@@ -110,9 +110,6 @@ void print_resume();
 // Quick stop to avoid harm to the user
 void quick_stop();
 
-// Resume operation after quick_stop
-void quick_resume();
-
 // return true if the printer is not moving (idle, paused, aborted or finished)
 bool printer_idle();
 
