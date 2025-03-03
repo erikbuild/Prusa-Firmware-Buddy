@@ -15,3 +15,8 @@ add_library(STM32H5xx_CMSIS INTERFACE)
 target_include_directories(STM32H5xx_CMSIS INTERFACE Include Device/ST/STM32H5xx/Include)
 target_link_libraries(STM32H5xx_CMSIS INTERFACE CMSIS_common)
 add_library(STM32H5xx::CMSIS ALIAS STM32H5xx_CMSIS)
+
+add_library(STM32C0xx_CMSIS INTERFACE)
+target_include_directories(STM32C0xx_CMSIS INTERFACE Include Device/ST/STM32C0xx/Include)
+target_link_libraries(STM32C0xx_CMSIS INTERFACE CMSIS_common)
+add_library(STM32C0xx::CMSIS ALIAS STM32C0xx_CMSIS)
