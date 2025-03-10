@@ -16,6 +16,7 @@ set(PRINTER_VALID_OPTS
     "XL"
     "iX"
     "XL_DEV_KIT"
+    "NONE"
     )
 set(BOARD_VALID_OPTS
     "BUDDY"
