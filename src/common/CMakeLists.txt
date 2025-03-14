@@ -102,6 +102,7 @@ elseif(BOARD STREQUAL "DWARF")
             safe_state.cpp
     )
   target_link_libraries(firmware PRIVATE logging)
+
 elseif(BOARD STREQUAL "MODULARBED")
   target_sources(firmware PRIVATE heap.cpp otp.cpp)
   target_link_libraries(firmware PRIVATE logging)
@@ -217,10 +218,9 @@ if(HAS_HOTEND_TYPE_SUPPORT)
   target_sources(firmware PRIVATE hotend_type.cpp)
 endif()
 
-add_subdirectory(filters)
 add_subdirectory(fanctl)
-add_subdirectory(mapi)
 add_subdirectory(marlin_server_types)
+add_subdirectory(filters)
 
 if(BOARD IN_LIST BUDDY_BOARDS)
   add_subdirectory(crash_dump)
@@ -230,6 +230,7 @@ endif()
 if(BOARD_IS_MASTER_BOARD)
   add_subdirectory(gcode)
   add_subdirectory(feature)
+  add_subdirectory(mapi)
 endif()
 
 add_subdirectory(utils)
