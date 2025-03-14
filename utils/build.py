@@ -520,6 +520,8 @@ class CMakePresetsGenerator:
                 return 'build-vscode-modularbed'
             elif 'xbuddy-extension' in configuration.preset.name:
                 return 'build-vscode-xbuddy-extension'
+            elif 'anfc' in configuration.preset.name:
+                return 'build-vscode-anfc'
             else:
                 return 'build-vscode-buddy'
         else:

@@ -4009,7 +4009,7 @@
         {
             "name": "anfc-h5_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4056,7 +4056,7 @@
         {
             "name": "anfc-h5_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4103,7 +4103,7 @@
         {
             "name": "anfc-h5_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4150,7 +4150,7 @@
         {
             "name": "anfc-h5_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4197,7 +4197,7 @@
         {
             "name": "anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4244,7 +4244,7 @@
         {
             "name": "anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4291,7 +4291,7 @@
         {
             "name": "anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4338,7 +4338,7 @@
         {
             "name": "anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
