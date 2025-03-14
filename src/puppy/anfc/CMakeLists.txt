@@ -41,4 +41,4 @@ endif()
 
 target_sources(firmware PRIVATE hal.cpp main.cpp nfc.cpp stdlib.c)
 
-target_link_libraries(firmware PRIVATE ${HAL_LIB} HAL_Config printf::printf)
+target_link_libraries(firmware PRIVATE ${HAL_LIB} HAL_Config printf::printf SG14)
