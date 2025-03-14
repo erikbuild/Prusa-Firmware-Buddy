@@ -94,6 +94,13 @@ namespace {
             } else {
                 return 0;
             }
+        } else if (ini_string_match(section, INI_SECTION, name, "proxy_hostname")) {
+            if (len <= config_store_ns::connect_proxy_size) {
+                strlcpy(config->proxy_host, value, sizeof config->proxy_host);
+                config->loaded = true;
+            } else {
+                return 0;
+            }
         } else if (ini_string_match(section, INI_SECTION, name, "token")) {
             if (len <= config_store_ns::connect_token_size) {
                 strlcpy(config->token, value, sizeof config->token);
@@ -106,6 +113,15 @@ namespace {
             long tmp = strtol(value, &endptr, 10);
             if (*endptr == '\0' && tmp >= 0 && tmp <= 65535) {
                 config->port = (uint16_t)tmp;
+                config->loaded = true;
+            } else {
+                return 0;
+            }
+        } else if (ini_string_match(section, INI_SECTION, name, "proxy_port")) {
+            char *endptr;
+            long tmp = strtol(value, &endptr, 10);
+            if (*endptr == '\0' && tmp >= 0 && tmp <= 65535) {
+                config->proxy_port = (uint16_t)tmp;
                 config->loaded = true;
             } else {
                 return 0;
@@ -194,7 +210,7 @@ namespace {
 #if HAS_MMU2()
         params.progress_code = MMU2::Fsm::Instance().reporter.GetProgressCode();
         params.command_code = MMU2::Fsm::Instance().reporter.GetCommandInProgress();
-        const bool mmu_enabled = config_store().mmu2_enabled.get() && marlin_vars().mmu2_state == ftrstd::to_underlying(MMU2::xState::Active);
+        const bool mmu_enabled = config_store().mmu2_enabled.get() && marlin_vars().mmu2_state == std::to_underlying(MMU2::xState::Active);
         params.slot_mask = mmu_enabled ? 0b00011111 : 1;
         params.mmu_version = MMU2::mmu2.GetMMUFWVersion();
         // Note: 0 means no active tool, indexing from 1
@@ -376,6 +392,8 @@ bool MarlinPrinter::load_cfg_from_ini() {
         store.connect_port.set(config.port);
         store.connect_tls.set(config.tls);
         store.connect_custom_tls_cert.set(config.custom_cert);
+        store.connect_proxy_host.set(config.proxy_host);
+        store.connect_proxy_port.set(config.proxy_port);
         // Note: enabled is controlled in the GUI
     }
     return ok;

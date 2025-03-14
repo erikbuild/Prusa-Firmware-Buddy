@@ -42,6 +42,7 @@ union __attribute__((packed)) LedPwm {
 };
 
 dwarf_shared::StatusLed status_led = dwarf_shared::StatusLed(); // Default LED control
+uint32_t tool_picked_timestamp_ms = 0; // Holds when tool was picked - used to delay fault state checking
 
 static constexpr unsigned int MODBUS_QUEUE_MESSAGE_COUNT = 40;
 
@@ -163,7 +164,7 @@ void ProcessModbusMessages() {
         }
 
         switch (msg->m_Address) {
-        case ftrstd::to_underlying(ModbusRegisters::SystemCoil::tmc_enable): {
+        case std::to_underlying(ModbusRegisters::SystemCoil::tmc_enable): {
             log_info(ModbusControl, "E stepper enable: %" PRIu32, msg->m_Value);
             if (msg->m_Value) {
                 enable_e_steppers();
@@ -172,15 +173,15 @@ void ProcessModbusMessages() {
             }
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemCoil::is_selected): {
+        case std::to_underlying(ModbusRegisters::SystemCoil::is_selected): {
             SetDwarfSelected(msg->m_Value);
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemCoil::loadcell_enable): {
+        case std::to_underlying(ModbusRegisters::SystemCoil::loadcell_enable): {
             loadcell::loadcell_set_enable(msg->m_Value);
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemCoil::accelerometer_enable): {
+        case std::to_underlying(ModbusRegisters::SystemCoil::accelerometer_enable): {
             if (msg->m_Value) {
                 dwarf::accelerometer::enable();
             } else {
@@ -188,22 +189,22 @@ void ProcessModbusMessages() {
             }
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::nozzle_target_temperature): {
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::nozzle_target_temperature): {
             log_info(ModbusControl, "Set hotend temperature: %" PRIu32, msg->m_Value);
             thermalManager.setTargetHotend(msg->m_Value, 0);
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::heatbreak_requested_temperature): {
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::heatbreak_requested_temperature): {
             log_info(ModbusControl, "Set Heatbreak requested temperature: %" PRIu32, msg->m_Value);
             thermalManager.setTargetHeatbreak(msg->m_Value, 0);
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::fan0_pwm): {
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::fan0_pwm): {
             log_info(ModbusControl, "Set print fan PWM:: %" PRIu32, msg->m_Value);
             thermalManager.set_fan_speed(0, msg->m_Value);
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::fan1_pwm): {
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::fan1_pwm): {
             if (msg->m_Value == std::numeric_limits<uint16_t>::max()) {
                 // switch back to auto control
                 if (Fans::heat_break(0).isSelftest()) {
@@ -223,7 +224,7 @@ void ProcessModbusMessages() {
 
             break;
         }
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::led_pwm): {
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::led_pwm): {
             LedPwm led_pwm = ModbusRegisters::GetRegValue(ModbusRegisters::SystemHoldingRegister::led_pwm);
             if (isDwarfSelected()) {
                 Cheese::set_led(led_pwm.selected);
@@ -234,16 +235,16 @@ void ProcessModbusMessages() {
         }
 
         ///@note React only to last register of the set. It needs to be written in block, last register applies new values.
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::status_color_end): {
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::status_color_end): {
             status_led = dwarf_shared::StatusLed({ ModbusRegisters::GetRegValue(ModbusRegisters::SystemHoldingRegister::status_color_start),
                 ModbusRegisters::GetRegValue(ModbusRegisters::SystemHoldingRegister::status_color_end) });
             break;
         }
 
         ///@note React only to last register of the set. It needs to be written in block, last register applies new values.
-        case ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_end): {
-            static_assert((ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_end)
-                              - ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_start) + 1)
+        case std::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_end): {
+            static_assert((std::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_end)
+                              - std::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_start) + 1)
                     == (3 * sizeof(float) + 1) / 2,
                 "Needs this many registers");
 
@@ -254,7 +255,7 @@ void ProcessModbusMessages() {
              */
             auto get_reg = [](size_t i) -> uint16_t {
                 return ModbusRegisters::GetRegValue(static_cast<ModbusRegisters::SystemHoldingRegister>(
-                    ftrstd::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_start) + i));
+                    std::to_underlying(ModbusRegisters::SystemHoldingRegister::pid_start) + i));
             };
 
             uint32_t temp_data; ///< Use to convert two registers into one float
@@ -308,6 +309,17 @@ static void update_fault_status() {
     }
 }
 
+static bool should_check_fault_status(bool is_parked, bool is_picked) {
+    if (is_picked && tool_picked_timestamp_ms == 0) {
+        tool_picked_timestamp_ms = ticks_ms();
+    } else if (!is_picked) {
+        tool_picked_timestamp_ms = 0;
+    }
+    // Do not report issues with a tool that is parked, not picked or was picked less of a second ago
+    static constexpr uint32_t picked_tool_delay_ms = 1000;
+    return (!is_parked && (is_picked && (ticks_ms() - tool_picked_timestamp_ms) >= picked_tool_delay_ms));
+}
+
 void UpdateRegisters() {
     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::hotend_measured_temperature, clamp_to_int16(Temperature::degHotend(0)));
     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::hotend_pwm_state, Temperature::getHeaterPower(H_E0));
@@ -338,18 +350,20 @@ void UpdateRegisters() {
     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::system_24V_mV, advancedpower.Get24VVoltage() * 1000);
     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::heater_current_mA, advancedpower.GetDwarfNozzleCurrent() * 1000);
 
-    update_fault_status();
+    if (should_check_fault_status(Cheese::is_parked(), Cheese::is_picked())) {
+        update_fault_status();
+    }
 }
 
 void TriggerMarlinKillFault(dwarf_shared::errors::FaultStatusMask fault, const char *component, const char *message) {
     ModbusRegisters::PutStringIntoInputRegisters(
-        ftrstd::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_component_start),
-        ftrstd::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_component_end),
+        std::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_component_start),
+        std::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_component_end),
         component);
 
     ModbusRegisters::PutStringIntoInputRegisters(
-        ftrstd::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_message_start),
-        ftrstd::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_message_end),
+        std::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_message_start),
+        std::to_underlying(ModbusRegisters::SystemInputRegister::marlin_error_message_end),
         message);
 
     // this erases existing erros, but since this is fatal error, it doesn't matter

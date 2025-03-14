@@ -132,8 +132,6 @@ void hwio_beeper_set_pwm(uint32_t per, uint32_t pul) {
 }
 
 void hwio_beeper_tone(float frq, uint32_t duration_ms) {
-    uint32_t per;
-    uint32_t pul;
     if (frq && duration_ms && hwio_beeper_vol) {
         if (frq < 0) {
             frq *= -1;
@@ -143,9 +141,9 @@ void hwio_beeper_tone(float frq, uint32_t duration_ms) {
         }
 
         if (board_revisions_9_and_higher()) {
-            per = (uint32_t)(84000000.0F / frq);
-            pul = (uint32_t)(per * hwio_beeper_vol / 2);
 #if HAS_GUI() && (DEBUG_WITH_BEEPS() || !_DEBUG)
+            uint32_t per = (uint32_t)(84000000.0F / frq);
+            uint32_t pul = (uint32_t)(per * hwio_beeper_vol / 2);
             hwio_beeper_set_pwm(per, pul);
 #endif
             hwio_beeper_duration_ms = duration_ms;
@@ -399,15 +397,22 @@ uint32_t analogRead(uint32_t ulPin) {
 void analogWrite(uint32_t ulPin, uint32_t ulValue) {
     if (HAL_PWM_Initialized) {
         switch (ulPin) {
-        case MARLIN_PIN(FAN): // print fan
-            Fans::print(active_extruder).setPWM(ulValue);
-            buddy::puppies::modular_bed.set_print_fan_active(ulValue > 0);
+        case MARLIN_PIN(FAN): {
+            // print fan
+            // possible PWM value remmaping in case of different type of ventilator
+            PrintFanType pft = get_print_fan_type(active_extruder);
+            uint16_t remapped_pwm = print_fan_remap_pwm(pft, ulValue);
+            Fans::print(active_extruder).setPWM(remapped_pwm);
+            buddy::puppies::modular_bed.set_print_fan_active(remapped_pwm > 0);
             return;
-        case MARLIN_PIN(FAN1):
+        }
+        case MARLIN_PIN(FAN1): {
             // heatbreak fan, any writes to it are ignored, its controlled by dwarf
             return;
-        default:
+        }
+        default: {
             hwio_arduino_error(HWIO_ERR_UNDEF_ANA_WR, ulPin); // error: undefined pin analog write
+        }
         }
     } else {
         hwio_arduino_error(HWIO_ERR_UNINI_ANA_WR, ulPin); // error: uninitialized analog write

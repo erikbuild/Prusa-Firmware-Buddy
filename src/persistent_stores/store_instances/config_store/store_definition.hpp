@@ -3,7 +3,6 @@
 
 #include <bitset>
 
-#include <common/hotend_type.hpp>
 #include "constants.hpp"
 #include "defaults.hpp"
 #include <option/has_config_store_wo_backend.h>
@@ -47,6 +46,7 @@
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
 #include <feature/xbuddy_extension/xbuddy_extension_fan_results.hpp>
+#include <print_fan_type.hpp>
 
 #if HAS_SHEET_PROFILES()
     #include <common/sheet.hpp>
@@ -59,6 +59,11 @@
 #include <option/has_chamber_filtration_api.h>
 #if HAS_CHAMBER_FILTRATION_API()
     #include <feature/chamber_filtration/chamber_filtration_enums.hpp>
+#endif
+
+#include <option/has_hotend_type_support.h>
+#if HAS_HOTEND_TYPE_SUPPORT()
+    #include <hotend_type.hpp>
 #endif
 
 namespace config_store_ns {
@@ -222,7 +227,9 @@ struct CurrentStore
 
     StoreItem<std::array<char, connect_host_size + 1>, defaults::connect_host, ItemFlag::network | ItemFlag::dev_items, journal::hash("Connect Host")> connect_host;
     StoreItem<std::array<char, connect_token_size + 1>, defaults::connect_token, ItemFlag::network, journal::hash("Connect Token")> connect_token;
+    StoreItem<std::array<char, connect_proxy_size + 1>, defaults::connect_proxy_host, ItemFlag::network | ItemFlag::dev_items, journal::hash("Connect Proxy Host")> connect_proxy_host;
     StoreItem<uint16_t, defaults::connect_port, ItemFlag::network | ItemFlag::dev_items, journal::hash("Connect Port")> connect_port;
+    StoreItem<uint16_t, 0, ItemFlag::network | ItemFlag::dev_items, journal::hash("Connect proxy port")> connect_proxy_port;
     StoreItem<bool, true, ItemFlag::network | ItemFlag::dev_items, journal::hash("Connect TLS")> connect_tls;
     StoreItem<bool, false, ItemFlag::network, journal::hash("Connect Enabled")> connect_enabled;
     StoreItem<bool, false, ItemFlag::network | ItemFlag::dev_items, journal::hash("Connect custom TLS certificate")> connect_custom_tls_cert;
@@ -539,8 +546,10 @@ struct CurrentStore
     StoreItem<uint16_t, defaults::axis_rms_current_ma_E0_, ItemFlag::hw_config | ItemFlag::common_misconfigurations, journal::hash("Axis RMS Current MA E0")> axis_rms_current_ma_E0_;
     StoreItem<float, defaults::axis_z_max_pos_mm, ItemFlag::hw_config | ItemFlag::common_misconfigurations, journal::hash("Axis Z Max Pos MM")> axis_z_max_pos_mm;
 
+#if HAS_HOTEND_TYPE_SUPPORT()
     // Nozzle Sock has is here for backwards compatibility (should be binary compatible)
     StoreItemArray<HotendType, defaults::hotend_type, ItemFlag::hw_config, journal::hash("Hotend Type Per Tool"), 8, HOTENDS> hotend_type;
+#endif
 
     StoreItem<restore_z::Position, restore_z::default_position, ItemFlag::features, journal::hash("Restore Z Coordinate After Boot")> restore_z_after_boot;
 
@@ -651,6 +660,11 @@ struct CurrentStore
     StoreItem<uint8_t, 10, ItemFlag::features, journal::hash("Chamber filtration post print duration")> chamber_post_print_filtration_duration_min;
     StoreItem<PWM255, 10, ItemFlag::features, journal::hash("Chamber mid print filtration pwm")> chamber_mid_print_filtration_pwm;
     StoreItem<PWM255, 128, ItemFlag::features, journal::hash("Chamber post print filtration pwm")> chamber_post_print_filtration_pwm;
+    StoreItem<bool, false, ItemFlag::features, journal::hash("Chamber filtration always on")> chamber_filtration_always_on;
+#endif
+
+#if HAS_PRINT_FAN_TYPE()
+    StoreItemArray<PrintFanType, PrintFanType::default_value, ItemFlag::hw_config, journal::hash("Print Fan Type Per Tool"), 8, HOTENDS> print_fan_type;
 #endif
 
 private:
@@ -741,7 +755,10 @@ struct DeprecatedStore
     StoreItem<float, 0, journal::hash("Loadcell Threshold Continuous")> loadcell_threshold_continuous;
 
     StoreItem<HWCheckSeverity, defaults::hw_check_severity, journal::hash("HW Check Fan Compatibility")> hw_check_fan_compatibility;
+
+#if HAS_HOTEND_TYPE_SUPPORT()
     StoreItem<HotendType, defaults::hotend_type, journal::hash("Nozzle Sock")> hotend_type_single_hotend;
+#endif
 
     StoreItem<bool, false, journal::hash("USB MSC Enabled")> usb_msc_enabled;
 };

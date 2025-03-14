@@ -17,6 +17,7 @@
 #include "client_fsm_types.h"
 #include "general_response.hpp"
 #include "printers.h"
+#include <enum_array.hpp>
 #include <option/filament_sensor.h>
 #include <option/has_attachable_accelerometer.h>
 #include <option/has_belt_tuning.h>
@@ -35,7 +36,12 @@
 #include <option/has_xbuddy_extension.h>
 #include <option/has_uneven_bed_prompt.h>
 #include <option/has_ceiling_clearance.h>
-#include <common/hotend_type.hpp>
+
+#include <option/has_hotend_type_support.h>
+#if HAS_HOTEND_TYPE_SUPPORT()
+    #include <hotend_type.hpp>
+#endif
+
 #include <device/board.h>
 
 /// number of bits used to encode response
@@ -1027,7 +1033,7 @@ class ClientResponses {
 
 public:
     static constexpr const PhaseResponses &get_fsm_responses(ClientFSM fsm_type, PhaseUnderlyingType phase) {
-        if (ftrstd::to_underlying(fsm_type) >= fsm_phase_responses.size()) {
+        if (std::to_underlying(fsm_type) >= fsm_phase_responses.size()) {
             return empty_phase_responses;
         }
 

@@ -2,31 +2,35 @@
 
 #include <stdint.h>
 
-#include <enum_array.hpp>
 #include <i18n.h>
 
-#include <option/has_hotend_type_support.h>
 #include <printers.h>
+
+#include <option/has_hotend_type_support.h>
+#if !HAS_HOTEND_TYPE_SUPPORT()
+    #error This header should only be included if HAS_HOTEND_TYPE_SUPPORT()
+#endif
 
 /// Shared for all printers.
 /// !!! Never change order, never remove items - this is used in config store
 enum class HotendType : uint8_t {
     stock = 0,
 
+#if !PRINTER_IS_PRUSA_MINI()
     /// Stock Prusa hotend with sillicone sock
     stock_with_sock = 1,
+#endif
 
+#if PRINTER_IS_PRUSA_MK3_5()
     /// E3D Revo (MK3.5 only)
     e3d_revo = 2,
-
-    _cnt,
+#endif
 };
 
-static constexpr EnumArray<HotendType, const char *, HotendType::_cnt> hotend_type_names {
-    { HotendType::stock, N_("Stock") },
-    { HotendType::stock_with_sock, N_("With sock") },
-    { HotendType::e3d_revo, N_("E3D Revo") },
-};
+const char *hotend_type_name(HotendType t);
+
+/// Hotend types alter the parameters of the heater selftest - this number describes how.
+int8_t hotend_type_heater_selftest_offset(HotendType t);
 
 /// Filtered and ordered list of hotend types, for UI purposes
 static constexpr std::array hotend_type_list {
