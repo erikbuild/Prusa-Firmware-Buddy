@@ -41,4 +41,9 @@ endif()
 
 target_sources(firmware PRIVATE hal.cpp main.cpp nfc.cpp stdlib.c)
 
-target_link_libraries(firmware PRIVATE ${HAL_LIB} HAL_Config printf::printf SG14)
+target_include_directories(firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include)
+
+add_subdirectory(nfc_ll)
+add_subdirectory(nfc_prusa)
+
+target_link_libraries(firmware PRIVATE ${HAL_LIB} HAL_Config printf::printf SG14 nanocbor)

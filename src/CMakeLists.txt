@@ -63,6 +63,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   endif()
 
   add_subdirectory(semihosting)
+
 elseif(BOARD STREQUAL "DWARF")
   target_include_directories(firmware PRIVATE .)
 
@@ -75,6 +76,7 @@ elseif(BOARD STREQUAL "DWARF")
   add_subdirectory(freertos)
   add_subdirectory(puppy/dwarf)
   add_subdirectory(puppy/shared)
+
 elseif(BOARD STREQUAL "MODULARBED")
   target_include_directories(firmware PRIVATE .)
 
@@ -87,12 +89,16 @@ elseif(BOARD STREQUAL "MODULARBED")
   add_subdirectory(freertos)
   add_subdirectory(puppy/modularbed)
   add_subdirectory(puppy/shared)
+
 elseif(BOARD STREQUAL "XBUDDY_EXTENSION")
   add_subdirectory(freertos)
   add_subdirectory(puppy/xbuddy_extension_shared)
   add_subdirectory(puppy/xbuddy_extension)
+
 elseif(BOARD STREQUAL "ANFC" OR BOARD STREQUAL "ANFC_H5")
   add_subdirectory(puppy/anfc)
+  add_subdirectory(common)
+
 elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
   target_include_directories(firmware PRIVATE .)
 
