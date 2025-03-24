@@ -77,6 +77,7 @@ exclude: |
     lib/Middlewares/Third_Party/mbedtls/|
     lib/Prusa-Error-Codes/|
     lib/Prusa-Firmware-MMU/|
+    lib/Prusa-Material-Data-Format/|
     lib/QR/|
     lib/Segger|
     lib/TMCStepper/|
