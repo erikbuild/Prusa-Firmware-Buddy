@@ -29,5 +29,5 @@ target_include_directories(
   prusa_nfc_reader_tests PRIVATE include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/common
                                  ${CMAKE_SOURCE_DIR}/src/puppy/anfc ${CMAKE_CURRENT_BINARY_DIR}
   )
-target_link_libraries(prusa_nfc_reader_tests SG14 nanocbor magic_enum)
+target_link_libraries(prusa_nfc_reader_tests SG14 nanocbor magic_enum buddy_utils)
 add_catch_test(prusa_nfc_reader_tests)
