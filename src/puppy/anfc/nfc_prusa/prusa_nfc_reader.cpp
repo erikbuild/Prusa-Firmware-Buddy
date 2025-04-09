@@ -351,16 +351,16 @@ PrusaNFCReader::IOResult<std::string_view> PrusaNFCReader::read_field_string(con
     const auto r = read_field_impl(field, [&result, &buffer](CBORValue v) -> ReadFieldCallbackResult {
         const uint8_t *data;
         size_t len;
-        const auto r = nanocbor_get_tstr(v, &data, &len);
-        if (r < 0) {
-            return r;
+        const auto r2 = nanocbor_get_tstr(v, &data, &len);
+        if (r2 < 0) {
+            return r2;
         }
         if (len > buffer.size()) {
             return Error::data_too_big;
         }
         memcpy(buffer.data(), data, len);
         result = std::string_view(buffer.data(), len);
-        return r;
+        return r2;
     });
     if (!r) {
         return std::unexpected(r.error());

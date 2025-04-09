@@ -1,5 +1,7 @@
 target_include_directories(firmware PRIVATE . include)
 
+target_link_libraries(firmware PRIVATE buddy_utils)
+
 if(BOARD IN_LIST BUDDY_BOARDS)
   target_sources(
     firmware
@@ -12,7 +14,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             crc32.cpp
             crc32_zlib.cpp
             data_exchange.cpp
-            enum_array.cpp
             error_code_mangle.cpp
             ExtInterruptHandler.cpp
             filename_type.cpp
@@ -143,10 +144,8 @@ elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
     )
 endif()
 
-if(NOT BOARD STREQUAL "DWARF" AND NOT BOARD STREQUAL "MODULARBED")
-  if(HAS_POWER_PANIC)
-    target_sources(firmware PRIVATE power_panic.cpp)
-  endif()
+if(HAS_POWER_PANIC)
+  target_sources(firmware PRIVATE power_panic.cpp)
 
   if(${POWER_PANIC_STORAGE_IS_FLASH})
     target_sources(firmware PRIVATE power_panic_storage_flash.cpp)

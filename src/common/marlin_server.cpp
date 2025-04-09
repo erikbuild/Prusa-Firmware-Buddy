@@ -630,7 +630,6 @@ void init(void) {
     // after a reboot.
     fsm_states.init_state_id();
 
-    marlin_vars().init();
 #if HAS_SHEET_PROFILES()
     SteelSheets::CheckIfCurrentValid();
 #endif
@@ -962,7 +961,7 @@ void loop() {
 
 #if HAS_EMERGENCY_STOP()
     // During printing, possibly block anytime
-    if (server.print_state == State::Printing) {
+    if (is_printing_state(server.print_state)) {
         buddy::emergency_stop().maybe_block();
     }
 #endif
@@ -989,7 +988,7 @@ static void idle(void) {
 
 #if HAS_EMERGENCY_STOP()
     // During printing, possibly block anytime
-    if (server.print_state == State::Printing) {
+    if (is_printing_state(server.print_state)) {
         buddy::emergency_stop().maybe_block();
     }
 #endif

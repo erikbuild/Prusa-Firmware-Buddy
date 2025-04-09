@@ -6,7 +6,7 @@
 
 #include <inplace_vector.hpp>
 #include <inplace_function.hpp>
-#include <enum_array.hpp>
+#include <utils/enum_array.hpp>
 
 #include <utils/cache.hpp>
 #include <nfc_ll/nfc_defines.hpp>

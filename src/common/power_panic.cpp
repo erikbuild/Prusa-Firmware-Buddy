@@ -339,6 +339,12 @@ void resume_loop() {
             buddy::chamber().set_target_temperature(state_buf.chamber_target_temp);
         }
 #endif
+#if HAS_TEMP_HEATBREAK_CONTROL
+        for (uint8_t e = 0; e < HOTENDS; e++) {
+            thermalManager.setTargetHeatbreak(state_buf.heatbreak_temperatures[e], e);
+        }
+
+#endif
 
 #if HAS_TOOLCHANGER()
         if (state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL) { // Was in toolchange area
@@ -666,6 +672,10 @@ void panic_loop() {
             break;
         }
 
+        if (!runtime_state.nested_fault) {
+            marlin_vars().media_SFN_path.copy_to(runtime_state.media_SFN_path, sizeof(runtime_state.media_SFN_path));
+        }
+
         // Z axis is now aligned
         stepperZ.rms_current(POWER_PANIC_Z_CURRENT, 1);
         log_debug(PowerPanic, "Z MSCNT end: %d", stepperZ.MSCNT());
@@ -694,6 +704,11 @@ void panic_loop() {
 #endif
 #if HAS_CHAMBER_API()
         state_buf.chamber_target_temp = buddy::chamber().target_temperature().value_or(chamber_temp_off);
+#endif
+#if HAS_TEMP_HEATBREAK_CONTROL
+        for (uint8_t e = 0; e < HOTENDS; e++) {
+            state_buf.heatbreak_temperatures[e] = Temperature::degTargetHeatbreak(e);
+        }
 #endif
         state_buf.gcode_stream_restore_info = marlin_server::stream_restore_info();
 #if HAS_TOOLCHANGER()
@@ -842,7 +857,6 @@ void ac_fault_isr() {
 
     // stop motion
     if (!runtime_state.nested_fault) {
-        marlin_vars().media_SFN_path.copy_to(runtime_state.media_SFN_path, sizeof(runtime_state.media_SFN_path));
         state_buf.planner.was_paused = marlin_server::printer_paused();
         state_buf.planner.was_crashed = crash_s.did_trigger();
     }
