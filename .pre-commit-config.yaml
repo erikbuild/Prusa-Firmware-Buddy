@@ -96,6 +96,7 @@ exclude: |
     lib/magic_enum/|
     lib/SG14/|
     lib/nanocbor/|
+    lib/libcanard/|
     tests/stubs/FreeRTOS|
     tests/unit/common/gcode/.*\.gcode$|
     tests/unit/lang/translator/(keys|cs|es|fr|de|pl|it)\.txt$|
