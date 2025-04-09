@@ -82,14 +82,15 @@ def nfc_update(input_data, update_data: dict = {}, remove_fields: dict = {}):
             yaml.safe_dump({
                 "data": update_data,
                 "remove": remove_fields
-            }).encode("UTF-8"))
+            },
+                           sort_keys=False).encode("UTF-8"))
         f.close()
 
         return subprocess.run(
             [
                 sys.executable,
-                os.path.join(materials_dir, "utils", "rec_update.py"),
-                f.name,
+                os.path.join(materials_dir, "utils", "rec_update.py"), f.name,
+                "--no-canonical"
             ],
             input=input_data,
             stdout=subprocess.PIPE,
@@ -105,12 +106,12 @@ empty_tag_with_minimal_meta_section = nfc_initialize(["-s=128", "-b=1"])
 standard_data = {
     "main": {
         "material_class": "FFF",
-        "brand": "Prusament",
         "material_type": "ASA",
-        "is_signed": False,
-        "transmission_distance": 0.3,
+        "brand": "Prusament",
         "material_name": "PLA Prusa Galaxy Black",
+        "is_signed": False,
         "netto_full_weight": 0x1FFFFFFFF,
+        "transmission_distance": 0.3,
         "tags": ["glitter", "abrasive"],
     }
 }
