@@ -15,6 +15,7 @@ class Region:
     fields: Fields
     record: typing.Any
     is_corrupt: bool = False
+    canonical: bool = True  # Encode the CBOR canonically (order the map entries)
 
     def __init__(self, record, offset: int, memory: memoryview, fields: Fields):
         assert type(memory) is memoryview
@@ -23,6 +24,11 @@ class Region:
         self.offset = offset
         self.memory = memory
         self.fields = fields
+
+        try:
+            cbor2.load(io.BytesIO(self.memory))
+        except cbor2.CBORError:
+            self.is_corrupt = True
 
         if len(self.memory) == 0:
             self.is_corrupt = True
@@ -40,7 +46,7 @@ class Region:
         return result
 
     def used_size(self):
-        if len(self.memory) == 0:
+        if self.is_corrupt:
             return 0
 
         data_io = io.BytesIO(self.memory)
@@ -48,20 +54,34 @@ class Region:
         return data_io.tell()
 
     def read(self):
-        if len(self.memory) == 0:
+        if self.is_corrupt:
             return {}
 
         return self.fields.decode(cbor2.loads(self.memory))
 
+    def encode(self, data):
+        data_io = io.BytesIO()
+        encoder = cbor2.CBOREncoder(
+            data_io,
+            canonical=self.record.canonical,
+            indefinite_containers=self.record.encode_indefinite_containers,
+        )
+
+        # Encode float optimally, even in non-canonical mode
+        encoder._encoders[float] = cbor2.CBOREncoder.encode_minimal_float
+
+        encoder.encode(data)
+        return data_io.getvalue()
+
     def write(self, data):
         self.memory[:] = bytearray(len(self.memory))
-        encoded = cbor2.dumps(self.fields.encode(data), canonical=True, indefinite_containers=self.record.encode_indefinite_containers)
+        encoded = self.encode(self.fields.encode(data))
         assert len(encoded) <= len(self.memory), f"Data of size {len(encoded)} does not fit into region of size {len(self.memory)}"
         self.memory[0 : len(encoded)] = encoded
 
     def sign(self, sign_f):
         used_size = self.used_size()
-        signature = cbor2.dumps(sign_f(self.memory[0:used_size]), canonical=True, indefinite_containers=self.record.encode_indefinite_containers)
+        signature = self.encode(sign_f(self.memory[0:used_size]))
         signature_len = len(signature)
         memory_len = len(self.memory)
 

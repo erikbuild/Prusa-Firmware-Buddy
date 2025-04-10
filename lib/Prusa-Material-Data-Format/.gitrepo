@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:prusa3d/Prusa-Material-Data-Format.git
 	branch = main
-	commit = c16a6bbd8e6353cdbb5be0eb6f656cd97d137757
-	parent = 8d6fabd49a835707dda58c276ecb04cd7a42124b
+	commit = 416295bfbe6096c1ee23ff6b5c42aecc61fcb0d3
+	parent = 7d3173c0220b563c36e796091bfac6f1834daf53
 	method = merge
-	cmdver = 0.4.6
+	cmdver = 0.4.9
