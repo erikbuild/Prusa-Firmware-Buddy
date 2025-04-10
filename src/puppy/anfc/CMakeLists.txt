@@ -23,10 +23,9 @@ elseif(BOARD STREQUAL "ANFC_H5")
 
   target_compile_definitions(firmware PRIVATE STM32GENERIC STM32H5 STM32H5xx)
 
-  # TODO: This is wrong
   if(BOOTLOADER STREQUAL "EMPTY" OR BOOTLOADER)
     target_set_linker_script(firmware "${CMAKE_CURRENT_SOURCE_DIR}/link/stm32h503_boot.ld")
-    target_compile_definitions(firmware PRIVATE BOOTLOADER_SIZE=8192)
+    target_compile_definitions(firmware PRIVATE BOOTLOADER_SIZE=32768)
   else()
     target_set_linker_script(firmware "${CMAKE_CURRENT_SOURCE_DIR}/link/stm32h503_noboot.ld")
     target_compile_definitions(firmware PRIVATE BOOTLOADER_SIZE=0)
