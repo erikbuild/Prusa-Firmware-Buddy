@@ -7,7 +7,7 @@
 #include <uavcan/_register/Access_1_0.h>
 #include <variant>
 #include <span>
-#include <overloaded_visitor.hpp>
+#include <utils/overloaded_visitor.hpp>
 
 namespace can::cyphal {
 
