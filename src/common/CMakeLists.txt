@@ -228,7 +228,6 @@ endif()
 
 add_subdirectory(fanctl)
 add_subdirectory(marlin_server_types)
-add_subdirectory(filters)
 
 if(BOARD IN_LIST BUDDY_BOARDS)
   add_subdirectory(crash_dump)
