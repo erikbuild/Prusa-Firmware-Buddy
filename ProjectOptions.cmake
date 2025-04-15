@@ -768,6 +768,19 @@ set(DEBUG_WITH_BEEPS
     )
 define_boolean_option(DEBUG_WITH_BEEPS ${DEBUG_WITH_BEEPS})
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(DISABLE_WATCHDOG
+      "ON"
+      CACHE BOOL "Disable watchdog handlers for debugging"
+      )
+else()
+  set(DISABLE_WATCHDOG
+      "OFF"
+      CACHE BOOL "Disable watchdog handlers for debugging"
+      )
+endif()
+define_boolean_option(DISABLE_WATCHDOG ${DISABLE_WATCHDOG})
+
 # Use websocket to talk to Connect instead of many http requests.
 #
 # The server part is not ready and the protocol is in a flux too. For that reason, this is not
