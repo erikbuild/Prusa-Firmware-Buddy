@@ -2,7 +2,8 @@
 #include "cyphal_task.hpp"
 #include <uavcan/time/Synchronization_1_0.h>
 
-#include <utility_extensions.hpp>
+#include <utility>
+
 #include <bsod.h>
 #include <assert.h>
 #include <timing.h>
@@ -101,22 +102,22 @@ void Task::loop() {
             apply_automatic_retransmission();
 
             // Take serialized message and put it to Cyphal Tx queue
-            if (what & ftrstd::to_underlying(Notify::Sender)) {
+            if (what & std::to_underlying(Notify::Sender)) {
                 sender_loop();
             }
 
             // Transmit CAN frames from the Cyphal Tx queue
-            if (what & ftrstd::to_underlying(Notify::Tx)) {
+            if (what & std::to_underlying(Notify::Tx)) {
                 tx_loop();
             }
 
             // Receive CAN frames from driver and put them to Cyphal
-            if (what & ftrstd::to_underlying(Notify::Rx)) {
+            if (what & std::to_underlying(Notify::Rx)) {
                 rx_loop();
             }
 
             // Log buffer overflow
-            if (what & ftrstd::to_underlying(Notify::RxLost)) {
+            if (what & std::to_underlying(Notify::RxLost)) {
                 lost_rx_frames_time = notify_time;
                 lost_rx_frames = lost_rx_frames_isr.load();
             }
@@ -134,10 +135,10 @@ void Task::notify(Notify what) {
 
     if (__get_IPSR() != 0) { // We are in ISR
         BaseType_t woken = pdFALSE;
-        xTaskNotifyIndexedFromISR(loop_task, notify_index, ftrstd::to_underlying(what), eSetBits, &woken);
+        xTaskNotifyIndexedFromISR(loop_task, notify_index, std::to_underlying(what), eSetBits, &woken);
         portYIELD_FROM_ISR(woken);
     } else {
-        xTaskNotifyIndexed(loop_task, notify_index, ftrstd::to_underlying(what), eSetBits);
+        xTaskNotifyIndexed(loop_task, notify_index, std::to_underlying(what), eSetBits);
     }
 }
 
