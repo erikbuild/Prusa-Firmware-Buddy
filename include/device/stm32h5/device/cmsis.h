@@ -3,4 +3,4 @@
 
 #define SYSTEM_CORE_CLOCK 160000000
 
-#include_next <device/cmsis_internal.h>
+#include <device/cmsis_internal.h>
