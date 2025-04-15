@@ -1,6 +1,5 @@
 
 #include "cyphal_timesync.hpp"
-#include <device/peripherals.h>
 
 #include <metric.h>
 
