@@ -724,37 +724,29 @@ uint16_t PreciseStepping::process_one_step_event_from_queue() {
 }
 
 static int32_t counter_signed_diff(uint16_t timestamp1, uint16_t timestamp2) {
-    int32_t diff = int32_t(timestamp1) - int32_t(timestamp2);
-    if (diff > 0xFFFF / 2 - 1) {
-        diff -= 0xFFFF;
-    } else if (diff < -0xFFFF / 2) {
-        diff += 0xFFFF;
-    }
-    return diff;
+    return static_cast<int16_t>(timestamp1 - timestamp2);
 }
 
 void PreciseStepping::step_isr() {
-#ifndef ISR_DEADLINE_TRACKING
-    constexpr uint16_t min_delay = 6; // fuse isr for steps below this threshold (us)
-#else
-    constexpr uint32_t min_delay = 11; // fuse isr for steps below this threshold (us)
-#endif
-    constexpr uint16_t min_reserve = 5; // minimum interval for isr re-entry (us)
+    // minimum interval for isr re-entry (ticks: us)
+    constexpr uint16_t min_reserve = 5;
 
-#ifdef ISR_DEADLINE_TRACKING
-    // in addition to checking for forward misses, check for past ones
-    static uint32_t scheduled_ts = 0;
-    if (scheduled_ts && ticks_us() > scheduled_ts + min_reserve * 2) {
-        ++step_dl_miss;
-    }
-#endif
+    // maximum time advancement for each isr (ticks: us)
+    constexpr uint16_t max_time_increment = STEPPER_ISR_MAX_TICKS / 2;
+    static_assert(max_time_increment < STEPPER_ISR_MAX_TICKS);
+    static_assert(max_time_increment > min_reserve);
 
-    const uint32_t compare = __HAL_TIM_GET_COMPARE(&TimerHandle[STEP_TIMER_NUM].handle, TIM_CHANNEL_1);
+    // maximum number of steps ticked in a single iteration, for debugging purposes
+    uint8_t steps_merged = 0; // current call
+    static uint8_t max_steps_merged = 0; // overall
+
+    const auto timer_handle = &TimerHandle[STEP_TIMER_NUM].handle;
+    const uint32_t compare = __HAL_TIM_GET_COMPARE(timer_handle, TIM_CHANNEL_1);
 
     uint32_t next = 0;
     uint32_t time_increment = 0;
-    uint32_t timer_remaining_time = 0;
-    do {
+    uint32_t max_ticks = STEPPER_ISR_MAX_TICKS;
+    for (;;) {
         if (stop_pending)
             [[unlikely]] {
             next = compare + STEPPER_ISR_PERIOD_IN_TICKS;
@@ -762,36 +754,46 @@ void PreciseStepping::step_isr() {
             break;
         }
 
-        if (!left_ticks_to_next_step_event) {
+        // ensure we didn't advance too many ticks in previous iterations,
+        // which is a sign we aren't able to catch up and will eventually skip
+        assert(time_increment < max_time_increment);
+
+        // tick zero-interval steps together
+        while (!left_ticks_to_next_step_event) {
             left_ticks_to_next_step_event = process_one_step_event_from_queue();
         }
 
-        // limit the interval to avoid a counter overflow or runout
-        uint16_t ticks_to_next_step_event = left_ticks_to_next_step_event;
-        if (ticks_to_next_step_event > STEPPER_ISR_MAX_TICKS) {
-            ticks_to_next_step_event = STEPPER_ISR_MAX_TICKS;
+        // limit the interval of the next tick
+        uint32_t ticks_to_next_isr = left_ticks_to_next_step_event + time_increment;
+        if (ticks_to_next_isr <= max_ticks) {
+            // the next iteration will process the event
+            time_increment += left_ticks_to_next_step_event;
+            left_ticks_to_next_step_event = 0;
+        } else {
+            // the next iteration just advances the timer
+            left_ticks_to_next_step_event = ticks_to_next_isr - max_ticks;
+            time_increment += max_ticks;
+            ticks_to_next_isr = max_ticks;
         }
 
-        // Compute the time remaining until the next step event.
-        left_ticks_to_next_step_event -= ticks_to_next_step_event;
-
-        // Compute the number of ticks for the next ISR.
-        time_increment += ticks_to_next_step_event;
-        if (ticks_to_next_step_event <= min_delay) {
-            continue;
+        // actually plan the next deadline and check if we have enough time reserve
+        next = compare + ticks_to_next_isr;
+        const uint32_t counter = __HAL_TIM_GET_COUNTER(timer_handle);
+        if (counter_signed_diff(next, counter) >= min_reserve) {
+            break;
         }
 
-        next = compare + time_increment;
+        // not enough reserve: iterate again to process the next event immediately
+        ++steps_merged;
 
-        const uint32_t counter = __HAL_TIM_GET_COUNTER(&TimerHandle[STEP_TIMER_NUM].handle);
+        // adjust the deadline limit based on the real time elapsed to avoid rescheduling
+        max_ticks = STEPPER_ISR_MAX_TICKS + counter_signed_diff(counter, compare);
+    }
 
-        // truncate timer_remaining_time to the effective 16bit res required by
-        // counter_signed_diff() to correctly check for overflow later. However, if that happens
-        // (timer_remaining_time is >= U16/2), it means we already blew past the new event. Instead
-        // of ticking it immediately, reschedule on a new isr. We check for the size of the overflow
-        // just below.
-        timer_remaining_time = (next - counter) & 0xFFFF;
-    } while (timer_remaining_time < min_reserve);
+    // keep some stats for debugging purposes
+    if (steps_merged > max_steps_merged) {
+        max_steps_merged = steps_merged;
+    }
 
     // What follows is a not-straightforward scheduling of the next step ISR
     // time event. If this ISR is interrupted by another routine, we might
@@ -801,33 +803,27 @@ void PreciseStepping::step_isr() {
     // The difference of values passed into counter_signed_diff always has to be smaller
     // or equal to (UINT16_MAX / 2). Otherwise, the value returned by counter_signed_diff()
     // will be incorrect.
-    const auto timer_handle_ptr = &TimerHandle[STEP_TIMER_NUM].handle;
     uint32_t adjusted_next = next - last_step_isr_delay;
     int32_t diff;
     {
         buddy::InterruptDisabler _;
-        int32_t tim_counter = __HAL_TIM_GET_COUNTER(timer_handle_ptr);
+        int32_t tim_counter = __HAL_TIM_GET_COUNTER(timer_handle);
         diff = counter_signed_diff(adjusted_next, tim_counter);
         // We should miss the next deadline just by a couple of ticks. When the value of 'diff'
         // is a big negative number, the difference between 'adjusted_next' and 'tim_counter'
         // is bigger than (UINT16_MAX / 2), or something interrupts the stepper routine for a very long time.
-        assert(diff >= -STEPPER_ISR_MAX_TICKS && diff < STEPPER_ISR_MAX_TICKS);
+        assert(diff >= -STEPPER_ISR_MAX_TICKS && diff <= STEPPER_ISR_MAX_TICKS);
         if (diff < min_reserve) {
             adjusted_next = tim_counter + min_reserve;
         }
-        __HAL_TIM_SET_COMPARE(timer_handle_ptr, TIM_CHANNEL_1, adjusted_next);
+        __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, adjusted_next);
     }
 
-    if (diff < min_delay) {
+    if (diff < min_reserve) {
         last_step_isr_delay = -diff + min_reserve;
     } else {
         last_step_isr_delay = 0;
     }
-
-#ifdef ISR_DEADLINE_TRACKING
-    uint32_t scheduled_ticks = (((next & 0xFFFF) - __HAL_TIM_GET_COUNTER(&TimerHandle[STEP_TIMER_NUM].handle)) & 0xFFFF);
-    scheduled_ts = ticks_us() + scheduled_ticks;
-#endif
 }
 
 FORCE_INLINE move_t *append_beginning_empty_move() {

@@ -39,6 +39,7 @@
 #include <option/has_ceiling_clearance.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_auto_retract.h>
+#include <option/has_nozzle_cleaner.h>
 
 #include <option/has_hotend_type_support.h>
 #if HAS_HOTEND_TYPE_SUPPORT()
@@ -125,13 +126,10 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
     Parking_unstoppable,
     WaitingTemp_stoppable,
     WaitingTemp_unstoppable,
-    PreparingToRam_stoppable,
-    PreparingToRam_unstoppable,
     Ramming_stoppable,
     Ramming_unstoppable,
     Unloading_stoppable,
     Unloading_unstoppable,
-    RemoveFilament,
     IsFilamentUnloaded,
     FilamentNotInFS,
     ManualUnload_continuable,
@@ -147,12 +145,19 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
     Ejecting_unstoppable,
     Loading_stoppable,
     Loading_unstoppable,
+    LoadingToGears_stoppable,
+    LoadingToGears_unstoppable,
     Purging_stoppable,
     Purging_unstoppable,
+    AwaitingFilament_stoppable,
+    AwaitingFilament_unstoppable,
     IsColor,
     IsColorPurge,
     Unparking,
-
+#if HAS_NOZZLE_CLEANER()
+    UnloadNozzleCleaning,
+    LoadNozzleCleaning,
+#endif
 #if HAS_LOADCELL()
     FilamentStuck,
 #endif
@@ -623,13 +628,10 @@ class ClientResponses {
             { PhasesLoadUnload::Parking_unstoppable, {} },
             { PhasesLoadUnload::WaitingTemp_stoppable, { Response::Stop } },
             { PhasesLoadUnload::WaitingTemp_unstoppable, {} },
-            { PhasesLoadUnload::PreparingToRam_stoppable, { Response::Stop } },
-            { PhasesLoadUnload::PreparingToRam_unstoppable, {} },
             { PhasesLoadUnload::Ramming_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Ramming_unstoppable, {} },
             { PhasesLoadUnload::Unloading_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Unloading_unstoppable, {} },
-            { PhasesLoadUnload::RemoveFilament, { Response::Filament_removed } },
             { PhasesLoadUnload::IsFilamentUnloaded, { Response::Yes, Response::No } },
             { PhasesLoadUnload::FilamentNotInFS, { Response::Help } },
             { PhasesLoadUnload::ManualUnload_continuable, { Response::Continue, Response::Retry } },
@@ -645,11 +647,19 @@ class ClientResponses {
             { PhasesLoadUnload::Ejecting_unstoppable, {} },
             { PhasesLoadUnload::Loading_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Loading_unstoppable, {} },
+            { PhasesLoadUnload::LoadingToGears_stoppable, { Response::Stop } },
+            { PhasesLoadUnload::LoadingToGears_unstoppable, {} },
             { PhasesLoadUnload::Purging_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Purging_unstoppable, {} },
+            { PhasesLoadUnload::AwaitingFilament_stoppable, { Response::Stop } },
+            { PhasesLoadUnload::AwaitingFilament_unstoppable, {} },
             { PhasesLoadUnload::IsColor, { Response::Yes, Response::Purge_more, Response::Retry } },
             { PhasesLoadUnload::IsColorPurge, { Response::Yes, Response::Purge_more } },
             { PhasesLoadUnload::Unparking, {} },
+#if HAS_NOZZLE_CLEANER()
+            { PhasesLoadUnload::UnloadNozzleCleaning, {} },
+            { PhasesLoadUnload::LoadNozzleCleaning, {} },
+#endif
 #if HAS_LOADCELL()
             { PhasesLoadUnload::FilamentStuck, { Response::Unload } },
 #endif
