@@ -1,5 +1,6 @@
 #include "hal.hpp"
 #include "nfc.hpp"
+#include "device/peripherals.h"
 
 #ifdef STM32H5
     #include <stm32h5xx.h>

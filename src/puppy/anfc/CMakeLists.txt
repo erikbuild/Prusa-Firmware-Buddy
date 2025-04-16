@@ -79,6 +79,7 @@ target_link_libraries(
           BuddyHeaders
           o1heap
           prusa_nfc_reader
+          st25r39xxb
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using

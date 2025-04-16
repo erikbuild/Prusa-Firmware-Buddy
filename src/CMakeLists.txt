@@ -110,6 +110,7 @@ elseif(BOARD STREQUAL "ANFC" OR BOARD STREQUAL "ANFC_H5")
   add_subdirectory(puppy/anfc)
   add_subdirectory(puppy/can_shared)
   add_subdirectory(can)
+  add_subdirectory(hw/NFC_ST25R39XX)
 
 elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
   target_include_directories(firmware PRIVATE .)

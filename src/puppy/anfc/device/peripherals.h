@@ -11,6 +11,7 @@
 namespace hal::peripherals {
 extern FDCAN_HandleTypeDef hfdcan1;
 extern HASH_HandleTypeDef hhash;
+extern SPI_HandleTypeDef hspi1;
 } // namespace hal::peripherals
 
 // src/can does not expect the namespace...
