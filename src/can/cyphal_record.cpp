@@ -6,12 +6,11 @@ namespace can::cyphal {
 
 Record *Record::instance = nullptr; ///< Singleton instance
 
-Record::Record(Task &cyphal_task_)
-    : cyphal_task(cyphal_task_)
-    , log_sender(cyphal_task_, uavcan_diagnostic_Record_1_1_serialize_,
-          uavcan_diagnostic_Record_1_1_FIXED_PORT_ID_, CanardTransferKindMessage,
-          CANARD_NODE_ID_UNSET, ProtoSender::send_timeout_default,
-          CanardPriorityOptional) {
+Record::Record()
+    : log_sender(uavcan_diagnostic_Record_1_1_serialize_,
+        uavcan_diagnostic_Record_1_1_FIXED_PORT_ID_, CanardTransferKindMessage,
+        CANARD_NODE_ID_UNSET, ProtoSender::send_timeout_default,
+        CanardPriorityOptional) {
     assert(instance == nullptr); // Allow only one instance
     instance = this;
 

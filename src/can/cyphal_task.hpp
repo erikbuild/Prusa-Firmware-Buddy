@@ -368,4 +368,7 @@ public:
     void set_filter(uint32_t index, const CanardFilter &filter, bool timestamp, bool high_prio) { driver.set_filter(index, filter, timestamp, high_prio); }
 };
 
+// Cyphal task singleton
+extern Task cyphal_task;
+
 } // namespace can::cyphal

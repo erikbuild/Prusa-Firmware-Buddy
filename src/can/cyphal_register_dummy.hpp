@@ -18,9 +18,8 @@ class RegisterDummy {
     Server<uint8_t, 0, uint8_t, 0> server_list;
 
 public:
-    RegisterDummy(Task &cyphal_task)
+    RegisterDummy()
         : server_list(
-            cyphal_task,
             ProtoSuber::dummy_deserialize, ProtoSender::dummy_serialize, uavcan_register_List_1_0_FIXED_PORT_ID_,
             [this]([[maybe_unused]] const uint8_t &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
                 uint8_t out_data = 0;

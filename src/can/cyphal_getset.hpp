@@ -63,8 +63,6 @@ public:
     using Callback = std::function<void(const T_CONFIG &config, const ProtoSuber::Meta &meta)>;
 
 private:
-    Task &cyphal_task; ///< Cyphal task to lock access to config
-
     T_CONFIG config; ///< Hold the config
 
     Server<uint8_t, 0, T_CONFIG, SIZE_GET_RESPONSE> get_server; ///< Server with empty request and only T_CONFIG in response
@@ -77,7 +75,6 @@ public:
      * @brief Double-server object that is used to configure a device.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task_ Cyphal task used to communicate
      * @param config_ initial default config
      *
      * @param deserialize_fn function to deserialize the "set" config, looks like "module_submodule_ConfigType_1_0_deserialize_"
@@ -91,22 +88,19 @@ public:
      * @param send_timeout timeout to transmit response, see Server for more info
      * @param multipart_timeout timeout for request, see Server for more info
      */
-    GetSetServer(Task &cyphal_task_, const T_CONFIG &config_,
+    GetSetServer(const T_CONFIG &config_,
         SuberCall<T_CONFIG, EXTENT_SET_REQUEST>::DeserializeFn &deserialize_fn, SenderDirect<T_CONFIG, SIZE_GET_RESPONSE>::SerializeFn &serialize_fn,
         CanardPortID get_port_id, CanardPortID set_port_id,
         const Callback callback_,
         CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout)
-        : cyphal_task(cyphal_task_)
-        , config(config_)
+        : config(config_)
         , get_server(
-              cyphal_task_,
               ProtoSuber::dummy_deserialize, serialize_fn, get_port_id,
               [this]([[maybe_unused]] const uint8_t &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
                   get_server.send_response(config);
               },
               send_timeout, multipart_timeout)
         , set_server(
-              cyphal_task_,
               deserialize_fn, ProtoSender::dummy_serialize, set_port_id,
               [this](const T_CONFIG &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
                   config = data;

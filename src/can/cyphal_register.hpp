@@ -180,14 +180,12 @@ class RegisterMachine {
     }
 
 public:
-    RegisterMachine(Task &cyphal_task)
+    RegisterMachine()
         : server_access(
-            cyphal_task,
             uavcan_register_Access_Request_1_0_deserialize_, uavcan_register_Access_Response_1_0_serialize_, uavcan_register_Access_1_0_FIXED_PORT_ID_,
             [this](const uavcan_register_Access_Request_1_0 &data, [[maybe_unused]] const ProtoSuber::Meta &meta) { access(data); },
             ProtoSender::send_timeout_default, ProtoSuber::multipart_timeout_default)
         , server_list(
-              cyphal_task,
               uavcan_register_List_Request_1_0_deserialize_, uavcan_register_List_Response_1_0_serialize_, uavcan_register_List_1_0_FIXED_PORT_ID_,
               [this](const uavcan_register_List_Request_1_0 &data, [[maybe_unused]] const ProtoSuber::Meta &meta) { list(data); },
               ProtoSender::send_timeout_default, ProtoSuber::multipart_timeout_default) {

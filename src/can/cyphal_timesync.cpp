@@ -19,10 +19,9 @@ namespace {
     constexpr int32_t TIM_BASE_CLK_MHZ_ = TIM_BASE_CLK_MHZ;
 } // namespace
 
-TimeSync::TimeSync(Task &cyphal_task_, uint32_t filter_index_)
-    : cyphal_task(cyphal_task_)
-    , filter_index(filter_index_)
-    , sync_suber(cyphal_task_, uavcan_time_Synchronization_1_0_deserialize_, uavcan_time_Synchronization_1_0_FIXED_PORT_ID_,
+TimeSync::TimeSync(uint32_t filter_index_)
+    : filter_index(filter_index_)
+    , sync_suber(uavcan_time_Synchronization_1_0_deserialize_, uavcan_time_Synchronization_1_0_FIXED_PORT_ID_,
           [this](const uavcan_time_Synchronization_1_0 &data, const ProtoSuber::Meta &meta) {
               if (meta.remote_node_id == CANARD_NODE_ID_UNSET) {
                   return; // Anonymous message would mess the following if

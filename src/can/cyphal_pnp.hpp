@@ -16,7 +16,6 @@ namespace can::cyphal {
  * @brief Plug `n` Play object that requests node ID from allocator.
  */
 class PnP {
-    Task &cyphal_task; ///< Cyphal task to use
     CanardMicrosecond next_send = 0U; ///< Next time to send request
 
     CanardNodeID id_giver = CANARD_NODE_ID_UNSET; ///< Node ID of a node that given us our node ID
@@ -31,16 +30,14 @@ class PnP {
 public:
     /**
      * @brief Plug `n` Play object.
-     * @param cyphal_task_ Cyphal task to use
      * @param request_id suggest this ID, we can get any other ID if this is not available
      * @param uid unique ID of this node
      */
-    PnP(Task &cyphal_task_, CanardNodeID request_id, const uint8_t uid[sizeof(uavcan_pnp_NodeIDAllocationData_2_0::unique_id)])
-        : cyphal_task(cyphal_task_)
-        , id_request(cyphal_task_,
-              uavcan_pnp_NodeIDAllocationData_2_0_serialize_, uavcan_pnp_NodeIDAllocationData_2_0_FIXED_PORT_ID_,
-              CanardTransferKindMessage, CANARD_NODE_ID_UNSET, ProtoSender::send_timeout_default, CanardPrioritySlow)
-        , id_response(cyphal_task_,
+    PnP(CanardNodeID request_id, const uint8_t uid[sizeof(uavcan_pnp_NodeIDAllocationData_2_0::unique_id)])
+        : id_request(
+            uavcan_pnp_NodeIDAllocationData_2_0_serialize_, uavcan_pnp_NodeIDAllocationData_2_0_FIXED_PORT_ID_,
+            CanardTransferKindMessage, CANARD_NODE_ID_UNSET, ProtoSender::send_timeout_default, CanardPrioritySlow)
+        , id_response(
               uavcan_pnp_NodeIDAllocationData_2_0_deserialize_, uavcan_pnp_NodeIDAllocationData_2_0_FIXED_PORT_ID_,
               [this](const uavcan_pnp_NodeIDAllocationData_2_0 &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
                   if (memcmp(data.unique_id, request_data.unique_id, sizeof(data.unique_id))) { // This is not our ID

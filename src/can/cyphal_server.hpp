@@ -14,7 +14,6 @@ namespace can::cyphal {
  */
 class ServerVoid : public ProtoSuber {
 private:
-    Task &cyphal_task; ///< Cyphal task to add itself to
     SenderDirectLambda response; ///< Response message
 
     std::atomic<bool> awaiting_response = false; ///< True if response should be sent ASAP
@@ -54,17 +53,14 @@ protected:
      * @note This uses void to send data, so it is dangerous. Do not use without the templated face.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task_ Cyphal task used to communicate
      * @param port_id Cyphal service port-ID
      * @param extent maximum size of serialized data
      * @param send_timeout timeout to transmit response, discard if it gets stuck in queue for this long
      * @param multipart_timeout timeout for request, this applies to multipart messages that arrive far apart
      */
-    ServerVoid(Task &cyphal_task_, CanardPortID port_id, size_t extent, CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout)
+    ServerVoid(CanardPortID port_id, size_t extent, CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout)
         : ProtoSuber(CanardTransferKindRequest, port_id, extent, multipart_timeout)
-        , cyphal_task(cyphal_task_)
         , response(
-              cyphal_task_,
               [this](const void *const data, uint8_t *const buffer, size_t *const size) -> int8_t {
                   return serialize_response(data, buffer, size);
               },
@@ -174,7 +170,6 @@ public:
      * @brief Server object that receives a request and sends a response.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task Cyphal task used to communicate
      * @param deserialize_request_fn_ function to deserialize the request data, looks like "module_submodule_ServiceType_Request_1_0_deserialize_"
      * @param serialize_response_fn_ function to serialize the response data, looks like "module_submodule_ServiceType_Response_1_0_serialize_"
      *
@@ -191,10 +186,10 @@ public:
      * @note Roundtrip delay limit and suggested call() timeout is sum of send_timeout and multipart_timeout in both client and server.
      *    If same, then it is "2 * (send_timeout + multipart_timeout)" or "2 * get_client_timeout()".
      */
-    Server(Task &cyphal_task, SuberCall<T_REQUEST, EXTENT_REQUEST>::DeserializeFn &deserialize_request_fn_, SenderDirect<T_RESPONSE, SIZE_RESPONSE>::SerializeFn &serialize_response_fn_,
+    Server(SuberCall<T_REQUEST, EXTENT_REQUEST>::DeserializeFn &deserialize_request_fn_, SenderDirect<T_RESPONSE, SIZE_RESPONSE>::SerializeFn &serialize_response_fn_,
         CanardPortID port_id, const SuberCall<T_REQUEST, EXTENT_REQUEST>::Callback callback_,
         CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout)
-        : ServerVoid(cyphal_task, port_id, EXTENT_REQUEST, send_timeout, multipart_timeout)
+        : ServerVoid(port_id, EXTENT_REQUEST, send_timeout, multipart_timeout)
         , callback(callback_)
         , deserialize_request_fn(deserialize_request_fn_)
         , serialize_response_fn(serialize_response_fn_) {}

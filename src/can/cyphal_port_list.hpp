@@ -202,10 +202,9 @@ class PortList {
 public:
     /**
      * @brief Periodically publish list of used ports.
-     * @param cyphal_task Cyphal task to send
      */
-    PortList(Task &cyphal_task)
-        : list_sender(cyphal_task, {}, serialize, uavcan_node_port_List_1_0_FIXED_PORT_ID_,
+    PortList()
+        : list_sender({}, serialize, uavcan_node_port_List_1_0_FIXED_PORT_ID_,
             uavcan_node_port_List_1_0_MAX_PUBLICATION_PERIOD * 1000000,
             ProtoSender::send_timeout_default, CanardPriorityOptional)
         , timesync_port(uavcan_time_Synchronization_1_0_FIXED_PORT_ID_) {

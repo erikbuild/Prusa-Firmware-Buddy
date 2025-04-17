@@ -19,7 +19,6 @@ namespace can::cyphal {
  */
 class SenderDirectVoid : public ProtoSender {
 protected:
-    Task &cyphal_task; ///< Cyphal task to send the message
     CanardNodeID remote_node_id; ///< Remote node-ID, used for requests
     CanardTransferID next_transfer_id = 0; ///< Next transfer ID that will be sent
 
@@ -80,7 +79,6 @@ protected:
      * @brief Object that directly sends message, request or response.
      * @note No need to call add_to_task(), this is not registered with Cyphal Task.
      *
-     * @param cyphal_task Cyphal task to send the message
      * @param port_id Cyphal message port-ID
      * @param kind message, request or response
      * @param remote_node_id remote node-ID, used for requests and responses
@@ -88,11 +86,10 @@ protected:
      * @param timeout timeout to transmit, discard if it gets stuck in queue for this long
      * @param priority Cyphal priority of the message
      */
-    SenderDirectVoid(Task &cyphal_task_, CanardPortID port_id,
+    SenderDirectVoid(CanardPortID port_id,
         CanardTransferKind kind_, CanardNodeID remote_node_id_,
         CanardMicrosecond timeout, CanardPriority priority)
         : ProtoSender(port_id, timeout, priority)
-        , cyphal_task(cyphal_task_)
         , remote_node_id(remote_node_id_)
         , kind(kind_) {
         // Remote node-ID should be set only for requests and responses
@@ -153,10 +150,10 @@ class SenderDirectLambda final : public SenderDirectVoid {
     }
 
 public:
-    SenderDirectLambda(Task &cyphal_task_, const SerializeVoid serialize_fn_, CanardPortID port_id,
+    SenderDirectLambda(const SerializeVoid serialize_fn_, CanardPortID port_id,
         CanardTransferKind kind_, CanardNodeID remote_node_id_,
         CanardMicrosecond timeout, CanardPriority priority)
-        : SenderDirectVoid(cyphal_task_, port_id, kind_, remote_node_id_, timeout, priority)
+        : SenderDirectVoid(port_id, kind_, remote_node_id_, timeout, priority)
         , serialize_fn(serialize_fn_) {
     }
 
@@ -185,7 +182,6 @@ public:
      * @brief Object that directly sends message, request or response.
      * @note No need to call add_to_task(), this is not registered with Cyphal Task.
      *
-     * @param cyphal_task Cyphal task to send the message
      * @param serialize_fn_ function to serialize the data, looks like "module_submodule_MessageType_1_0_serialize_"
      * @param port_id Cyphal message port-ID
      * @param kind message, request or response
@@ -194,10 +190,10 @@ public:
      * @param timeout timeout to transmit, discard if it gets stuck in queue for this long
      * @param priority Cyphal priority of the message
      */
-    SenderDirect(Task &cyphal_task, SerializeFn &serialize_fn_, CanardPortID port_id,
+    SenderDirect(SerializeFn &serialize_fn_, CanardPortID port_id,
         CanardTransferKind kind = CanardTransferKindMessage, CanardNodeID remote_node_id = CANARD_NODE_ID_UNSET,
         CanardMicrosecond timeout = ProtoSender::send_timeout_default, CanardPriority priority = CanardPriorityNominal)
-        : SenderDirectVoid(cyphal_task, port_id, kind, remote_node_id, timeout, priority)
+        : SenderDirectVoid(port_id, kind, remote_node_id, timeout, priority)
         , serialize_fn(serialize_fn_) {
     }
 

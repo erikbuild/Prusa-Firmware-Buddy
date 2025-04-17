@@ -148,10 +148,9 @@ int8_t SimpleRegisterClient::deserialize(SimpleRegisterResponse *const obj, cons
     return 0;
 }
 
-SimpleRegisterClient::SimpleRegisterClient(Task &cyphal_task,
-    CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout, CanardPriority priority)
+SimpleRegisterClient::SimpleRegisterClient(CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout, CanardPriority priority)
     : Client(
-        cyphal_task, serialize, deserialize,
+        serialize, deserialize,
         uavcan_register_Access_1_0_FIXED_PORT_ID_, CANARD_NODE_ID_UNSET,
         [&](const SimpleRegisterResponse &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
             response_value = data.reg; // Just store response

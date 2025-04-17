@@ -38,11 +38,8 @@ class SuberCallVoid : public ProtoSuber {
     }
 
 protected:
-    Task &cyphal_task; ///< Cyphal task to add itself to
-
-    SuberCallVoid(Task &cyphal_task_, CanardPortID port_id, size_t extent, CanardTransferKind kind, CanardMicrosecond timeout)
-        : ProtoSuber(kind, port_id, extent, timeout)
-        , cyphal_task(cyphal_task_) {}
+    SuberCallVoid(CanardPortID port_id, size_t extent, CanardTransferKind kind, CanardMicrosecond timeout)
+        : ProtoSuber(kind, port_id, extent, timeout) {}
 
     /**
      * @brief Callback when message, request or response is received.
@@ -108,7 +105,6 @@ public:
      * @brief Object that can be subscribed and handles deserialization.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task Cyphal task to add itself to
      * @param deserialize_fn_ function to deserialize the data, looks like "module_submodule_MessageType_1_0_deserialize_"
      * @param callback_ callback to be called when data is received
      *    @note Callback is called from the CAN thread. Do not use this callback for heavy processing.
@@ -118,9 +114,9 @@ public:
      * @param kind_ message, request or response
      * @param timeout timeout for message, this applies to multipart messages that arrive far apart
      */
-    SuberCall(Task &cyphal_task, DeserializeFn &deserialize_fn_, CanardPortID port_id, const Callback callback_,
+    SuberCall(DeserializeFn &deserialize_fn_, CanardPortID port_id, const Callback callback_,
         CanardTransferKind kind = CanardTransferKindMessage, CanardMicrosecond timeout = ProtoSuber::multipart_timeout_default)
-        : SuberCallVoid(cyphal_task, port_id, EXTENT, kind, timeout)
+        : SuberCallVoid(port_id, EXTENT, kind, timeout)
         , deserialize_fn(deserialize_fn_)
         , callback(callback_) {
         assert(callback);

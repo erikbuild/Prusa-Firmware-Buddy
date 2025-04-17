@@ -58,17 +58,13 @@ class ClientVoid : public ProtoSuber {
     }
 
 protected:
-    Task &cyphal_task; ///< Cyphal task to add itself to
-
-    ClientVoid(Task &cyphal_task_, CanardPortID port_id, CanardNodeID remote_node_id, size_t extent, CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout, CanardPriority priority)
+    ClientVoid(CanardPortID port_id, CanardNodeID remote_node_id, size_t extent, CanardMicrosecond send_timeout, CanardMicrosecond multipart_timeout, CanardPriority priority)
         : ProtoSuber(CanardTransferKindResponse, port_id, extent, multipart_timeout)
         , request(
-              cyphal_task_,
               [this](const void *const data, uint8_t *const buffer, size_t *const size) -> int8_t {
                   return serialize_request(data, buffer, size);
               },
-              port_id, CanardTransferKindRequest, remote_node_id, send_timeout, priority)
-        , cyphal_task(cyphal_task_) {
+              port_id, CanardTransferKindRequest, remote_node_id, send_timeout, priority) {
         assert(response_semaphore != nullptr);
     }
 
@@ -260,7 +256,6 @@ public:
      * @brief Client object that sends a request and receives a response.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task Cyphal task used to communicate
      * @param serialize_request_fn_ function to serialize the request data, looks like "module_submodule_ServiceType_Request_1_0_serialize_"
      * @param deserialize_response_fn_ function to deserialize the response data, looks like "module_submodule_ServiceType_Response_1_0_deserialize_"
      *
@@ -285,14 +280,14 @@ public:
      *
      * @param priority Cyphal priority of the request
      */
-    Client(Task &cyphal_task,
+    Client(
         SenderDirect<T_REQUEST, SIZE_REQUEST>::SerializeFn &serialize_request_fn_, SuberCall<T_RESPONSE, EXTENT_RESPONSE>::DeserializeFn &deserialize_response_fn_,
         CanardPortID port_id, CanardNodeID remote_node_id,
         const SuberCall<T_RESPONSE, EXTENT_RESPONSE>::Callback callback_,
         CanardMicrosecond send_timeout,
         CanardMicrosecond multipart_timeout,
         CanardPriority priority = CanardPriorityNominal)
-        : ClientVoid(cyphal_task, port_id, remote_node_id, EXTENT_RESPONSE, send_timeout, multipart_timeout, priority)
+        : ClientVoid(port_id, remote_node_id, EXTENT_RESPONSE, send_timeout, multipart_timeout, priority)
         , callback(callback_)
         , serialize_request_fn(serialize_request_fn_)
         , deserialize_response_fn(deserialize_response_fn_) {

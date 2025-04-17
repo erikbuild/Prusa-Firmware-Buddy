@@ -22,7 +22,6 @@ namespace detail {
  * This is only the client side of things. The server side is a part of can::Task.
  */
 class TimeSync {
-    Task &cyphal_task; ///< Cyphal task to subscribe to
     uint32_t filter_index = 0; ///< Index of the CAN Rx filter to use
 
     struct LocalRemoteSet {
@@ -114,10 +113,9 @@ public:
 
     /**
      * @brief Construct a new TimeSync client object.
-     * @param cyphal_task_ Cyphal task to subscribe to
      * @param filter_index_ Index of the CAN Rx filter to use
      */
-    TimeSync(Task &cyphal_task_, uint32_t filter_index_);
+    TimeSync(uint32_t filter_index_);
 
     /**
      * @brief Add itself to task and to portlist.

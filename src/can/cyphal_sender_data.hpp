@@ -39,7 +39,6 @@ public:
 
 private:
     SerializeFn &serialize_fn; ///< Function to serialize the data
-    Task &cyphal_task; ///< Cyphal task to lock access to data
     T data; ///< Data to be sent
 
 public:
@@ -47,7 +46,6 @@ public:
      * @brief Object that holds message data and handles periodic publication.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task_ Cyphal task to lock access to the data
      * @param data_ data to be published
      * @param serialize_fn_ function to serialize the data, looks like "module_submodule_MessageType_1_0_serialize_"
      * @param port_id Cyphal message port-ID
@@ -55,11 +53,10 @@ public:
      * @param timeout timeout to transmit, discard if it gets stuck in queue for this long
      * @param priority Cyphal priority of the message
      */
-    SenderData(Task &cyphal_task_, const T &data_, SerializeFn &serialize_fn_, CanardPortID port_id,
+    SenderData(const T &data_, SerializeFn &serialize_fn_, CanardPortID port_id,
         CanardMicrosecond period = 0, CanardMicrosecond timeout = ProtoSender::send_timeout_default, CanardPriority priority = CanardPriorityNominal)
         : ProtoSenderPeriodic(port_id, period, timeout, priority)
         , serialize_fn(serialize_fn_)
-        , cyphal_task(cyphal_task_)
         , data(data_) {}
 
     /**

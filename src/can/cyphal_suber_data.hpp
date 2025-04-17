@@ -33,7 +33,6 @@ public:
 
 private:
     DeserializeFn &deserialize_fn; ///< Function to deserialize the data
-    Task &cyphal_task; ///< Cyphal task to lock access to data
     T data[SOURCES] = {}; ///< Received data
     Meta meta[SOURCES] = {}; ///< Metadata of the above
     std::array<CanardNodeID, SOURCES> source_nodes; ///< Node-IDs that can be received
@@ -74,7 +73,6 @@ public:
      * @brief Object that can be subscribed and handles deserialization of messages.
      * @note After creation, you must call add_to_task() to add itself to Cyphal Task.
      *
-     * @param cyphal_task_ Cyphal task to lock access to the data
      * @param deserialize_fn_ function to deserialize the data, looks like "module_submodule_MessageType_1_0_deserialize_"
      * @param port_id_ Cyphal message port-ID
      * @param source_nodes_ node-IDs that can be received into each data bin,
@@ -82,13 +80,12 @@ public:
      *                      use CANARD_NODE_ID_MAX + 1 to receive nothing
      * @param timeout_ timeout for message, this applies to multipart messages that arrive far apart
      */
-    SuberDataSource(Task &cyphal_task_, DeserializeFn &deserialize_fn_,
+    SuberDataSource(DeserializeFn &deserialize_fn_,
         CanardPortID port_id,
         std::array<CanardNodeID, SOURCES> source_nodes_ = { CANARD_NODE_ID_UNSET }, // Default, catch any source to first bin
         CanardMicrosecond timeout = ProtoSuber::multipart_timeout_default)
         : ProtoSuber(CanardTransferKindMessage, port_id, EXTENT, timeout)
         , deserialize_fn(deserialize_fn_)
-        , cyphal_task(cyphal_task_)
         , source_nodes(source_nodes_) {}
 
     /**

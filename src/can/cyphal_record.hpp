@@ -17,8 +17,6 @@ namespace can::cyphal {
  * Use Record::extern_log_event() as log_event_fn.
  */
 class Record {
-    Task &cyphal_task; ///< Task to use for sending the log messages
-
     /// Cyphal sender object
     SenderDirect<uavcan_diagnostic_Record_1_1, uavcan_diagnostic_Record_1_1_SERIALIZATION_BUFFER_SIZE_BYTES_> log_sender;
 
@@ -58,9 +56,8 @@ public:
 
     /**
      * @brief Initialize the Cyphal Record logging destination.
-     * @param cyphal_task the task to use for sending the log messages
      */
-    Record(Task &cyphal_task);
+    Record();
 
     ~Record();
 

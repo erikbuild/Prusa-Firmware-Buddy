@@ -87,14 +87,13 @@ class SimpleRegisterClient : public Client<SimpleRegisterRequest,
 public:
     /**
      * @brief Construct a new register client object.
-     * @param cyphal_task Cyphal task to use for communication
      * @warning Don't forget to add_to_task() after construction.
      *
      * @param send_timeout timeout to transmit request, discard if it gets stuck in queue for this long
      * @param multipart_timeout timeout for response, this applies to multipart messages that arrive far apart
      * @param priority Cyphal priority of the request
      */
-    SimpleRegisterClient(Task &cyphal_task,
+    SimpleRegisterClient(
         CanardMicrosecond send_timeout = ProtoSender::send_timeout_default,
         CanardMicrosecond multipart_timeout = ProtoSuber::multipart_timeout_default,
         CanardPriority priority = CanardPriorityNominal);
