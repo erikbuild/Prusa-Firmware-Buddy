@@ -285,17 +285,11 @@
             "type": "cortex-debug",
             "servertype": "openocd",
             "armToolchainPath": "${workspaceRoot}/.dependencies/gcc-arm-none-eabi-13.2.1/bin",
-            "openOCDPreConfigLaunchCommands": [
-                "set PUPPY_TYPE anfc_h5"
-            ],
             "postLaunchCommands": [
                 "set $pc = &Reset_Handler"
             ],
             "configFiles": [
-                "${workspaceRoot}/utils/debug/00_common.cfg",
-                "${workspaceRoot}/utils/debug/10_custom_config_defaults.cfg",
-                "${workspaceRoot}/utils/debug/20_board_puppy.cfg",
-                "${workspaceRoot}/utils/debug/30_rtt_workaround.cfg"
+                "${workspaceRoot}/utils/debug/anfc_h5.cfg",
             ],
             "toolchainPrefix": "arm-none-eabi",
             "device": "STM32H503CBU7",
