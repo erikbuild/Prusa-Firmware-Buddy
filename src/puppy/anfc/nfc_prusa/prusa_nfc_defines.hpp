@@ -6,6 +6,7 @@ enum class NFCRegion : uint8_t {
     meta,
     main,
     auxiliary,
+    _cnt,
 };
 
 /// Section and region are virtually the same

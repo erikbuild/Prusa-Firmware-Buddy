@@ -69,6 +69,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_MUTEXES                       1
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configUSE_COUNTING_SEMAPHORES           1
+#define configTASK_NOTIFICATION_ARRAY_ENTRIES   2
 #define INCLUDE_vTaskDelay                      1
 #define INCLUDE_vTaskSuspend                    1
 

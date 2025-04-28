@@ -45,7 +45,17 @@ else()
   message(FATAL_ERROR "Unsupported nfc board: ${BOARD}")
 endif()
 
-target_sources(firmware PRIVATE enum_mapping_check.cpp hal.cpp main.cpp nfc.cpp stdlib.cpp)
+target_sources(
+  firmware
+  PRIVATE "${CMAKE_SOURCE_DIR}/src/device/multi_watchdog.cpp"
+          cyphal_anfc_node.cpp
+          enum_mapping_check.cpp
+          hal.cpp
+          main.cpp
+          nfc.cpp
+          nfc_task.cpp
+          stdlib.cpp
+  )
 
 target_include_directories(firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal)
 
