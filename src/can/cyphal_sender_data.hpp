@@ -30,7 +30,7 @@ struct TransformResult {
  * @note Constructor parameter "fn_": function to serialize the data, looks like "module_submodule_MessageType_1_0_serialize_"
  */
 template <typename T, size_t SIZE>
-class SenderData final : public ProtoSenderPeriodic {
+class SenderData : public ProtoSenderPeriodic {
 public:
     static_assert(MAX_SERIALIZED_SIZE_BYTES >= SIZE, "Increase size of buffer for the serialized data!");
 
@@ -149,6 +149,21 @@ public:
         }
 
         return res.success;
+    }
+};
+
+template <typename Traits>
+using SenderDataTraitedBase = SenderData<typename Traits::Type, Traits::serialization_buffer_size_bytes>;
+
+template <typename Traits, CanardPortID port_id = Traits::fixed_port_id>
+class SenderDataTraited : public SenderDataTraitedBase<Traits> {
+
+public:
+    SenderDataTraited(CanardMicrosecond period = 0, CanardMicrosecond timeout = ProtoSender::send_timeout_default, CanardPriority priority = CanardPriorityNominal)
+        : SenderDataTraitedBase<Traits>({}, *Traits::serialize, port_id, period, timeout, priority) {
+        if constexpr (Traits::has_fixed_port_id) {
+            static_assert(port_id == Traits::fixed_port_id);
+        }
     }
 };
 
