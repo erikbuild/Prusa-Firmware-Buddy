@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <algorithm>
 
 /// Identifier for a tag the NFC reader is managing
 using NFCTagID = uint16_t;
@@ -14,6 +15,13 @@ using NFCOffset = uint16_t;
 struct NFCSpan {
 
 public:
+    static constexpr NFCSpan from_offset_end(NFCOffset offset, NFCOffset end) {
+        return NFCSpan {
+            .offset = offset,
+            .size = static_cast<NFCOffset>(end - offset),
+        };
+    }
+
     NFCOffset offset = 0;
     NFCOffset size = 0;
 
@@ -22,8 +30,24 @@ public:
     }
 
 public:
+    constexpr bool is_empty() const {
+        return size == 0;
+    }
+
     constexpr bool contains(const NFCSpan &subspan) const {
         return (subspan.offset >= offset) && (subspan.end() <= end());
+    }
+
+    constexpr NFCSpan combined(const NFCSpan &other) {
+        if (is_empty()) {
+            return other;
+
+        } else if (other.is_empty()) {
+            return *this;
+
+        } else {
+            return from_offset_end(std::min(offset, other.offset), std::max(end(), other.end()));
+        }
     }
 
     constexpr bool operator==(const NFCSpan &) const = default;
