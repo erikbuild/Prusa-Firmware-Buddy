@@ -126,6 +126,15 @@ public:
     /// To be called if the tag gets somehow changed outside of the PrusaNFCReader control
     void invalidate_cache(NFCTagID tag);
 
+    /// Completely forgets the tag and allows the tag ID to be reused
+    /// If the tag is still present, a new TagDetected event will be emitted
+    void forget_tag(NFCTagID tag);
+
+    /// Completely reset reader state.
+    /// Should invalidate all caches and memory.
+    /// As a result, all nearby tags should emit TagDetected events
+    void reset_state();
+
 public:
     /// \returns metadata for the tag. Employs the cache if possible
     [[nodiscard]] IOResult<const TagMetadata *> read_metadata(NFCTagID tag);

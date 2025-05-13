@@ -16,6 +16,7 @@ public:
     };
 
     /// The reader has lost connection with a tag
+    /// Please call \p forget_tag after processing this event to allow reuse of the tag ID
     struct TagLostEvent {
         NFCTagID tag;
     };
@@ -46,4 +47,10 @@ public:
     /// Reads a single event and stores it in \p e
     /// \returns false if there is no event
     [[nodiscard]] virtual bool get_event(Event &e) = 0;
+
+    /// Completely forgets the tag and allows the tag ID to be reused
+    /// If the tag is still present, a new TagDetected event will be emitted
+    virtual void forget_tag(NFCTagID tag) = 0;
+
+    virtual void reset_state() = 0;
 };

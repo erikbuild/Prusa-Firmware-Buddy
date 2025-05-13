@@ -66,6 +66,17 @@ void PrusaNFCReader::invalidate_cache(NFCTagID tag) {
     }
 }
 
+void PrusaNFCReader::forget_tag(NFCTagID tag) {
+    invalidate_cache(tag);
+    reader_.forget_tag(tag);
+}
+
+void PrusaNFCReader::reset_state() {
+    metadata_cache_.clear();
+    read_buffer_cache_ = {};
+    reader_.reset_state();
+}
+
 void PrusaNFCReader::set_params(const Params &set) {
     params_ = set;
     metadata_cache_.clear();

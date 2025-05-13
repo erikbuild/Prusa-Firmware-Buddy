@@ -89,6 +89,12 @@ public:
     [[nodiscard]] virtual bool get_event(Event &e) final {
         return false;
     }
+
+    virtual void forget_tag(NFCTagID tag) final {
+    }
+
+    virtual void reset_state() final {
+    }
 };
 
 NFCSection section_for_field(NFCMetaField) {
