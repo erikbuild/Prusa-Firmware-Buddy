@@ -9,6 +9,12 @@
     #error
 #endif
 
+extern "C" {
+#include <FreeRTOSConfig.h>
+}
+static_assert(configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY == 2);
+#define ISR_PRIORITY_DEFAULT 2 // default ISR priority, used by ISRs that don't need specific ISR priority
+
 // SVC_Handler + PendSV_Handler + SysTick_Handler are defined by FreeRTOS
 
 const std::span<std::byte> hal::memory::peripheral_address_region(reinterpret_cast<std::byte *>(PERIPH_BASE_NS), 0x10000000);
@@ -161,10 +167,10 @@ void hal::init_can() {
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* FDCAN1 interrupt Init */
-    HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, ISR_PRIORITY_DEFAULT, 0);
     HAL_NVIC_EnableIRQ(FDCAN1_IT0_IRQn);
 
-    HAL_NVIC_SetPriority(FDCAN1_IT1_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(FDCAN1_IT1_IRQn, ISR_PRIORITY_DEFAULT, 0);
     HAL_NVIC_EnableIRQ(FDCAN1_IT1_IRQn);
 
 #else
@@ -236,7 +242,7 @@ void hal::init_gpio() {
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    HAL_NVIC_SetPriority(EXTI5_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(EXTI5_IRQn, ISR_PRIORITY_DEFAULT, 0);
     HAL_NVIC_EnableIRQ(EXTI5_IRQn);
 
     GPIO_InitStruct.Pin = GPIO_PIN_6;
