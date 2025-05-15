@@ -171,7 +171,7 @@ public:
  * @note Constructor parameter "fn_": function to serialize the data, looks like "module_submodule_MessageType_1_0_serialize_"
  */
 template <typename T, size_t SIZE>
-class SenderDirect final : public SenderDirectVoid {
+class SenderDirect : public SenderDirectVoid {
 public:
     static_assert(MAX_SERIALIZED_SIZE_BYTES >= SIZE, "Increase size of buffer for the serialized data!");
 
@@ -228,6 +228,21 @@ private:
     /// Inherited from SenderDirectVoid, call typed function
     int8_t serialize(const void *data, uint8_t *buffer, size_t *inout_buffer_size_bytes) override {
         return serialize_fn(reinterpret_cast<const T *>(data), buffer, inout_buffer_size_bytes);
+    }
+};
+
+template <typename Traits>
+using SenderDirectTraitedBase = SenderDirect<typename Traits::Type, Traits::serialization_buffer_size_bytes>;
+
+template <typename Traits, CanardPortID port_id = Traits::fixed_port_id>
+class SenderDirectTraited final : public SenderDirectTraitedBase<Traits> {
+
+public:
+    SenderDirectTraited()
+        : SenderDirectTraitedBase<Traits>(*Traits::serialize, port_id) {
+        if constexpr (Traits::has_fixed_port_id) {
+            static_assert(port_id == Traits::fixed_port_id);
+        }
     }
 };
 
