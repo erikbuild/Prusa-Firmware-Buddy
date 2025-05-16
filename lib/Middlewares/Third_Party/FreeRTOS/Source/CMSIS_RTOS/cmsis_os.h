@@ -26,7 +26,7 @@
  *
  *----------------------------------------------------------------------------
  *
- * Portions Copyright © 2016 STMicroelectronics International N.V. All rights reserved.
+ * Portions Copyright ï¿½ 2016 STMicroelectronics International N.V. All rights reserved.
  * Portions Copyright (c) 2013 ARM LIMITED
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without
@@ -103,7 +103,12 @@
 #include "timers.h"
 #include "queue.h"
 #include "semphr.h"
+
+#if portUSING_MPU_WRAPPERS
+#include "mpu_wrappers.h"
+#else
 #include "event_groups.h"
+#endif
 
 /**
 \page cmsis_os_h Header File Template: cmsis_os.h
