@@ -17,7 +17,7 @@ _ssize_t _read_r(struct _reent *, int, void *, size_t) {
 }
 
 _ssize_t _write_r(struct _reent *, int, const void *, size_t) {
-    hal_panic();
+    return 0;
 }
 
 int __attribute__((used)) _kill_r(struct _reent *, int, int) {
@@ -25,7 +25,7 @@ int __attribute__((used)) _kill_r(struct _reent *, int, int) {
 }
 
 int __attribute__((used)) _getpid_r(struct _reent *) {
-    hal_panic();
+    return -1;
 }
 
 int _fstat(int, struct stat *) {

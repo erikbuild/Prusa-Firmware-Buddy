@@ -19,6 +19,7 @@ if(BOARD STREQUAL "ANFC")
   target_sources(firmware PRIVATE startup/stm32c092.s system_stm32c0xx.c)
 
   set(HAL_LIB "STM32C0::HAL")
+  set(CMSIS_LIB "STM32C0xx::CMSIS")
 
 elseif(BOARD STREQUAL "ANFC_H5")
   add_library(HAL_Config INTERFACE)
@@ -39,13 +40,14 @@ elseif(BOARD STREQUAL "ANFC_H5")
   target_sources(firmware PRIVATE startup/stm32h503.s system_stm32h5xx.c)
 
   set(HAL_LIB "STM32H5::HAL")
+  set(CMSIS_LIB "STM32H5xx::CMSIS")
 else()
   message(FATAL_ERROR "Unsupported nfc board: ${BOARD}")
 endif()
 
 target_sources(firmware PRIVATE hal.cpp main.cpp nfc.cpp stdlib.c)
 
-target_include_directories(firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal)
 
 add_subdirectory(nfc_ll)
 add_subdirectory(nfc_prusa)
@@ -59,6 +61,8 @@ target_link_libraries(
           nanocbor
           buddy_utils
           freertos
+          canard
+          BuddyHeaders
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using
@@ -66,4 +70,8 @@ target_link_libraries(
 target_link_libraries(firmware PRIVATE FreeRTOS::FreeRTOS)
 
 add_library(FreeRTOS_Config INTERFACE)
+target_link_libraries(FreeRTOS_Config INTERFACE ${CMSIS_LIB})
 target_include_directories(FreeRTOS_Config INTERFACE config)
+
+include(../../can/data_types/TranspileDsdl.cmake)
+transpile_dsdl()
