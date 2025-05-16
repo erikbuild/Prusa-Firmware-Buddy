@@ -35,7 +35,9 @@ struct __attribute__((packed)) DataExchange {
     LoveBoardEeprom loveboard_eeprom; // 32B
 }; // 100B in total
 
-DataExchange ram_data_exchange __attribute__((section(".boot_fw_data_exchange")));
+// Do not forget to modify linker script if you change any of those.
+DataExchange &ram_data_exchange = *(DataExchange *)SRAM1_BASE;
+static_assert(sizeof(DataExchange) == 100);
 
 #if !BOOTLOADER()
 
