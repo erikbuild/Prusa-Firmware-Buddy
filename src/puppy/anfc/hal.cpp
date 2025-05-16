@@ -24,6 +24,10 @@ void hal::panic() {
     NVIC_SystemReset();
 }
 
+void hal::reset() {
+    NVIC_SystemReset();
+}
+
 void hal::set_status_led(bool set) {
     // Note: the LED logic is inverted on the board
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, set ? GPIO_PIN_RESET : GPIO_PIN_SET);

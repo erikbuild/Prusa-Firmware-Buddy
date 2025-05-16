@@ -9,6 +9,7 @@ void init();
 void set_status_led(bool set);
 
 void __attribute__((noreturn)) panic();
+void __attribute__((noreturn)) reset();
 
 namespace memory {
 
