@@ -61,6 +61,9 @@
 #elif defined(BOARD) && BOARD == BOARD_XBUDDY_EXTENSION
     #define BOARD_IS_XBUDDY_EXTENSION() 1
     #define BOARD_STRING()              "XBUDDY_EXTENSION"
+#elif defined(BOARD) && (BOARD == BOARD_ANFC || BOARD == BOARD_ANFC_H5)
+    #define BOARD_IS_ANFC() 1
+    #define BOARD_STRING()  "ANFC"
 #else
     #error Please define the BOARD macro
 #endif
@@ -91,4 +94,8 @@
 
 #ifndef BOARD_IS_XBUDDY_EXTENSION
     #define BOARD_IS_XBUDDY_EXTENSION() 0
+#endif
+
+#ifndef BOARD_IS_ANFC
+    #define BOARD_IS_ANFC() 0
 #endif
