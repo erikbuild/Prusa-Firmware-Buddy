@@ -141,7 +141,7 @@ endif()
 
 target_include_directories(BuddyHeaders INTERFACE include)
 
-target_link_libraries(BuddyHeaders INTERFACE FreeRTOS::FreeRTOS FreeRTOS::CMSIS)
+target_link_libraries(BuddyHeaders INTERFACE FreeRTOS::FreeRTOS)
 
 # Define printer type and version
 set(PRINTER_VERSION "1") # default version
@@ -211,10 +211,12 @@ endif()
 #
 
 # STM32::USBHost
-add_library(STM32_USBHost_Config ALIAS BuddyHeaders)
+add_library(STM32_USBHost_Config INTERFACE)
+target_link_libraries(STM32_USBHost_Config INTERFACE BuddyHeaders FreeRTOS::CMSIS)
 
 # STM32::Utilities::CPU
-add_library(STM32_Utilities_CPU_Config ALIAS BuddyHeaders)
+add_library(STM32_Utilities_CPU_Config INTERFACE)
+target_link_libraries(STM32_Utilities_CPU_Config INTERFACE BuddyHeaders FreeRTOS::CMSIS)
 
 #
 # Configure SEGGER
@@ -228,14 +230,14 @@ target_link_libraries(Segger_Config INTERFACE BuddyHeaders)
 #
 
 add_library(LwIP_Config INTERFACE)
-target_link_libraries(LwIP_Config INTERFACE BuddyHeaders log_interface)
+target_link_libraries(LwIP_Config INTERFACE BuddyHeaders log_interface FreeRTOS::CMSIS)
 
 #
 # Configure FatFs
 #
 
 add_library(FatFs_Config INTERFACE)
-target_link_libraries(FatFs_Config INTERFACE BuddyHeaders logging STM32::USBHost)
+target_link_libraries(FatFs_Config INTERFACE BuddyHeaders logging STM32::USBHost FreeRTOS::CMSIS)
 
 #
 # Configure Marlin
@@ -247,14 +249,14 @@ target_include_directories(
   Marlin_Config INTERFACE include/marlin src/common src/gui src/marlin_stubs/include
   )
 target_include_directories(Marlin_Config INTERFACE src/common/selftest)
-target_link_libraries(Marlin_Config INTERFACE BuddyHeaders FreeRTOS::FreeRTOS)
+target_link_libraries(Marlin_Config INTERFACE BuddyHeaders FreeRTOS::FreeRTOS FreeRTOS::CMSIS)
 
 #
 # Configure tinyusb
 #
 add_library(tinyusb_dependencies INTERFACE)
 target_include_directories(tinyusb_dependencies INTERFACE include/tinyusb)
-target_link_libraries(tinyusb_dependencies INTERFACE FreeRTOS::FreeRTOS)
+target_link_libraries(tinyusb_dependencies INTERFACE FreeRTOS::FreeRTOS FreeRTOS::CMSIS)
 
 #
 # Global Compiler & Linker Configuration
