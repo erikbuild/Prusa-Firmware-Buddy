@@ -91,36 +91,23 @@ const img::Resource *get_icon(Action action, Tool tool) {
 }
 
 struct SnakeConfig {
-    enum class State {
-        reset,
-        first,
-        not_first,
-    };
-
     void reset() {
-        break_after_submenu = false;
-        in_progress = false;
+        *this = {};
         last_action = get_last_action();
-        last_tool = Tool::_first;
-        state = State::reset;
     }
 
     void next(Action action, Tool tool) {
         in_progress = true;
         last_action = action;
         last_tool = tool;
-        if (state == State::reset) {
-            state = State::first;
-        } else if (state == State::first) {
-            state = State::not_first;
-        }
     }
 
+    bool in_progress { false }; ///< Is snake currently running?
     bool break_after_submenu { false }; ///< User selected to do one submenu and then stop
-    bool in_progress { false };
-    Action last_action { Action::_last };
+    bool auto_continue { false }; ///< Automatically continue, don't ask user for confirmation
+
+    Action last_action { Action::_last }; ///< Last action that we'have done
     Tool last_tool { Tool::_first };
-    State state { State::reset };
 };
 
 } // namespace
@@ -175,7 +162,7 @@ void do_snake(Action action, Tool tool = Tool::_first) {
     }
 
     if (has_submenu(action)) {
-        if (snake_config.state == SnakeConfig::State::reset || tool == Tool::_first) { // Ask only for first tool or if it is selected in submenu
+        if (!snake_config.in_progress || tool == Tool::_first) { // Ask only for first tool or if it is selected in submenu
             ask_config(action);
         }
         marlin_client::test_start_with_data(get_test_mask(action), get_tool_mask(tool));
@@ -207,9 +194,7 @@ void continue_snake() {
         return; // Stop when submenu is finished
     }
 
-    if (snake_config.state == SnakeConfig::State::first // ran only one action so far
-        && (snake_config.last_action != get_first_action() || get_test_result(get_next_action(get_first_action()), Tool::_all_tools) == TestResult_Passed)) {
-
+    if (!snake_config.auto_continue) {
         Response resp = Response::Stop;
         if (is_multitool() && has_submenu(snake_config.last_action) && snake_config.last_tool != get_last_enabled_tool()) {
             resp = MsgBoxQuestion(_("FINISH remaining calibrations without proceeding to other tests, or perform ALL Calibrations and Tests?\n\nIf you QUIT, all data up to this point is saved."), { Response::Finish, Response::All, Response::Quit }, 2);
@@ -221,6 +206,9 @@ void continue_snake() {
             snake_config.reset();
             return; // stop after running the first one
         }
+
+        // Do not ask again
+        snake_config.auto_continue = true;
     }
 
     if (!is_multitool()
@@ -307,19 +295,14 @@ string_view_utf8 I_MI_STS::get_filled_menu_item_label(Action action) {
 }
 
 I_MI_STS::I_MI_STS(Action action)
-    : IWindowMenuItem(get_filled_menu_item_label(action),
-        get_icon(action, Tool::_all_tools), is_enabled_t::yes, get_mainitem_hidden_state(action), get_expands(action)) {
-    if (is_multitool()) {
-        set_icon_position(IconPosition::right);
-    } else {
-        set_icon_position(IconPosition::replaces_extends);
-    }
+    : IWindowMenuItem(get_filled_menu_item_label(action), nullptr, is_enabled_t::yes, get_mainitem_hidden_state(action), get_expands(action))
+    , action(action) {
     if (!are_previous_completed(action)) {
         set_color_scheme(&not_yet_ready_scheme);
     }
 }
 
-void I_MI_STS::do_click([[maybe_unused]] IWindowMenu &window_menu, Action action) {
+void I_MI_STS::click(IWindowMenu &) {
     if (!has_submenu(action) || !is_multitool()) {
         do_snake(action);
     } else {
@@ -327,13 +310,28 @@ void I_MI_STS::do_click([[maybe_unused]] IWindowMenu &window_menu, Action action
     }
 }
 
+void I_MI_STS::Loop() {
+    SetIconId(get_icon(action, Tool::_all_tools));
+    if (is_multitool()) {
+        set_icon_position(IconPosition::right);
+    } else {
+        set_icon_position(IconPosition::replaces_extends);
+    }
+}
+
 I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, Tool tool)
-    : IWindowMenuItem(_(label), get_icon(action, tool), is_enabled_t::yes, get_subitem_hidden_state(tool)) {
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, get_subitem_hidden_state(tool))
+    , action(action)
+    , tool(tool) {
     set_icon_position(IconPosition::right);
 }
 
-void I_MI_STS_SUBMENU::do_click([[maybe_unused]] IWindowMenu &window_menu, Tool tool, Action action) {
+void I_MI_STS_SUBMENU::click(IWindowMenu &) {
     do_snake(action, tool);
+}
+
+void I_MI_STS_SUBMENU::Loop() {
+    SetIconId(get_icon(action, tool));
 }
 
 namespace SelftestSnake {
@@ -410,6 +408,7 @@ void ScreenMenuSTSWizard::windowEvent(window_t *sender, GUI_event_t event, void 
         MsgBoxInfo(_("Before you continue, make sure the print sheet is installed on the heatbed."), Responses_Ok);
 
         do_snake(get_first_action());
+        snake_config.auto_continue = true;
         return;
     }
 

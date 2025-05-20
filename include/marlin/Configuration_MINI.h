@@ -203,65 +203,6 @@
         { 0, 90 } // Angles for E0, E1 (single servo) or lowered/raised (dual servo)
 #endif
 
-/**
- * Two separate X-carriages with extruders that connect to a moving part
- * via a solenoid docking mechanism. Requires SOL1_PIN and SOL2_PIN.
- */
-//#define PARKING_EXTRUDER
-
-/**
- * Two separate X-carriages with extruders that connect to a moving part
- * via a magnetic docking mechanism using movements and no solenoid
- *
- * project   : https://www.thingiverse.com/thing:3080893
- * movements : https://youtu.be/0xCEiG9VS3k
- *             https://youtu.be/Bqbcs0CU2FE
- */
-//#define MAGNETIC_PARKING_EXTRUDER
-
-#if EITHER(PARKING_EXTRUDER, MAGNETIC_PARKING_EXTRUDER)
-
-    #define PARKING_EXTRUDER_PARKING_X \
-        { -78, 184 } // X positions for parking the extruders
-    #define PARKING_EXTRUDER_GRAB_DISTANCE 1 // (mm) Distance to move beyond the parking point to grab the extruder
-//#define MANUAL_SOLENOID_CONTROL                   // Manual control of docking solenoids with M380 S / M381
-
-    #if ENABLED(PARKING_EXTRUDER)
-
-        #define PARKING_EXTRUDER_SOLENOIDS_INVERT // If enabled, the solenoid is NOT magnetized with applied voltage
-        #define PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE LOW // LOW or HIGH pin signal energizes the coil
-        #define PARKING_EXTRUDER_SOLENOIDS_DELAY 250 // (ms) Delay for magnetic field. No delay if 0 or not defined.
-    //#define MANUAL_SOLENOID_CONTROL                   // Manual control of docking solenoids with M380 S / M381
-
-    #elif ENABLED(MAGNETIC_PARKING_EXTRUDER)
-
-        #define MPE_FAST_SPEED 9000 // (mm/m) Speed for travel before last distance point
-        #define MPE_SLOW_SPEED 4500 // (mm/m) Speed for last distance travel to park and couple
-        #define MPE_TRAVEL_DISTANCE 10 // (mm) Last distance point
-        #define MPE_COMPENSATION 0 // Offset Compensation -1 , 0 , 1 (multiplier) only for coupling
-
-    #endif
-
-#endif
-
-/**
- * Switching Toolhead
- *
- * Support for swappable and dockable toolheads, such as
- * the E3D Tool Changer. Toolheads are locked with a servo.
- */
-//#define SWITCHING_TOOLHEAD
-#if ENABLED(SWITCHING_TOOLHEAD)
-    #define SWITCHING_TOOLHEAD_SERVO_NR 2 // Index of the servo connector
-    #define SWITCHING_TOOLHEAD_SERVO_ANGLES \
-        { 0, 180 } // (degrees) Angles for Lock, Unlock
-    #define SWITCHING_TOOLHEAD_Y_POS 235 // (mm) Y position of the toolhead dock
-    #define SWITCHING_TOOLHEAD_Y_SECURITY 10 // (mm) Security distance Y axis
-    #define SWITCHING_TOOLHEAD_Y_CLEAR 60 // (mm) Minimum distance from dock for unobstructed X axis
-    #define SWITCHING_TOOLHEAD_X_POS \
-        { 215, 0 } // (mm) X positions for parking the extruders
-#endif
-
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
 // For the other hotends it is their distance from the extruder 0 hotend.

@@ -78,7 +78,6 @@ GCodeLoader nozzle_cleaner_gcode_loader;
     HAS_FILAMENT_SENSOR || \
     HAS_BUZZER || \
     NUM_RUNOUT_SENSORS > 1 || \
-    ENABLED(DUAL_X_CARRIAGE) || \
     ENABLED(ADVANCED_PAUSE_CONTINUOUS_PURGE)
 #error unsupported
 #endif

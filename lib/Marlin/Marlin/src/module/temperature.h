@@ -237,9 +237,22 @@ typedef struct {
 
 // Heater watch handling
 typedef struct {
+  /**
+   * The target temperature that should be reached by the next check.
+   * @warning: This value is not the same as temp_heatbreak.target
+   */
   uint16_t target;
+  /**
+   * The time in milliseconds to wait for the temperature to rise.
+   * @note: The value 0 means no watch.
+   */
   millis_t next_ms;
-  inline bool elapsed(const millis_t &ms) { return next_ms && ELAPSED(ms, next_ms); }
+  /**
+   * Checks if the next_ms has elapsed since the last call.
+   * @retval true if ${next_ms} has elapsed and the watch is active. (next_ms != 0)
+   * @retval false if ${next_ms} has not elapsed or the watch is inactive. (next_ms == 0) 
+   */
+  inline bool elapsed(const millis_t &ms) { return (next_ms != 0) && ELAPSED(ms, next_ms); }
   inline bool elapsed() { return elapsed(millis()); }
 } heater_watch_t;
 
@@ -375,7 +388,7 @@ class Temperature {
 
     #if HAS_TEMP_HEATBREAK
       #if WATCH_HEATBREAK
-        static heater_watch_t watch_heatbreak;
+      static heater_watch_t watch_heatbreak[HOTENDS];
       #endif
       static millis_t next_heatbreak_check_ms;
       #ifdef HEATBREAK_MINTEMP
@@ -718,9 +731,9 @@ class Temperature {
     #endif // HAS_TEMP_HEATBREAK
 
     #if WATCH_HEATBREAK
-      static void start_watching_heatbreak();
+      static void start_watching_heatbreak(const uint8_t E_NAME);
     #else
-      static inline void start_watching_heatbreak() {}
+      static inline void start_watching_heatbreak(const uint8_t) {}
     #endif
 
     #if HAS_TEMP_HEATBREAK_CONTROL
@@ -735,7 +748,7 @@ class Temperature {
         #if ENABLED(PRUSA_TOOLCHANGER)
           prusa_toolchanger.getTool(HOTEND_INDEX).set_heatbreak_target_temp(celsius);
         #endif
-        start_watching_heatbreak();
+        start_watching_heatbreak(HOTEND_INDEX);
       }
     #endif // HAS_TEMP_HEATBREAK
 

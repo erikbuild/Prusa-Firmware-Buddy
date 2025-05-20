@@ -94,7 +94,7 @@
 
 #include <option/has_nozzle_cleaner.h>
 
-#if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(AXEL_TPARA) || ENABLED(DUAL_X_CARRIAGE) || ENABLED(FOAMCUTTER_XYUV)
+#if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(AXEL_TPARA) || ENABLED(FOAMCUTTER_XYUV)
   #error These babies are no longer welcome here. The relevants ifdefs were removed.
 #endif
 
@@ -576,10 +576,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   // Always home with tool 0 active (but not with PRUSA_TOOLCHANGER)
   #if HAS_MULTI_HOTEND && DISABLED(PRUSA_TOOLCHANGER)
     const uint8_t old_tool_index = active_extruder;
-    // PARKING_EXTRUDER homing requires different handling of movement / solenoid activation, depending on the side of homing
-    #if ENABLED(PARKING_EXTRUDER)
-      const bool pe_final_change_must_unpark = parking_extruder_unpark_after_homing(old_tool_index, X_HOME_DIR + 1 == old_tool_index * 2);
-    #endif
     tool_change(0, tool_return_t::no_return);
   #endif
 
@@ -903,7 +899,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // Restore the active tool after homing
   #if HAS_MULTI_HOTEND && DISABLED(PRUSA_TOOLCHANGER)
-    tool_change(old_tool_index, TERN(PARKING_EXTRUDER, !pe_final_change_must_unpark, DISABLED(DUAL_X_CARRIAGE)));   // Do move if one of these
+    tool_change(old_tool_index, true);   // Do move if one of these
   #endif
 
   #if HAS_HOMING_CURRENT

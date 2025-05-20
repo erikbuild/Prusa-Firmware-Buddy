@@ -204,11 +204,6 @@
     #define HOTENDS       E_STEPPERS
   #endif
 
-#elif ENABLED(SWITCHING_TOOLHEAD)   // Toolchanger
-
-  #define E_STEPPERS      EXTRUDERS
-  #define E_MANUAL        EXTRUDERS
-
 #elif HAS_PRUSA_MMU2                // Průša Multi-Material Unit v2
 
   #define E_STEPPERS      1

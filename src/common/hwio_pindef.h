@@ -51,11 +51,6 @@
 #include <option/has_phase_stepping.h>
 #include <option/has_i2c_expander.h>
 
-#if (!defined(PRINTER_IS_PRUSA_MINI) || !defined(PRINTER_IS_PRUSA_MK4) || !defined(PRINTER_IS_PRUSA_MK3_5) \
-    || !defined(PRINTER_IS_PRUSA_XL) || !defined(PRINTER_IS_PRUSA_iX) || !defined(PRINTER_IS_PRUSA_COREONE))
-    #error "Some printer type not defined."
-#endif
-
 #include <option/has_advanced_power.h>
 #if HAS_ADVANCED_POWER()
 // #include "advanced_power.hpp"

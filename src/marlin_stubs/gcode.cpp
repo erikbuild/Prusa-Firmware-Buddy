@@ -206,7 +206,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             }
             break;
 #endif
-
+#if PRINTER_IS_PRUSA_iX()
+        case 853:
+            PrusaGcodeSuite::M853();
+            break;
+#endif
 #if ENABLED(PRUSA_TOOL_MAPPING)
         case 863:
             PrusaGcodeSuite::M863();

@@ -39,10 +39,6 @@
     #include "../../lib/Marlin/Marlin/src/module/prusa/toolchanger.h"
 #endif
 
-#if (BOARD_IS_XBUDDY())
-    #include "hw_configuration.hpp"
-#endif
-
 namespace {
 /**
  * @brief hwio Marlin wrapper errors
@@ -197,12 +193,6 @@ void hwio_update_1ms(void) {
         hwio_beeper_set_pwm(0, 0);
     }
 }
-
-#if (BOARD_IS_XBUDDY() && HAS_TEMP_HEATBREAK)
-extern "C" uint8_t hwio_get_loveboard_bomid() {
-    return buddy::hw::Configuration::Instance().get_love_board().bomID;
-}
-#endif
 
 //--------------------------------------
 // Arduino digital/analog read/write error handler

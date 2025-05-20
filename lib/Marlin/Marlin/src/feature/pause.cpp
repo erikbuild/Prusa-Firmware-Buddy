@@ -187,13 +187,6 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
     }
   }
 
-  #if ENABLED(DUAL_X_CARRIAGE)
-    const int8_t saved_ext        = active_extruder;
-    const bool saved_ext_dup_mode = extruder_duplication_enabled;
-    active_extruder = DXC_ext;
-    extruder_duplication_enabled = false;
-  #endif
-
   // Slow Load filament
   if (slow_load_length) do_pause_e_move(slow_load_length, FILAMENT_CHANGE_SLOW_LOAD_FEEDRATE);
 
@@ -210,12 +203,6 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
       planner.settings.retract_acceleration = saved_acceleration;
     #endif
   }
-
-  #if ENABLED(DUAL_X_CARRIAGE)      // Tie the two extruders movement back together.
-    active_extruder = saved_ext;
-    extruder_duplication_enabled = saved_ext_dup_mode;
-    stepper.set_directions();
-  #endif
 
   #if ENABLED(ADVANCED_PAUSE_CONTINUOUS_PURGE)
 
@@ -387,21 +374,8 @@ bool pause_print(const float &retract, const xyz_pos_t &park_point, const float 
   if (!axes_need_homing())
     nozzle.park(2, park_point);
 
-  #if ENABLED(DUAL_X_CARRIAGE)
-    const int8_t saved_ext        = active_extruder;
-    const bool saved_ext_dup_mode = extruder_duplication_enabled;
-    active_extruder = DXC_ext;
-    extruder_duplication_enabled = false;
-  #endif
-
   if (unload_length)   // Unload the filament
     unload_filament(unload_length, show_lcd);
-
-  #if ENABLED(DUAL_X_CARRIAGE)
-    active_extruder = saved_ext;
-    extruder_duplication_enabled = saved_ext_dup_mode;
-    stepper.set_directions();
-  #endif
 
   return true;
 }
@@ -439,13 +413,6 @@ void wait_for_confirmation(const bool is_reload/*=false*/, const int8_t max_beep
   const millis_t nozzle_timeout = (millis_t)(PAUSE_PARK_NOZZLE_TIMEOUT) * 1000UL;
 
   HOTEND_LOOP() thermalManager.hotend_idle[e].start(nozzle_timeout);
-
-  #if ENABLED(DUAL_X_CARRIAGE)
-    const int8_t saved_ext        = active_extruder;
-    const bool saved_ext_dup_mode = extruder_duplication_enabled;
-    active_extruder = DXC_ext;
-    extruder_duplication_enabled = false;
-  #endif
 
   // Wait for filament insert by user and press button
   KEEPALIVE_STATE(PAUSED_FOR_USER);
@@ -514,11 +481,6 @@ void wait_for_confirmation(const bool is_reload/*=false*/, const int8_t max_beep
 
     idle(true);
   }
-  #if ENABLED(DUAL_X_CARRIAGE)
-    active_extruder = saved_ext;
-    extruder_duplication_enabled = saved_ext_dup_mode;
-    stepper.set_directions();
-  #endif
 }
 
 /**
@@ -539,15 +501,6 @@ void wait_for_confirmation(const bool is_reload/*=false*/, const int8_t max_beep
  * - Resume the current SD print job, if any
  */
 void resume_print(const float &slow_load_length/*=0*/, const float &fast_load_length/*=0*/, const float &purge_length/*=ADVANCED_PAUSE_PURGE_LENGTH*/, const int8_t max_beep_count/*=0*/ DXC_ARGS) {
-  /*
-  SERIAL_ECHOLNPAIR(
-    "start of resume_print()\ndual_x_carriage_mode:", dual_x_carriage_mode,
-    "\nextruder_duplication_enabled:", extruder_duplication_enabled,
-    "\nactive_extruder:", active_extruder,
-    "\n"
-  );
-  //*/
-
   if (!did_pause_print) return;
 
   // Re-enable the heaters if they timed out

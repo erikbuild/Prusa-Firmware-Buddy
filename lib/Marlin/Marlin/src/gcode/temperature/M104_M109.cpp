@@ -77,11 +77,6 @@ void GcodeSuite::M104() {
     #endif
     thermalManager.setTargetHotend(temp, target_extruder);
 
-    #if ENABLED(DUAL_X_CARRIAGE)
-      if (dxc_is_duplicating() && target_extruder == 0)
-        thermalManager.setTargetHotend(temp ? temp + duplicate_extruder_temp_offset : 0, 1);
-    #endif
-
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
       /*
        * Stop the timer at the end of print. Start is managed by 'heat and wait' M109.
@@ -137,11 +132,6 @@ void GcodeSuite::M109() {
       if (target_extruder != active_extruder) return;
     #endif
     thermalManager.setTargetHotend(temp, target_extruder);
-
-    #if ENABLED(DUAL_X_CARRIAGE)
-      if (dxc_is_duplicating() && target_extruder == 0)
-        thermalManager.setTargetHotend(temp ? temp + duplicate_extruder_temp_offset : 0, 1);
-    #endif
 
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
       // TODO: this doesn't work properly for multitool, temperature of last tool decides whenever printjob timer is started or not

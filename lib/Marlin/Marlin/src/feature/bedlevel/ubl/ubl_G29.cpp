@@ -55,10 +55,6 @@
     #include "loadcell.hpp"
   #endif
 
-  #if ENABLED(DUAL_X_CARRIAGE)
-    #include "../../../module/tool_change.h"
-  #endif
-
   #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
   #include "../../../core/debug_out.h"
 
@@ -368,9 +364,6 @@
       if (axes_need_homing()) {
         gcode.process_subcommands_now_P(PSTR("G28 O"));
       }
-      #if ENABLED(DUAL_X_CARRIAGE)
-        if (active_extruder != 0) tool_change(0);
-      #endif
     }
 
     // Invalidate Mesh Points. This command is a little bit asymmetrical because

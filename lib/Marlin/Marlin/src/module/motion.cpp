@@ -162,9 +162,6 @@ xyze_pos_t destination; // {0}
     );
     // Transpose from [XYZ][HOTENDS] to [HOTENDS][XYZ]
     HOTEND_LOOP() LOOP_XYZ(a) hotend_offset[e][a] = tmp[a][e];
-    #if ENABLED(DUAL_X_CARRIAGE)
-      hotend_offset[1].x = _MAX(X2_HOME_POS, X2_MAX_POS);
-    #endif
   }
 #endif
 
@@ -575,33 +572,7 @@ void restore_feedrate_and_scaling() {
     #endif
   ) {
 
-    #if ENABLED(DUAL_X_CARRIAGE)
-
-      if (axis == X_AXIS) {
-
-        // In Dual X mode hotend_offset[X] is T1's home position
-        const float dual_max_x = _MAX(hotend_offset[1].x, X2_MAX_POS);
-
-        if (new_tool_index != 0) {
-          // T1 can move from X2_MIN_POS to X2_MAX_POS or X2 home position (whichever is larger)
-          soft_endstop.min.x = X2_MIN_POS;
-          soft_endstop.max.x = dual_max_x;
-        }
-        else if (dxc_is_duplicating()) {
-          // In Duplication Mode, T0 can move as far left as X1_MIN_POS
-          // but not so far to the right that T1 would move past the end
-          soft_endstop.min.x = X1_MIN_POS;
-          soft_endstop.max.x = _MIN(X1_MAX_POS, dual_max_x - duplicate_extruder_x_offset);
-        }
-        else {
-          // In other modes, T0 can move from X1_MIN_POS to X1_MAX_POS
-          soft_endstop.min.x = X1_MIN_POS;
-          soft_endstop.max.x = X1_MAX_POS;
-        }
-
-      }
-
-    #elif ENABLED(DELTA)
+    #if ENABLED(DELTA)
 
       soft_endstop.min[axis] = base_min_pos(axis);
       soft_endstop.max[axis] = (axis == Z_AXIS ? delta_height
@@ -735,10 +706,6 @@ void prepare_move_to_destination(const MoveHints &hints) {
     }
 
   #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
-
-  #if ENABLED(DUAL_X_CARRIAGE)
-    if (dual_x_carriage_unpark()) return;
-  #endif
 
   prepare_move_to(destination, feedrate_mm_s, { .move = hints });
 
@@ -1147,13 +1114,6 @@ void set_axis_is_at_home(const AxisEnum axis, [[maybe_unused]] bool homing_z_wit
   SBI(axis_known_position, axis);
   SBI(axis_homed, axis);
 
-  #if ENABLED(DUAL_X_CARRIAGE)
-    if (axis == X_AXIS && (active_extruder == 1 || dual_x_carriage_mode == DXC_DUPLICATION_MODE)) {
-      current_position.x = x_home_pos(active_extruder);
-      return;
-    }
-  #endif
-
   #if ENABLED(MORGAN_SCARA)
     scara_set_axis_is_at_home(axis);
   #elif ENABLED(DELTA)
@@ -1364,9 +1324,6 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> homeaxis(", axis_codes[axis], ")");
 
   const int axis_home_dir = (
-    #if ENABLED(DUAL_X_CARRIAGE)
-      axis == X_AXIS ? x_home_dir(active_extruder) :
-    #endif
       invert_home_dir ? (-home_dir(axis)) : home_dir(axis)
   );
 

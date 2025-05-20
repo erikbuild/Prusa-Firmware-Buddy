@@ -367,14 +367,7 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
   // Return true if the given position is within the machine bounds.
   inline bool position_is_reachable(const float &rx, const float &ry) {
     if (!WITHIN(ry, Y_MIN_POS - slop, Y_MAX_POS + slop)) return false;
-    #if ENABLED(DUAL_X_CARRIAGE)
-      if (active_extruder)
-        return WITHIN(rx, X2_MIN_POS - slop, X2_MAX_POS + slop);
-      else
-        return WITHIN(rx, X1_MIN_POS - slop, X1_MAX_POS + slop);
-    #else
-      return WITHIN(rx, X_MIN_POS - slop, X_MAX_POS + slop);
-    #endif
+    return WITHIN(rx, X_MIN_POS - slop, X_MAX_POS + slop);
   }
   inline bool position_is_reachable(const xy_pos_t &pos) { return position_is_reachable(pos.x, pos.y); }
 
@@ -412,33 +405,7 @@ FORCE_INLINE bool position_is_reachable_by_probe(const xy_pos_t &pos) { return p
   #endif
 #endif
 
-/**
- * Dual X Carriage
- */
-#if ENABLED(DUAL_X_CARRIAGE)
-
-  enum DualXMode : char {
-    DXC_FULL_CONTROL_MODE,
-    DXC_AUTO_PARK_MODE,
-    DXC_DUPLICATION_MODE,
-    DXC_MIRRORED_MODE
-  };
-
-  extern DualXMode dual_x_carriage_mode;
-  extern float inactive_extruder_x_pos,           // Used in mode 0 & 1
-               duplicate_extruder_x_offset;       // Used in mode 2 & 3
-  extern xyz_pos_t raised_parked_position;        // Used in mode 1
-  extern bool active_extruder_parked;             // Used in mode 1, 2 & 3
-  extern millis_t delayed_move_time;              // Used in mode 1
-  extern int16_t duplicate_extruder_temp_offset;  // Used in mode 2 & 3
-
-  FORCE_INLINE bool dxc_is_duplicating() { return dual_x_carriage_mode >= DXC_DUPLICATION_MODE; }
-
-  float x_home_pos(const int extruder);
-
-  FORCE_INLINE int x_home_dir(const uint8_t extruder) { return extruder ? X2_HOME_DIR : X_HOME_DIR; }
-
-#elif ENABLED(MULTI_NOZZLE_DUPLICATION)
+#if ENABLED(MULTI_NOZZLE_DUPLICATION)
 
   enum DualXMode : char {
     DXC_DUPLICATION_MODE = 2

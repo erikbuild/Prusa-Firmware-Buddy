@@ -144,7 +144,7 @@
   #include "feature/fanmux.h"
 #endif
 
-#if DO_SWITCH_EXTRUDER || ANY(SWITCHING_NOZZLE, PARKING_EXTRUDER, MAGNETIC_PARKING_EXTRUDER, ELECTROMAGNETIC_SWITCHING_TOOLHEAD)
+#if DO_SWITCH_EXTRUDER || ANY(SWITCHING_NOZZLE)
   #include "module/tool_change.h"
 #endif
 
@@ -546,16 +546,6 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
     }
   #endif // EXTRUDER_RUNOUT_PREVENT
 
-  #if ENABLED(DUAL_X_CARRIAGE)
-    // handle delayed move timeout
-    if (delayed_move_time && ELAPSED(ms, delayed_move_time + 1000UL) && IsRunning()) {
-      // travel moves have been received so enact them
-      delayed_move_time = 0xFFFFFFFFUL; // force moves to be done
-      destination = current_position;
-      prepare_move_to_destination();
-    }
-  #endif
-
   #if ENABLED(MONITOR_DRIVER_STATUS)
     monitor_motor_drivers();
   #endif
@@ -918,19 +908,6 @@ void setup() {
       move_nozzle_servo(0);
     #endif
   #endif
-
-  #if ENABLED(MAGNETIC_PARKING_EXTRUDER)
-    mpe_settings_init();
-  #endif
-
-  #if ENABLED(PARKING_EXTRUDER)
-    pe_solenoid_init();
-  #endif
-
-  #if ENABLED(ELECTROMAGNETIC_SWITCHING_TOOLHEAD)
-    est_init();
-  #endif
-
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
   #endif

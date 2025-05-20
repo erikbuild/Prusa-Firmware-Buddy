@@ -141,21 +141,17 @@ static FwAutoUpdate get_auto_update_flag(void) {
 namespace data_exchange {
 
 #if HAS_XLCD()
-OtpStatus get_xlcd_status() {
-    return ram_data_exchange.xlcd_status;
-}
-
-XlcdEeprom get_xlcd_eeprom() {
+const XlcdEeprom &get_xlcd_eeprom() {
     return ram_data_exchange.xlcd_eeprom;
 }
 #endif
 
 #if HAS_LOVE_BOARD() || PRINTER_IS_PRUSA_MK3_5()
-OtpStatus get_loveboard_status() {
+const OtpStatus &get_loveboard_status() {
     return ram_data_exchange.loveboard_status;
 }
 
-LoveBoardEeprom get_loveboard_eeprom() {
+const LoveBoardEeprom &get_loveboard_eeprom() {
     return ram_data_exchange.loveboard_eeprom;
 }
 #endif

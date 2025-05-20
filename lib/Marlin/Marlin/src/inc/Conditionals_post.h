@@ -84,18 +84,6 @@
 #define Y_MAX_BED (Y_MIN_BED + Y_BED_SIZE)
 
 /**
- * Dual X Carriage
- */
-#if ENABLED(DUAL_X_CARRIAGE)
-  #ifndef X1_MIN_POS
-    #define X1_MIN_POS X_MIN_POS
-  #endif
-  #ifndef X1_MAX_POS
-    #define X1_MAX_POS X_BED_SIZE
-  #endif
-#endif
-
-/**
  * CoreXY, CoreXZ, and CoreYZ - and their reverse
  */
 #if EITHER(COREXY, COREYX)
@@ -1404,16 +1392,6 @@
 
 // Add commands that need sub-codes to this list
 #define USE_GCODE_SUBCODES ANY(G38_PROBE_TARGET, CNC_COORDINATE_SYSTEMS, PRINT_CHECKING_Q_CMDS)
-
-// Parking Extruder
-#if ENABLED(PARKING_EXTRUDER)
-  #ifndef PARKING_EXTRUDER_GRAB_DISTANCE
-    #define PARKING_EXTRUDER_GRAB_DISTANCE 0
-  #endif
-  #ifndef PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE
-    #define PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE HIGH
-  #endif
-#endif
 
 // Number of VFAT entries used. Each entry has 13 UTF-16 characters
 #if ENABLED(SCROLL_LONG_FILENAMES)

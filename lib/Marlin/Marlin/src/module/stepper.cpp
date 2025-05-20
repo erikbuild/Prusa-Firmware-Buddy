@@ -228,7 +228,7 @@ void Stepper::init() {
     if (!X_ENABLE_ON) {
         X_ENABLE_WRITE(HIGH);
     }
-    #if EITHER(DUAL_X_CARRIAGE, X_DUAL_STEPPER_DRIVERS) && HAS_X2_ENABLE
+    #if ENABLED(X_DUAL_STEPPER_DRIVERS) && HAS_X2_ENABLE
     X2_ENABLE_INIT;
     if (!X_ENABLE_ON) {
         X2_ENABLE_WRITE(HIGH);
@@ -317,7 +317,7 @@ void Stepper::init() {
 
 // Init Step Pins
 #if HAS_X_STEP
-    #if EITHER(X_DUAL_STEPPER_DRIVERS, DUAL_X_CARRIAGE)
+    #if ENABLED(X_DUAL_STEPPER_DRIVERS)
     X2_STEP_INIT;
     X2_STEP_WRITE(INVERT_X_STEP_PIN);
     #endif

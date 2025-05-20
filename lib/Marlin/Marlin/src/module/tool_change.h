@@ -54,47 +54,11 @@
   #endif
 #endif
 
-#if ENABLED(PARKING_EXTRUDER)
-
-  #if ENABLED(PARKING_EXTRUDER_SOLENOIDS_INVERT)
-    #define PE_MAGNET_ON_STATE !PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE
-  #else
-    #define PE_MAGNET_ON_STATE PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE
-  #endif
-
-  void pe_set_solenoid(const uint8_t extruder_num, const uint8_t state);
-
-  inline void pe_activate_solenoid(const uint8_t extruder_num) { pe_set_solenoid(extruder_num, PE_MAGNET_ON_STATE); }
-  inline void pe_deactivate_solenoid(const uint8_t extruder_num) { pe_set_solenoid(extruder_num, !PE_MAGNET_ON_STATE); }
-
-  void pe_solenoid_init();
-
-#elif ENABLED(MAGNETIC_PARKING_EXTRUDER)
-
-  typedef struct MPESettings {
-      float parking_xpos[2],      // M951 L R
-            grab_distance;        // M951 I
- feedRate_t slow_feedrate,        // M951 J
-            fast_feedrate;        // M951 H
-      float travel_distance,      // M951 D
-            compensation_factor;  // M951 C
-  } mpe_settings_t;
-
-  extern mpe_settings_t mpe_settings;
-
-  void mpe_settings_init();
-
-#endif
-
 #if ENABLED(SINGLENOZZLE)
   extern uint16_t singlenozzle_temp[EXTRUDERS];
   #if FAN_COUNT > 0
     extern uint8_t singlenozzle_fan_speed[EXTRUDERS];
   #endif
-#endif
-
-#if ENABLED(ELECTROMAGNETIC_SWITCHING_TOOLHEAD)
-  void est_init();
 #endif
 
 enum class tool_return_t {

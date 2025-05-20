@@ -310,14 +310,6 @@ void MarlinSettings::reset() {
   #endif
 
   //
-  // Magnetic Parking Extruder
-  //
-
-  #if ENABLED(MAGNETIC_PARKING_EXTRUDER)
-    mpe_settings_init();
-  #endif
-
-  //
   // Global Leveling
   //
 

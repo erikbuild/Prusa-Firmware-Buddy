@@ -804,10 +804,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 869: M869(); break;                                  // M869: Report axis error
       #endif
 
-      #if ENABLED(MAGNETIC_PARKING_EXTRUDER)
-        case 951: M951(); break;                                  // M951: Set Magnetic Parking Extruder parameters
-      #endif
-
       #if HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER()
         case 958: M958(); break;
         case 959: M959(); break;

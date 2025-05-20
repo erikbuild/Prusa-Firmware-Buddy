@@ -10,23 +10,31 @@
 #include <window_icon.hpp>
 #include <window_progress.hpp>
 #include <window_text.hpp>
+#include <common/utils/string_builder.hpp>
 
 namespace {
-#if PRINTER_IS_PRUSA_XL()
-constexpr const char *QR_ADDR = "prusa.io/xl-phstep-qr";
-constexpr const char *ADDR_IN_TEXT = "prusa.io/xl-phstep";
-#elif PRINTER_IS_PRUSA_iX()
-constexpr const char *QR_ADDR = "prusa.io/ix-phstep-qr";
-constexpr const char *ADDR_IN_TEXT = "prusa.io/ix-phstep";
-#elif PRINTER_IS_PRUSA_COREONE()
-constexpr const char *QR_ADDR = "prusa.io/coreone-phstep-qr";
-constexpr const char *ADDR_IN_TEXT = "prusa.io/coreone-phstep";
-#elif PRINTER_IS_PRUSA_MK4()
-constexpr const char *QR_ADDR = "prusa.io/mk4-phstep-qr";
-constexpr const char *ADDR_IN_TEXT = "prusa.io/mk4-phstep";
-#else
-    #error
-#endif
+
+using Buffer = std::array<char, 29>;
+// Generate a link into the provided buffer, return the pointer to the buffer (for convenience).
+//
+// Eg. prusa.io/mk4-phstep-qr
+//
+// Uses the firmware base, eg. MK4S and MK3.9 are also mk4 in here.
+Buffer addr(bool qr) {
+    Buffer buffer;
+    StringBuilder builder(buffer);
+    builder.append_string("prusa.io/");
+    assert(PrinterModelInfo::firmware_base().help_url);
+    builder.append_string(PrinterModelInfo::firmware_base().help_url);
+    builder.append_string("-phstep");
+    if (qr) {
+        builder.append_string("-qr");
+    }
+    // Check that we fit within the 29 character buffer.
+    assert(!builder.is_problem());
+    return buffer;
+}
+
 constexpr const char *txt_header { N_("PHASE STEPPING CALIBRATION") };
 constexpr const char *txt_learn_more { N_("To learn more about the phase stepping calibration process, read the article:") };
 constexpr const char *txt_homing { N_("Homing") };
@@ -123,6 +131,8 @@ namespace frame {
     };
 
     class Introduction final {
+        Buffer text_link;
+        Buffer qr_link;
         window_text_t text;
         window_text_t link;
         window_icon_t icon_phone;
@@ -130,10 +140,12 @@ namespace frame {
 
     public:
         explicit Introduction(window_t *parent)
-            : text { parent, FrameQRLayout::text_rect(), is_multiline::yes, is_closed_on_click_t::no, _(txt_learn_more) }
-            , link { parent, FrameQRLayout::link_rect(), is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH(ADDR_IN_TEXT) }
+            : text_link { addr(false) }
+            , qr_link { addr(true) }
+            , text { parent, FrameQRLayout::text_rect(), is_multiline::yes, is_closed_on_click_t::no, _(txt_learn_more) }
+            , link { parent, FrameQRLayout::link_rect(), is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM(text_link.data()) }
             , icon_phone { parent, FrameQRLayout::phone_icon_rect(), &img::hand_qr_59x72 }
-            , qr { parent, FrameQRLayout::qrcode_rect(), Align_t::Center(), QR_ADDR } {
+            , qr { parent, FrameQRLayout::qrcode_rect(), Align_t::Center(), qr_link.data() } {
         }
         void update(const fsm::PhaseData &) {}
     };

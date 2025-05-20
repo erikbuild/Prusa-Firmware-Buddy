@@ -117,7 +117,9 @@ void M864(); //< spool join control
 void M865(); //< Set up ad-hoc filament
 
 void M591(); //< configure Filament stuck monitoring
-
+#if PRINTER_IS_PRUSA_iX()
+void M853(); //< Align z motors over bed pins/end of axis
+#endif
 #if HAS_BELT_TUNING()
 void M960(); //< Belt tuning
 #endif
