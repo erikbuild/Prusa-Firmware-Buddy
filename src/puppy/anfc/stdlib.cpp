@@ -3,6 +3,8 @@
 
 #include "hal.h"
 
+extern "C" {
+
 #ifdef STM32H5
 int _close_r(struct _reent *, int) {
     hal_panic();
@@ -53,3 +55,4 @@ _ssize_t _write(struct _reent *, int, const void *, size_t) {
     hal_panic();
 }
 #endif
+}

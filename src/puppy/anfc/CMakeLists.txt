@@ -45,7 +45,7 @@ else()
   message(FATAL_ERROR "Unsupported nfc board: ${BOARD}")
 endif()
 
-target_sources(firmware PRIVATE hal.cpp main.cpp nfc.cpp stdlib.c)
+target_sources(firmware PRIVATE hal.cpp main.cpp nfc.cpp stdlib.cpp)
 
 target_include_directories(firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal)
 
