@@ -10,6 +10,10 @@
 
 namespace hal::peripherals {
 extern FDCAN_HandleTypeDef hfdcan1;
-}
+extern HASH_HandleTypeDef hhash;
+} // namespace hal::peripherals
+
+// src/can does not expect the namespace...
+using namespace hal::peripherals;
 
 #define TIM3_OVERFLOW 1

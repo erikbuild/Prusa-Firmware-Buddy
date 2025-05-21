@@ -10,6 +10,7 @@
 #include <nfc_task.hpp>
 
 #include <prusa3d/nfc/event/Event_1_0.h>
+#include <prusa3d/common/CustomExecuteCommand_1_0.h>
 
 namespace anfc::cyphal {
 
@@ -43,10 +44,11 @@ ANFCNode::ANFCNode(const UID &uid)
     }
     , execute_command_server {
         [this](const auto &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
-            uavcan_node_ExecuteCommand_Response_1_3 resp = {
-                .status = uavcan_node_ExecuteCommand_Response_1_3_STATUS_BAD_COMMAND,
-                .output {},
-            };
+            // Avoid copy-initializing the output array - initialize only status and output.count
+            uavcan_node_ExecuteCommand_Response_1_3 resp;
+            resp.status = uavcan_node_ExecuteCommand_Response_1_3_STATUS_BAD_COMMAND;
+            resp.output.count = 0;
+
             switch (data.command) {
 
             case uavcan_node_ExecuteCommand_Request_1_3_COMMAND_RESTART:
@@ -57,6 +59,10 @@ ANFCNode::ANFCNode(const UID &uid)
             case uavcan_node_ExecuteCommand_Request_1_3_COMMAND_EMERGENCY_STOP:
                 resp.status = uavcan_node_ExecuteCommand_Response_1_3_STATUS_SUCCESS;
                 bsod("Cyphal Emergency Stop!"); // Abort everything
+                break;
+
+            case prusa3d_common_CustomExecuteCommand_1_0_COMMAND_GET_APP_SALTED_HASH:
+                salted_app_hash_server.handle_request(execute_command_server, data, resp);
                 break;
             }
 
@@ -171,6 +177,8 @@ void ANFCNode::task() {
                 event_queue_condition.notify_one();
             }
         }
+
+        salted_app_hash_server.step(execute_command_server);
 
         hal::set_status_led((now / 1024) % 2);
         freertos::delay(1);

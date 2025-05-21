@@ -38,10 +38,12 @@ void init_clock();
 void init_can();
 void init_spi();
 void init_gpio();
+void init_hash();
 } // namespace hal
 
 namespace hal::peripherals {
 FDCAN_HandleTypeDef hfdcan1;
+HASH_HandleTypeDef hhash;
 SPI_HandleTypeDef hspi1;
 } // namespace hal::peripherals
 
@@ -51,6 +53,7 @@ void hal::init() {
     hal::init_gpio();
     hal::init_spi();
     hal::init_can();
+    hal::init_hash();
 }
 
 void hal::init_clock() {
@@ -253,6 +256,17 @@ void hal::init_gpio() {
 #else
     #error "No hal::init_gpio() implementation"
 #endif
+}
+
+void hal::init_hash() {
+    using namespace hal::peripherals;
+
+    hhash.Instance = HASH;
+    hhash.Init.DataType = HASH_BYTE_SWAP;
+    hhash.Init.Algorithm = HASH_ALGOSELECTION_SHA256;
+    if (HAL_HASH_Init(&hhash) != HAL_OK) {
+        panic();
+    }
 }
 
 extern "C" void hal_panic() {

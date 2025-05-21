@@ -18,6 +18,9 @@ if(BOARD STREQUAL "ANFC")
 
   target_sources(firmware PRIVATE startup/stm32c092.s system_stm32c0xx.c)
 
+  # Required by self_hash
+  target_link_libraries(firmware PRIVATE mbedTLS)
+
   set(HAL_LIB "STM32C0::HAL")
   set(CMSIS_LIB "STM32C0xx::CMSIS")
 
@@ -57,7 +60,9 @@ target_sources(
           stdlib.cpp
   )
 
-target_include_directories(firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal)
+target_include_directories(
+  firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal ../can_shared
+  )
 
 add_subdirectory(nfc_ll)
 add_subdirectory(nfc_prusa)

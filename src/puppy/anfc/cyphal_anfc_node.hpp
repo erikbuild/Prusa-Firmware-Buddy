@@ -17,6 +17,7 @@
 #include <cyphal_port_list.hpp>
 #include <cyphal_task.hpp>
 #include <cyphal_traits_utils.hpp>
+#include <salted_app_hash_command_server.hpp>
 
 #include <uavcan/node/Mode_1_0.h>
 #include <uavcan/node/GetInfo_1_0.h>
@@ -124,6 +125,8 @@ private: //* Scaffolding
 
     /// ExecuteCommand server, mandatory command interface
     can::cyphal::ServerTraited<uavcan_node_ExecuteCommand_1_3_Traits> execute_command_server;
+
+    can::cyphal::SaltedAppHashCommandServer salted_app_hash_server;
 
     /// GetInfo Server, mandatory device info
     static constexpr const char *name = "cz.prusa3d.pub6.nfc";
