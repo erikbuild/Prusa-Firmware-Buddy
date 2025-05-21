@@ -3,6 +3,14 @@
 #include <span>
 #include <cstddef>
 
+#ifdef STM32H5
+    #include <stm32h5xx.h>
+#elifdef STM32C0
+    #include <stm32c0xx.h>
+#else
+    #error
+#endif
+
 namespace hal {
 
 /// Enable CAN bit rate switch?
@@ -20,5 +28,10 @@ namespace memory {
     extern const std::span<std::byte> peripheral_address_region;
 
 }; // namespace memory
+
+namespace peripherals {
+    extern FDCAN_HandleTypeDef hfdcan1;
+    extern SPI_HandleTypeDef hspi1;
+} // namespace peripherals
 
 } // namespace hal

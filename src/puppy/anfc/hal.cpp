@@ -72,11 +72,12 @@ void hal::init_clock() {
      * in the RCC_OscInitTypeDef structure.
      * Target HCLK frequency is 240MHz
      */
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSI;
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_CSI;
     RCC_OscInitStruct.HSIState = RCC_HSI_ON;
     RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
     RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-    RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+    RCC_OscInitStruct.CSIState = RCC_CSI_ON;
+    RCC_OscInitStruct.CSICalibrationValue = RCC_CSICALIBRATION_DEFAULT;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLL1_SOURCE_HSI;
     RCC_OscInitStruct.PLL.PLLM = 4;
@@ -185,11 +186,20 @@ void hal::init_can() {
 void hal::init_spi() {
     using namespace hal::peripherals;
 #ifdef STM32H5
-    GPIO_InitTypeDef GPIO_InitStruct {};
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct {};
 
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI1;
-    PeriphClkInitStruct.Spi1ClockSelection = RCC_SPI1CLKSOURCE_PLL1Q;
+    PeriphClkInitStruct.PLL2.PLL2Source = RCC_PLL2_SOURCE_CSI;
+    PeriphClkInitStruct.PLL2.PLL2M = 1;
+    PeriphClkInitStruct.PLL2.PLL2N = 35;
+    PeriphClkInitStruct.PLL2.PLL2P = 7;
+    PeriphClkInitStruct.PLL2.PLL2Q = 4;
+    PeriphClkInitStruct.PLL2.PLL2R = 2;
+    PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2_VCIRANGE_2;
+    PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2_VCORANGE_WIDE;
+    PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+    PeriphClkInitStruct.PLL2.PLL2ClockOut = RCC_PLL2_DIVP;
+    PeriphClkInitStruct.Spi1ClockSelection = RCC_SPI1CLKSOURCE_PLL2P;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
         hal::panic();
     }
@@ -197,35 +207,62 @@ void hal::init_spi() {
     __HAL_RCC_SPI1_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF4_SPI1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    /** SPI1 GPIO Configuration
+    PA1     ------> SPI1_NSS
+    PA2     ------> SPI1_SCK
+    PA3     ------> SPI1_MISO
+    PA4     ------> SPI1_MOSI
+    */
+
+    {
+        static constexpr GPIO_InitTypeDef GPIO_InitStruct {
+            .Pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4,
+            .Mode = GPIO_MODE_AF_PP,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_LOW,
+            .Alternate = GPIO_AF4_SPI1,
+        };
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    }
+    {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+        static constexpr GPIO_InitTypeDef GPIO_InitStruct {
+            .Pin = GPIO_PIN_1,
+            .Mode = GPIO_MODE_OUTPUT_PP,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_LOW,
+            .Alternate = 0,
+        };
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    }
 
     hspi1.Instance = SPI1;
-    hspi1.Init.Mode = SPI_MODE_MASTER;
-    hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
-    hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
-    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-    hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi1.Init.CRCPolynomial = 0x7;
-    hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-    hspi1.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-    hspi1.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
-    hspi1.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-    hspi1.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
-    hspi1.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
-    hspi1.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
-    hspi1.Init.IOSwap = SPI_IO_SWAP_DISABLE;
-    hspi1.Init.ReadyMasterManagement = SPI_RDY_MASTER_MANAGEMENT_INTERNALLY;
-    hspi1.Init.ReadyPolarity = SPI_RDY_POLARITY_HIGH;
+    hspi1.Init = {
+        .Mode = SPI_MODE_MASTER,
+        .Direction = SPI_DIRECTION_2LINES,
+        .DataSize = SPI_DATASIZE_8BIT,
+        .CLKPolarity = SPI_POLARITY_LOW,
+        .CLKPhase = SPI_PHASE_2EDGE,
+        .NSS = SPI_NSS_SOFT,
+        .BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2,
+        .FirstBit = SPI_FIRSTBIT_MSB,
+        .TIMode = SPI_TIMODE_DISABLE,
+        .CRCCalculation = SPI_CRCCALCULATION_DISABLE,
+        .CRCPolynomial = 0x7,
+        .CRCLength = SPI_CRC_LENGTH_10BIT,
+        .NSSPMode = SPI_NSS_PULSE_DISABLE,
+        .NSSPolarity = SPI_NSS_POLARITY_LOW,
+        .FifoThreshold = SPI_FIFO_THRESHOLD_01DATA,
+        .TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN,
+        .RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN,
+        .MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE,
+        .MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE,
+        .MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE,
+        .MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE,
+        .IOSwap = SPI_IO_SWAP_DISABLE,
+        .ReadyMasterManagement = SPI_RDY_MASTER_MANAGEMENT_INTERNALLY,
+        .ReadyPolarity = SPI_RDY_POLARITY_HIGH,
+    };
     if (HAL_SPI_Init(&hspi1) != HAL_OK) {
         hal::panic();
     }
@@ -236,23 +273,34 @@ void hal::init_spi() {
 
 void hal::init_gpio() {
 #ifdef STM32H5
-    GPIO_InitTypeDef GPIO_InitStruct {};
-
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
-    GPIO_InitStruct.Pin = GPIO_PIN_5;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    { // NFC Interupt
+        static constexpr GPIO_InitTypeDef GPIO_InitStruct {
+            .Pin = GPIO_PIN_5,
+            .Mode = GPIO_MODE_IT_RISING,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_LOW,
+            .Alternate = 0
+        };
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+        HAL_NVIC_SetPriority(EXTI5_IRQn, ISR_PRIORITY_DEFAULT, 0);
+        HAL_NVIC_EnableIRQ(EXTI5_IRQn);
+    }
 
-    HAL_NVIC_SetPriority(EXTI5_IRQn, ISR_PRIORITY_DEFAULT, 0);
-    HAL_NVIC_EnableIRQ(EXTI5_IRQn);
+    { // Status LED
+        static constexpr GPIO_InitTypeDef GPIO_InitStruct {
+            .Pin = GPIO_PIN_6,
+            .Mode = GPIO_MODE_OUTPUT_PP,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_LOW,
+            .Alternate = 0
+        };
 
-    GPIO_InitStruct.Pin = GPIO_PIN_6;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    }
+
 #else
     #error "No hal::init_gpio() implementation"
 #endif
