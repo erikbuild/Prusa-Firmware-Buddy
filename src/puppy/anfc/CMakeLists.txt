@@ -73,5 +73,5 @@ add_library(FreeRTOS_Config INTERFACE)
 target_link_libraries(FreeRTOS_Config INTERFACE ${CMSIS_LIB})
 target_include_directories(FreeRTOS_Config INTERFACE config)
 
-include(../../can/data_types/TranspileDsdl.cmake)
+include("${CMAKE_SOURCE_DIR}/src/can/data_types/TranspileDsdl.cmake")
 transpile_dsdl()
