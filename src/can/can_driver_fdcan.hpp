@@ -44,7 +44,9 @@ public:
         list = this;
     }
 
-    virtual ~FdcanDriver() = default;
+    // Intentionally not virtual
+    // Vitrual destructors generate a free() call, not acceptable for no dynamic allocation targets
+    ~FdcanDriver() = default;
 
     /**
      * @brief Do last minute inits and start CAN driver to be active on the bus.

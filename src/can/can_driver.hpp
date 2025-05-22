@@ -44,7 +44,9 @@ private:
     NotifyCallback notify_callback = nullptr;
 
 public:
-    virtual ~Driver() = default;
+    // Intentionally not virtual
+    // Vitrual destructors generate a free() call, not acceptable for no dynamic allocation targets
+    ~Driver() = default;
 
     /**
      * @brief Set callback for ISR notifications.
