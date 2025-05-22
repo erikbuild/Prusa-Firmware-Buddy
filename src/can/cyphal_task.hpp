@@ -64,6 +64,12 @@ public:
         bool waiting_for_timestamp = false; ///< True when sent message and waiting for valid timestamp
     };
 
+    using Allocator = void *(CanardInstance *const instance, const size_t bytes);
+    static void *default_allocator(CanardInstance *const instance, const size_t bytes);
+
+    using Deallocator = void(CanardInstance *const instance, void *const pointer);
+    static void default_deallocator(CanardInstance *const instance, void *const pointer);
+
 private:
     TimeSync timesync; ///< Variables to send timesync messages
 
@@ -146,7 +152,7 @@ public:
      * @param driver_ CAN hardware driver
      * @param tx_queue_size size of the TX queue, see default_tx_queue_size
      */
-    Task(Driver &driver_, uint32_t tx_queue_size = default_tx_queue_size);
+    Task(Driver &driver_, uint32_t tx_queue_size = default_tx_queue_size, Allocator allocator = default_allocator, Deallocator deallocator = default_deallocator);
 
     /**
      * @brief Lock mutex as long as this lives.

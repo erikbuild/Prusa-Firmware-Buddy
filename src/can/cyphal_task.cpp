@@ -14,26 +14,23 @@ LOG_COMPONENT_DEF(can, logging::Severity::debug);
 
 namespace can::cyphal {
 
-namespace {
+/**
+ * @brief Malloc for canard.
+ * @todo The execution time should be constant (malloc maybe isn't). Otherwise it will lag the bus.
+ */
+void *Task::default_allocator([[maybe_unused]] CanardInstance *const ins, const size_t amount) {
+    return malloc(amount);
+}
 
-    /**
-     * @brief Malloc for canard.
-     * @todo The execution time should be constant (malloc maybe isn't). Otherwise it will lag the bus.
-     */
-    void *canardAllocate([[maybe_unused]] CanardInstance *const ins, const size_t amount) {
-        return malloc(amount);
-    }
+/**
+ * @brief Free for canard.
+ * @todo The execution time should be constant (free maybe isn't). Otherwise it will lag the bus.
+ */
+void Task::default_deallocator([[maybe_unused]] CanardInstance *const ins, void *const pointer) {
+    free(pointer);
+}
 
-    /**
-     * @brief Free for canard.
-     * @todo The execution time should be constant (free maybe isn't). Otherwise it will lag the bus.
-     */
-    void canardFree([[maybe_unused]] CanardInstance *const ins, void *const pointer) {
-        free(pointer);
-    }
-} // namespace
-
-Task::Task(Driver &driver_, uint32_t tx_queue_size)
+Task::Task(Driver &driver_, uint32_t tx_queue_size, Allocator allocator, Deallocator deallocator)
     : driver(driver_) {
 
     // Check all semaphores are valid
@@ -45,7 +42,7 @@ Task::Task(Driver &driver_, uint32_t tx_queue_size)
     xSemaphoreGive(tx_buffer_semaphore);
 
     // Init Cyphal
-    canard_instance = canardInit(&canardAllocate, &canardFree);
+    canard_instance = canardInit(allocator, deallocator);
     canard_instance.node_id = CANARD_NODE_ID_UNSET;
     assert(63 * tx_queue_size > ProtoSender::MAX_SERIALIZED_SIZE_BYTES); // Queue size must be enough to hold the biggest message
     canard_tx_queue = canardTxInit(tx_queue_size, CANARD_MTU_CAN_FD);
