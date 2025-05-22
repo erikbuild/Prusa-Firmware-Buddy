@@ -9,6 +9,7 @@
 #include <can_driver_fdcan.hpp>
 #include <device/hal.h>
 #include <nfc_task.hpp>
+#include <o1heap/o1heap.hpp>
 
 // This magical incantation is required for fw_descriptor integration in cmake to work.
 [[maybe_unused]] __attribute__((section(".fw_descriptor"), used)) const std::byte fw_descriptor[48] {};
@@ -44,11 +45,21 @@ auto get_uid() {
 }
 
 can::FdcanDriver can_driver(hal::peripherals::hfdcan1);
+
+/// Heap allocated for canard
+O1Heap<8192> canard_heap;
+
+void *canard_heap_allocate(CanardInstance *, size_t bytes) {
+    return canard_heap.alloc(bytes);
+}
+void canard_heap_free(CanardInstance *, void *ptr) {
+    canard_heap.free(ptr);
+}
 } // namespace
 
 // Cannot be in private namespace - linked with src/can
 // Also, has to be initialized before can_node
-can::cyphal::Task can::cyphal::cyphal_task(can_driver);
+can::cyphal::Task can::cyphal::cyphal_task(can_driver, 32, &canard_heap_allocate, &canard_heap_free);
 
 anfc::cyphal::ANFCNode can_node(get_uid());
 

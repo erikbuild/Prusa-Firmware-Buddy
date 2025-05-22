@@ -73,6 +73,7 @@ target_link_libraries(
           freertos
           canard
           BuddyHeaders
+          o1heap
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using
