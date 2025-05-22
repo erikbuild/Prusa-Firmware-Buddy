@@ -147,7 +147,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc) {
         analog_gpio_init(GPIOA, GPIO_PIN_4 | GPIO_PIN_5);
         analog_gpio_init(GPIOB, GPIO_PIN_0);
 #else
-    #error "macro BOARD_TYPE is not defined"
+    #error
 #endif
 
         /* ADC1 DMA Init */

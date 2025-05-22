@@ -362,31 +362,27 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
  * position_is_reachable family of functions
  */
 
-#if 1 // CARTESIAN
+// Return true if the given position is within the machine bounds.
+inline bool position_is_reachable(const float &rx, const float &ry) {
+  if (!WITHIN(ry, Y_MIN_POS - slop, Y_MAX_POS + slop)) return false;
+  return WITHIN(rx, X_MIN_POS - slop, X_MAX_POS + slop);
+}
+inline bool position_is_reachable(const xy_pos_t &pos) { return position_is_reachable(pos.x, pos.y); }
 
-  // Return true if the given position is within the machine bounds.
-  inline bool position_is_reachable(const float &rx, const float &ry) {
-    if (!WITHIN(ry, Y_MIN_POS - slop, Y_MAX_POS + slop)) return false;
-    return WITHIN(rx, X_MIN_POS - slop, X_MAX_POS + slop);
+#if HAS_BED_PROBE
+  /**
+   * Return whether the given position is within the bed, and whether the nozzle
+   * can reach the position required to put the probe at the given position.
+   *
+   * Example: For a probe offset of -10,+10, then for the probe to reach 0,0 the
+   *          nozzle must be be able to reach +10,-10.
+   */
+  inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
+    return position_is_reachable(rx - probe_offset.x - TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.x), ry - probe_offset.y - TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.y))
+        && WITHIN(rx, probe_min_x() - slop, probe_max_x() + slop)
+        && WITHIN(ry, probe_min_y() - slop, probe_max_y() + slop);
   }
-  inline bool position_is_reachable(const xy_pos_t &pos) { return position_is_reachable(pos.x, pos.y); }
-
-  #if HAS_BED_PROBE
-    /**
-     * Return whether the given position is within the bed, and whether the nozzle
-     * can reach the position required to put the probe at the given position.
-     *
-     * Example: For a probe offset of -10,+10, then for the probe to reach 0,0 the
-     *          nozzle must be be able to reach +10,-10.
-     */
-    inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
-      return position_is_reachable(rx - probe_offset.x - TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.x), ry - probe_offset.y - TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.y))
-          && WITHIN(rx, probe_min_x() - slop, probe_max_x() + slop)
-          && WITHIN(ry, probe_min_y() - slop, probe_max_y() + slop);
-    }
-  #endif
-
-#endif // CARTESIAN
+#endif
 
 #if !HAS_BED_PROBE
   FORCE_INLINE bool position_is_reachable_by_probe(const float &rx, const float &ry) { return position_is_reachable(rx, ry); }

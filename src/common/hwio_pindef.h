@@ -219,8 +219,8 @@ inline constexpr SPI_HandleTypeDef *hw_get_spi_side_strip() {
         #define MARLIN_PORT_X_ENA     MARLIN_PORT_D
         #define MARLIN_PIN_NR_X_ENA   MARLIN_PIN_NR_3
     #else
-        #error "Unknown board."
-    #endif //(BOARD_TYPE == XBUDDY_BOARD)
+        #error
+    #endif
 
     #if HAS_LOCAL_BED()
         #define MARLIN_PORT_BED_HEAT   MARLIN_PORT_B
@@ -390,8 +390,8 @@ inline constexpr SPI_HandleTypeDef *hw_get_spi_side_strip() {
             MACRO_FUNCTION(buddy::hw::InterruptPin, hx717Soft, buddy::hw::IoPort::E COMMA buddy::hw::IoPin::p3, IMode::IT_rising_falling COMMA Pull::down COMMA ISR_PRIORITY_HX717_SOFT COMMA 0 COMMA false, buddy::hw::hx717_soft) \
             MACRO_FUNCTION(buddy::hw::OutputPin, hx717Sck, buddy::hw::IoPort::G COMMA buddy::hw::IoPin::p1, Pin::State::low COMMA OMode::pushPull COMMA OSpeed::very_high, buddy::hw::noHandler)
     #else
-        #error "Unknown board."
-    #endif // #if (BOARD_TYPE == BUDDY_BOARD)
+        #error
+    #endif
 
     #if HAS_I2C_EXPANDER()
         #include "TCA6408A.hpp"

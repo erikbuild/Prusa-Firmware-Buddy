@@ -630,20 +630,17 @@ void restore_feedrate_and_scaling() {
 
     if (!soft_endstops_enabled || !all_axes_homed()) return;
 
-    #if 1
-      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_X)
-        NOLESS(target.x, soft_endstop.min.x);
-      #endif
-      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_X)
-        NOMORE(target.x, soft_endstop.max.x);
-      #endif
-      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
-        NOLESS(target.y, soft_endstop.min.y);
-      #endif
-      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
-        NOMORE(target.y, soft_endstop.max.y);
-      #endif
-
+    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_X)
+      NOLESS(target.x, soft_endstop.min.x);
+    #endif
+    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_X)
+      NOMORE(target.x, soft_endstop.max.x);
+    #endif
+    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
+      NOLESS(target.y, soft_endstop.min.y);
+    #endif
+    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
+      NOMORE(target.y, soft_endstop.max.y);
     #endif
 
     #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Z)

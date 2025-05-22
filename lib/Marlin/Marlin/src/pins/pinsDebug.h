@@ -98,8 +98,6 @@ const PinInfo pin_array[] PROGMEM = {
 
 };
 
-#include HAL_PATH(../HAL, pinsDebug.h)  // get the correct support file for this CPU
-
 #ifndef M43_NEVER_TOUCH
   #define M43_NEVER_TOUCH(Q) false
 #endif

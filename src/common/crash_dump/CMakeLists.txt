@@ -2,7 +2,6 @@ target_sources(
   firmware
   PRIVATE ../../../lib/CrashCatcher/Core/src/CrashCatcher.c
           ../../../lib/CrashCatcher/Core/src/CrashCatcher_armv7m.S
-          crash_dump_distribute.cpp
           # these two CrashCatcher files need to be here otherwise HardFault_Handler will be handled
           # by Default_Handler (no compiler error)
           crash_dump_handlers.cpp

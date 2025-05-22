@@ -27,31 +27,11 @@
 #if EXTRUDERS > 1
 
   typedef struct {
-    #if ENABLED(TOOLCHANGE_FILAMENT_SWAP)
-      float swap_length, extra_prime;
-      int16_t prime_speed, retract_speed;
-    #endif
-    #if ENABLED(TOOLCHANGE_PARK)
-      xy_pos_t change_point;
-    #endif
     float z_raise;
   } toolchange_settings_t;
 
   extern toolchange_settings_t toolchange_settings;
 
-#endif
-
-#if DO_SWITCH_EXTRUDER
-  void move_extruder_servo(const uint8_t e);
-#endif
-
-#if ENABLED(SWITCHING_NOZZLE)
-  #if SWITCHING_NOZZLE_TWO_SERVOS
-    void lower_nozzle(const uint8_t e);
-    void raise_nozzle(const uint8_t e);
-  #else
-    void move_nozzle_servo(const uint8_t angle_index);
-  #endif
 #endif
 
 #if ENABLED(SINGLENOZZLE)

@@ -854,25 +854,6 @@
 #if EXTRUDERS > 1
     // Z raise distance for tool-change, as needed for some extruders
     #define TOOLCHANGE_ZRAISE 2 // (mm)
-
-    // Retract and prime filament on tool-change
-    //#define TOOLCHANGE_FILAMENT_SWAP
-    #if ENABLED(TOOLCHANGE_FILAMENT_SWAP)
-        #define TOOLCHANGE_FIL_SWAP_LENGTH 12 // (mm)
-        #define TOOLCHANGE_FIL_EXTRA_PRIME 2 // (mm)
-        #define TOOLCHANGE_FIL_SWAP_RETRACT_SPEED 3600 // (mm/m)
-        #define TOOLCHANGE_FIL_SWAP_PRIME_SPEED 3600 // (mm/m)
-    #endif
-
-    /**
-   * Position to park head during tool change.
-   */
-    //#define TOOLCHANGE_PARK
-    #if ENABLED(TOOLCHANGE_PARK)
-        #define TOOLCHANGE_PARK_XY \
-            { X_MIN_POS + 10, Y_MIN_POS + 10 }
-        #define TOOLCHANGE_PARK_XY_FEEDRATE 6000 // (mm/m)
-    #endif
 #endif
 
 /**
@@ -1718,20 +1699,6 @@
 //#define MMU2_DEBUG  // Write debug info to serial output
 
 #endif // PRUSA_MMU2
-
-/**
- * Advanced Print Counter settings
- */
-#if ENABLED(PRINTCOUNTER)
-    #define SERVICE_WARNING_BUZZES 3
-// Activate up to 3 service interval watchdogs
-//#define SERVICE_NAME_1      "Service S"
-//#define SERVICE_INTERVAL_1  100 // print hours
-//#define SERVICE_NAME_2      "Service L"
-//#define SERVICE_INTERVAL_2  200 // print hours
-//#define SERVICE_NAME_3      "Service 3"
-//#define SERVICE_INTERVAL_3    1 // print hours
-#endif
 
 // Prusa M73 implementation
 #define M73_PRUSA

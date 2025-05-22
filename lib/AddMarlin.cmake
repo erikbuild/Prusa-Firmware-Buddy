@@ -205,6 +205,7 @@ if(BOARD_IS_MASTER_BOARD)
               Marlin/Marlin/src/module/prusa/tool_mapper.cpp
               Marlin/Marlin/src/module/prusa/toolchanger.cpp
               Marlin/Marlin/src/module/prusa/toolchanger_utils.cpp
+              Marlin/Marlin/src/module/tool_change.cpp
       )
   endif()
 

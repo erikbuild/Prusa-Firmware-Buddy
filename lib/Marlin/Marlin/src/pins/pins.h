@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#include "../core/boards.h"
-
 /**
  * Include pins definitions
  *
@@ -37,22 +35,14 @@
 
 #define MAX_EXTRUDERS 6
 
-#if MB(BUDDY_2209_02)
-  #if BOARD_IS_BUDDY() || BOARD_IS_XBUDDY()
-    #include "stm32/pins_BUDDY_2209_02.h"       // STM32F4                                env:STM32F4
-  #else
-    #error "Unknown PRINTER_TYPE"
-  #endif
+#if BOARD_IS_BUDDY() || BOARD_IS_XBUDDY()
+  #include "stm32/pins_BUDDY_2209_02.h"
 #elif BOARD_IS_XLBUDDY()
-  #if PRINTER_IS_PRUSA_XL()
-    #include "stm32/pins_XLBUDDY.h"       // STM32F4                                env:STM32F4
-  #else
-    #error "Unknown PRINTER_TYPE"
-  #endif
+  #include "stm32/pins_XLBUDDY.h"
 #elif BOARD_IS_DWARF()
-    #include "stm32/pins_DWARF.h"
+  #include "stm32/pins_DWARF.h"
 #else
-  #error "Unknown MOTHERBOARD value set in Configuration.h"
+  #error
 #endif
 
 // Define certain undefined pins

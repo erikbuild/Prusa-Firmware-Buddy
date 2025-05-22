@@ -180,30 +180,11 @@
    */
   void MarlinUI::reset_status() {
     PGM_P printing = GET_TEXT(MSG_PRINTING);
-    #if SERVICE_INTERVAL_1 > 0
-      static const char service1[] PROGMEM = { "> " SERVICE_NAME_1 "!" };
-    #endif
-    #if SERVICE_INTERVAL_2 > 0
-      static const char service2[] PROGMEM = { "> " SERVICE_NAME_2 "!" };
-    #endif
-    #if SERVICE_INTERVAL_3 > 0
-      static const char service3[] PROGMEM = { "> " SERVICE_NAME_3 "!" };
-    #endif
     PGM_P msg = nullptr;
     if (printingIsPaused())
       msg = print_paused;
     else if (print_job_timer.isRunning())
       msg = printing;
-
-    #if SERVICE_INTERVAL_1 > 0
-      else if (print_job_timer.needsService(1)) msg = service1;
-    #endif
-    #if SERVICE_INTERVAL_2 > 0
-      else if (print_job_timer.needsService(2)) msg = service2;
-    #endif
-    #if SERVICE_INTERVAL_3 > 0
-      else if (print_job_timer.needsService(3)) msg = service3;
-    #endif
 
     if(msg) {
       set_status_P(msg, -1);

@@ -41,29 +41,21 @@
 
 #if defined(BOARD) && BOARD == BOARD_BUDDY
     #define BOARD_IS_BUDDY() 1
-    #define BOARD_STRING()   "Buddy"
 #elif defined(BOARD) && BOARD == BOARD_XBUDDY
     #define BOARD_IS_XBUDDY() 1
-    #define BOARD_STRING()    "XBuddy"
 #elif defined(BOARD) && BOARD == BOARD_XLBUDDY
     #define BOARD_IS_XLBUDDY() 1
-    #define BOARD_STRING()     "XLBuddy"
 #elif defined(BOARD) && BOARD == BOARD_DWARF
     #define BOARD_IS_DWARF() 1
-    #define BOARD_STRING()   "Dwarf"
 #elif defined(BOARD) && BOARD == BOARD_MODULARBED
     #define BOARD_IS_MODULARBED() 1
-    #define BOARD_STRING()        "ModularBed"
 #elif defined(BOARD) && BOARD == BOARD_XL_DEV_KIT_XLB
     #define BOARD_IS_XLBUDDY()        1 // todo: remove, for now xl dev two  boards enabled
     #define BOARD_IS_XL_DEV_KIT_XLB() 1
-    #define BOARD_STRING()            "XL_DEV_KIT_XLB"
 #elif defined(BOARD) && BOARD == BOARD_XBUDDY_EXTENSION
     #define BOARD_IS_XBUDDY_EXTENSION() 1
-    #define BOARD_STRING()              "XBUDDY_EXTENSION"
 #elif defined(BOARD) && (BOARD == BOARD_ANFC || BOARD == BOARD_ANFC_H5)
     #define BOARD_IS_ANFC() 1
-    #define BOARD_STRING()  "ANFC"
 #else
     #error Please define the BOARD macro
 #endif

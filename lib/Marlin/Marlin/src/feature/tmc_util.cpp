@@ -21,6 +21,7 @@
  */
 
 #include "tmc_util.h"
+#include <libs/duration_t.h>
 #include <module/printcounter.h>
 #include <module/stepper/trinamic.h>
 #include <module/motion.h>

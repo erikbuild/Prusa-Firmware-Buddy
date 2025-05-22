@@ -93,7 +93,7 @@
 
 #if EXTRUDERS > 1
   #include "tool_change.h"
-  void M217_report(const bool eeprom);
+  void M217_report();
 #endif
 
 #if ENABLED(BLTOUCH)
@@ -283,16 +283,6 @@ void MarlinSettings::reset() {
   //
 
   #if EXTRUDERS > 1
-    #if ENABLED(TOOLCHANGE_FILAMENT_SWAP)
-      toolchange_settings.swap_length = TOOLCHANGE_FIL_SWAP_LENGTH;
-      toolchange_settings.extra_prime = TOOLCHANGE_FIL_EXTRA_PRIME;
-      toolchange_settings.prime_speed = TOOLCHANGE_FIL_SWAP_PRIME_SPEED;
-      toolchange_settings.retract_speed = TOOLCHANGE_FIL_SWAP_RETRACT_SPEED;
-    #endif
-    #if ENABLED(TOOLCHANGE_PARK)
-      constexpr xyz_pos_t tpxy = TOOLCHANGE_PARK_XY;
-      toolchange_settings.change_point = tpxy;
-    #endif
     toolchange_settings.z_raise = TOOLCHANGE_ZRAISE;
   #endif
 
@@ -775,14 +765,7 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_HEADING("Servo Angles:");
       for (uint8_t i = 0; i < NUM_SERVOS; i++) {
         switch (i) {
-          #if ENABLED(SWITCHING_EXTRUDER)
-            case SWITCHING_EXTRUDER_SERVO_NR:
-            #if EXTRUDERS > 3
-              case SWITCHING_EXTRUDER_E23_SERVO_NR:
-            #endif
-          #elif ENABLED(SWITCHING_NOZZLE)
-            case SWITCHING_NOZZLE_SERVO_NR:
-          #elif (ENABLED(BLTOUCH) && defined(BLTOUCH_ANGLES)) || (defined(Z_SERVO_ANGLES) && defined(Z_PROBE_SERVO_NR))
+          #if (ENABLED(BLTOUCH) && defined(BLTOUCH_ANGLES)) || (defined(Z_SERVO_ANGLES) && defined(Z_PROBE_SERVO_NR))
             case Z_PROBE_SERVO_NR:
           #endif
             CONFIG_ECHO_START();
@@ -1211,7 +1194,7 @@ void MarlinSettings::reset() {
     #if EXTRUDERS > 1
       CONFIG_ECHO_HEADING("Tool-changing:");
       CONFIG_ECHO_START();
-      M217_report(true);
+      M217_report();
     #endif
 
     #if ENABLED(BACKLASH_GCODE)

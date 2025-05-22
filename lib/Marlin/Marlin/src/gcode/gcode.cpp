@@ -33,10 +33,6 @@ GcodeSuite gcode;
 #include "../module/motion.h"
 #include "../module/planner.h"
 
-#if ENABLED(PRINTCOUNTER)
-  #include "../module/printcounter.h"
-#endif
-
 #if ENABLED(HOST_PROMPT_SUPPORT)
   #include "../feature/host_actions.h"
 #endif
@@ -195,11 +191,6 @@ void GcodeSuite::get_destination_from_command() {
 
   if (parser.linearval('F') > 0)
     feedrate_mm_s = parser.value_feedrate();
-
-  #if ENABLED(PRINTCOUNTER)
-    if (!DEBUGGING(DRYRUN) && !skip_move)
-      print_job_timer.incFilamentUsed(destination.e - current_position.e);
-  #endif
 }
 
 /**
@@ -461,10 +452,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       case 75: M75(); break;                                      // M75: Start print timer
       case 76: M76(); break;                                      // M76: Pause print timer
       case 77: M77(); break;                                      // M77: Stop print timer
-
-      #if ENABLED(PRINTCOUNTER)
-        case 78: M78(); break;                                    // M78: Show print statistics
-      #endif
 
       #if ENABLED(M100_FREE_MEMORY_WATCHER)
         case 100: M100(); break;                                  // M100: Free Memory Report

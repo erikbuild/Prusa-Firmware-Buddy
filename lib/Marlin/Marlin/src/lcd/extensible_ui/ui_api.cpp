@@ -55,11 +55,6 @@
 #include "../../libs/duration_t.h"
 #include "../../HAL/shared/Delay.h"
 
-#if ENABLED(PRINTCOUNTER)
-  #include "../../core/utility.h"
-  #include "../../libs/numtostr.h"
-#endif
-
 #if EXTRUDERS > 1
   #include "../../module/tool_change.h"
 #endif
@@ -734,18 +729,6 @@ namespace ExtUI {
 
   #if ENABLED(HOST_PROMPT_SUPPORT)
     void setHostResponse(const uint8_t response) { host_response_handler(response); }
-  #endif
-
-  #if ENABLED(PRINTCOUNTER)
-    char* getTotalPrints_str(char buffer[21])    { strcpy(buffer,i16tostr3left(print_job_timer.getStats().totalPrints));    return buffer; }
-    char* getFinishedPrints_str(char buffer[21]) { strcpy(buffer,i16tostr3left(print_job_timer.getStats().finishedPrints)); return buffer; }
-    char* getTotalPrintTime_str(char buffer[21]) { return duration_t(print_job_timer.getStats().printTime).toString(buffer); }
-    char* getLongestPrint_str(char buffer[21])   { return duration_t(print_job_timer.getStats().longestPrint).toString(buffer); }
-    char* getFilamentUsed_str(char buffer[21])   {
-      printStatistics stats = print_job_timer.getStats();
-      sprintf_P(buffer, PSTR("%ld.%im"), long(stats.filamentUsed / 1000), int16_t(stats.filamentUsed / 100) % 10);
-      return buffer;
-    }
   #endif
 
   float getFeedrate_percent() { return feedrate_percentage; }

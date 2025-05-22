@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#define MOTHERBOARD BOARD_BUDDY_2209_02
-
 // clang-format off
 
 /**
@@ -199,25 +197,6 @@
 #define PRUSA_SPOOL_JOIN
 #endif
 
-// A dual extruder that uses a single stepper motor
-//#define SWITCHING_EXTRUDER
-#if ENABLED(SWITCHING_EXTRUDER)
-    #define SWITCHING_EXTRUDER_SERVO_NR 0
-    #define SWITCHING_EXTRUDER_SERVO_ANGLES \
-        { 0, 90 } // Angles for E0, E1[, E2, E3]
-    #if EXTRUDERS > 3
-        #define SWITCHING_EXTRUDER_E23_SERVO_NR 1
-    #endif
-#endif
-
-// A dual-nozzle that uses a servomotor to raise/lower one (or both) of the nozzles
-//#define SWITCHING_NOZZLE
-#if ENABLED(SWITCHING_NOZZLE)
-    #define SWITCHING_NOZZLE_SERVO_NR 0
-    //#define SWITCHING_NOZZLE_E1_SERVO_NR 1          // If two servos are used, the index of the second
-    #define SWITCHING_NOZZLE_SERVO_ANGLES \
-        { 0, 90 } // Angles for E0, E1 (single servo) or lowered/raised (dual servo)
-#endif
 
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
@@ -1378,20 +1357,6 @@
  *   M77 - Stop the print job timer
  */
 #define PRINTJOB_TIMER_AUTOSTART
-
-/**
- * Print Counter
- *
- * Track statistical data such as:
- *
- *  - Total print jobs
- *  - Total successful print jobs
- *  - Total failed print jobs
- *  - Total time printing
- *
- * View the current statistics with M78.
- */
-//#define PRINTCOUNTER
 
 //=============================================================================
 //============================= LCD and SD support ============================

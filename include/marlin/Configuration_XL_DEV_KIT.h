@@ -21,8 +21,6 @@
  */
 #pragma once
 
-#define MOTHERBOARD BOARD_XLBUDDY_V1
-
 #include <option/has_loadcell.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_precise_homing.h>
@@ -192,25 +190,6 @@
  */
 //#define PRUSA_MMU2
 
-// A dual extruder that uses a single stepper motor
-//#define SWITCHING_EXTRUDER
-#if ENABLED(SWITCHING_EXTRUDER)
-    #define SWITCHING_EXTRUDER_SERVO_NR 0
-    #define SWITCHING_EXTRUDER_SERVO_ANGLES \
-        { 0, 90 } // Angles for E0, E1[, E2, E3]
-    #if EXTRUDERS > 3
-        #define SWITCHING_EXTRUDER_E23_SERVO_NR 1
-    #endif
-#endif
-
-// A dual-nozzle that uses a servomotor to raise/lower one (or both) of the nozzles
-//#define SWITCHING_NOZZLE
-#if ENABLED(SWITCHING_NOZZLE)
-    #define SWITCHING_NOZZLE_SERVO_NR 0
-    //#define SWITCHING_NOZZLE_E1_SERVO_NR 1          // If two servos are used, the index of the second
-    #define SWITCHING_NOZZLE_SERVO_ANGLES \
-        { 0, 90 } // Angles for E0, E1 (single servo) or lowered/raised (dual servo)
-#endif
 
 /**
  * Prusa Toolchanger
@@ -1421,20 +1400,6 @@
  *   M77 - Stop the print job timer
  */
 #define PRINTJOB_TIMER_AUTOSTART
-
-/**
- * Print Counter
- *
- * Track statistical data such as:
- *
- *  - Total print jobs
- *  - Total successful print jobs
- *  - Total failed print jobs
- *  - Total time printing
- *
- * View the current statistics with M78.
- */
-//#define PRINTCOUNTER
 
 //=============================================================================
 //============================= LCD and SD support ============================

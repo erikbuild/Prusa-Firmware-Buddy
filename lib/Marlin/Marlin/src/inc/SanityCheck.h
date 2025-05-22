@@ -58,9 +58,7 @@
 /**
  * Warnings for old configurations
  */
-#ifndef MOTHERBOARD
-  #error "MOTHERBOARD is required. Please update your configuration."
-#elif !defined(X_BED_SIZE) || !defined(Y_BED_SIZE)
+#if !defined(X_BED_SIZE) || !defined(Y_BED_SIZE)
   #error "X_BED_SIZE and Y_BED_SIZE are now required! Please update your configuration."
 #elif WATCH_TEMP_PERIOD > 500
   #error "WATCH_TEMP_PERIOD now uses seconds instead of milliseconds."
@@ -274,8 +272,6 @@
   #error "ENDSTOP_NOISE_FILTER is now ENDSTOP_NOISE_THRESHOLD [2-7]. Please update your configuration."
 #elif defined(RETRACT_ZLIFT)
   #error "RETRACT_ZLIFT is now RETRACT_ZRAISE. Please update your Configuration_adv.h."
-#elif defined(TOOLCHANGE_PARK_ZLIFT) || defined(TOOLCHANGE_UNPARK_ZLIFT)
-  #error "TOOLCHANGE_PARK_ZLIFT and TOOLCHANGE_UNPARK_ZLIFT are now TOOLCHANGE_ZRAISE. Please update your configuration."
 #elif defined(SINGLENOZZLE_TOOLCHANGE_ZRAISE)
   #error "SINGLENOZZLE_TOOLCHANGE_ZRAISE is now TOOLCHANGE_ZRAISE. Please update your configuration."
 #elif defined(SINGLENOZZLE_SWAP_LENGTH)
@@ -339,40 +335,6 @@
 #elif defined(JUNCTION_DEVIATION)
   #error "JUNCTION_DEVIATION is no longer required. (See CLASSIC_JERK). Please remove it from Configuration.h."
 #endif
-
-#define BOARD_MKS_13        -1000
-#define BOARD_TRIGORILLA    -1001
-#define BOARD_RURAMPS4D     -1002
-#define BOARD_FORMBOT_TREX2 -1003
-#define BOARD_BIQU_SKR_V1_1 -1004
-#define BOARD_STM32F1R      -1005
-#define BOARD_STM32F103R    -1006
-#define BOARD_ESP32         -1007
-#if MB(MKS_13)
-  #error "BOARD_MKS_13 has been renamed BOARD_MKS_GEN_13. Please update your configuration."
-#elif MB(TRIGORILLA)
-  #error "BOARD_TRIGORILLA has been renamed BOARD_TRIGORILLA_13. Please update your configuration."
-#elif MB(RURAMPS4D)
-  #error "BOARD_RURAMPS4D has been renamed BOARD_RURAMPS4D_11. Please update your configuration."
-#elif MB(FORMBOT_TREX2)
-  #error "FORMBOT_TREX2 has been renamed BOARD_FORMBOT_TREX2PLUS. Please update your configuration."
-#elif MB(BIQU_SKR_V1_1)
-  #error "BOARD_BIQU_SKR_V1_1 has been renamed BOARD_BIGTREE_SKR_V1_1. Please update your configuration."
-#elif MB(STM32F1R)
-  #error "BOARD_STM32F1R has been renamed BOARD_STM32F103RE. Please update your configuration."
-#elif MB(STM32F103R)
-  #error "BOARD_STM32F103R has been renamed BOARD_STM32F103RE. Please update your configuration."
-#elif MOTHERBOARD == BOARD_ESP32
-  #error "BOARD_ESP32 has been renamed BOARD_ESPRESSIF_ESP32. Please update your configuration."
-#endif
-#undef BOARD_MKS_13
-#undef BOARD_TRIGORILLA
-#undef BOARD_RURAMPS4D
-#undef BOARD_FORMBOT_TREX2
-#undef BOARD_BIQU_SKR_V1_1
-#undef BOARD_STM32F1R
-#undef BOARD_STM32F103R
-#undef BOARD_ESP32
 
 /**
  * Marlin release, version and default string
@@ -644,23 +606,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     #error "EXTRUDERS must be 1 with HEATERS_PARALLEL."
   #endif
 
-  #if ENABLED(TOOLCHANGE_FILAMENT_SWAP)
-    #ifndef TOOLCHANGE_FIL_SWAP_LENGTH
-      #error "TOOLCHANGE_FILAMENT_SWAP requires TOOLCHANGE_FIL_SWAP_LENGTH. Please update your Configuration."
-    #elif !defined(TOOLCHANGE_FIL_SWAP_RETRACT_SPEED)
-      #error "TOOLCHANGE_FILAMENT_SWAP requires TOOLCHANGE_FIL_SWAP_RETRACT_SPEED. Please update your Configuration."
-    #elif !defined(TOOLCHANGE_FIL_SWAP_PRIME_SPEED)
-      #error "TOOLCHANGE_FILAMENT_SWAP requires TOOLCHANGE_FIL_SWAP_PRIME_SPEED. Please update your Configuration."
-    #endif
-  #endif
-  #if ENABLED(TOOLCHANGE_PARK)
-    #ifndef TOOLCHANGE_PARK_XY
-      #error "TOOLCHANGE_PARK requires TOOLCHANGE_PARK_XY. Please update your Configuration."
-    #elif !defined(TOOLCHANGE_PARK_XY_FEEDRATE)
-      #error "TOOLCHANGE_PARK requires TOOLCHANGE_PARK_XY_FEEDRATE. Please update your Configuration."
-    #endif
-  #endif
-
   #ifndef TOOLCHANGE_ZRAISE
     #error "TOOLCHANGE_ZRAISE required for EXTRUDERS > 1. Please update your Configuration_adv.h."
   #endif
@@ -676,77 +621,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  */
 #ifdef SNMM
   #error "SNMM is now MK2_MULTIPLEXER. Please update your configuration."
-#endif
-
-/**
- * A Dual Nozzle carriage with switching servo
- */
-#if ENABLED(SWITCHING_NOZZLE)
-  #if ENABLED(SINGLENOZZLE)
-    #error "SWITCHING_NOZZLE and SINGLENOZZLE are incompatible."
-  #elif EXTRUDERS != 2
-    #error "SWITCHING_NOZZLE requires exactly 2 EXTRUDERS."
-  #elif NUM_SERVOS < 1
-    #error "SWITCHING_NOZZLE requires NUM_SERVOS >= 1."
-  #endif
-
-  #ifndef SWITCHING_NOZZLE_SERVO_NR
-    #error "SWITCHING_NOZZLE requires SWITCHING_NOZZLE_SERVO_NR."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-    #error "SERVO0_PIN must be defined for your SWITCHING_NOZZLE."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-    #error "SERVO1_PIN must be defined for your SWITCHING_NOZZLE."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-    #error "SERVO2_PIN must be defined for your SWITCHING_NOZZLE."
-  #elif SWITCHING_NOZZLE_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-    #error "SERVO3_PIN must be defined for your SWITCHING_NOZZLE."
-  #endif
-
-  #ifdef SWITCHING_NOZZLE_E1_SERVO_NR
-    #if SWITCHING_NOZZLE_E1_SERVO_NR == SWITCHING_NOZZLE_SERVO_NR
-      #error "SWITCHING_NOZZLE_E1_SERVO_NR must be different from SWITCHING_NOZZLE_SERVO_NR."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-      #error "SERVO0_PIN must be defined for your SWITCHING_NOZZLE."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-      #error "SERVO1_PIN must be defined for your SWITCHING_NOZZLE."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-      #error "SERVO2_PIN must be defined for your SWITCHING_NOZZLE."
-    #elif SWITCHING_NOZZLE_E1_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-      #error "SERVO3_PIN must be defined for your SWITCHING_NOZZLE."
-    #endif
-  #endif
-#endif
-
-/**
- * Single Stepper Dual Extruder with switching servo
- */
-#if ENABLED(SWITCHING_EXTRUDER)
-  #if NUM_SERVOS < 1
-    #error "SWITCHING_EXTRUDER requires NUM_SERVOS >= 1."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-    #error "SERVO0_PIN must be defined for your SWITCHING_EXTRUDER."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-    #error "SERVO1_PIN must be defined for your SWITCHING_EXTRUDER."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-    #error "SERVO2_PIN must be defined for your SWITCHING_EXTRUDER."
-  #elif SWITCHING_EXTRUDER_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-    #error "SERVO3_PIN must be defined for your SWITCHING_EXTRUDER."
-  #endif
-  #if EXTRUDERS > 3
-    #if NUM_SERVOS < 2
-      #error "SWITCHING_EXTRUDER with 4 extruders requires NUM_SERVOS >= 2."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-      #error "SERVO0_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-      #error "SERVO1_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-      #error "SERVO2_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-      #error "SERVO3_PIN must be defined for your SWITCHING_EXTRUDER."
-    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == SWITCHING_EXTRUDER_SERVO_NR
-      #error "SWITCHING_EXTRUDER_E23_SERVO_NR should be a different extruder from SWITCHING_EXTRUDER_SERVO_NR."
-    #endif
-  #endif
 #endif
 
 #if HAS_REMOTE_ACCELEROMETER() && !HAS_TOOLCHANGER()
@@ -774,7 +648,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 /**
  * Servo deactivation depends on servo endstops, switching nozzle, or switching extruder
  */
-#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR)
+#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE
   #error "Z_PROBE_SERVO_NR, switching nozzle, switching toolhead or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
 #endif
 
@@ -1193,8 +1067,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     #error "MULTI_NOZZLE_DUPLICATION requires 2 or more hotends."
   #elif ENABLED(SINGLENOZZLE)
     #error "MULTI_NOZZLE_DUPLICATION is incompatible with SINGLENOZZLE."
-  #elif ENABLED(SWITCHING_EXTRUDER)
-    #error "MULTI_NOZZLE_DUPLICATION is incompatible with SWITCHING_EXTRUDER."
   #endif
 #endif
 
@@ -1879,10 +1751,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 
 #endif
 
-#if ENABLED(PRINTCOUNTER)
-  #error "PRINTCOUNTER requires EEPROM_SETTINGS. Please update your Configuration."
-#endif
-
 #if ENABLED(GCODE_MACROS) && !WITHIN(GCODE_MACROS_SLOTS, 1, 10)
   #error "GCODE_MACROS_SLOTS must be a number from 1 to 10."
 #endif
@@ -1951,19 +1819,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
     #error "PRUSA_MMU2 requires EXTRUDERS = 5."
   #elif DISABLED(ADVANCED_PAUSE_FEATURE)
     static_assert(nullptr == strstr(MMU2_FILAMENT_RUNOUT_SCRIPT, "M600"), "ADVANCED_PAUSE_FEATURE is required to use M600 with PRUSA_MMU2.");
-  #endif
-#endif
-
-/**
- * Advanced PRINTCOUNTER settings
- */
-#if ENABLED(PRINTCOUNTER)
-  #if defined(SERVICE_INTERVAL_1) != defined(SERVICE_NAME_1)
-    #error "Both SERVICE_NAME_1 and SERVICE_INTERVAL_1 are required."
-  #elif defined(SERVICE_INTERVAL_2) != defined(SERVICE_NAME_2)
-    #error "Both SERVICE_NAME_2 and SERVICE_INTERVAL_2 are required."
-  #elif defined(SERVICE_INTERVAL_3) != defined(SERVICE_NAME_3)
-    #error "Both SERVICE_NAME_3 and SERVICE_INTERVAL_3 are required."
   #endif
 #endif
 

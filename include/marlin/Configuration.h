@@ -22,7 +22,3 @@
 #else
     #error "Unknown PRINTER_TYPE!"
 #endif
-
-#ifndef MOTHERBOARD
-    #error "Undefined MOTHERBOARD"
-#endif

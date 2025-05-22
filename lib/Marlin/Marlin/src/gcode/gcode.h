@@ -108,7 +108,6 @@
  * M75  - Start the print job timer.
  * M76  - Pause the print job timer.
  * M77  - Stop the print job timer.
- * M78  - Show statistical information about the print jobs. (Requires PRINTCOUNTER)
  * M80  - Turn on Power Supply. (Requires PSU_CONTROL)
  * M81  - Turn off Power Supply. (Requires PSU_CONTROL)
  * M82  - Set E codes absolute (default).
@@ -592,10 +591,6 @@ private:
   static void M75();
   static void M76();
   static void M77();
-
-  #if ENABLED(PRINTCOUNTER)
-    static void M78();
-  #endif
 
   #if HAS_POWER_SWITCH
     static void M80();

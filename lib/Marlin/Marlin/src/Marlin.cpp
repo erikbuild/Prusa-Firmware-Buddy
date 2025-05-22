@@ -56,7 +56,7 @@
 #include "module/probe.h"
 #include "module/temperature.h"
 #include "module/configuration_store.h"
-#include "module/printcounter.h" // PrintCounter or Stopwatch
+#include "module/printcounter.h"
 #include "feature/closedloop.h"
 #include "feature/safety_timer.h"
 #include "feature/bed_preheat.hpp"
@@ -142,10 +142,6 @@
 
 #if HAS_FANMUX
   #include "feature/fanmux.h"
-#endif
-
-#if DO_SWITCH_EXTRUDER || ANY(SWITCHING_NOZZLE)
-  #include "module/tool_change.h"
 #endif
 
 #if ENABLED(PRUSA_MMU2)
@@ -471,38 +467,25 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
       && ELAPSED(ms, gcode.previous_move_ms + (EXTRUDER_RUNOUT_SECONDS) * 1000UL)
       && !planner.busy()
     ) {
-      #if ENABLED(SWITCHING_EXTRUDER)
-        bool oldstatus;
-        switch (active_extruder) {
-          default: oldstatus = E0_ENABLE_READ(); enable_E0(); break;
-          #if E_STEPPERS > 1
-            case 2: case 3: oldstatus = E1_ENABLE_READ(); enable_E1(); break;
-            #if E_STEPPERS > 2
-              case 4: case 5: oldstatus = E2_ENABLE_READ(); enable_E2(); break;
-            #endif // E_STEPPERS > 2
-          #endif // E_STEPPERS > 1
-        }
-      #else // !SWITCHING_EXTRUDER
-        bool oldstatus;
-        switch (active_extruder) {
-          default: oldstatus = E0_ENABLE_READ(); enable_E0(); break;
-          #if E_STEPPERS > 1
-            case 1: oldstatus = E1_ENABLE_READ(); enable_E1(); break;
-            #if E_STEPPERS > 2
-              case 2: oldstatus = E2_ENABLE_READ(); enable_E2(); break;
-              #if E_STEPPERS > 3
-                case 3: oldstatus = E3_ENABLE_READ(); enable_E3(); break;
-                #if E_STEPPERS > 4
-                  case 4: oldstatus = E4_ENABLE_READ(); enable_E4(); break;
-                  #if E_STEPPERS > 5
-                    case 5: oldstatus = E5_ENABLE_READ(); enable_E5(); break;
-                  #endif // E_STEPPERS > 5
-                #endif // E_STEPPERS > 4
-              #endif // E_STEPPERS > 3
-            #endif // E_STEPPERS > 2
-          #endif // E_STEPPERS > 1
-        }
-      #endif // !SWITCHING_EXTRUDER
+      bool oldstatus;
+      switch (active_extruder) {
+        default: oldstatus = E0_ENABLE_READ(); enable_E0(); break;
+        #if E_STEPPERS > 1
+          case 1: oldstatus = E1_ENABLE_READ(); enable_E1(); break;
+          #if E_STEPPERS > 2
+            case 2: oldstatus = E2_ENABLE_READ(); enable_E2(); break;
+            #if E_STEPPERS > 3
+              case 3: oldstatus = E3_ENABLE_READ(); enable_E3(); break;
+              #if E_STEPPERS > 4
+                case 4: oldstatus = E4_ENABLE_READ(); enable_E4(); break;
+                #if E_STEPPERS > 5
+                  case 5: oldstatus = E5_ENABLE_READ(); enable_E5(); break;
+                #endif // E_STEPPERS > 5
+              #endif // E_STEPPERS > 4
+            #endif // E_STEPPERS > 3
+          #endif // E_STEPPERS > 2
+        #endif // E_STEPPERS > 1
+      }
 
       const float olde = current_position.e;
       current_position.e += EXTRUDER_RUNOUT_EXTRUDE;
@@ -511,36 +494,24 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
       planner.set_e_position_mm(olde);
       planner.synchronize();
 
-      #if ENABLED(SWITCHING_EXTRUDER)
-        switch (active_extruder) {
-          default: oldstatus = E0_ENABLE_WRITE(oldstatus); break;
-          #if E_STEPPERS > 1
-            case 2: case 3: oldstatus = E1_ENABLE_WRITE(oldstatus); break;
-            #if E_STEPPERS > 2
-              case 4: case 5: oldstatus = E2_ENABLE_WRITE(oldstatus); break;
-            #endif // E_STEPPERS > 2
-          #endif // E_STEPPERS > 1
-        }
-      #else // !SWITCHING_EXTRUDER
-        switch (active_extruder) {
-          case 0: E0_ENABLE_WRITE(oldstatus); break;
-          #if E_STEPPERS > 1
-            case 1: E1_ENABLE_WRITE(oldstatus); break;
-            #if E_STEPPERS > 2
-              case 2: E2_ENABLE_WRITE(oldstatus); break;
-              #if E_STEPPERS > 3
-                case 3: E3_ENABLE_WRITE(oldstatus); break;
-                #if E_STEPPERS > 4
-                  case 4: E4_ENABLE_WRITE(oldstatus); break;
-                  #if E_STEPPERS > 5
-                    case 5: E5_ENABLE_WRITE(oldstatus); break;
-                  #endif // E_STEPPERS > 5
-                #endif // E_STEPPERS > 4
-              #endif // E_STEPPERS > 3
-            #endif // E_STEPPERS > 2
-          #endif // E_STEPPERS > 1
-        }
-      #endif // !SWITCHING_EXTRUDER
+      switch (active_extruder) {
+        case 0: E0_ENABLE_WRITE(oldstatus); break;
+        #if E_STEPPERS > 1
+          case 1: E1_ENABLE_WRITE(oldstatus); break;
+          #if E_STEPPERS > 2
+            case 2: E2_ENABLE_WRITE(oldstatus); break;
+            #if E_STEPPERS > 3
+              case 3: E3_ENABLE_WRITE(oldstatus); break;
+              #if E_STEPPERS > 4
+                case 4: E4_ENABLE_WRITE(oldstatus); break;
+                #if E_STEPPERS > 5
+                  case 5: E5_ENABLE_WRITE(oldstatus); break;
+                #endif // E_STEPPERS > 5
+              #endif // E_STEPPERS > 4
+            #endif // E_STEPPERS > 3
+          #endif // E_STEPPERS > 2
+        #endif // E_STEPPERS > 1
+      }
 
       gcode.reset_stepper_timeout();
     }
@@ -602,10 +573,6 @@ void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
 
   #if HAS_HEATED_BED
     bed_preheat.update();
-  #endif
-
-  #if ENABLED(PRINTCOUNTER)
-    print_job_timer.tick();
   #endif
 
   #if USE_BEEPER
@@ -745,10 +712,6 @@ void setup() {
   motor_serial_lock_init();
   motor_driver_init();
   motor_driver_check_connections();
-
-  #ifdef BOARD_INIT
-    BOARD_INIT();
-  #endif
 
   // Check startup - does nothing if bootloader sets MCUSR to 0
   byte mcu = HAL_get_reset_source();
@@ -895,19 +858,6 @@ void setup() {
     I2CPEM.init();
   #endif
 
-  #if DO_SWITCH_EXTRUDER
-    move_extruder_servo(0);   // Initialize extruder servo
-  #endif
-
-  #if ENABLED(SWITCHING_NOZZLE)
-    // Initialize nozzle servo(s)
-    #if SWITCHING_NOZZLE_TWO_SERVOS
-      lower_nozzle(0);
-      raise_nozzle(1);
-    #else
-      move_nozzle_servo(0);
-    #endif
-  #endif
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
   #endif
