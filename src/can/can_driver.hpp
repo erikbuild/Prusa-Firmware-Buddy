@@ -1,9 +1,9 @@
 #pragma once
 
-#include <canard.h>
-
-#include <functional>
+#include <inplace_function.hpp>
 #include <optional>
+
+#include <canard.h>
 
 namespace can {
 
@@ -24,7 +24,7 @@ public:
      * @brief Callback type when event happens.
      * @param notification which event happened
      */
-    using NotifyCallback = std::function<void(Notification notification)>;
+    using NotifyCallback = stdext::inplace_function<void(Notification notification)>;
 
     struct ErrorStats {
         uint8_t tec; ///< Transmit error counter
