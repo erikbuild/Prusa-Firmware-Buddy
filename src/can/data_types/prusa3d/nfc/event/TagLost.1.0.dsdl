@@ -1,4 +1,5 @@
-# ID of the lost tag. Will be deallocated and reused once the event is accepted.
+# ID of the lost tag
+# After accepting the event, you have to request ForgetTag to release the tag ID
 prusa3d.nfc.util.TagID.1.0 id
 
 @sealed

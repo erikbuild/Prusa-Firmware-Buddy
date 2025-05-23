@@ -23,10 +23,6 @@ public:
     /// \returns false if the queue is full
     [[nodiscard]] bool enqueue_request(const prusa3d_nfc_command_Request_Request_1_0 &request);
 
-    /// Attempts to enqueue a forget tag request
-    /// \returns false if the queue is full
-    [[nodiscard]] bool enqueue_forget_tag(NFCTagID tag);
-
 public:
     /// Thread function, for internal use only
     void task();

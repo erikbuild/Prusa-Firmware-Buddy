@@ -45,6 +45,9 @@ bool NFCTask::enqueue_request(const prusa3d_nfc_command_Request_Request_1_0 &req
         } else if (prusa3d_nfc_request_RequestData_1_0_is_reset_state_(&rreq)) {
             reader_.reset_state();
 
+        } else if (prusa3d_nfc_request_RequestData_1_0_is_forget_tag_(&rreq)) {
+            reader_.forget_tag(rreq.forget_tag.tag.value);
+
         } else if (prusa3d_nfc_request_RequestData_1_0_is_set_params_(&rreq)) {
             auto &req = rreq.set_params;
 
@@ -56,12 +59,6 @@ bool NFCTask::enqueue_request(const prusa3d_nfc_command_Request_Request_1_0 &req
         }
 
         can_node.enqueue_event(response);
-    });
-}
-
-bool NFCTask::enqueue_forget_tag(NFCTagID tag) {
-    return enqueue_job([this, tag] {
-        reader_.forget_tag(tag);
     });
 }
 

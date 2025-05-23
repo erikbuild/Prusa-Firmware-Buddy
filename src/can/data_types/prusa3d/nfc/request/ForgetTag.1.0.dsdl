@@ -1,0 +1,6 @@
+# Completely forget the tag and allows the tag ID to be reused
+# If the tag is still present, a new TagDetected event will be emitted
+
+prusa3d.nfc.util.TagID.1.0 tag
+
+@sealed

@@ -18,16 +18,10 @@ using namespace can::cyphal;
 ANFCNode::ANFCNode(const UID &uid)
     : accept_event_server {
         [this](const auto &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
-            const auto event = event_sender.get_data();
             prusa3d_nfc_command_AcceptEvent_Response_1_0 response;
 
             // Verify that the accept request is for the currently broadcasted event
             response.ok = (currently_broadcasted_event_id == data.event_id.value);
-
-            // When tag lost event is accepted, forget the tag and allow tag ID reuse
-            if (response.ok && prusa3d_nfc_event_EventData_1_0_is_tag_lost_(&event.data)) {
-                response.ok = nfc_task.enqueue_forget_tag(event.data.tag_lost.tag.value);
-            }
 
             accept_event_server.send_response(response);
             currently_broadcasted_event_id = 0;
