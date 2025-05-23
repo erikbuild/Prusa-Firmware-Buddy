@@ -54,6 +54,10 @@ void __malloc_unlock(struct _reent *) {
     portEXIT_CRITICAL();
 }
 
+extern "C" void __assert_func(const char *, int, const char *, const char *) {
+    hal_panic();
+}
+
 #ifdef STM32H5
 int _close_r(struct _reent *, int) {
     hal_panic();
