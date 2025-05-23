@@ -24,7 +24,10 @@ ANFCNode::ANFCNode(const UID &uid)
             response.ok = (currently_broadcasted_event_id == data.event_id.value);
 
             accept_event_server.send_response(response);
-            currently_broadcasted_event_id = 0;
+
+            if (response.ok) {
+                currently_broadcasted_event_id = 0;
+            }
         },
         ProtoSender::send_timeout_default,
         ProtoSuber::multipart_timeout_default,
