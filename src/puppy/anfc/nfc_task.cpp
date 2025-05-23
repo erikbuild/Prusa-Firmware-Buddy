@@ -22,16 +22,48 @@ std::optional<PrusaNFCReader::NFCTagField> parse_request_field(const prusa3d_nfc
 }
 } // namespace
 
-bool NFCTask::enqueue_request(const prusa3d_nfc_command_Request_Request_1_0 &request) {
-    auto request_cpy = std::make_unique<std::remove_cvref_t<decltype(request)>>();
-    memcpy(request_cpy.get(), &request, sizeof(request));
+bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
+    using ReqTraits = prusa3d_nfc_command_Request_Request_1_0_Traits;
+    using Size = uint16_t;
 
-    return enqueue_job([this, request = std::move(request_cpy)]() {
+    void *data_copy;
+    {
+        std::lock_guard lg(job_queue_mutex_);
+        data_copy = nfc_task.job_queue_data_heap_.alloc(data.size() + sizeof(Size));
+    }
+
+    // Failed to serialize -> the queue is full
+    if (!data_copy) {
+        return false;
+    }
+
+    // Store size in the allocated region as well, inplace_function wouldn't fit another variable in captures
+    *static_cast<Size *>(data_copy) = data.size();
+    memcpy(static_cast<std::byte *>(data_copy) + sizeof(Size), data.data(), data.size());
+
+    const auto job = [this, data_copy]() {
+        ReqTraits::Type request;
+        size_t size = *static_cast<const Size *>(data_copy);
+
+        // Deserialize the message only for processing. Deserialized messages takes much more space than a serialized one
+        const auto deserialize_result = ReqTraits::deserialize(&request, static_cast<const uint8_t *>(data_copy) + sizeof(Size), &size);
+
+        // After deserializing, we no longer need the data
+        {
+            std::lock_guard lock { job_queue_mutex_ };
+            job_queue_data_heap_.free(data_copy);
+        }
+
+        // Failed to deserialize the request -> drop
+        if (deserialize_result < 0) {
+            return;
+        }
+
         prusa3d_nfc_event_Event_1_0 response;
         prusa3d_nfc_event_EventData_1_0_select_request_done_(&response.data);
-        response.data.request_done.request_id = request->request_id;
+        response.data.request_done.request_id = request.request_id;
 
-        auto &rreq = request->request;
+        auto &rreq = request.request;
         auto &result = response.data.request_done.result;
 
         if (prusa3d_nfc_request_RequestData_1_0_is_read_field_(&rreq)) {
@@ -64,7 +96,15 @@ bool NFCTask::enqueue_request(const prusa3d_nfc_command_Request_Request_1_0 &req
         }
 
         can_node.enqueue_event(response);
-    });
+    };
+
+    if (!enqueue_job(job)) {
+        std::lock_guard lock { job_queue_mutex_ };
+        job_queue_data_heap_.free(data_copy);
+        return false;
+    }
+
+    return true;
 }
 
 void NFCTask::task() {
@@ -86,7 +126,7 @@ void NFCTask::task() {
 
 bool NFCTask::enqueue_job(Job &&job) {
     // Enqueing might be attempted simultaneously from multiple threads, so we need to protect it with a mutex
-    std::unique_lock lock(enqueue_mutex_);
+    std::unique_lock lock(job_queue_mutex_);
     return job_queue_.enqueue(std::move(job));
 }
 

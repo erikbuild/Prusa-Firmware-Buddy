@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 // Optimize Cyphal headers for size
 #pragma GCC push_options
 #pragma GCC optimize("Os")
@@ -14,6 +16,7 @@
 #include <cyphal_record.hpp>
 #include <cyphal_port_list.hpp>
 #include <cyphal_task.hpp>
+#include <cyphal_traits_utils.hpp>
 
 #include <uavcan/node/Mode_1_0.h>
 #include <uavcan/node/GetInfo_1_0.h>
@@ -69,7 +72,13 @@ private: //* Business logic
 
     can::cyphal::ServerTraited<prusa3d_nfc_command_AcceptEvent_1_0_Traits, prusa3d_nfc_PortIDs_1_0_SRV_AcceptEvent> accept_event_server;
 
-    can::cyphal::ServerTraited<prusa3d_nfc_command_Request_1_0_Traits, prusa3d_nfc_PortIDs_1_0_SRV_Request> request_server;
+    // We don't want to deserialize the request actually, we just want to pass the raw data to the NFC task.
+    // Deserialized data takes always 256+ bytes, serialized will usually take much less
+    struct StubbedRequestSrvTraits : public prusa3d_nfc_command_Request_1_0_Traits {
+        using Request = can::RawDataTraits<prusa3d_nfc_command_Request_Request_1_0_Traits>;
+    };
+
+    can::cyphal::ServerTraited<StubbedRequestSrvTraits, prusa3d_nfc_PortIDs_1_0_SRV_Request> request_server;
 
 private: //* Scaffolding
     uavcan_node_GetInfo_Response_1_0 get_info_resp; ///< GetInfo response

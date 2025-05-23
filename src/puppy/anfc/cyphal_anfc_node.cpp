@@ -35,7 +35,7 @@ ANFCNode::ANFCNode(const UID &uid)
     , request_server {
         [this](const auto &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
             prusa3d_nfc_command_Request_Response_1_0 response;
-            response.status = nfc_task.enqueue_request(data) ? prusa3d_nfc_command_Request_Response_1_0_OK : prusa3d_nfc_command_Request_Response_1_0_REQUEST_QUEUE_FULL,
+            response.status = nfc_task.enqueue_serialized_request(std::span<const uint8_t>(data.serialized_data.data(), data.serialized_size)) ? prusa3d_nfc_command_Request_Response_1_0_OK : prusa3d_nfc_command_Request_Response_1_0_REQUEST_QUEUE_FULL,
             request_server.send_response(response);
         },
         ProtoSender::send_timeout_default,
