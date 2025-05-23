@@ -40,7 +40,7 @@ private:
     void handle_write_field_request(const prusa3d_nfc_request_WriteField_1_0 &request, prusa3d_nfc_util_ReaderError_1_0 &result);
 
 private:
-    AtomicCircularQueue<Job, uint8_t, 32> job_queue_;
+    AtomicCircularQueue<Job, uint8_t, 16> job_queue_;
 
     /// Jobs can need some additional data to keep within themselves (typically serialized request)
     /// Don't forget to cover enqueues/frees with the mutex
@@ -52,7 +52,7 @@ private:
     LLNFCReader ll_reader_;
     PrusaNFCReader reader_ { ll_reader_ };
 
-    std::array<char, 256> mime_type_buffer_;
+    std::array<char, 64> mime_type_buffer_;
 };
 
 /// Defined in main.cpp

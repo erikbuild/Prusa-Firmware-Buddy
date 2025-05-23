@@ -109,7 +109,7 @@ private: //* Scaffolding
     uavcan_node_GetInfo_Response_1_0 get_info_resp; ///< GetInfo response
 
     /// Mandatory register interface
-    can::cyphal::RegisterMachine<12> registers; // Set and get registers
+    can::cyphal::RegisterMachine<6> registers; // Set and get registers
 
     /// Heartbeat message, mandatory state report
     can::cyphal::SenderDirectTraited<uavcan_node_Heartbeat_1_0_Traits> heartbeat_sender;

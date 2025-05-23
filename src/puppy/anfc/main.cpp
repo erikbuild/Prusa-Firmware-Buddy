@@ -22,17 +22,17 @@ LOG_COMPONENT_DEF(nfc);
 namespace {
 
 // CAN node app task, processes requests from the CAN. Implemented in can_node
-constexpr const size_t node_task_stack_size = 200;
+constexpr const size_t node_task_stack_size = 512 / sizeof(StackType_t);
 alignas(32) StackType_t node_task_stack[node_task_stack_size];
 StaticTask_t node_task_control_block;
 
 // High-priority task that is woken up when we need to receive/send over CAN and handles the request
-constexpr const size_t can_task_stack_size = 384;
+constexpr const size_t can_task_stack_size = 1024 / sizeof(StackType_t);
 alignas(32) StackType_t can_task_stack[can_task_stack_size];
 StaticTask_t can_task_control_block;
 
 // NFC reader task, handles lenghty blocking interactions with the NFC tags. Implemented in nfc_task
-constexpr const size_t nfc_task_stack_size = 400;
+constexpr const size_t nfc_task_stack_size = 1536 / sizeof(StackType_t);
 alignas(32) StackType_t nfc_task_stack[nfc_task_stack_size];
 StaticTask_t nfc_task_control_block;
 
