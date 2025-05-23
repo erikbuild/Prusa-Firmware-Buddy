@@ -101,3 +101,7 @@ extern "C" int main() {
     // Start FreeRTOS scheduler and we are done.
     vTaskStartScheduler();
 }
+
+extern "C" void vApplicationStackOverflowHook([[maybe_unused]] TaskHandle_t xTask, [[maybe_unused]] char *pcTaskName) {
+    std::abort();
+}

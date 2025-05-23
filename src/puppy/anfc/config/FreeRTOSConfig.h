@@ -72,6 +72,7 @@ extern uint32_t SystemCoreClock;
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES   2
 #define INCLUDE_vTaskDelay                      1
 #define INCLUDE_vTaskSuspend                    1
+#define configCHECK_FOR_STACK_OVERFLOW          2
 
 /* Cortex-M specific definitions. */
 #define configPRIO_BITS      4
