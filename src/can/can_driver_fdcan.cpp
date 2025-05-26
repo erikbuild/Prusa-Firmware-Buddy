@@ -341,4 +341,17 @@ void FdcanDriver::set_filter(uint32_t index, const CanardFilter &filter, bool ti
     }
 }
 
+Driver::ErrorStats FdcanDriver::get_error_stats() {
+    FDCAN_ErrorCountersTypeDef error_counters;
+    if (auto ret = HAL_FDCAN_GetErrorCounters(&hfdcan, &error_counters); ret != HAL_OK) {
+        bsod("CAN HAL error stats %i,%i", static_cast<int>(ret), static_cast<int>(hfdcan.ErrorCode));
+    }
+
+    return {
+        .tec = static_cast<uint8_t>(error_counters.TxErrorCnt),
+        .rec = static_cast<uint8_t>((error_counters.RxErrorPassive != 0 ? 0x80 : 0x00) | error_counters.RxErrorCnt),
+        .err_log = error_counters.ErrorLogging,
+    };
+}
+
 } // namespace can

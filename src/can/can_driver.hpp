@@ -26,6 +26,19 @@ public:
      */
     using NotifyCallback = std::function<void(Notification notification)>;
 
+    struct ErrorStats {
+        uint8_t tec; ///< Transmit error counter
+        uint8_t rec; ///< Receive error counter
+
+        /**
+         * @brief CAN error logging.
+         * The counter is incremented each time when a CAN protocol error causes
+         * the transmit error counter or the receive error counter to be incremented.
+         * Each get_error_stats() clears this counter.
+         */
+        unsigned int err_log;
+    };
+
 private:
     /// Notify the application about events. Called from ISR or task.
     NotifyCallback notify_callback = nullptr;
@@ -99,6 +112,13 @@ public:
      * @note Throw bsod on hardware error.
      */
     virtual void set_filter(uint32_t index, const CanardFilter &filter, bool timestamp, bool high_prio) = 0;
+
+    /**
+     * @brief Get error statistics.
+     * @note Reading clears err_log counter.
+     * @return error statistics
+     */
+    virtual ErrorStats get_error_stats() = 0;
 
     /// ------------------
     /// Interrupt handlers

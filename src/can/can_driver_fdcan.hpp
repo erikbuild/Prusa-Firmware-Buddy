@@ -106,6 +106,13 @@ public:
      */
     void set_filter(uint32_t index, const CanardFilter &filter, bool timestamp, bool high_prio) override;
 
+    /**
+     * @brief Get error statistics.
+     * @note Reading clears err_log counter.
+     * @return error statistics
+     */
+    ErrorStats get_error_stats() override;
+
     /// ------------------
     /// Interrupt handlers
     /// @note Public, but handled internally, so do not use.

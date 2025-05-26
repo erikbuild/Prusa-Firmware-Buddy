@@ -130,12 +130,23 @@ private:
 
 public:
     /**
+     * @brief Default size of the TX queue.
+     *     Cyphal demo suggest 100 for classic CAN.
+     *     With 7 bytes per packet, that is a maximum message of 700 bytes.
+     *     With 63 bytes per packet, we could lower this number to 12.
+     *     One Tx item takes between 49 and 112 bytes, depending on the size of the payload.
+     */
+    static constexpr uint32_t default_tx_queue_size = 16;
+    static_assert(63.f * default_tx_queue_size > ProtoSender::MAX_SERIALIZED_SIZE_BYTES * 1.5f,
+        "Default TX queue size is too small for 1.5 of the largest message.");
+
+    /**
      * @brief Create a Cyphal instance.
      * @note Afterwards, create one RTOS task with task(this) function.
      * @param driver_ CAN hardware driver
-     * @param tx_queue_size size of the TX queue, Cyphal demo suggest 100 for classic CAN, we need something smaller that fits in RAM
+     * @param tx_queue_size size of the TX queue, see default_tx_queue_size
      */
-    Task(Driver &driver_, uint32_t tx_queue_size = 32);
+    Task(Driver &driver_, uint32_t tx_queue_size = default_tx_queue_size);
 
     /**
      * @brief Lock mutex as long as this lives.
@@ -366,6 +377,13 @@ public:
      * @note Throw bsod on hardware error.
      */
     void set_filter(uint32_t index, const CanardFilter &filter, bool timestamp, bool high_prio) { driver.set_filter(index, filter, timestamp, high_prio); }
+
+    /**
+     * @brief Get error statistics.
+     * @note Reading clears err_log counter.
+     * @return error statistics
+     */
+    Driver::ErrorStats get_error_stats() { return driver.get_error_stats(); }
 };
 
 // Cyphal task singleton

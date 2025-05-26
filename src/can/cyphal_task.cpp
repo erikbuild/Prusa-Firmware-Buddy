@@ -47,6 +47,7 @@ Task::Task(Driver &driver_, uint32_t tx_queue_size)
     // Init Cyphal
     canard_instance = canardInit(&canardAllocate, &canardFree);
     canard_instance.node_id = CANARD_NODE_ID_UNSET;
+    assert(63 * tx_queue_size > ProtoSender::MAX_SERIALIZED_SIZE_BYTES); // Queue size must be enough to hold the biggest message
     canard_tx_queue = canardTxInit(tx_queue_size, CANARD_MTU_CAN_FD);
     timesync.canard_tx_queue = canardTxInit(1, CANARD_MTU_CAN_FD);
 }

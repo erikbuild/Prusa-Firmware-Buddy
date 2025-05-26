@@ -27,6 +27,11 @@ Starting with `prusa3d` namespace to avoid conflicts with third party devices, e
 
 Naming should follow the conventions from [Cyphal Specifications](https://opencyphal.org/specification).
 
+Versioning rules need to be followed when modifying this, see Guide or Specifications.
+Protocol compatible changes (homogenous struct to array, adding elements to messages...) increase minor version number.
+Incompatible changes increase major version number.
+It is necessary to keep bootloader compatibility and it will allow an observer in Linux to understand any version of a connected device.
+
 Try to use `uavcan.si.xxx` types whenever possible.
 For example `uavcan.si.unit.velocity.Scalar.1.0` will always be in `m/s` and understandable by an external observer.
 If you need to use a custom unit for optimization, define `prusa3d.unit.velocity.FurlongsPerFortnight.1.0` that will be `@sealed` and thoroughly comment why it was necessary.
