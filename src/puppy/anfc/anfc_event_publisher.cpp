@@ -6,14 +6,14 @@
 using namespace can::cyphal;
 
 anfc::cyphal::ANFCEventPublisher::ANFCEventPublisher()
-    : accept_event_server {
+    : accept_server {
         [this](const auto &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
             prusa3d_nfc_command_AcceptEvent_Response_1_0 response;
 
             // Verify that the accept request is for the currently broadcasted event
             response.ok = (currently_broadcasted_event_id == data.event_id.value);
 
-            accept_event_server.send_response(response);
+            accept_server.send_response(response);
 
             if (response.ok) {
                 currently_broadcasted_event_id = 0;
@@ -27,30 +27,30 @@ anfc::cyphal::ANFCEventPublisher::ANFCEventPublisher()
 void anfc::cyphal::ANFCEventPublisher::step() {
     if (currently_broadcasted_event_id == 0) {
         // Stop repeating the previously broadcasted event
-        event_sender.set_period(0);
+        sender.set_period(0);
 
         // Pop a next event from the queue and start broadcasting it
-        if (!event_queue.isEmpty()) {
-            const EventRecord rec = event_queue.dequeue();
+        if (!queue.isEmpty()) {
+            const EventRecord rec = queue.dequeue();
 
             currently_broadcasted_event_id = rec.id;
 
             // Copy the data to the sender buffer
-            event_sender.transform_data([&](auto &data) -> can::cyphal::TransformResult {
+            sender.transform_data([&](auto &data) -> can::cyphal::TransformResult {
                 memcpy(data.serialized_data.data(), rec.serialized_data, rec.serialized_data_size);
                 data.serialized_size = rec.serialized_data_size;
                 return TransformResult { .success = true, .significant = true };
             });
-            event_sender.set_period(event_retransmission_period_ms);
+            sender.set_period(retransmission_period_ms);
 
             // The event data has been copied to the sender -> we can free it from the heap
             {
-                std::lock_guard lock { event_queue_mutex };
-                event_queue_heap.free(rec.serialized_data);
+                std::lock_guard lock { mutex };
+                queue_heap.free(rec.serialized_data);
             }
 
             // Notify tasks blocked on enqueue_event that we've freed up some space
-            event_queue_condition.notify_one();
+            condition.notify_one();
         }
     }
 }
@@ -60,7 +60,7 @@ void anfc::cyphal::ANFCEventPublisher::enqueue_event(prusa3d_nfc_event_Event_1_0
 
     // Prevent assigning event ID 0 (with respect to overflows) - that is a special value
     while (event.event_id.value == 0) {
-        event.event_id.value = ++event_id_counter;
+        event.event_id.value = ++id_counter;
     }
 
     using EvTraits = prusa3d_nfc_event_Event_1_0_Traits;
@@ -79,9 +79,9 @@ void anfc::cyphal::ANFCEventPublisher::enqueue_event(prusa3d_nfc_event_Event_1_0
 
     // Allocate space for the event data on the event queue heap
     {
-        std::unique_lock lock { event_queue_mutex };
-        while (!(enqueued_data = event_queue_heap.alloc(event_size))) {
-            event_queue_condition.wait(lock);
+        std::unique_lock lock { mutex };
+        while (!(enqueued_data = queue_heap.alloc(event_size))) {
+            condition.wait(lock);
         }
     }
 
@@ -96,9 +96,9 @@ void anfc::cyphal::ANFCEventPublisher::enqueue_event(prusa3d_nfc_event_Event_1_0
 
     // Enqueue the event
     {
-        std::unique_lock lock { event_queue_mutex };
-        while (!event_queue.enqueue(rec)) {
-            event_queue_condition.wait(lock);
+        std::unique_lock lock { mutex };
+        while (!queue.enqueue(rec)) {
+            condition.wait(lock);
         }
     }
 }
