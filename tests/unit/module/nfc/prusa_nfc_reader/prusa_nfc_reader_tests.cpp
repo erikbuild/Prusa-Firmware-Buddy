@@ -8,8 +8,8 @@
 #include <ranges>
 #include <magic_enum.hpp>
 
-#include <nfc_prusa/prusa_nfc_reader.hpp>
-#include <nfc_ll/i_nfc_reader.hpp>
+#include <prusa_nfc/prusa_nfc_reader.hpp>
+#include <prusa_nfc/i_nfc_reader.hpp>
 
 using ByteString = std::basic_string<std::byte>;
 
@@ -234,7 +234,7 @@ void test_standard_tag_main(PrusaNFCReader &reader, MockNFCReader &mock) {
     CHECK(mock.log.reads.size() == 1);
 }
 
-TEST_CASE("anfc::PrusaNFCReader::reading_standard_sample_tag") {
+TEST_CASE("PrusaNFCReader::reading_standard_sample_tag") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
@@ -289,7 +289,7 @@ TEST_CASE("anfc::PrusaNFCReader::reading_standard_sample_tag") {
     }
 }
 
-TEST_CASE("anfc::PrusaNFCReader::reading_standard_sample_tag_with_aux") {
+TEST_CASE("PrusaNFCReader::reading_standard_sample_tag_with_aux") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
@@ -355,7 +355,7 @@ TEST_CASE("anfc::PrusaNFCReader::reading_standard_sample_tag_with_aux") {
     }
 }
 
-TEST_CASE("anfc::PrusaNFCReader::writing") {
+TEST_CASE("PrusaNFCReader::writing") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
@@ -529,7 +529,7 @@ TEST_CASE("anfc::PrusaNFCReader::writing") {
     }
 }
 
-TEST_CASE("anfc::PrusaNFCReader::edge_cases") {
+TEST_CASE("PrusaNFCReader::edge_cases") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
@@ -737,7 +737,7 @@ TEST_CASE("anfc::PrusaNFCReader::edge_cases") {
     }
 }
 
-TEST_CASE("anfc::PrusaNFCReader::caching") {
+TEST_CASE("PrusaNFCReader::caching") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
     for (size_t i = 0; i < PrusaNFCReader::metadata_cache_capacity + 2; i++) {

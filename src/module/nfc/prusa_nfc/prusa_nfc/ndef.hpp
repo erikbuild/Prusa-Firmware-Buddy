@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nfc_ll/nfc_defines.hpp>
+#include "nfc_defines.hpp"
 
 enum class NDEFTypeNameFormat : uint8_t {
     empty = 0,

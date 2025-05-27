@@ -9,8 +9,8 @@
 #include <utils/enum_array.hpp>
 
 #include <utils/cache.hpp>
-#include <nfc_ll/nfc_defines.hpp>
-#include <nfc_ll/i_nfc_reader.hpp>
+#include "nfc_defines.hpp"
+#include "i_nfc_reader.hpp"
 
 #include "prusa_nfc_defines.hpp"
 

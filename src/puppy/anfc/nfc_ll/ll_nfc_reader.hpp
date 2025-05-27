@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_nfc_reader.hpp"
+#include <prusa_nfc/i_nfc_reader.hpp>
 
 // !!! Currently stub implementation for testing
 class LLNFCReader final : public INFCReader {

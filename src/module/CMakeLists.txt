@@ -4,3 +4,4 @@
 add_subdirectory(utils)
 add_subdirectory(magic_optimizations)
 add_subdirectory(raii)
+add_subdirectory(nfc)

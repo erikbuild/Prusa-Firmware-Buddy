@@ -66,7 +66,6 @@ target_include_directories(
   )
 
 add_subdirectory(nfc_ll)
-add_subdirectory(nfc_prusa)
 
 target_link_libraries(
   firmware
@@ -74,12 +73,12 @@ target_link_libraries(
           HAL_Config
           printf::printf
           SG14
-          nanocbor
           buddy_utils
           freertos
           canard
           BuddyHeaders
           o1heap
+          prusa_nfc_reader
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using

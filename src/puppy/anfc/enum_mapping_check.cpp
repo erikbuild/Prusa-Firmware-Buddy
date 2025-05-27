@@ -1,5 +1,5 @@
 #include <prusa3d/nfc/util/ReaderError_1_0.h>
-#include <nfc_prusa/prusa_nfc_reader.hpp>
+#include <prusa_nfc/prusa_nfc_reader.hpp>
 
 // We have an enum specified in src/can/data_types/prusa3d/nfc/util/ReaderError.1.0.dsdl that needs to match 1:1 PrusaNFCReader::Error enum
 // Here we are checking that this is really the case

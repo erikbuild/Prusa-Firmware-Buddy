@@ -3,7 +3,7 @@
 
 #include <utils/atomic_circular_queue.hpp>
 #include <move_only_inplace_function.hpp>
-#include <nfc_prusa/prusa_nfc_reader.hpp>
+#include <prusa_nfc/prusa_nfc_reader.hpp>
 #include <nfc_ll/ll_nfc_reader.hpp>
 
 #include <freertos/mutex.hpp>
