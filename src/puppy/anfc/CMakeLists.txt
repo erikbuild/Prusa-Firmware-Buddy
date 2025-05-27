@@ -51,6 +51,7 @@ endif()
 target_sources(
   firmware
   PRIVATE "${CMAKE_SOURCE_DIR}/src/device/multi_watchdog.cpp"
+          anfc_event_publisher.cpp
           cyphal_anfc_node.cpp
           enum_mapping_check.cpp
           hal.cpp
