@@ -127,14 +127,15 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
     // Chew through the NDEF header
     NFCSpan payload_span;
     {
-        auto io_result = read_span({ .tag = tag, .span = { .offset = 0, .size = sizeof(NDEFRecordFullHeader) } });
-        if (!io_result) {
-            return handle_error(io_result.error());
-        }
-
         // Copy the header so that we can reuse the read buffer (and also for alignment)
         NDEFRecordFullHeader ndef_header;
-        memcpy(&ndef_header, io_result->data(), sizeof(ndef_header));
+        {
+            auto io_result = read_span({ .tag = tag, .span = { .offset = 0, .size = sizeof(NDEFRecordFullHeader) } });
+            if (!io_result) {
+                return handle_error(io_result.error());
+            }
+            memcpy(&ndef_header, io_result->data(), sizeof(ndef_header));
+        }
 
         if (
             !ndef_header.message_begin // Not a message begin -> invalid data
@@ -145,16 +146,19 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
             return tag_invalid_error;
         }
 
-        // Read the NDEF type into the read buffer
-        io_result = read_span({ .tag = tag, .span = ndef_header.dynamic_field_span(NDEFRecordFullHeader::DynamicField::type) });
-        if (!io_result) {
-            return handle_error(io_result.error());
-        }
+        // Check NDEF MIME type
+        {
+            // Read the NDEF type into the read buffer
+            auto io_result = read_span({ .tag = tag, .span = ndef_header.dynamic_field_span(NDEFRecordFullHeader::DynamicField::type) });
+            if (!io_result) {
+                return handle_error(io_result.error());
+            }
 
-        // Different mime type -> the tag is invalid
-        const std::string_view tag_mime_type { reinterpret_cast<const char *>(io_result->data()), io_result->size() };
-        if (tag_mime_type != params_.mime_type) {
-            return tag_invalid_error;
+            // Different mime type -> the tag is invalid
+            const std::string_view tag_mime_type { reinterpret_cast<const char *>(io_result->data()), io_result->size() };
+            if (tag_mime_type != params_.mime_type) {
+                return tag_invalid_error;
+            }
         }
 
         // Parse and store the payload location
