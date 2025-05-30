@@ -132,7 +132,7 @@ void hal::init_can() {
     hfdcan1.Instance = FDCAN1;
     hfdcan1.Init = FDCAN_InitTypeDef {
         .ClockDivider = FDCAN_CLOCK_DIV1,
-        .FrameFormat = FDCAN_FRAME_FD_BRS,
+        .FrameFormat = enable_bit_rate_switch ? FDCAN_FRAME_FD_BRS : FDCAN_FRAME_FD_NO_BRS,
         .Mode = FDCAN_MODE_NORMAL,
         .AutoRetransmission = DISABLE,
         .TransmitPause = ENABLE,

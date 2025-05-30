@@ -44,7 +44,7 @@ auto get_uid() {
     return uid;
 }
 
-can::FdcanDriver can_driver(hal::peripherals::hfdcan1);
+can::FdcanDriver can_driver(hal::peripherals::hfdcan1, hal::enable_bit_rate_switch);
 
 /// Heap allocated for canard
 O1Heap<8192> canard_heap;
