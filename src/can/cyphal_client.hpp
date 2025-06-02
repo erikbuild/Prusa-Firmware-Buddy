@@ -151,13 +151,22 @@ public:
     }
 
     /**
-     * @brief Check if response is ready.
-     * @param timeout timeout to receive response in RTOS ticks, 0 to just check
+     * @brief Wait for response to be ready.
+     * @param timeout timeout to receive response in RTOS ticks
      * @return will return true only once after call() that timeouted
      * @note Don't mix polling and blocking calls. This is useful after call() with response_timeout = 0.
      */
-    [[nodiscard]] bool wait_response_ready(TickType_t response_timeout = 0) {
+    [[nodiscard]] bool wait_response_ready(TickType_t response_timeout) {
         return (xSemaphoreTake(response_semaphore, response_timeout) == pdTRUE); // Try for response
+    }
+
+    /**
+     * @brief Check if response is ready.
+     * @return will return true only once after call() that timeouted
+     * @note Don't mix polling and blocking calls. This is useful after call() with response_timeout = 0.
+     */
+    [[nodiscard]] inline bool is_response_ready() {
+        return wait_response_ready(0);
     }
 
     /**
