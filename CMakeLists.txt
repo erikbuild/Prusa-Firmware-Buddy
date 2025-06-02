@@ -10,6 +10,7 @@ include(cmake/AddPuppyFirmware.cmake)
 
 # Needded for nunavut
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set_property(GLOBAL PROPERTY EXCLUDE_FROM_ALL ON)
 
 project(
   Buddy
@@ -629,4 +630,8 @@ if(DSDL_TRANSPILE)
   # Convert dsdl files to headers and include them
   include(src/can/data_types/TranspileDsdl.cmake)
   transpile_dsdl()
+endif()
+
+if(NOT DEFINED UNITTESTS_ENABLE OR NOT UNITTESTS_ENABLE)
+  set_target_properties(firmware PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()

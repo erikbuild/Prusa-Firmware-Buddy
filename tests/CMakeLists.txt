@@ -1,3 +1,4 @@
+set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL OFF)
 add_subdirectory(unit)
 add_subdirectory(stubs/FreeRTOS)
 add_subdirectory(manual)
