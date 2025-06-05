@@ -5,5 +5,6 @@ prusa3d.nfc.request.WriteField.1.0 write_field
 prusa3d.nfc.request.ResetState.1.0 reset_state
 prusa3d.nfc.request.SetParams.1.0 set_params
 prusa3d.nfc.request.ForgetTag.1.0 forget_tag
+prusa3d.nfc.request.EnumerateFields.1.0 enumerate_fields
 
 @sealed

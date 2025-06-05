@@ -7,10 +7,15 @@
 #include <cyphal_anfc_node.hpp>
 
 #include <prusa3d/nfc/event/Event_1_0.h>
+#include <prusa3d/nfc/util/ReaderError_1_0.h>
 
 namespace {
+bool is_valid_section(std::underlying_type_t<NFCSection> section) {
+    return section < std::to_underlying(NFCSection::_cnt);
+}
+
 std::optional<PrusaNFCReader::NFCTagField> parse_request_field(const prusa3d_nfc_util_TagField_1_0 &field) {
-    if (field.section.value >= std::to_underlying(NFCSection::_cnt)) {
+    if (!is_valid_section(field.section.value)) {
         return std::nullopt;
     }
 
@@ -93,6 +98,10 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
                 .mime_type = std::string_view(mime_type_buffer_.data(), mime_len),
                 .has_meta_region = req.has_meta_region,
             });
+
+        } else if (prusa3d_nfc_request_RequestData_1_0_is_enumerate_fields_(&rreq)) {
+            prusa3d_nfc_request_RequestResult_1_0_select_enumerate_fields_(&result);
+            handle_enumerate_fields_request(rreq.enumerate_fields, result.enumerate_fields);
         }
 
         can_node.enqueue_event(response);
@@ -263,7 +272,7 @@ void NFCTask::handle_write_field_request(const prusa3d_nfc_request_WriteField_1_
 
     const auto field_opt = parse_request_field(request.field);
     if (!field_opt) {
-        error = static_cast<uint8_t>(PrusaNFCReader::Error::other);
+        error = prusa3d_nfc_util_ReaderError_1_0_OTHER;
         return;
     }
     const auto field = *field_opt;
@@ -302,6 +311,24 @@ void NFCTask::handle_write_field_request(const prusa3d_nfc_request_WriteField_1_
     if (io_result.has_value()) {
         error = prusa3d_nfc_util_ReaderError_1_0_NO_ERROR;
     } else {
-        error = static_cast<uint8_t>(io_result.error());
+        error = std::to_underlying(io_result.error());
     }
+}
+
+void NFCTask::handle_enumerate_fields_request(const prusa3d_nfc_request_EnumerateFields_1_0 &request, prusa3d_nfc_request_EnumerateFieldsResult_1_0 &result) {
+    if (!is_valid_section(request.section.value)) {
+        prusa3d_nfc_request_EnumerateFieldsResult_1_0_select_error_(&result);
+        result._error._error = prusa3d_nfc_util_ReaderError_1_0_OTHER;
+        return;
+    }
+
+    const auto io_result = reader_.enumerate_fields(static_cast<NFCTagID>(request.tag.value), static_cast<NFCSection>(request.section.value), result.fields.value.elements);
+    if (!io_result) {
+        prusa3d_nfc_request_EnumerateFieldsResult_1_0_select_error_(&result);
+        result._error._error = std::to_underlying(io_result.error());
+        return;
+    }
+
+    prusa3d_nfc_request_EnumerateFieldsResult_1_0_select_fields_(&result);
+    result.fields.value.count = io_result->size();
 }

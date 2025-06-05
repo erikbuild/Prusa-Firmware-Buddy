@@ -9,4 +9,6 @@ prusa3d.nfc.util.ValueOrError.1.0 read_field
 # Write field error or NO_ERROR
 prusa3d.nfc.util.ReaderError.1.0 write_field
 
+prusa3d.nfc.request.EnumerateFieldsResult.1.0 enumerate_fields
+
 @sealed
