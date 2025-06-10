@@ -322,15 +322,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &command) 
         return std::unexpected(nfcv::Error::response_invalid_size);
     }
 
-    /*{
-        iso13239::CRC crc {};
-        crc.add_bytes(std::span { reinterpret_cast<uint8_t *>(buffer.data()), *decode_res - 2 });
-        const auto transmitted_crc = std::to_integer<uint16_t>(buffer[buffer.size() - 2]) | (std::to_integer<uint16_t>(buffer[buffer.size() - 1]) << 8);
-        if (crc.get_result() != transmitted_crc) {
-            return std::unexpected(Error::InvalidCRC);
-        }
-    }*/
-
     // Parse response to message
     const auto deserialization_res = nfcv::parse_response(*decode_res, command);
     if (!deserialization_res.has_value()) {

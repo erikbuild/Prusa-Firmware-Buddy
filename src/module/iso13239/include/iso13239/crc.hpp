@@ -7,6 +7,8 @@ namespace iso13239 {
 
 class CRC {
 public:
+    using ResultType = uint16_t;
+
     constexpr CRC()
         : curr_value(0xffff) {}
     constexpr void add_byte(uint8_t byte) {
@@ -21,12 +23,12 @@ public:
             add_byte(byte);
         }
     }
-    constexpr uint16_t get_result() {
+    constexpr ResultType get_result() {
         return ~curr_value;
     }
 
 private:
-    uint16_t curr_value;
+    ResultType curr_value;
 };
 
 } // namespace iso13239

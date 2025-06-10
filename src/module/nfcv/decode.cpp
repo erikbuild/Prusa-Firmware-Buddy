@@ -1,5 +1,7 @@
 #include <nfcv/decode.hpp>
 
+#include <iso13239/crc.hpp>
+
 #include <utility>
 #include <cstdint>
 #include <cassert>
@@ -67,6 +69,16 @@ nfcv::Result<std::span<std::byte>> nfcv::decode(const std::span<const std::byte>
 
 namespace nfcv {
 namespace {
+    bool validate_response_crc(const std::span<const std::byte> &buffer) {
+        static constexpr size_t CRC_SIZE = sizeof(iso13239::CRC::ResultType);
+        iso13239::CRC crc {};
+        crc.add_bytes(std::span { reinterpret_cast<const uint8_t *>(buffer.data()), buffer.size() - CRC_SIZE });
+        const auto ref_crc_bytes = buffer.subspan(buffer.size() - CRC_SIZE);
+        static_assert(std::endian::native == std::endian::little);
+        const auto transmitted_crc = std::to_integer<iso13239::CRC::ResultType>(ref_crc_bytes[0]) | (std::to_integer<iso13239::CRC::ResultType>(ref_crc_bytes[1]) << 8);
+        return crc.get_result() == transmitted_crc;
+    }
+
     static constexpr std::byte NFCV_ERROR_FLAG { 0x01 };
     Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::Inventory &command) {
         if (data.size() != command.response.uid.size() + 4 /*1B flags + 1B mask length (is 0) + 0B mask + 2B CRC*/) {
@@ -174,6 +186,10 @@ namespace {
 nfcv::Result<void> nfcv::parse_response(const std::span<const std::byte> &data, Command &command) {
     if (data.size() <= 2) {
         return std::unexpected(Error::response_invalid_size);
+    }
+
+    if (!validate_response_crc(data)) {
+        return std::unexpected(Error::invalid_crc);
     }
 
     if ((data[0] & NFCV_ERROR_FLAG) == NFCV_ERROR_FLAG) {
