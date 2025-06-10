@@ -47,7 +47,7 @@ namespace command {
             uint8_t block_address;
             std::span<const std::byte> block_buffer;
         } request;
-        struct Respose {
+        struct Response {
         } response;
     };
 
