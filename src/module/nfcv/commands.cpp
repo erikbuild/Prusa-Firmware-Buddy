@@ -14,7 +14,7 @@ namespace {
 } // namespace
 
 bool is_response_expected(const Command &command) {
-    return std::visit([]<typename T>(const T &) { return (requires { T::Response; }); }, command);
+    return std::visit([]<typename T>(const T &) -> bool { return requires { typename T::Response; }; }, command);
 }
 
 bool is_write_like_command(const Command &command) {
