@@ -42,58 +42,54 @@ void nfcv::Encoder1Of4::append_crc_and_finalize() {
 }
 
 namespace nfcv::impl {
-Result<void> construct_command(MsgBuilder &builder, [[maybe_unused]] const command::Inventory &command) {
-    if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(3)) {
-        return std::unexpected(Error::buffer_overflow);
-    }
-    nfcv::Encoder1Of4 encoder(builder);
-    encoder.append_byte(std::byte { 0x26 }); // Flags: 1 subcarier, high datarate, inventory flag, 1 slot
-    encoder.append_byte(std::byte { 0x01 }); // Specify Inventory command
+
+template <typename Command>
+constexpr std::byte command_flags() {
+    return static_cast<std::byte>(MessageFlag::high_data_rate | MessageFlagNoInv::address_flag);
+}
+
+template <>
+constexpr std::byte command_flags<command::Inventory>() {
+    return static_cast<std::byte>(MessageFlag::high_data_rate | MessageFlag::inventory_flag | MessageFlagInv::nb_slots_flag);
+}
+
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::Inventory &command) {
+    return 3;
+}
+
+Result<void> construct_rest(Encoder1Of4 &encoder, [[maybe_unused]] const command::Inventory &command) {
     encoder.append_byte(std::byte { 0x00 }); // No optional data
-    encoder.append_crc_and_finalize();
     return {};
 }
 
-Result<void> construct_command(MsgBuilder &builder, const command::SystemInfo &command) {
-    if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(10)) {
-        return std::unexpected(Error::buffer_overflow);
-    }
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::SystemInfo &command) {
+    return 10;
+}
 
-    nfcv::Encoder1Of4 encoder(builder);
-    encoder.append_byte(std::byte { 0x22 });
-    encoder.append_byte(std::byte { 0x2B }); // SysInfo command
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::SystemInfo &command) {
     for (const auto &byte : command.request.uid) {
         encoder.append_byte(byte);
     }
-    encoder.append_crc_and_finalize();
     return {};
 }
 
-Result<void> construct_command(MsgBuilder &builder, const command::ReadSingleBlock &command) {
-    if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(11)) {
-        return std::unexpected(Error::buffer_overflow);
-    }
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::ReadSingleBlock &command) {
+    return 11;
+}
 
-    nfcv::Encoder1Of4 encoder(builder);
-    encoder.append_byte(std::byte { 0x22 });
-    encoder.append_byte(std::byte { 0x20 });
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::ReadSingleBlock &command) {
     for (const auto &byte : command.request.uid) {
         encoder.append_byte(byte);
     }
     encoder.append_byte(std::byte { command.request.block_address });
-
-    encoder.append_crc_and_finalize();
     return {};
 }
 
-Result<void> construct_command(MsgBuilder &builder, const command::WriteSingleBlock &command) {
-    if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(11 + command.request.block_buffer.size())) {
-        return std::unexpected(Error::buffer_overflow);
-    }
+constexpr std::size_t expected_message_size(const command::WriteSingleBlock &command) {
+    return 11 + command.request.block_buffer.size();
+}
 
-    nfcv::Encoder1Of4 encoder(builder);
-    encoder.append_byte(std::byte { 0x22 });
-    encoder.append_byte(std::byte { 0x21 });
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::WriteSingleBlock &command) {
     for (const auto &byte : command.request.uid) {
         encoder.append_byte(byte);
     }
@@ -101,29 +97,33 @@ Result<void> construct_command(MsgBuilder &builder, const command::WriteSingleBl
     for (const auto &byte : command.request.block_buffer) {
         encoder.append_byte(byte);
     }
-
-    encoder.append_crc_and_finalize();
     return {};
 }
 
-Result<void> construct_command(MsgBuilder &builder, const command::StayQuiet &command) {
-    if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(10)) {
-        return std::unexpected(Error::buffer_overflow);
-    }
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::StayQuiet &command) {
+    return 10;
+}
 
-    nfcv::Encoder1Of4 encoder(builder);
-    encoder.append_byte(std::byte { 0x22 });
-    encoder.append_byte(std::byte { 0x02 });
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::StayQuiet &command) {
     for (const auto &byte : command.request.uid) {
         encoder.append_byte(byte);
     }
-
-    encoder.append_crc_and_finalize();
     return {};
 }
 
 } // namespace nfcv::impl
 
 nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &command) {
-    return std::visit([&](const auto &cmd) { return impl::construct_command(builder, cmd); }, command);
+    nfcv::Encoder1Of4 encoder(builder);
+    return std::visit([&]<typename T>(const T &cmd) -> nfcv::Result<void> {
+        if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(impl::expected_message_size(cmd))) {
+            return std::unexpected(Error::buffer_overflow);
+        }
+        encoder.append_byte(impl::command_flags<T>());
+        encoder.append_byte(T::cmd_id);
+        const auto res = impl::construct_rest(encoder, cmd);
+        encoder.append_crc_and_finalize();
+        return res;
+    },
+        command);
 }

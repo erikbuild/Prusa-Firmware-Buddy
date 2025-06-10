@@ -27,4 +27,32 @@ struct TagInfo {
     std::optional<MemorySize> mem_size;
     std::optional<ICRef> ic_ref;
 };
+
+enum class MessageFlag : uint8_t {
+    two_subcarriers = 1 << 0,
+    high_data_rate = 1 << 1,
+    inventory_flag = 1 << 2,
+    protocol_extension = 1 << 3,
+};
+
+enum class MessageFlagNoInv : uint8_t {
+    select_flag = 1 << 4,
+    address_flag = 1 << 5,
+    custom_flag = 1 << 6,
+};
+
+enum class MessageFlagInv : uint8_t {
+    afi_flag = 1 << 4,
+    /// if set - 1 slot, otherwise 16 slots
+    nb_slots_flag = 1 << 5,
+    custom_flag = 1 << 6,
+};
+
+constexpr MessageFlag operator|(MessageFlag a, MessageFlag b) { return static_cast<MessageFlag>(std::to_underlying(a) | std::to_underlying(b)); }
+constexpr MessageFlagNoInv operator|(MessageFlagNoInv a, MessageFlag b) { return static_cast<MessageFlagNoInv>(std::to_underlying(a) | std::to_underlying(b)); }
+constexpr MessageFlagNoInv operator|(MessageFlag a, MessageFlagNoInv b) { return static_cast<MessageFlagNoInv>(std::to_underlying(a) | std::to_underlying(b)); }
+constexpr MessageFlagNoInv operator|(MessageFlagNoInv a, MessageFlagNoInv b) { return static_cast<MessageFlagNoInv>(std::to_underlying(a) | std::to_underlying(b)); }
+constexpr MessageFlagInv operator|(MessageFlagInv a, MessageFlag b) { return static_cast<MessageFlagInv>(std::to_underlying(a) | std::to_underlying(b)); }
+constexpr MessageFlagInv operator|(MessageFlag a, MessageFlagInv b) { return static_cast<MessageFlagInv>(std::to_underlying(a) | std::to_underlying(b)); }
+constexpr MessageFlagInv operator|(MessageFlagInv a, MessageFlagInv b) { return static_cast<MessageFlagInv>(std::to_underlying(a) | std::to_underlying(b)); }
 } // namespace nfcv

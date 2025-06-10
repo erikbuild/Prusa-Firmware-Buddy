@@ -10,6 +10,7 @@ namespace nfcv {
 
 namespace command {
     struct Inventory {
+        static constexpr std::byte cmd_id { 0x01 };
         struct Request {
         } request;
         struct Response {
@@ -17,6 +18,7 @@ namespace command {
         } response;
     };
     struct SystemInfo {
+        static constexpr std::byte cmd_id { 0x2B };
         struct Request {
             nfcv::UIDConstView uid;
         } request;
@@ -25,6 +27,7 @@ namespace command {
     };
 
     struct ReadSingleBlock {
+        static constexpr std::byte cmd_id { 0x20 };
         struct Request {
             nfcv::UIDConstView uid;
             uint8_t block_address;
@@ -35,6 +38,7 @@ namespace command {
     };
 
     struct WriteSingleBlock {
+        static constexpr std::byte cmd_id { 0x21 };
         struct Request {
             nfcv::UIDConstView uid;
             uint8_t block_address;
@@ -45,6 +49,7 @@ namespace command {
     };
 
     struct StayQuiet {
+        static constexpr std::byte cmd_id { 0x02 };
         struct Request {
             nfcv::UIDConstView uid;
         } request;
