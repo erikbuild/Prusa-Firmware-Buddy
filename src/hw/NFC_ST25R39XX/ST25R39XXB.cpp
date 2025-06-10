@@ -289,6 +289,7 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &command) 
 
     // Some commands doesn't send a response according to the iso - like StayQuiet
     if (!nfcv::is_response_expected(command)) {
+        // We need to wait after each command for ~ 320 ns - to ensure that we wait 320 ns, we need to wait for 2 ms, because freertos ticks in ms intervals
         sys_int.delay(2); // FIXME: Add proper timeout using the generict timer in st25r39xxb chips
         return {};
     }
@@ -325,6 +326,9 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &command) 
     if (!deserialization_res.has_value()) {
         return std::unexpected(deserialization_res.error());
     }
+
+    // We need to wait after each command for ~ 320 ns - to ensure that we wait 320 ns, we need to wait for 2 ms, because freertos ticks in ms intervals
+    sys_int.delay(2); // FIXME: Add proper timeout using the generict timer in st25r39xxb chips
     return {};
 }
 
