@@ -78,12 +78,12 @@ namespace {
         HWImpl hw_impl(&hal::peripherals::hspi1, GPIOA, GPIO_PIN_1);
         SysImpl sys_impl {};
     } // namespace nfcr1
-    st25r39xxb::ST25R39XXB nfc_reader_1 { nfcr1::hw_impl, nfcr1::sys_impl };
 } // namespace
+st25r39xxb::ST25R39XXB reader_1 { nfcr1::hw_impl, nfcr1::sys_impl };
 } // namespace nfc
 
-void nfc::init() {
-    auto init_res = nfc_reader_1.init();
+void nfc::readers_init() {
+    auto init_res = nfc::reader_1.init();
     if (!init_res.has_value()) {
         hal::panic();
     }

@@ -117,6 +117,7 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
 }
 
 void NFCTask::task() {
+    nfc::readers_init();
     while (true) {
         // Process a reader event
         if (PrusaNFCReader::Event e; reader_.get_event(e)) {

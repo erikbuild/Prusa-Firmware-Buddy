@@ -31,6 +31,9 @@ public:
         /// Trying to read/write outside of the tag memory
         outside_of_bounds,
 
+        /// TagID is invalid (or already invalidated)
+        invalid_id,
+
         /// Other, unspecified error.
         /// Retrying the operation might help.
         other,

@@ -6,6 +6,8 @@
 #include <prusa_nfc/prusa_nfc_reader.hpp>
 #include <nfc_ll/ll_nfc_reader.hpp>
 
+#include "nfc.hpp"
+
 #include <freertos/mutex.hpp>
 #include <o1heap/o1heap.hpp>
 
@@ -50,7 +52,7 @@ private:
     /// Mutex for enqueing the jobs and for the heap ops
     freertos::Mutex job_queue_mutex_;
 
-    LLNFCReader ll_reader_;
+    LLNFCReader ll_reader_ { nfc::reader_1 };
     PrusaNFCReader reader_ { ll_reader_ };
 
     std::array<char, 64> mime_type_buffer_;

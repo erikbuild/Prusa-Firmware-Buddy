@@ -1,6 +1,9 @@
 #pragma once
 
+#include <st25r39xxb/ST25R39XXB.hpp>
+
 namespace nfc {
-void init();
+extern st25r39xxb::ST25R39XXB reader_1;
+void readers_init();
 void irq();
 } // namespace nfc

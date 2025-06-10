@@ -27,6 +27,7 @@ PrusaNFCReader::Error PrusaNFCReader::to_prusa_error(INFCReader::IOError error) 
         return Error::tag_invalid;
 
     case INFCReader::IOError::other:
+    case INFCReader::IOError::invalid_id:
         return Error::other;
     }
 

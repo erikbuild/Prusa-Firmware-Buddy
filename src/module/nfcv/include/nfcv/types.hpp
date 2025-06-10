@@ -11,6 +11,12 @@ constexpr size_t UID_SIZE = 8;
 using UID = std::array<std::byte, UID_SIZE>;
 using UIDView = std::span<std::byte, UID_SIZE>;
 using UIDConstView = std::span<const std::byte, UID_SIZE>;
+constexpr std::byte UID_MSB { 0xe0 };
+constexpr size_t UID_MSB_INDEX = UID_SIZE - 1;
+
+constexpr size_t MAX_BLOCK_SIZE_IN_BYTES = 32;
+// constexpr size_t MAX_NUMBER_OF_BLOCKS = 256;
+
 using BlockID = uint8_t;
 
 struct TagInfo {
