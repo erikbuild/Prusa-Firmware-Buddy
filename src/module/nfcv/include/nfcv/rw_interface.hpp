@@ -1,8 +1,9 @@
 #pragma once
 
+#include "error.hpp"
 #include "types.hpp"
 
-#include <cstdint>
+#include <cstddef>
 #include <expected>
 
 namespace nfcv {
@@ -10,11 +11,6 @@ namespace nfcv {
 class ReaderWriterInterface {
 public:
     using AntennaData = uintptr_t;
-    enum class Error {
-        // TODO: fill me up as implementing other functions
-    };
-    template <typename T>
-    using Result = std::expected<T, Error>;
 
     virtual Result<void> field_up(AntennaData antenna_data) = 0;
     virtual void field_down() = 0;

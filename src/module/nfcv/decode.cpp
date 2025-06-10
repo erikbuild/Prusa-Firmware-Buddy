@@ -5,7 +5,7 @@
 #include <cassert>
 #include <algorithm>
 
-std::expected<std::span<std::byte>, nfcv::DecodeError> nfcv::decode(const std::span<const std::byte> &input, const std::span<std::byte> &output) {
+nfcv::Result<std::span<std::byte>> nfcv::decode(const std::span<const std::byte> &input, const std::span<std::byte> &output) {
     static constexpr std::byte NFCV_RESPONSE_SOF_MASK { 0x1f };
     static constexpr std::byte NFCV_RESPONSE_SOF_PATTERN { 0x17 };
     static constexpr std::byte NFCV_RESPONSE_EOF { 0x1d };
@@ -17,18 +17,18 @@ std::expected<std::span<std::byte>, nfcv::DecodeError> nfcv::decode(const std::s
 
     // TODO: More strict check here
     if (input.size() == 0) {
-        return std::unexpected(DecodeError::input_buffer_overflow);
+        return std::unexpected(Error::buffer_overflow);
     }
 
     if ((input[0] & NFCV_RESPONSE_SOF_MASK) != NFCV_RESPONSE_SOF_PATTERN) {
-        return std::unexpected(DecodeError::invalid_start);
+        return std::unexpected(Error::response_format_invalid);
     }
 
     for (size_t bit_pos = 0, i = NFCV_RESPONSE_DATA_BIT_OFFSET;; i += 2) {
         const size_t byte_index = i / BITS_IN_BYTE;
         const size_t bit_offset = i % BITS_IN_BYTE;
         if (byte_index + 1 >= input.size()) {
-            return std::unexpected(DecodeError::input_buffer_overflow);
+            return std::unexpected(Error::buffer_overflow);
         }
         // let's construct the current byte offset by bit_offset
         const auto resp_byte = (input[byte_index] >> bit_offset) | (input[byte_index + 1] << (BITS_IN_BYTE - bit_offset));
@@ -53,12 +53,12 @@ std::expected<std::span<std::byte>, nfcv::DecodeError> nfcv::decode(const std::s
             break;
 
         default:
-            return std::unexpected(DecodeError::invalid_bit_pattern);
+            return std::unexpected(Error::response_format_invalid);
         }
         ++bit_pos;
 
         if (bit_pos / BITS_IN_BYTE >= output.size()) {
-            return std::unexpected(DecodeError::output_buffer_overflow);
+            return std::unexpected(Error::buffer_overflow);
         }
     }
 
@@ -68,9 +68,9 @@ std::expected<std::span<std::byte>, nfcv::DecodeError> nfcv::decode(const std::s
 namespace nfcv {
 namespace {
     static constexpr std::byte NFCV_ERROR_FLAG { 0x01 };
-    std::expected<void, DeserializationError> parse_response(const std::span<const std::byte> &data, nfcv::command::Inventory &command) {
+    Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::Inventory &command) {
         if (data.size() != command.response.uid.size() + 4 /*1B flags + 1B mask length (is 0) + 0B mask + 2B CRC*/) {
-            return std::unexpected(DeserializationError::unknown);
+            return std::unexpected(Error::unknown);
         }
 
         auto iter = data.begin();
@@ -80,7 +80,7 @@ namespace {
         return {};
     }
 
-    std::expected<void, DeserializationError> parse_response(const std::span<const std::byte> &data, nfcv::command::SystemInfo &command) {
+    Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::SystemInfo &command) {
         // Size validation
         const auto info_flags = data[1];
         static constexpr std::byte INFO_DSFID_SUPPORTED { 0x01 };
@@ -102,7 +102,7 @@ namespace {
         }
 
         if (data.size() != size) {
-            return std::unexpected(DeserializationError::incorrect_size);
+            return std::unexpected(Error::response_invalid_size);
         }
 
         // Data parsing
@@ -144,9 +144,9 @@ namespace {
         return {};
     }
 
-    std::expected<void, DeserializationError> parse_response(const std::span<const std::byte> &data, nfcv::command::ReadSingleBlock &command) {
+    Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::ReadSingleBlock &command) {
         if (data.size() != (3 + command.response.block_buffer.size())) {
-            return std::unexpected(DeserializationError::incorrect_size);
+            return std::unexpected(Error::response_invalid_size);
         }
 
         auto iter = data.begin();
@@ -156,28 +156,28 @@ namespace {
         return {};
     }
 
-    std::expected<void, DeserializationError> parse_response(const std::span<const std::byte> &data, [[maybe_unused]] nfcv::command::WriteSingleBlock &command) {
+    Result<void> parse_response(const std::span<const std::byte> &data, [[maybe_unused]] nfcv::command::WriteSingleBlock &command) {
         if (data.size() != 3) {
-            return std::unexpected(DeserializationError::incorrect_size);
+            return std::unexpected(Error::response_invalid_size);
         }
 
         return {};
     }
 
-    std::expected<void, DeserializationError> parse_response([[maybe_unused]] const std::span<const std::byte> &data, [[maybe_unused]] nfcv::command::StayQuiet &command) {
+    Result<void> parse_response([[maybe_unused]] const std::span<const std::byte> &data, [[maybe_unused]] nfcv::command::StayQuiet &command) {
         // according to spec the StayQuiet command has no reponse (or it is not mentioned), so we should never call this method
         std::abort();
     }
 } // namespace
 } // namespace nfcv
 
-std::expected<void, nfcv::DeserializationError> nfcv::parse_response(const std::span<const std::byte> &data, Command &command) {
+nfcv::Result<void> nfcv::parse_response(const std::span<const std::byte> &data, Command &command) {
     if (data.size() <= 2) {
-        return std::unexpected(DeserializationError::incorrect_size);
+        return std::unexpected(Error::response_invalid_size);
     }
 
     if ((data[0] & NFCV_ERROR_FLAG) == NFCV_ERROR_FLAG) {
-        return std::unexpected(DeserializationError::response_is_error);
+        return std::unexpected(Error::response_is_error);
     }
 
     return std::visit([&](auto &cmd) { return parse_response(data, cmd); }, command);

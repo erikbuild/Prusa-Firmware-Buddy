@@ -11,26 +11,6 @@
 
 namespace st25r39xxb {
 
-enum class Error : uint8_t {
-    timeout,
-    invalid_chip,
-    bad_oscilator,
-    buffer_overflow,
-    invalid_crc,
-    device_hard_framing_error,
-    device_soft_framing_error,
-    device_parity_error,
-    device_crc_error,
-    no_response,
-    response_invalid_size,
-    response_format_invalid,
-    response_is_error,
-    unknown,
-};
-
-template <typename T>
-using Result = std::expected<T, Error>;
-
 class ST25R39XXB {
 public:
     enum class Antenna : uint8_t {
@@ -45,12 +25,12 @@ public:
         , buffer() {}
 
     /// Generic initialization function. Should be always called
-    [[nodiscard]] Result<void> init();
+    [[nodiscard]] nfcv::Result<void> init();
     /// NFC-V Poller initialization
     /// Demo function to test that everything works.
     void nfcv_init_poller();
     // TODO: this function is currently too exhasutive, make something more lightweight/async
-    [[nodiscard]] Result<void> nfcv_tick_poller();
+    [[nodiscard]] nfcv::Result<void> nfcv_tick_poller();
     /// Sets one of the antennas as output (the other will still be able to receive data)
     void select_antenna(Antenna target_antena);
 
@@ -72,14 +52,14 @@ private:
      */
     void set_interrupt_mask(st25r39xxb::IRQType mask);
     [[nodiscard]] st25r39xxb::IRQType read_interrupt();
-    [[nodiscard]] Result<void> await_interrupt(st25r39xxb::IRQType wait_for, uint32_t timeout);
+    [[nodiscard]] nfcv::Result<void> await_interrupt(st25r39xxb::IRQType wait_for, uint32_t timeout);
 
-    [[nodiscard]] Result<void> turn_on_oscilator();
+    [[nodiscard]] nfcv::Result<void> turn_on_oscilator();
     void set_output_impedance(st25r39xxb::Impedance target_impedance);
     void set_output_amplitude(st25r39xxb::Amplitude target_amplitude);
     void switch_antennas();
 
-    [[nodiscard]] Result<void> nfcv_field_up();
+    [[nodiscard]] nfcv::Result<void> nfcv_field_up();
     void nfcv_field_down();
 
     /**
@@ -87,7 +67,7 @@ private:
      *
      * It returns true if command was successfull, otherwise returns false
      */
-    [[nodiscard]] Result<void> nfcv_command(nfcv::Command &command);
+    [[nodiscard]] nfcv::Result<void> nfcv_command(nfcv::Command &command);
 };
 
 } // namespace st25r39xxb

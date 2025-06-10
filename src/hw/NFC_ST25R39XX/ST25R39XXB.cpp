@@ -8,21 +8,21 @@
 #include <nfcv/encode.hpp>
 #include <nfcv/decode.hpp>
 
-static constexpr st25r39xxb::Error convert_error(st25r39xxb::IRQType error_irqs) {
+static constexpr nfcv::Error convert_error(st25r39xxb::IRQType error_irqs) {
     using namespace st25r39xxb;
     if (std::to_underlying(error_irqs & IRQType::hard_framing_error)) {
-        return Error::device_hard_framing_error;
+        return nfcv::Error::device_hard_framing_error;
     } else if (std::to_underlying(error_irqs & IRQType::soft_framing_error)) {
-        return Error::device_soft_framing_error;
+        return nfcv::Error::device_soft_framing_error;
     } else if (std::to_underlying(error_irqs & IRQType::parity_error)) {
-        return Error::device_parity_error;
+        return nfcv::Error::device_parity_error;
     } else if (std::to_underlying(error_irqs & IRQType::crc_error)) {
-        return Error::device_crc_error;
+        return nfcv::Error::device_crc_error;
     }
     std::abort();
 }
 
-st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::await_interrupt(st25r39xxb::IRQType irqs_to_wait_for, uint32_t timeout_ms) {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::await_interrupt(st25r39xxb::IRQType irqs_to_wait_for, uint32_t timeout_ms) {
     using namespace st25r39xxb;
     while (true) {
         timeout_ms = sys_int.await_interrupt(timeout_ms);
@@ -35,7 +35,7 @@ st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::await_interrupt(st25r39xxb::IRQ
             break;
         }
         if (timeout_ms == 0) {
-            return std::unexpected(Error::timeout);
+            return std::unexpected(nfcv::Error::timeout);
         }
     }
 
@@ -54,7 +54,7 @@ void st25r39xxb::ST25R39XXB::set_interrupt_mask(st25r39xxb::IRQType mask) {
     hw_int.write_registers_continuous(RegisterA::mask_main_interrupt, std::span { reinterpret_cast<std::byte *>(&mask), sizeof(mask) });
 }
 
-st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::init() {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::init() {
     hw_int.direct_command(Command::set_default_2);
 
     hw_int.write_register(RegisterA::io_configuration_2, std::byte { 0x04 }); // IO configuration register 2
@@ -126,7 +126,7 @@ st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::init() {
     return {};
 }
 
-st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::turn_on_oscilator() {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::turn_on_oscilator() {
     static constexpr std::byte OSCILATOR_ENABLE { 0b1000'0000 };
     if ((hw_int.read_register(RegisterA::operation_control) & OSCILATOR_ENABLE) != OSCILATOR_ENABLE) {
         set_interrupt_mask(~IRQType::oscilator_freq_stable);
@@ -140,7 +140,7 @@ st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::turn_on_oscilator() {
     set_interrupt_mask(IRQType::all);
     static constexpr std::byte OSCILATOR_OK { 0b0001'0000 };
     if ((hw_int.read_register(RegisterA::auxilary_display) & OSCILATOR_OK) != OSCILATOR_OK) {
-        return std::unexpected(Error::bad_oscilator);
+        return std::unexpected(nfcv::Error::bad_oscilator);
     }
 
     return {};
@@ -162,7 +162,7 @@ void st25r39xxb::ST25R39XXB::nfcv_init_poller() {
     hw_int.register_clear_bits(RegisterB::auxiliary_modulation_setting, std::byte { 0x88 });
 }
 
-st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::nfcv_field_up() {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_field_up() {
     // Martin Poupa's Solution - much simpler in flipper fw - will use that for the moment
     hw_int.write_register(RegisterB::nfc_field_on_guard_timer, std::byte { 0x00 });
     hw_int.write_register(RegisterA::operation_control, std::byte { 0x81 });
@@ -246,46 +246,13 @@ void st25r39xxb::ST25R39XXB::select_antenna(Antenna target_antenna) {
     set_output_impedance(Impedance::ohm2);
 }
 
-static constexpr st25r39xxb::Error convert_error(nfcv::SerializationError se) {
-    switch (se) {
-    case nfcv::SerializationError::buffer_overflow:
-        return st25r39xxb::Error::buffer_overflow;
-    }
-    std::unreachable();
-}
-
-static constexpr st25r39xxb::Error convert_error(nfcv::DecodeError de) {
-    switch (de) {
-    case nfcv::DecodeError::invalid_start:
-    case nfcv::DecodeError::invalid_bit_pattern:
-        return st25r39xxb::Error::response_format_invalid;
-    case nfcv::DecodeError::input_buffer_overflow:
-        return st25r39xxb::Error::response_invalid_size;
-    case nfcv::DecodeError::output_buffer_overflow:
-        return st25r39xxb::Error::buffer_overflow;
-    }
-    std::unreachable();
-}
-
-static constexpr st25r39xxb::Error convert_error(nfcv::DeserializationError de) {
-    switch (de) {
-    case nfcv::DeserializationError::incorrect_size:
-        return st25r39xxb::Error::response_invalid_size;
-    case nfcv::DeserializationError::response_is_error:
-        return st25r39xxb::Error::response_is_error;
-    case nfcv::DeserializationError::unknown:
-        return st25r39xxb::Error::unknown;
-    }
-    std::unreachable();
-}
-
-st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &command) {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &command) {
     // Prepare message
     buffer.clear();
     {
         const auto construct_res = nfcv::construct_command(buffer, command);
         if (!construct_res.has_value()) {
-            return std::unexpected(convert_error(construct_res.error()));
+            return construct_res;
         }
     }
 
@@ -330,8 +297,8 @@ st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &com
     const auto receive_res = await_interrupt(IRQType::rx_start, 21);
     if (!receive_res.has_value()) {
         // We timed out - we didn't receive any response
-        if (receive_res.error() == Error::timeout) {
-            return std::unexpected(Error::no_response);
+        if (receive_res.error() == nfcv::Error::timeout) {
+            return std::unexpected(nfcv::Error::no_response);
         }
         return res;
     }
@@ -349,10 +316,10 @@ st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &com
 
     const auto decode_res = nfcv::decode(buffer, buffer);
     if (!decode_res.has_value()) {
-        return std::unexpected(convert_error(decode_res.error()));
+        return std::unexpected(decode_res.error());
     }
     if (decode_res->size() < 3) {
-        return std::unexpected(Error::response_invalid_size);
+        return std::unexpected(nfcv::Error::response_invalid_size);
     }
 
     /*{
@@ -367,7 +334,7 @@ st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(nfcv::Command &com
     // Parse response to message
     const auto deserialization_res = nfcv::parse_response(*decode_res, command);
     if (!deserialization_res.has_value()) {
-        return std::unexpected(convert_error(deserialization_res.error()));
+        return std::unexpected(deserialization_res.error());
     }
     return {};
 }
@@ -378,7 +345,7 @@ uint16_t st25r39xxb::ST25R39XXB::get_fifo_len() {
     return (std::to_integer<uint16_t>(fifo_status.at(0)) | ((std::to_integer<uint16_t>(fifo_status.at(1)) & 0xB0) << 2));
 }
 
-st25r39xxb::Result<void> st25r39xxb::ST25R39XXB::nfcv_tick_poller() {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_tick_poller() {
     using namespace nfcv;
     // WARNING: This function is just validation for the current implementation. It shouldn't be used in production
     //

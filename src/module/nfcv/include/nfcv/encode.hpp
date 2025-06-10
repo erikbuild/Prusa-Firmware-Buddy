@@ -1,6 +1,8 @@
 #pragma once
 
-#include <nfcv/commands.hpp>
+#include "commands.hpp"
+#include "error.hpp"
+
 #include <inplace_vector.hpp>
 #include <iso13239/crc.hpp>
 
@@ -9,11 +11,7 @@
 namespace nfcv {
 using MsgBuilder = stdext::inplace_vector<std::byte, 512>;
 
-enum class SerializationError {
-    buffer_overflow,
-};
-
-std::expected<void, SerializationError> construct_command(MsgBuilder &builder, const Command &cmd);
+Result<void> construct_command(MsgBuilder &builder, const Command &cmd);
 
 /// One of two encoding methods for NFC-V VCD messages.
 /// Encodes every bit pair as 1 of 4 valid values.

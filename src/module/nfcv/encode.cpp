@@ -42,9 +42,9 @@ void nfcv::Encoder1Of4::append_crc_and_finalize() {
 }
 
 namespace nfcv::impl {
-std::expected<void, SerializationError> construct_command(MsgBuilder &builder, [[maybe_unused]] const command::Inventory &command) {
+Result<void> construct_command(MsgBuilder &builder, [[maybe_unused]] const command::Inventory &command) {
     if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(3)) {
-        return std::unexpected(SerializationError::buffer_overflow);
+        return std::unexpected(Error::buffer_overflow);
     }
     nfcv::Encoder1Of4 encoder(builder);
     encoder.append_byte(std::byte { 0x26 }); // Flags: 1 subcarier, high datarate, inventory flag, 1 slot
@@ -54,9 +54,9 @@ std::expected<void, SerializationError> construct_command(MsgBuilder &builder, [
     return {};
 }
 
-std::expected<void, SerializationError> construct_command(MsgBuilder &builder, const command::SystemInfo &command) {
+Result<void> construct_command(MsgBuilder &builder, const command::SystemInfo &command) {
     if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(10)) {
-        return std::unexpected(SerializationError::buffer_overflow);
+        return std::unexpected(Error::buffer_overflow);
     }
 
     nfcv::Encoder1Of4 encoder(builder);
@@ -69,9 +69,9 @@ std::expected<void, SerializationError> construct_command(MsgBuilder &builder, c
     return {};
 }
 
-std::expected<void, SerializationError> construct_command(MsgBuilder &builder, const command::ReadSingleBlock &command) {
+Result<void> construct_command(MsgBuilder &builder, const command::ReadSingleBlock &command) {
     if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(11)) {
-        return std::unexpected(SerializationError::buffer_overflow);
+        return std::unexpected(Error::buffer_overflow);
     }
 
     nfcv::Encoder1Of4 encoder(builder);
@@ -86,9 +86,9 @@ std::expected<void, SerializationError> construct_command(MsgBuilder &builder, c
     return {};
 }
 
-std::expected<void, SerializationError> construct_command(MsgBuilder &builder, const command::WriteSingleBlock &command) {
+Result<void> construct_command(MsgBuilder &builder, const command::WriteSingleBlock &command) {
     if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(11 + command.request.block_buffer.size())) {
-        return std::unexpected(SerializationError::buffer_overflow);
+        return std::unexpected(Error::buffer_overflow);
     }
 
     nfcv::Encoder1Of4 encoder(builder);
@@ -106,9 +106,9 @@ std::expected<void, SerializationError> construct_command(MsgBuilder &builder, c
     return {};
 }
 
-std::expected<void, SerializationError> construct_command(MsgBuilder &builder, const command::StayQuiet &command) {
+Result<void> construct_command(MsgBuilder &builder, const command::StayQuiet &command) {
     if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(10)) {
-        return std::unexpected(SerializationError::buffer_overflow);
+        return std::unexpected(Error::buffer_overflow);
     }
 
     nfcv::Encoder1Of4 encoder(builder);
@@ -124,6 +124,6 @@ std::expected<void, SerializationError> construct_command(MsgBuilder &builder, c
 
 } // namespace nfcv::impl
 
-std::expected<void, nfcv::SerializationError> nfcv::construct_command(MsgBuilder &builder, const Command &command) {
+nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &command) {
     return std::visit([&](const auto &cmd) { return impl::construct_command(builder, cmd); }, command);
 }
