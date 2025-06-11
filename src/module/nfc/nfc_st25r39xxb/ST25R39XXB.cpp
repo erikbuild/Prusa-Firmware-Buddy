@@ -167,7 +167,7 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         }
     }
 
-    set_interrupt_mask(~(IRQType::tx_end | IRQType::rx_start | IRQType::rx_end | IRQType::no_response_timer_expire | IRQType::errors));
+    set_interrupt_mask(~(IRQType::tx_end | IRQType::rx_start | IRQType::rx_end | IRQType::no_response_timer_expire | IRQType::general_purpose_timer_expire | IRQType::errors));
     // Clear fifos
     hw_int.direct_command(Command::clear_fifo);
 
@@ -201,8 +201,12 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
 
     // Some commands doesn't send a response according to the iso - like StayQuiet
     if (!nfcv::is_response_expected(command)) {
-        // We need to wait after each command for ~ 320 ns - to ensure that we wait 320 ns, we need to wait for 2 ms, because freertos ticks in ms intervals
-        sys_int.delay(2); // FIXME: Add proper timeout using the generict timer in st25r39xxb chips
+        // We trigger GPT on RX end, but since the command doesn't
+        // send a response, then we need to start it manually via command
+        hw_int.direct_command(Command::start_general_purpose_timer);
+        if (const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2); !res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
+            return res;
+        }
         return {};
     }
     const auto receive_res = await_interrupt(IRQType::rx_start, 20, IRQType::no_response_timer_expire);
@@ -239,8 +243,9 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         return std::unexpected(deserialization_res.error());
     }
 
-    // We need to wait after each command for ~ 320 ns - to ensure that we wait 320 ns, we need to wait for 2 ms, because freertos ticks in ms intervals
-    sys_int.delay(2); // FIXME: Add proper timeout using the generict timer in st25r39xxb chips
+    if (const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2); !res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
+        return res;
+    }
     return {};
 }
 
@@ -313,15 +318,17 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::field_up(AntennaData antenna) {
 
     hw_int.write_register(RegisterA::receiver_timer_mask, std::byte { 0x41 });
 
-    hw_int.write_register(RegisterA::no_response_timer_1, std::byte { 0x00 });
-    hw_int.write_register(RegisterA::no_response_timer_2, std::byte { 0x52 });
-
     hw_int.direct_command(Command::stop_all_1);
     hw_int.direct_command(Command::reset_rx_gain);
 
-    hw_int.write_register(RegisterA::general_purpose_timer_1, std::byte { 0x01 });
-    hw_int.write_register(RegisterA::general_purpose_timer_2, std::byte { 0x84 });
+    // FIXME: We don't need to setup the timer on every field up. Move to some generic nfc-v initialization
+    // Force general purpose timer (gpt) to start automatically at the end of RX
+    // It can always be started with Command::start_general_purpose_timer
     hw_int.write_register(RegisterA::timer_and_emv_control, std::byte { 0x20 });
+    // We will be using gpt for waiting between two commands (which is about 300us)
+    // Every "tick" of gpt is ~590ns. So 300'000/590 = 508.484 => 509 (0x01fd)
+    hw_int.write_register(RegisterA::general_purpose_timer_1, std::byte { 0x01 }); // MSB
+    hw_int.write_register(RegisterA::general_purpose_timer_2, std::byte { 0xfd }); // LSB
 
     hw_int.write_register(RegisterA::ISO14443A, std::byte { 0xDC });
     hw_int.write_register(RegisterA::receiver_configuration_2, std::byte { 0xE5 });
