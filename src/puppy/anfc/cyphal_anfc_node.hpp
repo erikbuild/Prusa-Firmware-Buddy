@@ -90,6 +90,8 @@ private: //* Scaffolding
     /// GetInfo Server, mandatory device info
     static constexpr const char *name = "cz.prusa3d.pub6.nfc";
     can::cyphal::ServerTraited<uavcan_node_GetInfo_1_0_Traits> get_info_server;
+
+    void wait_for_pnp();
 };
 
 } // namespace anfc::cyphal

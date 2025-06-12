@@ -22,7 +22,7 @@ LOG_COMPONENT_DEF(nfc);
 namespace {
 
 // CAN node app task, processes requests from the CAN. Implemented in can_node
-constexpr const size_t node_task_stack_size = 512 / sizeof(StackType_t);
+constexpr const size_t node_task_stack_size = 768 / sizeof(StackType_t);
 alignas(32) StackType_t node_task_stack[node_task_stack_size];
 StaticTask_t node_task_control_block;
 

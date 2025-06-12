@@ -3,6 +3,7 @@
 #include "cyphal_anfc_node.hpp"
 
 #include <bsod.h>
+#include <cyphal_pnp.hpp>
 
 #include <nfc.hpp>
 #include <hal.hpp>
@@ -97,12 +98,10 @@ void ANFCNode::init() {
     setup_server(request_server, "srv.request", prusa3d_nfc_command_Request_1_0_FULL_NAME_AND_VERSION_);
 
     event_publisher.init(port_list, registers);
-
-    // TODO: ???
-    can::cyphal::cyphal_task.set_node_id(2);
 }
 
 void ANFCNode::task() {
+    wait_for_pnp();
     while (true) {
         const auto now = ticks_ms();
 
@@ -131,6 +130,21 @@ void ANFCNode::task() {
         salted_app_hash_server.step(execute_command_server);
 
         hal::set_status_led((now / 1024) % 2);
+        freertos::delay(1);
+    }
+}
+
+void ANFCNode::wait_for_pnp() {
+    // This is just a hint, doesn't even need to be a good hint.
+    const CanardNodeID node_id_hint = 0;
+    can::cyphal::PnP pnp {
+        node_id_hint,
+        get_info_resp.unique_id,
+    };
+
+    pnp.start();
+    while (cyphal_task.is_anonymous()) {
+        pnp.loop_tx();
         freertos::delay(1);
     }
 }
