@@ -5,6 +5,7 @@
 #include <pwm_utils.hpp>
 #include <freertos/mutex.hpp>
 #include <general_response.hpp>
+#include <utils/timing/rate_limiter.hpp>
 
 #include "chamber_filtration_enums.hpp"
 
@@ -74,6 +75,9 @@ private:
 
     /// ticks_s() of the start of filter usage (output_pwm > 0) that has not yet been emitted in the config_store
     uint32_t unaccounted_filter_time_used_start_s_ = 0;
+
+    /// We don't need to run step very often
+    RateLimiter<> step_rate_limiter_s_ { 2 };
 };
 
 ChamberFiltration &chamber_filtration();

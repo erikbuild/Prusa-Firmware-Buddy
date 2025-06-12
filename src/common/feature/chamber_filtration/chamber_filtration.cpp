@@ -90,6 +90,13 @@ PWM255 ChamberFiltration::output_pwm() const {
 void ChamberFiltration::step() {
     assert(osThreadGetId() == marlin_server::server_task);
 
+    // The step acutally doesn't need to run often at all,
+    // do not run it every marlin cycle
+    const auto now_s = ticks_s();
+    if (!step_rate_limiter_s_.check(now_s)) {
+        return;
+    }
+
     std::lock_guard _lg(mutex_);
 
     if (!is_enabled()) {
