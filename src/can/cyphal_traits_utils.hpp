@@ -35,4 +35,18 @@ struct RawDataTraits : public BaseTraits {
     }
 };
 
+struct RawPacketBaseTraits {
+    static constexpr size_t data_size = 63; ///< Size of the data in the packet
+    static constexpr size_t serialization_buffer_size_bytes = data_size;
+    static constexpr size_t extent_bytes = data_size;
+    static constexpr bool has_fixed_port_id = false;
+};
+
+/**
+ * @brief Traits for raw one packet of data.
+ * These allow using the 63 bytes of CANFD payload as is.
+ * There is no dsdl type nor serialization, just 63 bytes of data.
+ */
+using RawPacketTraits = RawDataTraits<RawPacketBaseTraits>;
+
 } // namespace can
