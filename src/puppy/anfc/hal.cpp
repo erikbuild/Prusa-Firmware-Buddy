@@ -316,6 +316,7 @@ void hal::init_hash() {
     if (HAL_HASH_Init(&hhash) != HAL_OK) {
         panic();
     }
+    __HAL_RCC_HASH_CLK_ENABLE();
 }
 
 extern "C" void hal_panic() {
