@@ -48,7 +48,8 @@ ANFCNode::ANFCNode(const UID &uid)
 
             case prusa3d_common_CustomExecuteCommand_1_0_COMMAND_GET_APP_SALTED_HASH:
                 salted_app_hash_server.handle_request(execute_command_server, data, resp);
-                break;
+                // Response will be sent by SaltedAppHashCommandServer::step()
+                return;
             }
 
             execute_command_server.send_response(resp);
