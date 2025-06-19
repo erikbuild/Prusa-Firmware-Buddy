@@ -49,7 +49,7 @@ public:
 
     /// Writes \p buffer.size() bytes to \p tag, starting at position \p start
     /// \returns whether the operation was successful
-    [[nodiscard]] virtual IOResult<void> write(NFCTagID tag, NFCOffset start, const std::span<std::byte> &data) = 0;
+    [[nodiscard]] virtual IOResult<void> write(NFCTagID tag, NFCOffset start, const std::span<const std::byte> &data) = 0;
 
     /// Reads a single event and stores it in \p e
     /// \returns false if there is no event

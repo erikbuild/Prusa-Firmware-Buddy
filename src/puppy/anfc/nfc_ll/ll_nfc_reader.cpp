@@ -8,13 +8,13 @@ LLNFCReader::LLNFCReader(nfcv::ReaderWriterInterface &reader)
     reset_state();
 }
 
-INFCReader::IOResult<void> LLNFCReader::io_op(NFCTagID tag, NFCOffset start, const std::span<std::byte> &buffer, stdext::inplace_function<IOOpFunc> impl) {
+INFCReader::IOResult<void> LLNFCReader::io_op(NFCTagID tag, NFCOffset start, size_t buffer_size, stdext::inplace_function<IOOpFunc> impl) {
     if (!is_valid(tag)) {
         return std::unexpected(IOError::invalid_id);
     }
     const auto &tag_data = tags.at(tag);
 
-    if (const auto end = start + buffer.size(); end > tag_data.block_count * tag_data.block_size) {
+    if (const auto end = start + buffer_size; end > tag_data.block_count * tag_data.block_size) {
         return std::unexpected(IOError::outside_of_bounds);
     }
 
@@ -45,7 +45,7 @@ INFCReader::IOResult<void> LLNFCReader::read(NFCTagID tag, NFCOffset start, cons
         NFCOffset start;
         const std::span<std::byte> &buffer;
     } ref = { .start = start, .buffer = buffer };
-    return io_op(tag, start, buffer, [this, &ref](const TagData &tag_data) {
+    return io_op(tag, start, buffer.size(), [this, &ref](const TagData &tag_data) {
         return read_impl(tag_data, ref.start, ref.buffer);
     });
 }
@@ -70,13 +70,13 @@ nfcv::Result<void> LLNFCReader::read_impl(const TagData &tag_data, NFCOffset sta
     return {};
 }
 
-INFCReader::IOResult<void> LLNFCReader::write(NFCTagID tag, NFCOffset start, const std::span<std::byte> &buffer) {
+INFCReader::IOResult<void> LLNFCReader::write(NFCTagID tag, NFCOffset start, const std::span<const std::byte> &buffer) {
     // Default lambda capture doesn't fit the stdext::inplace_function so we need a helper to pass the data correctly
     struct {
         NFCOffset start;
-        const std::span<std::byte> &buffer;
+        const std::span<const std::byte> &buffer;
     } ref = { .start = start, .buffer = buffer };
-    return io_op(tag, start, buffer, [this, &ref](const TagData &tag_data) { return write_impl(tag_data, ref.start, ref.buffer); });
+    return io_op(tag, start, buffer.size(), [this, &ref](const TagData &tag_data) { return write_impl(tag_data, ref.start, ref.buffer); });
 }
 
 nfcv::Result<void> LLNFCReader::write_impl(const TagData &tag_data, NFCOffset start, const std::span<const std::byte> &buffer) {

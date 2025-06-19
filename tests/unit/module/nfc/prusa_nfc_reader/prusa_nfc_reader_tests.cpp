@@ -65,7 +65,7 @@ public:
         return {};
     }
 
-    [[nodiscard]] virtual IOResult<void> write(NFCTagID tag, NFCOffset start, const std::span<std::byte> &buffer) final {
+    [[nodiscard]] virtual IOResult<void> write(NFCTagID tag, NFCOffset start, const std::span<const std::byte> &buffer) final {
         log.writes.push_back(WriteLog {
             .tag = tag,
             .seq = log.seq_counter++,
