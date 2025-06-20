@@ -1,5 +1,6 @@
 import pycyphal.application
 import uavcan.node
+import uavcan.pnp
 import prusa3d.nfc.event
 import prusa3d.nfc.command
 import prusa3d.nfc.request
@@ -7,6 +8,15 @@ import asyncio
 import yaml
 
 req_counter = 0
+
+nfc_node_id = 2
+
+
+def print_msg(msg):
+    if msg is None:
+        print("NONE")
+    else:
+        print(yaml.dump(pycyphal.dsdl.to_builtin(msg)))
 
 
 async def main():
@@ -18,14 +28,34 @@ async def main():
     node = pycyphal.application.make_node(node_info, "dummy.db")
     node.start()
 
-    accept_event = node.make_client(prusa3d.nfc.command.AcceptEvent_1, 2,
-                                    prusa3d.nfc.PortIDs_1_0.SRV_AcceptEvent)
+    # Handle ID allocation for the NFC
+    if True:
+        id_alloc_sub = node.make_subscriber(uavcan.pnp.NodeIDAllocationData_2,
+                                            "id_alloc_sub")
 
-    request = node.make_client(prusa3d.nfc.command.Request_1_0, 2,
-                               prusa3d.nfc.PortIDs_1_0.SRV_Request)
+        id_alloc_pub = node.make_publisher(uavcan.pnp.NodeIDAllocationData_2,
+                                           "id_alloc_pub")
 
-    def print_msg(msg):
-        print(yaml.dump(pycyphal.dsdl.to_builtin(msg)))
+        msg = await id_alloc_sub.get(timeout=2)
+        print("ID ASSIGNED")
+
+        if msg is not None and msg.node_id.value == 0:
+            await id_alloc_pub.publish(
+                uavcan.pnp.NodeIDAllocationData_2(
+                    node_id=uavcan.node.ID_1(nfc_node_id),
+                    unique_id=msg.unique_id))
+
+    accept_event = node.make_client(
+        prusa3d.nfc.command.AcceptEvent_1,
+        nfc_node_id,
+        prusa3d.nfc.PortIDs_1_0.SRV_AcceptEvent,
+    )
+
+    request = node.make_client(
+        prusa3d.nfc.command.Request_1_0,
+        nfc_node_id,
+        prusa3d.nfc.PortIDs_1_0.SRV_Request,
+    )
 
     def req_id():
         global req_counter
