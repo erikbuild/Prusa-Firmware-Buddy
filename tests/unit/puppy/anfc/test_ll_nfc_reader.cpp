@@ -1,4 +1,4 @@
-#include <ll_nfc_reader.hpp>
+#include <prusa_nfc_nfcv/ll_nfc_reader.hpp>
 
 #include <nfcv/rw_interface.hpp>
 #include <catch2/catch.hpp>

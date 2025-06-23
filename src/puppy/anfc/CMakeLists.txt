@@ -65,8 +65,6 @@ target_include_directories(
   firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal ../can_shared
   )
 
-add_subdirectory(nfc_ll)
-
 target_link_libraries(
   firmware
   PRIVATE ${HAL_LIB}
@@ -80,6 +78,7 @@ target_link_libraries(
           o1heap
           prusa_nfc_reader
           st25r39xxb
+          prusa_nfc_nfcv
           raii
   )
 
