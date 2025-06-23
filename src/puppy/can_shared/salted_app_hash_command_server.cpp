@@ -7,6 +7,16 @@
 
 using namespace can::cyphal;
 
+bool is_debugger_attached() {
+#if defined(STM32H5) || defined(STM32G4)
+    return (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk);
+#elif defined(STM32C0)
+    return (DBG->CR & (DBG_CR_DBG_STOP_Msk | DBG_CR_DBG_STANDBY_Msk));
+#else
+    #error
+#endif
+}
+
 void SaltedAppHashCommandServer::handle_request(Server &server, const uavcan_node_ExecuteCommand_Request_1_3 &request, uavcan_node_ExecuteCommand_Response_1_3 &response) {
     if (request.parameter.count != sizeof(requested_salt)) {
         response.status = uavcan_node_ExecuteCommand_Response_1_3_STATUS_BAD_PARAMETER;
@@ -14,7 +24,7 @@ void SaltedAppHashCommandServer::handle_request(Server &server, const uavcan_nod
         return;
     }
 
-    if (!BOOTLOADER() || (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)) {
+    if (!BOOTLOADER() || is_debugger_attached()) {
         // Refuse to give hash
         //   - if bootloader not preset (hash is useless, its impossible to flash fw)
         //   - debugger connected - to avoid reflashing the board under debugger
