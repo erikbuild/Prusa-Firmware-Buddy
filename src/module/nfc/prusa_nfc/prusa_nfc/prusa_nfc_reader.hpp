@@ -65,6 +65,9 @@ public:
         /// Retrying the operation might help.
         other = 6,
 
+        /// The operation is not implemented (possibly because of the prameter combination)
+        not_implemented = 7,
+
         _cnt,
     };
 

@@ -26,6 +26,9 @@ PrusaNFCReader::Error PrusaNFCReader::to_prusa_error(INFCReader::IOError error) 
     case INFCReader::IOError::outside_of_bounds:
         return Error::tag_invalid;
 
+    case INFCReader::IOError::not_implemented:
+        return Error::not_implemented;
+
     case INFCReader::IOError::other:
     case INFCReader::IOError::invalid_id:
         return Error::other;
@@ -115,6 +118,11 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
             // We failed reading something. Invalidate the metadata, so that it is re-read later if requested.
             metadata_cache_.invalidate(tag);
             return std::unexpected(err);
+
+        case Error::not_implemented:
+            // This should not happen for elementary functions
+            // Fallback to unreachable
+            break;
 
         case Error::_cnt:
             // Fallback to unreachable

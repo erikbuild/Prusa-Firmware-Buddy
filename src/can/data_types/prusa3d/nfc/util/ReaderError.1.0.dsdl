@@ -20,12 +20,12 @@ uint8 TAG_INVALID = 4
 # Data is too big and doesn't fit somewhere (tag itself, internal buffers, ...)
 uint8 DATA_TOO_BIG = 5
 
-#  Other, unspecified error (comm error, ...)
+# Other, unspecified error (comm error, ...)
 # Retrying the operation might help.
 uint8 OTHER = 6
 
-# There are data pending to be written in the buffers. They need to be flushed first.
-uint8 WRITE_PENDING = 7
+# The operation is not implemented (possibly because of the prameter combination)
+uint8 NOT_IMPLEMENTED = 7
 
 # No error, actually
 uint8 NO_ERROR = 255

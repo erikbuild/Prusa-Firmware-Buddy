@@ -11,4 +11,5 @@ static_assert(prusa3d_nfc_util_ReaderError_1_0_REGION_CORRUPT == std::to_underly
 static_assert(prusa3d_nfc_util_ReaderError_1_0_TAG_INVALID == std::to_underlying(PrusaNFCReader::Error::tag_invalid));
 static_assert(prusa3d_nfc_util_ReaderError_1_0_DATA_TOO_BIG == std::to_underlying(PrusaNFCReader::Error::data_too_big));
 static_assert(prusa3d_nfc_util_ReaderError_1_0_OTHER == std::to_underlying(PrusaNFCReader::Error::other));
-static_assert(std::to_underlying(PrusaNFCReader::Error::_cnt) == 7);
+static_assert(prusa3d_nfc_util_ReaderError_1_0_NOT_IMPLEMENTED == std::to_underlying(PrusaNFCReader::Error::not_implemented));
+static_assert(std::to_underlying(PrusaNFCReader::Error::_cnt) == 8);

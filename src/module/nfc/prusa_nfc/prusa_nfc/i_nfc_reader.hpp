@@ -37,6 +37,9 @@ public:
         /// Other, unspecified error.
         /// Retrying the operation might help.
         other,
+
+        /// The operation is not implemented (possibly because of the prameter combination)
+        not_implemented,
     };
 
     template <typename T>
