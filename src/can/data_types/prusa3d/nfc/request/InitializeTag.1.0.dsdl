@@ -1,0 +1,28 @@
+# Tag to operate on
+prusa3d.nfc.util.TagID.1.0 tag
+
+# If > 0, first N bytes of the tag will be write-protected using the provided password
+# The number has to be aligned to the tag block size
+uint16 protect_first_num_bytes
+
+# Password to write-protect first_num_bytes and utility registers (DSFID, EAS, ...)
+uint8[4] password
+
+# Determines how the data should be protected
+uint8 protection_policy
+
+# Do not fail immediately on error, try locking/initializing whatever possible
+bool best_effort
+
+
+# No protection, just set the registers
+uint8 PROTECTION_POLICY_NONE = 0
+
+# Irreversibly lock the registers & memory
+uint8 PROTECTION_POLICY_LOCK = 1
+
+# Password-protect writing to the relevant registers
+# NOTE: Some registers cannot be password-protected, those will be locked
+uint8 PROTECTION_POLICY_WRITE_PASSWORD = 2
+
+@sealed

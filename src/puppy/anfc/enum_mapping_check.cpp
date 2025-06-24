@@ -1,4 +1,5 @@
 #include <prusa3d/nfc/util/ReaderError_1_0.h>
+#include <prusa3d/nfc/request/InitializeTag_1_0.h>
 #include <prusa_nfc/prusa_nfc_reader.hpp>
 
 // We have an enum specified in src/can/data_types/prusa3d/nfc/util/ReaderError.1.0.dsdl that needs to match 1:1 PrusaNFCReader::Error enum
@@ -13,3 +14,8 @@ static_assert(prusa3d_nfc_util_ReaderError_1_0_DATA_TOO_BIG == std::to_underlyin
 static_assert(prusa3d_nfc_util_ReaderError_1_0_OTHER == std::to_underlying(PrusaNFCReader::Error::other));
 static_assert(prusa3d_nfc_util_ReaderError_1_0_NOT_IMPLEMENTED == std::to_underlying(PrusaNFCReader::Error::not_implemented));
 static_assert(std::to_underlying(PrusaNFCReader::Error::_cnt) == 8);
+
+static_assert(prusa3d_nfc_request_InitializeTag_1_0_PROTECTION_POLICY_NONE == std::to_underlying(INFCReader::InitializeTagParams::ProtectionPolicy::none));
+static_assert(prusa3d_nfc_request_InitializeTag_1_0_PROTECTION_POLICY_LOCK == std::to_underlying(INFCReader::InitializeTagParams::ProtectionPolicy::lock));
+static_assert(prusa3d_nfc_request_InitializeTag_1_0_PROTECTION_POLICY_WRITE_PASSWORD == std::to_underlying(INFCReader::InitializeTagParams::ProtectionPolicy::write_password));
+static_assert(std::to_underlying(INFCReader::InitializeTagParams::ProtectionPolicy::_cnt) == 3);
