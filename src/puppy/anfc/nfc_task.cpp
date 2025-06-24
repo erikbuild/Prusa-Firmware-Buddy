@@ -25,6 +25,24 @@ std::optional<PrusaNFCReader::NFCTagField> parse_request_field(const prusa3d_nfc
         .field = field.field.value,
     };
 }
+
+template <typename T>
+uint8_t io_result_to_error(const PrusaNFCReader::IOResult<T> &io_result) {
+    if (io_result.has_value()) {
+        return prusa3d_nfc_util_ReaderError_1_0_NO_ERROR;
+    } else {
+        return std::to_underlying(io_result.error());
+    }
+}
+
+template <typename T>
+uint8_t io_result_to_error(const INFCReader::IOResult<T> &io_result) {
+    if (io_result.has_value()) {
+        return prusa3d_nfc_util_ReaderError_1_0_NO_ERROR;
+    } else {
+        return std::to_underlying(PrusaNFCReader::to_prusa_error(io_result.error()));
+    }
+}
 } // namespace
 
 bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
@@ -102,6 +120,14 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
         } else if (prusa3d_nfc_request_RequestData_1_0_is_enumerate_fields_(&rreq)) {
             prusa3d_nfc_request_RequestResult_1_0_select_enumerate_fields_(&result);
             handle_enumerate_fields_request(rreq.enumerate_fields, result.enumerate_fields);
+
+        } else if (prusa3d_nfc_request_RequestData_1_0_is_raw_read_(&rreq)) {
+            prusa3d_nfc_request_RequestResult_1_0_select_raw_read_(&result);
+            handle_raw_read_request(rreq.raw_read, result.raw_read);
+
+        } else if (prusa3d_nfc_request_RequestData_1_0_is_raw_write_(&rreq)) {
+            prusa3d_nfc_request_RequestResult_1_0_select_raw_write_(&result);
+            handle_raw_write_request(rreq.raw_write, result.raw_write);
         }
 
         can_node.enqueue_event(response);
@@ -309,11 +335,7 @@ void NFCTask::handle_write_field_request(const prusa3d_nfc_request_WriteField_1_
         io_result = std::unexpected(PrusaNFCReader::Error::other);
     }
 
-    if (io_result.has_value()) {
-        error = prusa3d_nfc_util_ReaderError_1_0_NO_ERROR;
-    } else {
-        error = std::to_underlying(io_result.error());
-    }
+    error = io_result_to_error(io_result);
 }
 
 void NFCTask::handle_enumerate_fields_request(const prusa3d_nfc_request_EnumerateFields_1_0 &request, prusa3d_nfc_request_EnumerateFieldsResult_1_0 &result) {
@@ -332,4 +354,29 @@ void NFCTask::handle_enumerate_fields_request(const prusa3d_nfc_request_Enumerat
 
     prusa3d_nfc_request_EnumerateFieldsResult_1_0_select_fields_(&result);
     result.fields.value.count = io_result->size();
+}
+
+void NFCTask::handle_raw_read_request(const prusa3d_nfc_request_RawRead_1_0 &request, prusa3d_nfc_request_RawReadResult_1_0 &result) {
+    if (request.num_bytes > std::size(result.data.value.elements)) {
+        prusa3d_nfc_request_RawReadResult_1_0_select_error_(&result);
+        result._error._error = prusa3d_nfc_util_ReaderError_1_0_DATA_TOO_BIG;
+        return;
+    }
+
+    prusa3d_nfc_request_RawReadResult_1_0_select_data_(&result);
+    result.data.value.count = request.num_bytes;
+
+    const auto io_result = ll_reader_.read(request.tag.value, request.offset, std::span(reinterpret_cast<std::byte *>(result.data.value.elements), request.num_bytes));
+    if (!io_result) {
+        prusa3d_nfc_request_RawReadResult_1_0_select_error_(&result);
+        result._error._error = std::to_underlying(io_result.error());
+    }
+}
+
+void NFCTask::handle_raw_write_request(const prusa3d_nfc_request_RawWrite_1_0 &request, prusa3d_nfc_util_ReaderError_1_0 &result) {
+    // Who knows what we are writing to the tag - invalidate higher-level reader cache
+    reader_.invalidate_cache(request.tag.value);
+
+    const auto io_result = ll_reader_.write(request.tag.value, request.offset, std::span(reinterpret_cast<const std::byte *>(request.data.value.elements), request.data.value.count));
+    result._error = io_result_to_error(io_result);
 }
