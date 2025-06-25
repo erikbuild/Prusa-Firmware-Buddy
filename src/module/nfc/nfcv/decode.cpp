@@ -79,6 +79,17 @@ namespace {
         return crc.get_result() == transmitted_crc;
     }
 
+    template <typename Command>
+    Result<void> parse_response(const std::span<const std::byte> &data, [[maybe_unused]] Command &command)
+        requires(std::is_empty_v<typename Command::Response>)
+    {
+        if (data.size() != 3) {
+            return std::unexpected(Error::response_invalid_size);
+        }
+
+        return {};
+    }
+
     static constexpr std::byte NFCV_ERROR_FLAG { 0x01 };
     Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::Inventory &command) {
         if (data.size() != command.response.uid.size() + 4 /*1B flags + 1B mask length (is 0) + 0B mask + 2B CRC*/) {
@@ -164,14 +175,6 @@ namespace {
         auto iter = data.begin();
         std::advance(iter, 1);
         std::copy_n(iter, command.response.block_buffer.size(), command.response.block_buffer.begin());
-
-        return {};
-    }
-
-    Result<void> parse_response(const std::span<const std::byte> &data, [[maybe_unused]] nfcv::command::WriteSingleBlock &command) {
-        if (data.size() != 3) {
-            return std::unexpected(Error::response_invalid_size);
-        }
 
         return {};
     }
