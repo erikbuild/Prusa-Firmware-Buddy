@@ -24,6 +24,10 @@ public:
     void reset_state() final;
 
 private:
+    enum class TagType : uint8_t {
+        slix2,
+        unknown,
+    };
     struct TagData {
         enum class State : uint8_t {
             free,
@@ -36,6 +40,7 @@ private:
         uint8_t block_size;
         uint8_t block_count;
         State state = State::free;
+        TagType tag_type;
     };
 
     nfcv::ReaderWriterInterface &reader;

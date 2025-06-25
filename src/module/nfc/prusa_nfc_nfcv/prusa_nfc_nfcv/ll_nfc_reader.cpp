@@ -286,7 +286,26 @@ void LLNFCReader::run_next_discovery() {
             .block_size = tag_info->mem_size.value_or(def_mem_size).block_size,
             .block_count = tag_info->mem_size.value_or(def_mem_size).block_count,
             .state = TagData::State::known,
+            .tag_type = TagType::unknown,
         };
+
+        // Determine tag type
+        {
+            constexpr std::byte uid_7_nfcv { 0xE0 }; // Specified by ISO 15693-3
+            constexpr std::byte uid_6_nxp { 0x04 }; // NXP Semiconductors
+            constexpr std::byte uid_5_icode { 0x01 }; //  ICODE SLIX 2
+
+            constexpr std::byte uid_4_icode_mask { 0b11000 };
+            constexpr std::byte uid_4_icode_slix2 { 0b01000 }; // Differentiate between SLI, SLIX, SLIX2)
+
+            if (true
+                && uid[7] == uid_7_nfcv
+                && uid[6] == uid_6_nxp
+                && uid[5] == uid_5_icode
+                && (uid[4] & uid_4_icode_mask) == uid_4_icode_slix2) {
+                tag_data->tag_type = TagType::slix2;
+            }
+        }
     }
 
     // Lets find a uid that we lost
