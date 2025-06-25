@@ -98,7 +98,7 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
             const auto element = curr_queue.front();
             curr_queue.pop_front();
             if (element.has_value()) {
-                std::ranges::copy(*element, command.response.uid.begin());
+                std::ranges::copy(*element, command.response.begin());
                 return {};
             }
         }
@@ -128,7 +128,7 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
     }
 
     nfcv::Result<void> nfcv_command_impl(nfcv::command::ReadSingleBlock &command) {
-        const auto &buffer = command.response.block_buffer;
+        const auto &buffer = command.response;
 
         ReadSingleBlock read_block { .uid = {}, .block_id = command.request.block_address };
         std::ranges::copy(command.request.uid, read_block.uid.begin());

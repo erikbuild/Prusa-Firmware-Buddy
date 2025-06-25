@@ -13,34 +13,33 @@ namespace command {
         static constexpr std::byte cmd_id { 0x01 };
         struct Request {
         } request;
-        struct Response {
-            nfcv::UIDView uid;
-        } response;
+        using Response = UID;
+        Response &response;
     };
+
     struct SystemInfo {
         static constexpr std::byte cmd_id { 0x2B };
         struct Request {
-            nfcv::UIDConstView uid;
+            UID uid;
         } request;
-        using Response = TagInfo &;
-        Response response;
+        using Response = TagInfo;
+        Response &response;
     };
 
     struct ReadSingleBlock {
         static constexpr std::byte cmd_id { 0x20 };
         struct Request {
-            nfcv::UIDConstView uid;
+            UID uid;
             uint8_t block_address;
         } request;
-        struct Response {
-            std::span<std::byte> block_buffer;
-        } response;
+        using Response = const std::span<std::byte>;
+        Response response;
     };
 
     struct WriteSingleBlock {
         static constexpr std::byte cmd_id { 0x21 };
         struct Request {
-            nfcv::UIDConstView uid;
+            UID uid;
             uint8_t block_address;
             std::span<const std::byte> block_buffer;
         } request;
@@ -51,8 +50,9 @@ namespace command {
     struct StayQuiet {
         static constexpr std::byte cmd_id { 0x02 };
         struct Request {
-            nfcv::UIDConstView uid;
-        } request;
+            UID uid;
+        } request = {};
+        // No repsonse expected
     };
 
 } // namespace command

@@ -74,7 +74,7 @@ TEST_CASE("Test NFC-V response deserialization - Inventory response", "[nfcv][de
     static constexpr nfcv::UID expected_uid = { std::byte { 19 }, std::byte { 123 }, std::byte { 90 }, std::byte { 4 }, std::byte { 9 }, std::byte { 1 }, std::byte { 4 }, std::byte { 224 } };
     const std::array<uint8_t, 12> input = { 0, 0, 19, 123, 90, 4, 9, 1, 4, 224, 176, 178 };
     nfcv::UID uid;
-    nfcv::Command cmd { nfcv::command::Inventory { .request = {}, .response = { .uid = uid } } };
+    nfcv::Command cmd { nfcv::command::Inventory { .request = {}, .response = uid } };
     const auto res = nfcv::parse_response(std::as_bytes(std::span { input }), cmd);
     REQUIRE(res.has_value());
     REQUIRE(std::ranges::equal(uid, expected_uid));
@@ -102,7 +102,7 @@ TEST_CASE("Test NFC-V response deserialization - ReadSingleBlock", "[nfcv][deser
 
     std::array<std::byte, 4> block_data {};
     static constexpr std::array<std::byte, 4> expected_block_data = { std::byte { 16 }, std::byte { 17 }, std::byte { 18 }, std::byte { 19 } };
-    nfcv::Command cmd { nfcv::command::ReadSingleBlock { .request = { .uid = uid, .block_address = 12 }, .response = { .block_buffer = block_data } } };
+    nfcv::Command cmd { nfcv::command::ReadSingleBlock { .request = { .uid = uid, .block_address = 12 }, .response { block_data } } };
     const auto res = nfcv::parse_response(std::as_bytes(std::span { input }), cmd);
     REQUIRE(res.has_value());
     REQUIRE(block_data == expected_block_data);
@@ -113,7 +113,7 @@ TEST_CASE("Test NFC-V response deserialization - WriteSingleBlock", "[nfcv][dese
     static constexpr std::array<std::byte, 4> block_data = { std::byte { 16 }, std::byte { 17 }, std::byte { 18 }, std::byte { 19 } };
     const std::array<uint8_t, 3> input = { 0, 120, 240 };
 
-    nfcv::Command cmd { nfcv::command::WriteSingleBlock { .request = { .uid = uid, .block_address = 12, .block_buffer = block_data }, .response = {} } };
+    nfcv::Command cmd { nfcv::command::WriteSingleBlock { .request = { .uid = uid, .block_address = 12, .block_buffer = block_data } } };
     const auto res = nfcv::parse_response(std::as_bytes(std::span { input }), cmd);
     REQUIRE(res.has_value());
 }
@@ -121,7 +121,7 @@ TEST_CASE("Test NFC-V response deserialization - WriteSingleBlock", "[nfcv][dese
 TEST_CASE("Test NFC-V response deserialization - expected error small buffer", "[nfcv][deserialization]") {
     const std::array<uint8_t, 2> input = { 0, 0 };
     nfcv::UID uid;
-    nfcv::Command cmd { nfcv::command::Inventory { .request = {}, .response = { .uid = uid } } };
+    nfcv::Command cmd { nfcv::command::Inventory { .request = {}, .response = uid } };
     const auto res = nfcv::parse_response(std::as_bytes(std::span { input }), cmd);
     REQUIRE(!res.has_value());
     REQUIRE(res.error() == nfcv::Error::response_invalid_size);
@@ -130,7 +130,7 @@ TEST_CASE("Test NFC-V response deserialization - expected error small buffer", "
 TEST_CASE("Test NFC-V response deserialization - expected error response is error", "[nfcv][deserialization]") {
     static constexpr nfcv::UID uid {};
     const std::array<uint8_t, 4> input = { 1, 0, 0x9f, 0x16 };
-    nfcv::Command cmd { nfcv::command::ReadSingleBlock { .request = { .uid = uid, .block_address = 12 }, .response = { .block_buffer = {} } } };
+    nfcv::Command cmd { nfcv::command::ReadSingleBlock { .request = { .uid = uid, .block_address = 12 }, .response = {} } };
     const auto res = nfcv::parse_response(std::as_bytes(std::span { input }), cmd);
     REQUIRE(!res.has_value());
     REQUIRE(res.error() == nfcv::Error::response_is_error);
@@ -150,7 +150,7 @@ void test_encode(const nfcv::Command &command, std::span<const std::byte> expect
 
 TEST_CASE("Test NFC-V request encoding - Inventory command", "[nfcv][encode]") {
     nfcv::UID uid {};
-    nfcv::Command command { nfcv::command::Inventory { .request = {}, .response = { .uid = uid } } };
+    nfcv::Command command { nfcv::command::Inventory { .request = {}, .response = uid } };
     static constexpr std::array<uint8_t, 22> expected_output { 0x21, 0x20, 0x08, 0x20, 0x02, 0x08, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x20, 0x08, 0x80, 0x80, 0x20, 0x20, 0x02, 0x02, 0x04 };
     test_encode(command, std::as_bytes(std::span { expected_output }));
 }
@@ -167,7 +167,7 @@ TEST_CASE("Test NFC-V request encoding - SystemInfo command", "[nfcv][encode]") 
 TEST_CASE("Test NFC-V request encoding - ReadSingleBlock command", "[nfcv][encode]") {
     static constexpr nfcv::UID uid = { std::byte { 19 }, std::byte { 123 }, std::byte { 90 }, std::byte { 4 }, std::byte { 9 }, std::byte { 1 }, std::byte { 4 }, std::byte { 224 } };
     std::array<std::byte, 4> block_data {};
-    nfcv::Command command { nfcv::command::ReadSingleBlock { .request = { .uid = uid, .block_address = 12 }, .response = { .block_buffer = block_data } } };
+    nfcv::Command command { nfcv::command::ReadSingleBlock { .request = { .uid = uid, .block_address = 12 }, .response = block_data } };
     static constexpr std::array<uint8_t, 54> expected_output { 0x21, 0x20, 0x2, 0x20, 0x2, 0x2, 0x2, 0x20, 0x2, 0x80, 0x2, 0x8, 0x2, 0x80, 0x20, 0x80, 0x8, 0x20, 0x20, 0x8, 0x8, 0x2, 0x8, 0x2, 0x2, 0x8, 0x20, 0x2, 0x2, 0x8, 0x2, 0x2, 0x2, 0x2, 0x8, 0x2, 0x2, 0x2, 0x2, 0x20, 0x80, 0x2, 0x80, 0x2, 0x2, 0x2, 0x2, 0x80, 0x2, 0x20, 0x20, 0x20, 0x8, 0x4 };
 
     test_encode(command, std::as_bytes(std::span { expected_output }));

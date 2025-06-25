@@ -92,13 +92,13 @@ namespace {
 
     static constexpr std::byte NFCV_ERROR_FLAG { 0x01 };
     Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::Inventory &command) {
-        if (data.size() != command.response.uid.size() + 4 /*1B flags + 1B mask length (is 0) + 0B mask + 2B CRC*/) {
+        if (data.size() != command.response.size() + 4 /*1B flags + 1B mask length (is 0) + 0B mask + 2B CRC*/) {
             return std::unexpected(Error::unknown);
         }
 
         auto iter = data.begin();
         std::advance(iter, 2);
-        std::copy_n(iter, command.response.uid.size(), command.response.uid.begin());
+        std::copy_n(iter, command.response.size(), command.response.begin());
 
         return {};
     }
@@ -168,13 +168,11 @@ namespace {
     }
 
     Result<void> parse_response(const std::span<const std::byte> &data, nfcv::command::ReadSingleBlock &command) {
-        if (data.size() != (3 + command.response.block_buffer.size())) {
+        if (data.size() != (3 + command.response.size())) {
             return std::unexpected(Error::response_invalid_size);
         }
 
-        auto iter = data.begin();
-        std::advance(iter, 1);
-        std::copy_n(iter, command.response.block_buffer.size(), command.response.block_buffer.begin());
+        std::copy_n(std::next(data.begin()), command.response.size(), command.response.begin());
 
         return {};
     }
