@@ -16,6 +16,8 @@ constexpr size_t MAX_BLOCK_SIZE_IN_BYTES = 32;
 
 using UID = std::array<std::byte, UID_SIZE>;
 using BlockID = uint8_t;
+using AFI = uint8_t;
+using DSFID = uint8_t;
 
 struct TagInfo {
     using DSFID = uint8_t;

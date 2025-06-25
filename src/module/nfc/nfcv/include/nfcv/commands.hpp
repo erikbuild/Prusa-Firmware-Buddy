@@ -63,9 +63,35 @@ namespace command {
         // No repsonse expected
     };
 
+    struct WriteAFI {
+        static constexpr std::byte cmd_id { 0x27 };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+            AFI afi;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
+    struct WriteDSFID {
+        static constexpr std::byte cmd_id { 0x29 };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+            DSFID dsfid;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
 } // namespace command
 
-using Command = std::variant<command::Inventory, command::SystemInfo, command::ReadSingleBlock, command::WriteSingleBlock, command::StayQuiet>;
+using Command = std::variant<command::Inventory, command::SystemInfo, command::ReadSingleBlock, command::WriteSingleBlock, command::StayQuiet, command::WriteAFI, command::WriteDSFID>;
 
 /// Utility function that checks if current command expects response
 bool is_response_expected(const Command &command);

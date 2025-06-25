@@ -28,6 +28,8 @@ using Inventory = nfcv::command::Inventory::Request;
 using StayQuiet = nfcv::command::StayQuiet::Request;
 using SystemInfo = nfcv::command::SystemInfo::Request;
 using ReadSingleBlock = nfcv::command::ReadSingleBlock::Request;
+using WriteAFI = nfcv::command::WriteAFI::Request;
+using WriteDSFID = nfcv::command::WriteDSFID::Request;
 
 struct WriteSingleBlock {
     nfcv::UID uid;
@@ -36,7 +38,11 @@ struct WriteSingleBlock {
     bool operator==(const WriteSingleBlock &other) const = default;
 };
 
-using Event = std::variant<FieldUp, FieldDown, SwitchToNextDiscoveryAntenna, Inventory, StayQuiet, SystemInfo, ReadSingleBlock, WriteSingleBlock>;
+using Event = std::variant<
+    FieldUp, FieldDown, SwitchToNextDiscoveryAntenna,
+    Inventory, StayQuiet, SystemInfo,
+    ReadSingleBlock, WriteSingleBlock,
+    WriteAFI, WriteDSFID>;
 
 struct EventLogger : public nfcv::ReaderWriterInterface {
     nfcv::Result<void> field_up(AntennaData antenna_data) final {
@@ -90,13 +96,13 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
         std::copy_n(command.request.uid.begin(), command.request.uid.size(), sys_info.uid.begin());
         events.push_back(sys_info);
 
-        auto tag_data = std::ranges::find_if(tag_infos, [&](const auto &element) { return std::ranges::equal(command.request.uid, element.first); });
-        if (tag_data != tag_infos.end()) {
-            command.response = tag_data->second;
-            return {};
+        auto info = get_tag_info(command.request.uid);
+        if (!info) {
+            return std::unexpected(nfcv::Error::other);
         }
 
-        return std::unexpected(nfcv::Error::other);
+        command.response = *info;
+        return {};
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::ReadSingleBlock &command) {
@@ -129,6 +135,35 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
             std::copy_n(buffer.begin(), buffer.size(), it);
         }
         return {};
+    }
+
+    nfcv::Result<void> nfcv_command_impl(nfcv::command::WriteAFI &command) {
+        events.push_back(command.request);
+
+        auto info = get_tag_info(command.request.uid);
+        if (!info) {
+            return std::unexpected(nfcv::Error::other);
+        }
+
+        info->afi = command.request.afi;
+        return {};
+    }
+
+    nfcv::Result<void> nfcv_command_impl(nfcv::command::WriteDSFID &command) {
+        events.push_back(command.request);
+
+        auto info = get_tag_info(command.request.uid);
+        if (!info) {
+            return std::unexpected(nfcv::Error::other);
+        }
+
+        info->dsfid = command.request.dsfid;
+        return {};
+    }
+
+    nfcv::TagInfo *get_tag_info(const nfcv::UID &uid) {
+        const auto r = std::ranges::find_if(tag_infos, [&](const auto &item) { return item.first == uid; });
+        return r != tag_infos.end() ? &r->second : nullptr;
     }
 
     std::vector<Event> events {};
