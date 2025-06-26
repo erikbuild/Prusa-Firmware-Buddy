@@ -3,6 +3,45 @@
 #include <bitset>
 #include <raii/scope_guard.hpp>
 
+namespace {
+
+INFCReader::IOError to_prusa_error(nfcv::Error error) {
+    using E = nfcv::Error;
+    using R = INFCReader::IOError;
+
+    switch (error) {
+
+    case E::timeout:
+    case E::invalid_chip:
+    case E::bad_oscilator:
+    case E::buffer_overflow:
+    case E::invalid_crc:
+    case E::device_hard_framing_error:
+    case E::device_soft_framing_error:
+    case E::device_parity_error:
+    case E::device_crc_error:
+    case E::no_response:
+    case E::response_invalid_size:
+    case E::response_format_invalid:
+    case E::response_is_error:
+    case E::bad_request:
+    case E::other:
+    case E::unknown:
+        return R::other;
+
+    case E::not_implemented:
+        return R::not_implemented;
+    }
+
+    std::unreachable();
+}
+
+std::unexpected<INFCReader::IOError> to_prusa_unexpected(nfcv::Error error) {
+    return std::unexpected(to_prusa_error(error));
+}
+
+} // namespace
+
 LLNFCReader::LLNFCReader(nfcv::ReaderWriterInterface &reader)
     : reader(reader) {
     reset_state();
@@ -18,8 +57,8 @@ INFCReader::IOResult<void> LLNFCReader::io_op(NFCTagID tag, NFCOffset start, siz
         return std::unexpected(IOError::outside_of_bounds);
     }
 
-    if (!reader.field_up(tag_data.antenna).has_value()) {
-        return std::unexpected(IOError::other);
+    if (auto r = reader.field_up(tag_data.antenna); !r) {
+        return to_prusa_unexpected(r.error());
     }
     ScopeGuard auto_field_down = [this]() {
         reader.field_down();
@@ -33,7 +72,7 @@ INFCReader::IOResult<void> LLNFCReader::io_op(NFCTagID tag, NFCOffset start, siz
             }
             return {};
         }
-        return std::unexpected(IOError::other);
+        return to_prusa_unexpected(impl_res.error());
     }
 
     return {};
@@ -44,7 +83,10 @@ INFCReader::IOResult<void> LLNFCReader::read(NFCTagID tag, NFCOffset start, cons
     struct {
         NFCOffset start;
         const std::span<std::byte> &buffer;
-    } ref = { .start = start, .buffer = buffer };
+    } ref = {
+        .start = start,
+        .buffer = buffer,
+    };
     return io_op(tag, start, buffer.size(), [this, &ref](const TagData &tag_data) {
         return read_impl(tag_data, ref.start, ref.buffer);
     });
