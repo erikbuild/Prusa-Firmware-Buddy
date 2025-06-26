@@ -6,7 +6,8 @@
 #include <fstream>
 #include <span>
 #include <ranges>
-#include <magic_enum.hpp>
+
+#include <test_utils/formatters.hpp>
 
 #include <prusa_nfc/prusa_nfc_reader.hpp>
 #include <prusa_nfc/i_nfc_reader.hpp>
@@ -111,57 +112,8 @@ PrusaNFCReader::NFCTagField field(auto f, NFCTagID tag = 0) {
     return { .tag = tag, .section = section_for_field(f), .field = std::to_underlying(f) };
 };
 
-template <typename T>
-std::ostream &std::operator<<(std::ostream &os, const std::span<T> &value);
-
-std::ostream &operator<<(std::ostream &os, const PrusaNFCReader::Error &value) {
-    os << "Error::" << magic_enum::enum_name(value);
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, const std::basic_string_view<std::byte> &bytes) {
-    const auto flags = os.flags();
-    os << std::hex;
-    for (auto byte : bytes) {
-        os << (int)byte;
-    }
-    os.flags(flags);
-    return os;
-}
-
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const PrusaNFCReader::IOResult<T> &value) {
-    if (!value) {
-        os << value.error();
-    } else {
-        os << *value;
-    }
-    return os;
-}
-
 std::ostream &operator<<(std::ostream &os, const PrusaNFCReader::WriteReport &report) {
     os << "{existed: " << report.field_existed << "}";
-    return os;
-}
-
-template <typename T>
-std::ostream &std::operator<<(std::ostream &os, const std::unexpected<T> &value) {
-    os << value.error();
-    return os;
-}
-
-template <typename T>
-std::ostream &std::operator<<(std::ostream &os, const std::span<T> &value) {
-    os << "[";
-    bool i = false;
-    for (const auto &item : value) {
-        if (i) {
-            os << ", ";
-        }
-        i = true;
-        os << item;
-    }
-    os << "]";
     return os;
 }
 
