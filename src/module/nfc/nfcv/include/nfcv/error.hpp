@@ -20,6 +20,8 @@ enum class Error : uint8_t {
     response_invalid_size,
     response_format_invalid,
     response_is_error,
+    bad_request,
+    not_implemented,
     other,
     unknown,
 };
