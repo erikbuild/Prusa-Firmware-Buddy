@@ -89,9 +89,39 @@ namespace command {
         } response;
     };
 
+    ///* SLIX2 extension
+    struct SetEAS {
+        static constexpr std::byte cmd_id { 0xA2 };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
+    ///* SLIX2 extension
+    struct ResetEAS {
+        static constexpr std::byte cmd_id { 0xA3 };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
 } // namespace command
 
-using Command = std::variant<command::Inventory, command::SystemInfo, command::ReadSingleBlock, command::WriteSingleBlock, command::StayQuiet, command::WriteAFI, command::WriteDSFID>;
+using Command = std::variant<
+    command::Inventory, command::SystemInfo, command::StayQuiet,
+    command::ReadSingleBlock, command::WriteSingleBlock,
+    command::WriteAFI, command::WriteDSFID,
+    command::SetEAS, command::ResetEAS>;
 
 /// Utility function that checks if current command expects response
 bool is_response_expected(const Command &command);

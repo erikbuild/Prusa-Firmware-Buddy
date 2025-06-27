@@ -36,6 +36,8 @@ using SystemInfo = nfcv::command::SystemInfo::Request;
 using ReadSingleBlock = nfcv::command::ReadSingleBlock::Request;
 using WriteAFI = nfcv::command::WriteAFI::Request;
 using WriteDSFID = nfcv::command::WriteDSFID::Request;
+using SetEAS = nfcv::command::SetEAS::Request;
+using ResetEAS = nfcv::command::ResetEAS::Request;
 
 struct WriteSingleBlock {
     nfcv::UID uid;
@@ -48,6 +50,7 @@ using Event = std::variant<
     FieldUp, FieldDown, SwitchToNextDiscoveryAntenna,
     Inventory, StayQuiet, SystemInfo,
     ReadSingleBlock, WriteSingleBlock,
+    SetEAS, ResetEAS,
     WriteAFI, WriteDSFID>;
 
 struct EventLogger : public nfcv::ReaderWriterInterface {
@@ -134,6 +137,14 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::WriteDSFID &command) {
         return tag_op(command, [](auto &command, auto &tag) { tag.info.dsfid = command.request.dsfid; });
+    }
+
+    nfcv::Result<void> nfcv_command_impl(const nfcv::command::SetEAS &command) {
+        return tag_op(command, [](auto &, auto &tag) { tag.eas = true; });
+    }
+
+    nfcv::Result<void> nfcv_command_impl(const nfcv::command::ResetEAS &command) {
+        return tag_op(command, [](auto &, auto &tag) { tag.eas = false; });
     }
 
     template <typename C, typename F>

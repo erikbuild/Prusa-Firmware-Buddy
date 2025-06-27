@@ -133,6 +133,26 @@ Result<void> construct_rest(Encoder1Of4 &encoder, const command::WriteDSFID &com
     return {};
 }
 
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::SetEAS &command) {
+    return 11;
+}
+
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::SetEAS &command) {
+    encoder.append_byte(SLIX_IC_MFG);
+    encoder.append_bytes(command.request.uid);
+    return {};
+}
+
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::ResetEAS &command) {
+    return 11;
+}
+
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::ResetEAS &command) {
+    encoder.append_byte(SLIX_IC_MFG);
+    encoder.append_bytes(command.request.uid);
+    return {};
+}
+
 } // namespace nfcv::impl
 
 nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &command) {

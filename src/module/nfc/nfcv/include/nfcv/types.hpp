@@ -14,6 +14,11 @@ constexpr size_t UID_MSB_INDEX = UID_SIZE - 1;
 constexpr size_t MAX_BLOCK_SIZE_IN_BYTES = 32;
 // constexpr size_t MAX_NUMBER_OF_BLOCKS = 256;
 
+/// Magic constant you're supposed to put before the UID for SLIX2 extension commands
+/// The spec file is not very clear what the shorthand means,
+// it's likely something to do with "integrated circuit manufacturer code"
+constexpr std::byte SLIX_IC_MFG { 0x04 };
+
 using UID = std::array<std::byte, UID_SIZE>;
 using BlockID = uint8_t;
 using AFI = uint8_t;
