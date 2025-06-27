@@ -5,6 +5,8 @@
 #include "mmu.hpp"
 #include "modbus.hpp"
 #include "temperature.hpp"
+#include <cstdlib>
+#include <span>
 #include <freertos/timing.hpp>
 #include <xbuddy_extension_shared/mmu_bridge.hpp>
 
@@ -86,36 +88,65 @@ public:
 
 class Dispatch final : public modbus::Callbacks {
 public:
-    // Do we want these to be some kind of number-value array, or is this hardcoded thing good enough?
-    Logic logic;
-    MMU mmu;
-    Status read_register(uint8_t device, uint16_t address, uint16_t &out) {
-        switch (device) {
-        case MY_MODBUS_ADDR:
-            return logic.read_register(device, address, out);
-        case MMU_MODBUS_ADDR:
-            return mmu.read_register(device, address, out);
-        default:
-            return Status::Ignore;
+    struct SubDevice {
+        uint8_t id;
+        modbus::Callbacks *callbacks;
+    };
+
+private:
+    std::span<SubDevice> sub_devices;
+
+    template <class F>
+    Status with(uint8_t device, F f) {
+        for (const auto &sub_device : sub_devices) {
+            if (sub_device.id == device) {
+                return f(*sub_device.callbacks);
+            }
+        }
+
+        return Status::Ignore;
+    }
+
+    bool all_distinct() {
+        for (size_t i = 0; i < sub_devices.size(); i++) {
+            for (size_t j = i + 1; j < sub_devices.size(); j++) {
+                if (sub_devices[i].id == sub_devices[j].id) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+public:
+    Dispatch(std::span<SubDevice> sub_devices)
+        : sub_devices { sub_devices } {
+        if (!all_distinct()) {
+            abort();
         }
     }
 
+    Status read_register(uint8_t device, uint16_t address, uint16_t &out) {
+        return with(device, [&](auto &cbacks) { return cbacks.read_register(device, address, out); });
+    }
+
     Status write_register(uint8_t device, uint16_t address, uint16_t value) {
-        switch (device) {
-        case MY_MODBUS_ADDR:
-            return logic.write_register(device, address, value);
-        case MMU_MODBUS_ADDR:
-            return mmu.write_register(device, address, value);
-        default:
-            return Status::Ignore;
-        }
+        return with(device, [&](auto &cbacks) { return cbacks.write_register(device, address, value); });
     }
 };
 
 } // namespace
 
 void app::run() {
-    Dispatch modbus_callbacks;
+    Logic logic;
+    MMU mmu;
+
+    std::array sub_devices = {
+        Dispatch::SubDevice { MY_MODBUS_ADDR, &logic },
+        Dispatch::SubDevice { MMU_MODBUS_ADDR, &mmu },
+    };
+
+    Dispatch modbus_callbacks { sub_devices };
 
     std::byte response_buffer[32]; // is enough for now
     hal::rs485::start_receiving();

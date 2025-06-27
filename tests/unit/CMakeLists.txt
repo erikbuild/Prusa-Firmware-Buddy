@@ -7,6 +7,10 @@ add_custom_target(tests)
 # Define UNITTESTS macro everywhere
 add_definitions(-DUNITTESTS)
 
+# Make tests_include available for all tests
+include_directories(tests_include)
+link_libraries(magic_enum)
+
 # Prepend our stubbed libintl header to override the host's gettext
 include_directories(${CMAKE_SOURCE_DIR}/tests/stubs/host)
 

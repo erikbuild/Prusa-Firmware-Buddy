@@ -41,6 +41,7 @@
 #include <option/has_auto_retract.h>
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_manual_chamber_vents.h>
+#include <option/has_precise_homing_corexy.h>
 
 #include <option/has_hotend_type_support.h>
 #if HAS_HOTEND_TYPE_SUPPORT()
@@ -456,6 +457,12 @@ enum class PhasesWarning : PhaseUnderlyingType {
 
 #if HAS_CEILING_CLEARANCE()
     CeilingClearanceViolation,
+#endif
+
+#if HAS_PRECISE_HOMING_COREXY()
+    HomingCalibrationNeeded,
+    HomingRefinementFailed,
+    HomingRefinementFailedNoRetry,
 #endif
 
     /// Shown when the M334 is attempting to change metrics configuration, prompting the user to confirm the change (security reasons)
@@ -944,6 +951,11 @@ class ClientResponses {
 #endif
 #if HAS_CEILING_CLEARANCE()
             { PhasesWarning::CeilingClearanceViolation, { Response::Continue, Response::Abort } },
+#endif
+#if HAS_PRECISE_HOMING_COREXY()
+            { PhasesWarning::HomingCalibrationNeeded, { Response::Calibrate, Response::Skip, Response::Always, Response::Never } },
+            { PhasesWarning::HomingRefinementFailed, { Response::Retry, Response::Abort, Response::Ignore } },
+            { PhasesWarning::HomingRefinementFailedNoRetry, { Response::Abort, Response::Ignore } },
 #endif
             { PhasesWarning::MetricsConfigChangePrompt, { Response::Yes, Response::No } },
     };

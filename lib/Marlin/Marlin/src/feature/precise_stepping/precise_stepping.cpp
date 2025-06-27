@@ -755,29 +755,32 @@ static int32_t counter_signed_diff(uint16_t timestamp1, uint16_t timestamp2) {
 
 void PreciseStepping::step_isr() {
     // minimum interval for isr re-entry (ticks: us)
-    constexpr uint16_t min_reserve = 5;
+    constexpr uint8_t min_reserve = 2;
 
     // maximum time advancement for each isr (ticks: us)
     constexpr uint16_t max_time_increment = STEPPER_ISR_MAX_TICKS / 2;
     static_assert(max_time_increment < STEPPER_ISR_MAX_TICKS);
     static_assert(max_time_increment > min_reserve);
 
-    // maximum number of steps ticked in a single iteration, for debugging purposes
-    uint8_t steps_merged = 0; // current call
-    static uint8_t max_steps_merged = 0; // overall
-
     const auto timer_handle = &TimerHandle[STEP_TIMER_NUM].handle;
     const uint32_t compare = __HAL_TIM_GET_COMPARE(timer_handle, TIM_CHANNEL_1);
 
-    uint32_t next = 0;
+    uint16_t next = 0;
     uint32_t time_increment = 0;
     uint32_t max_ticks = STEPPER_ISR_MAX_TICKS;
-    for (;;) {
+    uint16_t tim_counter = 0;
+    int32_t diff = 0;
+
+    // maximum number of steps ticked in a single iteration
+    constexpr uint8_t limit_steps_merged = 5;
+    for (uint8_t steps_merged = 0;; steps_merged++) {
         if (stop_pending)
             [[unlikely]] {
-            next = compare + STEPPER_ISR_PERIOD_IN_TICKS;
+            buddy::InterruptDisabler _;
+            next = __HAL_TIM_GET_COMPARE(timer_handle, TIM_CHANNEL_1) + STEPPER_ISR_PERIOD_IN_TICKS;
             Stepper::axis_did_move = 0;
-            break;
+            __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, next);
+            return;
         }
 
         // ensure we didn't advance too many ticks in previous iterations,
@@ -803,53 +806,51 @@ void PreciseStepping::step_isr() {
         }
 
         // actually plan the next deadline and check if we have enough time reserve
-        next = compare + ticks_to_next_isr;
-        const uint32_t counter = __HAL_TIM_GET_COUNTER(timer_handle);
-        if (counter_signed_diff(next, counter) >= min_reserve) {
-            break;
-        }
+        // we need to block PhaseStepping and other high priority interrupts here to have precise timing
+        // during setting of the next CC event
+        {
+            next = compare + ticks_to_next_isr;
+            uint16_t adjusted_next = next - last_step_isr_delay;
 
-        // not enough reserve: iterate again to process the next event immediately
-        ++steps_merged;
+            buddy::InterruptDisabler _;
+            // What follows is a not-straightforward scheduling of the next step ISR
+            // time event. If this ISR is interrupted by another routine, we might
+            // schedule an event that is in the past from the perspective of the step
+            // timer. Thus, we check if this is the case and possibly adjust the time.
+            // On the next ISR we will pick up the slack.
+            // The difference of values passed into counter_signed_diff always has to be smaller
+            // or equal to (UINT16_MAX / 2). Otherwise, the value returned by counter_signed_diff()
+            // will be incorrect.
+            tim_counter = __HAL_TIM_GET_COUNTER(timer_handle);
+            diff = counter_signed_diff(adjusted_next, tim_counter);
+
+            // in case we are behind with steps planning, we allow only limit_steps_merged to be merged
+            // and then leave the interrupt for min_reserve[us] in order to give some processing power
+            // also to other tasks or interrupts
+            if ((diff > 0) || (steps_merged == (limit_steps_merged - 1))) {
+                last_step_isr_delay = 0;
+
+                if (diff < min_reserve) {
+                    // in case there is a risk to miss next CC, we have to increase time for the next planned event
+                    // and compensate it in the next next planned event
+                    last_step_isr_delay = min_reserve - diff;
+                    adjusted_next += last_step_isr_delay;
+                }
+                __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, adjusted_next);
+                break;
+            }
+        }
+        // we are late with step execution, so we will speed up the next step
+        last_step_isr_delay = -diff;
 
         // adjust the deadline limit based on the real time elapsed to avoid rescheduling
-        max_ticks = STEPPER_ISR_MAX_TICKS + counter_signed_diff(counter, compare);
+        max_ticks = STEPPER_ISR_MAX_TICKS + counter_signed_diff(tim_counter, compare);
     }
 
-    // keep some stats for debugging purposes
-    if (steps_merged > max_steps_merged) {
-        max_steps_merged = steps_merged;
-    }
-
-    // What follows is a not-straightforward scheduling of the next step ISR
-    // time event. If this ISR is interrupted by another routine, we might
-    // schedule an event that is in the past from the perspective of the step
-    // timer. Thus, we check if this is the case and possibly adjust the time.
-    // On the next ISR we will pick up the slack.
-    // The difference of values passed into counter_signed_diff always has to be smaller
-    // or equal to (UINT16_MAX / 2). Otherwise, the value returned by counter_signed_diff()
-    // will be incorrect.
-    uint32_t adjusted_next = next - last_step_isr_delay;
-    int32_t diff;
-    {
-        buddy::InterruptDisabler _;
-        int32_t tim_counter = __HAL_TIM_GET_COUNTER(timer_handle);
-        diff = counter_signed_diff(adjusted_next, tim_counter);
-        // We should miss the next deadline just by a couple of ticks. When the value of 'diff'
-        // is a big negative number, the difference between 'adjusted_next' and 'tim_counter'
-        // is bigger than (UINT16_MAX / 2), or something interrupts the stepper routine for a very long time.
-        assert(diff >= -STEPPER_ISR_MAX_TICKS && diff <= STEPPER_ISR_MAX_TICKS);
-        if (diff < min_reserve) {
-            adjusted_next = tim_counter + min_reserve;
-        }
-        __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, adjusted_next);
-    }
-
-    if (diff < min_reserve) {
-        last_step_isr_delay = -diff + min_reserve;
-    } else {
-        last_step_isr_delay = 0;
-    }
+    // We should miss the next deadline just by a couple of ticks. When the value of 'diff'
+    // is a big negative number, the difference between 'adjusted_next' and 'tim_counter'
+    // is bigger than (UINT16_MAX / 2), or something interrupts the stepper routine for a very long time.
+    assert(diff >= -STEPPER_ISR_MAX_TICKS && diff <= STEPPER_ISR_MAX_TICKS);
 }
 
 FORCE_INLINE move_t *append_beginning_empty_move() {

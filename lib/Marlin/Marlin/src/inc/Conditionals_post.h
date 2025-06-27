@@ -1042,11 +1042,6 @@
 #endif
 
 /**
- * Part Cooling fan multipliexer
- */
-#define HAS_FANMUX PIN_EXISTS(FANMUX0)
-
-/**
  * MIN/MAX case light PWM scaling
  */
 #if HAS_CASE_LIGHT

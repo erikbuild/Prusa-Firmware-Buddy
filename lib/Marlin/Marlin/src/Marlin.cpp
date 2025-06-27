@@ -57,7 +57,6 @@
 #include "module/temperature.h"
 #include "module/configuration_store.h"
 #include "module/printcounter.h"
-#include "feature/closedloop.h"
 #include "feature/safety_timer.h"
 #if !BOARD_IS_DWARF()
 #include "pause_stubbed.hpp"
@@ -97,10 +96,6 @@
   #include "module/servo.h"
 #endif
 
-#if ENABLED(DAC_STEPPER_CURRENT)
-  #include "feature/dac/stepper_dac.h"
-#endif
-
 #if ENABLED(I2C_POSITION_ENCODERS)
   #include "feature/I2CPositionEncoder.h"
 #endif
@@ -128,10 +123,6 @@
 
 #if HAS_CASE_LIGHT
   #include "feature/caselight.h"
-#endif
-
-#if HAS_FANMUX
-  #include "feature/fanmux.h"
 #endif
 
 #if ENABLED(PRUSA_MMU2)
@@ -355,7 +346,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
           #if _DEBUG && !BOARD_IS_DWARF()
           // Report steppers being disabled to the user
           // Skip if position not trusted to avoid warnings when position is not important
-          if(axis_known_position) {
+          if(axes_home_level != AxesHomeLevel::no_axes_homed) {
             /// @note Hacky link from marlin_server which cannot be included here.
             /// @todo Remove when stepper timeout screen is solved properly.
             extern void marlin_server_steppers_timeout_warning();
@@ -782,10 +773,6 @@ void setup() {
     digipot_i2c_init();
   #endif
 
-  #if ENABLED(DAC_STEPPER_CURRENT)
-    dac_init();
-  #endif
-
   #if EITHER(Z_PROBE_SLED, SOLENOID_PROBE) && HAS_SOLENOID_1
     OUT_WRITE(SOL1_PIN, LOW); // OFF
   #endif
@@ -809,10 +796,6 @@ void setup() {
     SET_OUTPUT(E_MUX2_PIN);
   #endif
 
-  #if HAS_FANMUX
-    fanmux_init();
-  #endif
-
   #if ENABLED(BLTOUCH)
     bltouch.init(/*set_voltage=*/true);
   #endif
@@ -823,10 +806,6 @@ void setup() {
 
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
-  #endif
-
-  #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-    init_closedloop();
   #endif
 
   #ifdef STARTUP_COMMANDS

@@ -1129,12 +1129,7 @@ float Planner::get_axis_position_mm(const AxisEnum axis) {
 
 
 bool Planner::busy() {
-  return !draining_buffer && (
-    processing()
-      #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-        || (READ(CLOSED_LOOP_ENABLE_PIN) && !READ(CLOSED_LOOP_MOVE_COMPLETE_PIN))
-      #endif
-    );
+  return !draining_buffer && processing();
 }
 
 /**
@@ -1149,49 +1144,6 @@ void Planner::synchronize() {
 #if HAS_PHASE_STEPPING()
   phase_stepping::check_state();
 #endif // HAS_PHASE_STEPPING()
-}
-
-/**
- * Planner::_buffer_msteps_raw
- *
- * Add a new linear movement to the buffer (in terms of steps) without implicit kinematic
- * translation, compensation or queuing restrictions.
- *
- *  target        - target position in mini-steps units
- *  fr_mm_s       - (target) speed of the move
- *  extruder      - target extruder
- *  millimeters   - the length of the movement, if known
- *
- * Returns true if movement was properly queued, false otherwise
- */
-bool Planner::_buffer_msteps_raw(const xyze_long_t &target, const xyze_pos_t &target_float
-  , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
-) {
-
-  // Wait for the next available block
-  uint8_t next_buffer_head;
-  block_t * const block = get_next_free_block(next_buffer_head);
-  if (!block) return false;
-
-  // Mark the block as raw
-  PlannerHints block_hints = hints;
-  block_hints.raw_block = true;
-
-  // Fill the block with the specified movement
-  if (!_populate_block(block, target, target_float, fr_mm_s, extruder, block_hints)) {
-    // Movement was not queued, probably because it was too short.
-    //  Simply accept that as movement queued and done
-    return true;
-  }
-
-  // Move buffer head
-  block_buffer_head = next_buffer_head;
-
-  // Recalculate and optimize trapezoidal speed profiles
-  recalculate(TERN_(HINTS_SAFE_EXIT_SPEED, hints.safe_exit_speed_sqr));
-
-  // Movement successfully queued!
-  return true;
 }
 
 /**
@@ -1217,7 +1169,7 @@ bool Planner::_buffer_msteps(const xyze_long_t &target, const xyze_pos_t &target
   // Fill the block with the specified movement
   if (!_populate_block(block, target, target_float, fr_mm_s, extruder, hints)) {
     // Movement was not queued, probably because it was too short.
-    //  Simply accept that as movement queued and done
+    // Simply accept that as movement queued and done
     return true;
   }
 

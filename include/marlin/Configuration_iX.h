@@ -1668,9 +1668,6 @@
 // SkeinForge sends the wrong arc g-codes when using Arc Point as fillet procedure
 //#define SF_ARC_FIX
 
-// Support for the BariCUDA Paste Extruder
-//#define BARICUDA
-
 /**
  * R/C SERVO support
  * Sponsored by TrinityLabs, Reworked by codexmas

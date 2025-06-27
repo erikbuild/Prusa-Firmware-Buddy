@@ -377,10 +377,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 9: M9(); break;                                      // M9: Coolant OFF
       #endif
 
-      #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-        case 12: M12(); break;                                    // M12: Synchronize and optionally force a CLC set
-      #endif
-
       #if ENABLED(EXPECTED_PRINTER_CHECK)
         case 16: M16(); break;                                    // M16: Expected printer check
       #endif
@@ -475,20 +471,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       #if ENABLED(AUTO_REPORT_TEMPERATURES) && HAS_TEMP_SENSOR
         case 155: M155(); break;                                  // M155: Set temperature auto-report interval
       #endif
-
-      #if ENABLED(BARICUDA)
-        // PWM for HEATER_1_PIN
-        #if HAS_HEATER_1
-          case 126: M126(); break;                                // M126: valve open
-          case 127: M127(); break;                                // M127: valve closed
-        #endif
-
-        // PWM for HEATER_2_PIN
-        #if HAS_HEATER_2
-          case 128: M128(); break;                                // M128: valve open
-          case 129: M129(); break;                                // M129: valve closed
-        #endif
-      #endif // BARICUDA
 
       #if HAS_POWER_SWITCH
         case 80: M80(); break;                                    // M80: Turn on Power Supply

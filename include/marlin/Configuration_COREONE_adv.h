@@ -183,17 +183,6 @@
 #define EXTRUDER_AUTO_FAN_SPEED 255 // 255 == full speed
 
 /**
- * Part-Cooling Fan Multiplexer
- *
- * This feature allows you to digitally multiplex the fan output.
- * The multiplexer is automatically switched at tool-change.
- * Set FANMUX[012]_PINs below for up to 2, 4, or 8 multiplexed fans.
- */
-#define FANMUX0_PIN -1
-#define FANMUX1_PIN -1
-#define FANMUX2_PIN -1
-
-/**
  * M355 Case Light on-off / brightness
  */
 //#define CASE_LIGHT_ENABLE
@@ -218,13 +207,6 @@
 // @section extras
 
 //#define Z_LATE_ENABLE // Enable Z the last moment. Needed if your Z driver overheats.
-
-// Employ an external closed loop controller. Override pins here if needed.
-//#define EXTERNAL_CLOSED_LOOP_CONTROLLER
-#if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-//#define CLOSED_LOOP_ENABLE_PIN        -1
-//#define CLOSED_LOOP_MOVE_COMPLETE_PIN -1
-#endif
 
 /**
  * Dual Steppers / Dual Endstops
@@ -1288,7 +1270,6 @@
         #define Y_CURRENT_HOME 550
         #if HAS_PRECISE_HOMING_COREXY()
             #define PRECISE_HOMING_COREXY_RETRIES 6     // count: maximum number of refinement attempts
-            #define PRECISE_HOMING_SENS_TRY_RECAL 5     // count: recalibrate sensitivity at [x] failed attempts
             #define XY_HOMING_HOLDING_CURRENT 900       // mA: holding current for fixed motor
             #define XY_HOMING_MEASURE_CURRENT 650       // mA: holding current for the measured motor
             #define XY_HOMING_MEASURE_SENS_MIN -6       // minimum sensitivity threshold for measured motor

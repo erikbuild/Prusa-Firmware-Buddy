@@ -24,6 +24,8 @@
  * motion.cpp
  */
 
+#include <array>
+
 #include "motion.h"
 #include "bsod.h"
 #include "endstops.h"
@@ -109,16 +111,7 @@ XYZ_CONSTS(float, max_length,     MAX_LENGTH);
 XYZ_CONSTS(float, home_bump_mm,   HOME_BUMP_MM);
 XYZ_CONSTS(signed char, home_dir, HOME_DIR);
 
-/**
- * axis_homed
- *   Flags that each linear axis was homed.
- *   XYZ on cartesian, ABC on delta.
- *
- * axis_known_position
- *   Flags that the position is known in each linear axis. Set when homed.
- *   Cleared whenever a stepper powers off, potentially losing its position.
- */
-uint8_t axis_homed, axis_known_position; // = 0
+AxesHomeLevel axes_home_level = AxesHomeLevel::no_axes_homed;
 
 // Relative Mode. Enable with G91, disable with G90.
 bool relative_mode; // = false;
@@ -401,7 +394,7 @@ void do_blocking_move_to_xy_z(const xy_pos_t &raw, const float &z, const feedRat
     if (!lower_allowed) NOLESS(zdest, current_position.z);
     NOMORE(zdest, Z_MAX_POS);
 
-    if (TEST(axis_known_position, Z_AXIS)) {
+    if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
       // axis position is known: perform a regular move
       do_blocking_move_to_z(zdest);
     } else if (zdest != current_position.z) {
@@ -592,17 +585,19 @@ void prepare_move_to_destination(const MoveHints &hints) {
   current_position = destination;
 }
 
-uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/) {
-  #if ENABLED(HOME_AFTER_DEACTIVATE)
-    #define HOMED_FLAGS axis_known_position
-  #else
-    #define HOMED_FLAGS axis_homed
-  #endif
-  return axis_bits & ~HOMED_FLAGS;
+uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {
+  uint8_t result = 0;
+  for(uint8_t i = 0; i < axes_home_level.size(); i++) {
+    const uint8_t bit = (1 << i);
+    if((axis_bits & bit) && (axes_home_level[i] < required_level)) {
+      result |= bit;
+    }
+  }
+  return result;
 }
 
-bool axis_unhomed_error(uint8_t axis_bits/*=0x07*/) {
-  if ((axis_bits = axes_need_homing(axis_bits))) {
+bool axis_unhomed_error(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {
+  if ((axis_bits = axes_need_homing(axis_bits, required_level))) {
     PGM_P home_first = GET_TEXT(MSG_HOME_FIRST);
     char msg[strlen_P(home_first)+1];
     sprintf_P(msg, home_first,
@@ -788,7 +783,7 @@ void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const fe
   if (planner.draining())
     return;
 
-  CBI(axis_known_position, axis);
+  axes_home_level[axis] = AxisHomeLevel::not_homed;
   current_position[axis] = 0;
   sync_plan_position();
   current_position[axis] = distance;
@@ -976,14 +971,13 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
  *
  * @param homing_z_with_probe false when sensorless homing was used instead of probe
  */
-void set_axis_is_at_home(const AxisEnum axis, [[maybe_unused]] bool homing_z_with_probe) {
+void set_axis_is_at_home(const AxisEnum axis, AxisHomeLevel level, [[maybe_unused]] bool homing_z_with_probe) {
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> set_axis_is_at_home(", axis_codes[axis], ")");
 
   // ensure we're not within an aborted move: caller needs to check!
   assert(!planner.draining());
 
-  SBI(axis_known_position, axis);
-  SBI(axis_homed, axis);
+  axes_home_level[axis] = level; 
 
   #ifdef WORKSPACE_HOME
     /*Fill workspace_homes[] with data from config*/
@@ -1081,8 +1075,7 @@ void set_axis_is_at_home(const AxisEnum axis, [[maybe_unused]] bool homing_z_wit
 void set_axis_is_not_at_home(const AxisEnum axis) {
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> set_axis_is_not_at_home(", axis_codes[axis], ")");
 
-  CBI(axis_known_position, axis);
-  CBI(axis_homed, axis);
+  axes_home_level[axis] = AxisHomeLevel::not_homed;
 
   if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("<<< set_axis_is_not_at_home(", axis_codes[axis], ")");
 
@@ -1159,7 +1152,7 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
   void (*enable_wavetable)(AxisEnum), [[maybe_unused]] bool can_calibrate, bool homing_z_with_probe) {
 
   // clear the axis state while running
-  CBI(axis_known_position, axis);
+  axes_home_level[axis] = AxisHomeLevel::not_homed;
 
   #if ENABLED(CRASH_RECOVERY)
     crash_s.not_for_replay();
@@ -1187,74 +1180,69 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
     auto loadcellPrecisionEnabler = Loadcell::HighPrecisionEnabler(loadcell, axis == Z_AXIS);
   #endif
 
-  #ifdef HOMING_MAX_ATTEMPTS
-    float (*min_diff)(uint8_t) = invert_home_dir ? axis_home_invert_min_diff : axis_home_min_diff;
-    float (*max_diff)(uint8_t) = invert_home_dir ? axis_home_invert_max_diff : axis_home_max_diff;
+  float (*min_diff)(uint8_t) = invert_home_dir ? axis_home_invert_min_diff : axis_home_min_diff;
+  float (*max_diff)(uint8_t) = invert_home_dir ? axis_home_invert_max_diff : axis_home_max_diff;
 
-    float probe_offset;
-    for(size_t attempt = 0;;) {
-      #if HAS_PRECISE_HOMING()
-        if ((axis == X_AXIS || axis == Y_AXIS) && !invert_home_dir) {
-          probe_offset = home_axis_precise(axis, axis_home_dir, can_calibrate, fr_mm_s);
-          attempt = HOMING_MAX_ATTEMPTS; // call home_axis_precise() just once
-        }
-        else
-      #endif
-        {
-          if (attempt > 0 && axis == Z_AXIS) {
-            // Z has no move back and after the first attempt we might be left too close on the
-            // build plate (for example, with a loadcell we're _on_ the plate). Move back now before
-            // we attempt to probe again so that we can zero the sensor again.
-            float bump = axis_home_dir * (
-              #if HOMING_Z_WITH_PROBE
-                (axis == Z_AXIS && homing_z_with_probe && (Z_HOME_BUMP_MM)) ? _MAX(Z_CLEARANCE_BETWEEN_PROBES, Z_HOME_BUMP_MM) :
-              #endif
-              home_bump_mm(axis)
-            );
-            current_position[axis] -= bump;
-            line_to_current_position(fr_mm_s ? fr_mm_s : homing_feedrate(Z_AXIS));
-            planner.synchronize();
-          }
-
-          probe_offset = homeaxis_single_run(axis, axis_home_dir, fr_mm_s, invert_home_dir, homing_z_with_probe, attempt) * static_cast<float>(axis_home_dir);
-        }
-      if (planner.draining()) {
-        // move intentionally aborted, do not retry/kill
-        return true;
+  float probe_offset;
+  for(size_t attempt = 0;;) {
+    #if HAS_PRECISE_HOMING()
+      if ((axis == X_AXIS || axis == Y_AXIS) && !invert_home_dir) {
+        probe_offset = home_axis_precise(axis, axis_home_dir, can_calibrate, fr_mm_s);
+        attempt = HOMING_MAX_ATTEMPTS; // call home_axis_precise() just once
       }
-
-      // check if the offset is acceptable
-      bool in_range = min_diff(axis) <= probe_offset && probe_offset <= max_diff(axis);
-      metric_record_custom(&metric_home_diff, ",ax=%u,ok=%u v=%.3f,n=%u", (unsigned)axis, (unsigned)in_range, probe_offset, (unsigned)attempt);
-      if (in_range) break; // OK offset in range
-
-      // check whether we should try again
-      if (++attempt >= HOMING_MAX_ATTEMPTS) {
-        // not OK run out attempts
-        set_axis_is_not_at_home(axis);
-        
-        if (!HomingReporter::block_red_screen()) {
-          static constexpr std::array error_codes {
-            ErrCode::ERR_ELECTRO_HOMING_ERROR_X,
-            ErrCode::ERR_ELECTRO_HOMING_ERROR_Y,
-            ErrCode::ERR_ELECTRO_HOMING_ERROR_Z
-          };
-
-          homing_failed([code = error_codes[std::min(static_cast<size_t>(axis), error_codes.size() - 1)]]() { fatal_error(code); }, orig_crash, axis == Z_AXIS);
+      else
+    #endif
+      {
+        if (attempt > 0 && axis == Z_AXIS) {
+          // Z has no move back and after the first attempt we might be left too close on the
+          // build plate (for example, with a loadcell we're _on_ the plate). Move back now before
+          // we attempt to probe again so that we can zero the sensor again.
+          float bump = axis_home_dir * (
+            #if HOMING_Z_WITH_PROBE
+              (axis == Z_AXIS && homing_z_with_probe && (Z_HOME_BUMP_MM)) ? _MAX(Z_CLEARANCE_BETWEEN_PROBES, Z_HOME_BUMP_MM) :
+            #endif
+            home_bump_mm(axis)
+          );
+          current_position[axis] -= bump;
+          line_to_current_position(fr_mm_s ? fr_mm_s : homing_feedrate(Z_AXIS));
+          planner.synchronize();
         }
 
-        return false;
+        probe_offset = homeaxis_single_run(axis, axis_home_dir, fr_mm_s, invert_home_dir, homing_z_with_probe, attempt) * static_cast<float>(axis_home_dir);
       }
-
-      if((axis == X_AXIS || axis == Y_AXIS) && !invert_home_dir){
-        //print only for normal homing, messages from precise homing are taken care inside precise homing
-        ui.status_printf_P(0,"%c axis homing failed, retrying", axis_codes[axis]);
-      }
+    if (planner.draining()) {
+      // move intentionally aborted, do not retry/kill
+      return true;
     }
-  #else // HOMING_MAX_ATTEMPTS
-    homeaxis_single_run(axis, axis_home_dir);
-  #endif // HOMING_MAX_ATTEMPTS
 
+    // check if the offset is acceptable
+    bool in_range = min_diff(axis) <= probe_offset && probe_offset <= max_diff(axis);
+    metric_record_custom(&metric_home_diff, ",ax=%u,ok=%u v=%.3f,n=%u", (unsigned)axis, (unsigned)in_range, probe_offset, (unsigned)attempt);
+    if (in_range) break; // OK offset in range
+
+    // check whether we should try again
+    if (++attempt >= HOMING_MAX_ATTEMPTS) {
+      // not OK run out attempts
+      set_axis_is_not_at_home(axis);
+      
+      if (!HomingReporter::block_red_screen()) {
+        static constexpr std::array error_codes {
+          ErrCode::ERR_ELECTRO_HOMING_ERROR_X,
+          ErrCode::ERR_ELECTRO_HOMING_ERROR_Y,
+          ErrCode::ERR_ELECTRO_HOMING_ERROR_Z
+        };
+
+        homing_failed([code = error_codes[std::min(static_cast<size_t>(axis), error_codes.size() - 1)]]() { fatal_error(code); }, orig_crash, axis == Z_AXIS);
+      }
+
+      return false;
+    }
+
+    if((axis == X_AXIS || axis == Y_AXIS) && !invert_home_dir){
+      //print only for normal homing, messages from precise homing are taken care inside precise homing
+      ui.status_printf_P(0,"%c axis homing failed, retrying", axis_codes[axis]);
+    }
+  }
   #ifdef HOMING_BACKOFF_POST_MM
     constexpr xyz_float_t endstop_backoff = HOMING_BACKOFF_POST_MM;
     const float backoff_mm = endstop_backoff[
@@ -1516,7 +1504,17 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
       return NAN;
 
   if (!invert_home_dir) {
-    set_axis_is_at_home(axis, homing_z_with_probe);
+    bool is_homed_precisely = false;
+    if(axis == Z_AXIS) {
+      // Z is homed precisely only if we used probe (so banging against the ceiling is not considered precise homing)
+      is_homed_precisely = (!HOMING_Z_WITH_PROBE || homing_z_with_probe);
+
+    } else {
+      // If precise homing is enabled, there will be a precise refinement done in a separate function
+      is_homed_precisely = (!HAS_PRECISE_HOMING() && !HAS_PRECISE_HOMING_COREXY());
+    }
+
+    set_axis_is_at_home(axis, is_homed_precisely ? AxisHomeLevel::full : AxisHomeLevel::imprecise, homing_z_with_probe);
   }
   sync_plan_position();
 

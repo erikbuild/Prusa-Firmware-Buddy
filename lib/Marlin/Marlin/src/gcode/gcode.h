@@ -75,7 +75,6 @@
  * M7   - Turn mist coolant ON. (Requires COOLANT_CONTROL)
  * M8   - Turn flood coolant ON. (Requires COOLANT_CONTROL)
  * M9   - Turn coolant OFF. (Requires COOLANT_CONTROL)
- * M12  - Set up closed loop control system. (Requires EXTERNAL_CLOSED_LOOP_CONTROLLER)
  * M16  - Expected printer check. (Requires EXPECTED_PRINTER_CHECK)
  * M17  - Enable/Power all stepper motors
  * M18  - Disable all stepper motors; same as M84
@@ -132,10 +131,6 @@
  * M120 - Enable endstops detection.
  * M121 - Disable endstops detection.
  * M122 - Debug stepper (Requires at least one _DRIVER_TYPE defined as TMC2130/2160/5130/5160/2208/2209/2660)
- * M126 - Solenoid Air Valve Open. (Requires BARICUDA)
- * M127 - Solenoid Air Valve Closed. (Requires BARICUDA)
- * M128 - EtoP Open. (Requires BARICUDA)
- * M129 - EtoP Closed. (Requires BARICUDA)
  * M140 - Set bed target temp. S<temp>
  * M141 - Set heated chamber target temp. S<temp> (Requires a chamber heater)
  * M150 - Set Status LED Color as R<red> U<green> B<blue> P<bright>. Values 0-255.
@@ -277,9 +272,11 @@ struct G28Flags {
   #if ENABLED(MARLIN_DEV_MODE)
     bool simulate = false;
   #endif
-  #if HAS_PRECISE_HOMING_COREXY()
-    bool no_refine = false;
-  #endif
+
+  /// Require the homing to be precise (if false, only guarantees 'imprecise' homing, which might be faster, but is not suitable for printing)
+  /// Relates to HAS_PRECISE_HOMING_COREXY
+  bool precise = true;
+
   #if ENABLED(DETECT_PRINT_SHEET)
     bool check_sheet = false;
   #endif
@@ -503,10 +500,6 @@ private:
     static void M9();
   #endif
 
-  #if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
-    static void M12();
-  #endif
-
   #if ENABLED(EXPECTED_PRINTER_CHECK)
     static void M16();
   #endif
@@ -602,17 +595,6 @@ private:
   static void M119();
   static void M120();
   static void M121();
-
-  #if ENABLED(BARICUDA)
-    #if HAS_HEATER_1
-      static void M126();
-      static void M127();
-    #endif
-    #if HAS_HEATER_2
-      static void M128();
-      static void M129();
-    #endif
-  #endif
 
   #if HAS_HEATED_BED
     static void M140();

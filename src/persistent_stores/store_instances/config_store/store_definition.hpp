@@ -24,6 +24,7 @@
 #include <module/prusa/dock_position.hpp>
 #include <module/prusa/tool_offset.hpp>
 #include <filament_sensors_remap_data.hpp>
+#include <tristate.hpp>
 #include <option/has_loadcell.h>
 #include <option/has_sheet_profiles.h>
 #include <option/has_adc_side_fsensor.h>
@@ -44,6 +45,7 @@
 #include <option/has_auto_retract.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_chamber_vents.h>
+#include <option/has_precise_homing_corexy.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -643,6 +645,14 @@ struct CurrentStore
 
 #if HAS_PRECISE_HOMING_COREXY()
     StoreItem<CoreXYGridOrigin, COREXY_NO_GRID_ORIGIN, ItemFlag::calibrations, journal::hash("CoreXY calibrated grid origin")> corexy_grid_origin;
+
+    /// Whether to automatically calibrate precise homing when deemed necessary
+    /// Tristate::other = ask the user
+    StoreItem<Tristate, Tristate::other, ItemFlag::features, journal::hash("Auto-recalibrate precise homing")> auto_recalibrate_precise_homing;
+
+    /// History whether a homing point was stable after precise homing. High number of unstable homings will result in calibration prompt.
+    /// Implemented as a rotating bit buffer (pushed after each successful refinement); ones represent unstable refinements
+    StoreItem<uint16_t, 0, ItemFlag::printer_state, journal::hash("Precise Homing Instability History")> precise_homing_instability_history;
 #endif
 #if HAS_PRECISE_HOMING_COREXY() && HAS_TRINAMIC && defined(XY_HOMING_MEASURE_SENS_MIN)
     StoreItem<CoreXYHomeTMCSens, COREXY_NO_HOME_TMC_SENS, ItemFlag::calibrations, journal::hash("CoreXY home TMC calibration")> corexy_home_tmc_sens;

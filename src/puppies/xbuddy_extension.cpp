@@ -1,9 +1,11 @@
 #include <puppies/xbuddy_extension.hpp>
-#include <puppies/PuppyBootstrap.hpp>
-#include <cassert>
-#include "timing.h"
 
+#include "timing.h"
+#include <algorithm>
+#include <cassert>
 #include <logging/log.hpp>
+#include <puppies/PuppyBootstrap.hpp>
+
 LOG_COMPONENT_REF(MMU2);
 
 using Lock = std::unique_lock<freertos::Mutex>;
@@ -167,21 +169,27 @@ CommunicationStatus XBuddyExtension::refresh_holding() {
 CommunicationStatus XBuddyExtension::refresh() {
     Lock lock(mutex);
 
-    const auto input = refresh_input(250);
-    const auto holding = refresh_holding();
+    const auto status = {
+        refresh_input(250),
+        refresh_holding(),
+    };
 
     // Actually, failed MMU communication is not an issue on this level. Timeout and retries are being handled on the protocol_logic level
     // while MODBUS purely serves as a pass-through transport media -> no need to panic when MMU doesn't communicate now
     // Note: might change in the future, therefore keeping the same interface like refresh_input
     refresh_mmu();
 
-    if (input == CommunicationStatus::ERROR || holding == CommunicationStatus::ERROR) {
+    constexpr auto equal_to = [](CommunicationStatus what) {
+        return [what](CommunicationStatus status) { return status == what; };
+    };
+
+    if (std::ranges::any_of(status, equal_to(CommunicationStatus::ERROR))) {
         return CommunicationStatus::ERROR;
-    } else if (input == CommunicationStatus::SKIPPED && holding == CommunicationStatus::SKIPPED) {
-        return CommunicationStatus::SKIPPED;
-    } else {
-        return CommunicationStatus::OK;
     }
+    if (std::ranges::all_of(status, equal_to(CommunicationStatus::SKIPPED))) {
+        return CommunicationStatus::SKIPPED;
+    }
+    return CommunicationStatus::OK;
 }
 
 CommunicationStatus XBuddyExtension::initial_scan() {

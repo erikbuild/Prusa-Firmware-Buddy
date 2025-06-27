@@ -222,16 +222,6 @@
   #define FAN2_PIN -1
 #endif
 
-#ifndef FANMUX0_PIN
-  #define FANMUX0_PIN -1
-#endif
-#ifndef FANMUX1_PIN
-  #define FANMUX1_PIN -1
-#endif
-#ifndef FANMUX2_PIN
-  #define FANMUX2_PIN -1
-#endif
-
 #ifndef HEATER_0_PIN
   #define HEATER_0_PIN -1
 #endif
