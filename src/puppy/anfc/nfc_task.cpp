@@ -84,6 +84,7 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
 
         prusa3d_nfc_event_Event_1_0 response;
         prusa3d_nfc_event_EventData_1_0_select_request_done_(&response.data);
+        prusa3d_nfc_request_RequestResult_1_0_select_empty_(&response.data.request_done.result);
         response.data.request_done.request_id = request.request_id;
 
         auto &rreq = request.request;
