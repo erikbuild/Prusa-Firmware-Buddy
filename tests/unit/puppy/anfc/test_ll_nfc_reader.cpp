@@ -34,6 +34,31 @@ struct TagData {
         UNSCOPED_INFO("Set pwd: " << set_password[password_index(password)]);
         return set_password[password_index(password)] == stored_password[password_index(password)];
     }
+
+    uint8_t page_protection_boundary_block_index = 0;
+    nfcv::SLIX2PageProtection l_page_protection = nfcv::SLIX2PageProtection::none;
+    nfcv::SLIX2PageProtection h_page_protection = nfcv::SLIX2PageProtection::none;
+
+    bool can_access_block(uint8_t block_index, bool write) const {
+        using Protection = nfcv::SLIX2PageProtection;
+        const Protection protection = (block_index < page_protection_boundary_block_index ? l_page_protection : h_page_protection);
+        switch (protection) {
+
+        case Protection::none:
+            return true;
+
+        case Protection::rw_read_password:
+            return is_password_correct(nfcv::SLIX2PasswordID::read);
+
+        case Protection::write:
+            return !write || is_password_correct(nfcv::SLIX2PasswordID::write);
+
+        case Protection::rw_separate_passwords:
+            return is_password_correct(write ? nfcv::SLIX2PasswordID::write : nfcv::SLIX2PasswordID::read);
+        }
+
+        std::unreachable();
+    }
 };
 
 struct FieldUp {
@@ -61,6 +86,7 @@ using ResetEAS = nfcv::command::ResetEAS::Request;
 using GetRandomNumber = nfcv::command::GetRandomNumber::Request;
 using SetPassword = nfcv::command::SetPassword::Request;
 using PasswordProtectEASAFI = nfcv::command::PasswordProtectEASAFI::Request;
+using ProtectPage = nfcv::command::ProtectPage::Request;
 
 struct WriteSingleBlock {
     nfcv::UID uid;
@@ -76,6 +102,7 @@ using Event = std::variant<
     SetEAS, ResetEAS,
     GetRandomNumber, SetPassword,
     PasswordProtectEASAFI,
+    ProtectPage,
     WriteAFI, WriteDSFID>;
 
 struct EventLogger : public nfcv::ReaderWriterInterface {
@@ -137,11 +164,16 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::ReadSingleBlock &command) {
-        return tag_op(command, [](auto &command, auto &tag) {
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (!tag.can_access_block(command.request.block_address, false)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
             const auto &buffer = command.response;
             auto it = tag.data->begin();
-            std::advance(it, command.request.block_address * buffer.size());
+            std::advance(it, command.request.block_address * tag.info.mem_size->block_size);
             std::copy_n(it, buffer.size(), buffer.begin());
+            return {};
         });
     }
 
@@ -153,11 +185,16 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
             .data { command.request.block_buffer.begin(), command.request.block_buffer.end() },
         });
 
-        return tag_op(command, [](auto &command, auto &tag) {
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (!tag.can_access_block(command.request.block_address, true)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
             const auto &buffer = command.request.block_buffer;
             auto it = tag.data->begin();
-            std::advance(it, command.request.block_address * buffer.size());
+            std::advance(it, command.request.block_address * tag.info.mem_size->block_size);
             std::copy_n(buffer.begin(), buffer.size(), it);
+            return {};
         });
     }
 
@@ -256,6 +293,20 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
             }
 
             std::unreachable();
+        });
+    }
+
+    nfcv::Result<void> nfcv_command_impl(const nfcv::command::ProtectPage &command) {
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (!tag.is_password_correct(nfcv::SLIX2PasswordID::read) || !tag.is_password_correct(nfcv::SLIX2PasswordID::write)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
+            tag.l_page_protection = command.request.l_page_protection;
+            tag.h_page_protection = command.request.h_page_protection;
+            tag.page_protection_boundary_block_index = command.request.boundary_block_address;
+
+            return {};
         });
     }
 

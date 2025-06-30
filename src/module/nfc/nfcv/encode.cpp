@@ -204,6 +204,18 @@ Result<void> construct_rest(Encoder1Of4 &encoder, const command::PasswordProtect
     return {};
 }
 
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::ProtectPage &command) {
+    return 13;
+}
+
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::ProtectPage &command) {
+    encoder.append_byte(SLIX_IC_MFG);
+    encoder.append_bytes(command.request.uid);
+    encoder.append_raw(command.request.boundary_block_address);
+    encoder.append_raw<uint8_t>(std::to_underlying(command.request.l_page_protection) | (std::to_underlying(command.request.h_page_protection) << 4));
+    return {};
+}
+
 } // namespace nfcv::impl
 
 nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &command) {

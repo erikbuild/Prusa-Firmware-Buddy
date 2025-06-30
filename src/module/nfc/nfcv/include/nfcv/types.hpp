@@ -72,6 +72,19 @@ enum class SLIX2PasswordID : uint8_t {
     _password_count = 5,
 };
 
+enum class SLIX2PageProtection : uint8_t {
+    none = 0b00,
+
+    /// Reading and writing is protected by the read password
+    rw_read_password = 0b01,
+
+    /// Reading is unprotected, writing is protected by the write password
+    write = 0b10,
+
+    /// Reading is protected by the read password, writing is protected by the write password
+    rw_separate_passwords = 0b11,
+};
+
 constexpr MessageFlag operator|(MessageFlag a, MessageFlag b) { return static_cast<MessageFlag>(std::to_underlying(a) | std::to_underlying(b)); }
 constexpr MessageFlagNoInv operator|(MessageFlagNoInv a, MessageFlag b) { return static_cast<MessageFlagNoInv>(std::to_underlying(a) | std::to_underlying(b)); }
 constexpr MessageFlagNoInv operator|(MessageFlag a, MessageFlagNoInv b) { return static_cast<MessageFlagNoInv>(std::to_underlying(a) | std::to_underlying(b)); }

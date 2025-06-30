@@ -178,12 +178,35 @@ namespace command {
         } response;
     };
 
+    ///* SLIX2 extension
+    struct ProtectPage {
+        static constexpr std::byte cmd_id { 0xB6 };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+
+            /// ID of the first block of page H
+            uint8_t boundary_block_address;
+
+            /// Protection of the L page [0, boundary_block_address)
+            SLIX2PageProtection l_page_protection : 2;
+
+            /// Protection of the H page [boundary_block_address, tag_size)
+            SLIX2PageProtection h_page_protection : 2;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
     using Command = std::variant<
         Inventory, SystemInfo, StayQuiet,
         ReadSingleBlock, WriteSingleBlock,
         WriteAFI, WriteDSFID,
         GetRandomNumber, SetPassword, WritePassword,
         PasswordProtectEASAFI,
+        ProtectPage,
         SetEAS, ResetEAS>;
 
 } // namespace command
