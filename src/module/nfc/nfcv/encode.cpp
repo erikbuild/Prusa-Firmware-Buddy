@@ -53,13 +53,15 @@ void nfcv::Encoder1Of4::append_crc_and_finalize() {
 
 namespace nfcv::impl {
 
+static constexpr auto default_command_flags = static_cast<std::byte>(MessageFlag::high_data_rate | MessageFlagNoInv::address_flag);
+
 template <typename Command>
-constexpr std::byte command_flags() {
-    return static_cast<std::byte>(MessageFlag::high_data_rate | MessageFlagNoInv::address_flag);
+constexpr std::byte command_flags(const Command &) {
+    return default_command_flags;
 }
 
 template <>
-constexpr std::byte command_flags<command::Inventory>() {
+constexpr std::byte command_flags<command::Inventory>(const command::Inventory &) {
     return static_cast<std::byte>(MessageFlag::high_data_rate | MessageFlag::inventory_flag | MessageFlagInv::nb_slots_flag);
 }
 
@@ -187,6 +189,21 @@ Result<void> construct_rest(Encoder1Of4 &encoder, const command::WritePassword &
     return {};
 }
 
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::PasswordProtectEASAFI &command) {
+    return 11;
+}
+
+template <>
+constexpr std::byte command_flags<command::PasswordProtectEASAFI>(const command::PasswordProtectEASAFI &command) {
+    return default_command_flags | (command.request.option == command::PasswordProtectEASAFI::Request::Option::afi ? static_cast<std::byte>(MessageFlagNoInv::custom_flag) : static_cast<std::byte>(0));
+}
+
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::PasswordProtectEASAFI &command) {
+    encoder.append_byte(SLIX_IC_MFG);
+    encoder.append_bytes(command.request.uid);
+    return {};
+}
+
 } // namespace nfcv::impl
 
 nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &command) {
@@ -197,7 +214,7 @@ nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &c
             return std::unexpected(Error::buffer_overflow);
         }
 
-        encoder.append_byte(impl::command_flags<T>());
+        encoder.append_byte(impl::command_flags<T>(cmd));
         encoder.append_byte(T::cmd_id);
         const auto res = impl::construct_rest(encoder, cmd);
         encoder.append_crc_and_finalize();

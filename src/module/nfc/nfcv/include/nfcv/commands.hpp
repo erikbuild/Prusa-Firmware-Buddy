@@ -157,11 +157,33 @@ namespace command {
         } response;
     };
 
+    ///* SLIX2 extension
+    struct PasswordProtectEASAFI {
+        static constexpr std::byte cmd_id { 0xA6 };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+
+            enum class Option {
+                eas,
+                afi,
+            };
+
+            // What register to protect
+            Option option;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
     using Command = std::variant<
         Inventory, SystemInfo, StayQuiet,
         ReadSingleBlock, WriteSingleBlock,
         WriteAFI, WriteDSFID,
         GetRandomNumber, SetPassword, WritePassword,
+        PasswordProtectEASAFI,
         SetEAS, ResetEAS>;
 
 } // namespace command

@@ -15,6 +15,8 @@ struct TagData {
     std::optional<bool> eas;
     std::vector<std::byte> *data = nullptr;
     std::optional<uint16_t> random_number;
+    bool eas_password_protected = false;
+    bool afi_password_protected = false;
 
     using Passwords = std::array<nfcv::SLIX2Password, std::to_underlying(nfcv::SLIX2PasswordID::_password_count)>;
     static size_t password_index(nfcv::SLIX2PasswordID id) {
@@ -58,6 +60,7 @@ using SetEAS = nfcv::command::SetEAS::Request;
 using ResetEAS = nfcv::command::ResetEAS::Request;
 using GetRandomNumber = nfcv::command::GetRandomNumber::Request;
 using SetPassword = nfcv::command::SetPassword::Request;
+using PasswordProtectEASAFI = nfcv::command::PasswordProtectEASAFI::Request;
 
 struct WriteSingleBlock {
     nfcv::UID uid;
@@ -72,6 +75,7 @@ using Event = std::variant<
     ReadSingleBlock, WriteSingleBlock,
     SetEAS, ResetEAS,
     GetRandomNumber, SetPassword,
+    PasswordProtectEASAFI,
     WriteAFI, WriteDSFID>;
 
 struct EventLogger : public nfcv::ReaderWriterInterface {
@@ -158,19 +162,42 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::WriteAFI &command) {
-        return tag_op(command, [](auto &command, auto &tag) { tag.info.afi = command.request.afi; });
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (tag.afi_password_protected && !tag.is_password_correct(nfcv::SLIX2PasswordID::eas_afi)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
+            tag.info.afi = command.request.afi;
+            return {};
+        });
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::WriteDSFID &command) {
-        return tag_op(command, [](auto &command, auto &tag) { tag.info.dsfid = command.request.dsfid; });
+        return tag_op(command, [](auto &command, auto &tag) {
+            tag.info.dsfid = command.request.dsfid;
+        });
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::SetEAS &command) {
-        return tag_op(command, [](auto &, auto &tag) { tag.eas = true; });
+        return tag_op(command, [](auto &, auto &tag) -> nfcv::Result<void> {
+            if (tag.eas_password_protected && !tag.is_password_correct(nfcv::SLIX2PasswordID::eas_afi)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
+            tag.eas = true;
+            return {};
+        });
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::ResetEAS &command) {
-        return tag_op(command, [](auto &, auto &tag) { tag.eas = false; });
+        return tag_op(command, [](auto &, auto &tag) -> nfcv::Result<void> {
+            if (tag.eas_password_protected && !tag.is_password_correct(nfcv::SLIX2PasswordID::eas_afi)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
+            tag.eas = false;
+            return {};
+        });
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::GetRandomNumber &command) {
@@ -207,6 +234,28 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
 
             tag.stored_password[TagData::password_index(command.request.password_id)] = command.request.password;
             return {};
+        });
+    }
+
+    nfcv::Result<void> nfcv_command_impl(const nfcv::command::PasswordProtectEASAFI &command) {
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (!tag.is_password_correct(nfcv::SLIX2PasswordID::eas_afi)) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
+            using Option = nfcv::command::PasswordProtectEASAFI::Request::Option;
+            switch (command.request.option) {
+
+            case Option::eas:
+                tag.eas_password_protected = true;
+                return {};
+
+            case Option::afi:
+                tag.afi_password_protected = true;
+                return {};
+            }
+
+            std::unreachable();
         });
     }
 
