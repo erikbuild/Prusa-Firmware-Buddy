@@ -43,6 +43,7 @@ namespace command {
 
     struct WriteSingleBlock {
         static constexpr std::byte cmd_id { 0x21 };
+        static constexpr bool is_write_alike = true;
         struct Request {
             UID uid;
             uint8_t block_address;
