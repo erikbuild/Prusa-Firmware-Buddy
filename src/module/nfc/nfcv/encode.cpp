@@ -1,5 +1,7 @@
 #include <nfcv/encode.hpp>
 
+#include <cassert>
+
 nfcv::Encoder1Of4::Encoder1Of4(MsgBuilder &msg_builder)
     : builder(msg_builder)
     , crc()
@@ -116,13 +118,17 @@ Result<void> construct_rest(Encoder1Of4 &encoder, const command::StayQuiet &comm
 nfcv::Result<void> nfcv::construct_command(MsgBuilder &builder, const Command &command) {
     nfcv::Encoder1Of4 encoder(builder);
     return std::visit([&]<typename T>(const T &cmd) -> nfcv::Result<void> {
-        if ((builder.capacity() - builder.size()) < nfcv::Encoder1Of4::calculate_message_size(impl::expected_message_size(cmd))) {
+        const auto expected_size = nfcv::Encoder1Of4::calculate_message_size(impl::expected_message_size(cmd));
+        if (builder.capacity() < expected_size) {
             return std::unexpected(Error::buffer_overflow);
         }
+
         encoder.append_byte(impl::command_flags<T>());
         encoder.append_byte(T::cmd_id);
         const auto res = impl::construct_rest(encoder, cmd);
         encoder.append_crc_and_finalize();
+
+        assert(builder.size() == expected_size);
         return res;
     },
         command);
