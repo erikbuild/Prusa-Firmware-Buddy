@@ -89,6 +89,18 @@ namespace command {
         } response;
     };
 
+    struct LockDSFID {
+        static constexpr std::byte cmd_id { 0x2A };
+        static constexpr bool is_write_alike = true;
+        struct Request {
+            UID uid;
+
+            inline bool operator==(const Request &o) const = default;
+        } request;
+        struct Response {
+        } response;
+    };
+
     ///* SLIX2 extension
     struct SetEAS {
         static constexpr std::byte cmd_id { 0xA2 };
@@ -204,6 +216,7 @@ namespace command {
         Inventory, SystemInfo, StayQuiet,
         ReadSingleBlock, WriteSingleBlock,
         WriteAFI, WriteDSFID,
+        LockDSFID,
         GetRandomNumber, SetPassword, WritePassword,
         PasswordProtectEASAFI,
         ProtectPage,

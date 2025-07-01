@@ -135,6 +135,15 @@ Result<void> construct_rest(Encoder1Of4 &encoder, const command::WriteDSFID &com
     return {};
 }
 
+constexpr std::size_t expected_message_size([[maybe_unused]] const command::LockDSFID &command) {
+    return 10;
+}
+
+Result<void> construct_rest(Encoder1Of4 &encoder, const command::LockDSFID &command) {
+    encoder.append_bytes(command.request.uid);
+    return {};
+}
+
 constexpr std::size_t expected_message_size([[maybe_unused]] const command::SetEAS &command) {
     return 11;
 }

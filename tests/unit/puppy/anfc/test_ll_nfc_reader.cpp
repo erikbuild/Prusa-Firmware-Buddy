@@ -17,6 +17,7 @@ struct TagData {
     std::optional<uint16_t> random_number;
     bool eas_password_protected = false;
     bool afi_password_protected = false;
+    bool dsfid_locked = false;
 
     using Passwords = std::array<nfcv::SLIX2Password, std::to_underlying(nfcv::SLIX2PasswordID::_password_count)>;
     static size_t password_index(nfcv::SLIX2PasswordID id) {
@@ -81,6 +82,7 @@ using SystemInfo = nfcv::command::SystemInfo::Request;
 using ReadSingleBlock = nfcv::command::ReadSingleBlock::Request;
 using WriteAFI = nfcv::command::WriteAFI::Request;
 using WriteDSFID = nfcv::command::WriteDSFID::Request;
+using LockDSFID = nfcv::command::LockDSFID::Request;
 using SetEAS = nfcv::command::SetEAS::Request;
 using ResetEAS = nfcv::command::ResetEAS::Request;
 using GetRandomNumber = nfcv::command::GetRandomNumber::Request;
@@ -103,6 +105,7 @@ using Event = std::variant<
     GetRandomNumber, SetPassword,
     PasswordProtectEASAFI,
     ProtectPage,
+    LockDSFID,
     WriteAFI, WriteDSFID>;
 
 struct EventLogger : public nfcv::ReaderWriterInterface {
@@ -210,8 +213,24 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::WriteDSFID &command) {
-        return tag_op(command, [](auto &command, auto &tag) {
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (tag.dsfid_locked) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
             tag.info.dsfid = command.request.dsfid;
+            return {};
+        });
+    }
+
+    nfcv::Result<void> nfcv_command_impl(const nfcv::command::LockDSFID &command) {
+        return tag_op(command, [](auto &command, auto &tag) -> nfcv::Result<void> {
+            if (tag.dsfid_locked) {
+                return std::unexpected(nfcv::Error::response_is_error);
+            }
+
+            tag.dsfid_locked = true;
+            return {};
         });
     }
 
