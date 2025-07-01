@@ -1,0 +1,7 @@
+# Tag to operate on
+prusa3d.nfc.util.TagID.1.0 tag
+
+# Password that was used for write-protecting the memory
+uint8[4] password
+
+@sealed

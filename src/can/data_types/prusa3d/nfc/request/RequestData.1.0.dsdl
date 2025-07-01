@@ -9,5 +9,6 @@ prusa3d.nfc.request.EnumerateFields.1.0 enumerate_fields
 prusa3d.nfc.request.RawWrite.1.0 raw_write
 prusa3d.nfc.request.RawRead.1.0 raw_read
 prusa3d.nfc.request.InitializeTag.1.0 initialize_tag
+prusa3d.nfc.request.UnlockTag.1.0 unlock_tag
 
 @sealed

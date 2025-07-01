@@ -20,4 +20,7 @@ prusa3d.nfc.util.ReaderError.1.0 raw_write
 # IO error or NO_ERROR
 prusa3d.nfc.util.ReaderError.1.0 initialize_tag
 
+# IO error or NO_ERROR
+prusa3d.nfc.util.ReaderError.1.0 unlock_tag
+
 @sealed
