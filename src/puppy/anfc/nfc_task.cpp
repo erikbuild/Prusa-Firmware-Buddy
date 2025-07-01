@@ -133,6 +133,11 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
         } else if (prusa3d_nfc_request_RequestData_1_0_is_initialize_tag_(&rreq)) {
             prusa3d_nfc_request_RequestResult_1_0_select_initialize_tag_(&result);
             handle_initialize_tag_request(rreq.initialize_tag, result.initialize_tag);
+
+        } else if (prusa3d_nfc_request_RequestData_1_0_is_unlock_tag_(&rreq)) {
+            prusa3d_nfc_request_RequestResult_1_0_select_unlock_tag_(&result);
+            const auto io_result = ll_reader_.unlock_tag(rreq.unlock_tag.tag.value, std::bit_cast<uint32_t>(rreq.unlock_tag.password));
+            result.unlock_tag._error = io_result_to_error(io_result);
         }
 
         can_node.enqueue_event(response);
