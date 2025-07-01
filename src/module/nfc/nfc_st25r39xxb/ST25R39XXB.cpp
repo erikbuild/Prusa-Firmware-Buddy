@@ -345,4 +345,7 @@ void st25r39xxb::ST25R39XXB::field_down() {
     static constexpr std::byte OPER_CONTROL_TX_ENABLE { 0b0000'1000 };
     static constexpr std::byte OPER_CONTROL_RX_ENABLE { 0b0100'0000 };
     hw_int.register_clear_bits(RegisterA::operation_control, OPER_CONTROL_TX_ENABLE | OPER_CONTROL_RX_ENABLE);
+
+    // The next command fails if we do field_down - field_up - command cycle without this delay
+    sys_int.delay(30);
 }
