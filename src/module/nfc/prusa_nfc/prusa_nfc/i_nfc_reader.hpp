@@ -106,4 +106,12 @@ public:
         (void)tag, (void)params;
         return std::unexpected(IOError::not_implemented);
     }
+
+    /// Removes write protection for the memory protected by the specified write password
+    /// !!! This does not fully undo the password protection, nor does it change the password
+    /// !!! Registers and other things will still be protected
+    [[nodiscard]] virtual IOResult<void> unlock_tag(NFCTagID tag, uint32_t password) {
+        (void)tag, (void)password;
+        return std::unexpected(IOError::not_implemented);
+    }
 };

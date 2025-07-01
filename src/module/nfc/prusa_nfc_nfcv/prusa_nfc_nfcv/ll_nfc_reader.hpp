@@ -25,6 +25,8 @@ public:
 
     [[nodiscard]] virtual IOResult<void> initialize_tag(NFCTagID tag, const InitializeTagParams &params) override;
 
+    [[nodiscard]] virtual IOResult<void> unlock_tag(NFCTagID tag, uint32_t password) override;
+
 private:
     enum class TagType : uint8_t {
         slix2,

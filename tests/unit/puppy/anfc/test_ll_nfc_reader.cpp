@@ -1133,5 +1133,23 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][prusa_nfc]") {
         REQUIRE(r == io_success);
 
         post_init_checks();
+
+        {
+            INFO("Unlocking");
+
+            REQUIRE(reader.unlock_tag(0, 0xdeadbeef));
+
+            // Check that the memory is unlocked; registers should still remain locked
+            check_write_access(false, true);
+        }
+
+        {
+            INFO("Best effort re-locking");
+
+            // Try initializing again with best-effort, this should protect the memory again
+            params.best_effort = true;
+            REQUIRE(reader.initialize_tag(0, params) == io_success);
+            check_write_access(true, true);
+        }
     }
 }

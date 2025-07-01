@@ -198,7 +198,7 @@ INFCReader::IOResult<void> LLNFCReader::initialize_tag(NFCTagID tag, const Initi
     }
     const TagData &tag_data = tags.at(tag);
 
-    // The initialize_tag procedure is only implemented for our ICODE SLIX 2 tags
+    // This procedure is only implemented for our ICODE SLIX 2 tags
     if (tag_data.tag_type != TagType::slix2) {
         return std::unexpected(IOError::not_implemented);
     }
@@ -347,6 +347,44 @@ INFCReader::IOResult<void> LLNFCReader::initialize_tag(NFCTagID tag, const Initi
     }
 
     std::unreachable();
+}
+
+INFCReader::IOResult<void> LLNFCReader::unlock_tag(NFCTagID tag, uint32_t password) {
+    if (!is_valid(tag)) {
+        return std::unexpected(IOError::invalid_id);
+    }
+    const TagData &tag_data = tags.at(tag);
+
+    // This procedure is only implemented for our ICODE SLIX 2 tags
+    if (tag_data.tag_type != TagType::slix2) {
+        return std::unexpected(IOError::not_implemented);
+    }
+
+    nfcv::FieldGuard field_guard(reader, tag_data.antenna);
+    if (!field_guard.result) {
+        return to_prusa_unexpected(field_guard.result.error());
+    }
+
+    for (const auto reg : { nfcv::ReaderWriterInterface::Register::read_password, nfcv::ReaderWriterInterface::Register::write_password }) {
+        if (auto r = reader.set_password(tag_data.uid, reg, password); !r) {
+            return handle_io_error(tag, r.error());
+        }
+    }
+
+    // Unprotect the memory
+    {
+        const nfcv::command::ProtectPage cmd { {
+            .uid = tag_data.uid,
+            .boundary_block_address = 0,
+            .l_page_protection = nfcv::SLIX2PageProtection::none,
+            .h_page_protection = nfcv::SLIX2PageProtection::none,
+        } };
+        if (auto r = reader.nfcv_command(cmd); !r) {
+            return handle_io_error(tag, r.error());
+        }
+    }
+
+    return {};
 }
 
 bool LLNFCReader::is_valid(NFCTagID tag_id) {
