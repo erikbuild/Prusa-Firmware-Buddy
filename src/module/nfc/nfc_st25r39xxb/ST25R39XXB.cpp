@@ -58,12 +58,12 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init() {
 
     hw_int.write_register(RegisterA::io_configuration_2, std::byte { 0x04 }); // IO configuration register 2
 
-    /*auto version = TRY(read_register(RegisterA::ICIdentity));
-    static constexpr std::byte TYPE_CODE_MASK { 0b0001'1111 };
-    static constexpr std::byte ST25R3916B_ID { 0b0000'1100 };
-    if ((version & TYPE_CODE_MASK) != ST25R3916B_ID) {
-        return std::unexpected(Error::InvalidChip);
-    }*/
+    auto version = hw_int.read_register(RegisterA::ic_identity);
+    static constexpr std::byte TYPE_CODE_MASK { 0b1111'1000 };
+    static constexpr std::byte ST25R39XXB_ID { 0b0011'0000 };
+    if ((version & TYPE_CODE_MASK) != ST25R39XXB_ID) {
+        return std::unexpected(nfcv::Error::invalid_chip);
+    }
 
     // Disable IRQs
     set_interrupt_mask(IRQType::all);
