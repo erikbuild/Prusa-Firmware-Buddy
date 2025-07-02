@@ -1,6 +1,8 @@
 /// \file
 #pragma once
 
+#define DO_NOT_CHECK_ATOMIC_LOCK_FREE
+
 #include <utils/atomic_circular_queue.hpp>
 #include <move_only_inplace_function.hpp>
 #include <prusa_nfc/prusa_nfc_reader.hpp>

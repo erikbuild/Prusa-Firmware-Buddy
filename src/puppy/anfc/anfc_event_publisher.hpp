@@ -1,6 +1,8 @@
 /// \file
 #pragma once
 
+#define DO_NOT_CHECK_ATOMIC_LOCK_FREE
+
 // Optimize Cyphal headers for size
 #pragma GCC push_options
 #pragma GCC optimize("Os")

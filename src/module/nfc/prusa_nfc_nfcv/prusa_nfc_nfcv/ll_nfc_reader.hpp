@@ -1,5 +1,7 @@
 #pragma once
 
+#define DO_NOT_CHECK_ATOMIC_LOCK_FREE
+
 #include <utils/atomic_circular_queue.hpp>
 #include <prusa_nfc/i_nfc_reader.hpp>
 #include <nfcv/types.hpp>
