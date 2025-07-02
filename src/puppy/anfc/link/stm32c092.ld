@@ -6,8 +6,8 @@
 **
 **  Author		: STM32CubeMX
 **
-**  Abstract    : Linker script for STM32C092RCTx series
-**                128Kbytes FLASH and 24Kbytes RAM
+**  Abstract    : Linker script for STM32C092FCTx series
+**                256Kbytes FLASH and 30Kbytes RAM
 **
 **                Set heap size, stack size and stack location according
 **                to application requirements.
@@ -58,7 +58,7 @@ _estack = ORIGIN(RAM) + LENGTH(RAM);    /* end of RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
-TOTAL_FLASH_SIZE = 128K;
+TOTAL_FLASH_SIZE = 256K;
 FW_ORIGIN = 0x8000000;
 DESCRIPTOR_SIZE = 128;
 APP_SIZE = TOTAL_FLASH_SIZE - BL_SIZE - DESCRIPTOR_SIZE;
@@ -66,7 +66,7 @@ APP_SIZE = TOTAL_FLASH_SIZE - BL_SIZE - DESCRIPTOR_SIZE;
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 24K
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 30K
 FLASH_BOOTLOADER (rx) : ORIGIN = FW_ORIGIN, LENGTH = BL_SIZE
 FLASH (rx) : ORIGIN = FW_ORIGIN + BL_SIZE, LENGTH = APP_SIZE
 FW_DESCRIPTOR (r) : ORIGIN = FW_ORIGIN + TOTAL_FLASH_SIZE - DESCRIPTOR_SIZE, LENGTH = DESCRIPTOR_SIZE
@@ -213,5 +213,10 @@ SECTIONS
     . = ORIGIN(FLASH) + LENGTH(FLASH) + LENGTH(FW_DESCRIPTOR) - 1;
     BYTE(0xAA)
   } > FW_DESCRIPTOR
+
+  __fw_descriptor_start = ORIGIN(FW_DESCRIPTOR);
+  __fw_descriptor_length = LENGTH(FW_DESCRIPTOR);
+  __flash_start = ORIGIN(FLASH);
+
 
 }

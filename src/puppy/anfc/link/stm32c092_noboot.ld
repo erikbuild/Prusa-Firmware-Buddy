@@ -1,3 +1,3 @@
-BL_SIZE = 32K;
+BL_SIZE = 0K;
 
 INCLUDE stm32c092.ld;
