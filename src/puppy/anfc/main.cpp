@@ -104,3 +104,8 @@ extern "C" int main() {
 extern "C" void vApplicationStackOverflowHook([[maybe_unused]] TaskHandle_t xTask, [[maybe_unused]] char *pcTaskName) {
     std::abort();
 }
+
+extern "C" void vApplicationTickHook(void) {
+    // Used by HAL_SPI
+    HAL_IncTick();
+}

@@ -65,7 +65,7 @@ extern uint32_t SystemCoreClock;
 #define configPROTECTED_KERNEL_OBJECT_POOL_SIZE 32
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     0
-#define configUSE_TICK_HOOK                     0
+#define configUSE_TICK_HOOK                     1
 #define configUSE_MUTEXES                       1
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configUSE_COUNTING_SEMAPHORES           1
