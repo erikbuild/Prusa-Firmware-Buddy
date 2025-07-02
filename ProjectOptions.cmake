@@ -26,7 +26,7 @@ set(BOARD_VALID_OPTS
     "MODULARBED"
     "XL_DEV_KIT_XLB"
     "XBUDDY_EXTENSION"
-    "ANFC"
+    "ANFC_C0"
     "ANFC_H5" # temporary dev only
     )
 set(MCU_VALID_OPTS
@@ -174,7 +174,7 @@ if(${MCU} STREQUAL "<default>")
     set(MCU "STM32G070RBT6")
   elseif(${BOARD} STREQUAL "XBUDDY_EXTENSION")
     set(MCU "STM32H503CBU7")
-  elseif(${BOARD} STREQUAL "ANFC")
+  elseif(${BOARD} STREQUAL "ANFC_C0")
     set(MCU "STM32C092RTCX")
   elseif(${BOARD} STREQUAL "ANFC_H5")
     set(MCU "STM32H503KBU7")

@@ -1,6 +1,6 @@
 target_link_options(firmware PUBLIC "-L" "${CMAKE_CURRENT_SOURCE_DIR}/link")
 
-if(BOARD STREQUAL "ANFC")
+if(BOARD STREQUAL "ANFC_C0")
   add_library(HAL_Config INTERFACE)
   target_compile_definitions(HAL_Config INTERFACE STM32C092xx USE_HAL_DRIVER)
   target_include_directories(HAL_Config INTERFACE config)

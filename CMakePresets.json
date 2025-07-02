@@ -4747,7 +4747,7 @@
             }
         },
         {
-            "name": "anfc_debug_boot",
+            "name": "anfc-c0_debug_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -4761,7 +4761,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC"
+                    "value": "ANFC_C0"
                 },
                 "BOOTLOADER": {
                     "type": "STRING",
@@ -4794,7 +4794,7 @@
             }
         },
         {
-            "name": "anfc_debug_noboot",
+            "name": "anfc-c0_debug_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -4808,7 +4808,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC"
+                    "value": "ANFC_C0"
                 },
                 "BOOTLOADER": {
                     "type": "STRING",
@@ -4841,7 +4841,7 @@
             }
         },
         {
-            "name": "anfc_release_boot",
+            "name": "anfc-c0_release_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -4855,7 +4855,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC"
+                    "value": "ANFC_C0"
                 },
                 "BOOTLOADER": {
                     "type": "STRING",
@@ -4888,7 +4888,7 @@
             }
         },
         {
-            "name": "anfc_release_noboot",
+            "name": "anfc-c0_release_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -4902,7 +4902,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC"
+                    "value": "ANFC_C0"
                 },
                 "BOOTLOADER": {
                     "type": "STRING",

@@ -236,11 +236,11 @@
             }
         },
         {
-            "name": "anfc",
+            "name": "anfc-c0",
             "description": "Firmware for NFC addon",
             "cacheVariables": {
                 "PRINTER": "NONE",
-                "BOARD": "ANFC"
+                "BOARD": "ANFC_C0"
             }
         }
     ]
