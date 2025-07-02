@@ -36,8 +36,8 @@ set(MCU_VALID_OPTS
     "STM32F427ZI"
     "STM32G070RBT6"
     "STM32H503CBU7"
+    "STM32C092KCUX" # planned ANFC final target
     "STM32H503KBU7" # dev only
-    "STM32C092RTCX" # temporray until we have real HW
     )
 set(BOOTLOADER_VALID_OPTS "NO" "EMPTY" "YES")
 set(TRANSLATIONS_ENABLED_VALID_OPTS "<default>" "NO" "YES")
