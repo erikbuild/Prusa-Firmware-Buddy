@@ -19,6 +19,6 @@ set(CMSIS_LIB
     PARENT_SCOPE
     )
 set(BOOTLOADER_SIZE
-    32768
+    49152
     PARENT_SCOPE
     )

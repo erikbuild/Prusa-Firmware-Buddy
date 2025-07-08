@@ -1,3 +1,3 @@
-BL_SIZE = 32K;
+BL_SIZE = 48K;
 
 INCLUDE link_platform.ld;
