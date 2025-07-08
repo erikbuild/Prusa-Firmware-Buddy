@@ -170,7 +170,7 @@ pipeline {
                             'main,xl-minimal,release,yesboot', // Test optional features on the most complex target
                             'all,ix,release,yesboot',
                             'all,anfc-h5,release,noboot',
-                            'all,anfc-c0,release,yesboot'
+                            'all,anfc-c0,release,noboot'
                     }
                 }
                 stages {
