@@ -5,6 +5,8 @@ add_library(STM32H5_HAL_Config ALIAS HAL_Config)
 
 target_compile_definitions(firmware PRIVATE STM32GENERIC STM32H5 STM32H5xx)
 
+target_sources(firmware PRIVATE hal.cpp)
+
 set(HAL_LIB
     "STM32H5::HAL"
     PARENT_SCOPE

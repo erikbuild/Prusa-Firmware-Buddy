@@ -27,7 +27,6 @@ target_sources(
           anfc_event_publisher.cpp
           cyphal_anfc_node.cpp
           enum_mapping_check.cpp
-          hal.cpp
           main.cpp
           nfc.cpp
           nfc_task.cpp
