@@ -38,6 +38,8 @@
 #define BOARD_MODULARBED()       5
 #define BOARD_XL_DEV_KIT_XLB()   6
 #define BOARD_XBUDDY_EXTENSION() 7
+#define BOARD_ANFC_C0()          8
+#define BOARD_ANFC_H5()          9
 
 #if !defined(BOARD)
     #error Please define the BOARD macro
@@ -56,7 +58,7 @@
     #define BOARD_IS_XL_DEV_KIT_XLB() 1
 #elif BOARD() == BOARD_XBUDDY_EXTENSION()
     #define BOARD_IS_XBUDDY_EXTENSION() 1
-#elif defined(BOARD) && (BOARD == BOARD_ANFC || BOARD == BOARD_ANFC_H5)
+#elif BOARD() == BOARD_ANFC_C0() || BOARD() == BOARD_ANFC_H5()
     #define BOARD_IS_ANFC() 1
 #else
     #error BOARD is something weird
