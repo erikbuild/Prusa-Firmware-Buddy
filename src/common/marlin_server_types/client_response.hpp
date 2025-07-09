@@ -18,6 +18,7 @@
 #include "general_response.hpp"
 #include "printers.h"
 #include <utils/enum_array.hpp>
+#include <guiconfig/guiconfig.h>
 #include <option/filament_sensor.h>
 #include <option/has_attachable_accelerometer.h>
 #include <option/has_belt_tuning.h>
@@ -42,6 +43,7 @@
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
+#include <option/has_side_fsensor.h>
 
 #include <option/has_hotend_type_support.h>
 #if HAS_HOTEND_TYPE_SUPPORT()
@@ -49,6 +51,7 @@
 #endif
 
 #include <device/board.h>
+#include <option/has_e2ee_support.h>
 
 /// number of bits used to encode response
 // TODO: Make 2 everywhere: BFW-6028
@@ -145,6 +148,10 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
     IsFilamentInGear,
     Ejecting_stoppable,
     Ejecting_unstoppable,
+#if HAS_SIDE_FSENSOR()
+    LoadingObstruction_stoppable,
+    LoadingObstruction_unstoppable,
+#endif
     Loading_stoppable,
     Loading_unstoppable,
     LoadingToGears_stoppable,
@@ -238,6 +245,9 @@ enum class PhasesPrintPreview : PhaseUnderlyingType {
     tools_mapping,
 #endif
     wrong_filament,
+#if HAS_E2EE_SUPPORT()
+    untrusted_identity,
+#endif
     file_error, ///< Something is wrong with the gcode file
     _last = file_error
 };
@@ -465,6 +475,10 @@ enum class PhasesWarning : PhaseUnderlyingType {
     HomingRefinementFailedNoRetry,
 #endif
 
+#if HAS_ILI9488_DISPLAY()
+    DisplayProblemDetected,
+#endif
+
     /// Shown when the M334 is attempting to change metrics configuration, prompting the user to confirm the change (security reasons)
     MetricsConfigChangePrompt,
 
@@ -657,6 +671,10 @@ class ClientResponses {
             { PhasesLoadUnload::IsFilamentInGear, { Response::Yes, Response::No } },
             { PhasesLoadUnload::Ejecting_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Ejecting_unstoppable, {} },
+#if HAS_SIDE_FSENSOR()
+            { PhasesLoadUnload::LoadingObstruction_stoppable, { Response::Retry, Response::Stop } },
+            { PhasesLoadUnload::LoadingObstruction_unstoppable, { Response::Retry, Response::Help } },
+#endif
             { PhasesLoadUnload::Loading_stoppable, { Response::Stop } },
             { PhasesLoadUnload::Loading_unstoppable, {} },
             { PhasesLoadUnload::LoadingToGears_stoppable, { Response::Stop } },
@@ -781,6 +799,9 @@ class ClientResponses {
                                                       Response::Ok,
                                                       Response::Abort,
                                                   } },
+#if HAS_E2EE_SUPPORT()
+            { PhasesPrintPreview::untrusted_identity, { Response::Yes, Response::No, Response::Abort } },
+#endif
             { PhasesPrintPreview::file_error, {
                                                   Response::Abort,
                                               } },
@@ -925,7 +946,7 @@ class ClientResponses {
 #if HAS_EMERGENCY_STOP()
         { PhasesWarning::DoorOpen, {} },
 #endif
-            { PhasesWarning::Warning, { Response::Continue } },
+            { PhasesWarning::Warning, { Response::Ok } },
 #if XL_ENCLOSURE_SUPPORT() || HAS_CHAMBER_FILTRATION_API()
             { PhasesWarning::EnclosureFilterExpiration, { Response::Ignore, Response::Postpone5Days, Response::Done } },
 #endif
@@ -956,6 +977,9 @@ class ClientResponses {
             { PhasesWarning::HomingCalibrationNeeded, { Response::Calibrate, Response::Skip, Response::Always, Response::Never } },
             { PhasesWarning::HomingRefinementFailed, { Response::Retry, Response::Abort, Response::Ignore } },
             { PhasesWarning::HomingRefinementFailedNoRetry, { Response::Abort, Response::Ignore } },
+#endif
+#if HAS_ILI9488_DISPLAY()
+            { PhasesWarning::DisplayProblemDetected, { Response::Yes, Response::No } },
 #endif
             { PhasesWarning::MetricsConfigChangePrompt, { Response::Yes, Response::No } },
     };

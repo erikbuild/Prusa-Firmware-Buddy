@@ -20,6 +20,10 @@
 #if HAS_PHASE_STEPPING()
     #include <feature/phase_stepping/phase_stepping.hpp>
 #endif
+#include <option/has_e2ee_support.h>
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/key.hpp>
+#endif
 
 // Check that our presets cover all the item flags
 static constexpr auto store_flags = [] {
@@ -67,19 +71,30 @@ extern osThreadId displayTaskHandle;
     Sound_Stop();
     Sound_Update1ms();
 
+    // !!! Do this before entering the critical section, as it does all sorts of file access and logging
+    if (!hard_reset) {
 #if HAS_PHASE_STEPPING()
-    // Phase stepping is a calibration that is stored on xFlash, not in the config store -> it needs special handling
-    // On hard reset, we're clearing the whole xFlash anyway, no point in doing this separately
-    if (!hard_reset && !items_to_keep.test(std::to_underlying(Item::calibrations))) {
-        // Do this before entering the critical section, as it does all sorts of file access and logging
+        // Phase stepping is a calibration that is stored on xFlash, not in the config store -> it needs special handling
+        // On hard reset, we're clearing the whole xFlash anyway, no point in doing this separately
+        if (!items_to_keep.test(std::to_underlying(Item::calibrations))) {
 
-        // Formally speaking, we should access phase_stepping only from the marlin thread.
-        // But all this function does is unlink files from the xFlash.
-        // These files are only accessed in specific phstep gcodes
-        // and it's not worth ensuring that they would happen to overwrite before we enter the final factory reset critical section a few lines below
-        phase_stepping::remove_from_persistent_storage();
-    }
+            // Formally speaking, we should access phase_stepping only from the marlin thread.
+            // But all this function does is unlink files from the xFlash.
+            // These files are only accessed in specific phstep gcodes
+            // and it's not worth ensuring that they would happen to overwrite before we enter the final factory reset critical section a few lines below
+            phase_stepping::remove_from_persistent_storage();
+        }
 #endif
+
+#if HAS_E2EE_SUPPORT()
+        if (!items_to_keep.test(std::to_underlying(Item::security))) {
+            e2ee::remove_all_identities();
+            e2ee::remove_key();
+        }
+#endif
+
+        // Configurations that are out of config store should be wiped here
+    }
 
     // Disable task switching, we don't want anyone to screw up with anything now
     freertos::CriticalSection critical_section;
@@ -124,7 +139,6 @@ extern osThreadId displayTaskHandle;
     } else if (items_to_keep.any()) {
         // Initialize a blank config store and save there our selection of items.
         // Values of these items are being kept in the RAM.
-
         config_store().init();
 
         // Do not do default config_sotre().load_all(), it would overwrite our items in the RAM.

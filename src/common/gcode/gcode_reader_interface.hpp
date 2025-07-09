@@ -12,6 +12,10 @@
 #include "gcode_reader_restore_info.hpp"
 #include "gcode_reader_result.hpp"
 
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/e2ee.hpp>
+#endif
+
 class IGcodeReader {
 public:
     enum class Continuations {
@@ -134,8 +138,12 @@ public:
 
     /**
      * @brief Returns whenever file is valid enough to begin printing it (has metadata and some gcodes)
+     *
+     * Also checks the sequence of the blocks is correct. For encrypted gcodes it also checks if it is encrypted for this printer,
+     * that it does not have anything between the blocks. If the full check is true it also verifies the identity block signature
+     * and the hashes of metadata and keyblocks are correct.
      */
-    virtual bool valid_for_print() = 0;
+    virtual bool valid_for_print(bool full_check) = 0;
 
     /**
      * @brief Load latest validity information from current transfer
@@ -152,6 +160,11 @@ public:
 
     /// Returns error message if has_error() is true
     virtual const char *error_str() const = 0;
+
+#if HAS_E2EE_SUPPORT()
+    virtual e2ee::IdentityInfo get_identity_info() const = 0;
+    virtual bool has_identity_info() const = 0;
+#endif
 };
 
 /**
@@ -196,11 +209,28 @@ public:
         return error_str_;
     }
 
+#if HAS_E2EE_SUPPORT()
+    bool has_identity_info() const override {
+        return identity_info.has_value();
+    }
+
+    e2ee::IdentityInfo get_identity_info() const override {
+        assert(identity_info.has_value());
+        return identity_info.value();
+    }
+#endif
+
 protected:
     inline void set_error(const char *msg) {
         assert(msg);
         error_str_ = msg;
     }
+
+#if HAS_E2EE_SUPPORT()
+    void set_identity_info(const e2ee::IdentityInfo &info) {
+        identity_info = info;
+    }
+#endif
 
     IGcodeReader::Result_t stream_get_line_common(GcodeBuffer &b, Continuations line_continuations);
 
@@ -243,4 +273,8 @@ protected:
 private:
     /// If set to not null, the reader is considered to be in an unrecoverable error state
     const char *error_str_ = nullptr;
+
+#if HAS_E2EE_SUPPORT()
+    std::optional<e2ee::IdentityInfo> identity_info;
+#endif
 };

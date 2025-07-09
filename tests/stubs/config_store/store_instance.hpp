@@ -1,5 +1,9 @@
 #pragma once
 
+#include <option/has_e2ee_support.h>
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/identity_check_levels.hpp>
+#endif
 #include <cstdint>
 #include <array>
 
@@ -40,6 +44,17 @@ struct ConfigStore {
 
     ProxyHost connect_proxy_host;
     IntZero connect_proxy_port;
+#if HAS_E2EE_SUPPORT()
+    struct Value {
+        void set(e2ee::IdentityCheckLevel n) {
+        }
+        e2ee::IdentityCheckLevel get() const {
+            return e2ee::IdentityCheckLevel::AnyIdentity;
+        }
+    };
+
+    Value identity_check;
+#endif
 };
 
 inline ConfigStore &config_store() {

@@ -32,7 +32,7 @@ class ClosedReader final : public IGcodeReader {
     Result_t stream_getc(char &) override {
         return Result_t::RESULT_ERROR;
     }
-    bool valid_for_print() override {
+    bool valid_for_print([[maybe_unused]] bool full_check) override {
         return false;
     }
     void update_validity(const char *) override {
@@ -46,4 +46,14 @@ class ClosedReader final : public IGcodeReader {
     const char *error_str() const override {
         return "FIle is closed";
     }
+#if HAS_E2EE_SUPPORT()
+    bool has_identity_info() const override {
+        return false;
+    }
+
+    e2ee::IdentityInfo get_identity_info() const override {
+        return {};
+    }
+
+#endif
 };

@@ -150,6 +150,9 @@
 #if HAS_CHAMBER_API()
     #include <feature/chamber/chamber.hpp>
 #endif
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/key.hpp>
+#endif
 
 #include <option/has_chamber_filtration_api.h>
 #if HAS_CHAMBER_FILTRATION_API()
@@ -198,6 +201,7 @@ namespace marlin_server {
 
 CallbackHookPoint<> idle_hook_point;
 
+void media_prefetch_lazy_start();
 void media_prefetch_start();
 
 namespace {
@@ -458,7 +462,7 @@ namespace {
 /******************************************************************************/
 // Warning handling
 
-static std::bitset<static_cast<size_t>(WarningType::_last) + 1> warning_flags;
+static std::bitset<std::to_underlying(WarningType::_cnt)> warning_flags;
 static uint32_t active_warning_pop_timestamp_sec = 0;
 
 static void handle_warnings() {
@@ -480,24 +484,21 @@ static void handle_warnings() {
         return;
     }
 
-    const auto consume_response = [&]() {
-        const auto response = get_response_from_phase(phase);
-        if (response != Response::_none) {
-            clear_warning(warning_type);
-        }
-
-        return response;
-    };
+    // Peek the response, only some of the warnings consume it
+    const auto response = get_response_from_phase(phase, false);
+    if (response == Response::_none) {
+        return;
+    }
 
     switch (phase) {
 
     case PhasesWarning::Warning:
-        consume_response();
+        // The only response is OK, at which point we just consume the response and hide the warning.
         break;
 
 #if HAS_MANUAL_CHAMBER_VENTS()
     case PhasesWarning::ChamberVents:
-        if (consume_response() == Response::Disable) {
+        if (response == Response::Disable) {
             config_store().check_manual_vent_state.set(false);
         }
         break;
@@ -505,14 +506,25 @@ static void handle_warnings() {
 
 #if HAS_CHAMBER_FILTRATION_API()
     case PhasesWarning::EnclosureFilterExpiration:
-        buddy::chamber_filtration().handle_filter_expiration_warning(consume_response());
+        buddy::chamber_filtration().handle_filter_expiration_warning(response);
+        break;
+#endif
+
+#if HAS_ILI9488_DISPLAY()
+    case PhasesWarning::DisplayProblemDetected:
+        config_store().reduce_display_baudrate.set(response == Response::Yes);
         break;
 #endif
 
     default:
-        // Most warnings are handled somewhere else and we shouldn't consume and process the responses
-        break;
+        // Most warnings are handled somewhere else and we shouldn't process the responses here
+        // Return to avoid consuming the response
+        return;
     }
+
+    // Consume the response now
+    get_response_from_phase(phase, true);
+    clear_warning(warning_type);
 }
 
 static void update_warning_fsm() {
@@ -915,6 +927,9 @@ void static finalize_print(bool finished) {
 
     marlin_vars().print_end_time = time(nullptr);
     marlin_vars().add_job_result(job_id, finished ? marlin_vars_t::JobInfo::JobResult::finished : marlin_vars_t::JobInfo::JobResult::aborted);
+#if HAS_E2EE_SUPPORT()
+    e2ee::remove_temporary_identites();
+#endif
 
 #if HAS_CHAMBER_FILTRATION_API()
     buddy::chamber_filtration().check_filter_expiration();
@@ -1275,7 +1290,12 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
 
     set_media_position(resume_pos.offset);
     print_state.media_restore_info = resume_pos.restore_info;
-    media_prefetch_start();
+
+    if (skip_preview == PreviewSkipIfAble::no) {
+        media_prefetch_lazy_start();
+    } else {
+        media_prefetch_start();
+    }
 
     server.print_state = can_print ? State::PrintPreviewInit : State::Idle;
 
@@ -1467,9 +1487,13 @@ static void crash_recovery_begin_crash() {
 }
 #endif /*ENABLED(CRASH_RECOVERY)*/
 
-void media_prefetch_start() {
+void media_prefetch_lazy_start() {
     print_state.file_open_reported = false;
     media_prefetch.start(marlin_vars().media_SFN_path.get_ptr(), GCodeReaderPosition { stream_restore_info(), media_position() });
+}
+
+void media_prefetch_start() {
+    media_prefetch_lazy_start();
     media_prefetch.issue_fetch();
 }
 
@@ -1919,6 +1943,10 @@ static void _server_print_loop(void) {
         oProgressData.stealth_mode.percent_done.mSetValue(0, 0);
         PrintPreview::Instance().Init();
         server.print_state = State::PrintPreviewImage;
+#if HAS_E2EE_SUPPORT()
+        // remove any left over tmp trusted identities
+        e2ee::remove_temporary_identites();
+#endif
         break;
 
     case State::PrintPreviewImage:
@@ -3433,14 +3461,16 @@ static void _server_set_var(const Request &request) {
     bsod("unimplemented _server_set_var for var_id %i", (int)variable_identifier);
 }
 
-FSMResponseVariant get_response_variant_from_phase(FSMAndPhase fsm_and_phase) {
+FSMResponseVariant get_response_variant_from_phase(FSMAndPhase fsm_and_phase, bool consume_response) {
     // The FSM should be active the whole time we're waiting for the response.
     // If it isn't, something's probably wrong
     assert(fsm_states[fsm_and_phase.fsm].has_value());
 
     const EncodedFSMResponse value = server_side_encoded_fsm_response;
     if (value.fsm_and_phase == fsm_and_phase) {
-        server_side_encoded_fsm_response = empty_encoded_fsm_response;
+        if (consume_response) {
+            server_side_encoded_fsm_response = empty_encoded_fsm_response;
+        }
         return value.response;
     } else {
         return {};

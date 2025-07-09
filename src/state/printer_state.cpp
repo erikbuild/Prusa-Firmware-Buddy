@@ -16,6 +16,7 @@
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/xbuddy_extension_variant_standard.h>
+#include <option/has_side_fsensor.h>
 
 using namespace marlin_server;
 using namespace printer_state;
@@ -66,6 +67,10 @@ optional<ErrCode> attention_while_printpreview(const PhasesPrintPreview preview_
         return ErrCode::CONNECT_PRINT_PREVIEW_NO_FILAMENT;
     case PhasesPrintPreview::wrong_filament:
         return ErrCode::CONNECT_PRINT_PREVIEW_WRONG_FILAMENT;
+#if HAS_E2EE_SUPPORT()
+    case PhasesPrintPreview::untrusted_identity:
+        return ErrCode::CONNECT_UNTRUSTED_IDENTITY;
+#endif
     case PhasesPrintPreview::file_error:
         return ErrCode::CONNECT_PRINT_PREVIEW_FILE_ERROR;
 #if HAS_TOOLCHANGER() || HAS_MMU2()
@@ -95,6 +100,10 @@ bool is_warning_attention(const fsm::BaseData &data) {
 #endif
 #if HAS_SELFTEST()
     case ErrCode::ERR_SYSTEM_ACTION_SELFTEST_REQUIRED:
+#endif
+#if HAS_ILI9488_DISPLAY()
+        // Local issue, do not report to connect
+    case ErrCode::ERR_ELECTRO_DISPLAY_PROBLEM_DETECTED:
 #endif
         return false;
     default:
@@ -127,6 +136,11 @@ optional<ErrCode> load_unload_attention_while_printing([[maybe_unused]] const fs
         case PhasesLoadUnload::FilamentStuck:
             return ErrCode::ERR_MECHANICAL_STUCK_FILAMENT_DETECTED;
     #endif
+    #if HAS_SIDE_FSENSOR()
+        case PhasesLoadUnload::LoadingObstruction_stoppable:
+        case PhasesLoadUnload::LoadingObstruction_unstoppable:
+            return ErrCode::ERR_MECHANICAL_LOADING_OBSTRUCTION;
+    #endif
         default:
             return nullopt;
         }
@@ -137,6 +151,11 @@ optional<ErrCode> load_unload_attention_while_printing([[maybe_unused]] const fs
 #if HAS_LOADCELL()
     case PhasesLoadUnload::FilamentStuck:
         return ErrCode::ERR_MECHANICAL_STUCK_FILAMENT_DETECTED;
+#endif
+#if HAS_SIDE_FSENSOR()
+    case PhasesLoadUnload::LoadingObstruction_stoppable:
+    case PhasesLoadUnload::LoadingObstruction_unstoppable:
+        return ErrCode::ERR_MECHANICAL_LOADING_OBSTRUCTION;
 #endif
     default:
         return ErrCode::CONNECT_FILAMENT_RUNOUT;
@@ -526,6 +545,10 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::CONNECT_NOT_DOWNLOADED;
     case WarningType::BuddyMCUMaxTemp:
         return ErrCode::CONNECT_BUDDY_MCU_MAX_TEMP;
+#if HAS_ILI9488_DISPLAY()
+    case WarningType::DisplayProblemDetected:
+        return ErrCode::ERR_ELECTRO_DISPLAY_PROBLEM_DETECTED;
+#endif
 #if HAS_DWARF()
     case WarningType::DwarfMCUMaxTemp:
         return ErrCode::CONNECT_DWARF_MCU_MAX_TEMP;
@@ -635,6 +658,15 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
     case WarningType::HomingRefinementFailedNoRetry:
         return ErrCode::ERR_MECHANICAL_PRECISE_REFINEMENT_FAILED;
 #endif
+
+#if HAS_SELFTEST()
+    case WarningType::SelftestNotSuccessfullyCompleted:
+        return ErrCode::CONNECT_UNFINISHED_SELFTEST;
+#endif
+
+    case WarningType::_cnt:
+        // Fallthrough to unreachable
+        break;
     }
 
     assert(false);

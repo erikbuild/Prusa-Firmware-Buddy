@@ -3,6 +3,7 @@
 #include "leds/animation_controller.hpp"
 #include "marlin_vars.hpp"
 #include "client_response.hpp"
+#include <option/has_side_fsensor.h>
 
 namespace leds {
 
@@ -39,6 +40,10 @@ static StateAnimation marlin_to_anim_state() {
         // PreLoading
         case PhasesLoadUnload::LoadingToGears_stoppable:
         case PhasesLoadUnload::LoadingToGears_unstoppable:
+    #if HAS_SIDE_FSENSOR()
+        case PhasesLoadUnload::LoadingObstruction_stoppable:
+        case PhasesLoadUnload::LoadingObstruction_unstoppable:
+    #endif
             return StateAnimation::Loading;
         // Loading filament
         case PhasesLoadUnload::Loading_stoppable:

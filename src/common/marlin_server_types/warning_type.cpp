@@ -76,6 +76,11 @@ constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
         return PhasesWarning::HomingRefinementFailedNoRetry;
 #endif
 
+#if HAS_ILI9488_DISPLAY()
+    case WarningType::DisplayProblemDetected:
+        return PhasesWarning::DisplayProblemDetected;
+#endif
+
         //
     }
 }
@@ -106,7 +111,7 @@ static_assert([] {
     // Check that each phase (except for Warning and ChamberVents, which are handled separately) has a separate phase
     // If this does not apply and we use
     // In the future, we could possibly unify WarningType and PhasesWarning
-    for (size_t i = 0; i <= static_cast<size_t>(WarningType::_last); i++) {
+    for (size_t i = 0; i < std::to_underlying(WarningType::_cnt); i++) {
         const WarningType wt = static_cast<WarningType>(i);
         const PhasesWarning ph = warning_type_phase_constexpr(wt);
         const auto phi = std::to_underlying(ph);
@@ -132,3 +137,9 @@ static_assert([] {
 
     return true;
 }());
+
+#if HAS_ILI9488_DISPLAY()
+// This one should be very low on the list (= priority).
+// When it's popped up, it doesn't propagate to connect, so it might hide some important warnings
+static_assert(std::to_underlying(WarningType::DisplayProblemDetected) == std::to_underlying(WarningType::_cnt) - 1);
+#endif

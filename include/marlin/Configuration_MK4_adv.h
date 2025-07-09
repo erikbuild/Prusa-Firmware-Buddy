@@ -973,7 +973,7 @@
     constexpr float HOLD_MULTIPLIER[4] = {1, 1, 1, 1};  // Scales down the holding current from run current
     #define INTERPOLATE true // Interpolate X/Y/Z_MICROSTEPS to 256
 
-    #if X_DRIVER_TYPE == TMC2130 && Y_DRIVER_TYPE == X_DRIVER_TYPE
+    #if AXIS_DRIVER_TYPE_X(TMC2130) && SAME_DRIVER_ID(X_DRIVER_TYPE, Y_DRIVER_TYPE)
         #define HAS_TMC_WAVETABLE // enable wavetable correction for this driver/motor type
     #endif
 
@@ -1231,7 +1231,7 @@
 //#define SENSORLESS_PROBING
 
     #if EITHER(SENSORLESS_HOMING, SENSORLESS_PROBING)
-        #if X_DRIVER_TYPE == TMC2130
+        #if AXIS_DRIVER_TYPE_X(TMC2130)
             // The range of stallguard sensitivities to probe and calibrate
             // (the required sensitivity varies by motor)
             #define XY_STALL_SENSITIVITY_MIN -7
@@ -1240,21 +1240,21 @@
             // Read from config. May be int16 max if uncalibrated, which is
             // then handled in the Crash_s class.
             #define X_STALL_SENSITIVITY config_store().homing_sens_x.get()
-        #elif X_DRIVER_TYPE == TMC2209
+        #elif AXIS_DRIVER_TYPE_X(TMC2209)
             #define X_STALL_SENSITIVITY 140
         #endif
 
-        #if Y_DRIVER_TYPE == TMC2130
+        #if AXIS_DRIVER_TYPE_Y(TMC2130)
             // Read from config. May be int16 max if uncalibrated, which is
             // then handled in the Crash_s class.
             #define Y_STALL_SENSITIVITY config_store().homing_sens_y.get()
-        #elif Y_DRIVER_TYPE == TMC2209
+        #elif AXIS_DRIVER_TYPE_Y(TMC2209)
             #define Y_STALL_SENSITIVITY 130
         #endif
 
-        #if Z_DRIVER_TYPE == TMC2130
+        #if AXIS_DRIVER_TYPE_Z(TMC2130)
             #define Z_STALL_SENSITIVITY 4
-        #elif Z_DRIVER_TYPE == TMC2209
+        #elif AXIS_DRIVER_TYPE_Z(TMC2209)
             #define Z_STALL_SENSITIVITY 100
         #endif
 

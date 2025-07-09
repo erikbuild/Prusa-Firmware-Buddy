@@ -65,6 +65,11 @@
     #include <gui/screen/screen_hw_mmu.hpp>
 #endif
 
+#if HAS_E2EE_SUPPORT()
+    #include "screen_menu_e2ee.hpp"
+    #include "ScreenHandler.hpp"
+#endif
+
 #include <config_store/store_instance.hpp>
 
 MI_SCREEN_BASE::MI_SCREEN_BASE(ScreenFactory::Creator::Func screen_ctor, const char *label)
@@ -191,5 +196,8 @@ MI_HW_MMU::MI_HW_MMU()
 void MI_HW_MMU::click(IWindowMenu &) {
     Screens::Access()->Open<ScreenMenuHwMmu>();
 }
+#endif
 
+#if HAS_E2EE_SUPPORT()
+template struct MI_SCREEN_CTOR<ScreenMenuE2ee>;
 #endif

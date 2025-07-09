@@ -67,6 +67,9 @@ public:
         purge,
         color_correct_ask,
         eject,
+#if HAS_SIDE_FSENSOR()
+        loading_obstruction,
+#endif
 #if HAS_MMU2()
         mmu_load_start,
         mmu_load_ask,
@@ -230,6 +233,9 @@ private:
     void purge_process(Response response);
     void color_correct_ask_process(Response response);
     void eject_process(Response response);
+#if HAS_SIDE_FSENSOR()
+    void loading_obstruction_process(Response response);
+#endif
 #if HAS_MMU2()
     void mmu_load_start_process(Response response);
     void mmu_load_ask_process(Response response);
@@ -275,6 +281,9 @@ private:
             { LoadState::purge, &Pause::purge_process },
             { LoadState::color_correct_ask, &Pause::color_correct_ask_process },
             { LoadState::eject, &Pause::eject_process },
+#if HAS_SIDE_FSENSOR()
+            { LoadState::loading_obstruction, &Pause::loading_obstruction_process },
+#endif
 #if HAS_MMU2()
             { LoadState::mmu_load_start, &Pause::mmu_load_start_process },
             { LoadState::mmu_load_ask, &Pause::mmu_load_ask_process },

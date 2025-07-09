@@ -33,7 +33,42 @@ static void init_input_shaper_pulses(const float a[], const float t[], const int
         sum_a += a[i];
     }
 
-    // Reverse pulses vs their traditional definition
+    // Reverse pulses vs. their traditional definition
+    // and normalize their amplitudes
+    //
+    // In traditional definition time is increasing
+    // as it is running forward.
+    // If we assume time axis to have negative values on the left
+    // and positive values on the right signal is moving from
+    // left to the right as time goes forward.
+    // In tradition definition pulses with lower index have lower
+    // time and are encountered first by the signal.
+    //
+    // In our definition of time meaning of the time is time
+    // remaining to some event. In our definition time
+    // is decreasing as it is running forward.
+    // If we assume time axis to have negative values on the left
+    // and positive values on the right signal is moving from
+    // right to the left as time goes forward.
+    // In our definition pulses with higher index have higher
+    // time and are encountered first by the signal.
+    // As the time is moving in opposite direction,
+    // we need to reverse pulses to ensure first pulse
+    // from traditional definition is encountered first
+    // by the signal in our definition.
+    // In our definition we use same index vs. time
+    // ordering as in traditional definition
+    // (lowest index has lowest time and vice versa)
+    // So purely reordering would break ordering.
+    // Therefore we also flip pulse time sign to preserve
+    // ordering.
+    //
+    // Amplitude normalization ensures that sum
+    // of all pulse amplitudes is 1. This ensures that
+    // sparse moves reaches their original target destinations.
+    // If the sum would be greater than 1, printed object would be
+    // enlarged in that axis, if lower than 1 it would be reduced.
+
     const float inv_sum_a = 1.f / sum_a;
     for (int i = 0; i < num_pulses; ++i) {
         is_pulses->pulses[num_pulses - i - 1].a = a[i] * inv_sum_a;

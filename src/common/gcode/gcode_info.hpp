@@ -139,6 +139,11 @@ private:
 
     std::atomic<const char *> error_str_ = nullptr; ///< If there is an error, this variable can be used to report the error string
 
+#if HAS_E2EE_SUPPORT()
+    mutable freertos::Mutex identity_mutex;
+    std::optional<e2ee::IdentityInfo> identity_info;
+#endif
+
     time_buff printing_time; ///< Stores string representation of printing time left
 #if EXTRUDERS > 1
     std::optional<float> filament_wipe_tower_g = { std::nullopt }; ///< Grams of filament used for wipe tower
@@ -169,6 +174,22 @@ public:
         assert(error);
         error_str_ = error;
     }
+
+#if HAS_E2EE_SUPPORT()
+    bool has_identity_info() const {
+        std::unique_lock lock(identity_mutex);
+        return identity_info.has_value();
+    }
+    e2ee::IdentityInfo get_identity_info() const {
+        std::unique_lock lock(identity_mutex);
+        return identity_info.value();
+    }
+
+    void set_identity_info(e2ee::IdentityInfo info) {
+        std::unique_lock lock(identity_mutex);
+        identity_info = info;
+    }
+#endif
 
     bool has_preview_thumbnail() const { return has_preview_thumbnail_; } ///< Check if file has preview thumbnail
     bool has_progress_thumbnail() const { return has_progress_thumbnail_; } ///< Check if file has progress thumbnail

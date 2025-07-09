@@ -7,6 +7,7 @@ target_sources(
           crash_dump_handlers.cpp
           dump.cpp
           dump_parse.cpp
+          secret.cpp
   )
 
 # CrashCatcher needs increased stack size, because w25x methods are hungry

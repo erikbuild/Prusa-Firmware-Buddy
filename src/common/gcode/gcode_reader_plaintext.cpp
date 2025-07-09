@@ -238,7 +238,7 @@ IGcodeReader::FileVerificationResult PlainGcodeReader::verify_file(FileVerificat
     return { .is_ok = true };
 }
 
-bool PlainGcodeReader::valid_for_print() {
+bool PlainGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {
     // if entire file valid (for short files), or head and tail valid (for long files)
     uint32_t tail_start = (file_size > search_last_x_bytes) ? (file_size - search_last_x_bytes) : 0;
     return range_valid(0, file_size) || (range_valid(0, header_metadata_size) && range_valid(tail_start, file_size));

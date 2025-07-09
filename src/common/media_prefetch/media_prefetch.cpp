@@ -5,6 +5,9 @@
 
 #include <logging/log.hpp>
 #include <utils/enum_array.hpp>
+#include <option/has_e2ee_support.h>
+
+#include <config_store/store_instance.hpp>
 
 #include "prefetch_compression.hpp"
 
@@ -328,7 +331,25 @@ void MediaPrefetchManager::fetch_routine(AsyncJobExecutionControl &control) {
                 return;
             }
 
-            s.gcode_reader = AnyGcodeFormatReader(filepath.data());
+            s.gcode_reader = AnyGcodeFormatReader(filepath.data(), /*allow_decryption=*/true
+#if HAS_E2EE_SUPPORT()
+                // If we are not starting from zero, the identity must always be trusted,
+                // at least temporarily
+                ,
+                s.gcode_reader_pos == 0 ? config_store().identity_check.get() : e2ee::IdentityCheckLevel::KnownOnly
+#endif
+            );
+            if (!s.gcode_reader->valid_for_print(true)) {
+                log_debug(MediaPrefetch, "Gcode corrupted, not valid for print");
+                // Not valid with no error means we just don't have enough data yet
+                if (s.gcode_reader->has_error()) {
+                    log_debug(MediaPrefetch, "reader error: %s", s.gcode_reader->error_str());
+                    fetch_handle_error(control, IGcodeReader::Result_t::RESULT_CORRUPT);
+                }
+                // close the reader, so we try to initialize again next time
+                s.gcode_reader = {};
+                return;
+            }
 
             if (!s.gcode_reader.is_open()) {
                 log_debug(MediaPrefetch, "Fetch open failed");

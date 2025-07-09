@@ -28,6 +28,9 @@ if(NOT CMAKE_CROSSCOMPILING)
   add_subdirectory(utils)
 endif()
 
+if(NOT CMAKE_CROSSCOMPILING)
+  option(UNITTESTS_ENABLE "Enable building of unittest" ON)
+endif()
 include(ProjectOptions.cmake)
 
 # link time optimizations to disable LTO run cmake with -DDISABLE_LTO
@@ -437,12 +440,9 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
 endif()
 
 # Unittests
-if(NOT CMAKE_CROSSCOMPILING)
-  option(UNITTESTS_ENABLE "Enable building of unittest" ON)
-  if(UNITTESTS_ENABLE)
-    enable_testing()
-    add_subdirectory(tests)
-  endif()
+if(UNITTESTS_ENABLE)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
 
 # std::rand/random

@@ -35,6 +35,7 @@ This file is generated automatically so don't edit it directly
 - ModularBed: logging::Severity::info, src/puppies/modular_bed.cpp
 - Network: logging::Severity::info, lib/WUI/wui.cpp
 - PRUSA_GCODE: logging::Severity::info, src/marlin_stubs/gcode.cpp
+- PRUSA_PACK_READER: logging::Severity::info, src/common/gcode/gcode_reader_binary.cpp
 - PhaseStepping: logging::Severity::debug, lib/Marlin/Marlin/src/feature/phase_stepping/phase_stepping.cpp
 - Ping: logging::Severity::info, src/common/ping_manager.cpp
 - PowerPanic: logging::Severity::info, src/common/power_panic.cpp

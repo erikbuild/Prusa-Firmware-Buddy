@@ -50,10 +50,12 @@
 #include <feature/ramming/standard_ramming_sequence.hpp>
 #include <utils/progress.hpp>
 #include <buddy/unreachable.hpp>
+#include <sound.hpp>
 
 #include <option/has_human_interactions.h>
 #include <option/has_mmu2.h>
 #include <option/has_wastebin.h>
+#include <option/has_side_fsensor.h>
 
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
@@ -443,19 +445,33 @@ void Pause::load_start_process([[maybe_unused]] Response response) {
     }
 #endif
 
+#if HAS_SIDE_FSENSOR()
+    if (FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder) && FSensors_instance().no_filament_surely(LogicalFilamentSensor::side)) {
+        // When filament is in extruder sensor but not in side sensor, it's not a good idea to push another one in
+
+        // Filament should be already out of gears by now, we move it just to be sure it's removable manually
+        std::ignore = do_e_move_notify_progress_coldextrude(-20.f, (FILAMENT_CHANGE_UNLOAD_FEEDRATE), StopConditions::Accomplished);
+        Sound_Play(eSOUND_TYPE::SingleBeep);
+        set(LoadState::loading_obstruction);
+        return;
+    }
+#endif
+
     switch (load_type) {
     case LoadType::load_to_gears:
-        // Both parts of the condition below need to be true:
-        // XL has side sensor, but not having gears FS means the "else" workflow is needed.
-        // MK4 with MMU rework doesn't have side sensor (for this case, the unofficial
-        // non-ergonomic autoload workflow would be: user pushes filament into the extruder
-        // and activates the FS by hand by moving the lever to trigger the autoload).
-        if (option::has_side_fsensor && settings.extruder_mmu_rework) {
+        // if extruder sensor is not working, we cannot load filament automatically, we need the user to manually confirm the the filament is pushed in
+        if (!FSensors_instance().is_working(LogicalFilamentSensor::extruder)) {
+            set(LoadState::filament_push_ask);
+            break;
+        }
+        // If we are loading and filament is not in extruder = loading triggered by sideFS -> need asisting
+        if (FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
             set_timed(LoadState::assist_insertion);
         } else {
             set(LoadState::load_to_gears);
         }
         break;
+
     case LoadType::autoload:
         // if filament is not present we want to break and not set loaded filament
         // we have already loaded the filament in gear, now just wait for temperature to rise
@@ -479,6 +495,28 @@ void Pause::load_start_process([[maybe_unused]] Response response) {
         break;
     }
 }
+
+#if HAS_SIDE_FSENSOR()
+void Pause::loading_obstruction_process(Response response) {
+    setPhase(is_unstoppable() ? PhasesLoadUnload::LoadingObstruction_unstoppable : PhasesLoadUnload::LoadingObstruction_stoppable);
+    handle_help(response);
+
+    switch (response) {
+    case Response::Help:
+    case Response::Retry:
+        // Retry falls back to load_start, where FS is checked again and retracts if it fails
+        set(LoadState::load_start);
+        break;
+
+    case Response::Stop:
+        set(LoadState::stop);
+        break;
+
+    default:
+        break;
+    }
+}
+#endif
 
 void Pause::filament_push_ask_process(Response response) {
     if constexpr (!option::has_human_interactions) {
@@ -512,8 +550,13 @@ void Pause::filament_push_ask_process(Response response) {
         setPhase(is_unstoppable() ? PhasesLoadUnload::UserPush_unstoppable : PhasesLoadUnload::UserPush_stoppable);
         const bool has_filament = FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
         const bool is_mmu_rework_and_has_filament = settings.extruder_mmu_rework && has_filament;
+        const bool side_fs_empty = FSensors_instance().no_filament_surely(LogicalFilamentSensor::side);
+        const bool extruder_fs_not_working = !FSensors_instance().is_working(LogicalFilamentSensor::extruder);
+
         if (response == Response::Continue || is_mmu_rework_and_has_filament) {
             set(LoadState::load_to_gears);
+        } else if (!is_unstoppable() && side_fs_empty && extruder_fs_not_working) { // We got to this state because extruder sensor is not working and side sensor triggered autoload (if now sideFS is empty we exit out)
+            set(LoadState::stop);
         }
     }
 }
@@ -906,16 +949,13 @@ void Pause::load_nozzle_clean_process([[maybe_unused]] Response response) {
 #endif
 
 void Pause::stop_process([[maybe_unused]] Response response) {
-    if (!planner.draining()) {
-        planner.quick_stop();
+    if (!planner.busy()) {
+        // The printer is not moving, we don't need to do anything drastic and lose homing.
+        set(LoadState::_stopped);
+        return;
     }
 
-    if (planner.processing()) {
-        return; // wait in invoke_loop() until is printer done moving, then finalize stopping
-    }
-
-    planner.resume_queuing();
-    set_all_unhomed();
+    planner.quick_stop_and_resume();
     xyze_pos_t real_current_position;
     planner.get_axis_position_mm(static_cast<xyz_pos_t &>(real_current_position));
     real_current_position[E_AXIS] = 0;
@@ -927,6 +967,12 @@ void Pause::stop_process([[maybe_unused]] Response response) {
     #endif
     );
 #endif
+
+    // Lose homing only if we interrupted XYZ movement. quick_stop on extruder movement is fine
+    if (xyz_pos_t(current_position) != xyz_pos_t(real_current_position)) {
+        set_all_unhomed();
+    }
+
     current_position = real_current_position;
     planner.set_position_mm(current_position);
 
@@ -1089,7 +1135,7 @@ void Pause::filament_not_in_fs_process(Response response) {
     setPhase(PhasesLoadUnload::FilamentNotInFS);
     handle_help(response);
 
-    if (!FSensors_instance().has_filament_surely(LogicalFilamentSensor::autoload)) {
+    if (!FSensors_instance().has_filament_surely(LogicalFilamentSensor::primary_runout)) {
         if constexpr (!option::has_human_interactions) {
             // In case of no human interactions, require no filament being
             // detected for at least 1s to avoid FS flicking off and on due
@@ -1226,10 +1272,8 @@ bool Pause::parkMoveXGreaterThanY(const xyz_pos_t &pos0, const xyz_pos_t &pos1) 
         if (check4(check_for, StopConditions::SideFilamentSensorRunout) && FSensors_instance().no_filament_surely(LogicalFilamentSensor::side)) {
             log_info(MarlinServer, "Pause::sideFS runout");
             // Discard planned and executed moves at once - a bit brute-force solution, but there are currently no other planned moves than the E-move
-            PreciseStepping::quick_stop();
-            while (!planner.draining() && PreciseStepping::stopping()) {
-                PreciseStepping::loop();
-            }
+            planner.quick_stop_and_resume();
+
             return StopConditions::SideFilamentSensorRunout;
         }
         idle(true, true);
@@ -1550,6 +1594,10 @@ void Pause::handle_help(Response response) {
 
     if (marlin_server::prompt_warning(warning) == Response::FS_disable) {
         FSensors_instance().set_enabled_global(false);
+        while (FSensors_instance().is_enable_state_update_processing()) {
+            // Wait for the filament sensor disable to propagate, some phases rely on it to be updated
+            idle(true, true);
+        }
         marlin_server::set_warning(WarningType::FilamentSensorsDisabled);
         config_store().show_fsensors_disabled_warning_after_print.set(true);
     }

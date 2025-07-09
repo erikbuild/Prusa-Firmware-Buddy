@@ -229,10 +229,10 @@ Errors:
     approved: false
 
   - code: "XX119"
-    title: "FILAMENT ALREADY IN EXTRUDER SENSOR"
+    title: "LOADING OBSTRUCTION"
     printers: [XL, COREONE, iX]
-    text: "Filament is already loaded in the extruder's filament sensor. Please remove it from the extruder manually before proceeding."
-    id: "FILAMENT_ALREADY_IN_EXTRUDER_SENSOR"
+    text: "Filament was detected in the extruder filament sensor. Please remove it manually before proceeding."
+    id: "LOADING_OBSTRUCTION"
     type: WARNING
     gui_layout: "warning_dialog"
     approved: false
@@ -727,6 +727,16 @@ Errors:
     id: "ACCELEROMETER_COMMUNICATION_FAILED"
     gui_layout: "warning_dialog"
     approved: true
+
+  - code: "XX324"
+    printers: [MK4, COREONE, iX, XL, MK3.5]
+    title: "DISPLAY PROBLEM DETECTED"
+    text: "Display issues detected. Reducing the refresh rate will possibly solve the problem. Proceed?"
+    id: "DISPLAY_PROBLEM_DETECTED"
+    gui_layout: "warning_dialog"
+    approved: false
+
+# CONNECTIVITY   xx4xx   # Connectivity - Wi - Fi, LAN, Prusa Connect Cloud
 
   - code: "XX401"
     title: "CONNECT REGISTRATION FAILED"
@@ -1537,3 +1547,10 @@ Errors:
     type: "CONNECT"
     gui_layout: "warning_dialog"
     approved: true
+
+  - code: "XX841"
+    printers: [iX, MK4, MK3.5, XL, COREONE]
+    title: "UNTRUSTED IDENTITY"
+    text: "G-Code signed by an identity not trusted by this printer. Do you want to save identity as trusted?\n\nIdentity name: %s\nIdentity key hash: %s"
+    id: "UNTRUSTED_IDENTITY"
+    type: "CONNECT"

@@ -12,6 +12,7 @@
 #include <option/has_translations.h>
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_mmu2.h>
+#include <option/has_e2ee_support.h>
 #include <img_resources.hpp>
 #include <ScreenFactory.hpp>
 
@@ -32,7 +33,6 @@ struct MI_SCREEN_CTOR {
     // Implemented in the cpp file
     static ScreenFactory::Creator::Func get();
 };
-
 /// Usage:
 /// - Add here: using MI_XXX = MI_SCREEN<N_("Lavbel"), class ScreenClass>;
 /// - Include the relevant screen header in the cpp
@@ -209,4 +209,9 @@ public:
     MI_HW_MMU();
     void click(IWindowMenu &) override;
 };
+#endif
+
+#if HAS_E2EE_SUPPORT()
+using MI_E2EE
+    = MI_SCREEN<N_("Encryption"), class ScreenMenuE2ee>;
 #endif

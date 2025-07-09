@@ -77,6 +77,11 @@
     #include <feature/tmc_util.h>
 #endif
 
+#include <option/has_e2ee_support.h>
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/e2ee.hpp>
+#endif // HAS_E2EE_SUPPORT()
+
 namespace {
 void MsgBoxNonBlockInfo(const string_view_utf8 &txt) {
     constexpr static const char *title = N_("Information");
@@ -234,6 +239,18 @@ void MI_DISABLE_STEP::click(IWindowMenu & /*window_menu*/) {
     marlin_client::gcode("M18");
 #endif
 }
+
+/*****************************************************************************/
+// MI_ENTER_DFU
+#ifdef BUDDY_ENABLE_DFU_ENTRY
+MI_ENTER_DFU::MI_ENTER_DFU()
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::dev) {
+}
+
+void MI_ENTER_DFU::click(IWindowMenu &) {
+    sys_dfu_request_and_reset();
+}
+#endif
 
 /*****************************************************************************/
 // MI_SAVE_DUMP

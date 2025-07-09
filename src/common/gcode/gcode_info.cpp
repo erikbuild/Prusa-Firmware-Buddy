@@ -71,11 +71,19 @@ bool GCodeInfo::check_still_valid() {
 
 bool GCodeInfo::check_valid_for_print(IGcodeReader &reader) {
     reader.update_validity(GetGcodeFilepath());
-    is_printable_ = reader.valid_for_print();
+    // Simpler check, that does not do all the things needed
+    // to fully verify encrypted gcodes, that one is done in
+    // the prefetch only
+    is_printable_ = reader.valid_for_print(false);
 
     if (reader.has_error()) {
         error_str_ = reader.error_str();
     }
+#if HAS_E2EE_SUPPORT()
+    if (reader.has_identity_info()) {
+        set_identity_info(reader.get_identity_info());
+    }
+#endif
 
     return is_printable_;
 }
@@ -165,6 +173,9 @@ void GCodeInfo::reset_info() {
     per_extruder_info.fill({});
     printing_time[0] = 0;
     error_str_ = {};
+#if HAS_E2EE_SUPPORT()
+    identity_info = std::nullopt;
+#endif
 }
 
 void GCodeInfo::EvaluateToolsValid() {

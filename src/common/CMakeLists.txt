@@ -96,6 +96,9 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   if(HAS_SHEET_PROFILES)
     target_sources(firmware PRIVATE SteelSheets.cpp)
   endif()
+  if(HAS_E2EE_SUPPORT)
+    add_subdirectory(e2ee)
+  endif()
 elseif(BOARD STREQUAL "DWARF")
   target_sources(
     firmware

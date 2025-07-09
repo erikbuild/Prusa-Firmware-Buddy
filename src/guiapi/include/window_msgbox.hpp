@@ -24,6 +24,7 @@ inline constexpr PhaseResponses Responses_YesRetry             = { Response::Yes
 inline constexpr PhaseResponses Responses_RetryCancel          = { Response::Retry,    Response::Cancel, Response::_none,       Response::_none };
 inline constexpr PhaseResponses Responses_Disable              = { Response::Disable,  Response::_none,  Response::_none,       Response::_none };
 inline constexpr PhaseResponses Responses_INVALID              = { Response::_last,    Response::_last,  Response::_last,       Response::_last };
+inline constexpr PhaseResponses Responses_ContinueAbort        = { Response::Continue, Response::Abort,  Response::_none,       Response::_none };
 
 // clang-format on
 /*****************************************************************************/

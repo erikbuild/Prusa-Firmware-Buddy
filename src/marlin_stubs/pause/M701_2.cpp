@@ -33,6 +33,8 @@
     #include <feature/auto_retract/auto_retract.hpp>
 #endif
 
+#include <raii/scope_guard.hpp>
+
 uint filament_gcodes::InProgress::lock = 0;
 
 using namespace filament_gcodes;
@@ -227,78 +229,86 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
     filament::set_color_to_load(std::nullopt);
 
     InProgress progress;
-    FSensors_instance().ClrAutoloadSent();
+    ScopeGuard autoload_clr = [&] {
+        FSensors_instance().ClrAutoloadSent();
+    };
 
     if constexpr (option::has_bowden) {
         config_store().set_filament_type(target_extruder, FilamentType::none);
         M701_no_parser(FilamentType::none, fast_load_length, z_min_pos, RetAndCool_t::Return, target_extruder, 0, std::nullopt, ResumePrint_t::No);
-    } else {
-
-        pause::Settings settings;
-        settings.SetExtruder(target_extruder);
-        settings.SetFastLoadLength(fast_load_length);
-        settings.SetRetractLength(0.f);
-        float e_pos_to_restore = current_position.e;
-
-        mapi::ParkingPosition pos = {
-            X_AXIS_LOAD_POS,
-            Y_AXIS_LOAD_POS,
-            std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE })
-        };
-
-        settings.SetParkPoint(pos);
-
-        const uint16_t orig_temp = Temperature::degTargetHotend(active_extruder);
-
-        auto unload_and_reset = [&] {
-            thermalManager.setTargetHotend(orig_temp, active_extruder);
-            marlin_server::set_temp_to_display(orig_temp, active_extruder);
-            Pause::Instance().perform(Pause::LoadType::unload_from_gears, settings);
-            M70X_process_user_response(PreheatStatus::Result::DoneNoFilament, target_extruder);
-        };
-
-        if (orig_temp < EXTRUDE_MINTEMP) {
-            thermalManager.setTargetHotend(EXTRUDE_MINTEMP, active_extruder);
-            marlin_server::set_temp_to_display(EXTRUDE_MINTEMP, active_extruder);
-        }
-
-        // catch filament in gear and then ask for temp
-        if (!Pause::Instance().perform(Pause::LoadType::load_to_gears, settings) && FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder)) {
-            // Unload when user said stop and filament was already loaded
-            unload_and_reset();
-            return;
-        }
-        // check if filament is in gears before continuing to preheat
-        if (FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
-            return;
-        }
-
-        if constexpr (option::has_human_interactions) {
-            PreheatData data = PreheatData::make(PreheatMode::Autoload, target_extruder, RetAndCool_t::Return);
-            auto preheat_ret = preheat_for_change_load(data, target_extruder);
-
-            if (preheat_ret.first) {
-                // canceled
-                unload_and_reset();
-                return;
-            }
-
-            const FilamentType filament = preheat_ret.second;
-            filament::set_type_to_load(filament);
-            filament::set_color_to_load(std::nullopt);
-
-            mapi::ParkingPosition park_position({ mapi::ParkingPosition::unchanged, mapi::ParkingPosition::unchanged, std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE }) });
-            // Returning to previous position is unwanted outside of printing (M1701 should be used only outside of printing)
-            settings.SetParkPoint(park_position);
-
-            if (load_unload(Pause::LoadType::autoload, settings)) {
-                M70X_process_user_response(PreheatStatus::Result::DoneHasFilament, target_extruder);
-            } else {
-                M70X_process_user_response(PreheatStatus::Result::DidNotFinish, target_extruder);
-            }
-        }
-        planner.set_e_position_mm((destination.e = current_position.e = e_pos_to_restore));
+        return;
     }
+
+    pause::Settings settings;
+    settings.SetExtruder(target_extruder);
+    settings.SetFastLoadLength(fast_load_length);
+    settings.SetRetractLength(0.f);
+    float e_pos_to_restore = current_position.e;
+    mapi::ParkingPosition pos = {
+        X_AXIS_LOAD_POS,
+        Y_AXIS_LOAD_POS,
+        std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE })
+    };
+    settings.SetParkPoint(pos);
+
+    const uint16_t orig_temp = Temperature::degTargetHotend(active_extruder);
+
+    ScopeGuard fail_guard = [&] {
+        thermalManager.setTargetHotend(orig_temp, active_extruder);
+        marlin_server::set_temp_to_display(orig_temp, active_extruder);
+        PreheatStatus::SetResult(PreheatStatus::Result::DoneNoFilament);
+    };
+
+    auto unload_filament = [&](Pause::LoadType unload_type) {
+        Pause::Instance().perform(unload_type, settings);
+    };
+
+    if (orig_temp < EXTRUDE_MINTEMP) {
+        thermalManager.setTargetHotend(EXTRUDE_MINTEMP, active_extruder);
+        marlin_server::set_temp_to_display(EXTRUDE_MINTEMP, active_extruder);
+    }
+
+    // catch filament in gear and then ask for temp
+    if (!Pause::Instance().perform(Pause::LoadType::load_to_gears, settings) && !FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
+        // Unload when user said stop and filament was already loaded
+        unload_filament(Pause::LoadType::unload_from_gears);
+        return;
+    }
+    // check if filament is in gears before continuing to preheat
+    if (FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
+        return;
+    }
+
+    if constexpr (option::has_human_interactions) {
+        PreheatData data = PreheatData::make(PreheatMode::Autoload, target_extruder, RetAndCool_t::Return);
+        auto preheat_ret = preheat_for_change_load(data, target_extruder);
+
+        if (preheat_ret.first) {
+            // canceled
+            unload_filament(Pause::LoadType::unload_from_gears);
+            return;
+        }
+
+        const FilamentType filament = preheat_ret.second;
+        filament::set_type_to_load(filament);
+        filament::set_color_to_load(std::nullopt);
+
+        mapi::ParkingPosition park_position({ mapi::ParkingPosition::unchanged, mapi::ParkingPosition::unchanged, std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE }) });
+        // Returning to previous position is unwanted outside of printing (M1701 should be used only outside of printing)
+        settings.SetParkPoint(park_position);
+
+        if (!Pause::Instance().perform(Pause::LoadType::autoload, settings)) {
+            // This is a bit problematic, since we dont know how far the autoload has gotten (if only waiting for preheat or already loading to nozzle) -> therefore we have to always do the full unload even if it was stoped during wait_temp (where only unload from gears would suffice)
+            // This could possibly be solved if we move preheating and the whole autoload process into pause (so that is wouldn't be seperated to two operations (load_to_gears and autoload)) and then we could tell apart when the autoload was stopped
+            unload_filament(Pause::LoadType::unload);
+            return;
+        }
+    }
+    planner.set_e_position_mm((destination.e = current_position.e = e_pos_to_restore));
+
+    // at this point autoload is considered successful so fail guard is not to be triggered and we report DoneHasFilament as status
+    fail_guard.disarm();
+    PreheatStatus::SetResult(PreheatStatus::Result::DoneHasFilament);
 }
 
 void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, uint8_t target_extruder, RetAndCool_t preheat, AskFilament_t ask_filament, std::optional<Color> color_to_be_loaded) {

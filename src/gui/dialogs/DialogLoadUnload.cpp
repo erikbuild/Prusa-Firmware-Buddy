@@ -16,6 +16,7 @@
 #include <find_error.hpp>
 #include <filament_to_load.hpp>
 #include <utils/enum_array.hpp>
+#include <option/has_side_fsensor.h>
 
 RadioButtonNotice::RadioButtonNotice(window_t *parent, Rect16 rect)
     : RadioButton(parent, rect) {}
@@ -55,9 +56,6 @@ static constexpr const char *txt_ejecting = N_("Ejecting");
 static constexpr const char *txt_loading = N_("Loading to nozzle");
 static constexpr const char *txt_purging = N_("Purging");
 static constexpr const char *txt_is_color = N_("Is color correct?");
-#if HAS_LOADCELL()
-static constexpr const char *txt_filament_stuck = ""; // Empty here, set from the error description
-#endif
 #if HAS_NOZZLE_CLEANER()
 static constexpr const char *txt_nozzle_cleaning = N_("Cleaning nozzle");
 #endif
@@ -124,8 +122,8 @@ static constexpr EnumArray<PhasesLoadUnload, State, CountPhases<PhasesLoadUnload
     { PhasesLoadUnload::Unloading_unstoppable, { txt_unload } },
     { PhasesLoadUnload::IsFilamentUnloaded, { txt_unload_confirm, DialogLoadUnload::phaseWaitSound } },
     { PhasesLoadUnload::FilamentNotInFS, { txt_filament_not_in_fs, DialogLoadUnload::phaseAlertSound } },
-    { PhasesLoadUnload::ManualUnload_continuable, { txt_manual_unload, DialogLoadUnload::phaseStopSound } },
-    { PhasesLoadUnload::ManualUnload_uncontinuable, { txt_manual_unload, DialogLoadUnload::phaseStopSound } },
+    { PhasesLoadUnload::ManualUnload_continuable, { txt_manual_unload } },
+    { PhasesLoadUnload::ManualUnload_uncontinuable, { txt_manual_unload } },
     { PhasesLoadUnload::UserPush_stoppable, { txt_push_fil, DialogLoadUnload::phaseAlertSound } },
     { PhasesLoadUnload::UserPush_unstoppable, { txt_push_fil, DialogLoadUnload::phaseAlertSound } },
     { PhasesLoadUnload::MakeSureInserted_stoppable, { txt_make_sure_inserted, DialogLoadUnload::phaseAlertSound } },
@@ -135,6 +133,10 @@ static constexpr EnumArray<PhasesLoadUnload, State, CountPhases<PhasesLoadUnload
     { PhasesLoadUnload::IsFilamentInGear, { txt_is_filament_in_gear } },
     { PhasesLoadUnload::Ejecting_stoppable, { txt_ejecting } },
     { PhasesLoadUnload::Ejecting_unstoppable, { txt_ejecting } },
+#if HAS_SIDE_FSENSOR()
+    { PhasesLoadUnload::LoadingObstruction_stoppable, { nullptr } }, // Set up in notice_update
+    { PhasesLoadUnload::LoadingObstruction_unstoppable, { nullptr } }, // Set up in notice_update
+#endif
     { PhasesLoadUnload::Loading_stoppable, { txt_loading } },
     { PhasesLoadUnload::Loading_unstoppable, { txt_loading } },
     { PhasesLoadUnload::LoadingToGears_stoppable, { txt_inserting } },
@@ -151,7 +153,7 @@ static constexpr EnumArray<PhasesLoadUnload, State, CountPhases<PhasesLoadUnload
     { PhasesLoadUnload::LoadNozzleCleaning, { txt_nozzle_cleaning } },
 #endif
 #if HAS_LOADCELL()
-    { PhasesLoadUnload::FilamentStuck, { txt_filament_stuck, DialogLoadUnload::phaseAlertSound } },
+    { PhasesLoadUnload::FilamentStuck, { nullptr, DialogLoadUnload::phaseAlertSound } }, // Set up in notice_update
 #endif
 #if HAS_AUTO_RETRACT()
     { PhasesLoadUnload::AutoRetracting, { N_("Auto-retracting filament") } },
@@ -338,6 +340,7 @@ DialogLoadUnload::DialogLoadUnload(fsm::BaseData data)
 }
 
 DialogLoadUnload::~DialogLoadUnload() {
+    Sound_Stop();
     // Dtor only resets the header to black.
     // The header could not be red before the screen opened.
     // And even if it were, this behavior would only cause the header to appear in the wrong color.
@@ -355,7 +358,6 @@ DialogLoadUnload *DialogLoadUnload::instance = nullptr;
 // Phase callbacks to play a sound in specific moment at the start/end of
 // specified phase
 void DialogLoadUnload::phaseAlertSound() {
-    Sound_Stop();
     Sound_Play(eSOUND_TYPE::SingleBeep);
 }
 void DialogLoadUnload::phaseWaitSound() {
@@ -363,7 +365,6 @@ void DialogLoadUnload::phaseWaitSound() {
         Sound_Play(eSOUND_TYPE::WaitingBeep);
     }
 }
-void DialogLoadUnload::phaseStopSound() { Sound_Stop(); }
 
 static constexpr bool is_notice_mmu([[maybe_unused]] PhasesLoadUnload phase) {
 #if HAS_MMU2()
@@ -381,8 +382,16 @@ static constexpr bool is_notice_fstuck([[maybe_unused]] PhasesLoadUnload phase) 
 #endif
 }
 
+static constexpr bool is_notice_loading_obstruction([[maybe_unused]] PhasesLoadUnload phase) {
+#if HAS_SIDE_FSENSOR()
+    return phase == PhasesLoadUnload::LoadingObstruction_stoppable || phase == PhasesLoadUnload::LoadingObstruction_unstoppable;
+#else
+    return false;
+#endif
+}
+
 static constexpr bool is_notice(PhasesLoadUnload phase) {
-    return is_notice_mmu(phase) || is_notice_fstuck(phase);
+    return is_notice_mmu(phase) || is_notice_fstuck(phase) || is_notice_loading_obstruction(phase);
 }
 
 void DialogLoadUnload::Change(fsm::BaseData base_data) {
@@ -423,6 +432,15 @@ void DialogLoadUnload::Change(fsm::BaseData base_data) {
             notice_radio_button.set_fixed_width_buttons_count(0);
             notice_radio_button.ChangePhase(phase, { Response::Unload });
             notice_update(std::to_underlying(err_desc.err_code), err_desc.err_title, err_desc.err_text, ErrType::WARNING);
+        }
+    #endif
+    #if HAS_SIDE_FSENSOR()
+        if (is_notice_loading_obstruction(phase)) {
+            const ErrDesc &err = find_error(ErrCode::ERR_MECHANICAL_LOADING_OBSTRUCTION);
+
+            notice_radio_button.set_fixed_width_buttons_count(2);
+            notice_radio_button.ChangePhase(phase, ClientResponses::get_available_responses(phase));
+            notice_update(std::to_underlying(err.err_code), err.err_title, err.err_text, err.type);
         }
     #endif
         current_phase = phase;
@@ -504,6 +522,7 @@ void DialogLoadUnload::phaseEnter() {
     if (!current_phase) {
         return;
     }
+    Sound_Stop();
     {
         radio.Change(*current_phase /*, states[phase].btn_resp, &states[phase].btn_labels*/); // TODO alternative button label support
         label.SetText(_(get_current_state(*current_phase).label));

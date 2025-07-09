@@ -4,7 +4,7 @@
 #include <mbedtls/entropy_poll.h>
 #include <random.h>
 
-int mbedtls_hardware_poll([[maybe_unused]] void *Data, unsigned char *Output, size_t Len, size_t *oLen) {
+extern "C" int mbedtls_hardware_poll([[maybe_unused]] void *Data, unsigned char *Output, size_t Len, size_t *oLen) {
 
     uint32_t randomValue;
     uint32_t bytesWritten = 0;

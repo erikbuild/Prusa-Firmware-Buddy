@@ -4,6 +4,7 @@
 #include <crash_dump/dump.hpp>
 #include <stdio.h>
 #include "interrupt_disabler.hpp"
+#include "secret.hpp"
 #include "utility_extensions.hpp"
 #include <common/sys.hpp>
 #include <common/w25x.hpp>
@@ -370,6 +371,7 @@ void CrashCatcher_DumpStart([[maybe_unused]] const CrashCatcherInfo *pInfo) {
     vTaskEndScheduler();
 
     crash_dump::before_dump();
+    crash_dump::privacy_protection.clean_up();
 
     if (!w25x_reinit_before_crash_dump()) {
         crash_dump::dump_failed();

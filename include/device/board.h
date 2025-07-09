@@ -31,33 +31,35 @@
 /// BOARD (e.g. BUDDY_BOARD)
 ///
 
-#define BOARD_BUDDY            1
-#define BOARD_XBUDDY           2
-#define BOARD_XLBUDDY          3
-#define BOARD_DWARF            4
-#define BOARD_MODULARBED       5
-#define BOARD_XL_DEV_KIT_XLB   6
-#define BOARD_XBUDDY_EXTENSION 7
+#define BOARD_BUDDY()            1
+#define BOARD_XBUDDY()           2
+#define BOARD_XLBUDDY()          3
+#define BOARD_DWARF()            4
+#define BOARD_MODULARBED()       5
+#define BOARD_XL_DEV_KIT_XLB()   6
+#define BOARD_XBUDDY_EXTENSION() 7
 
-#if defined(BOARD) && BOARD == BOARD_BUDDY
+#if !defined(BOARD)
+    #error Please define the BOARD macro
+#elif BOARD() == BOARD_BUDDY()
     #define BOARD_IS_BUDDY() 1
-#elif defined(BOARD) && BOARD == BOARD_XBUDDY
+#elif BOARD() == BOARD_XBUDDY()
     #define BOARD_IS_XBUDDY() 1
-#elif defined(BOARD) && BOARD == BOARD_XLBUDDY
+#elif BOARD() == BOARD_XLBUDDY()
     #define BOARD_IS_XLBUDDY() 1
-#elif defined(BOARD) && BOARD == BOARD_DWARF
+#elif BOARD() == BOARD_DWARF()
     #define BOARD_IS_DWARF() 1
-#elif defined(BOARD) && BOARD == BOARD_MODULARBED
+#elif BOARD() == BOARD_MODULARBED()
     #define BOARD_IS_MODULARBED() 1
-#elif defined(BOARD) && BOARD == BOARD_XL_DEV_KIT_XLB
+#elif BOARD() == BOARD_XL_DEV_KIT_XLB()
     #define BOARD_IS_XLBUDDY()        1 // todo: remove, for now xl dev two  boards enabled
     #define BOARD_IS_XL_DEV_KIT_XLB() 1
-#elif defined(BOARD) && BOARD == BOARD_XBUDDY_EXTENSION
+#elif BOARD() == BOARD_XBUDDY_EXTENSION()
     #define BOARD_IS_XBUDDY_EXTENSION() 1
 #elif defined(BOARD) && (BOARD == BOARD_ANFC || BOARD == BOARD_ANFC_H5)
     #define BOARD_IS_ANFC() 1
 #else
-    #error Please define the BOARD macro
+    #error BOARD is something weird
 #endif
 
 #ifndef BOARD_IS_BUDDY

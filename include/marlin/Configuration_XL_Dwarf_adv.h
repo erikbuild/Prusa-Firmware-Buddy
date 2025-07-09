@@ -1223,15 +1223,15 @@
 //#define SENSORLESS_PROBING // TMC2130 only
 
     #if EITHER(SENSORLESS_HOMING, SENSORLESS_PROBING)
-        #if X_DRIVER_TYPE == TMC2209
+        #if AXIS_DRIVER_TYPE_X(TMC2209)
             #define X_STALL_SENSITIVITY 8
         #endif
 
-        #if Y_DRIVER_TYPE == TMC2209
+        #if AXIS_DRIVER_TYPE_Y(TMC2209)
             #define Y_STALL_SENSITIVITY 8
         #endif
 
-        #if Z_DRIVER_TYPE == TMC2209
+        #if AXIS_DRIVER_TYPE_Z(TMC2209)
             // #define Z_STALL_SENSITIVITY 8
         #endif
 

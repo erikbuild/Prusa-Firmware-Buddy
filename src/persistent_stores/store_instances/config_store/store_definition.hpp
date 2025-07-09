@@ -46,6 +46,7 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
+#include <option/has_e2ee_support.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -68,6 +69,9 @@
 #include <option/has_hotend_type_support.h>
 #if HAS_HOTEND_TYPE_SUPPORT()
     #include <hotend_type.hpp>
+#endif
+#if HAS_E2EE_SUPPORT()
+    #include <e2ee/identity_check_levels.hpp>
 #endif
 
 namespace config_store_ns {
@@ -112,6 +116,11 @@ struct ItemFlag {
 
     /// Special items, completely outside of categorization and selective factory reset, that have a specific handling
     static constexpr ItemFlags special = 1 << 10;
+
+#if HAS_E2EE_SUPPORT()
+    /// Security stuff. Currently, End to end encryption.
+    static constexpr ItemFlags security = 1 << 11;
+#endif
 }; // namespace ItemFlag
 
 /**
@@ -434,6 +443,14 @@ struct CurrentStore
     StoreItem<uint8_t, 255, ItemFlag::user_interface, journal::hash("XBuddy Extension Chamber LEDs PWM")> side_leds_max_brightness;
     /// Whether the side leds should dim down a bit when user is not interacting with the printer or stay on full power the whole time
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Enable Side LEDs dimming")> side_leds_dimming_enabled;
+
+    #if HAS_XBUDDY_EXTENSION()
+    /// same as side_leds_max_brightness but when camera is powered on
+    StoreItem<uint8_t, 255, ItemFlag::user_interface, journal::hash("Chamber LEDs PWM with Camera")> side_leds_max_brightness_with_camera;
+    /// same as side_leds_dimming_enabled but when camera is powered on
+    StoreItem<bool, false, ItemFlag::user_interface, journal::hash("Side LEDs dimming with camera")> side_leds_dimming_enabled_with_camera;
+    #endif
+
 #endif
 
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Enable Serial Printing Screen")> serial_print_screen_enabled;
@@ -484,6 +501,10 @@ struct CurrentStore
     StoreItem<HWCheckSeverity, defaults::hw_check_severity, ItemFlag::features, journal::hash("HW Check Input Shaper")> hw_check_input_shaper;
 #if HAS_GCODE_COMPATIBILITY()
     StoreItem<HWCheckSeverity, defaults::hw_check_severity, ItemFlag::features, journal::hash("HW Check Compatibility")> hw_check_gcode_compatibility;
+#endif
+
+#if HAS_E2EE_SUPPORT()
+    StoreItem<e2ee::IdentityCheckLevel, e2ee::IdentityCheckLevel::AnyIdentity, ItemFlag::security, journal::hash("E2EE Identity check")> identity_check;
 #endif
     template <typename F>
     auto visit_hw_check(HWCheckType type, const F &visitor) {

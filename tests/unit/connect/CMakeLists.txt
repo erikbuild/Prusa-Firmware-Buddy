@@ -30,6 +30,15 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/random_common.cpp
   ${CMAKE_SOURCE_DIR}/src/common/random_sw.cpp
   ${CMAKE_SOURCE_DIR}/src/common/general_response.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/path_utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/e2ee.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/sha256_multiuse.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/movable_aes_context.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/key.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/decryptor.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/e2ee/hmac.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/crash_dump/secret.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/background.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/render.cpp
   ${CMAKE_SOURCE_DIR}/src/connect/command.cpp
@@ -59,6 +68,7 @@ add_executable(
   xbuddy_extension_mock.cpp
   side_strip_control_mock.cpp
   cancel_object_mock.cpp
+  ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
   ${CMAKE_SOURCE_DIR}/tests/unit/common/printer_state_mock.cpp
   ${CMAKE_SOURCE_DIR}/tests/stubs/jsmn_impl.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/strlcpy.c
