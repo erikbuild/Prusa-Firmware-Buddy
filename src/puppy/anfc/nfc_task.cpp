@@ -136,8 +136,7 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
 
         } else if (prusa3d_nfc_request_RequestData_1_0_is_unlock_tag_(&rreq)) {
             prusa3d_nfc_request_RequestResult_1_0_select_unlock_tag_(&result);
-            const auto io_result = ll_reader_.unlock_tag(rreq.unlock_tag.tag.value, std::bit_cast<uint32_t>(rreq.unlock_tag.password));
-            result.unlock_tag._error = io_result_to_error(io_result);
+            handle_unlock_tag_request(rreq.unlock_tag, result.unlock_tag);
         }
 
         can_node.enqueue_event(response);
@@ -402,5 +401,10 @@ void NFCTask::handle_initialize_tag_request(const prusa3d_nfc_request_Initialize
         .best_effort = request.best_effort,
     };
     const auto io_result = ll_reader_.initialize_tag(request.tag.value, params);
+    result._error = io_result_to_error(io_result);
+}
+
+void NFCTask::handle_unlock_tag_request(const prusa3d_nfc_request_UnlockTag_1_0 &request, prusa3d_nfc_util_ReaderError_1_0 &result) {
+    const auto io_result = ll_reader_.unlock_tag(request.tag.value, std::bit_cast<uint32_t>(request.password));
     result._error = io_result_to_error(io_result);
 }
