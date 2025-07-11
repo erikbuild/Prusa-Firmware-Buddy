@@ -163,15 +163,21 @@ void NFCTask::task() {
         // Process a reader event
         if (PrusaNFCReader::Event e; radio_enabled_ && reader_.get_event(e)) {
             handle_event(e);
+
+            // We've done something -> skip the delay
+            continue;
         }
 
         // Process a request
         // Dequeues are done from a single thread, so we don't need a mutex
         if (!job_queue_.isEmpty()) {
             job_queue_.dequeue()();
+
+            // We've done something -> skip the delay
+            continue;
         }
 
-        freertos::delay(1);
+        freertos::delay(radio_enabled_ ? 1 : 10);
     }
 }
 
