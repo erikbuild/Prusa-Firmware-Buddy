@@ -1,5 +1,0 @@
-# Completely reset reader state.
-# Should invalidate all caches and memory.
-# As a result, all nearby tags should emit TagDetected events
-
-@sealed
