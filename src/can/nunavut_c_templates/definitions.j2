@@ -258,6 +258,7 @@ struct {{ t | full_reference_name }}_Traits {
     static constexpr auto deserialize = {{ t | full_reference_name }}_deserialize_;
     static constexpr size_t serialization_buffer_size_bytes = {{ t | full_reference_name }}_SERIALIZATION_BUFFER_SIZE_BYTES_;
     static constexpr size_t extent_bytes = {{ t | full_reference_name }}_EXTENT_BYTES_;
+    static constexpr const char *full_name_and_version = {{ t | full_reference_name }}_FULL_NAME_AND_VERSION_;
 
     {{ generate_common_traits(t) }}
 };

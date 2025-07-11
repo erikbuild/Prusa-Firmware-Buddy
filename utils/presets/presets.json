@@ -181,6 +181,7 @@
                 "MDNS":false,
                 "HAS_BELT_TUNING":false,
                 "HAS_CANCEL_OBJECT":false,
+                "HAS_E2EE_SUPPORT":false,
                 "HAS_GEARBOX_ALIGNMENT":false,
                 "HAS_INPUT_SHAPER_CALIBRATION":false,
                 "HAS_PHASE_STEPPING_CALIBRATION":false,

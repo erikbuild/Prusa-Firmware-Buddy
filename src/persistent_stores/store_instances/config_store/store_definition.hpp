@@ -439,14 +439,13 @@ struct CurrentStore
     StoreItem<float, 0.0f, ItemFlag::calibrations, journal::hash("Homing Bump Divisor Y")> homing_bump_divisor_y;
 
 #if HAS_SIDE_LEDS()
-    /// 0-255; 0 = disabled. Decreases when dimming is enabled
+    /// 0-255; 0 = disabled.
     StoreItem<uint8_t, 255, ItemFlag::user_interface, journal::hash("XBuddy Extension Chamber LEDs PWM")> side_leds_max_brightness;
+    StoreItem<uint8_t, 40, ItemFlag::user_interface, journal::hash("XBuddy Extension Chamber LEDs dimmed PWM")> side_leds_dimmed_brightness;
     /// Whether the side leds should dim down a bit when user is not interacting with the printer or stay on full power the whole time
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Enable Side LEDs dimming")> side_leds_dimming_enabled;
 
     #if HAS_XBUDDY_EXTENSION()
-    /// same as side_leds_max_brightness but when camera is powered on
-    StoreItem<uint8_t, 255, ItemFlag::user_interface, journal::hash("Chamber LEDs PWM with Camera")> side_leds_max_brightness_with_camera;
     /// same as side_leds_dimming_enabled but when camera is powered on
     StoreItem<bool, false, ItemFlag::user_interface, journal::hash("Side LEDs dimming with camera")> side_leds_dimming_enabled_with_camera;
     #endif
@@ -825,6 +824,10 @@ struct DeprecatedStore
 
 #if HAS_EMERGENCY_STOP()
     StoreItem<bool, true, journal::hash("Emergency stop enable")> emergency_stop_enable;
+#endif
+
+#if HAS_SIDE_LEDS() && HAS_XBUDDY_EXTENSION()
+    StoreItem<uint8_t, 255, journal::hash("Chamber LEDs PWM with Camera")> side_leds_max_brightness_with_camera;
 #endif
 };
 

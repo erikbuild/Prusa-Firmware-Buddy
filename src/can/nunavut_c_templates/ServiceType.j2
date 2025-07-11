@@ -20,6 +20,7 @@
 struct {{ T | full_reference_name }}_Traits {
     using Request = {{ T.request_type | full_reference_name }}_Traits;
     using Response = {{ T.response_type | full_reference_name }}_Traits;
+    static constexpr const char *full_name_and_version = {{ T | full_reference_name }}_FULL_NAME_AND_VERSION_;
     {{ generate_common_traits(T) }}
 };
 
