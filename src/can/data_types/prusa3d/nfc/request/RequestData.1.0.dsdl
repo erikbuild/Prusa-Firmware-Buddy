@@ -3,9 +3,8 @@
 prusa3d.nfc.request.ReadField.1.0 read_field
 prusa3d.nfc.request.WriteField.1.0 write_field
 
-# Completely reset reader state.
-# Should invalidate all caches and memory.
-# As a result, all nearby tags should emit TagDetected events
+# Completely reset reader state, invalidate all caches and memory.
+# As a result, all nearby tags are expected to emit TagDetected events (again)
 uavcan.primitive.Empty.1.0 reset_state
 
 prusa3d.nfc.request.SetParams.1.0 set_params

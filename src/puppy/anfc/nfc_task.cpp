@@ -177,6 +177,7 @@ void NFCTask::task() {
             continue;
         }
 
+        // When radio is disabled, there's not much stuff to do, so let's be a bit lazy
         freertos::delay(radio_enabled_ ? 1 : 10);
     }
 }
