@@ -45,6 +45,8 @@ target_link_libraries(
           SG14
           buddy_utils
           freertos
+          dsdl_uavcan
+          dsdl_prusa3d
           canard
           BuddyHeaders
           o1heap
@@ -61,6 +63,3 @@ target_link_libraries(firmware PRIVATE FreeRTOS::FreeRTOS)
 add_library(FreeRTOS_Config INTERFACE)
 target_link_libraries(FreeRTOS_Config INTERFACE ${CMSIS_LIB})
 target_include_directories(FreeRTOS_Config INTERFACE config)
-
-include("${CMAKE_SOURCE_DIR}/src/can/data_types/TranspileDsdl.cmake")
-transpile_dsdl()
