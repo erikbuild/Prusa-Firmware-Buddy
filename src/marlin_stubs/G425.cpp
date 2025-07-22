@@ -95,9 +95,7 @@
 #define HAS_X_CENTER BOTH(CALIBRATION_MEASURE_LEFT, CALIBRATION_MEASURE_RIGHT)
 #define HAS_Y_CENTER BOTH(CALIBRATION_MEASURE_FRONT, CALIBRATION_MEASURE_BACK)
 
-#if ENABLED(ARC_SUPPORT)
-void plan_arc(const xyze_pos_t &, const ab_float_t &, const bool, const uint8_t);
-#else
+#if DISABLED(ARC_SUPPORT)
     #error "G425 requires ARC_SUPPORT"
 #endif
 

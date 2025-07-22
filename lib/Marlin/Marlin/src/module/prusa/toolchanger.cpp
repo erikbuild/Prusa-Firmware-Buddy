@@ -32,9 +32,6 @@ PrusaToolChanger prusa_toolchanger;
 
 using namespace buddy::puppies;
 
-// internal helpers for arc planning
-void plan_arc(const xyze_pos_t &cart, const ab_float_t &offset, const bool clockwise, const uint8_t circles);
-
 namespace arc_move {
 
 // generated arc parameters

@@ -382,7 +382,7 @@ private:
 
   friend class MarlinSettings;
   #if ENABLED(ARC_SUPPORT)
-    friend void plan_arc(const xyze_pos_t&, const ab_float_t&, const bool, const uint8_t);
+    friend void plan_arc(const xyze_pos_t&, const ab_float_t&, const bool, const uint8_t, const bool);
   #endif
 
   static void G0_G1(TERN_(HAS_FAST_MOVES, const bool fast_move=false));

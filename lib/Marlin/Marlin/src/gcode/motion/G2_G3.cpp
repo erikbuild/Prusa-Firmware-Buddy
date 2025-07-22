@@ -52,16 +52,9 @@
 #define ARC_LIJKUVW_CODE(L,I,J,K,U,V,W)    CODE_N(SUB2(NUM_AXES),L,I,J,K,U,V,W)
 #define ARC_LIJKUVWE_CODE(L,I,J,K,U,V,W,E) ARC_LIJKUVW_CODE(L,I,J,K,U,V,W); CODE_ITEM_E(E)
 
-/**
- * Plan an arc in 2 dimensions, with linear motion in the other axes.
- * The arc is traced with many small linear segments according to the configuration.
- */
-void plan_arc(
-  const xyze_pos_t &cart,   // Destination position
-  const ab_float_t &offset, // Center of rotation relative to current_position
-  const bool clockwise,     // Clockwise?
-  const uint8_t circles     // Take the scenic route
-) {
+void plan_arc(const xyze_pos_t &cart, const ab_float_t &offset,
+  const bool clockwise, const uint8_t circles, bool last_segment) {
+
   #if ENABLED(CNC_WORKSPACE_PLANES)
     AxisEnum axis_p, axis_q, axis_l;
     switch (gcode.workspace_plane) {
@@ -494,7 +487,7 @@ void GcodeSuite::G2_G3(const bool clockwise) {
     #endif
 
     // Send the arc to the planner
-    plan_arc(destination, arc_offset, clockwise, circles_to_do);
+    plan_arc(destination, arc_offset, clockwise, circles_to_do, true);
   }
   else
     SERIAL_ERROR_MSG(STR_ERR_ARC_ARGS);

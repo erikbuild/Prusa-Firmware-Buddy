@@ -514,3 +514,17 @@ FORCE_INLINE bool position_is_reachable_by_probe(const xy_pos_t &pos) { return p
   sensorless_t start_sensorless_homing_per_axis(const AxisEnum axis);
   void end_sensorless_homing_per_axis(const AxisEnum axis, sensorless_t enable_stealth);
 #endif
+
+#if ENABLED(ARC_SUPPORT)
+  /**
+   * Plan an arc in 2 dimensions, with linear motion in the other axes.
+   * The arc is traced with many small linear segments according to the configuration.
+   */
+  void plan_arc(
+    const xyze_pos_t &cart,   // Destination position
+    const ab_float_t &offset, // Center of rotation relative to current_position
+    const bool clockwise,     // Clockwise?
+    const uint8_t circles,    // Number of full circles to perform
+    bool last_segment=false   // Mark last segment of the arc as terminating
+  );
+#endif
