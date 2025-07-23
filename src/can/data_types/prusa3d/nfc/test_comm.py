@@ -95,12 +95,23 @@ async def main():
 
     event_sub = node.make_subscriber(prusa3d.nfc.event.Event_1,
                                      prusa3d.nfc.PortIDs_1_0.MSG_Event)
-    event_sub.receive_in_background(handle_event)
+
+    async def receive_event():
+        event = await event_sub.get(5000)
+        await handle_event(event, None)
 
     await send_request(
         "enable_radio",
         {},
     )
+
+    # Enable radio done
+    await receive_event()
+
+    # NFC tag detected
+    await receive_event()
+
+    event_sub.receive_in_background(handle_event)
 
     await send_request(
         "read_field",
