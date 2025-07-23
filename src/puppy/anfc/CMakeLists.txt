@@ -33,7 +33,8 @@ target_sources(
   )
 
 target_include_directories(
-  firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal ../can_shared "${DEVICE_DIR}"
+  firmware PRIVATE . ${CMAKE_SOURCE_DIR}/include stub ../shared/hal ../honeybee_shared
+                   "${DEVICE_DIR}"
   )
 
 target_link_libraries(

@@ -4,6 +4,6 @@
 
 namespace logging {
 
-inline void log_format_can_node(FormattedEvent *, void (*)(char, void *), void *) {}
+inline void log_format_honeybee_node(FormattedEvent *, void (*)(char, void *), void *) {}
 
 } // namespace logging
