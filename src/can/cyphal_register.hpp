@@ -265,14 +265,26 @@ public:
     [[nodiscard]] RegisterIds get_server_ids() const {
         return { .access = server_access.get_server_id(), .list = server_list.get_server_id() };
     }
+
+    /// @returns maximum supported register count
+    [[nodiscard]] size_t get_max_registers() const {
+        return max_registers;
+    }
+
+    /// @returns number of registers added so far
+    [[nodiscard]] size_t get_register_count() const {
+        return register_count;
+    }
 };
 
 /// @brief Template that stores registers inside.
-template <size_t MAX_REGISTERS>
+template <size_t MAX_REGISTERS_>
 class RegisterMachine : public RegisterMachineIface {
-    RegisterMachineIface::ProtoRegister registers_array[MAX_REGISTERS];
+    RegisterMachineIface::ProtoRegister registers_array[MAX_REGISTERS_];
 
 public:
+    static constexpr size_t MAX_REGISTERS = MAX_REGISTERS_;
+
     RegisterMachine()
         : RegisterMachineIface(MAX_REGISTERS, registers_array) {}
 };
