@@ -25,7 +25,13 @@ enum class Fault {
 using ANFCNodeBase = can::cyphal::Node<
     prusa3d_nfc_Status_1_0_Traits, prusa3d_nfc_PortIDs_1_0_MSG_Status,
     prusa3d_nfc_SetConfig_1_0_Traits, prusa3d_nfc_PortIDs_1_0_SRV_SetConfig,
-    Fault>;
+    Fault,
+    CANARD_NODE_ID_UNSET,
+    can::cyphal::defaults::WatchNodes,
+    can::cyphal::defaults::Notify,
+    2, // node_id_request
+    14 // MAX_REGISTERS
+    >;
 
 /// Task that handles the CAN business logic. Mostly just enqueues requests to the nfc task
 class ANFCNode : public ANFCNodeBase {
