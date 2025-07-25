@@ -13,12 +13,11 @@ namespace nfcv {
 
 class ReaderWriterInterface {
 public:
-    using AntennaData = uintptr_t;
+    using AntennaID = uint8_t;
 
-    virtual Result<void> field_up(AntennaData antenna_data) = 0;
+    virtual Result<void> field_up(AntennaID anetnna) = 0;
     virtual void field_down() = 0;
-
-    virtual AntennaData switch_to_next_discovery_atenna() = 0;
+    virtual AntennaID antenna_count() const = 0;
 
     [[nodiscard]] virtual nfcv::Result<void> nfcv_command(const Command &command) = 0;
 
@@ -94,7 +93,7 @@ public: //* Utility wrappers for nfcv commands
 class FieldGuard : Uncopyable {
 
 public:
-    FieldGuard(ReaderWriterInterface &reader, ReaderWriterInterface::AntennaData antenna)
+    FieldGuard(ReaderWriterInterface &reader, ReaderWriterInterface::AntennaID antenna)
         : reader(reader)
         , result(reader.field_up(antenna)) {
     }

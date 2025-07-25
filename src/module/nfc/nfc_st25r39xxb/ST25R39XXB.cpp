@@ -145,10 +145,10 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::turn_on_oscilator() {
     return {};
 }
 
-void st25r39xxb::ST25R39XXB::select_antenna(Antenna target_antenna) {
+void st25r39xxb::ST25R39XXB::select_antenna(AntennaID target_antenna) {
     static constexpr std::byte ANTENNA_CONTROL_MASK { 0b0100'0000 };
     std::byte value { 0 };
-    if (target_antenna == Antenna::antenna_2) {
+    if (target_antenna == 1) {
         value = ANTENNA_CONTROL_MASK;
     }
     hw_int.change_register(RegisterA::io_configuration_1, ANTENNA_CONTROL_MASK, value);
@@ -263,21 +263,8 @@ void st25r39xxb::ST25R39XXB::set_output_amplitude(st25r39xxb::Amplitude target_a
     hw_int.change_register(RegisterA::tx_driver, std::byte { 0xf0 }, std::byte { std::to_underlying(target_amplitude) });
 }
 
-nfcv::ReaderWriterInterface::AntennaData st25r39xxb::ST25R39XXB::switch_to_next_discovery_atenna() {
-    switch (current_discovery_antenna) {
-    case Antenna::antenna_1:
-        current_discovery_antenna = Antenna::antenna_2;
-        break;
-    case Antenna::antenna_2:
-        current_discovery_antenna = Antenna::antenna_1;
-        break;
-    }
-    select_antenna(current_discovery_antenna);
-    return static_cast<AntennaData>(current_discovery_antenna);
-}
-
-nfcv::Result<void> st25r39xxb::ST25R39XXB::field_up(AntennaData antenna) {
-    select_antenna(static_cast<Antenna>(antenna));
+nfcv::Result<void> st25r39xxb::ST25R39XXB::field_up(AntennaID antenna) {
+    select_antenna(antenna);
 
     // Martin Poupa's Solution - much simpler in flipper fw - will use that for the moment
     hw_int.write_register(RegisterB::nfc_field_on_guard_timer, std::byte { 0x00 });

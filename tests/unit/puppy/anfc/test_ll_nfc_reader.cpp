@@ -64,17 +64,13 @@ struct TagData {
 };
 
 struct FieldUp {
-    nfcv::ReaderWriterInterface::AntennaData antenna;
+    nfcv::ReaderWriterInterface::AntennaID antenna;
 
     bool operator==(const FieldUp &other) const = default;
 };
 
 struct FieldDown {
     bool operator==(const FieldDown &other) const = default;
-};
-
-struct SwitchToNextDiscoveryAntenna {
-    bool operator==(const SwitchToNextDiscoveryAntenna &other) const = default;
 };
 
 using Inventory = nfcv::command::Inventory::Request;
@@ -99,7 +95,7 @@ struct WriteSingleBlock {
 };
 
 using Event = std::variant<
-    FieldUp, FieldDown, SwitchToNextDiscoveryAntenna,
+    FieldUp, FieldDown,
     Inventory, StayQuiet, SystemInfo,
     ReadSingleBlock, WriteSingleBlock,
     SetEAS, ResetEAS,
@@ -110,8 +106,9 @@ using Event = std::variant<
     WriteAFI, WriteDSFID>;
 
 struct EventLogger : public nfcv::ReaderWriterInterface {
-    nfcv::Result<void> field_up(AntennaData antenna_data) final {
-        events.push_back(FieldUp { .antenna = antenna_data });
+    nfcv::Result<void> field_up(AntennaID antenna) final {
+        antenna_index = antenna;
+        events.push_back(FieldUp { .antenna = antenna });
         return {};
     }
     void field_down() final {
@@ -123,14 +120,8 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
         }
     }
 
-    AntennaData switch_to_next_discovery_atenna() final {
-        ++antenna_index;
-        if (antenna_index >= fake_antennas.size()) {
-            antenna_index %= fake_antennas.size();
-        }
-
-        events.push_back(SwitchToNextDiscoveryAntenna {});
-        return static_cast<AntennaData>(antenna_index);
+    AntennaID antenna_count() const final {
+        return fake_antennas.size();
     }
 
     [[nodiscard]] nfcv::Result<void> nfcv_command(const nfcv::Command &command) final {
@@ -387,14 +378,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         logger.tags[data::uid1] = TagData {
             .info = data::tag_info1,
         };
-        logger.antenna_index = 1;
 
         auto res = reader.get_event(event, 1);
         REQUIRE(res == true);
         REQUIRE(std::holds_alternative<INFCReader::TagDetectedEvent>(event));
         CHECK(std::get<INFCReader::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -413,7 +402,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         res = reader.get_event(event, 251);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     FieldDown {},
@@ -425,7 +413,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         REQUIRE(std::holds_alternative<INFCReader::TagLostEvent>(event));
         REQUIRE(std::get<INFCReader::TagLostEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     FieldDown {},
@@ -441,14 +428,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         logger.tags[data::uid2] = TagData {
             .info = data::tag_info1,
         };
-        logger.antenna_index = 1;
 
         auto res = reader.get_event(event, 1);
         REQUIRE(res == true);
         REQUIRE(std::holds_alternative<INFCReader::TagDetectedEvent>(event));
         CHECK(std::get<INFCReader::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -484,14 +469,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         logger.tags[data::uid3] = TagData {
             .info = data::tag_info1,
         };
-        logger.antenna_index = 1;
 
         auto res = reader.get_event(event, 1);
         REQUIRE(res == true);
         REQUIRE(std::holds_alternative<INFCReader::TagDetectedEvent>(event));
         CHECK(std::get<INFCReader::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -520,7 +503,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         REQUIRE(std::holds_alternative<INFCReader::TagDetectedEvent>(event));
         CHECK(std::get<INFCReader::TagDetectedEvent>(event).tag == 2);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid3 },
@@ -539,14 +521,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         logger.tags[data::uid2] = TagData {
             .info = data::tag_info1,
         };
-        logger.antenna_index = 1;
 
         auto res = reader.get_event(event, 1);
         REQUIRE(res == true);
         REQUIRE(std::holds_alternative<INFCReader::TagDetectedEvent>(event));
         CHECK(std::get<INFCReader::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -568,7 +548,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         res = reader.get_event(event, 251);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     FieldDown {},
@@ -580,7 +559,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         REQUIRE(std::holds_alternative<INFCReader::TagLostEvent>(event));
         CHECK(std::get<INFCReader::TagLostEvent>(event).tag == 1);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -592,7 +570,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         res = reader.get_event(event, 751);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid2 },
@@ -604,7 +581,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         res = reader.get_event(event, 1001);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -616,7 +592,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         res = reader.get_event(event, 1251);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid2 },
@@ -630,7 +605,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         res = reader.get_event(event, 1501);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -644,7 +618,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         REQUIRE(std::holds_alternative<INFCReader::TagDetectedEvent>(event));
         CHECK(std::get<INFCReader::TagDetectedEvent>(event).tag == 1);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    SwitchToNextDiscoveryAntenna {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid2 },
@@ -666,7 +639,6 @@ TEST_CASE("Test NFC-V tag read ops", "[nfcv][prusa_nfc]") {
         .info = data::tag_info1,
         .data = &tag1
     };
-    logger.antenna_index = 0;
 
     LLNFCReader reader { logger };
 
@@ -789,7 +761,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][prusa_nfc]") {
         .info = data::tag_info1,
         .data = &tag1,
     };
-    logger.antenna_index = 0;
 
     LLNFCReader reader { logger };
 
@@ -974,7 +945,6 @@ TEST_CASE("Test NFC-V register commands", "[nfcv]") {
             .mem_size = nfcv::TagInfo::MemorySize { .block_size = 4, .block_count = 64 },
         },
     };
-    logger.antenna_index = 1;
 
     const auto &tag = logger.tags[data::uid1_slix2];
 
@@ -1038,7 +1008,6 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][prusa_nfc]") {
             .mem_size = nfcv::TagInfo::MemorySize { .block_size = 4, .block_count = 64 },
         },
     };
-    logger.antenna_index = 1;
 
     LLNFCReader reader(logger);
     INFCReader::Event event;

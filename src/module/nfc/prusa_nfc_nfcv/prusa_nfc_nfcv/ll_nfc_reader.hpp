@@ -43,7 +43,7 @@ private:
         };
 
         nfcv::UID uid;
-        nfcv::ReaderWriterInterface::AntennaData antenna;
+        nfcv::ReaderWriterInterface::AntennaID antenna;
         uint8_t block_size;
         uint8_t block_count;
         State state = State::free;
@@ -55,6 +55,7 @@ private:
 
     static constexpr uint32_t PAUSE_BETWEEN_DISCOVERIES_MS = 250;
     RateLimiter<uint32_t> discoveries_limiter { PAUSE_BETWEEN_DISCOVERIES_MS };
+    nfcv::ReaderWriterInterface::AntennaID discovery_antenna = 0;
 
     AtomicCircularQueue<Event, uint8_t, 4> events;
 

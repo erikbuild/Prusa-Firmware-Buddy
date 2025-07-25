@@ -416,10 +416,7 @@ std::unexpected<INFCReader::IOError> LLNFCReader::handle_io_error(NFCTagID tag, 
 }
 
 void LLNFCReader::run_next_discovery() {
-    // Let's switch to next antenna before doing anything else
-    // and power up the field
-    const auto antenna = reader.switch_to_next_discovery_atenna();
-    nfcv::FieldGuard field_guard { reader, antenna };
+    nfcv::FieldGuard field_guard { reader, discovery_antenna };
     if (!field_guard.result) {
         return;
     }
@@ -467,7 +464,7 @@ void LLNFCReader::run_next_discovery() {
         NFCTagID tag_id = std::distance(tags.begin(), tag_data);
 
         // enqueue event to send
-        if (!events.enqueue(INFCReader::TagDetectedEvent { .tag = tag_id, .antenna = static_cast<NFCAntenna>(antenna) })) {
+        if (!events.enqueue(INFCReader::TagDetectedEvent { .tag = tag_id, .antenna = discovery_antenna })) {
             // we have too many events - this should never happend but lets be sure
             // we can't report the tag => so we don't want to store it
             // if this ultimately happens increase the events queue by little bit
@@ -480,7 +477,7 @@ void LLNFCReader::run_next_discovery() {
         static constexpr nfcv::TagInfo::MemorySize def_mem_size { .block_size = 0, .block_count = 0 };
         *tag_data = {
             .uid = uid,
-            .antenna = antenna,
+            .antenna = discovery_antenna,
             .block_size = tag_info->mem_size.value_or(def_mem_size).block_size,
             .block_count = tag_info->mem_size.value_or(def_mem_size).block_count,
             .state = TagData::State::known,
@@ -511,7 +508,7 @@ void LLNFCReader::run_next_discovery() {
         if (is_valid(tag_id)) {
             auto &tag_data = tags.at(tag_id);
             // check if the tag was found during this procedure and check if originaly the it was found on current antenna
-            if (tag_data.antenna == antenna && !found_tags.test(tag_id)) {
+            if (tag_data.antenna == discovery_antenna && !found_tags.test(tag_id)) {
                 // Detected lost tag - lets mark it and enqueue an event
                 if (!events.enqueue(INFCReader::TagLostEvent { .tag = tag_id })) {
                     // we have too many events - this should never happend but lets be sure
@@ -523,4 +520,7 @@ void LLNFCReader::run_next_discovery() {
             }
         }
     }
+
+    // Cycle antennas between discoveries
+    discovery_antenna = (discovery_antenna + 1) % reader.antenna_count();
 }

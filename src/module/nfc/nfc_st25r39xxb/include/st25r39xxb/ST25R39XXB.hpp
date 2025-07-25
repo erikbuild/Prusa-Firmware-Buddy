@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 #include <inplace_vector.hpp>
 #include <nfcv/commands.hpp>
 #include <nfcv/rw_interface.hpp>
@@ -14,31 +13,26 @@ namespace st25r39xxb {
 
 class ST25R39XXB : public nfcv::ReaderWriterInterface {
 public:
-    enum class Antenna : uint8_t {
-        antenna_1,
-        antenna_2,
-    };
-
     ST25R39XXB(HWInterface &hw_int, SystemInterface &sys_int)
         : hw_int(hw_int)
-        , sys_int(sys_int)
-        , current_discovery_antenna(ST25R39XXB::Antenna::antenna_2)
-        , buffer() {}
+        , sys_int(sys_int) //
+    {}
 
     /// Generic initialization function. Should be always called
     [[nodiscard]] nfcv::Result<void> init();
 
-    AntennaData switch_to_next_discovery_atenna() final;
-
-    nfcv::Result<void> field_up(AntennaData antenna_data) final;
+    nfcv::Result<void> field_up(AntennaID antenna) final;
     void field_down() final;
+
+    AntennaID antenna_count() const final {
+        return 2;
+    }
 
     [[nodiscard]] nfcv::Result<void> nfcv_command(const nfcv::Command &command) final;
 
 private:
     HWInterface &hw_int;
     SystemInterface &sys_int;
-    Antenna current_discovery_antenna = ST25R39XXB::Antenna::antenna_2;
     stdext::inplace_vector<std::byte, constant::FIFO_SIZE> buffer;
 
     [[nodiscard]] uint16_t get_fifo_len();
@@ -67,7 +61,7 @@ private:
     void set_output_impedance(st25r39xxb::Impedance target_impedance);
     void set_output_amplitude(st25r39xxb::Amplitude target_amplitude);
     /// Sets one of the antennas as output (the other will still be able to receive data)
-    void select_antenna(Antenna target_antena);
+    void select_antenna(AntennaID target_antenna);
 
     [[nodiscard]] nfcv::Result<void> nfcv_field_up();
     void nfcv_field_down();
