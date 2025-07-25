@@ -24,4 +24,7 @@ uavcan.primitive.Empty.1.0 enable_radio
 # All I/O operations will return an error until enabled
 uavcan.primitive.Empty.1.0 disable_radio
 
+# Config tweaks useful for debugging
+prusa3d.nfc.request.SetDebugConfig.1.0 set_debug_config
+
 @sealed

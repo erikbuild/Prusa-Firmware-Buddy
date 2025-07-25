@@ -1,0 +1,9 @@
+# If set to something else than NO_ANTENNA_ENFORCE, only the specified antenna will ever be used
+uint8 enforce_antenna
+
+# Automatically forget tags on TagLost event
+bool auto_forget_tag
+
+uint8 NO_ANTENNA_ENFORCE = 255
+
+@sealed

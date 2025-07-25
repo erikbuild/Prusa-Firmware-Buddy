@@ -142,6 +142,10 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
             prusa3d_nfc_request_RequestResult_1_0_select_unlock_tag_(&result);
             handle_unlock_tag_request(rreq.unlock_tag, result.unlock_tag);
 
+        } else if (prusa3d_nfc_request_RequestData_1_0_is_set_debug_config_(&rreq)) {
+            prusa3d_nfc_request_RequestResult_1_0_select_empty_(&result);
+            handle_set_debug_config_request(rreq.set_debug_config);
+
         } else if (prusa3d_nfc_request_RequestData_1_0_is_enable_radio_(&rreq)) {
             radio_enabled_ = true;
 
@@ -460,4 +464,12 @@ void NFCTask::handle_unlock_tag_request(const prusa3d_nfc_request_UnlockTag_1_0 
 
     const auto io_result = reader_.ll_reader().unlock_tag(request.tag.value, std::bit_cast<uint32_t>(request.password));
     result._error = io_result_to_error(io_result);
+}
+
+void NFCTask::handle_set_debug_config_request(const prusa3d_nfc_request_SetDebugConfig_1_0 &request) {
+    const INFCReader::DebugConfig config {
+        .enforce_antenna = request.enforce_antenna,
+        .auto_forget_tag = request.auto_forget_tag,
+    };
+    reader_.ll_reader().set_debug_config(config);
 }
