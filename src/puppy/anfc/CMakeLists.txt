@@ -1,4 +1,8 @@
-define_enum_option(NAME CAN_BUS_TYPE VALUE "PUB6" ALL_VALUES "PUB6;SLX")
+set(CAN_BUS_TYPE
+    "PUB6"
+    CACHE STRING "CAN bus configuration used by the device"
+    )
+define_enum_option(NAME CAN_BUS_TYPE VALUE ${CAN_BUS_TYPE} ALL_VALUES "PUB6;SLX")
 
 if(BOARD STREQUAL "ANFC_C0")
   set(DEVICE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/device/stm32c0")
