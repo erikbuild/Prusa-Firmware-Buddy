@@ -416,6 +416,10 @@ std::unexpected<INFCReader::IOError> LLNFCReader::handle_io_error(NFCTagID tag, 
 }
 
 void LLNFCReader::run_next_discovery() {
+    if (debug_config_.enforce_antenna != DebugConfig::no_antenna_enforce) {
+        discovery_antenna = debug_config_.enforce_antenna;
+    }
+
     nfcv::FieldGuard field_guard { reader, discovery_antenna };
     if (!field_guard.result) {
         return;
@@ -516,7 +520,8 @@ void LLNFCReader::run_next_discovery() {
                     // if this ultimately happens increase the events queue by little bit
                     continue;
                 }
-                tag_data.state = TagData::State::lost;
+
+                tag_data.state = debug_config_.auto_forget_tag ? TagData::State::free : TagData::State::lost;
             }
         }
     }

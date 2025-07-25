@@ -3,6 +3,7 @@
 #include <span>
 #include <variant>
 #include <expected>
+#include <limits>
 
 #include "nfc_defines.hpp"
 
@@ -23,6 +24,19 @@ public:
     /// Please call \p forget_tag after processing this event to allow reuse of the tag ID
     struct TagLostEvent {
         NFCTagID tag;
+    };
+
+    struct DebugConfig {
+    public:
+        /// Use all antennas, do not enforce a specific one
+        static constexpr NFCAntenna no_antenna_enforce = std::numeric_limits<NFCAntenna>::max();
+
+    public:
+        /// If set, only the specified antenna will ever be used
+        NFCAntenna enforce_antenna = no_antenna_enforce;
+
+        /// Automatically forget tags on TagLost event
+        bool auto_forget_tag : 1 = false;
     };
 
     using Event = std::variant<TagDetectedEvent, TagLostEvent>;
@@ -64,6 +78,11 @@ public:
     virtual void forget_tag(NFCTagID tag) = 0;
 
     virtual void reset_state() = 0;
+
+    /// A set of config tweaks useful for debugging
+    virtual void set_debug_config(const DebugConfig &config) {
+        debug_config_ = config;
+    }
 
 public:
     struct InitializeTagParams {
@@ -115,4 +134,7 @@ public:
         (void)tag, (void)password;
         return std::unexpected(IOError::not_implemented);
     }
+
+protected:
+    DebugConfig debug_config_;
 };
