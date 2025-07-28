@@ -18,12 +18,16 @@ public:
         /// Antenna the tag has been detected on.
         /// If tag gets moved from antenna to antenna, the reader will emit TagLost and new TagDetected (and likely assign a new ID to the tag)
         NFCAntenna antenna;
+
+        inline bool operator==(const TagDetectedEvent &) const = default;
     };
 
     /// The reader has lost connection with a tag
     /// Please call \p forget_tag after processing this event to allow reuse of the tag ID
     struct TagLostEvent {
         NFCTagID tag;
+
+        inline bool operator==(const TagLostEvent &) const = default;
     };
 
     struct DebugConfig {
