@@ -13,6 +13,7 @@
 class LLNFCReader final : public INFCReader {
 public:
     static constexpr size_t MAX_KNOWN_TAGS = 8;
+    static constexpr uint32_t PAUSE_BETWEEN_DISCOVERIES_MS = 250;
 
     LLNFCReader(nfcv::ReaderWriterInterface &reader);
 
@@ -53,7 +54,6 @@ private:
     nfcv::ReaderWriterInterface &reader;
     std::array<TagData, MAX_KNOWN_TAGS> tags {};
 
-    static constexpr uint32_t PAUSE_BETWEEN_DISCOVERIES_MS = 250;
     RateLimiter<uint32_t> discoveries_limiter { PAUSE_BETWEEN_DISCOVERIES_MS };
     nfcv::ReaderWriterInterface::AntennaID discovery_antenna = 0;
 
