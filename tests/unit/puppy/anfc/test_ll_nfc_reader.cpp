@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <vector>
 #include <variant>
-#include <deque>
+#include <unordered_set>
 #include <map>
 
 struct TagData {
@@ -19,6 +19,12 @@ struct TagData {
     bool eas_password_protected = false;
     bool afi_password_protected = false;
     bool dsfid_locked = false;
+
+    /// Antennas the tag is detected by
+    std::unordered_set<NFCAntenna> antennas;
+
+    /// Whether the tag should not respond to Inventory commands
+    bool stay_quiet = false;
 
     using Passwords = std::array<nfcv::SLIX2Password, std::to_underlying(nfcv::SLIX2PasswordID::_password_count)>;
     static size_t password_index(nfcv::SLIX2PasswordID id) {
@@ -121,16 +127,18 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
         return {};
     }
     void field_down() final {
+        antenna_index = 65535;
         events.push_back(FieldDown {});
 
         for (auto &tag : tags) {
             tag.second.random_number = std::nullopt;
             tag.second.set_password = TagData::invalid_set_password;
+            tag.second.stay_quiet = false;
         }
     }
 
     AntennaID antenna_count() const final {
-        return fake_antennas.size();
+        return antenna_count_;
     }
 
     [[nodiscard]] nfcv::Result<void> nfcv_command(const nfcv::Command &command) final {
@@ -143,12 +151,10 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::Inventory &command) {
         events.push_back(command.request);
-        auto &curr_queue = fake_antennas[antenna_index];
-        if (curr_queue.size() > 0) {
-            const auto element = curr_queue.front();
-            curr_queue.pop_front();
-            if (element.has_value()) {
-                std::ranges::copy(*element, command.response.begin());
+
+        for (auto &tag : tags) {
+            if (!tag.second.stay_quiet && tag.second.antennas.contains(antenna_index)) {
+                command.response = tag.first;
                 return {};
             }
         }
@@ -157,8 +163,9 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::StayQuiet &command) {
-        events.push_back(command.request);
-        return {};
+        return tag_op(command, [](auto &, auto &tag) {
+            tag.stay_quiet = true;
+        });
     }
 
     nfcv::Result<void> nfcv_command_impl(const nfcv::command::SystemInfo &command) {
@@ -355,13 +362,9 @@ struct EventLogger : public nfcv::ReaderWriterInterface {
     }
 
     std::vector<Event> events {};
-    /// Fakes antennas and emulates inventory calls
-    /// First layer is vector of antennas
-    /// Second layer is deque of possible tags discovareble by calling inventory command
-    /// Inventory will accept UID until std::nullopt. Multiple std::nullopts after each other are valid.
-    std::vector<std::deque<std::optional<nfcv::UID>>> fake_antennas {};
     std::map<nfcv::UID, TagData> tags {};
-    size_t antenna_index {};
+    size_t antenna_index = 65535;
+    size_t antenna_count_ = 2;
 };
 
 namespace data {
@@ -383,9 +386,9 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
 
     SECTION("Test simple TagDisovered -> TagLost functionality") {
         logger.events = {};
-        logger.fake_antennas = { { data::uid1, std::nullopt, std::nullopt }, {} };
         logger.tags[data::uid1] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
 
         auto res = reader.get_event(event, 1);
@@ -407,6 +410,8 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
         CHECK(logger.events.empty());
 
         logger.events.clear();
+
+        logger.tags[data::uid1].antennas = {};
 
         res = reader.get_event(event, 251);
         REQUIRE(res == false);
@@ -430,12 +435,13 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
 
     SECTION("Test mutliple tags discovered scenario - all at once") {
         logger.events = {};
-        logger.fake_antennas = { { data::uid1, data::uid2 }, {} };
         logger.tags[data::uid1] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
         logger.tags[data::uid2] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
 
         auto res = reader.get_event(event, 1);
@@ -468,15 +474,17 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
 
     SECTION("Test mutliple tags discovered scenario - on multiple antennas") {
         logger.events = {};
-        logger.fake_antennas = { { data::uid1, data::uid2 }, { data::uid3 } };
         logger.tags[data::uid1] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
         logger.tags[data::uid2] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
         logger.tags[data::uid3] = TagData {
             .info = data::tag_info1,
+            .antennas = { 1 },
         };
 
         auto res = reader.get_event(event, 1);
@@ -523,12 +531,13 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
 
     SECTION("Test tag switch antenna scenario") {
         logger.events = {};
-        logger.fake_antennas = { { data::uid1, data::uid2, std::nullopt, data::uid1, std::nullopt, data::uid1, std::nullopt, data::uid1 }, { std::nullopt, data::uid2, std::nullopt, data::uid2, std::nullopt, data::uid2 } };
         logger.tags[data::uid1] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
         logger.tags[data::uid2] = TagData {
             .info = data::tag_info1,
+            .antennas = { 0 },
         };
 
         auto res = reader.get_event(event, 1);
@@ -561,6 +570,9 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][prusa_nfc]"
                                                     Inventory {},
                                                     FieldDown {},
                                                 }));
+
+        logger.tags[data::uid1].antennas = { 0 };
+        logger.tags[data::uid2].antennas = { 1 };
 
         logger.events.clear();
         res = reader.get_event(event, 501);
@@ -643,10 +655,10 @@ TEST_CASE("Test NFC-V tag read ops", "[nfcv][prusa_nfc]") {
     std::ranges::generate(tag1, [n = 0]() mutable { return static_cast<std::byte>(n++); });
     EventLogger logger {};
     logger.events = {};
-    logger.fake_antennas = { { data::uid1, std::nullopt } };
     logger.tags[data::uid1] = TagData {
         .info = data::tag_info1,
-        .data = &tag1
+        .data = &tag1,
+        .antennas = { 0 },
     };
 
     LLNFCReader reader { logger };
@@ -765,10 +777,10 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][prusa_nfc]") {
     std::ranges::generate(tag1, [n = 0]() mutable { return static_cast<std::byte>(n++); });
     EventLogger logger {};
     logger.events = {};
-    logger.fake_antennas = { { data::uid1, std::nullopt } };
     logger.tags[data::uid1] = TagData {
         .info = data::tag_info1,
         .data = &tag1,
+        .antennas = { 0 },
     };
 
     LLNFCReader reader { logger };
@@ -948,11 +960,11 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][prusa_nfc]") {
 TEST_CASE("Test NFC-V register commands", "[nfcv]") {
     EventLogger logger;
     logger.events = {};
-    logger.fake_antennas = { { data::uid1_slix2, std::nullopt, std::nullopt }, {} };
     logger.tags[data::uid1_slix2] = TagData {
         .info = {
             .mem_size = nfcv::TagInfo::MemorySize { .block_size = 4, .block_count = 64 },
         },
+        .antennas = { 0 },
     };
 
     const auto &tag = logger.tags[data::uid1_slix2];
@@ -1011,11 +1023,11 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][prusa_nfc]") {
 
     EventLogger logger;
     logger.events = {};
-    logger.fake_antennas = { { tag_uid, std::nullopt, std::nullopt }, {} };
     logger.tags[tag_uid] = TagData {
         .info = {
             .mem_size = nfcv::TagInfo::MemorySize { .block_size = 4, .block_count = 64 },
         },
+        .antennas = { 0 },
     };
 
     LLNFCReader reader(logger);
