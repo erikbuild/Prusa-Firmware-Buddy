@@ -39,6 +39,7 @@ void init_spi();
 void init_tim3();
 void init_adc();
 void init_gpio();
+void init_tim2();
 
 #ifdef HASH_ALGOSELECTION_SHA256
 void init_hash();
@@ -49,6 +50,7 @@ namespace hal::peripherals {
 FDCAN_HandleTypeDef hfdcan1;
 SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim2;
 ADC_HandleTypeDef hadc1;
 HASH_HandleTypeDef hhash;
 } // namespace hal::peripherals
@@ -62,6 +64,7 @@ void hal::init() {
     hal::init_gpio();
     hal::init_spi();
     hal::init_can();
+    hal::init_tim2();
     hal::init_tim3();
     hal::init_adc();
     hal::init_hash();
@@ -273,6 +276,29 @@ void hal::init_spi() {
     }
 }
 
+void hal::init_tim2() {
+    using namespace hal::peripherals;
+
+    __HAL_RCC_TIM2_CLK_ENABLE();
+
+    htim2.Instance = TIM2;
+    htim2.Init.Prescaler = 0;
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim2.Init.Period = 240'000'000;
+    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
+        hal::panic();
+    }
+
+    HAL_NVIC_SetPriority(TIM2_IRQn, ISR_PRIORITY_DEFAULT, 0);
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+
+    if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK) {
+        hal::panic();
+    }
+}
+
 void hal::init_tim3() {
     using namespace hal::peripherals;
 
@@ -453,4 +479,8 @@ extern "C" void FDCAN1_IT0_IRQHandler(void) {
 
 extern "C" void FDCAN1_IT1_IRQHandler(void) {
     HAL_FDCAN_IRQHandler(&hal::peripherals::hfdcan1);
+}
+
+extern "C" void TIM2_IRQHandler(void) {
+    HAL_TIM_IRQHandler(&hal::peripherals::htim2);
 }
