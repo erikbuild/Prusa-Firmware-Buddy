@@ -238,6 +238,15 @@
             }
         },
         {
+            "name": "anfc-h5-uart",
+            "description": "Firmware for NFC addon (UART virtualization)",
+            "cacheVariables": {
+                "PRINTER": "NONE",
+                "BOARD": "ANFC_H5",
+                "CAN_BUS_TYPE": "UART"
+            }
+        },
+        {
             "name": "anfc-c0",
             "description": "Firmware for NFC addon",
             "cacheVariables": {
