@@ -3,6 +3,17 @@ bool time_sync_precise # Time synchronization is precise
 # Board orientation - on some platforms determines if the board is "left" or "right" variant - "normal" on other platforms
 prusa3d.nfc.BoardOrientation.1.0 board_orientation
 
+# Board Info
+prusa3d.unit.Celsius.1.0 board_temp
+prusa3d.unit.Celsius.1.0 mcu_temp
+
+# FS - in 16 bit accuracy
+prusa3d.common.AdcRaw.1.0 fs_1
+prusa3d.common.AdcRaw.1.0 fs_2
+
+#NFC
+bool radio_enabled
+
 prusa3d.common.SharedFault.1.0 faults # Contains specific FAULT_*XX* above and shared faults
 
 @sealed

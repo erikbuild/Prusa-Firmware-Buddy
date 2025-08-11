@@ -1,0 +1,4 @@
+# Raw value from ADC peripheral (can be from 8-bits to 16 bits long depending on the device)
+
+uint16 adc_raw
+@sealed
