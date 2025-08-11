@@ -35,6 +35,7 @@ target_sources(
           enum_mapping_check.cpp
           main.cpp
           nfc.cpp
+          precise_timer.cpp
           stdlib.cpp
           stub/otp.cpp
   )
