@@ -88,19 +88,13 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init() {
     set_output_amplitude(Amplitude::percent_82);
     sys_int.delay(1);
 
-    // Resistive am modulation is disabled
-    // hw_int.write_register(RegisterB::resistive_am_modulation, std::byte { 0x80 });
-    // Also external field detector is disabled
-    // hw_int.write_register(RegisterA::external_field_detector_activation_threshold, std::byte { 0x00 });
-    // hw_int.write_register(RegisterA::external_field_detector_deactivation_threshold, std::byte { 0x00 });
-
     // Enables automatic anticollision in NFC-A - why? we are wotking with NFC-V
     // Disables automatic responses in SENSF_RES. WTF is this
     // and again why here?
     hw_int.write_register(RegisterA::passive_target, std::byte { 0x50 });
 
     // Enables reception even if there are errors in the first 4 bits of the frame
-    // TODO: Documentation mentiones ISO-A (probablt NFC-A), make sure that this is needed
+    // TODO: Documentation mentiones ISO-A (NFC-A), make sure that this is needed
     hw_int.write_register(RegisterB::emd_suppression_configuration, std::byte { 0x40 });
 
     // Do we want to set this? Or even set it here? This values is mode dependent, maybe move it some other mode
@@ -113,13 +107,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init() {
     // Driver load modulation enabled - why? are we even able to use passive target modulation
     // Regulator shaped AM modulation for AWS enabled - why? we are enabling AWS without the correct HW setup
     hw_int.write_register(RegisterB::auxiliary_modulation_setting, std::byte { 0x94 });
-
-    // We are not in receiver mode - no need to setup this register
-    // hw_int.write_register(RegisterA::gain_reduction_state, std::byte { 0x09 });
-
-    // It looks like this is also not needed :/
-    // hw_int.write_register(RegisterA::antenna_tuning_control_1, std::byte { 0x82 });
-    // hw_int.write_register(RegisterA::antenna_tuning_control_2, std::byte { 0x82 });
 
     set_interrupt_mask(~IRQType::direct_command_finished);
     hw_int.direct_command(Command::adjust_regulators);
@@ -283,8 +270,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller() {
     // TODO: Verify this settings, by disabling this command the signal is worse
     // By preliminary testing the 0x03 also worked
     hw_int.write_register(RegisterA::receiver_configuration_1, std::byte { 0x13 });
-    // hw_int.write_register(RegisterA::receiver_configuration_2, std::byte { 0xe5 }); - no need to set so far
-    // hw_int.write_register(RegisterA::receiver_configuration_3, std::byte { 0x00 }); - no need to set so far
 
     // AM and PM correlation signals summed before digitizing (summation mode)
     // Set collision detection level to 53% (compared to data detection level)
@@ -319,8 +304,7 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller() {
     set_interrupt_mask(~(IRQType::collision_detected | IRQType::pwp_field_active));
     hw_int.direct_command(Command::nfc_init_field_on);
 
-    auto res = await_interrupt(IRQType::pwp_field_active, 100, IRQType::collision_detected);
-    if (!res.has_value()) {
+    if (const auto res = await_interrupt(IRQType::pwp_field_active, 100, IRQType::collision_detected); !res.has_value()) {
         return res;
     }
 
