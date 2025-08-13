@@ -102,12 +102,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init() {
     // Also ST25R3919B doesn't support pasive target anything
     hw_int.write_register(RegisterA::passive_target_modulation, std::byte { 0x2F });
 
-    // Regulator AM disabled - why? we have a big capacitor so shouldn't we enable it?
-    //                         or we don't want that capacitor due to the fact we want AWS
-    // Driver load modulation enabled - why? are we even able to use passive target modulation
-    // Regulator shaped AM modulation for AWS enabled - why? we are enabling AWS without the correct HW setup
-    hw_int.write_register(RegisterB::auxiliary_modulation_setting, std::byte { 0x94 });
-
     set_interrupt_mask(~IRQType::direct_command_finished);
     hw_int.direct_command(Command::adjust_regulators);
 
@@ -147,9 +141,6 @@ void st25r39xxb::ST25R39XXB::select_antenna(AntennaID target_antenna) {
         value = ANTENNA_CONTROL_MASK;
     }
     hw_int.change_register(RegisterA::io_configuration_1, ANTENNA_CONTROL_MASK, value);
-
-    set_output_amplitude(Amplitude::percent_82);
-    set_output_impedance(Impedance::ohm2);
 }
 
 nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &command) {
@@ -258,7 +249,7 @@ void st25r39xxb::ST25R39XXB::set_output_amplitude(st25r39xxb::Amplitude target_a
     hw_int.change_register(RegisterA::tx_driver, std::byte { 0xf0 }, std::byte { std::to_underlying(target_amplitude) });
 }
 
-nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller() {
+nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller(ModulationType modulation_type) {
     // Enable oscilator and regulator
     // It is recommended that bits en_fd_c<1:0> of the operation control register are set to 01b in Reader mode.
     hw_int.write_register(RegisterA::operation_control, std::byte { 0x81 });
@@ -282,8 +273,30 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller() {
     // Number of sub-carrier pulses in report period to 8
     // Sub-carrier frequence to 424kHz
     hw_int.write_register(RegisterA::stream_mode_definition, std::byte { 0x38 });
-    // Set operation mode to Sub-carrier stream mode and modulation mode to OOK
-    hw_int.change_register(RegisterA::mode_definition, std::byte { 0x7c }, std::byte { 0x70 });
+    {
+        // Set operation mode to Sub-carrier stream mode
+        std::byte value { 0x70 };
+        // and RF modulation mode based on the settings (3rd lowest bit 0 - ook 1 - am)
+        if (modulation_type == ModulationType::am) {
+            value |= std::byte { 1 << 2 };
+        }
+
+        hw_int.change_register(RegisterA::mode_definition, std::byte { 0x7c }, value);
+    }
+
+    {
+        Amplitude target_amplitude = Amplitude::percent_82;
+
+        if (modulation_type == ModulationType::am) {
+            // TODO: Make also this value configurable, since it might work differently on different devices
+            target_amplitude = Amplitude::percent_30;
+        }
+
+        set_output_amplitude(target_amplitude);
+    }
+
+    set_output_impedance(Impedance::ohm2);
+    hw_int.direct_command(Command::change_am_modulation_state);
 
     // Force general purpose timer (gpt) to start automatically at the end of RX
     // It can always be started with Command::start_general_purpose_timer

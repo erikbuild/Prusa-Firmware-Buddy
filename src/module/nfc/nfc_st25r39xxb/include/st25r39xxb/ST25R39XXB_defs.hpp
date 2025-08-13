@@ -285,6 +285,11 @@ enum class Amplitude : uint8_t {
     percent_82 = 0xF0,
 };
 
+enum class ModulationType : uint8_t {
+    ook,
+    am
+};
+
 namespace constant {
     constexpr size_t FIFO_SIZE = 512;
 }
