@@ -116,6 +116,12 @@ extern "C" void vApplicationTickHook(void) {
     HAL_IncTick();
 }
 
+[[noreturn]] void __attribute__((noreturn, format(__printf__, 1, 4)))
+_bsod(const char *fmt, const char *file_name, int line_number, ...) {
+    (void)fmt, (void)file_name, (void)line_number;
+    hal::panic();
+}
+
 namespace puppy::fault {
 void trigger_fault(SharedFault) {
     hal::panic();
