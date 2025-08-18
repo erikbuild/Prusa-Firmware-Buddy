@@ -41,7 +41,7 @@ void anfc::cyphal::ANFCEventPublisher::step() {
                 data.serialized_size = rec.serialized_data_size;
                 return TransformResult { .success = true, .significant = true };
             });
-            sender.set_period(retransmission_period_ms);
+            sender.set_period(retransmission_period_ms * 1000);
 
             // The event data has been copied to the sender -> we can free it from the heap
             {
