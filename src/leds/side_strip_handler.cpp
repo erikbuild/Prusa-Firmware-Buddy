@@ -1,5 +1,6 @@
 #include "leds/side_strip_handler.hpp"
 #include "leds/simple_transition_controller.hpp"
+#include "marlin_server.hpp"
 
 namespace leds {
 
@@ -38,13 +39,13 @@ void SideStripHandler::update() {
         change_state(SideStripState::custom_color);
     } else {
         custom_color.reset();
-
-        if (!dimming_enabled || (active_timestamp_ms != 0 && time_ms - active_timestamp_ms < active_timeout_ms)) {
+        const bool dont_dim = dimming_enabled == DimmingEnabled::never || (dimming_enabled == DimmingEnabled::not_printing && marlin_server::is_printing());
+        if (dont_dim || (active_timestamp_ms != 0 && time_ms - active_timestamp_ms < active_timeout_ms)) {
             change_state(SideStripState::active);
         } else {
             // Clear to prevent overflow bugs
             active_timestamp_ms = 0;
-            change_state(SideStripState::idle);
+            change_state(SideStripState::dimmed);
         }
     }
 
@@ -53,16 +54,9 @@ void SideStripHandler::update() {
 
 void SideStripHandler::load_config() {
     std::lock_guard lock(mutex);
-#if HAS_XBUDDY_EXTENSION()
-    camera_enabled = config_store().xbe_usb_power.get();
+    dimmed_brightness = config_store().side_leds_dimmed_brightness.get();
     max_brightness = config_store().side_leds_max_brightness.get();
-    if (camera_enabled) {
-        dimming_enabled = config_store().side_leds_dimming_enabled_with_camera.get();
-    } else
-#endif
-    {
-        dimming_enabled = config_store().side_leds_dimming_enabled.get();
-    }
+    dimming_enabled = config_store().side_leds_dimming_enabled.get();
     // Set state to off to force a change of state that will transition to the new brightness
     state = SideStripState::off;
 }
@@ -101,20 +95,13 @@ void SideStripHandler::set_dimmed_brightness(uint8_t value) {
     state = SideStripState::off;
 }
 
-bool SideStripHandler::get_dimming_enabled() const {
+DimmingEnabled SideStripHandler::get_dimming_enabled() const {
     std::lock_guard lock(mutex);
     return dimming_enabled;
 }
 
-void SideStripHandler::set_dimming_enabled(bool value) {
-#if HAS_XBUDDY_EXTENSION()
-    if (camera_enabled) {
-        config_store().side_leds_dimming_enabled_with_camera.set(value);
-    } else
-#endif
-    {
-        config_store().side_leds_dimming_enabled.set(value);
-    }
+void SideStripHandler::set_dimming_enabled(DimmingEnabled value) {
+    config_store().side_leds_dimming_enabled.set(value);
     std::lock_guard lock(mutex);
     dimming_enabled = value;
 }
@@ -129,7 +116,7 @@ void SideStripHandler::change_state(SideStripState state) {
         this->state = state;
 
         uint32_t duration;
-        if (state == SideStripState::idle) {
+        if (state == SideStripState::dimmed) {
             duration = 5000;
         } else if (state == SideStripState::custom_color) {
             duration = custom_color->transition_ms;
@@ -146,7 +133,7 @@ ColorRGBW SideStripHandler::get_color_for_state(SideStripState state) {
     switch (state) {
     case SideStripState::off:
         return ColorRGBW();
-    case SideStripState::idle:
+    case SideStripState::dimmed:
         return base_color.clamp(dimmed_brightness);
     case SideStripState::active:
         return base_color.clamp(max_brightness);

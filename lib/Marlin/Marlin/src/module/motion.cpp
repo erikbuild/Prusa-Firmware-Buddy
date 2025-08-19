@@ -128,7 +128,7 @@ xyze_pos_t current_position = { X_HOME_POS, Y_HOME_POS, Z_HOME_POS };
 /**
  * Cartesian Destination
  *   The destination for a move, filled in by G-code movement commands,
- *   and expected by functions like 'prepare_move_to_destination'.
+ *   and expected by functions like 'prepare_move_to'.
  *   G-codes can set destination using 'get_destination_from_command'
  */
 xyze_pos_t destination; // {0}
@@ -288,10 +288,7 @@ void line_to_current_position(const feedRate_t &fr_mm_s/*=feedrate_mm_s*/) {
   planner.buffer_line(current_position, fr_mm_s, active_extruder);
 }
 
-void _internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/) {
-  const feedRate_t old_feedrate = feedrate_mm_s;
-  if (fr_mm_s) feedrate_mm_s = fr_mm_s;
-
+void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, const PrepareMoveHints & hints) {
   const uint16_t old_pct = feedrate_percentage;
   feedrate_percentage = 100;
 
@@ -300,9 +297,8 @@ void _internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/) {
      planner.e_factor[active_extruder] = 1.0f;
   #endif
 
-  prepare_move_to_destination();
+  prepare_move_to(destination, fr_mm_s ?: feedrate_mm_s, hints);
 
-  feedrate_mm_s = old_feedrate;
   feedrate_percentage = old_pct;
   #if EXTRUDERS
     planner.e_factor[active_extruder] = old_fac;
@@ -324,36 +320,24 @@ void do_blocking_move_to(const float rx, const float ry, const float rz, const f
   planner.synchronize();
 }
 
-static void line_to_destination_position(const feedRate_t &fr_mm_s) {
-  current_position = destination;
-  line_to_current_position(fr_mm_s);
-}
-
 /// Z-Manhattan fast move
-void plan_park_move_to(const float rx, const float ry, const float rz, const feedRate_t &fr_xy, const feedRate_t &fr_z, Segmented segmented){
-  void (*move)(const feedRate_t &fr_mm_s) = nullptr;
-  if (segmented == Segmented::yes) {
-      move = prepare_internal_move_to_destination;
-  } else {
-      move = line_to_destination_position;
-  }
-
+void plan_park_move_to(const float rx, const float ry, const float rz, const feedRate_t &fr_xy, const feedRate_t &fr_z, Segmented segmented) {
   // If Z needs to raise, do it before moving XY
   if (current_position.z < rz) {
     destination = current_position;
     destination.z = rz;
-    move(fr_z);
+    prepare_internal_move_to_destination(fr_z, { .apply_modifiers = true, .do_segment = segmented == Segmented::yes });
   }
 
   destination = current_position;
   destination.set(rx, ry);
-  move(fr_xy);
+  prepare_internal_move_to_destination(fr_xy, { .apply_modifiers = false /*XY move doesn't need MBL*/, .do_segment = segmented == Segmented::yes });
 
   // If Z needs to lower, do it after moving XY
   if (current_position.z > rz) {
     destination = current_position;
     destination.z = rz;
-    move(fr_z);
+    prepare_internal_move_to_destination(fr_z, { .apply_modifiers = true, .do_segment = segmented == Segmented::yes });
   }
 }
 
@@ -542,47 +526,6 @@ void plan_move_by(const feedRate_t fr, const float dx, const float dy, const flo
   target.z += dz;
   target.e += de;
   planner.buffer_segment(target, fr);
-}
-
-/**
- * Prepare a single move and get ready for the next one
- *
- * This may result in several calls to planner.buffer_line to
- * do smaller moves for mesh moves, etc.
- *
- * Make sure current_position.e and destination.e are good
- * before calling or cold/lengthy extrusion may get missed.
- *
- * Before exit, current_position is set to destination.
- */
-void prepare_move_to_destination(const MoveHints &hints) {
-  apply_motion_limits(destination);
-
-  #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
-
-    if (!DEBUGGING(DRYRUN)) {
-      if (destination.e != current_position.e) {
-        #if ENABLED(PREVENT_COLD_EXTRUSION)
-          if (thermalManager.tooColdToExtrude(active_extruder)) {
-            current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
-            SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
-          }
-        #endif // PREVENT_COLD_EXTRUSION
-        #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
-          const float e_delta = ABS(destination.e - current_position.e) * planner.e_factor[active_extruder];
-          if (e_delta > (EXTRUDE_MAXLENGTH)) {
-            current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
-            SERIAL_ECHO_MSG(MSG_ERR_LONG_EXTRUDE_STOP);
-          }
-        #endif // PREVENT_LENGTHY_EXTRUDE
-      }
-    }
-
-  #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
-
-  prepare_move_to(destination, feedrate_mm_s, { .move = hints });
-
-  current_position = destination;
 }
 
 uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {
@@ -902,11 +845,37 @@ uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate
   return trigger_state;
 }
 
-void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHints hints) {
+void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hints) {
   static_assert(sizeof(PrepareMoveHints) <= 4, "Change the parameter to a reference");
+
+  if(hints.apply_motion_limits) {
+    apply_motion_limits(target);
+  }
 
   if (!position_is_reachable(target)) {
       return;
+  }
+
+  if(hints.extrusion_safety_checks) {
+    #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
+      if (!DEBUGGING(DRYRUN)) {
+        if (destination.e != current_position.e) {
+          #if ENABLED(PREVENT_COLD_EXTRUSION)
+            if (thermalManager.tooColdToExtrude(active_extruder)) {
+              current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
+              SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
+            }
+          #endif // PREVENT_COLD_EXTRUSION
+          #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
+            const float e_delta = ABS(destination.e - current_position.e) * planner.e_factor[active_extruder];
+            if (e_delta > (EXTRUDE_MAXLENGTH)) {
+              current_position.e = destination.e; // Behave as if the move really took place, but ignore E part
+              SERIAL_ECHO_MSG(MSG_ERR_LONG_EXTRUDE_STOP);
+            }
+          #endif // PREVENT_LENGTHY_EXTRUDE
+        }
+      }
+    #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
   }
 
   if(hints.scale_feedrate) {
@@ -919,23 +888,25 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
   using SegmentCount = uint16_t;
   SegmentCount segment_count = 1;
 
-  // Segment the move enough for MBL
-  #if ENABLED(AUTO_BED_LEVELING_UBL)
-  if(hints.apply_modifiers && planner.leveling_active && planner.leveling_active_at_z(target.z)) {
-    segment_count = std::max<SegmentCount>(segment_count, std::round(xy_distance / LEVELED_SEGMENT_LENGTH));
-  }
-  #endif
+  if (hints.do_segment) {
+    // Segment the move enough for MBL
+    #if ENABLED(AUTO_BED_LEVELING_UBL)
+    if(hints.apply_modifiers && planner.leveling_active && planner.leveling_active_at_z(target.z)) {
+      segment_count = std::max<SegmentCount>(segment_count, std::round(xy_distance / LEVELED_SEGMENT_LENGTH));
+    }
+    #endif
 
-  // Segment the moves to be able to do emergency stop quickly
-  #if HAS_EMERGENCY_STOP()
-  {
-    // Using xy_distance here is quite approximate, but good enough for our purposes here
-    const float duration = (xy_distance / fr_mm_s);
+    // Segment the moves to be able to do emergency stop quickly
+    #if HAS_EMERGENCY_STOP()
+    {
+      // Using xy_distance here is quite approximate, but good enough for our purposes here
+      const float duration = (xy_distance / fr_mm_s);
 
-    segment_count = std::max<SegmentCount>(segment_count, abs(full_diff.z) / buddy::EmergencyStop::max_segment_z_mm);
-    segment_count = std::max<SegmentCount>(segment_count, duration / buddy::EmergencyStop::max_segment_time_s);
+      segment_count = std::max<SegmentCount>(segment_count, abs(full_diff.z) / buddy::EmergencyStop::max_segment_z_mm);
+      segment_count = std::max<SegmentCount>(segment_count, duration / buddy::EmergencyStop::max_segment_time_s);
+    }
+    #endif
   }
-  #endif
 
   xyze_pos_t segment_pos = current_position;
   const xyze_pos_t segment_diff = full_diff / segment_count;
@@ -950,7 +921,7 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
       planner.apply_modifiers(target, true);
     }
     #endif
-    planner.buffer_line(target, fr_mm_s, active_extruder, planner_hints);
+    planner.buffer_segment(target, fr_mm_s, active_extruder, planner_hints);
   };
 
   while (--segment_count) {
@@ -958,6 +929,8 @@ void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHi
     buffer_move(segment_pos);
   }
   buffer_move(target);
+
+  current_position = target;
 }
 
 /**

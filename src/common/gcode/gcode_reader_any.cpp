@@ -1,6 +1,6 @@
 #include "gcode_reader_any.hpp"
 
-#include "lang/i18n.h"
+#include <i18n.h>
 #include "transfers/transfer.hpp"
 #include <cassert>
 #include <errno.h> // for EAGAIN

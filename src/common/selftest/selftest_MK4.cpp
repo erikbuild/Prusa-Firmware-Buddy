@@ -31,7 +31,7 @@
 #include "selftest_result_type.hpp"
 #include "selftest_types.hpp"
 
-#include <filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <config_store/store_instance.hpp>
 #include "i_selftest.hpp"
 

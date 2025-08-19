@@ -26,11 +26,10 @@
 
 #if HAS_NOZZLE_CLEANER()
     #include <nozzle_cleaner.hpp>
-    #include <gcode_loader.hpp>
 #endif
 
 #include "Marlin/src/feature/pause.h"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "safety_timer_stubbed.hpp"
 #include "marlin_server.hpp"
 #include "fs_event_autolock.hpp"
@@ -69,7 +68,22 @@ LOG_COMPONENT_REF(MarlinServer);
 #endif
 
 #if HAS_NOZZLE_CLEANER()
-GCodeLoader nozzle_cleaner_gcode_loader;
+static void nozzle_cleaner_load_or_runout_load_gcode(Pause::LoadType load_type) {
+    switch (load_type) {
+    case Pause::LoadType::load:
+    case Pause::LoadType::autoload:
+    case Pause::LoadType::load_to_gears:
+    case Pause::LoadType::load_purge:
+        nozzle_cleaner::load_load_gcode();
+        break;
+    case Pause::LoadType::filament_change:
+    case Pause::LoadType::filament_stuck:
+        nozzle_cleaner::load_runout_gcode();
+        break;
+    default:
+        break;
+    }
+}
 #endif
 
 // private:
@@ -893,7 +907,6 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
         return;
     }
 #endif
-
     if (load_type == LoadType::filament_change || load_type == LoadType::filament_stuck) {
         // Feed a little bit of filament to stabilize pressure in nozzle
 
@@ -910,21 +923,7 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
     }
 
 #if HAS_NOZZLE_CLEANER()
-    switch (load_type) {
-    case LoadType::load:
-    case LoadType::autoload:
-    case LoadType::load_to_gears:
-    case LoadType::load_purge:
-        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::load_filename, nozzle_cleaner::load_sequence);
-        break;
-    case LoadType::filament_change:
-    case LoadType::filament_stuck:
-        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::runout_filename, nozzle_cleaner::runout_sequence);
-        break;
-    default:
-        break;
-    }
-
+    nozzle_cleaner_load_or_runout_load_gcode(load_type);
     set(LoadState::load_nozzle_clean);
     return;
 #endif
@@ -935,14 +934,8 @@ void Pause::load_prime_process([[maybe_unused]] Response response) {
 #if HAS_NOZZLE_CLEANER()
 void Pause::load_nozzle_clean_process([[maybe_unused]] Response response) {
     setPhase(PhasesLoadUnload::LoadNozzleCleaning);
-    auto loader_result = nozzle_cleaner_gcode_loader.get_result();
 
-    if (loader_result.has_value()) {
-        GcodeSuite::process_subcommands_now(loader_result.value());
-    }
-
-    if (loader_result.has_value() || loader_result.error() != GCodeLoader::BufferState::buffering) {
-        nozzle_cleaner_gcode_loader.reset();
+    if (nozzle_cleaner::execute()) {
         set(LoadState::_finished);
     }
 }
@@ -1028,6 +1021,13 @@ void Pause::auto_retract_process([[maybe_unused]] Response response) {
     setPhase(PhasesLoadUnload::AutoRetracting);
     PauseFsmDurationNotifier progress_notifier(*this, standard_ramming_sequence(StandardRammingSequence::auto_retract, marlin_vars().active_hotend_id()).duration_estimate_ms());
     auto_retract().maybe_retract_from_nozzle();
+
+    #if HAS_NOZZLE_CLEANER()
+    nozzle_cleaner_load_or_runout_load_gcode(load_type);
+    set(LoadState::load_nozzle_clean);
+    return;
+    #endif
+
     set(LoadState::_finished);
 }
 #endif
@@ -1049,6 +1049,12 @@ void Pause::ram_sequence_process([[maybe_unused]] Response response) {
 
 void Pause::unload_process([[maybe_unused]] Response response) {
     setPhase(is_unstoppable() ? PhasesLoadUnload::Unloading_unstoppable : PhasesLoadUnload::Unloading_stoppable);
+#if HAS_NOZZLE_CLEANER()
+    bool needs_cleaning = true; // Assume we need to clean the nozzle
+    #if HAS_AUTO_RETRACT()
+    needs_cleaning = !auto_retract().is_retracted(); // If we are retracted, we don't need to clean the nozzle
+    #endif
+#endif
     unload_filament();
 
     config_store().set_filament_type(settings.GetExtruder(), FilamentType::none);
@@ -1063,10 +1069,11 @@ void Pause::unload_process([[maybe_unused]] Response response) {
     case LoadType::filament_change:
     case LoadType::filament_stuck:
 #if HAS_NOZZLE_CLEANER()
-        nozzle_cleaner_gcode_loader.load_gcode(nozzle_cleaner::unload_filename, nozzle_cleaner::unload_sequence);
-
-        set(LoadState::unload_nozzle_clean);
-        return;
+        if (needs_cleaning) {
+            nozzle_cleaner::load_unload_gcode();
+            set(LoadState::unload_nozzle_clean);
+            return;
+        }
 #endif
 
         if constexpr (!option::has_human_interactions) {
@@ -1105,14 +1112,8 @@ void Pause::unload_from_gears_process([[maybe_unused]] Response response) {
 #if HAS_NOZZLE_CLEANER()
 void Pause::unload_nozzle_clean_process([[maybe_unused]] Response response) {
     setPhase(PhasesLoadUnload::UnloadNozzleCleaning);
-    auto loader_result = nozzle_cleaner_gcode_loader.get_result();
 
-    if (loader_result.has_value()) {
-        GcodeSuite::process_subcommands_now(loader_result.value());
-    }
-
-    if (loader_result.has_value() || loader_result.error() != GCodeLoader::BufferState::buffering) {
-        nozzle_cleaner_gcode_loader.reset();
+    if (nozzle_cleaner::execute()) {
         if constexpr (!option::has_human_interactions) {
             runout_timer_ms = ticks_ms();
             set(LoadState::filament_not_in_fs);

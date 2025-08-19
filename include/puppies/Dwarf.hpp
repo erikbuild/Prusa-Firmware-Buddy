@@ -13,7 +13,7 @@
 #include <utils/utility_extensions.hpp>
 #include <puppies/dwarf_status_led.hpp>
 #include <include/dwarf_errors.hpp>
-#include <filament_sensor.hpp>
+#include <feature/filament_sensor/filament_sensor.hpp>
 #include <timing.h>
 
 namespace freertos {

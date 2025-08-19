@@ -304,43 +304,6 @@ static bool wait_for_movement_state(phase_stepping::AxisState &axis_state,
     return true;
 }
 
-// Computes a pseudo-projection of one vector to another. The length of
-// direction vector is not normalized.
-[[maybe_unused]] static AccelerometerSample pseudo_project(std::tuple<int16_t, int16_t> what, std::tuple<float, float> dir) {
-    return AccelerometerSample { .value = static_cast<int16_t>(std::get<0>(what) * std::get<0>(dir) + std::get<1>(what) * std::get<1>(dir)) };
-}
-
-static AccelerometerSample project_to_axis(AxisEnum axis, const PrusaAccelerometer::RawAcceleration &sample) {
-#if PRINTER_IS_PRUSA_COREONE()
-    if (axis == AxisEnum::X_AXIS) {
-        return AccelerometerSample { .value = sample.val[1] };
-    } else if (axis == AxisEnum::Y_AXIS) {
-        return AccelerometerSample { .value = sample.val[0] };
-    } else {
-        bsod("Unsupported axis");
-    }
-#elif ENABLED(COREXY)
-    std::pair<float, float> proj_dir;
-    if (axis == AxisEnum::X_AXIS) {
-        proj_dir = { M_SQRT1_2, M_SQRT1_2 };
-    } else if (axis == AxisEnum::Y_AXIS) {
-        proj_dir = { -M_SQRT1_2, M_SQRT1_2 };
-    } else {
-        bsod("Unsupported axis");
-    }
-
-    return pseudo_project({ sample.val[0], sample.val[1] }, proj_dir);
-#else
-    if (axis == AxisEnum::X_AXIS) {
-        return AccelerometerSample { .value = sample.val[0] };
-    } else if (axis == AxisEnum::Y_AXIS) {
-        return AccelerometerSample { .value = sample.val[1] };
-    } else {
-        bsod("Unsupported axis");
-    }
-#endif
-}
-
 // Given a signal, compute signal energy for each sample. The energy is deduced
 // from the surrounding symmetrical window of size window_size.
 static EnergyContainer signal_local_energy(SignalView signal, int window_size) {
@@ -1245,9 +1208,9 @@ static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_sampl
         PrusaAccelerometer::RawAcceleration sample;
         using GetSampleResult = PrusaAccelerometer::GetSampleResult;
 
-        switch (accelerometer.get_sample(sample)) {
+        switch (accelerometer.get_sample_motor_coords(sample)) {
         case GetSampleResult::ok:
-            yield_sample(project_to_axis(axis, sample));
+            yield_sample({ sample.val[axis] });
             break;
 
         case GetSampleResult::buffer_empty:

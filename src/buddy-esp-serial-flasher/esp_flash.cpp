@@ -7,7 +7,7 @@ extern "C" {
 }
 #include <algorithm>
 #include <cstring>
-#include <gui/gui_bootstrap_screen.hpp>
+#include <buddy/bootstrap_state.hpp>
 #include <logging/log.hpp>
 #include <option/has_embedded_esp32.h>
 #include <option/has_gui.h>
@@ -18,6 +18,8 @@ extern "C" {
 #include <str_utils.hpp>
 
 LOG_COMPONENT_REF(Buddy);
+
+using buddy::BootstrapStage;
 
 namespace buddy_esp_serial_flasher {
 
@@ -61,7 +63,7 @@ public:
     }
     void report_progress(size_t increment) final {
         current += increment;
-        gui_bootstrap_screen_set_state(100 * current / total, retry ? "[ESP] Reflashing broken sectors" : "Flashing ESP");
+        bootstrap_state_set(100 * current / total, retry ? BootstrapStage::reflashing_esp : BootstrapStage::flashing_esp);
     }
 };
 

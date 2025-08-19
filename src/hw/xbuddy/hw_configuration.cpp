@@ -122,7 +122,7 @@ bool Configuration::is_fw_compatible_with_hw() const {
     return !door_sensor_connected && (loveboard_present || !mk35_extruder_detected);
     #elif PRINTER_IS_PRUSA_MK3_5()
     // valid data from loveboard means that we have MK4 HW, since MK3.5 does not have loveboard
-    return loveboard_present;
+    return !loveboard_present;
     #else
         #error
     #endif

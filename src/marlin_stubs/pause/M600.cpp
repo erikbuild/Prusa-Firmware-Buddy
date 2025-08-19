@@ -43,7 +43,7 @@ LOG_COMPONENT_REF(PRUSA_GCODE);
 #include "marlin_server.hpp"
 #include "pause_stubbed.hpp"
 #include <cmath>
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "filament.hpp"
 #include <gcode/gcode_parser.hpp>
 

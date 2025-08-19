@@ -21,7 +21,8 @@ enum class RequestFlag : uint8_t {
     PrintResume,
     TryRecoverFromMediaError,
     PrintExit,
-    KnobMove,
+    KnobMoveUp,
+    KnobMoveDown,
     KnobClick,
 #if HAS_SELFTEST()
     TestAbort,
@@ -32,4 +33,9 @@ enum class RequestFlag : uint8_t {
     _cnt
 };
 
+enum class KnobMove : uint8_t {
+    NoMove,
+    Up,
+    Down,
+};
 } // namespace marlin_server

@@ -1,6 +1,6 @@
 #include "footer_item_fsvalue.hpp"
 
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "img_resources.hpp"
 
 FooterItemFSValue::FooterItemFSValue(window_t *parent)

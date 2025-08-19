@@ -22,23 +22,6 @@ public:
     void SetColor(Color clr);
 };
 
-class window_vertical_progress_t : public window_t {
-    Color color_progress;
-    uint16_t progress_in_pixels;
-
-protected:
-    virtual void unconditionalDraw() override;
-
-public:
-    window_vertical_progress_t(window_t *parent, Rect16 rect, Color cl_progress = COLOR_ORANGE, Color cl_back = COLOR_DARK_GRAY);
-    void SetValue(float val);
-    void SetProgressColor(Color clr);
-    void SetProgressWidth(uint16_t width);
-    void SetProgressInPixels(uint16_t px);
-    void SetProgressPercent(uint8_t val);
-    uint16_t GetProgressPixels() const;
-};
-
 /**
  * @brief Draws number of circles with one current_index. All circles <= current index (or only current index if specified) have their color as "ON" ('progressed'), whilst all circles > current_index have the 'off' color (not yet done).
  * Circles always have diameter of given Rect16.Height(), so make sure the Rect is wide enough to hold all circles (there is an assert).

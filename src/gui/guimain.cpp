@@ -1,19 +1,14 @@
 #include "DialogHandler.hpp"
 #include "display.hpp"
-#include "gui_bootstrap_screen.hpp"
 #include "gui_time.hpp"
 #include "gui.hpp"
 #include "Jogwheel.hpp"
 #include "knob_event.hpp"
 #include "language_eeprom.hpp"
 #include "marlin_client.hpp"
-#include "screen_bsod.hpp"
-#include "screen_hardfault.hpp"
+#include <screen_error.hpp>
 #include "screen_home.hpp"
 #include "screen_move_z.hpp"
-#include "screen_qr_error.hpp"
-#include "screen_stack_overflow.hpp"
-#include "screen_watchdog.hpp"
 #include "ScreenFactory.hpp"
 #include "ScreenHandler.hpp"
 #include "ScreenShot.hpp"
@@ -23,11 +18,6 @@
 #include <crash_dump/dump.hpp>
 #include <screen_splash.hpp>
 #include <wdt.hpp>
-
-#include <printers.h>
-#if PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
-    #include "screen_fatal_warning.hpp"
-#endif
 
 #include <option/has_side_leds.h>
 #if HAS_SIDE_LEDS()
@@ -41,44 +31,6 @@
 
 Jogwheel jogwheel;
 
-/**
- * @brief Get the right error page to display
- *
- * Error has precedence over dump.
- */
-static ScreenFactory::Creator get_error_screen() {
-    if (crash_dump::message_get_type() == crash_dump::MsgType::RSOD && !crash_dump::message_is_displayed()) {
-        return ScreenFactory::Screen<ScreenErrorQR>;
-    }
-#if PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
-    if (crash_dump::message_get_type() == crash_dump::MsgType::FATAL_WARNING && !crash_dump::message_is_displayed()) {
-        return ScreenFactory::Screen<ScreenFatalWarning>;
-    }
-#endif
-
-    if (crash_dump::dump_is_valid() && !crash_dump::dump_is_displayed()) {
-        if (crash_dump::message_is_displayed()) {
-            // In case message is stale (already displayed), it is not relevant anymore.
-            // We have just crash dump without message. CrashDump without message means it was caused by hardfault directly.
-            return ScreenFactory::Screen<ScreenHardfault>;
-        }
-
-        switch (crash_dump::message_get_type()) {
-        case crash_dump::MsgType::IWDGW:
-            return ScreenFactory::Screen<ScreenWatchdog>;
-        case crash_dump::MsgType::BSOD:
-            return ScreenFactory::Screen<ScreenBsod>;
-        case crash_dump::MsgType::STACK_OVF:
-            return ScreenFactory::Screen<ScreenStackOverflow>;
-        default:
-            break;
-        }
-    }
-
-    // Display an unknown error page
-    return ScreenFactory::Screen<ScreenBlueError>;
-}
-
 void gui_error_run(void) {
     gui_init();
 
@@ -86,7 +38,7 @@ void gui_error_run(void) {
     // gui_error_run executes before bootstrap so resources may not be up to date resulting in artefects
     display::enable_resource_file();
 
-    screen_node screen_initializer { get_error_screen() };
+    screen_node screen_initializer { ScreenFactory::Screen<ScreenError> };
     Screens::Init(screen_initializer);
 
     // Mark everything as displayed
@@ -133,7 +85,10 @@ void gui_run(void) {
     leds::LEDManager::instance().init();
 #endif
     // Show bootstrap screen untill firmware initializes
-    gui_bootstrap_screen_run();
+    TaskDeps::provide(TaskDeps::Dependency::gui_display_ready);
+    while (!TaskDeps::check(TaskDeps::Tasks::bootstrap_done)) {
+        gui_bare_loop();
+    }
 
     marlin_client::init();
 

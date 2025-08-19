@@ -70,61 +70,6 @@ void window_numberless_progress_t::unconditionalDraw() {
     }
 }
 
-/*******************************************************************************/
-// window_vertical_progress_t
-window_vertical_progress_t::window_vertical_progress_t(window_t *parent, Rect16 rect, Color cl_progress, Color cl_back)
-    : window_t(parent, rect)
-    , color_progress(cl_progress) {
-    SetBackColor(cl_back);
-}
-
-void window_vertical_progress_t::SetProgressColor(Color clr) {
-    if (clr != color_progress) {
-        color_progress = clr;
-        Invalidate();
-    }
-}
-
-void window_vertical_progress_t::SetProgressWidth(uint16_t width) {
-    if (width != Width()) {
-        const Rect16::Width_t w(width);
-        SetRect(Rect16(Left(), Top(), w, Height()));
-        Invalidate();
-    }
-}
-
-void window_vertical_progress_t::SetProgressInPixels(uint16_t px) {
-    if (px != progress_in_pixels) {
-        progress_in_pixels = px;
-        Invalidate();
-    }
-}
-
-void window_vertical_progress_t::SetProgressPercent(uint8_t val) {
-    const uint8_t min = 0;
-    const uint8_t max = 100;
-    const uint8_t value = std::max(min, std::min(val, max));
-    SetProgressInPixels(uint16_t((value * Height()) / max));
-}
-
-uint16_t window_vertical_progress_t::GetProgressPixels() const {
-    return progress_in_pixels;
-}
-
-void window_vertical_progress_t::unconditionalDraw() {
-    Rect16 rc = GetRect();
-    const uint16_t progress_h = std::min(GetProgressPixels(), uint16_t(Height()));
-    rc = Rect16::Height_t(Height() - progress_h);
-    if (rc.Height()) {
-        display::fill_rect(rc, GetBackColor());
-    }
-    rc = Rect16::Top_t(Height() - progress_h);
-    rc = Rect16::Height_t(progress_h);
-    if (rc.Height()) {
-        display::fill_rect(rc, color_progress);
-    }
-}
-
 WindowProgressCircles::WindowProgressCircles(window_t *parent, Rect16 rect, uint8_t max_circles_)
     : window_t(parent, rect)
     , max_circles(max_circles_) {

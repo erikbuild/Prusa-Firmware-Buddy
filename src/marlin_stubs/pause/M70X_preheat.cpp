@@ -1,5 +1,5 @@
 #include "config_features.h"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <config_store/store_instance.hpp>
 
 // clang-format off
@@ -14,7 +14,7 @@
 #include "../../../lib/Marlin/Marlin/src/module/planner.h"
 #include "../../../lib/Marlin/Marlin/src/module/temperature.h"
 #include "pause_stubbed.hpp"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "M70X.hpp"
 
 #if HAS_CHAMBER_API()

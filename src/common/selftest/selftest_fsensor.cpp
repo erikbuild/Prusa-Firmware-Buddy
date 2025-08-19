@@ -8,7 +8,7 @@
 #include "marlin_server.hpp"
 #include "selftest_log.hpp"
 #include "i_selftest.hpp"
-#include "filament_sensor_adc.hpp"
+#include <feature/filament_sensor/filament_sensor_adc.hpp>
 #include <climits>
 #include "../../Marlin/src/module/stepper.h"
 #include "M70X.hpp"

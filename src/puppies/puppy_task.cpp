@@ -17,7 +17,6 @@
 #include <option/has_puppy_modularbed.h>
 #include <buddy/ccm_thread.hpp>
 #include "bsod.h"
-#include "gui_bootstrap_screen.hpp"
 
 #if HAS_PUPPY_MODULARBED()
     #include <puppies/modular_bed.hpp>
@@ -35,19 +34,10 @@ osThreadId puppy_task_handle;
 
 std::atomic<bool> stop_request = false; // when this is set to true, puppy task will gracefully stop its execution
 
-static PuppyBootstrap::BootstrapResult bootstrap_puppies(PuppyBootstrap::BootstrapResult minimal_config, bool first_run) {
+static PuppyBootstrap::BootstrapResult bootstrap_puppies(PuppyBootstrap::BootstrapResult minimal_config) {
     // boostrap first
     log_info(Puppies, "Starting bootstrap");
-    PuppyBootstrap puppy_bootstrap(PuppyModbus::share_buffer(), [first_run](PuppyBootstrap::Progress progress) {
-        bool log = true;
-        if (first_run) {
-            // report progress to gui bootstrap screen only if first run - if this is puppy recoverery, there is no bootstrap screen anymore
-            log = gui_bootstrap_screen_set_state(progress.percent_done, progress.description());
-        }
-        if (log) {
-            log_info(Puppies, "Bootstrap stage: %s, percent %d", progress.description(), progress.percent_done);
-        }
-    });
+    PuppyBootstrap puppy_bootstrap { PuppyModbus::share_buffer() };
     return puppy_bootstrap.run(minimal_config);
 }
 
@@ -226,14 +216,14 @@ static bool puppy_initial_scan() {
 static void puppy_task_body([[maybe_unused]] void const *argument) {
     TaskDeps::wait(TaskDeps::Tasks::puppy_task_start);
 
-    bool first_run = true;
+    [[maybe_unused]] bool first_run = true;
 
     // by default, we want one modular bed and one dwarf
     PuppyBootstrap::BootstrapResult minimal_puppy_config = PuppyBootstrap::MINIMAL_PUPPY_CONFIG;
 
     do {
         // reset and flash the puppies
-        auto bootstrap_result = bootstrap_puppies(minimal_puppy_config, first_run);
+        auto bootstrap_result = bootstrap_puppies(minimal_puppy_config);
         // once some puppies are detected, consider this minimal puppy config (do no allow disconnection of puppy while running)
         minimal_puppy_config = bootstrap_result;
 

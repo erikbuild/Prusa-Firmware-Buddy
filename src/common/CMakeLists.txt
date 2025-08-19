@@ -1,6 +1,6 @@
 target_include_directories(firmware PRIVATE . include)
 
-target_link_libraries(firmware PRIVATE buddy_utils)
+target_link_libraries(firmware PRIVATE buddy_utils bsod)
 
 if(BOARD IN_LIST BUDDY_BOARDS)
   target_sources(
@@ -28,6 +28,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             fsm_network_setup.cpp
             fsm_states.cpp
             general_response.cpp
+            hardware_rng.cpp
             hardware_serial.cpp
             heap.cpp
             homing_reporter.cpp
@@ -169,20 +170,7 @@ if(HAS_POWER_PANIC)
 endif()
 
 if(FILAMENT_SENSOR)
-  target_sources(
-    firmware PRIVATE filament_sensor.cpp filament_sensors_handler.cpp thread_measurement.cpp
-    )
-  if(FILAMENT_SENSOR STREQUAL "ADC")
-    target_sources(firmware PRIVATE filament_sensor_adc.cpp filament_sensor_adc_eval.cpp)
-  else()
-    target_sources(firmware PRIVATE filament_sensor_photoelectric.cpp)
-  endif()
-  if(HAS_MMU2)
-    target_sources(firmware PRIVATE filament_sensor_mmu.cpp)
-  endif()
-  if(HAS_XBUDDY_EXTENSION)
-    target_sources(firmware PRIVATE filament_sensor_xbuddy_extension.cpp)
-  endif()
+  target_sources(firmware PRIVATE thread_measurement.cpp)
 endif()
 
 if(HAS_LOADCELL)
@@ -193,22 +181,6 @@ if(HAS_LOADCELL_HX717)
 endif()
 if(HAS_LOADCELL AND HAS_LOADCELL_HX717)
   target_sources(firmware PRIVATE hx717mux.cpp)
-endif()
-
-if(BOARD_IS_MASTER_BOARD)
-  if(PRINTER STREQUAL "iX")
-    target_sources(
-      firmware PRIVATE filament_sensor_ix_side.cpp filament_sensors_handler_default.cpp
-      )
-  elseif(PRINTER STREQUAL "XL")
-    target_sources(
-      firmware PRIVATE filament_sensors_handler_XL.cpp filament_sensors_handler_XL_remap.cpp
-      )
-  elseif(PRINTER STREQUAL "XL_DEV_KIT")
-    target_sources(firmware PRIVATE filament_sensors_handler_XL_DEV_KIT.cpp)
-  else()
-    target_sources(firmware PRIVATE filament_sensors_handler_default.cpp)
-  endif()
 endif()
 
 if(GUI)

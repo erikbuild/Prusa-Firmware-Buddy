@@ -31,16 +31,8 @@
  #include <functional>
  
  #ifndef SG14_INPLACE_FUNCTION_THROW
-    #if __cpp_exception || defined(UNITTESTS)
-        #define SG14_INPLACE_FUNCTION_THROW(x) throw((x))
-    #elif __has_include(<bsod.h>)
-        // Our custom exception handling. Since we don't use them, lets bsod() if we can, otherwise lets abort.
-        #include <bsod.h>
-        #define SG14_INPLACE_FUNCTION_THROW(x) bsod("%s", (x).what())
-    #else
-        #include <cstdlib>
-        #define SG14_INPLACE_FUNCTION_THROW(x) std::abort()
-    #endif
+    #include <bsod/bsod.h>
+    #define SG14_INPLACE_FUNCTION_THROW(x) bsod(#x)
  #endif
  
  namespace stdext {

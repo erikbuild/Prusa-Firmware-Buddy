@@ -12,8 +12,8 @@
 #include <wui_api.h>
 #include <wui.h>
 #include <filament.hpp>
-#include <filament_sensors_handler.hpp>
-#include <filament_sensor_states.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensor_states.hpp>
 #include <state/printer_state.hpp>
 #include <common/sys.hpp>
 #include <common/unique_file_ptr.hpp>

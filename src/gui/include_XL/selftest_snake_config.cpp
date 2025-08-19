@@ -13,7 +13,7 @@
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
     #if HAS_SIDE_FSENSOR()
-        #include <filament_sensors_handler_XL_remap.hpp>
+        #include <feature/filament_sensor/filament_sensors_handler_XL_remap.hpp>
     #endif /*HAS_SIDE_FSENSOR()*/
 #endif /*HAS_TOOLCHANGER()*/
 

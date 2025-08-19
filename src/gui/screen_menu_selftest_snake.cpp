@@ -8,6 +8,8 @@
 #include <option/has_phase_stepping_selftest.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_toolchanger.h>
+#include <option/has_manual_belt_tuning.h>
+#include <buddy/unreachable.hpp>
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
 #endif
@@ -91,6 +93,17 @@ const img::Resource *get_icon(Action action, Tool tool) {
 }
 
 struct SnakeConfig {
+    enum class AutoContinue {
+        /// Ask whether to continue after finishing each test
+        ask,
+
+        /// Finish all tests in the submenu, then ask
+        submenu,
+
+        /// Continue doing all the tests without asking
+        all,
+    };
+
     void reset() {
         *this = {};
         last_action = get_last_action();
@@ -103,8 +116,7 @@ struct SnakeConfig {
     }
 
     bool in_progress { false }; ///< Is snake currently running?
-    bool break_after_submenu { false }; ///< User selected to do one submenu and then stop
-    bool auto_continue { false }; ///< Automatically continue, don't ask user for confirmation
+    AutoContinue auto_continue { AutoContinue::ask }; ///< Should we continue running other selftests after finishing the current one?
 
     Action last_action { Action::_last }; ///< Last action that we'have done
     Tool last_tool { Tool::_first };
@@ -194,26 +206,51 @@ void continue_snake() {
         return;
     }
 
-    if (snake_config.break_after_submenu && has_submenu(snake_config.last_action) && snake_config.last_tool == get_last_enabled_tool()) {
-        snake_config.reset();
-        return; // Stop when submenu is finished
+    if (snake_config.auto_continue == SnakeConfig::AutoContinue::submenu && has_submenu(snake_config.last_action) && snake_config.last_tool == get_last_enabled_tool()) {
+        snake_config.auto_continue = SnakeConfig::AutoContinue::ask;
     }
 
-    if (!snake_config.auto_continue) {
-        Response resp = Response::Stop;
+    if (snake_config.auto_continue == SnakeConfig::AutoContinue::ask) {
         if (is_multitool() && has_submenu(snake_config.last_action) && snake_config.last_tool != get_last_enabled_tool()) {
-            resp = MsgBoxQuestion(_("FINISH remaining calibrations without proceeding to other tests, or perform ALL Calibrations and Tests?\n\nIf you QUIT, all data up to this point is saved."), { Response::Finish, Response::All, Response::Quit }, 2);
-            snake_config.break_after_submenu = (resp == Response::Finish); // Continue running tests but stop at the end of submenu
-        } else {
-            resp = MsgBoxQuestion(_("Continue running Calibrations & Tests?"), { Response::Continue, Response::Quit }, 1);
-        }
-        if (resp == Response::Quit) {
-            snake_config.reset();
-            return; // stop after running the first one
-        }
+            const auto resp = MsgBoxQuestion(_("FINISH remaining calibrations without proceeding to other tests, or perform ALL Calibrations and Tests?\n\nIf you QUIT, all data up to this point is saved."), { Response::Finish, Response::All, Response::Quit }, 2);
+            switch (resp) {
 
-        // Do not ask again
-        snake_config.auto_continue = true;
+            case Response::Finish:
+                snake_config.auto_continue = SnakeConfig::AutoContinue::submenu;
+                break;
+
+            case Response::All:
+                snake_config.auto_continue = SnakeConfig::AutoContinue::all;
+                break;
+
+            case Response::Quit:
+                snake_config.reset();
+                return;
+
+            default:
+                BUDDY_UNREACHABLE();
+            }
+
+        } else {
+            const auto resp = MsgBoxQuestion(_("Continue running Calibrations & Tests?"), { Response::Continue, Response::All, Response::Quit }, 2);
+            switch (resp) {
+
+            case Response::Continue:
+                snake_config.auto_continue = SnakeConfig::AutoContinue::ask;
+                break;
+
+            case Response::All:
+                snake_config.auto_continue = SnakeConfig::AutoContinue::all;
+                break;
+
+            case Response::Quit:
+                snake_config.reset();
+                return;
+
+            default:
+                BUDDY_UNREACHABLE();
+            }
+        }
     }
 
     if (!is_multitool()
@@ -413,7 +450,7 @@ void ScreenMenuSTSWizard::windowEvent(window_t *sender, GUI_event_t event, void 
         MsgBoxInfo(_("Before you continue, make sure the print sheet is installed on the heatbed."), Responses_Ok);
 
         do_snake(get_first_action());
-        snake_config.auto_continue = true;
+        snake_config.auto_continue = SnakeConfig::AutoContinue::all;
         return;
     }
 

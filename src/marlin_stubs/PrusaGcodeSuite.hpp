@@ -7,6 +7,7 @@
 #include <option/has_toolchanger.h>
 #include <option/has_side_leds.h>
 #include <option/has_belt_tuning.h>
+#include <option/has_manual_belt_tuning.h>
 #include <option/has_i2c_expander.h>
 #include <option/has_chamber_api.h>
 #include <option/has_nozzle_cleaner.h>
@@ -123,6 +124,9 @@ void M853(); //< Align z motors over bed pins/end of axis
 #if HAS_BELT_TUNING()
 void M960(); //< Belt tuning
 #endif
+#if HAS_MANUAL_BELT_TUNING()
+void M961(); //< Manual Belt tuning
+#endif
 
 void M997(); //< Update firmware. Prusa STM32 platform specific
 void M999();
@@ -150,6 +154,11 @@ void M9150(); //< Set stealth mode
 
 void M9200(); //< Re-load IS settings from config store
 void M9201(); //< Reset to default motion parameters (accelerations, feedrates, ...)
+
+#if HAS_PRECISE_HOMING_COREXY()
+void M9202(); //< Clear precise homing calibration
+#endif
+
 void M9933(); //< Cork for tracking when gcode finished executing
 
 #if HAS_TOOLCHANGER()

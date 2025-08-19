@@ -11,6 +11,12 @@ add_definitions(-DUNITTESTS)
 include_directories(tests_include)
 link_libraries(magic_enum)
 
+# Add implementation that fails test on BSOD everywhere
+add_library(bsod_catch STATIC "${CMAKE_CURRENT_SOURCE_DIR}/tests_include/bsod.cpp")
+target_link_libraries(bsod_catch PUBLIC bsod)
+target_link_libraries(bsod_catch PRIVATE Catch2::Catch2)
+link_libraries(bsod_catch)
+
 # Prepend our stubbed libintl header to override the host's gettext
 include_directories(${CMAKE_SOURCE_DIR}/tests/stubs/host)
 
@@ -23,6 +29,7 @@ target_link_libraries(catch_main Catch2::Catch2 CppStdExtensions)
 function(add_catch_test target)
   target_link_libraries(${target} catch_main Catch2::Catch2)
   target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/tests/unit/include)
+  # Universal BSOD implementation that fails the tests
   catch_discover_tests(${target})
   add_dependencies(tests ${target})
 endfunction()
@@ -50,3 +57,4 @@ add_subdirectory(persistent_stores)
 add_subdirectory(media_prefetch)
 add_subdirectory(puppy)
 add_subdirectory(module)
+add_subdirectory(mock)

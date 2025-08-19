@@ -569,9 +569,5 @@ void window_frame_t::set_layout(ColorLayout lt) {
     case ColorLayout::black:
         RecursiveCall(&window_t::SetBlackLayout);
         break;
-
-    case ColorLayout::blue:
-        RecursiveCall(&window_t::SetBlueLayout);
-        break;
     }
 }

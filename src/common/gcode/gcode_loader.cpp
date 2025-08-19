@@ -12,6 +12,10 @@ bool GCodeLoader::is_idle() const {
     return state == BufferState::idle;
 }
 
+bool GCodeLoader::is_buffering() const {
+    return state == BufferState::buffering;
+}
+
 void GCodeLoader::load_gcode_callback(AsyncJobExecutionControl &control) {
     AnyGcodeFormatReader reader(gcode_buffer);
 

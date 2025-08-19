@@ -376,7 +376,7 @@ bool PrusaToolChanger::tool_change(const uint8_t new_tool, tool_return_t return_
             if (current_position.z != return_position.z) {
                 destination = current_position;
                 destination.z = return_position.z;
-                prepare_move_to_destination();
+                prepare_move_to(destination, Z_HOP_FEEDRATE_MM_S, {});
             }
         }
 

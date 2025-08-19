@@ -1,5 +1,5 @@
 #pragma once
-#include <Marlin/src/inc/MarlinConfigPre.h>
+#include <inc/MarlinConfigPre.h>
 
 #include <bitset>
 
@@ -23,7 +23,7 @@
 #include <selftest_result.hpp>
 #include <module/prusa/dock_position.hpp>
 #include <module/prusa/tool_offset.hpp>
-#include <filament_sensors_remap_data.hpp>
+#include <feature/filament_sensor/filament_sensors_remap_data.hpp>
 #include <tristate.hpp>
 #include <option/has_loadcell.h>
 #include <option/has_sheet_profiles.h>
@@ -33,7 +33,6 @@
 #include <option/has_toolchanger.h>
 #include <option/has_selftest.h>
 #include <option/has_phase_stepping.h>
-#include <option/has_phase_stepping_toggle.h>
 #include <option/has_i2c_expander.h>
 #include <option/has_xbuddy_extension.h>
 #include <option/has_emergency_stop.h>
@@ -47,6 +46,7 @@
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_e2ee_support.h>
+#include <option/has_manual_belt_tuning.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -72,6 +72,10 @@
 #endif
 #if HAS_E2EE_SUPPORT()
     #include <e2ee/identity_check_levels.hpp>
+#endif
+
+#if HAS_SIDE_LEDS()
+    #include "leds/dimming_enabled.hpp"
 #endif
 
 namespace config_store_ns {
@@ -441,15 +445,9 @@ struct CurrentStore
 #if HAS_SIDE_LEDS()
     /// 0-255; 0 = disabled.
     StoreItem<uint8_t, 255, ItemFlag::user_interface, journal::hash("XBuddy Extension Chamber LEDs PWM")> side_leds_max_brightness;
-    StoreItem<uint8_t, 40, ItemFlag::user_interface, journal::hash("XBuddy Extension Chamber LEDs dimmed PWM")> side_leds_dimmed_brightness;
+    StoreItem<uint8_t, PWM255::from_percent(40).value, ItemFlag::user_interface, journal::hash("XBuddy Extension Chamber LEDs dimmed PWM")> side_leds_dimmed_brightness;
     /// Whether the side leds should dim down a bit when user is not interacting with the printer or stay on full power the whole time
-    StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Enable Side LEDs dimming")> side_leds_dimming_enabled;
-
-    #if HAS_XBUDDY_EXTENSION()
-    /// same as side_leds_dimming_enabled but when camera is powered on
-    StoreItem<bool, false, ItemFlag::user_interface, journal::hash("Side LEDs dimming with camera")> side_leds_dimming_enabled_with_camera;
-    #endif
-
+    StoreItem<leds::DimmingEnabled, leds::DimmingEnabled::not_printing, ItemFlag::user_interface, journal::hash("Enable Side LEDs dimming")> side_leds_dimming_enabled;
 #endif
 
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Enable Serial Printing Screen")> serial_print_screen_enabled;
@@ -609,7 +607,7 @@ struct CurrentStore
 #endif
 
 #if HAS_PHASE_STEPPING()
-    static constexpr bool phase_stepping_ram_only = !HAS_PHASE_STEPPING_TOGGLE();
+    static constexpr bool phase_stepping_ram_only = true;
     StoreItem<bool, defaults::phase_stepping_enabled_x, ItemFlag::features, journal::hash("Phase Stepping Enabled X"), 1, phase_stepping_ram_only> phase_stepping_enabled_x;
     StoreItem<bool, defaults::phase_stepping_enabled_y, ItemFlag::features, journal::hash("Phase Stepping Enabled Y"), 1, phase_stepping_ram_only> phase_stepping_enabled_y;
 
@@ -668,7 +666,7 @@ struct CurrentStore
 
     /// Whether to automatically calibrate precise homing when deemed necessary
     /// Tristate::other = ask the user
-    StoreItem<Tristate, Tristate::other, ItemFlag::features, journal::hash("Auto-recalibrate precise homing")> auto_recalibrate_precise_homing;
+    StoreItem<Tristate, Tristate::other, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Auto-recalibrate precise homing")> auto_recalibrate_precise_homing;
 
     /// History whether a homing point was stable after precise homing. High number of unstable homings will result in calibration prompt.
     /// Implemented as a rotating bit buffer (pushed after each successful refinement); ones represent unstable refinements
@@ -718,6 +716,10 @@ struct CurrentStore
 
 #if HAS_MANUAL_CHAMBER_VENTS()
     StoreItem<bool, true, ItemFlag::printer_state, journal::hash("Check chamber ventilation state")> check_manual_vent_state;
+#endif
+
+#if HAS_MANUAL_BELT_TUNING()
+    StoreItem<bool, false, ItemFlag::calibrations, journal::hash("Manual Belt Tuning Completed")> manual_belt_tuning_completed;
 #endif
 
 private:
@@ -826,8 +828,11 @@ struct DeprecatedStore
     StoreItem<bool, true, journal::hash("Emergency stop enable")> emergency_stop_enable;
 #endif
 
-#if HAS_SIDE_LEDS() && HAS_XBUDDY_EXTENSION()
+#if HAS_SIDE_LEDS()
+    StoreItem<leds::DimmingEnabled, leds::DimmingEnabled::not_printing, journal::hash("Side LEDs dimming with camera")> side_leds_dimming_enabled_with_camera;
+    #if HAS_XBUDDY_EXTENSION()
     StoreItem<uint8_t, 255, journal::hash("Chamber LEDs PWM with Camera")> side_leds_max_brightness_with_camera;
+    #endif
 #endif
 };
 

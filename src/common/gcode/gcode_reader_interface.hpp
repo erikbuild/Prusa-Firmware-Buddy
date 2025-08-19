@@ -38,6 +38,13 @@ public:
         QOI,
     };
 
+    struct ThumbnailDetails {
+        uint16_t width;
+        uint16_t height;
+        unsigned long num_bytes;
+        ImgType type;
+    };
+
     enum class FileVerificationLevel {
         /// Quick verification, does not perform full CRC check,
         /// just checks for some markers that the file is valid (for exapmle GCDE at the beginning)
@@ -66,11 +73,61 @@ public:
         thumbnail,
     };
 
+    /// Positions where things start.
+    struct Index {
+        /// A position, or not_indexed.
+        ///
+        /// std::optional would be better, but takes more space.
+        ///
+        /// Note: This is raw file offset (bytes), not anything related to
+        /// stream positions.
+        using Position = uint32_t;
+
+        /// Not found, but we are not 100% sure.
+        ///
+        /// We may have looked or not.
+        static constexpr Position not_indexed = 0xFFFFFFFF;
+
+        /// We are sure it is not there. No reason to look again.
+        static constexpr Position not_present = not_indexed - 1;
+
+        static constexpr size_t thumbnail_slots = 3;
+
+        Position gcode = not_indexed;
+        Position metadata = not_indexed;
+
+        struct Thumbnail {
+            // Request section
+            uint16_t w = 0;
+            uint16_t h = 0;
+            ImgType type = ImgType::Unknown;
+            // Output
+            Position position = not_indexed;
+        };
+
+        std::array<Thumbnail, thumbnail_slots> thumbnails;
+
+        bool indexed() const {
+            // Simplified. We don't bother with formats that index only thumbnails.
+            return gcode != not_indexed || metadata != not_indexed;
+        }
+
+        static bool present(Position position) {
+            return position != not_indexed && position != not_present;
+        }
+    };
+
 public:
+    /// Pre-index the file.
+    ///
+    /// If the file / type doesn't support indexing, it doesn't modify the out
+    /// parameter at all.
+    virtual void generate_index(Index &out, bool ignore_crc = false);
+
     /**
      * @brief Start streaming metadata from gcode
      */
-    virtual bool stream_metadata_start() = 0;
+    virtual bool stream_metadata_start(const Index *index = nullptr) = 0;
 
     /**
      * @brief Start streaming gcodes from .gcode or .bgcode file
@@ -87,8 +144,10 @@ public:
      *
      * @param offset if non-zero will skip to specified offset (after powerpanic, pause etc)
      * @param ignore_crc if non-zero will ignore CRC, which should be used with caution
+     * @param index (if present) - preindexed to look up things faster. If not
+     *   nullptr, must come from previous call into index() on the same reader.
      */
-    virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false) = 0;
+    virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false, const Index *index = nullptr) = 0;
 
     /**
      * @brief Find thumbnail with specified parameters and start streaming it.
@@ -101,6 +160,15 @@ public:
      * Errors are not indicated specially.
      */
     virtual AbstractByteReader *stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger = false) = 0;
+#if 0
+    // TODO: Once we need it (do we? Will we?)
+    /**
+     * Start streaming a thumbnail on given position.
+     *
+     * Overload for the above, but with a position previously returned as part of index.
+     */
+    virtual AbstractByteReader *stream_thumbnail_start(Index::Position position);
+#endif
 
     /**
      * @brief Get line from stream specified before by start_xx function

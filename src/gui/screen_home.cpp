@@ -28,7 +28,7 @@
 #include "tasks.hpp"
 
 #include "screen_printing.hpp"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 
 #include <raii/auto_restore.hpp>
 #include "lazyfilelist.hpp"

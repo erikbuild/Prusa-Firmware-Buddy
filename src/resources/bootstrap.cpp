@@ -11,6 +11,7 @@
 #include <common/sys.hpp>
 #include <logging/log.hpp>
 #include <freertos/critical_section.hpp>
+#include <buddy/bootstrap_state.hpp>
 #include "timing.h"
 #include "cmsis_os.h"
 
@@ -24,7 +25,7 @@
 #include "fileutils.hpp"
 
 LOG_COMPONENT_DEF(Resources, logging::Severity::debug);
-using BootstrapStage = buddy::resources::BootstrapStage;
+using buddy::BootstrapStage;
 
 struct ResourcesScanResult {
     unsigned files_count;
@@ -92,7 +93,6 @@ static bool scan_resources_folder(Path &path, ResourcesScanResult &result) {
 
 class BootstrapProgressReporter {
 private:
-    buddy::resources::ProgressHook progress_hook;
     std::optional<ResourcesScanResult> scan_result;
     BootstrapStage current_stage;
     unsigned files_copied;
@@ -119,9 +119,8 @@ private:
     }
 
 public:
-    BootstrapProgressReporter(buddy::resources::ProgressHook progress_hook, BootstrapStage stage)
-        : progress_hook(progress_hook)
-        , scan_result()
+    BootstrapProgressReporter(BootstrapStage stage)
+        : scan_result()
         , current_stage(stage)
         , files_copied(0)
         , directories_copied(0)
@@ -129,7 +128,7 @@ public:
     }
 
     void report() {
-        progress_hook(percent_done(), current_stage);
+        bootstrap_state_set(percent_done(), current_stage);
     }
 
     void update_stage(BootstrapStage stage) {
@@ -138,8 +137,7 @@ public:
     }
 
     void report_percent_done() {
-        unsigned percent_done = this->percent_done();
-        progress_hook(percent_done, current_stage);
+        report();
     }
 
     void assign_scan_result(ResourcesScanResult result) {
@@ -487,8 +485,8 @@ static bool find_suitable_bbf_file(const buddy::resources::Revision &revision, P
     return true;
 }
 
-static bool do_bootstrap(const buddy::resources::Revision &revision, buddy::resources::ProgressHook progress_hook) {
-    BootstrapProgressReporter reporter(progress_hook, BootstrapStage::LookingForBbf);
+static bool do_bootstrap(const buddy::resources::Revision &revision) {
+    BootstrapProgressReporter reporter { BootstrapStage::looking_for_bbf };
     Path source_path("/");
     unique_file_ptr bbf;
     buddy::bbf::TLVType bbf_entry = buddy::bbf::TLVType::RESOURCES_IMAGE;
@@ -509,7 +507,7 @@ static bool do_bootstrap(const buddy::resources::Revision &revision, buddy::reso
         return false;
     }
 
-    reporter.update_stage(BootstrapStage::PreparingBootstrap);
+    reporter.update_stage(BootstrapStage::preparing_bootstrap);
 
     // use a small buffer for the BBF
     setvbuf(bbf.get(), NULL, _IOFBF, 32);
@@ -547,7 +545,7 @@ static bool do_bootstrap(const buddy::resources::Revision &revision, buddy::reso
     }
 
     // copy the resources
-    reporter.update_stage(BootstrapStage::CopyingFiles);
+    reporter.update_stage(BootstrapStage::copying_files);
     source_path.set("/bbf");
     if (!copy_resources_directory(source_path, target_path, reporter)) {
         log_error(Resources, "Failed to copy resources");
@@ -575,9 +573,9 @@ static bool do_bootstrap(const buddy::resources::Revision &revision, buddy::reso
     return true;
 }
 
-bool buddy::resources::bootstrap(const buddy::resources::Revision &revision, ProgressHook progress_hook) {
+bool buddy::resources::bootstrap(const buddy::resources::Revision &revision) {
     while (true) {
-        bool success = do_bootstrap(revision, progress_hook);
+        bool success = do_bootstrap(revision);
         if (success) {
             log_info(Resources, "Bootstrap successful");
             return true;

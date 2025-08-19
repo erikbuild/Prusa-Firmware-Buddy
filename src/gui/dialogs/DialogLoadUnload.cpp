@@ -8,7 +8,7 @@
 #include "ScreenHandler.hpp"
 #include "fonts.hpp"
 #include <mmu2/mmu2_error_converter.h>
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "img_resources.hpp"
 #include "fsm_loadunload_type.hpp"
 #include <option/has_side_fsensor.h>

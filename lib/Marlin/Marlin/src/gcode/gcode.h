@@ -153,7 +153,6 @@
  * M220 - Set Feedrate Percentage: "M220 S<percent>" (i.e., "FR" on the LCD)
  * M221 - Set Flow Percentage: "M221 S<percent>"
  * M240 - Trigger a camera to take a photograph. (Requires PHOTO_GCODE)
- * M250 - Set LCD contrast: "M250 C<contrast>" (0-63). (Requires LCD support)
  * M260 - i2c Send Data
  * M261 - i2c Request Data
  * M280 - Set servo position absolute: "M280 P<index> S<angle|µs>". (Requires servos)
@@ -435,10 +434,6 @@ private:
     #endif
     static G29_TYPE G29();
   #endif
-  #if ENABLED(ADVANCED_HOMING)
-    static void G65();
-  #endif
-
 
   #if HAS_BED_PROBE
     static void G30();
@@ -647,10 +642,6 @@ private:
 
   #if ENABLED(PHOTO_GCODE)
     static void M240();
-  #endif
-
-  #if HAS_LCD_CONTRAST
-    static void M250();
   #endif
 
   #if HAS_I2C_EXPANDER()

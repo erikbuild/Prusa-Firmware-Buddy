@@ -11,7 +11,7 @@
 #include <transfers/transfer.hpp>
 #include <filament.hpp>
 #include <filament_list.hpp>
-#include <filament_sensor_states.hpp>
+#include <feature/filament_sensor/filament_sensor_states.hpp>
 
 #include <option/has_cancel_object.h>
 #if HAS_CANCEL_OBJECT()

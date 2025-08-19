@@ -26,12 +26,12 @@
 LOG_COMPONENT_REF(Selftest);
 using namespace selftest;
 
-// Pre-C1 pritners have higher noise level allowed, the loadcell is worse isolated
-#if PRINTER_IS_PRUSA_XL() || PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_iX()
-static constexpr int32_t acceptable_noise_range_g = 40;
-#else
-static constexpr int32_t acceptable_noise_range_g = 20;
-#endif
+static constexpr int32_t acceptable_noise_range_g = 60;
+
+auto set_extruder_temperature = [](int16_t temperature, uint8_t extruder) {
+    thermalManager.setTargetHotend(temperature, extruder);
+    marlin_server::set_temp_to_display(temperature, extruder);
+};
 
 CSelftestPart_Loadcell::CSelftestPart_Loadcell(IPartHandler &state_machine, const LoadcellConfig_t &config,
     SelftestLoadcell_t &result)
@@ -45,13 +45,13 @@ CSelftestPart_Loadcell::CSelftestPart_Loadcell(IPartHandler &state_machine, cons
     , log(1000)
     , log_fast(100) // this is only during 1s (will generate 9-10 logs)
 {
-    thermalManager.setTargetHotend(0, rConfig.tool_nr);
+    set_extruder_temperature(0, rConfig.tool_nr);
     endstops.enable(true);
     log_info(Selftest, "%s Started", rConfig.partname);
 }
 
 CSelftestPart_Loadcell::~CSelftestPart_Loadcell() {
-    thermalManager.setTargetHotend(begin_target_temp, rConfig.tool_nr);
+    set_extruder_temperature(begin_target_temp, rConfig.tool_nr);
     endstops.enable(false);
 }
 
@@ -94,8 +94,7 @@ LoopResult CSelftestPart_Loadcell::stateMoveUpWaitFinish() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateCooldownInit() {
-    thermalManager.setTargetHotend(0, rConfig.tool_nr); // Disable heating for tested hotend
-    marlin_server::set_temp_to_display(0, rConfig.tool_nr);
+    set_extruder_temperature(0, rConfig.tool_nr); // Disable heating for tested hotend
     const float temp = thermalManager.degHotend(rConfig.tool_nr);
     rResult.temperature = static_cast<int16_t>(temp);
     need_cooling = temp > rConfig.cool_temp; // Check if temperature is safe
@@ -196,7 +195,8 @@ LoopResult CSelftestPart_Loadcell::stateConnectionCheck() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateAskAbortInit() {
-    IPartHandler::SetFsmPhase(PhasesSelftest::Loadcell_user_tap_ask_abort);
+    const bool show_ignore = rResult.loadcell_noisy && !rResult.ignore_noisy;
+    IPartHandler::SetFsmPhase(show_ignore ? PhasesSelftest::Loadcell_user_tap_ask_ignore_abort : PhasesSelftest::Loadcell_user_tap_ask_abort);
     return LoopResult::RunNext;
 }
 
@@ -206,6 +206,10 @@ LoopResult CSelftestPart_Loadcell::stateAskAbort() {
     case Response::Abort: // Abort is automatic at state machine level, it should never get here
         log_error(Selftest, "%s user pressed abort, code should not reach this place", rConfig.partname);
         return LoopResult::Abort;
+    case Response::Ignore:
+        log_error(Selftest, "%s user selected to ignore loadcell noise", rConfig.partname);
+        rResult.ignore_noisy = true;
+        return LoopResult::RunNext;
     case Response::Continue:
         log_info(Selftest, "%s user pressed continue", rConfig.partname);
         return LoopResult::RunNext;
@@ -224,7 +228,9 @@ LoopResult CSelftestPart_Loadcell::stateTapCheckCountDownInit() {
 
     loadcell_value_range = {};
     time_start_countdown = SelftestInstance().GetTime();
-    rResult = {};
+    // Preserve the ignore noisy across retries.
+    const bool ignore_noisy = rResult.ignore_noisy;
+    rResult = { .ignore_noisy = ignore_noisy };
 
     IPartHandler::SetFsmPhase(PhasesSelftest::Loadcell_user_tap_countdown);
     return LoopResult::RunNext;
@@ -259,7 +265,7 @@ LoopResult CSelftestPart_Loadcell::stateTapCheckCountDown() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateTapCheckInit() {
-    if (loadcell_value_range.max - loadcell_value_range.min > acceptable_noise_range_g) {
+    if (loadcell_value_range.max - loadcell_value_range.min > acceptable_noise_range_g && !rResult.ignore_noisy) {
         log_info(Selftest, "%s range: %" PRIi32 "-%" PRIi32 " outside of %" PRIi32, rConfig.partname, loadcell_value_range.min, loadcell_value_range.max, acceptable_noise_range_g);
         rResult.loadcell_noisy = true;
         return LoopResult::GoToMark0;
@@ -301,6 +307,6 @@ LoopResult CSelftestPart_Loadcell::stateTapOk() {
 
     log_info(Selftest, "%s finished", rConfig.partname);
     IPartHandler::SetFsmPhase(PhasesSelftest::Loadcell_user_tap_ok);
-    return LoopResult::RunNext;
     rResult.progress = 100;
+    return LoopResult::RunNext;
 }

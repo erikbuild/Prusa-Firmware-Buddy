@@ -2,6 +2,7 @@
 
 #include "color.hpp"
 #include "printers.h"
+#include "dimming_enabled.hpp"
 
 #include <freertos/mutex.hpp>
 #include <optional>
@@ -11,7 +12,7 @@ namespace leds {
 
 enum class SideStripState {
     off,
-    idle,
+    dimmed,
     active,
     custom_color,
     _last = custom_color,
@@ -56,8 +57,8 @@ public:
     uint8_t get_dimmed_brightness() const;
     void set_dimmed_brightness(uint8_t value);
 
-    bool get_dimming_enabled() const;
-    void set_dimming_enabled(bool value);
+    DimmingEnabled get_dimming_enabled() const;
+    void set_dimming_enabled(DimmingEnabled value);
 
     leds::ColorRGBW color() const;
 
@@ -78,10 +79,7 @@ private:
     mutable freertos::Mutex mutex;
 
     // Values are initialized from config store by load_config() in constructor
-    bool dimming_enabled;
-#if HAS_XBUDDY_EXTENSION()
-    bool camera_enabled;
-#endif
+    DimmingEnabled dimming_enabled;
     uint8_t max_brightness;
     uint8_t dimmed_brightness;
 

@@ -34,8 +34,9 @@ public:
     PrusaPackGcodeReader(PrusaPackGcodeReader &&other) = default;
     PrusaPackGcodeReader &operator=(PrusaPackGcodeReader &&other) = default;
 
-    virtual bool stream_metadata_start() override;
-    virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false) override;
+    virtual void generate_index(Index &out, bool ignore_crc) override;
+    virtual bool stream_metadata_start(const Index *index = nullptr) override;
+    virtual Result_t stream_gcode_start(uint32_t offset = 0, bool ignore_crc = false, const Index *index = nullptr) override;
     virtual AbstractByteReader *stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger = false) override;
     virtual Result_t stream_get_line(GcodeBuffer &buffer, Continuations) override;
     // Call this only after already decrypting the asymmetric stuff for encrypted gcodes
@@ -180,6 +181,14 @@ private:
     Result_t read_block_header(bgcode::core::BlockHeader &block_header, bool check_crc = false);
 
     /**
+     * @brief Read a block header of given type.
+     * @param block_header output
+     * @param position_hint if not not_found, read a header at this position.
+     * @param search_predicate if position hint not given (eg. not_found), use this predicate to search for the right header.
+     */
+    Result_t seek_block_header(bgcode::core::BlockHeader &block_header, Index::Position position_hint, bool check_crc, stdext::inplace_function<IterateResult_t(bgcode::core::BlockHeader &)> search_predicate);
+
+    /**
      * @brief Reads file header and check its content (for magic, version etc)
      * @return Status of the header.
      */
@@ -192,4 +201,6 @@ private:
         std::span<std::byte> read(std::span<std::byte>) final;
     };
     ThumbnailReader thumbnail_reader;
+
+    std::optional<ThumbnailDetails> thumbnail_details(const bgcode::core::BlockHeader &block_header);
 };

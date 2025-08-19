@@ -54,11 +54,6 @@ volatile uint8_t Endstops::hit_state;
 
 Endstops::esbits_t Endstops::live_state = 0;
 
-#if ENDSTOP_NOISE_THRESHOLD
-  Endstops::esbits_t Endstops::validated_live_state;
-  uint8_t Endstops::endstop_poll_count;
-#endif
-
 #if HAS_BED_PROBE
   std::atomic<bool> Endstops::z_probe_enabled { false };
 #endif
@@ -270,8 +265,6 @@ void Endstops::init() {
 void Endstops::poll() {
   #if DISABLED(ENDSTOP_INTERRUPTS_FEATURE)
     update();
-  #elif ENDSTOP_NOISE_THRESHOLD
-    if (endstop_poll_count) update();
   #endif
 
   // Call Loadcell::HomingSafetyCheck when homing (safeguard to stop homing when loadcell samples stop comming)
@@ -334,9 +327,6 @@ void Endstops::resync() {
     update();
   #else
     safe_delay(2);  // Wait for Temperature ISR to run at least once (runs at 1KHz)
-  #endif
-  #if ENDSTOP_NOISE_THRESHOLD
-    while (endstop_poll_count) safe_delay(1);
   #endif
 }
 
@@ -474,9 +464,7 @@ void __O2 Endstops::M119() {
 // Check endstops - Could be called from Temperature ISR!
 void Endstops::update() {
 
-  #if !ENDSTOP_NOISE_THRESHOLD
     if (!abort_enabled()) return;
-  #endif
 
   #define UPDATE_ENDSTOP_BIT(AXIS, MINMAX) SET_BIT_TO(live_state, _ENDSTOP(AXIS, MINMAX), (READ(_ENDSTOP_PIN(AXIS, MINMAX)) != _ENDSTOP_INVERTING(AXIS, MINMAX)))
   #define COPY_LIVE_STATE(SRC_BIT, DST_BIT) SET_BIT_TO(live_state, DST_BIT, TEST(live_state, SRC_BIT))
@@ -596,30 +584,6 @@ void Endstops::update() {
       // If this pin isn't the bed probe it's the Z endstop
       UPDATE_ENDSTOP_BIT(Z, MAX);
     #endif
-  #endif
-
-  #if ENDSTOP_NOISE_THRESHOLD
-
-    /**
-     * Filtering out noise on endstops requires a delayed decision. Let's assume, due to noise,
-     * that 50% of endstop signal samples are good and 50% are bad (assuming normal distribution
-     * of random noise). Then the first sample has a 50% chance to be good or bad. The 2nd sample
-     * also has a 50% chance to be good or bad. The chances of 2 samples both being bad becomes
-     * 50% of 50%, or 25%. That was the previous implementation of Marlin endstop handling. It
-     * reduces chances of bad readings in half, at the cost of 1 extra sample period, but chances
-     * still exist. The only way to reduce them further is to increase the number of samples.
-     * To reduce the chance to 1% (1/128th) requires 7 samples (adding 7ms of delay).
-     */
-    static esbits_t old_live_state;
-    if (old_live_state != live_state) {
-      endstop_poll_count = ENDSTOP_NOISE_THRESHOLD;
-      old_live_state = live_state;
-    }
-    else if (endstop_poll_count && !--endstop_poll_count)
-      validated_live_state = live_state;
-
-    if (!abort_enabled()) return;
-
   #endif
 
   // Test the current status of an endstop

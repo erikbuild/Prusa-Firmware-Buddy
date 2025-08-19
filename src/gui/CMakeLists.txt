@@ -17,7 +17,6 @@ target_sources(
           frame_calibration_common.cpp
           frame_qr_layout.cpp
           gcode_description.cpp
-          gui_bootstrap_screen.cpp
           gui_media_events.cpp
           gui_time.cpp
           guimain.cpp
@@ -40,10 +39,8 @@ target_sources(
           pseudo_screen_callback.cpp
           qoi_decoder.cpp
           qr.cpp
-          screen_blue_error.cpp
-          screen_bsod.cpp
+          screen_error.cpp
           screen_filebrowser.cpp
-          screen_hardfault.cpp
           screen_help_fw_update.cpp
           screen_home.cpp
           screen_menu.cpp
@@ -80,11 +77,7 @@ target_sources(
           screen_printing.cpp
           screen_printing_end_result.cpp
           screen_prusa_link.cpp
-          screen_qr_error.cpp
-          screen_reset_error.cpp
           screen_splash.cpp
-          screen_stack_overflow.cpp
-          screen_watchdog.cpp
           ScreenFactory.cpp
           ScreenHandler.cpp
           ScreenPrintingModel.cpp
@@ -164,10 +157,6 @@ if(HAS_MMU2)
             screen_menu_mmu_preload_to_mmu.cpp
             screen_tools_mapping.cpp
     )
-endif()
-
-if(PRINTER STREQUAL "MK4" OR PRINTER STREQUAL "MK3.5")
-  target_sources(firmware PRIVATE screen_fatal_warning.cpp)
 endif()
 
 if(PRINTER STREQUAL "MINI")

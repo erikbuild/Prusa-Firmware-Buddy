@@ -1,6 +1,5 @@
 #include "gcode_reader_binary.hpp"
 #include <utility_extensions.hpp>
-#include "lang/i18n.h"
 #include <md.h>
 #include <crc32.h>
 #include <logging/log.hpp>
@@ -111,6 +110,35 @@ IGcodeReader::Result_t PrusaPackGcodeReader::read_block_header(BlockHeader &bloc
     return Result_t::RESULT_OK;
 }
 
+IGcodeReader::Result_t PrusaPackGcodeReader::seek_block_header(BlockHeader &block_header, Index::Position position_hint, bool check_crc, stdext::inplace_function<IterateResult_t(BlockHeader &)> search_predicate) {
+    if (position_hint == Index::not_present) {
+        return Result_t::RESULT_EOF;
+    } else if (position_hint == Index::not_indexed) {
+        // get first matching block
+        const auto res = iterate_blocks(check_crc, search_predicate);
+
+        return std::visit([&](const auto &res) -> Result_t {
+            if constexpr (std::is_same_v<decltype(res), const BlockHeader &>) {
+                block_header = res;
+                return Result_t::RESULT_OK;
+            } else if constexpr (std::is_same_v<decltype(res), const Result_t &>) {
+                return res;
+            } else if constexpr (std::is_same_v<decltype(res), const std::monostate &>) {
+                return Result_t::RESULT_ERROR;
+            } else {
+                static_assert(false, "Not exhaustive");
+            }
+        },
+            res);
+    } else {
+        if (fseek(file.get(), position_hint, SEEK_SET) != 0) {
+            return Result_t::RESULT_ERROR;
+        }
+
+        return read_block_header(block_header, check_crc);
+    }
+}
+
 std::variant<std::monostate, BlockHeader, PrusaPackGcodeReader::Result_t> PrusaPackGcodeReader::iterate_blocks(bool check_crc, stdext::inplace_function<IterateResult_t(BlockHeader &)> function) {
     if (auto res = read_and_check_header(); res != Result_t::RESULT_OK) {
         return res;
@@ -144,24 +172,33 @@ std::variant<std::monostate, BlockHeader, PrusaPackGcodeReader::Result_t> PrusaP
     }
 }
 
-bool PrusaPackGcodeReader::stream_metadata_start() {
+bool PrusaPackGcodeReader::stream_metadata_start(const Index *index) {
     // Will be set accordingly at the end on success
     stream_mode_ = StreamMode::none;
 
-    auto res = iterate_blocks(false, [](BlockHeader &block_header) {
-        if (bgcode::core::EBlockType(block_header.type) == bgcode::core::EBlockType::PrinterMetadata) {
-            return IterateResult_t::Return;
+    {
+        BlockHeader header;
+
+        const auto res = seek_block_header(header, index ? index->metadata : Index::not_indexed, false, [](BlockHeader &block_header) {
+            switch (bgcode::core::EBlockType(block_header.type)) {
+            case bgcode::core::EBlockType::PrinterMetadata:
+                return IterateResult_t::Return;
+            case bgcode::core::EBlockType::GCode:
+            case bgcode::core::EBlockType::EncryptedBlock:
+                // No chance of finding it past this point.
+                return IterateResult_t::End;
+            default:
+                return IterateResult_t::Continue;
+            }
+        });
+
+        if (res != Result_t::RESULT_OK) {
+            return false;
         }
 
-        return IterateResult_t::Continue;
-    });
-
-    if (!std::holds_alternative<BlockHeader>(res)) {
-        return false;
+        stream.reset();
+        stream.current_plain_block_header = header;
     }
-
-    stream.reset();
-    stream.current_plain_block_header = get<BlockHeader>(res);
 
     uint16_t encoding;
     if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
@@ -192,6 +229,51 @@ const PrusaPackGcodeReader::StreamRestoreInfo::PrusaPackRec *PrusaPackGcodeReade
     return nullptr;
 }
 
+void PrusaPackGcodeReader::generate_index(Index &out, bool ignore_crc) {
+    out.gcode = Index::not_present;
+    out.metadata = Index::not_present;
+    for (auto &thumb : out.thumbnails) {
+        thumb.position = Index::not_present;
+    }
+
+    auto result = iterate_blocks(!ignore_crc, [&](const BlockHeader &header) -> IterateResult_t {
+        switch (static_cast<EBlockType>(header.type)) {
+        case EBlockType::GCode:
+        case EBlockType::EncryptedBlock:
+            out.gcode = header.get_position();
+            // All the interesting stuff is before actual gcodes. No reason to index further.
+            return IterateResult_t::End;
+        case EBlockType::PrinterMetadata:
+            // Note: We are not really interested in the other metadata blocks.
+            out.metadata = header.get_position();
+            return IterateResult_t::Continue;
+        case EBlockType::Thumbnail: {
+            const auto details = thumbnail_details(header);
+            if (!details.has_value()) {
+                return IterateResult_t::Continue;
+            }
+            for (auto &thumb : out.thumbnails) {
+                if (thumb.w == details->width && thumb.h == details->height && thumb.type == details->type) {
+                    thumb.position = header.get_position();
+                    break;
+                }
+            }
+            return IterateResult_t::Continue;
+        }
+        case bgcode::core::EBlockType::FileMetadata:
+        case bgcode::core::EBlockType::IdentityBlock:
+        case bgcode::core::EBlockType::KeyBlock:
+        case bgcode::core::EBlockType::PrintMetadata:
+        case bgcode::core::EBlockType::SlicerMetadata:;
+        }
+        return IterateResult_t::Continue;
+    });
+    if (!std::holds_alternative<std::monostate>(result)) {
+        assert(std::holds_alternative<Result_t>(result));
+        out = Index();
+    }
+}
+
 namespace {
 template <typename CB>
 void block_header_bytes_cb(BlockHeader header, CB callback) {
@@ -205,7 +287,7 @@ void block_header_bytes_cb(BlockHeader header, CB callback) {
 
 } // namespace
 
-IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc) {
+IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc, const Index *index) {
     BlockHeader start_block;
     uint32_t block_decompressed_offset; //< what is offset of first byte inside block that we start streaming from
     uint32_t block_throwaway_bytes; //< How many bytes to throw away from current block (after decompression)
@@ -218,8 +300,7 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     const bool check_crc = verify && !ignore_crc;
 
     if (offset == 0) {
-        // get first gcode block
-        auto res = iterate_blocks(check_crc, [](BlockHeader &block_header) {
+        const auto res = seek_block_header(start_block, index ? index->gcode : Index::not_indexed, check_crc, [](BlockHeader &block_header) {
             // check if correct type, if so, return this block
             if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode || (bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
                 return IterateResult_t::Return;
@@ -227,23 +308,15 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
 
             return IterateResult_t::Continue;
         });
-
-        auto header = std::get_if<BlockHeader>(&res);
-        if (header == nullptr) {
-            if (auto status = std::get_if<Result_t>(&res); status != nullptr) {
-                return *status;
-            } else {
-                // monostate should be returned only when the inner function returns End and we don't do that.
-                assert(false);
-                return Result_t::RESULT_ERROR;
-            }
+        if (res != Result_t::RESULT_OK) {
+            return res;
         }
 
-        start_block = *header;
         block_throwaway_bytes = 0;
         block_decompressed_offset = 0;
-
     } else {
+        // Index shall not be used when opening at a specific offset.
+        assert(index == nullptr);
         // offset > 0 - we are starting from arbitrary offset, find nearest block from cache
         if (auto res = read_and_check_header(); res != Result_t::RESULT_OK) {
             return res; // need to check file header somewhere
@@ -603,6 +676,25 @@ std::span<std::byte> PrusaPackGcodeReader::ThumbnailReader::read(std::span<std::
     return { buffer.data(), nread };
 }
 
+std::optional<PrusaPackGcodeReader::ThumbnailDetails> PrusaPackGcodeReader::thumbnail_details(const BlockHeader &block_header) {
+    if ((ECompressionType)block_header.compressed_size != bgcode::core::ECompressionType::None) {
+        // no compression supported on images, they are already compressed enough
+        return std::nullopt;
+    }
+
+    bgcode::core::ThumbnailParams thumb_header;
+    if (thumb_header.read(*file) != bgcode::core::EResult::Success) {
+        return std::nullopt;
+    }
+
+    return ThumbnailDetails {
+        .width = thumb_header.width,
+        .height = thumb_header.height,
+        .num_bytes = block_header.uncompressed_size,
+        .type = thumbnail_format_to_type(static_cast<bgcode::core::EThumbnailFormat>(thumb_header.format)),
+    };
+}
+
 AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger) {
 
     const struct params {
@@ -626,24 +718,20 @@ AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expect
         if ((EBlockType)block_header.type != EBlockType::Thumbnail) {
             return IterateResult_t::Continue;
         }
-        if ((ECompressionType)block_header.compressed_size != bgcode::core::ECompressionType::None) {
-            // no compression supported on images, they are already compressed enough
+
+        const auto details = thumbnail_details(block_header);
+
+        if (!details.has_value()) {
+            return IterateResult_t::Continue;
+        }
+        if (details->type != params.expected_type) {
+            // Other format than what we want
             return IterateResult_t::Continue;
         }
 
-        bgcode::core::ThumbnailParams thumb_header;
-        if (thumb_header.read(*file) != bgcode::core::EResult::Success) {
-            return IterateResult_t::Continue;
-        }
-
-        // format not valid
-        if (thumbnail_format_to_type(static_cast<bgcode::core::EThumbnailFormat>(thumb_header.format)) != params.expected_type) {
-            return IterateResult_t::Continue;
-        }
-
-        if (params.expected_height == thumb_header.height && params.expected_width == thumb_header.width) {
+        if (params.expected_height == details->height && params.expected_width == details->width) {
             return IterateResult_t::Return;
-        } else if (params.allow_larger && params.expected_height <= thumb_header.height && params.expected_width <= thumb_header.width) {
+        } else if (params.allow_larger && params.expected_height <= details->height && params.expected_width <= details->width) {
             return IterateResult_t::Return;
         } else {
             return IterateResult_t::Continue;

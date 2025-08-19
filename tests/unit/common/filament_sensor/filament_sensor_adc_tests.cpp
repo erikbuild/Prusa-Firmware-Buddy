@@ -1,5 +1,5 @@
 #include "catch2/catch.hpp"
-#include "filament_sensor_adc_eval.hpp"
+#include <feature/filament_sensor/filament_sensor_adc_eval.hpp>
 #include <fstream>
 #include <string>
 #include <chrono>

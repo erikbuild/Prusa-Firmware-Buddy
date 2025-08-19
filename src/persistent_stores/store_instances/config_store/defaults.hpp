@@ -11,7 +11,7 @@
 #include <common/sheet.hpp>
 #include <module/prusa/dock_position.hpp>
 #include <module/prusa/tool_offset.hpp>
-#include <filament_sensors_remap_data.hpp>
+#include <feature/filament_sensor/filament_sensors_remap_data.hpp>
 #include <printers.h>
 #include <common/hw_check.hpp>
 #include <filament_eeprom.hpp>

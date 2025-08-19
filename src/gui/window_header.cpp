@@ -361,9 +361,6 @@ void window_header_t::windowEvent(window_t *sender, GUI_event_t event, void *par
         case layout_color::red:
             SetRedLayout();
             break;
-        case layout_color::blue:
-            SetBlueLayout();
-            break;
         case layout_color::leave_it:
             break;
         }

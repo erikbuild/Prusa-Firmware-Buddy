@@ -153,6 +153,7 @@ if(BOARD IN_LIST BUDDY_BOARDS OR BOARD STREQUAL "XL_DEV_KIT_XLB")
 else()
   set(BOARD_IS_MASTER_BOARD false)
 endif()
+define_boolean_option(BOARD_IS_MASTER_BOARD ${BOARD_IS_MASTER_BOARD})
 
 # set MCU to its default if not specified
 if(${MCU} STREQUAL "<default>")
@@ -310,7 +311,6 @@ define_enum_option(NAME POWER_PANIC_STORAGE VALUE FLASH ALL_VALUES "FLASH;BKPSRA
 set_feature_for_printers(HAS_PRECISE_HOMING "MK4" "MK3.5")
 set_feature_for_printers(HAS_PRECISE_HOMING_COREXY "iX" "XL" "XL_DEV_KIT" "COREONE")
 set_feature_for_printers_master_board(HAS_PHASE_STEPPING "XL" "iX" "COREONE" "MK4")
-set_feature_for_printers_master_board(HAS_PHASE_STEPPING_TOGGLE "XL")
 set_feature_for_printers_master_board(HAS_PHASE_STEPPING_SELFTEST "iX" "XL")
 set_feature_for_printers_master_board(HAS_PHASE_STEPPING_CALIBRATION "XL" "iX" "COREONE" "MK4")
 set(PRINTERS_WITH_BURST_STEPPING "XL" "MK4" "iX" "COREONE")
@@ -383,7 +383,7 @@ set_feature_for_printers(
   "XL"
   "MINI"
   )
-set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4")
+set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4" "iX")
 set_feature_for_printers_master_board(
   HAS_E2EE_SUPPORT
   "MK4"
@@ -426,7 +426,7 @@ set_feature_for_printers(HAS_REMOTE_ACCELEROMETER "XL" "XL_DEV_KIT")
 # Some printers require manual mounting of accelerometer to the board, nozzle or bed
 set_feature_for_printers(HAS_ATTACHABLE_ACCELEROMETER "MK3.5" "MK4" "COREONE")
 
-set_feature_for_printers(HAS_COLDPULL "MK3.5" "MK4" "XL")
+set_feature_for_printers(HAS_COLDPULL "MK3.5" "MK4" "XL" "COREONE")
 
 set_feature_for_printers(HAS_BED_LEVEL_CORRECTION "MK3.5" "MINI")
 
@@ -436,7 +436,8 @@ set_feature_for_printers(HAS_NFC "MK3.5" "MK4" "COREONE")
 
 set_feature_for_printers(HAS_NOZZLE_CLEANER "iX")
 # BELT_TUNING requires SELFTEST
-set_feature_for_printers(HAS_BELT_TUNING "XL" "iX")
+set_feature_for_printers(HAS_BELT_TUNING "iX")
+set_feature_for_printers(HAS_MANUAL_BELT_TUNING "COREONE")
 set_feature_for_printers_master_board(HAS_I2C_EXPANDER "MK3.5" "MK4" "COREONE")
 set_feature_for_printers(HAS_WASTEBIN "iX")
 set_feature_for_printers_master_board(HAS_PRINT_FAN_TYPE "XL")
@@ -834,7 +835,7 @@ define_boolean_option(DISABLE_WATCHDOG ${DISABLE_WATCHDOG})
 # Eventually, this'll become the only used and supported way to talk to Connect. At that point, both
 # this option and the "old" code will be removed.
 set(WEBSOCKET
-    "OFF"
+    "ON"
     CACHE BOOL "Use websocket to talk to connect. In development"
     )
 define_boolean_option(WEBSOCKET ${WEBSOCKET})

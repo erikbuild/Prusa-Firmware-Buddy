@@ -160,62 +160,6 @@
 #endif
 
 /**
- * LCD Contrast for Graphical Displays
- */
-#if ENABLED(CARTESIO_UI)
-  #define _LCD_CONTRAST_MIN   60
-  #define _LCD_CONTRAST_INIT  90
-  #define _LCD_CONTRAST_MAX  140
-#elif ENABLED(miniVIKI)
-  #define _LCD_CONTRAST_MIN   75
-  #define _LCD_CONTRAST_INIT  95
-  #define _LCD_CONTRAST_MAX  115
-#elif ENABLED(VIKI2)
-  #define _LCD_CONTRAST_INIT 140
-#elif ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
-  #define _LCD_CONTRAST_MIN   90
-  #define _LCD_CONTRAST_INIT 110
-  #define _LCD_CONTRAST_MAX  130
-#elif ENABLED(AZSMZ_12864)
-  #define _LCD_CONTRAST_MIN  120
-  #define _LCD_CONTRAST_INIT 190
-#elif ENABLED(MKS_MINI_12864)
-  #define _LCD_CONTRAST_MIN  120
-  #define _LCD_CONTRAST_INIT 195
-#elif ENABLED(ULTI_CONTROLLER)
-  #define _LCD_CONTRAST_INIT 127
-  #define _LCD_CONTRAST_MAX  254
-#elif EITHER(MAKRPANEL, MINIPANEL)
-  #define _LCD_CONTRAST_INIT  17
-#endif
-
-#define HAS_LCD_CONTRAST defined(_LCD_CONTRAST_INIT)
-#if HAS_LCD_CONTRAST
-  #ifndef LCD_CONTRAST_MIN
-    #ifdef _LCD_CONTRAST_MIN
-      #define LCD_CONTRAST_MIN _LCD_CONTRAST_MIN
-    #else
-      #define LCD_CONTRAST_MIN 0
-    #endif
-  #endif
-  #ifndef LCD_CONTRAST_INIT
-    #define LCD_CONTRAST_INIT _LCD_CONTRAST_INIT
-  #endif
-  #ifndef LCD_CONTRAST_MAX
-    #ifdef _LCD_CONTRAST_MAX
-      #define LCD_CONTRAST_MAX _LCD_CONTRAST_MAX
-    #elif _LCD_CONTRAST_INIT > 63
-      #define LCD_CONTRAST_MAX 255
-    #else
-      #define LCD_CONTRAST_MAX 63   // ST7567 6-bits contrast
-    #endif
-  #endif
-  #ifndef DEFAULT_LCD_CONTRAST
-    #define DEFAULT_LCD_CONTRAST LCD_CONTRAST_INIT
-  #endif
-#endif
-
-/**
  * Set defaults for missing (newer) options
  */
 #ifndef DISABLE_INACTIVE_X
@@ -1240,12 +1184,6 @@
   #endif
 #endif
 
-#ifndef __SAM3X8E__ //todo: hal: broken hal encapsulation
-  #undef UI_VOLTAGE_LEVEL
-  #undef RADDS_DISPLAY
-  #undef MOTOR_CURRENT
-#endif
-
 // Updated G92 behavior shifts the workspace
 #define HAS_POSITION_SHIFT DISABLED(NO_WORKSPACE_OFFSETS)
 // The home offset also shifts the coordinate space
@@ -1263,35 +1201,6 @@
   #define MAX_VFAT_ENTRIES (5)
 #else
   #define MAX_VFAT_ENTRIES (2)
-#endif
-
-// Force SDCARD_SORT_ALPHA to be enabled for Graphical LCD on LPC1768
-// on boards where SD card and LCD display share the same SPI bus
-// because of a bug in the shared SPI implementation. (See #8122)
-#if defined(TARGET_LPC1768) && ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) && (SCK_PIN == LCD_PINS_D4)
-  #define SDCARD_SORT_ALPHA         // Keeps one directory level in RAM. Changing
-                                    // directory levels still glitches the screen,
-                                    // but the following LCD update cleans it up.
-  #undef SDSORT_LIMIT
-  #undef SDSORT_USES_RAM
-  #undef SDSORT_USES_STACK
-  #undef SDSORT_CACHE_NAMES
-  #define SDSORT_LIMIT       64
-  #define SDSORT_USES_RAM    true
-  #define SDSORT_USES_STACK  false
-  #define SDSORT_CACHE_NAMES true
-  #ifndef FOLDER_SORTING
-    #define FOLDER_SORTING     -1
-  #endif
-  #ifndef SDSORT_GCODE
-    #define SDSORT_GCODE       false
-  #endif
-  #ifndef SDSORT_DYNAMIC_RAM
-    #define SDSORT_DYNAMIC_RAM false
-  #endif
-  #ifndef SDSORT_CACHE_VFATS
-    #define SDSORT_CACHE_VFATS 2
-  #endif
 #endif
 
 // Defined here to catch the above defines

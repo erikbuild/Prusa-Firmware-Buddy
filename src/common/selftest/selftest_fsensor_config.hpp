@@ -10,7 +10,7 @@
 #include <cstdint>
 #include "selftest_fsensor_type.hpp"
 #include "client_response.hpp"
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 
 namespace selftest {
 // using 32bit variables, because it is stored in flash and access to 32bit variables is more efficient

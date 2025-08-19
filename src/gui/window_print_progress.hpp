@@ -28,13 +28,3 @@ public:
 protected:
     void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
 };
-
-class WindowPrintVerticalProgress : public window_vertical_progress_t {
-    int8_t last_sd_percent_done;
-
-public:
-    WindowPrintVerticalProgress(window_t *parent, Rect16 rect);
-
-protected:
-    void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
-};

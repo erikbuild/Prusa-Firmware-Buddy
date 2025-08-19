@@ -15,6 +15,7 @@
 #include <logging/log.hpp>
 #include "timing_precise.hpp"
 #include <option/has_burst_stepping.h>
+#include <option/has_local_accelerometer.h>
 #include <option/has_i2c_expander.h>
 #include <printers.h>
 
@@ -909,6 +910,7 @@ void hw_tim3_init() {
     __HAL_TIM_ENABLE(&htim3);
 }
 
+#if HAS_BURST_STEPPING()
 void hw_tim8_init() {
     TIM_ClockConfigTypeDef sClockSourceConfig {};
     TIM_MasterConfigTypeDef sMasterConfig {};
@@ -943,7 +945,9 @@ void hw_tim8_init() {
 
     HAL_TIM_MspPostInit(&htim8);
 }
+#endif // HAS_BURST_STEPPING()
 
+#if HAS_LOCAL_ACCELEROMETER()
 void hw_tim9_init() {
     TIM_ClockConfigTypeDef sClockSourceConfig {};
     TIM_MasterConfigTypeDef sMasterConfig {};
@@ -973,6 +977,7 @@ void hw_tim9_init() {
 
     HAL_TIM_MspPostInit(&htim9);
 }
+#endif // HAS_LOCAL_ACCELEROMETER()
 
 void hw_tim13_init() {
     htim13.Instance = TIM13;

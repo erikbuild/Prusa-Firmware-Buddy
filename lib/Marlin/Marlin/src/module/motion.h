@@ -43,8 +43,32 @@
 static constexpr uint8_t xyz_bits = _BV(X_AXIS) | _BV(Y_AXIS) | _BV(Z_AXIS);
 
 struct MoveHints {
-  bool is_printing_move = false;      // The move is a printing move and should possibly count into max printed Z
+  /// The move is a printing move and should possibly count into max printed Z
+  bool is_printing_move : 1 = false;
 };
+
+/** Holds flags related to configuration and segment generation
+ */
+struct PrepareMoveHints {
+  /// Apply modifiers (MBL, skew correction, ...)
+  bool apply_modifiers : 1 = true;
+
+  /// Apply feedrate scaling
+  bool scale_feedrate : 1 = true;
+
+  /// Segment the move to be able to append correct leveling values
+  bool do_segment : 1 = true;
+
+  /// Whether motion limits should be applied (not allowing moves outside of MIN/MAX coordinates)
+  bool apply_motion_limits : 1 = true;
+
+  /// Whether extrusion safety checks (PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE) should be applied
+  bool extrusion_safety_checks : 1 = true;
+  
+  MoveHints move = {}; 
+
+};
+
 
 enum class AxisHomeLevel : uint8_t {
   /// The axis it not homed at all, we could be anywhere
@@ -236,22 +260,14 @@ void sync_plan_position_e();
 void line_to_current_position(const feedRate_t &fr_mm_s=feedrate_mm_s);
 
 /// Plans (non-blocking) linear move to relative distance.
-/// It uses prepare_move_to_destination() for the planning which
-/// is suitable with UBL.
 void plan_move_by(const feedRate_t fr, const float dx, const float dy = 0, const float dz = 0, const float de = 0);
-
-void prepare_move_to_destination(const MoveHints &hints = {});
-
-void _internal_move_to_destination(const feedRate_t &fr_mm_s=0.0f);
-
-inline void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s=0.0f) {
-  _internal_move_to_destination(fr_mm_s);
-}
 
 enum class Segmented {
     yes,
     no,
 };
+
+void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s=0.0f, const PrepareMoveHints &hints = {});
 
 /// Plans (non-blocking) Z-Manhattan fast (non-linear) move to the specified location
 /// Feedrate is in mm/s
@@ -341,18 +357,8 @@ void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const fe
 // Perform a single homing move on a logical axis
 uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate_t fr_mm_s=0.0, bool can_move_back_before_homing = false, bool homing_z_with_probe = true);
 
-struct PrepareMoveHints {
-  /// Apply modifiers (MBL, skew correction, ...)
-  bool apply_modifiers : 1 = true;
-
-  /// Apply feedrate scaling
-  bool scale_feedrate : 1 = true;
-
-  MoveHints move;
-};
-
 /// Prepares the move to the target. Can apply segmentation based on MBL and other mechanisms requirements.
-void prepare_move_to(const xyze_pos_t &target, feedRate_t fr_mm_s, PrepareMoveHints hints);
+void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hints);
 
 /**
  * Workspace offsets

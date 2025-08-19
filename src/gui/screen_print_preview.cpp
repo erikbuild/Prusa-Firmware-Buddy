@@ -4,7 +4,7 @@
 #include "screen_print_preview.hpp"
 #include <logging/log.hpp>
 #include "marlin_client.hpp"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <stdarg.h>
 #include "sound.hpp"
 #include "img_resources.hpp"

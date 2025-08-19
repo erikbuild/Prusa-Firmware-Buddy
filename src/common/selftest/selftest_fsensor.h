@@ -11,7 +11,7 @@
 #include "i_selftest_part.hpp"
 #include "selftest_fsensor_config.hpp"
 #include "selftest_fsensor_type.hpp"
-#include "filament_sensors_handler.hpp" // FilamentSensorState
+#include <feature/filament_sensor/filament_sensors_handler.hpp> // FilamentSensorState
 #include "selftest_log.hpp"
 
 namespace selftest {

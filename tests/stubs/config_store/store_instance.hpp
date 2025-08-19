@@ -4,6 +4,7 @@
 #if HAS_E2EE_SUPPORT()
     #include <e2ee/identity_check_levels.hpp>
 #endif
+#include <common/hw_check.hpp>
 #include <cstdint>
 #include <array>
 
@@ -55,6 +56,29 @@ struct ConfigStore {
 
     Value identity_check;
 #endif
+    struct HwCheck {
+        HWCheckSeverity get() const {
+            return HWCheckSeverity::Abort;
+        }
+    };
+    HwCheck hw_check_input_shaper;
+    HwCheck hw_check_firmware;
+    HwCheck hw_check_gcode_level;
+    HwCheck hw_check_nozzle;
+    HwCheck hw_check_model;
+
+    float get_nozzle_diameter(uint8_t) const {
+        return 0.4;
+    }
+
+    struct ManyFalse {
+        std::array<bool, 5> get() const {
+            return { false, false, false, false, false };
+        }
+    };
+
+    ManyFalse nozzle_is_hardened;
+    ManyFalse nozzle_is_high_flow;
 };
 
 inline ConfigStore &config_store() {

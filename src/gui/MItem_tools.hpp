@@ -8,15 +8,14 @@
 #include "WindowItemFanLabel.hpp"
 #include "config.h"
 #include <buddy/door_sensor.hpp>
-#include <common/filament_sensor.hpp>
-#include <common/filament_sensor_states.hpp>
+#include <feature/filament_sensor/filament_sensor.hpp>
+#include <feature/filament_sensor/filament_sensor_states.hpp>
 #include <utility_extensions.hpp>
 #include <option/has_door_sensor.h>
 #include <option/has_dwarf.h>
 #include <option/has_filament_sensors_menu.h>
 #include <option/has_coldpull.h>
 #include <option/has_leds.h>
-#include <option/has_phase_stepping_toggle.h>
 #include <option/has_side_leds.h>
 #include <option/buddy_enable_connect.h>
 #include <option/has_belt_tuning.h>
@@ -469,21 +468,6 @@ protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
 
-#if HAS_PHASE_STEPPING_TOGGLE()
-
-class MI_PHASE_STEPPING_TOGGLE : public WI_ICON_SWITCH_OFF_ON_t {
-    static constexpr const char *label = "Phase Stepping";
-    bool event_in_progress { false };
-
-public:
-    MI_PHASE_STEPPING_TOGGLE();
-
-protected:
-    void OnChange(size_t old_index) override;
-};
-
-#endif
-
 /******************************************************************/
 #if HAS_COLDPULL()
 
@@ -572,7 +556,7 @@ public:
     virtual void Loop() override;
 };
 
-class MI_SIDE_LEDS_DIMMING_ENABLE : public WI_ICON_SWITCH_OFF_ON_t {
+class MI_SIDE_LEDS_DIMMING_ENABLE : public MenuItemSwitch {
     static constexpr const char *const label =
     #if PRINTER_IS_PRUSA_COREONE()
         N_("Chamber Dimming");
@@ -632,6 +616,10 @@ protected:
 
 #if HAS_BELT_TUNING()
 using MI_BELT_TUNING = WithConstructorArgs<MenuItemGcodeAction, N_("Belt Tuning"), "M960 W"_tstr>;
+#endif
+
+#if HAS_MANUAL_BELT_TUNING()
+using MI_MANUAL_BELT_TUNING = WithConstructorArgs<MenuItemGcodeAction, N_("Manual Belt Tuning"), "M961"_tstr>;
 #endif
 
 #if HAS_ILI9488_DISPLAY()

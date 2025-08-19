@@ -19,7 +19,6 @@ static DMA_HandleTypeDef hdma_usart2_rx;
 static DMA_HandleTypeDef hdma_usart6_rx;
 static DMA_HandleTypeDef hdma_usart6_tx;
 static DMA_HandleTypeDef hdma_adc1;
-static DMA_HandleTypeDef hdma_tim8;
 #elif BOARD_IS_XBUDDY()
 static DMA_HandleTypeDef hdma_spi2_rx;
 static DMA_HandleTypeDef hdma_spi2_tx;
@@ -35,7 +34,9 @@ static DMA_HandleTypeDef hdma_uart8_rx;
 static DMA_HandleTypeDef hdma_uart8_tx;
 static DMA_HandleTypeDef hdma_adc1;
 static DMA_HandleTypeDef hdma_adc3;
+    #if HAS_BURST_STEPPING()
 static DMA_HandleTypeDef hdma_tim8;
+    #endif
 #elif BOARD_IS_XLBUDDY()
 static DMA_HandleTypeDef hdma_spi3_rx;
 static DMA_HandleTypeDef hdma_spi3_tx;
@@ -53,7 +54,9 @@ static DMA_HandleTypeDef hdma_uart8_rx;
 static DMA_HandleTypeDef hdma_uart8_tx;
 static DMA_HandleTypeDef hdma_adc1;
 static DMA_HandleTypeDef hdma_adc3;
+    #if HAS_BURST_STEPPING()
 static DMA_HandleTypeDef hdma_tim8;
+    #endif
 #else
     #error "Unknown board"
 #endif
@@ -943,7 +946,9 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim) {
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    } else if (htim->Instance == TIM8) {
+    }
+#if HAS_BURST_STEPPING()
+    else if (htim->Instance == TIM8) {
         /* TIM8 DMA Init */
         hdma_tim8.Instance = DMA2_Stream1;
         hdma_tim8.Init.Channel = DMA_CHANNEL_7;
@@ -961,6 +966,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim) {
 
         __HAL_LINKDMA(htim, hdma[TIM_DMA_ID_UPDATE], hdma_tim8);
     }
+#endif
 }
 
 /**

@@ -4,7 +4,7 @@
 
 #include "screen_menu_filament_mmu.hpp"
 #include "filament.hpp"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "marlin_client.hpp"
 #include "ScreenHandler.hpp"
 #include "sound.hpp"

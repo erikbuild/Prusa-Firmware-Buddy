@@ -1,7 +1,6 @@
 #include "MItem_menus.hpp"
 #include "ScreenHandler.hpp"
 #include <option/buddy_enable_connect.h>
-#include "screen_qr_error.hpp"
 #include "screen_messages.hpp"
 #include "translator.hpp"
 #include "screen_menu_temperature.hpp"

@@ -1,5 +1,5 @@
-add_executable(
-  gcode_reader_test
+add_library(
+  gcode_reader_test_base OBJECT
   ${CMAKE_SOURCE_DIR}/src/common/base64_stream_decoder.cpp
   ${CMAKE_SOURCE_DIR}/src/common/gcode/gcode_buffer.cpp
   ${CMAKE_SOURCE_DIR}/src/common/gcode/gcode_reader_any.cpp
@@ -22,25 +22,51 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/lib/heatshrink/heatshrink_decoder.c
   ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
   ${CMAKE_SOURCE_DIR}/tests/unit/mock/bsod.cpp
-  gcode_reader.cpp
   missing_functions.c
   )
 target_include_directories(
-  gcode_reader_test
-  PRIVATE .
-          ${CMAKE_CURRENT_BINARY_DIR}
-          ${CMAKE_SOURCE_DIR}/src/common
-          ${CMAKE_SOURCE_DIR}/src/common/utils
-          ${CMAKE_SOURCE_DIR}/src
-          ${CMAKE_SOURCE_DIR}/src/common/gcode
-          ${CMAKE_SOURCE_DIR}/lib
-          ${CMAKE_SOURCE_DIR}/lib/heatshrink
-          ${CMAKE_SOURCE_DIR}/tests/stubs
-          ${CMAKE_SOURCE_DIR}/include
-          ${CMAKE_SOURCE_DIR}/include/usb_host
+  gcode_reader_test_base
+  PUBLIC .
+         ${CMAKE_CURRENT_BINARY_DIR}
+         ${CMAKE_SOURCE_DIR}/src/common
+         ${CMAKE_SOURCE_DIR}/src/common/utils
+         ${CMAKE_SOURCE_DIR}/src
+         ${CMAKE_SOURCE_DIR}/src/common/gcode
+         ${CMAKE_SOURCE_DIR}/lib
+         ${CMAKE_SOURCE_DIR}/lib/heatshrink
+         ${CMAKE_SOURCE_DIR}/tests/stubs
+         ${CMAKE_SOURCE_DIR}/include
+         ${CMAKE_SOURCE_DIR}/include/usb_host
   )
 
-target_link_libraries(gcode_reader_test SG14 mbedTLS bgcode_core freertos_tests raii)
+target_link_libraries(
+  gcode_reader_test_base
+  PUBLIC SG14
+         mbedTLS
+         bgcode_core
+         freertos_tests
+         raii
+         logging-mock
+         buddy_utils
+         freertos-mock
+  )
+
+add_executable(gcode_reader_test gcode_reader.cpp)
+target_link_libraries(gcode_reader_test gcode_reader_test_base)
+add_catch_test(gcode_reader_test)
+
+add_executable(
+  gcode_info_test
+  ${CMAKE_SOURCE_DIR}/src/common/gcode/gcode_info.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/printer_model.cpp ${CMAKE_SOURCE_DIR}/src/common/str_utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/utils/color.cpp gcode_info.cpp
+  )
+target_include_directories(
+  gcode_info_test PUBLIC ${CMAKE_SOURCE_DIR}/tests/stubs # Must be before lib/Marlin include
+                         ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src ${CMAKE_SOURCE_DIR}/src/lang
+  )
+target_link_libraries(gcode_info_test gcode_reader_test_base version)
+add_catch_test(gcode_info_test)
 
 file(
   COPY ${CMAKE_CURRENT_SOURCE_DIR}/test_plain.gcode
@@ -66,7 +92,8 @@ file(
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_corrupted_metadata.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_early_last_block.bgcode
        ${CMAKE_CURRENT_SOURCE_DIR}/test_encrypted_gcode_no_last_block.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new.gcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new.bgcode
+       ${CMAKE_CURRENT_SOURCE_DIR}/box_new_enc.bgcode
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
   )
-
-add_catch_test(gcode_reader_test)

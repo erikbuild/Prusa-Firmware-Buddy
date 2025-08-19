@@ -259,7 +259,7 @@ void _bsod(const char *fmt, const char *file_name, int line_number, ...) {
     va_end(args);
 
     // Save file, line and meessage
-    crash_dump::save_message(crash_dump::MsgType::BSOD, std::to_underlying(ErrCode::ERR_UNDEF), msg, title);
+    crash_dump::save_message(crash_dump::MsgType::BSOD, static_cast<uint16_t>(ErrCode::ERR_SYSTEM_INTERNAL_ERROR), msg, title);
 
     crash_dump::trigger_crash_dump();
 }
@@ -268,7 +268,8 @@ void _bsod(const char *fmt, const char *file_name, int line_number, ...) {
 
 extern "C" void vApplicationStackOverflowHook([[maybe_unused]] TaskHandle_t xTask, char *pcTaskName) {
     // Save task name as title
-    crash_dump::save_message(crash_dump::MsgType::STACK_OVF, 0, "", reinterpret_cast<char *>(pcTaskName));
+    const auto &e = find_error(ErrCode::ERR_SYSTEM_INTERNAL_ERROR);
+    crash_dump::save_message(crash_dump::MsgType::STACK_OVF, static_cast<uint16_t>(e.err_code), nullptr, reinterpret_cast<char *>(pcTaskName));
 
     crash_dump::trigger_crash_dump();
 }
@@ -378,7 +379,7 @@ const char *get_hardfault_reason() {
     }
 }
 
-size_t get_task_name(char *&buffer, size_t buffer_size) {
+size_t get_task_name(char *buffer, size_t buffer_size) {
     crash_dump::CrashCatcherDumpParser parser;
 
     // Get task name from dump

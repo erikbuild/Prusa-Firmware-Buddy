@@ -3,7 +3,9 @@
 #include "timing.h"
 #include <algorithm>
 #include <cassert>
+#include <cinttypes>
 #include <logging/log.hpp>
+#include <mutex>
 #include <puppies/PuppyBootstrap.hpp>
 
 LOG_COMPONENT_REF(MMU2);
@@ -44,6 +46,19 @@ void XBuddyExtension::set_white_led(uint8_t intensity) {
 
     if (requirement.value.white_led != intensity) {
         requirement.value.white_led = intensity;
+        requirement.dirty = true;
+    }
+}
+
+void XBuddyExtension::set_white_strobe_frequency(std::optional<uint16_t> freq) {
+    assert(freq != 0); // Explicit 0 makes no sense as frequency
+
+    const uint16_t freq_raw = freq.value_or(0);
+
+    Lock lock(mutex);
+
+    if (requirement.value.white_led_freq != freq_raw) {
+        requirement.value.white_led_freq = freq_raw;
         requirement.dirty = true;
     }
 }

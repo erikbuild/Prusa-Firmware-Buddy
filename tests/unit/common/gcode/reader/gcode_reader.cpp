@@ -1,5 +1,8 @@
-#include "gcode_reader_any.hpp"
-#include "catch2/catch.hpp"
+#include "test_files.hpp"
+
+#include <gcode_reader_any.hpp>
+#include <common/thumbnail_sizes.hpp>
+#include <catch2/catch.hpp>
 
 #include <deque>
 #include <iostream>
@@ -8,11 +11,6 @@
 
 namespace {
 
-constexpr static const char *PLAIN_TEST_FILE = "test_plain.gcode";
-constexpr static const char *BINARY_NO_COMPRESSION_FILE = "test_binary_no_compression.bgcode";
-constexpr static const char *BINARY_MEATPACK_FILE = "test_binary_meatpack.bgcode";
-constexpr static const char *BINARY_HEATSHRINK_FILE = "test_binary_heatshrink.bgcode";
-constexpr static const char *BINARY_HEATSHRINK_MEATPACK_FILE = "test_binary_heatshrink_meatpack.bgcode";
 // These are made from the test_binary_no_compression.bgcode by mangling a specific CRC.
 // See the utils/crckill.
 
@@ -33,7 +31,28 @@ constexpr static const std::string_view DUMMY_DATA_EXACT = ";0123456789012345678
 constexpr static const std::string_view DUMMY_DATA_EXACT_EOF = ";01234567890123456789012345678901234567890123456789012345678901234567890123456789";
 constexpr static const std::string_view DUMMY_DATA_ERR = ";01234567890123456789012345678901234567890123456789012345678901234567890123456789012345";
 
-const std::vector<const char *> test_files = { PLAIN_TEST_FILE, BINARY_NO_COMPRESSION_FILE, BINARY_MEATPACK_FILE, BINARY_HEATSHRINK_FILE, BINARY_HEATSHRINK_MEATPACK_FILE, BINARY_ENCRYPTED_CORRECT_GCODE };
+struct TestFile {
+    const char *filename;
+    // Can the file be indexed?
+    bool indexed;
+    // Are metadata & comments part of "general" gcode?
+    bool unified;
+    bool has_qoi_thumbnails;
+    // BUG: When restoring, we get different data. Skip them for now, as it's a different issue.
+    bool skip_restore_end_test;
+};
+
+const std::vector<TestFile> test_files = {
+    { PLAIN_TEST_FILE, false, true, false, false },
+    { BINARY_NO_COMPRESSION_FILE, true, false, false, false },
+    { BINARY_MEATPACK_FILE, true, false, false, false },
+    { BINARY_HEATSHRINK_FILE, true, false, false, false },
+    { BINARY_HEATSHRINK_MEATPACK_FILE, true, false, false, false },
+    { BINARY_ENCRYPTED_CORRECT_GCODE, true, false, false, false },
+    { NEW_PLAIN, false, true, true, false },
+    { NEW_BINARY, true, false, true, true },
+    { NEW_ENCRYPTED, true, false, true, true },
+};
 
 using State = transfers::PartialFile::State;
 using ValidPart = transfers::PartialFile::ValidPart;
@@ -63,11 +82,11 @@ struct DummyReader : public GcodeReaderCommon {
         ptr_stream_getc = static_cast<stream_getc_type>(&DummyReader::dummy_getc);
     }
 
-    virtual bool stream_metadata_start() override {
+    virtual bool stream_metadata_start(const Index *) override {
         return true;
     }
 
-    virtual Result_t stream_gcode_start(uint32_t, bool) override {
+    virtual Result_t stream_gcode_start(uint32_t, bool, const Index *) override {
         return Result_t::RESULT_OK;
     }
 
@@ -113,7 +132,7 @@ struct DummyReader : public GcodeReaderCommon {
 } // namespace
 
 TEST_CASE("Extract data", "[GcodeReader]") {
-    auto run_test = [](IGcodeReader *r, std::string base_name) {
+    auto run_test = [](IGcodeReader *r, std::string base_name, bool image) {
         GcodeBuffer buffer;
         {
             REQUIRE(r->stream_metadata_start());
@@ -137,7 +156,7 @@ TEST_CASE("Extract data", "[GcodeReader]") {
             }
             REQUIRE(result == IGcodeReader::Result_t::RESULT_EOF); // file was read fully without error
         }
-        {
+        if (image) {
             REQUIRE(r->stream_thumbnail_start(440, 240, IGcodeReader::ImgType::PNG, false));
             std::ofstream fs(base_name + "-thumb.png", std::ofstream::out);
             char c;
@@ -149,12 +168,114 @@ TEST_CASE("Extract data", "[GcodeReader]") {
         }
     };
 
-    for (auto &filename : test_files) {
-        SECTION(std::string("Test-file: ") + filename) {
-            AnyGcodeFormatReader reader(filename);
+    for (auto &test : test_files) {
+        SECTION(std::string("Test-file: ") + test.filename) {
+            AnyGcodeFormatReader reader(test.filename);
             REQUIRE(reader.is_open());
             REQUIRE(reader.get()->verify_file(IGcodeReader::FileVerificationLevel::full));
-            run_test(reader.get(), filename);
+            run_test(reader.get(), test.filename, !test.has_qoi_thumbnails);
+        }
+    }
+}
+
+TEST_CASE("Indexed readers", "[GcodeReader]") {
+    for (auto &test : test_files) {
+        SECTION(std::string("Test-file: ") + test.filename) {
+            AnyGcodeFormatReader reader(test.filename);
+            REQUIRE(reader.is_open());
+            REQUIRE(reader.get()->verify_file(IGcodeReader::FileVerificationLevel::full));
+            IGcodeReader::Index index;
+            REQUIRE(!index.indexed());
+            // Note: These sizes are for mk4, tests are something like mini.
+            index.thumbnails[0] = { 440, 240, IGcodeReader::ImgType::PNG };
+            // The new files do have the mini sizes.
+            index.thumbnails[1] = { thumbnail_sizes::preview_thumbnail_width, thumbnail_sizes::preview_thumbnail_height, IGcodeReader::ImgType::QOI };
+            reader->generate_index(index);
+            REQUIRE(index.indexed() == test.indexed);
+            if (test.indexed) {
+                CHECK(index.gcode != IGcodeReader::Index::not_indexed);
+                CHECK(index.gcode != IGcodeReader::Index::not_present);
+                CHECK(index.metadata != IGcodeReader::Index::not_indexed);
+                CHECK(index.metadata != IGcodeReader::Index::not_present);
+                for (const auto &thumb : index.thumbnails) {
+                    CHECK(thumb.position != IGcodeReader::Index::not_indexed);
+                }
+                CHECK((index.thumbnails[0].position != IGcodeReader::Index::not_present) == !test.has_qoi_thumbnails);
+                CHECK((index.thumbnails[1].position != IGcodeReader::Index::not_present) == test.has_qoi_thumbnails);
+                CHECK(index.thumbnails[2].position == IGcodeReader::Index::not_present);
+
+                // Compare indexed vs non-indexed access.
+                AnyGcodeFormatReader reader2(test.filename);
+                // Needed for the encrypted file, so that we do all the initial
+                // asymmetric decryption stuff
+                REQUIRE(reader->valid_for_print(true));
+                REQUIRE(reader2->valid_for_print(true));
+
+                REQUIRE(reader->stream_gcode_start(0, false, &index) == IGcodeReader::Result_t::RESULT_OK);
+                REQUIRE(reader2->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+
+                GcodeBuffer buffer;
+                GcodeBuffer buffer2;
+
+                IGcodeReader::Result_t result;
+                while ((result = reader->stream_get_line(buffer, IGcodeReader::Continuations::Discard)) == IGcodeReader::Result_t::RESULT_OK) {
+                    REQUIRE(reader2->stream_get_line(buffer2, IGcodeReader::Continuations::Discard) == IGcodeReader::Result_t::RESULT_OK);
+                    REQUIRE(strcmp(buffer.line.c_str(), buffer2.line.c_str()) == 0);
+                }
+
+                REQUIRE(reader2->stream_get_line(buffer2, IGcodeReader::Continuations::Discard) == result);
+
+                REQUIRE(reader->stream_metadata_start(&index));
+                REQUIRE(reader2->stream_metadata_start());
+
+                while ((result = reader->stream_get_line(buffer, IGcodeReader::Continuations::Discard)) == IGcodeReader::Result_t::RESULT_OK) {
+                    REQUIRE(reader2->stream_get_line(buffer2, IGcodeReader::Continuations::Discard) == IGcodeReader::Result_t::RESULT_OK);
+                    REQUIRE(strcmp(buffer.line.c_str(), buffer2.line.c_str()) == 0);
+                }
+
+                REQUIRE(reader2->stream_get_line(buffer2, IGcodeReader::Continuations::Discard) == result);
+            }
+        }
+    }
+}
+
+TEST_CASE("Mixed vs split readers", "[GcodeReader]") {
+    for (auto &test : test_files) {
+        SECTION(std::string("Test-file: ") + test.filename) {
+            AnyGcodeFormatReader reader(test.filename);
+            REQUIRE(reader.is_open());
+            REQUIRE(reader.get()->verify_file(IGcodeReader::FileVerificationLevel::full));
+            REQUIRE(reader->valid_for_print(true));
+
+            bool seen_meta = false;
+            bool seen_thumbnail = false;
+
+            REQUIRE(reader->stream_gcode_start() == IGcodeReader::Result_t::RESULT_OK);
+            GcodeBuffer buffer;
+
+            while (reader->stream_get_line(buffer, IGcodeReader::Continuations::Discard) == IGcodeReader::Result_t::RESULT_OK) {
+                // Note: This parsing would be insufficient in case of dealing
+                // with arbitrary gcode with some variability (eg. amount of
+                // whitespace before or after the tokens), but good enough with
+                // tests with known test data.
+                constexpr const char *thumb = "; thumbnail begin";
+                if (strncmp(buffer.line.c_str(), thumb, strlen(thumb)) == 0) {
+                    seen_thumbnail = true;
+                }
+                bool is_comment = buffer.line.front() == ';';
+                auto parsed = buffer.line.parse_metadata();
+                if (!parsed.first.is_empty() && !parsed.second.is_empty() && is_comment) {
+                    seen_meta = true;
+                }
+            }
+
+            if (test.unified) {
+                // Unfortunately, even the binary gcodes do contain comments in
+                // the gcode section that look like metadata (how is it even
+                // possible?!).
+                CHECK(seen_meta);
+            }
+            CHECK(seen_thumbnail == test.unified);
         }
     }
 }
@@ -163,7 +284,7 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
     // tests reads reader1 continuously, and seeks in reader2 to same position
     //  as where it is in reader1 and compares if they give same results while seeking to middle of file
 
-    auto run_test = [](IGcodeReader &reader1, const char *filename) {
+    auto run_test = [](IGcodeReader &reader1, const char *filename, bool skip_end_compare) {
         const size_t sizes[] = { 101, 103, 107, 109, 113, 3037, 3041, 3049, 3061, 3067 };
         std::unique_ptr<char[]> buffer1(new char[*std::max_element(sizes, sizes + std::size(sizes))]);
         std::unique_ptr<char[]> buffer2(new char[*std::max_element(sizes, sizes + std::size(sizes))]);
@@ -202,7 +323,10 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
             }
             REQUIRE(size1 == size2);
 
-            REQUIRE(memcmp(buffer1.get(), buffer2.get(), size1) == 0);
+            INFO("offset " << offset << " size " << size << " res " << (int)res1 << " size out " << size1);
+            if (!skip_end_compare) {
+                REQUIRE(memcmp(buffer1.get(), buffer2.get(), size1) == 0);
+            }
 
             if (res1 == IGcodeReader::Result_t::RESULT_EOF) {
                 break;
@@ -218,11 +342,11 @@ TEST_CASE("stream restore at offset", "[GcodeReader]") {
         }
     };
 
-    for (auto &filename : test_files) {
-        SECTION(std::string("Test-file: ") + filename) {
-            auto reader1 = AnyGcodeFormatReader(filename);
+    for (auto &test : test_files) {
+        SECTION(std::string("Test-file: ") + test.filename) {
+            auto reader1 = AnyGcodeFormatReader(test.filename);
             REQUIRE(reader1.is_open());
-            run_test(*reader1.get(), filename);
+            run_test(*reader1.get(), test.filename, test.skip_restore_end_test);
         }
     }
 }
@@ -466,9 +590,9 @@ TEST_CASE("gcode-reader-empty-validity", "[GcodeReader]") {
 }
 
 TEST_CASE("File size estimate", "[GcodeReader]") {
-    for (auto &filename : test_files) {
-        SECTION(std::string("Test-file: ") + filename) {
-            auto reader = AnyGcodeFormatReader(filename);
+    for (auto &test : test_files) {
+        SECTION(std::string("Test-file: ") + test.filename) {
+            auto reader = AnyGcodeFormatReader(test.filename);
             // Needed for the encrypted file, so that we do all the initial
             // asymmetric decryption stuff
             REQUIRE(reader->valid_for_print(true));

@@ -433,7 +433,7 @@ inline uint16_t mcuTemperature() { return adcDma1.get_channel(AdcChannel::mcu_te
 
 #if (BOARD_IS_XBUDDY())
 static constexpr size_t nozzle_buff_size { 128 };
-extern SumRingBuffer<uint32_t, nozzle_buff_size> nozzle_ring_buff;
+extern SumRingBuffer<uint16_t, uint32_t, nozzle_buff_size> nozzle_ring_buff;
 static_assert((adcDma1.sample_max * nozzle_buff_size) <= std::numeric_limits<decltype(nozzle_ring_buff)::sum_type>::max(),
     "Sum buffer type can overflow");
 

@@ -16,6 +16,7 @@
 #include <option/has_side_leds.h>
 #include <option/has_leds.h>
 #include <option/has_belt_tuning.h>
+#include <option/has_manual_belt_tuning.h>
 #include <option/has_door_sensor_calibration.h>
 
 #if HAS_LOADCELL()
@@ -238,6 +239,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M960();
             break;
 #endif
+#if HAS_MANUAL_BELT_TUNING()
+        case 961:
+            PrusaGcodeSuite::M961();
+            break;
+#endif
         case 997:
             PrusaGcodeSuite::M997();
             break;
@@ -315,6 +321,12 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
         case 9201:
             PrusaGcodeSuite::M9201();
             break;
+
+#if HAS_PRECISE_HOMING_COREXY()
+        case 9202:
+            PrusaGcodeSuite::M9202();
+            break;
+#endif
 
         case 9933:
             PrusaGcodeSuite::M9933();

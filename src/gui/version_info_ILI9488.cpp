@@ -6,7 +6,7 @@
 #include "img_resources.hpp"
 #include "shared_config.h" //BOOTLOADER_VERSION_ADDRESS
 #include "../common/otp.hpp"
-#include "common/filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <utils/string_builder.hpp>
 
 #include <option/has_mmu2.h>

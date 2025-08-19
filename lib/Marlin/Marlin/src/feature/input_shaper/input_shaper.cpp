@@ -80,6 +80,7 @@ static void init_input_shaper_pulses(const float a[], const float t[], const int
         // not sure if pulse centering algorithm works for negative amplitude
         // check if needed
         assert((is_pulses->pulses[i].a) >= 0.f);
+        static_assert(0.f == -0.f);
         // no other operation needed as sum of amplitudes is already 1 at this point
         pulses_weighted_average_time += double(is_pulses->pulses[i].a) * is_pulses->pulses[i].t;
     }
@@ -544,7 +545,6 @@ step_event_info_t input_shaper_step_generator_next_step_event(input_shaper_step_
 }
 
 uint8_t input_shaper_state_t::calc_nearest_next_change_idx() const {
-    assert(m_logical_axis_pulses.front()->num_pulses == m_logical_axis_pulses.back()->num_pulses);
     uint8_t min_next_change_idx = 0;
     double min_next_change = m_next_change[0];
     for (uint8_t idx = 1; idx < m_logical_axis_pulses.front()->num_pulses; ++idx) {

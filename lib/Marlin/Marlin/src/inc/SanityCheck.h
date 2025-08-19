@@ -224,8 +224,6 @@
   #error "K1 is now PID_K1. Please update your configuration."
 #elif defined(PROBE_DOUBLE_TOUCH)
   #error "PROBE_DOUBLE_TOUCH is now MULTIPLE_PROBING. Please update your configuration."
-#elif defined(LCD_I2C_SAINSMART_YWROBOT)
-  #error "LCD_I2C_SAINSMART_YWROBOT is now LCD_SAINSMART_I2C_(1602|2004). Please update your configuration."
 #elif defined(HAVE_TMCDRIVER)
   #error "HAVE_TMCDRIVER is now [AXIS]_DRIVER_TYPE TMC26X. Please update your Configuration.h."
 #elif defined(STEALTHCHOP)
@@ -262,8 +260,6 @@
   #error "JUNCTION_ACCELERATION_FACTOR is obsolete. Delete it from Configuration_adv.h."
 #elif defined(JUNCTION_ACCELERATION)
   #error "JUNCTION_ACCELERATION is obsolete. Delete it from Configuration_adv.h."
-#elif defined(ENDSTOP_NOISE_FILTER)
-  #error "ENDSTOP_NOISE_FILTER is now ENDSTOP_NOISE_THRESHOLD [2-7]. Please update your configuration."
 #elif defined(RETRACT_ZLIFT)
   #error "RETRACT_ZLIFT is now RETRACT_ZRAISE. Please update your Configuration_adv.h."
 #elif defined(SINGLENOZZLE_TOOLCHANGE_ZRAISE)
@@ -314,8 +310,6 @@
   #error "Replace POWER_SUPPLY 2 by enabling PSU_CONTROL and setting PSU_ACTIVE_HIGH to 'true'."
 #elif defined(POWER_SUPPLY)
   #error "POWER_SUPPLY is now obsolete. Please remove it from Configuration.h."
-#elif defined(MKS_ROBIN_TFT)
-  #error "MKS_ROBIN_TFT is now FSMC_GRAPHICAL_TFT. Please update your configuration."
 #elif defined(STRING_SPLASH_LINE1) || defined(STRING_SPLASH_LINE2)
   #error "STRING_SPLASH_LINE[12] are now obsolete. Please remove them from Configuration.h."
 #elif defined(Z_PROBE_ALLEN_KEY_DEPLOY_1_X) || defined(Z_PROBE_ALLEN_KEY_STOW_1_X)
@@ -448,13 +442,6 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
  */
 #if EITHER(SHOW_CUSTOM_BOOTSCREEN, CUSTOM_STATUS_SCREEN_IMAGE)
   #error "Graphical LCD is required for SHOW_CUSTOM_BOOTSCREEN and CUSTOM_STATUS_SCREEN_IMAGE."
-#endif
-
-/**
- * LCD Lightweight Screen Style
- */
-#if ENABLED(LIGHTWEIGHT_UI) && DISABLED(U8GLIB_ST7920)
-  #error "LIGHTWEIGHT_UI requires a U8GLIB_ST7920-based display."
 #endif
 
 /**
@@ -840,17 +827,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #endif
 
 /**
- * SAV_3DGLCD display options
- */
-#if ENABLED(SAV_3DGLCD)
-  #if NONE(U8GLIB_SSD1306, U8GLIB_SH1106)
-    #error "Enable a SAV_3DGLCD display type: U8GLIB_SSD1306 or U8GLIB_SH1106."
-  #elif BOTH(U8GLIB_SSD1306, U8GLIB_SH1106)
-    #error "Only enable one SAV_3DGLCD display type: U8GLIB_SSD1306 or U8GLIB_SH1106."
-  #endif
-#endif
-
-/**
  * Allen Key
  * Deploying the Allen Key probe uses big moves in z direction. Too dangerous for an unhomed z-axis.
  */
@@ -1157,10 +1133,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #endif
 #endif
 
-#if defined(ENDSTOP_NOISE_THRESHOLD) && !WITHIN(ENDSTOP_NOISE_THRESHOLD, 2, 7)
-  #error "ENDSTOP_NOISE_THRESHOLD must be an integer from 2 to 7."
-#endif
-
 /**
  * emergency-command parser
  */
@@ -1197,52 +1169,9 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * Make sure only one display is enabled
  */
 #if 1 < 0 \
-  + (ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER) && DISABLED(IS_RRD_SC)) \
-  + (ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) && DISABLED(IS_RRD_FG_SC)) \
-  + (ENABLED(U8GLIB_SSD1306) && DISABLED(IS_U8GLIB_SSD1306)) \
-  + (ENABLED(MINIPANEL) && DISABLED(MKS_MINI_12864)) \
-  + (ENABLED(EXTENSIBLE_UI) && DISABLED(IS_EXTUI)) \
-  + ENABLED(RADDS_DISPLAY) \
-  + ENABLED(ULTIMAKERCONTROLLER) \
-  + ENABLED(PANEL_ONE) \
-  + ENABLED(G3D_PANEL) \
-  + ENABLED(RIGIDBOT_PANEL) \
-  + ENABLED(MAKEBOARD_MINI_2_LINE_DISPLAY_1602) \
-  + ENABLED(LCD_SAINSMART_I2C_1602) \
-  + ENABLED(LCD_SAINSMART_I2C_2004) \
-  + ENABLED(LCM1602) \
-  + ENABLED(LCD_I2C_PANELOLU2) \
-  + ENABLED(LCD_I2C_VIKI) \
-  + ENABLED(SAV_3DLCD) \
-  + ENABLED(FF_INTERFACEBOARD) \
-  + ENABLED(REPRAPWORLD_GRAPHICAL_LCD) \
-  + ENABLED(VIKI2) \
-  + ENABLED(miniVIKI) \
-  + ENABLED(MAKRPANEL) \
-  + ENABLED(ELB_FULL_GRAPHIC_CONTROLLER) \
-  + ENABLED(BQ_LCD_SMART_CONTROLLER) \
-  + ENABLED(CARTESIO_UI) \
-  + ENABLED(LCD_FOR_MELZI) \
-  + ENABLED(ULTI_CONTROLLER) \
-  + ENABLED(MKS_MINI_12864) \
-  + ENABLED(CR10_STOCKDISPLAY) \
-  + ENABLED(ANET_FULL_GRAPHICS_LCD) \
-  + ENABLED(AZSMZ_12864) \
-  + ENABLED(SILVER_GATE_GLCD_CONTROLLER) \
-  + ENABLED(SAV_3DGLCD) \
-  + ENABLED(OLED_PANEL_TINYBOY2) \
-  + ENABLED(MKS_12864OLED) \
-  + ENABLED(MKS_12864OLED_SSD1306) \
-  + ENABLED(U8GLIB_SH1106_EINSTART) \
-  + ENABLED(OVERLORD_OLED) \
-  + ENABLED(FSMC_GRAPHICAL_TFT)
+  + (ENABLED(EXTENSIBLE_UI) && DISABLED(IS_EXTUI))
   #error "Please select no more than one LCD controller option."
 #endif
-
-#undef IS_RRD_SC
-#undef IS_RRD_FG_SC
-#undef IS_U8GLIB_SSD1306
-#undef IS_EXTUI
 
 /**
  * Check existing CS pins against enabled TMC SPI drivers.
@@ -1426,8 +1355,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     #else
       #error "SENSORLESS_HOMING requires Z_MAX_ENDSTOP_INVERTING = false when homing TMC2209 to Z_MAX."
     #endif
-  #elif ENDSTOP_NOISE_THRESHOLD
-    #error "SENSORLESS_HOMING is incompatible with ENDSTOP_NOISE_THRESHOLD."
   #elif !(X_SENSORLESS || Y_SENSORLESS || Z_SENSORLESS)
     #error "SENSORLESS_HOMING requires a TMC stepper driver with StallGuard on X, Y, or Z axes."
   #endif

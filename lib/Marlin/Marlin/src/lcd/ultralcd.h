@@ -27,9 +27,6 @@
 #define HAS_DIGITAL_BUTTONS (BUTTONS_EXIST(EN1, EN2) || ANY_BUTTON(ENC, BACK, UP, DWN, LFT, RT))
 #define HAS_ENCODER_WHEEL   (BUTTONS_EXIST(EN1, EN2))
 
-// I2C buttons must be read in the main thread
-#define HAS_SLOW_BUTTONS EITHER(LCD_I2C_VIKI, LCD_I2C_PANELOLU2)
-
 #if HAS_DIGITAL_BUTTONS
 
   // Wheel spin pins where BA is 00, 10, 11, 01 (1 bit always changes)
@@ -44,40 +41,6 @@
   #if BUTTON_EXISTS(ENC)
     #define BLEN_C 2
     #define EN_C _BV(BLEN_C)
-  #endif
-
-  #if ENABLED(LCD_I2C_VIKI)
-
-    #define B_I2C_BTN_OFFSET 3 // (the first three bit positions reserved for EN_A, EN_B, EN_C)
-
-    // button and encoder bit positions within 'buttons'
-    #define B_LE (BUTTON_LEFT   << B_I2C_BTN_OFFSET)      // The remaining normalized buttons are all read via I2C
-    #define B_UP (BUTTON_UP     << B_I2C_BTN_OFFSET)
-    #define B_MI (BUTTON_SELECT << B_I2C_BTN_OFFSET)
-    #define B_DW (BUTTON_DOWN   << B_I2C_BTN_OFFSET)
-    #define B_RI (BUTTON_RIGHT  << B_I2C_BTN_OFFSET)
-
-    #if BUTTON_EXISTS(ENC)                                // The pause/stop/restart button is connected to BTN_ENC when used
-      #define B_ST (EN_C)                                 // Map the pause/stop/resume button into its normalized functional name
-      #define BUTTON_CLICK() (buttons & (B_MI|B_RI|B_ST)) // Pause/stop also acts as click until a proper pause/stop is implemented.
-    #else
-      #define BUTTON_CLICK() (buttons & (B_MI|B_RI))
-    #endif
-
-    // I2C buttons take too long to read inside an interrupt context and so we read them during lcd_update
-
-  #elif ENABLED(LCD_I2C_PANELOLU2)
-
-    #if !BUTTON_EXISTS(ENC) // Use I2C if not directly connected to a pin
-
-      #define B_I2C_BTN_OFFSET 3 // (the first three bit positions reserved for EN_A, EN_B, EN_C)
-
-      #define B_MI (PANELOLU2_ENCODER_C << B_I2C_BTN_OFFSET) // requires LiquidTWI2 library v1.2.3 or later
-
-      #define BUTTON_CLICK() (buttons & B_MI)
-
-    #endif
-
   #endif
 
 #else

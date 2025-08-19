@@ -81,6 +81,10 @@ if(HAS_BELT_TUNING)
   target_sources(firmware PRIVATE M960.cpp)
 endif()
 
+if(HAS_MANUAL_BELT_TUNING)
+  target_sources(firmware PRIVATE M961.cpp)
+endif()
+
 if(CONNECT)
   target_sources(firmware PRIVATE M1200.cpp)
 endif()
@@ -91,4 +95,8 @@ endif()
 
 if(HAS_DOOR_SENSOR_CALIBRATION)
   target_sources(firmware PRIVATE M1980.cpp)
+endif()
+
+if(HAS_PRECISE_HOMING_COREXY)
+  target_sources(firmware PRIVATE M9202.cpp)
 endif()

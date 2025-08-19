@@ -323,6 +323,7 @@ static void reenable_wavetable(AxisEnum axis)
  * - `L` - Force leveling state ON (if possible) or OFF after homing (Requires `RESTORE_LEVELING_AFTER_G28` or `ENABLE_LEVELING_AFTER_G28`)
  * - `N` - No-change mode (do not change any motion setting such as feedrate)
  * - `O` - Home only if the position is not known and trusted
+ * - `Q` - Same as `O`, but only for printers that are precise homing level-aware; otherwise home unconditionally (backwards compatibility reasons)
  * - `P` - Do not check print sheet presence
  * - `R` - <linear> Raise by n mm/inches before homing
  * - `S` - Simulated homing only in `MARLIN_DEV_MODE`
@@ -341,7 +342,10 @@ void GcodeSuite::G28() {
   bool Z = parser.seen('Z');
 
   G28Flags flags;
-  flags.only_if_needed = parser.boolval('O');
+  flags.only_if_needed = parser.boolval('O')
+    // We will start emitting this new parameter into our gcodes, so that it would be applied only on the new firwmares, where the printers remember whether they are homed precisely or not
+    || parser.boolval('Q');
+
   flags.z_raise = parser.seenval('R') ? parser.value_linear_units() : Z_HOMING_HEIGHT;
   flags.no_change = parser.seen('N');
   flags.can_calibrate = !parser.seen('D');
@@ -781,6 +785,9 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
         #if ENABLED(DETECT_PRINT_SHEET)
         if (!failed && flags.check_sheet) {
+          PrintStatusMessageGuard status_guard;
+          status_guard.update<PrintStatusMessage::detecting_steel_sheet>({});
+
           failed = [&] {
             // Do multiple attempts of detect print sheet
             // The point is that we want to prevent false failures caused by a dirty nozzle (cold filament left hanging out)
@@ -931,13 +938,13 @@ enum class RefineResult {
   success,
   hard_fail, ///< Failed hard, cannot recover
   refine_fail, ///< Failed to refine, but could potentially continue unrefined
-  refine_fail_no_retry, ///< Failed to refine, could potentially continue unredinfed
+  calibrate_from_menu, ///< Needs calibration but cannot do it en-situ. The user needs to abort/ignroe and do it from the calibrations menu.
 };
 
 RefineResult corexy_calibrate_homing_during_G28(float xy_mm_s, const G28Flags &flags) {
   // We cannot calibrate -> this are bad, abort
   if (!flags.can_calibrate) {
-    return RefineResult::refine_fail_no_retry;
+    return RefineResult::calibrate_from_menu;
   }
 
   Tristate calibration_approved = flags.force_calibrate ? Tristate::yes : config_store().auto_recalibrate_precise_homing.get();
@@ -1014,45 +1021,44 @@ RefineResult corexy_refine_during_G28_once(float fr_mm_s, const G28Flags &flags)
   // Do not handle feedrate defaults again within precise homing: do it here
   fr_mm_s = fr_mm_s ?: homing_feedrate(A_AXIS);
 
-  if (!flags.force_calibrate && corexy_home_is_calibrated()) {
-    // Retry the refinement a few times
-    for (uint8_t retry = 0; retry < PRECISE_HOMING_COREXY_RETRIES; retry++) {
-      if (planner.draining()) {
-        return RefineResult::hard_fail;
+  if (flags.force_calibrate || !corexy_home_is_calibrated()) {
+    // Calibration is required, do not even attempt to naively refine
+    return corexy_calibrate_homing_during_G28(fr_mm_s, flags);
+  }
+
+  // Retry the refinement a few times
+  for (uint8_t retry = 0; retry < PRECISE_HOMING_COREXY_RETRIES; retry++) {
+    if (planner.draining()) {
+      return RefineResult::hard_fail;
+    }
+
+    if (corexy_home_refine(fr_mm_s, CoreXYCalibrationMode::disallow)) {
+      // Successfully refined the home
+
+      // Record whether the refinement found a stable home
+      config_store().precise_homing_instability_history.transform([is_unstable = corexy_home_is_unstable()] (auto val) {
+        return (val << 1) | is_unstable;
+      });
+
+      // If at least history_threshold out of last history_window refinements were unstable, trigger calibration
+      static constexpr auto history_threshold = 6;
+      static constexpr auto history_window = 10;
+
+      // Check that we have the requested history window actually stored
+      using History = decltype(config_store_ns::CurrentStore::precise_homing_instability_history)::value_type;
+      static_assert(history_window <= sizeof(History) * 8);
+      static constexpr History history_mask = ((1 << history_window) - 1);
+
+      if(std::popcount(static_cast<History>(config_store().precise_homing_instability_history.get() & history_mask)) >= history_threshold) {
+        break; // Break out of the loop -> trigger calibration
       }
 
-      if (corexy_home_refine(fr_mm_s, CoreXYCalibrationMode::disallow)) {
-        // Successfully refined the home
+      return RefineResult::success;
+    }
 
-        // Mark the axes as precisely homed
-        axes_home_level[X_AXIS] = AxisHomeLevel::full;
-        axes_home_level[Y_AXIS] = AxisHomeLevel::full;
-
-        // Record whether the refinement found a stable home
-        config_store().precise_homing_instability_history.transform([is_unstable = corexy_home_is_unstable()] (auto val) {
-          return (val << 1) | is_unstable;
-        });
-
-        // If at least history_threshold out of last history_window refinements were unstable, trigger calibration
-        static constexpr auto history_threshold = 6;
-        static constexpr auto history_window = 10;
-
-        // Check that we have the requested history window actually stored
-        using History = decltype(config_store_ns::CurrentStore::precise_homing_instability_history)::value_type;
-        static_assert(history_window <= sizeof(History) * 8);
-        static constexpr History history_mask = ((1 << history_window) - 1);
-
-        if(std::popcount(static_cast<History>(config_store().precise_homing_instability_history.get() & history_mask)) >= history_threshold) {
-          break; // Break out of the loop -> trigger calibration
-        }
-
-        return RefineResult::success;
-      }
-
-      // instead of blindly retrying internally on the same location, move the gantry
-      if (!corexy_rehome_xy(fr_mm_s)) {
-        return RefineResult::hard_fail;
-      }
+    // instead of blindly retrying internally on the same location, move the gantry
+    if (!corexy_rehome_xy(fr_mm_s)) {
+      return RefineResult::hard_fail;
     }
   }
 
@@ -1061,21 +1067,22 @@ RefineResult corexy_refine_during_G28_once(float fr_mm_s, const G28Flags &flags)
 }
 
 bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags) {
+  RefineResult result;
   while (true) {
-    bool no_retry = false;
-    switch(corexy_refine_during_G28_once(fr_mm_s, flags)) {
+    result = corexy_refine_during_G28_once(fr_mm_s, flags);
+    switch(result) {
 
       case RefineResult::success:
+        // Mark the axes as precisely homed
+        axes_home_level[X_AXIS] = AxisHomeLevel::full;
+        axes_home_level[Y_AXIS] = AxisHomeLevel::full;
         return true;
 
       case RefineResult::hard_fail:
         return false;
 
       case RefineResult::refine_fail:
-        break;
-
-      case RefineResult::refine_fail_no_retry:
-        no_retry = true;
+      case RefineResult::calibrate_from_menu:
         break;
     }
 
@@ -1084,7 +1091,8 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags) {
       return false;
     }
 
-    const auto prompt_result = marlin_server::prompt_warning(no_retry ? WarningType::HomingRefinementFailedNoRetry : WarningType::HomingRefinementFailed);
+    const auto warning_type = (result == RefineResult::calibrate_from_menu) ? WarningType::HomingCalibrationFromMenuNeeded : WarningType::HomingRefinementFailed;
+    const auto prompt_result = marlin_server::prompt_warning(warning_type);
     switch(prompt_result) {
 
     case Response::Retry:
@@ -1097,6 +1105,8 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags) {
 
     case Response::Ignore:
       // The user decided to ignore the problem at his own risk, consider the homing calibrated for now
+      axes_home_level[X_AXIS] = AxisHomeLevel::full;
+      axes_home_level[Y_AXIS] = AxisHomeLevel::full;   
       return true;
 
     default:

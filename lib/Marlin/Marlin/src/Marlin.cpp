@@ -813,26 +813,3 @@ void setup() {
     }
   #endif
 }
-
-/**
- * The main Marlin program loop
- *
- *  - Save or log commands to SD
- *  - Process available commands (if not saving)
- *  - Call endstop manager
- *  - Call inactivity manager
- */
-void loop() {
-
-  #if !ENABLED(MARLIN_DISABLE_INFINITE_LOOP)
-  for (;;) {
-  #endif
-
-    idle(false); // Do an idle first so boot is slightly faster
-
-    queue.advance();
-
-  #if !ENABLED(MARLIN_DISABLE_INFINITE_LOOP)
-  }
-  #endif
-}

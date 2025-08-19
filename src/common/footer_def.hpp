@@ -15,7 +15,6 @@
 #include <option/has_sheet_profiles.h>
 #include <option/has_chamber_api.h>
 #include "i18n.h"
-#include <bsod.h>
 #include <device/board.h>
 
 // sadly this must be macros, it is used in preprocessor
@@ -106,6 +105,7 @@ inline constexpr std::array item_list {
         Item::f_s_value,
 #endif
         Item::f_sensor,
+        Item::speed,
 #if HAS_SIDE_FSENSOR()
         Item::f_sensor_side,
 #endif
@@ -159,11 +159,11 @@ inline constexpr Record default_items = { { Item::speed,
 inline constexpr Record default_items = { { Item::nozzle,
     Item::bed,
     Item::filament,
-    #if PRINTER_IS_PRUSA_COREONE()
+    #if HAS_CHAMBER_API()
     Item::chamber_temp,
     #else
     Item::none,
-    #endif // PRINTER_IS_PRUSA_COREONE()
+    #endif
     Item::none } };
 #endif // FOOTER_LINES__ == 1 && FOOTER_ITEMS_PER_LINE__ == 5
 

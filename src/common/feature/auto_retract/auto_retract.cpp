@@ -5,23 +5,39 @@
 #include <feature/ramming/standard_ramming_sequence.hpp>
 #include <module/planner.h>
 #include <raii/auto_restore.hpp>
-#include <filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <logging/log.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
 #include <marlin_server.hpp>
+#include <feature/prusa/e-stall_detector.h>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
     #include <Marlin/src/feature/prusa/MMU2/mmu2_mk4.h>
 #endif
 
-// Auto retract functionality collides with the nozzle cleaner
-#include <option/has_nozzle_cleaner.h>
-static_assert(!HAS_NOZZLE_CLEANER());
-
 LOG_COMPONENT_REF(MarlinServer);
 
 using namespace buddy;
+
+namespace {
+
+class EStallDisabler {
+private:
+    bool detect;
+
+public:
+    EStallDisabler() {
+        detect = EMotorStallDetector::Instance().Enabled();
+        EMotorStallDetector::Instance().SetEnabled(false);
+    }
+    EStallDisabler(const EStallDisabler &other) = delete;
+    ~EStallDisabler() {
+        EMotorStallDetector::Instance().SetEnabled(detect);
+    }
+};
+
+} // namespace
 
 AutoRetract &buddy::auto_retract() {
     static AutoRetract instance;
@@ -77,6 +93,11 @@ void AutoRetract::maybe_retract_from_nozzle() {
     const auto orig_current_e_position = current_position.e;
 
     {
+        // No estall detection during the ramming; we may do so too fast sometimes
+        // to the point where the motor skips, but we don't care, as it doesn't
+        // damage the print.
+        EStallDisabler estall_disabler;
+
         const auto &sequence = standard_ramming_sequence(StandardRammingSequence::auto_retract, hotend);
         struct {
             uint32_t start_time;
@@ -123,7 +144,13 @@ void AutoRetract::maybe_deretract_to_nozzle() {
     const auto orig_e_position = planner.get_position_msteps().e;
     const auto orig_current_e_position = current_position.e;
 
-    standard_ramming_sequence(StandardRammingSequence::auto_retract, hotend).undo(FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+    {
+        // No estall detection during the ramming; we may do so too fast sometimes
+        // to the point where the motor skips, but we don't care, as it doesn't
+        // damage the print.
+        EStallDisabler estall_disabler;
+        standard_ramming_sequence(StandardRammingSequence::auto_retract, hotend).undo(FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+    }
 
     // "Fake" original extruder position - we are interrupting various movements by this function,
     // firmware gets very confused if the current position changes while it is planning a move

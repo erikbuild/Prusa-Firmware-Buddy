@@ -1,16 +1,14 @@
 #include "puppies/PuppyBootstrap.hpp"
-#include "buffered_serial.hpp"
 #include "puppies/BootloaderProtocol.hpp"
 #include "puppies/PuppyBus.hpp"
-#include "puppies/PuppyModbus.hpp"
 #include "bsod.h"
 #include <sys/stat.h>
 #include "assert.h"
-#include "hwio_pindef.h"
 #include <logging/log.hpp>
+#include <buddy/bootstrap_state.hpp>
 #include <buddy/digest.hpp>
 #include <buddy/main.h>
-#include "tasks.hpp"
+#include <buddy/unreachable.hpp>
 #include "timing.h"
 #include "bsod.h"
 #include "otp.hpp"
@@ -33,49 +31,54 @@ namespace buddy::puppies {
 
 using buddy::hw::Pin;
 
-const char *PuppyBootstrap::Progress::description() {
-    if (stage == PuppyBootstrap::FlashingStage::START) {
-        return "Waking up puppies";
-    } else if (stage == PuppyBootstrap::FlashingStage::DISCOVERY) {
-        return "Looking for puppies";
-    } else if (stage == PuppyBootstrap::FlashingStage::CALCULATE_FINGERPRINT) {
-        return "Verifying puppies";
-    }
+using buddy::BootstrapStage;
+
+static BootstrapStage flashing_stage(PuppyType puppy_type) {
+    switch (puppy_type) {
+    case DWARF:
 #if HAS_DWARF()
-    else if (stage == PuppyBootstrap::FlashingStage::CHECK_FINGERPRINT && puppy_type == PuppyType::DWARF) {
-        return "Verifying dwarf";
-    }
+        return BootstrapStage::flashing_dwarf;
+#else
+        break;
 #endif
+    case MODULARBED:
 #if HAS_PUPPY_MODULARBED()
-    else if (stage == PuppyBootstrap::FlashingStage::CHECK_FINGERPRINT && puppy_type == PuppyType::MODULARBED) {
-        return "Verifying modularbed";
-    }
+        return BootstrapStage::flashing_modular_bed;
+#else
+        break;
 #endif
+    case XBUDDY_EXTENSION:
 #if HAS_XBUDDY_EXTENSION()
-    else if (stage == PuppyBootstrap::FlashingStage::CHECK_FINGERPRINT && puppy_type == PuppyType::XBUDDY_EXTENSION) {
-        return "Verifying xbuddy extension";
-    }
+        return BootstrapStage::flashing_xbuddy_extension;
+#else
+        break;
 #endif
+    }
+    BUDDY_UNREACHABLE();
+}
+
+static BootstrapStage check_fingerprint_stage(PuppyType puppy_type) {
+    switch (puppy_type) {
+    case DWARF:
 #if HAS_DWARF()
-    else if (stage == PuppyBootstrap::FlashingStage::FLASHING && puppy_type == PuppyType::DWARF) {
-        return "Flashing dwarf";
-    }
+        return BootstrapStage::verifying_dwarf;
+#else
+        break;
 #endif
+    case MODULARBED:
 #if HAS_PUPPY_MODULARBED()
-    else if (stage == PuppyBootstrap::FlashingStage::FLASHING && puppy_type == PuppyType::MODULARBED) {
-        return "Flashing modularbed";
-    }
+        return BootstrapStage::verifying_modular_bed;
+#else
+        break;
 #endif
+    case XBUDDY_EXTENSION:
 #if HAS_XBUDDY_EXTENSION()
-    else if (stage == PuppyBootstrap::FlashingStage::FLASHING && puppy_type == PuppyType::XBUDDY_EXTENSION) {
-        return "Flashing xbuddy extension";
-    }
+        return BootstrapStage::verifying_xbuddy_extension;
+#else
+        break;
 #endif
-    else if (stage == PuppyBootstrap::FlashingStage::DONE) {
-        return ""; // Currently guimain prints nothing for the last bit of initialization, this should match
-    } else {
-        return "?";
     }
+    BUDDY_UNREACHABLE();
 }
 
 bool PuppyBootstrap::attempt_crash_dump_download(Dock dock, BootloaderProtocol::Address address) {
@@ -91,11 +94,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run(
     [[maybe_unused]] PuppyBootstrap::BootstrapResult minimal_config,
     [[maybe_unused]] unsigned int max_attempts) {
     PuppyBootstrap::BootstrapResult result;
-#if HAS_DWARF()
-    progressHook({ 0, FlashingStage::START, PuppyType::DWARF });
-#elif HAS_PUPPY_MODULARBED()
-    progressHook({ 0, FlashingStage::START, PuppyType::MODULARBED });
-#endif
+    bootstrap_state_set(0, BootstrapStage::waking_up_puppies);
     auto guard = buddy::puppies::PuppyBus::LockGuard();
 
 #if HAS_PUPPIES_BOOTLOADER()
@@ -131,11 +130,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run(
             }
         }
     }
-    #if HAS_DWARF()
-    progressHook({ 10, FlashingStage::CALCULATE_FINGERPRINT, PuppyType::DWARF });
-    #elif HAS_PUPPY_MODULARBED()
-    progressHook({ 10, FlashingStage::CALCULATE_FINGERPRINT, PuppyType::MODULARBED });
-    #endif
+    bootstrap_state_set(10, BootstrapStage::verifying_puppies);
     int percent_per_puppy = 80 / result.discovered_num();
     int percent_base = 20;
 
@@ -205,7 +200,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run(
         auto address = get_boot_address_for_dock(dock);
         auto puppy_type = to_puppy_type(dock);
 
-        progressHook({ percent_base, FlashingStage::CHECK_FINGERPRINT, puppy_type });
+        bootstrap_state_set(percent_base, check_fingerprint_stage(puppy_type));
 
         attempt_crash_dump_download(dock, address);
     #if PUPPY_FLASH_FW()
@@ -213,11 +208,6 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run(
     #endif
         percent_base += percent_per_puppy;
     }
-    #if HAS_DWARF()
-    progressHook({ 100, FlashingStage::DONE, PuppyType::DWARF });
-    #elif HAS_PUPPY_MODULARBED()
-    progressHook({ 100, FlashingStage::DONE, PuppyType::MODULARBED });
-    #endif
 
     // Start application
     for (const auto dock : DOCKS) {
@@ -251,9 +241,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run_address_assignment() {
         auto puppy_type = to_puppy_type(*dock);
         auto address = get_boot_address_for_dock(*dock);
 
-        progressHook({ std::to_underlying(*dock), FlashingStage::START, puppy_type });
-
-        progressHook({ 0, FlashingStage::DISCOVERY, puppy_type });
+        bootstrap_state_set(0, BootstrapStage::looking_for_puppies);
         log_info(Puppies, "Discovering whats in dock %s %d",
             get_puppy_info(puppy_type).name, std::to_underlying(*dock));
 
@@ -469,7 +457,7 @@ void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, 
 
     flasher.set_address(get_boot_address_for_dock(dock));
 
-    progressHook({ percent_offset, FlashingStage::CHECK_FINGERPRINT, puppy_type });
+    bootstrap_state_set(percent_offset, check_fingerprint_stage(puppy_type));
 
     bool match = fingerprint_match(fw_fingerprints.get_fingerprint(dock));
     log_info(Puppies, "Puppy %d-%s fingerprint %s", static_cast<int>(dock), get_puppy_info(puppy_type).name, match ? "matched" : "didn't match");
@@ -482,29 +470,29 @@ void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, 
             off_t fw_size;
             int percent_offset;
             int percent_span;
-            PuppyType puppy_type;
+            BootstrapStage flashing_stage;
         } params {
             .fw_file = fw_file,
             .fw_size = fw_size,
             .percent_offset = percent_offset,
             .percent_span = percent_span,
-            .puppy_type = puppy_type,
+            .flashing_stage = flashing_stage(puppy_type),
         };
 
-        BootloaderProtocol::status_t result = flasher.write_flash(fw_size, [this, &params](uint32_t offset, size_t size, uint8_t *out_data) -> bool {
-            // update GUI progress bar
-            this->progressHook({ static_cast<int>(params.percent_offset + offset * params.percent_span / params.fw_size), FlashingStage::FLASHING, params.puppy_type });
-            log_info(Puppies, "Flashing puppy %s offset %" PRIu32 "/%ld", get_puppy_info(params.puppy_type).name, offset, params.fw_size);
+        BootloaderProtocol::status_t result = flasher.write_flash(fw_size, [&params](uint32_t offset, size_t size, uint8_t *out_data) -> bool {
+            const uint8_t percent = static_cast<uint8_t>(params.percent_offset + offset * params.percent_span / params.fw_size);
+            bootstrap_state_set(percent, params.flashing_stage);
 
             // get data
             assert(offset + size <= static_cast<size_t>(params.fw_size));
-            int sret = fseek(params.fw_file.get(), offset, SEEK_SET);
-            assert(sret == 0);
-            UNUSED(sret);
-            unsigned int ret = fread(out_data, sizeof(uint8_t), size, params.fw_file.get());
-            assert(ret == size);
-            UNUSED(ret);
-
+            const int sret = fseek(params.fw_file.get(), offset, SEEK_SET);
+            if (sret != 0) {
+                return false;
+            }
+            const size_t ret = fread(out_data, sizeof(uint8_t), size, params.fw_file.get());
+            if (ret != size) {
+                return false;
+            }
             return true;
         });
 
@@ -512,7 +500,7 @@ void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, 
             fatal_error(ErrCode::ERR_SYSTEM_PUPPY_WRITE_FLASH_ERR, get_puppy_info(puppy_type).name);
         }
 
-        progressHook({ percent_offset + percent_span, FlashingStage::CHECK_FINGERPRINT, puppy_type });
+        bootstrap_state_set(percent_offset + percent_span, check_fingerprint_stage(puppy_type));
 
         // Calculate new fingerprint, salt needs to be changed so the flashing cannot be faked
         fw_fingerprints.get_salt(dock) = rand_u();

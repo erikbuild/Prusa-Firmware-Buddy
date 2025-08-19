@@ -1,6 +1,7 @@
 target_sources(
   firmware
-  PRIVATE digest.cpp
+  PRIVATE bootstrap_state.cpp
+          digest.cpp
           fatfs.cpp
           filesystem.cpp
           filesystem_fatfs.cpp

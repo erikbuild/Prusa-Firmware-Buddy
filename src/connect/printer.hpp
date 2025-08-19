@@ -17,7 +17,7 @@
 #include <device/board.h>
 #include <connect/hostname.hpp>
 #include <filament.hpp>
-#include <filament_sensor_states.hpp>
+#include <feature/filament_sensor/filament_sensor_states.hpp>
 
 #include <option/has_mmu2.h>
 #include <option/has_toolchanger.h>

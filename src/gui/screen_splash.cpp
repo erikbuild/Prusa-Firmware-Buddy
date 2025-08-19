@@ -1,6 +1,8 @@
 #include "screen_splash.hpp"
 #include "ScreenHandler.hpp"
 
+#include <buddy/bootstrap_state.hpp>
+#include <buddy/unreachable.hpp>
 #include "config.h"
 #include "config_features.h"
 #include <version/version.hpp>
@@ -61,11 +63,12 @@
     #define SPLASHSCREEN_VERSION_Y     185
 #endif
 
+using buddy::BootstrapStage;
+
 screen_splash_data_t::screen_splash_data_t()
     : screen_t()
     , text_progress(this, Rect16(0, SPLASHSCREEN_VERSION_Y, GuiDefaults::ScreenWidth, 18), is_multiline::no)
-    , progress(this, Rect16(SPLASHSCREEN_PROGRESSBAR_X, SPLASHSCREEN_PROGRESSBAR_Y, SPLASHSCREEN_PROGRESSBAR_W, SPLASHSCREEN_PROGRESSBAR_H), COLOR_ORANGE, COLOR_GRAY, 6)
-    , version_displayed(false) {
+    , progress(this, Rect16(SPLASHSCREEN_PROGRESSBAR_X, SPLASHSCREEN_PROGRESSBAR_Y, SPLASHSCREEN_PROGRESSBAR_W, SPLASHSCREEN_PROGRESSBAR_H), COLOR_ORANGE, COLOR_GRAY, 6) {
     ClrMenuTimeoutClose();
 
     text_progress.set_font(Font::small);
@@ -219,6 +222,61 @@ screen_splash_data_t::screen_splash_data_t()
 #endif
 }
 
+static const char *message(BootstrapStage stage) {
+    switch (stage) {
+    case BootstrapStage::initial:
+        break;
+#if RESOURCES() || BOOTLOADER_UPDATE()
+    case BootstrapStage::looking_for_bbf:
+        return "Looking for BBF...";
+#endif
+#if RESOURCES()
+    case BootstrapStage::preparing_bootstrap:
+        return "Preparing";
+    case BootstrapStage::copying_files:
+        return "Installing";
+#endif
+#if BOOTLOADER_UPDATE()
+    case BootstrapStage::preparing_update:
+    case BootstrapStage::updating:
+        return "Updating bootloader";
+#endif
+#if HAS_ESP_FLASH_TASK()
+    case BootstrapStage::flashing_esp:
+        return "Flashing ESP";
+    case BootstrapStage::reflashing_esp:
+        return "[ESP] Reflashing broken sectors";
+#endif
+#if HAS_PUPPIES()
+    case BootstrapStage::waking_up_puppies:
+        return "Waking up puppies";
+    case BootstrapStage::looking_for_puppies:
+        return "Looking for puppies";
+    case BootstrapStage::verifying_puppies:
+        return "Verifying puppies";
+    #if HAS_DWARF()
+    case BootstrapStage::flashing_dwarf:
+        return "Flashing dwarf";
+    case BootstrapStage::verifying_dwarf:
+        return "Verifying dwarf";
+    #endif
+    #if HAS_PUPPY_MODULARBED()
+    case BootstrapStage::flashing_modular_bed:
+        return "Flashing modularbed";
+    case BootstrapStage::verifying_modular_bed:
+        return "Verifying modularbed";
+    #endif
+    #if HAS_XBUDDY_EXTENSION()
+    case BootstrapStage::flashing_xbuddy_extension:
+        return "Flashing xbuddy extension";
+    case BootstrapStage::verifying_xbuddy_extension:
+        return "Verifying xbuddy extension";
+    #endif
+#endif
+    }
+    BUDDY_UNREACHABLE();
+}
+
 screen_splash_data_t::~screen_splash_data_t() {
     display::enable_resource_file(); // now it is safe to use resources from xFlash
 }
@@ -238,50 +296,12 @@ void screen_splash_data_t::draw() {
 #endif //_DEBUG
 }
 
-/**
- * @brief this callback must be called in GUI thread
- * also it must be called manually before main gui loop
- * no events can be fired during that period and gui_redraw() must be called manually
- *
- * @param percent value for progressbar
- * @param str string to show instead loading
- */
-void screen_splash_data_t::bootstrap_cb(unsigned percent, std::optional<const char *> str) {
-    GUIStartupProgress progr = { percent, str };
-    event_conversion_union un;
-    un.pGUIStartupProgress = &progr;
-    Screens::Access()->WindowEvent(GUI_event_t::GUI_STARTUP, un.pvoid);
-}
-
-void screen_splash_data_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, void *param) {
-    if (event == GUI_event_t::GUI_STARTUP) { // without clear it could run multiple times before screen is closed
-        if (!param) {
-            return;
-        }
-
-        event_conversion_union un;
-        un.pvoid = param;
-        if (!un.pGUIStartupProgress) {
-            return;
-        }
-        int percent = un.pGUIStartupProgress->percent_done;
-
-        // Bootstrap & FW version are displayed in the same space - we want to display what process is happening during bootstrap
-        // If such a process description is not available (e.g: fw_gui_splash_progress()) - draw FW version (only once to avoid flickering)
-        if (un.pGUIStartupProgress->bootstrap_description.has_value()) {
-            strlcpy(text_progress_buffer, un.pGUIStartupProgress->bootstrap_description.value(), sizeof(text_progress_buffer));
-            text_progress.SetText(string_view_utf8::MakeRAM(text_progress_buffer));
-            text_progress.Invalidate();
-            version_displayed = false;
-        } else {
-            if (!version_displayed) {
-                snprintf(text_progress_buffer, sizeof(text_progress_buffer), "Firmware %s", version::project_version_full);
-                text_progress.SetText(string_view_utf8::MakeRAM(text_progress_buffer));
-                text_progress.Invalidate();
-                version_displayed = true;
-            }
-        }
-
-        progress.SetProgressPercent(std::clamp(percent, 0, 100));
+void screen_splash_data_t::windowEvent(window_t *, GUI_event_t event, void *) {
+    if (event == GUI_event_t::LOOP) {
+        const auto bootstrap_state = buddy::bootstrap_state_get();
+        text_progress.SetText(bootstrap_state.stage == BootstrapStage::initial
+                ? string_view_utf8::MakeRAM(text_progress_buffer)
+                : string_view_utf8::MakeCPUFLASH(message(bootstrap_state.stage)));
+        progress.SetProgressPercent(bootstrap_state.percent);
     }
 }

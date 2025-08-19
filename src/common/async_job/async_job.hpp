@@ -71,6 +71,10 @@ private:
     /// !!! Assumes the mutex is locked. !!!
     void unqueue_nolock();
 
+    /// Links the instance to the linked list
+    /// !!! Assumes the mutex is locked and that the executor is set. !!!
+    void enqueue_nolock();
+
 private:
     /// Function to be executed in the worker task
     Callback callback;

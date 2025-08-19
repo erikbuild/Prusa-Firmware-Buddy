@@ -4,7 +4,7 @@
 #include "marlin_client.hpp"
 #include "WindowMenuSpin.hpp"
 #include "window_msgbox.hpp"
-#include <filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <mmu2/fail_bucket.hpp>
 
 #if HAS_SELFTEST()

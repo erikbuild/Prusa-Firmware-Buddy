@@ -64,7 +64,6 @@ if(BOARD_IS_MASTER_BOARD)
             Marlin/Marlin/src/gcode/bedlevel/ubl/G29.cpp
             Marlin/Marlin/src/gcode/bedlevel/ubl/M421.cpp
             Marlin/Marlin/src/gcode/calibrate/G28.cpp
-            Marlin/Marlin/src/gcode/calibrate/G65.cpp
             Marlin/Marlin/src/gcode/calibrate/G80.cpp
             Marlin/Marlin/src/gcode/calibrate/M666.cpp
             Marlin/Marlin/src/gcode/config/M200-M205.cpp
@@ -241,6 +240,7 @@ target_link_libraries(
          Marlin_Config
          error_codes
          marlin_server_types
+         bsod
          SG14
          buddy_utils
          raii

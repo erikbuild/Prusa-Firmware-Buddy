@@ -1,8 +1,11 @@
 #include "media_prefetch.hpp"
 
+#include <cassert>
+#include <cctype>
 #include <cstring>
 #include <cinttypes>
 
+#include "bsod.h"
 #include <logging/log.hpp>
 #include <utils/enum_array.hpp>
 #include <option/has_e2ee_support.h>

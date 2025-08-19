@@ -60,6 +60,7 @@
 #include "../Marlin/src/feature/print_area.h"
 #include "../Marlin/src/Marlin.h"
 #include "utility_extensions.hpp"
+#include <common/gcode/gcode_info_scan.hpp>
 
 #if ENABLED(PRUSA_MMU2)
     #include "../Marlin/src/feature/prusa/MMU2/mmu2_mk4.h"
@@ -183,6 +184,10 @@
 
 #include <feature/print_status_message/print_status_message_mgr.hpp>
 
+#if HAS_NOZZLE_CLEANER()
+    #include <nozzle_cleaner.hpp>
+#endif
+
 using namespace ExtUI;
 
 using ClientQueue = marlin_client::ClientQueue;
@@ -222,7 +227,7 @@ namespace {
         uint16_t flags; // server flags (MARLIN_SFLG)
         uint32_t knob_click_counter = 0; // Hold user knob clicks for safety timer
         uint32_t knob_move_counter = 0; // Holds user knob moves for safety timer
-
+        KnobMove last_knob_move = KnobMove::NoMove; // Last knob move direction (used for belt tuning)
 #if ENABLED(AXIS_MEASURE)
         /// length of axes measured after crash
         /// negative numbers represent undefined length
@@ -235,7 +240,6 @@ namespace {
         bool mmu_maintenance_checked = false;
 #endif
     };
-
     std::atomic<uint32_t> request_flags = 0;
     static_assert(std::to_underlying(RequestFlag::_cnt) <= 32, "There are more flags than bits");
 
@@ -308,6 +312,7 @@ namespace {
             if (disable_hotend) {
                 HOTEND_LOOP() {
                     thermalManager.setTargetHotend(0, e);
+                    set_temp_to_display(0, e);
                 }
             }
             m_failed = true;
@@ -786,20 +791,14 @@ static void cycle() {
     buddy::xbuddy_extension().step();
 #endif
 
+    record_fanctl_metrics();
+
     idle_hook_point.call_all();
 
     if (is_cycle_running) {
         return;
     }
     AutoRestore _nr(is_cycle_running, true);
-
-    bool call_print_loop = true;
-#if HAS_SELFTEST()
-    if (SelftestInstance().IsInProgress()) {
-        SelftestInstance().Loop();
-        call_print_loop = false;
-    }
-#endif
 
 #if HAS_MMU2()
     MMU2::Fsm::Instance().Loop();
@@ -816,7 +815,11 @@ static void cycle() {
     xl_enclosure.loop(remote_bed::get_mcu_temperature(), dwarf_temp);
 #endif
 
-    if (call_print_loop) {
+#if HAS_SELFTEST()
+    if (!SelftestInstance().IsInProgress()) {
+#else
+    {
+#endif
         _server_print_loop(); // we need call print loop here because it must be processed while blocking commands (M109)
     }
 
@@ -850,13 +853,25 @@ static void cycle() {
 }
 
 /// Function that is called just before finalize_print, before the steppers are possibly disabled
-static void pre_finalize_print([[maybe_unused]] bool finished) {
+/// \retval true the function did its job and we can continue with the state machine
+/// \retval false the function is not ready yet, we need to call it later again (loop in the same state)
+static bool pre_finalize_print([[maybe_unused]] bool finished) {
+#if HAS_NOZZLE_CLEANER()
+    if (nozzle_cleaner::is_loader_idle()) {
+        nozzle_cleaner::load_g12_gcode();
+    }
+    if (nozzle_cleaner::is_loader_buffering()) {
+        return false; // We are not ready yet, we need to wait for the loader to finish buffering
+    }
+#endif // HAS_NOZZLE_CLEANER()
+
 #if ENABLED(PRUSA_MMU2)
     if (MMU2::mmu2.Enabled() && (!finished || GCodeInfo::getInstance().is_singletool_gcode())) {
         // When we are running single-filament gcode with MMU, we should unload current filament.
         safely_unload_filament_from_nozzle_to_mmu();
     } else
 #endif // ENABLED(PRUSA_MMU2)
+
 #if HAS_AUTO_RETRACT()
         if (true) {
         buddy::auto_retract().maybe_retract_from_nozzle();
@@ -864,6 +879,17 @@ static void pre_finalize_print([[maybe_unused]] bool finished) {
 #endif
     {
     }
+
+#if HAS_NOZZLE_CLEANER()
+    // Here the nozzle cleaner loader should already be ready to execute the gcode.
+    nozzle_cleaner::execute();
+
+    xyz_pos_t park = XYZ_NOZZLE_PARK_POINT;
+    park.z = current_position.z;
+    plan_park_move_to_xyz(park, NOZZLE_PARK_XY_FEEDRATE, NOZZLE_PARK_Z_FEEDRATE, Segmented::yes);
+#endif
+
+    return true;
 }
 
 void static finalize_print(bool finished) {
@@ -973,6 +999,15 @@ static void check_crash() {
 #endif // ENABLED(CRASH_RECOVERY)
 
 void loop() {
+    ::idle(false); // Do an idle first so boot is slightly faster
+    queue.advance();
+
+#if HAS_SELFTEST()
+    if (SelftestInstance().IsInProgress()) {
+        SelftestInstance().Loop();
+    }
+#endif
+
 #if ANY(CRASH_RECOVERY, POWER_PANIC)
     check_crash();
 #endif
@@ -1243,6 +1278,19 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
     print_state = {};
 
     if (filename) {
+        // Avoid possible deadlocks by disabling a gcode scan, if there's any.
+        //
+        // The deadlock could happen if:
+        // * We started to download a file.
+        // * We start to show the preview, but it's not yet downloaded enough
+        //   to show on screen, in which case the scan _waits_ for it to become
+        //   downloaded enough.
+        // * Connect gets a command to start a print, forwarding it to us here.
+        // * We would have to wait of that one to finish below (the async job thing).
+        // * And we would be blocking Connect by not answering, therefore it
+        //   would not be updating the file downloaded range... not unblocking
+        //   the scan.
+        gcode_info_scan::cancel_scan();
         // We need a copy of the sfn as well because get_LFN needs the address mutable :/
         std::array<char, FILE_PATH_BUFFER_LEN> filepath_sfn;
         strlcpy(filepath_sfn.data(), filename, filepath_sfn.size());
@@ -2373,7 +2421,9 @@ static void _server_print_loop(void) {
             break;
         }
 
-        pre_finalize_print(false);
+        if (!pre_finalize_print(false)) {
+            break;
+        };
         server.print_state = State::Aborting_ParkHead;
         break;
     case State::Aborting_ParkHead:
@@ -2432,7 +2482,9 @@ static void _server_print_loop(void) {
             break;
         }
 
-        pre_finalize_print(true);
+        if (!pre_finalize_print(true)) {
+            break;
+        };
         server.print_state = State::Finishing_ParkHead;
         break;
     case State::Finishing_ParkHead:
@@ -2736,7 +2788,13 @@ static void _server_print_loop(void) {
         break;
     }
 
-    if (marlin_vars().fan_check_enabled) {
+    bool do_fan_check = marlin_vars().fan_check_enabled;
+#if HAS_SELFTEST()
+    // Do not check fan error in marlin server during Fan selftest
+    do_fan_check &= !fsm_states[ClientFSM::FansSelftest].has_value();
+#endif
+
+    if (do_fan_check) {
         HOTEND_LOOP() {
 #if !PRINTER_IS_PRUSA_iX()
             const auto fan_state = Fans::heat_break(e).get_state();
@@ -2908,11 +2966,10 @@ void lift_head() {
     static_assert(Z_NOZZLE_PARK_POINT > 0);
 
     if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
-        // Do prepare_move_to_destination, as it segments the move and thus allows better emergency_stop
-        AutoRestore _ar(feedrate_mm_s, MMM_TO_MMS(HOMING_FEEDRATE_INVERTED_Z));
+        // Do prepare_move_to, as it segments the move and thus allows better emergency_stop
         destination = current_position;
         destination.z += distance;
-        prepare_move_to_destination({});
+        prepare_move_to(destination, MMM_TO_MMS(HOMING_FEEDRATE_INVERTED_Z), {});
         planner.synchronize();
 
     } else {
@@ -2931,13 +2988,13 @@ void lift_head() {
 }
 
 void park_head() {
-    if (!all_axes_homed()) {
-        return;
-    }
-
     server.resume.pos = current_position;
     retract();
     lift_head();
+
+    if (!all_axes_homed()) {
+        return;
+    }
 
 #if HAS_TOOLCHANGER()
     // Check that we are not in dock
@@ -3035,6 +3092,12 @@ extern uint32_t get_user_click_count(void) {
 
 extern uint32_t get_user_move_count(void) {
     return server.knob_move_counter;
+}
+
+extern KnobMove get_last_knob_move(void) {
+    KnobMove move = server.last_knob_move;
+    server.last_knob_move = KnobMove::NoMove; // reset after reading
+    return move;
 }
 
 //-----------------------------------------------------------------------------
@@ -3355,7 +3418,12 @@ static void process_request_flags() {
         case RequestFlag::PrintExit:
             print_exit();
             break;
-        case RequestFlag::KnobMove:
+        case RequestFlag::KnobMoveUp:
+            server.last_knob_move = KnobMove::Up;
+            server.knob_move_counter++;
+            break;
+        case RequestFlag::KnobMoveDown:
+            server.last_knob_move = KnobMove::Down;
             server.knob_move_counter++;
             break;
         case RequestFlag::KnobClick:

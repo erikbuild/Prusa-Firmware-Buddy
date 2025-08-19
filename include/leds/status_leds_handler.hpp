@@ -10,18 +10,19 @@ namespace leds {
 enum class StateAnimation : uint8_t {
     Idle,
     Printing,
-    Aborting,
     Finishing,
+    Aborting,
     Warning,
     PowerPanic,
     PowerUp,
 #if PRINTER_IS_PRUSA_iX()
+    WaitingForPrinter,
+    WaitingForUser,
     Unloading,
     WaitingForFilamentRemoval,
     FilamentRemoved,
     Inserting,
     Loading,
-    WaitingForFilamentUserRetraction,
 #endif
     Error,
     _last = Error,

@@ -416,14 +416,6 @@ void MarlinSettings::reset() {
   #endif
 
   //
-  // LCD Contrast
-  //
-
-  #if HAS_LCD_CONTRAST
-    ui.set_contrast(DEFAULT_LCD_CONTRAST);
-  #endif
-
-  //
   // Volumetric & Filament Size
   //
 
@@ -802,12 +794,6 @@ void MarlinSettings::reset() {
       #endif
 
     #endif // PIDTEMP || PIDTEMPBED
-
-    #if HAS_LCD_CONTRAST
-      CONFIG_ECHO_HEADING("LCD Contrast:");
-      CONFIG_ECHO_START();
-      SERIAL_ECHOLNPAIR("  M250 C", ui.contrast);
-    #endif
 
     /**
      * Probe Offset

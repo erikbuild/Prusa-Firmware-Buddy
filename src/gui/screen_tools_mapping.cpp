@@ -13,7 +13,7 @@
 #include "mmu2_toolchanger_common.hpp"
 #include <tools_mapping.hpp>
 #include <print_utils.hpp>
-#include <filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <buddy/unreachable.hpp>
 
 namespace {

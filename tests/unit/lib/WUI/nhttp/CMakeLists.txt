@@ -156,6 +156,7 @@ target_link_libraries(
   freertos_tests
   buddy_utils
   raii
+  logging-mock
   )
 
 add_catch_test(nhttp_tests)

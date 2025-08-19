@@ -14,5 +14,6 @@ target_include_directories(
   PRIVATE include ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/common/utils
           ${CMAKE_SOURCE_DIR}/src/puppy/xbuddy_extension_shared
   )
+target_link_libraries(mmu2-modbus_tests freertos-mock logging-mock)
 
 add_catch_test(mmu2-modbus_tests)

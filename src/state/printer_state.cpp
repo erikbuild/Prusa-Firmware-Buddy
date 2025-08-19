@@ -17,6 +17,7 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_side_fsensor.h>
+#include <option/has_belt_tuning.h>
 
 using namespace marlin_server;
 using namespace printer_state;
@@ -224,6 +225,9 @@ DeviceState get_state(bool ready) {
 #if HAS_COLDPULL()
     case ClientFSM::ColdPull:
 #endif
+#if HAS_MANUAL_BELT_TUNING()
+    case ClientFSM::BeltTuning:
+#endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:
 #endif
@@ -419,6 +423,9 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::NetworkSetup:
 #if HAS_COLDPULL()
     case ClientFSM::ColdPull:
+#endif
+#if HAS_MANUAL_BELT_TUNING()
+    case ClientFSM::BeltTuning:
 #endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:
@@ -655,8 +662,10 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::ERR_MECHANICAL_HOMING_CALIBRATION_NEEDED;
 
     case WarningType::HomingRefinementFailed:
-    case WarningType::HomingRefinementFailedNoRetry:
         return ErrCode::ERR_MECHANICAL_PRECISE_REFINEMENT_FAILED;
+
+    case WarningType::HomingCalibrationFromMenuNeeded:
+        return ErrCode::ERR_MECHANICAL_HOMING_CALIBRATION_FROM_MENU_NEEDED;
 #endif
 
 #if HAS_SELFTEST()

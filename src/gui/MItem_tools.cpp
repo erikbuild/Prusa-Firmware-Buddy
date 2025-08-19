@@ -12,9 +12,9 @@
 #include "i18n.h"
 #include "ScreenHandler.hpp"
 #include "bsod.h"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "liveadjust_z.hpp"
-#include "filament_sensor.hpp"
+#include <feature/filament_sensor/filament_sensor.hpp>
 #include <buddy/main.h>
 #include "Pin.hpp"
 #include "hwio_pindef.h"
@@ -33,7 +33,6 @@
 #include <feature/prusa/e-stall_detector.h>
 #include <option/bootloader.h>
 #include <option/filament_sensor.h>
-#include <option/has_phase_stepping_toggle.h>
 #include <option/has_side_leds.h>
 #include <option/has_coldpull.h>
 #include <raii/auto_restore.hpp>
@@ -206,7 +205,18 @@ void MI_AUTO_HOME::click(IWindowMenu & /*window_menu*/) {
         return;
     }
 
-    marlin_client::gcode("G28 P");
+    // Note: This check is _in theory_ a bit racy - we could switch between
+    // printing / not printing between the check and the execution. However,
+    // this is highly unlikely and also somewhat harmless:
+    // * In one direction, we do precise homing even when imprecise would suffice.
+    // * In another direction, we add an imprecise homing _to the start_ of the
+    //   print, which is before the print itself does its own homing.
+    if (marlin_client::is_printing()) {
+        marlin_client::gcode("G28 P");
+    } else {
+        // Outside of a print, we are fine homing imprecisely.
+        marlin_client::gcode("G28 P I");
+    }
 }
 
 /*****************************************************************************/
@@ -730,45 +740,6 @@ void MI_SET_READY::click([[maybe_unused]] IWindowMenu &window_menu) {
     }
 }
 
-#if HAS_PHASE_STEPPING_TOGGLE()
-MI_PHASE_STEPPING_TOGGLE::MI_PHASE_STEPPING_TOGGLE()
-    : WI_ICON_SWITCH_OFF_ON_t(0, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
-    bool phstep_enabled = config_store().get_phase_stepping_enabled();
-    set_value(phstep_enabled);
-}
-
-void MI_PHASE_STEPPING_TOGGLE::OnChange([[maybe_unused]] size_t old_index) {
-    if (event_in_progress) {
-        return;
-    }
-
-    if (value() && (config_store().selftest_result_phase_stepping.get() != TestResult_Passed)) {
-    #if PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE()
-        if (MsgBoxQuestion(_("Turn on Phase stepping uncalibrated?"), Responses_YesNo) == Response::No) {
-            AutoRestore ar(event_in_progress, true);
-            set_value(old_index);
-            return;
-        }
-    #else
-        AutoRestore ar(event_in_progress, true);
-        MsgBoxWarning(_("Phase stepping not ready: perform calibration first."), Responses_Ok);
-        set_value(old_index);
-        return;
-    #endif
-    }
-
-    if (value()) {
-        marlin_client::gcode("M970 X1 Y1"); // turn phase stepping on
-    } else {
-        marlin_client::gcode("M970 X0 Y0"); // turn phase stepping off
-    }
-
-    // we need to wait until the action actually takes place so that when returning
-    // to the menu (if any) the new state is already reflected
-    window_dlg_wait_t::wait_for_gcodes_to_finish();
-}
-#endif
-
 #if HAS_COLDPULL()
 MI_COLD_PULL::MI_COLD_PULL()
     : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
@@ -869,6 +840,7 @@ void MI_SIDE_LEDS_MAX_BRIGTHNESS::OnClick() {
 #if HAS_SIDE_LEDS()
 /**********************************************************************************************/
 // MI_SIDE_LEDS_DIMMED_BRIGTHNESS
+
 MI_SIDE_LEDS_DIMMED_BRIGTHNESS::MI_SIDE_LEDS_DIMMED_BRIGTHNESS()
     : WiSpin(
         static_cast<float>(leds::SideStripHandler::instance().get_dimmed_brightness()) * 100 / 255,
@@ -881,18 +853,24 @@ void MI_SIDE_LEDS_DIMMED_BRIGTHNESS::OnClick() {
 }
 
 void MI_SIDE_LEDS_DIMMED_BRIGTHNESS::Loop() {
-    set_enabled(leds::SideStripHandler::instance().get_dimming_enabled());
+    set_enabled(leds::SideStripHandler::instance().get_dimming_enabled() != leds::DimmingEnabled::never);
 }
 #endif
 
 #if HAS_SIDE_LEDS()
 /**********************************************************************************************/
 // MI_SIDE_LEDS_DIMMING_ENABLE
+static constexpr EnumArray<leds::DimmingEnabled, const char *, leds::DimmingEnabled::_cnt> dimming_enabled_values {
+    { leds::DimmingEnabled::never, N_("Never") },
+    { leds::DimmingEnabled::always, N_("Always") },
+    { leds::DimmingEnabled::not_printing, N_("On Idle") },
+};
+
 MI_SIDE_LEDS_DIMMING_ENABLE::MI_SIDE_LEDS_DIMMING_ENABLE()
-    : WI_ICON_SWITCH_OFF_ON_t(leds::SideStripHandler::instance().get_dimming_enabled(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
+    : MenuItemSwitch(_(label), dimming_enabled_values, std::to_underlying(leds::SideStripHandler::instance().get_dimming_enabled())) {
 }
-void MI_SIDE_LEDS_DIMMING_ENABLE::OnChange(size_t) {
-    leds::SideStripHandler::instance().set_dimming_enabled(value());
+void MI_SIDE_LEDS_DIMMING_ENABLE::OnChange([[maybe_unused]] size_t old_index) {
+    leds::SideStripHandler::instance().set_dimming_enabled(static_cast<leds::DimmingEnabled>(get_index()));
 }
 #endif
 

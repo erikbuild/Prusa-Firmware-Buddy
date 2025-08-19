@@ -10,7 +10,7 @@
 #include "marlin_server.hpp"
 #include <media_prefetch_instance.hpp>
 #include "timing.h"
-#include "filament_sensors_handler.hpp"
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "filament.hpp"
 #include "M70X.hpp"
 #include <option/developer_mode.h>

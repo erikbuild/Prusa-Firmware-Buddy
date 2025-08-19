@@ -4,7 +4,7 @@
 #include <errno.h> // for EAGAIN
 #include <filename_type.hpp>
 #include <sys/stat.h>
-#include <type_traits>
+#include <cinttypes>
 
 PlainGcodeReader::PlainGcodeReader(FILE &f, const struct stat &stat_info)
     : GcodeReaderCommon(f) {
@@ -12,13 +12,16 @@ PlainGcodeReader::PlainGcodeReader(FILE &f, const struct stat &stat_info)
     file_size = stat_info.st_size;
 }
 
-bool PlainGcodeReader::stream_metadata_start() {
+bool PlainGcodeReader::stream_metadata_start([[maybe_unused]] const Index *index) {
+    assert(index == nullptr || !index->indexed());
     bool success = fseek(file.get(), 0, SEEK_SET) == 0;
     stream_mode_ = success ? StreamMode::metadata : StreamMode::none;
     gcodes_in_metadata = 0;
     return success;
 }
-IGcodeReader::Result_t PlainGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc) {
+
+IGcodeReader::Result_t PlainGcodeReader::stream_gcode_start(uint32_t offset, bool ignore_crc, [[maybe_unused]] const Index *index) {
+    assert(index == nullptr || !index->indexed());
     // There is no CRC in plaintext G-Code.
     (void)ignore_crc;
 
@@ -183,44 +186,44 @@ uint32_t PlainGcodeReader::get_gcode_stream_size() {
     return file_size;
 }
 
-bool PlainGcodeReader::IsBeginThumbnail(GcodeBuffer &buffer, uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larder, unsigned long &num_bytes) const {
-    constexpr const char thumbnailBegin_png[] = "; thumbnail begin "; // pozor na tu mezeru na konci
-    constexpr const char thumbnailBegin_qoi[] = "; thumbnail_QOI begin "; // pozor na tu mezeru na konci
+std::optional<IGcodeReader::ThumbnailDetails> PlainGcodeReader::thumbnail_details(GcodeBuffer::String comment) {
+    // The trailing space is present on purpose
+    constexpr const char thumbnailBegin_png[] = "; thumbnail begin ";
+    constexpr const char thumbnailBegin_qoi[] = "; thumbnail_QOI begin ";
+    ThumbnailDetails result;
+    if (comment.skip_prefix(thumbnailBegin_png)) {
+        result.type = ImgType::PNG;
+    } else if (comment.skip_prefix(thumbnailBegin_qoi)) {
+        result.type = ImgType::QOI;
+    } else {
+        return std::nullopt;
+    }
 
-    const char *thumbnailBegin = nullptr;
-    size_t thumbnailBeginSizeof = 0;
-    switch (expected_type) {
-    case ImgType::PNG:
-        thumbnailBegin = thumbnailBegin_png;
-        thumbnailBeginSizeof = sizeof(thumbnailBegin_png);
-        break;
-    case ImgType::QOI:
-        thumbnailBegin = thumbnailBegin_qoi;
-        thumbnailBeginSizeof = sizeof(thumbnailBegin_qoi);
-        break;
-    default:
+    int ss = sscanf(comment.c_str(), "%" SCNu16 "x%" SCNu16 "%lu", &result.width, &result.height, &result.num_bytes);
+
+    if (ss != 3) {
+        return std::nullopt;
+    }
+
+    return result;
+}
+
+bool PlainGcodeReader::IsBeginThumbnail(GcodeBuffer &buffer, uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larder, unsigned long &num_bytes) const {
+    const auto details = thumbnail_details(buffer.line);
+
+    if (expected_type != details->type) {
         return false;
     }
-    // pokud zacina radka na ; thumbnail, lze se tim zacit zabyvat
-    // nemuzu pouzivat zadne pokrocile algoritmy, musim vystacit se strcmp
-    const char *lc = buffer.line.begin; // jen quli debuggeru, abych do toho videl...
-    // ta -1 na size ma svuj vyznam - chci, aby strncmp NEporovnavalo ten null
-    // znak na konci, cili abych se nemusel srat s tim, ze vstupni string je
-    // delsi, cili aby to emulovalo chovani boost::starts_with()
-    if (!strncmp(lc, thumbnailBegin, thumbnailBeginSizeof - 1)) {
-        // zacatek thumbnailu
-        unsigned int x, y;
-        lc = lc + thumbnailBeginSizeof - 1;
-        int ss = sscanf(lc, "%ux%u %lu", &x, &y, &num_bytes);
-        if (ss == 3) { // 3 uspesne prectene itemy - rozliseni
-            // je to platny zacatek thumbnailu, je to ten muj?
-            if ((x == expected_width && y == expected_height) || (allow_larder && x >= expected_width && y >= expected_height)) {
-                // je to ten muj, ktery chci
-                return true;
-            }
-        }
+
+    const bool width_matches = (expected_width == details->width || (allow_larder && expected_width < details->width));
+    const bool height_matches = (expected_height == details->height || (allow_larder && expected_height < details->height));
+
+    if (!width_matches || !height_matches) {
+        return false;
     }
-    return false;
+
+    num_bytes = details->num_bytes;
+    return true;
 }
 
 IGcodeReader::FileVerificationResult PlainGcodeReader::verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const {

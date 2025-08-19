@@ -2,7 +2,7 @@
 #include "gcode_gearbox_alignment.hpp"
 
 #include <buddy/unreachable.hpp>
-#include <common/filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <raii/auto_restore.hpp>
 #include <config_store/store_instance.hpp>
 #include <M70X.hpp>

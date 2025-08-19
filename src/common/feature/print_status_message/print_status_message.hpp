@@ -4,6 +4,7 @@
 #include <option/has_auto_retract.h>
 
 #include "print_status_message_data.hpp"
+#include <inc/MarlinConfigPre.h>
 
 struct PrintStatusMessage {
     enum Type {
@@ -29,6 +30,9 @@ struct PrintStatusMessage {
 
 #if ENABLED(PROBE_CLEANUP_SUPPORT)
         nozzle_cleaning,
+#endif
+#if ENABLED(DETECT_PRINT_SHEET)
+        detecting_steel_sheet,
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)
         spool_joined,
@@ -91,6 +95,9 @@ struct PrintStatusMessage {
         TypeRecord<Type::waiting_for_bed_temp, PrintStatusMessageDataProgress>,
 #if ENABLED(PROBE_CLEANUP_SUPPORT)
         TypeRecord<Type::nozzle_cleaning, std::monostate>,
+#endif
+#if ENABLED(DETECT_PRINT_SHEET)
+        TypeRecord<Type::detecting_steel_sheet, std::monostate>,
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)
         TypeRecord<Type::spool_joined, std::monostate>,
