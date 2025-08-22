@@ -114,6 +114,13 @@ async def main():
     event_sub.receive_in_background(handle_event)
 
     await send_request(
+        "get_tag_uid",
+        {
+            "tag": 0,
+        },
+    )
+
+    await send_request(
         "read_field",
         {
             "field": {

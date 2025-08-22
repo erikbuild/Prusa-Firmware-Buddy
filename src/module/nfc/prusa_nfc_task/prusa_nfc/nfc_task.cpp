@@ -153,6 +153,11 @@ bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
             radio_enabled_ = false;
         }
 
+        else if (prusa3d_nfc_request_RequestData_1_0_is_get_tag_uid_(&rreq)) {
+            prusa3d_nfc_request_RequestResult_1_0_select_get_tag_uid_(&result);
+            handle_get_tag_uid_request(rreq.get_tag_uid, result.get_tag_uid);
+        }
+
         event_callback_(response);
     };
 
@@ -472,4 +477,24 @@ void NFCTask::handle_set_debug_config_request(const prusa3d_nfc_request_SetDebug
         .auto_forget_tag = request.auto_forget_tag,
     };
     reader_.ll_reader().set_debug_config(config);
+}
+
+void NFCTask::handle_get_tag_uid_request(const prusa3d_nfc_request_GetTagUID_1_0 &request, prusa3d_nfc_request_GetTagUIDResult_1_0 &result) {
+    // Note: Current implementation doesn't require radio for obtaining the UID, but some might in the future
+    if (!radio_enabled_) {
+        prusa3d_nfc_request_GetTagUIDResult_1_0_select_error_(&result);
+        result._error._error = prusa3d_nfc_util_ReaderError_1_0_RADIO_DISABLED;
+        return;
+    }
+
+    prusa3d_nfc_request_GetTagUIDResult_1_0_select_uid_(&result);
+    const auto io_result = reader_.ll_reader().get_tag_uid(request.tag.value, std::span { reinterpret_cast<std::byte *>(&result.uid.value.elements), sizeof(result.uid.value.elements) });
+    if (!io_result) {
+        prusa3d_nfc_request_GetTagUIDResult_1_0_select_error_(&result);
+        result._error._error = io_result_to_error(io_result);
+        return;
+    }
+
+    result.uid.value.count = *io_result;
+    return;
 }
