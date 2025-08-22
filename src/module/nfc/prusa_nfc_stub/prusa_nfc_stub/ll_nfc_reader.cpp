@@ -55,7 +55,7 @@ LLNFCReader::LLNFCReader() {
 
 INFCReader::IOResult<void> LLNFCReader::read(NFCTagID tag, NFCOffset start, const std::span<std::byte> &buffer) {
     if (tag != 0) {
-        return std::unexpected(IOError::other);
+        return std::unexpected(IOError::invalid_id);
     }
 
     if (start + buffer.size() > tag_size_) {
@@ -68,7 +68,7 @@ INFCReader::IOResult<void> LLNFCReader::read(NFCTagID tag, NFCOffset start, cons
 
 INFCReader::IOResult<void> LLNFCReader::write(NFCTagID tag, NFCOffset start, const std::span<const std::byte> &buffer) {
     if (tag != 0) {
-        return std::unexpected(IOError::other);
+        return std::unexpected(IOError::invalid_id);
     }
 
     if (start + buffer.size() > tag_size_) {
