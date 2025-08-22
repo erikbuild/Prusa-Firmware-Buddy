@@ -183,13 +183,16 @@ bool LLNFCReader::get_event(Event &e, uint32_t current_time_ms) {
 }
 
 void LLNFCReader::forget_tag(NFCTagID tag) {
-    assert(tag < MAX_KNOWN_TAGS);
+    if (tag >= tags.size()) {
+        return;
+    }
+
     auto &tag_data = tags.at(tag);
     tag_data.state = TagData::State::free;
 }
 
 void LLNFCReader::reset_state() {
-    for (size_t i = 0; i < MAX_KNOWN_TAGS; ++i) {
+    for (size_t i = 0; i < tags.size(); ++i) {
         forget_tag(i);
     }
     events.clear();
@@ -392,7 +395,7 @@ INFCReader::IOResult<void> LLNFCReader::unlock_tag(NFCTagID tag, uint32_t passwo
 
 bool LLNFCReader::is_valid(NFCTagID tag_id) {
     static_assert(!std::is_signed_v<decltype(tag_id)>);
-    if (tag_id >= MAX_KNOWN_TAGS) {
+    if (tag_id >= tags.size()) {
         return false;
     }
 
