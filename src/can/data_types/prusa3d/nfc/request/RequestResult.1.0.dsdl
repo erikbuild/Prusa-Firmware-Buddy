@@ -23,4 +23,6 @@ prusa3d.nfc.util.ReaderError.1.0 initialize_tag
 # IO error or NO_ERROR
 prusa3d.nfc.util.ReaderError.1.0 unlock_tag
 
+prusa3d.nfc.request.GetTagUIDResult.1.0 get_tag_uid
+
 @sealed
