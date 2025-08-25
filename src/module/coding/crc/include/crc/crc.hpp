@@ -1,3 +1,10 @@
+///
+/// This header file provides functions for encoding and decoding data using the
+/// Consistent Overhead Byte Stuffing (COBS) algorithm. COBS ensures that the
+/// data bytes do not contain the packet delimiter (0x00), making packet
+/// framing unambiguous.
+///
+/// The implementation and configuration is based on the CRCs described in https://reveng.sourceforge.io/crc-catalogue/16.htm
 #pragma once
 
 #include <stdint.h>
@@ -9,6 +16,17 @@
 // These are the equivalent C implementation as documented in the AVR
 // util/crc16.h header.
 
+/**
+ * @brief Compute 16-bit CCITT-FALSE CRC (polynomial 0x1021)
+ * @param crc Current CRC value (initialize with 0xFFFF)
+ * @param data Input byte to process
+ * @return Updated CRC value
+ * @note Characteristics:
+ * - Polynomial: 0x1021
+ * - Initial value: 0xFFFF
+ * - Final XOR: 0x0000
+ * - Non-reflected
+ */
 inline uint16_t _crc16_ccitt_false_update(uint16_t crc, uint8_t data) {
     crc ^= (uint16_t)data << 8;
     for (int i = 0; i < 8; ++i) {
@@ -21,6 +39,17 @@ inline uint16_t _crc16_ccitt_false_update(uint16_t crc, uint8_t data) {
     return crc;
 }
 
+/**
+ * @brief CRC-16/MODBUS (polynomial 0x8005)
+ * @param crc Current CRC value (initialize with 0x0000)
+ * @param data Input byte to process
+ * @return Updated CRC value
+ * @note Characteristics:
+ * - Polynomial: 0x8005 (reversed -> 0xA001)
+ * - Initial value: 0xFFFF
+ * - Final XOR: 0x0000
+ * - Reflected (LSB first)
+ */
 inline uint16_t _crc16_update(uint16_t crc, uint8_t a) {
     int i;
 
