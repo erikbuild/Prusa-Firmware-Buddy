@@ -9,6 +9,18 @@
 // These are the equivalent C implementation as documented in the AVR
 // util/crc16.h header.
 
+inline uint16_t _crc16_ccitt_false_update(uint16_t crc, uint8_t data) {
+    crc ^= (uint16_t)data << 8;
+    for (int i = 0; i < 8; ++i) {
+        if (crc & 0x8000) {
+            crc = (crc << 1) ^ 0x1021;
+        } else {
+            crc <<= 1;
+        }
+    }
+    return crc;
+}
+
 inline uint16_t _crc16_update(uint16_t crc, uint8_t a) {
     int i;
 
@@ -60,5 +72,6 @@ private:
     T crc = Initial;
 };
 
+using Crc16CcittFalse = Crc<uint16_t, _crc16_ccitt_false_update, 0xffff>;
 // Called CRC16-IBM (or CRC16-ANSI or just CRC16) by wikipedia, used by ModBus
 using Crc16Ibm = Crc<uint16_t, _crc16_update, 0xffff>;
