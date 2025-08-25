@@ -50,7 +50,7 @@ inline uint16_t _crc16_ccitt_false_update(uint16_t crc, uint8_t data) {
  * - Final XOR: 0x0000
  * - Reflected (LSB first)
  */
-inline uint16_t _crc16_update(uint16_t crc, uint8_t a) {
+inline uint16_t _crc16_modbus_update(uint16_t crc, uint8_t a) {
     int i;
 
     crc ^= a;
@@ -103,4 +103,4 @@ private:
 
 using Crc16CcittFalse = Crc<uint16_t, _crc16_ccitt_false_update, 0xffff>;
 // Called CRC16-IBM (or CRC16-ANSI or just CRC16) by wikipedia, used by ModBus
-using Crc16Ibm = Crc<uint16_t, _crc16_update, 0xffff>;
+using Crc16Modbus = Crc<uint16_t, _crc16_modbus_update, 0xffff>;
