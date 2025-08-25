@@ -1,6 +1,6 @@
 #include "puppies/BootloaderProtocol.hpp"
 #include <algorithm>
-#include "Crc.h"
+#include <crc/crc.hpp>
 #include <cstring>
 #include "buffered_serial.hpp"
 #include "puppies/PuppyBus.hpp"
