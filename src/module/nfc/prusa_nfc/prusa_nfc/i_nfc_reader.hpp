@@ -32,13 +32,6 @@ public:
 
     struct DebugConfig {
     public:
-        /// Use all antennas, do not enforce a specific one
-        static constexpr NFCAntenna no_antenna_enforce = std::numeric_limits<NFCAntenna>::max();
-
-    public:
-        /// If set, only the specified antenna will ever be used
-        NFCAntenna enforce_antenna = no_antenna_enforce;
-
         /// Automatically forget tags on TagLost event
         bool auto_forget_tag : 1 = false;
     };
@@ -96,6 +89,12 @@ public:
         debug_config_ = config;
     }
 
+    /// Use all antennas, do not enforce a specific one
+    static constexpr NFCAntenna no_antenna_enforce = std::numeric_limits<NFCAntenna>::max();
+    inline void enforce_antenna(NFCAntenna antenna) {
+        enforced_antenna = antenna;
+    }
+
 public:
     struct InitializeTagParams {
         enum class ProtectionPolicy : uint8_t {
@@ -149,4 +148,7 @@ public:
 
 protected:
     DebugConfig debug_config_;
+
+    /// If set, only the specified antenna will ever be used
+    NFCAntenna enforced_antenna = no_antenna_enforce;
 };

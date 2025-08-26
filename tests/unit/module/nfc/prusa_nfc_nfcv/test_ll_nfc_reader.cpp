@@ -1238,7 +1238,7 @@ TEST_CASE("Test NFC debug mode", "[nfcv][prusa_nfc]") {
     }
 
     SECTION("Force antenna") {
-        reader.set_debug_config({ .enforce_antenna = 1 });
+        reader.enforce_antenna(1);
 
         uint32_t time = 0;
         CHECK(reader.get_event(event, time));

@@ -433,8 +433,8 @@ std::unexpected<INFCReader::IOError> LLNFCReader::handle_io_error(NFCTagID tag, 
 }
 
 void LLNFCReader::run_next_discovery() {
-    if (debug_config_.enforce_antenna != DebugConfig::no_antenna_enforce) {
-        discovery_antenna = debug_config_.enforce_antenna;
+    if (enforced_antenna != INFCReader::no_antenna_enforce) {
+        discovery_antenna = enforced_antenna;
     }
 
     nfcv::FieldGuard field_guard { reader, discovery_antenna };
