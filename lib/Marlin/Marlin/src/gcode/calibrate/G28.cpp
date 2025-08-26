@@ -826,6 +826,13 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
                 planner.synchronize();
                 ignore_fail = (response == Response::Ignore);
                 attempt = 0;
+                if (response == Response::Abort) {
+                  if (marlin_server::is_printing()) {
+                    marlin_server::quick_stop();
+                    marlin_server::print_abort();
+                  }
+                  return false;
+                }
               }
 
               // Raise the Z again to prevent crashing into the sheet

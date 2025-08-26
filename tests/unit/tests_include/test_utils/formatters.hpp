@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <iomanip>
 #include <span>
 #include <optional>
 #include <expected>
@@ -82,6 +83,19 @@ ostream &operator<<(ostream &os, const variant<T...> &value) {
     },
         value);
     return os;
+}
+
+std::ostream &operator<<(std::ostream &out, std::byte byte) {
+    // std::byte is a enum without values, the formating with magic_enum isn't nice,
+    // so don't move this function below the enum formatter
+    const auto flags = out.flags();
+    const auto width = out.width();
+    const auto fill = out.fill();
+    out << "0x" << std::hex << std::setw(2) << std::setfill('0') << std::to_integer<uint32_t>(byte);
+    out.fill(fill);
+    out.width(width);
+    out.setf(flags);
+    return out;
 }
 
 template <typename T>

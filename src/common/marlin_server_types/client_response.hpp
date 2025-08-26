@@ -960,7 +960,7 @@ inline constexpr EnumArray<PhasesWarning, PhaseResponses, CountPhases<PhasesWarn
         { PhasesWarning::FilamentSensorStuckHelpMMU, { Response::Ok } },
 #endif
 #if ENABLED(DETECT_PRINT_SHEET)
-        { PhasesWarning::SteelSheetNotDetected, { Response::Retry, Response::Ignore } },
+        { PhasesWarning::SteelSheetNotDetected, { Response::Retry, Response::Ignore, Response::Abort } },
 #endif
 #if HAS_CHAMBER_API()
         { PhasesWarning::FailedToReachChamberTemperature, { Response::Ok, Response::Skip } },

@@ -81,8 +81,13 @@ add_compile_options(-frandom-seed=BuddyFW)
 
 add_compile_options(
   $<$<COMPILE_LANGUAGE:CXX>:-Wno-register> $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile>
-  $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
   )
+
+if(NOT UNITTESTS_ENABLE)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
+elseif(CMAKE_CROSSCOMPILING)
+  message(FATAL_ERROR "RTTI should be disabled when crosscompiling")
+endif()
 
 # append custom C/C++ flags
 if(CUSTOM_COMPILE_OPTIONS)
