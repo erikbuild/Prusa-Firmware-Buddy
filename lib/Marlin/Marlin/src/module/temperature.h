@@ -204,9 +204,7 @@ struct ModularBedHeater: public HeaterInfo {
     typedef heater_info_t bed_info_t;
   #endif
 #endif
-#if HAS_HEATED_CHAMBER
-  typedef heater_info_t chamber_info_t;
-#elif HAS_TEMP_CHAMBER
+#if HAS_TEMP_CHAMBER
   typedef temp_info_t chamber_info_t;
 #endif
 
@@ -345,9 +343,6 @@ class Temperature {
       #if HAS_HEATED_BED
         static heater_idle_t bed_idle;
       #endif
-      #if HAS_HEATED_CHAMBER
-        static heater_idle_t chamber_idle;
-      #endif
     #endif
 
     #if ENABLED(PID_EXTRUSION_SCALING)
@@ -410,19 +405,6 @@ class Temperature {
       #endif
       #ifdef BOARD_MAXTEMP
         static int16_t maxtemp_raw_BOARD;
-      #endif
-    #endif
-
-    #if HAS_HEATED_CHAMBER
-      #if WATCH_CHAMBER
-        static heater_watch_t watch_chamber;
-      #endif
-      static millis_t next_chamber_check_ms;
-      #ifdef CHAMBER_MINTEMP
-        static int16_t mintemp_raw_CHAMBER;
-      #endif
-      #ifdef CHAMBER_MAXTEMP
-        static int16_t maxtemp_raw_CHAMBER;
       #endif
     #endif
 
@@ -701,33 +683,7 @@ class Temperature {
 
     #if HAS_TEMP_CHAMBER
       FORCE_INLINE static float degChamber()            { return temp_chamber.celsius; }
-      #if HAS_HEATED_CHAMBER
-        FORCE_INLINE static int16_t degTargetChamber()  { return temp_chamber.target; }
-        FORCE_INLINE static bool isHeatingChamber()     { return temp_chamber.target > temp_chamber.celsius; }
-        FORCE_INLINE static bool isCoolingChamber()     { return temp_chamber.target < temp_chamber.celsius; }
-
-        static bool wait_for_chamber(const bool no_wait_for_cooling=true);
-      #endif
     #endif // HAS_TEMP_CHAMBER
-
-    #if WATCH_CHAMBER
-      static void start_watching_chamber();
-    #else
-      static inline void start_watching_chamber() {}
-    #endif
-
-    #if HAS_HEATED_CHAMBER
-      static void setTargetChamber(const int16_t celsius) {
-        temp_chamber.target =
-          #ifdef CHAMBER_MAXTEMP
-            _MIN(celsius, CHAMBER_MAXTEMP)
-          #else
-            celsius
-          #endif
-        ;
-        start_watching_chamber();
-      }
-    #endif // HAS_HEATED_CHAMBER
 
     #if HAS_TEMP_HEATBREAK
       FORCE_INLINE static float degHeatbreak(const uint8_t E_NAME)            { return temp_heatbreak[HOTEND_INDEX].celsius; }
@@ -891,10 +847,6 @@ public:
 
     #if ENABLED(PIDTEMPBED)
       static float get_pid_output_bed();
-    #endif
-
-    #if HAS_HEATED_CHAMBER
-      static float get_pid_output_chamber();
     #endif
 
     #if ENABLED(PIDTEMPHEATBREAK)

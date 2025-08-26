@@ -16,10 +16,10 @@ public:
     using FanPWMOrAuto = PWM255OrAuto;
 
     /// Temperature at which the fans start spinning at full speed, no matter what
-    static constexpr Temperature overheating_temp = 70.0f;
+    static constexpr Temperature overheating_temp = 60.0f;
 
     /// Temperature at which the print is stopped and fans at full power, not matter what
-    static constexpr Temperature critical_temp = 75.0f;
+    static constexpr Temperature critical_temp = 65.0f;
 
     /// Temperature at which the normal fan control may be restored, after emergency temperature
     static constexpr Temperature recovery_temp = 60.0f;

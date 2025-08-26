@@ -488,27 +488,36 @@ void restore_feedrate_and_scaling() {
    */
   void apply_motion_limits(xyz_pos_t &target) {
 
-    if (!soft_endstops_enabled || !all_axes_homed()) return;
+    if (!soft_endstops_enabled) return;
 
-    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_X)
-      NOLESS(target.x, soft_endstop.min.x);
-    #endif
-    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_X)
-      NOMORE(target.x, soft_endstop.max.x);
-    #endif
-    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
-      NOLESS(target.y, soft_endstop.min.y);
-    #endif
-    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
-      NOMORE(target.y, soft_endstop.max.y);
-    #endif
+    if(!axes_need_homing(_BV(X_AXIS))) {
+      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_X)
+        NOLESS(target.x, soft_endstop.min.x);
+      #endif
 
-    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Z)
-      NOLESS(target.z, soft_endstop.min.z);
+      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_X)
+        NOMORE(target.x, soft_endstop.max.x);
     #endif
-    #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_Z)
-      NOMORE(target.z, soft_endstop.max.z);
-    #endif
+    }
+    
+    if(!axes_need_homing(_BV(Y_AXIS))) {
+      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
+        NOLESS(target.y, soft_endstop.min.y);
+      #endif
+
+      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
+        NOMORE(target.y, soft_endstop.max.y);
+      #endif
+    }
+
+    if(!axes_need_homing(_BV(Z_AXIS))) {
+      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MIN_SOFTWARE_ENDSTOP_Z)
+        NOLESS(target.z, soft_endstop.min.z);
+      #endif
+      #if !HAS_SOFTWARE_ENDSTOPS || ENABLED(MAX_SOFTWARE_ENDSTOP_Z)
+        NOMORE(target.z, soft_endstop.max.z);
+      #endif
+    }
   }
 
 #endif // HAS_SOFTWARE_ENDSTOPS

@@ -3,22 +3,25 @@
 
 #include <inplace_function.hpp>
 
+#include <utils/uncopyable.hpp>
+
 template <typename... Args>
-class CallbackHookGuard;
+class Subscriber;
 
 /// Point for registering callbacks to
 /// Represented as a linked list
 /// !!! Not thread-safe
 template <typename... Args>
-class CallbackHookPoint {
+class Publisher : Uncopyable {
 
 public:
-    using Item = CallbackHookGuard<Args...>;
+    using Item = Subscriber<Args...>;
     friend Item;
 
 public:
     /// Calls all registered hooks
     /// The execution order depends on the insertion order - newer hooks execute first.
+    /// Warning - if a hook removes itself during the call, it will cause UB or crash.
     void call_all(Args &&...args) {
         for (auto it = first_; it; it = it->next_) {
             it->callback_(std::forward<Args>(args)...);
@@ -48,27 +51,27 @@ private:
 /// The hook gets removed when the function is destroyed
 /// !!! Not thread safe
 template <typename... Args>
-class CallbackHookGuard {
-    friend class CallbackHookPoint<Args...>;
+class Subscriber : Uncopyable {
+    friend class Publisher<Args...>;
 
 public:
     using Callback = stdext::inplace_function<void(Args...)>;
-    using Point = CallbackHookPoint<Args...>;
+    using Point = Publisher<Args...>;
 
 public:
     // Note: Template deducation problems without the "auto"
-    CallbackHookGuard(CallbackHookPoint<Args...> &point, const auto &cb)
+    Subscriber(Publisher<Args...> &point, const auto &cb)
         : point_(point)
         , callback_(cb) {
         point_.insert(this);
     }
 
-    ~CallbackHookGuard() {
+    ~Subscriber() {
         point_.remove(this);
     }
 
 private:
     Point &point_;
-    CallbackHookGuard *next_ = nullptr;
+    Subscriber *next_ = nullptr;
     Callback callback_;
 };

@@ -1,5 +1,6 @@
 #include "nozzle_cleaner.hpp"
 #include "Marlin/src/gcode/gcode.h"
+#include "raii/scope_guard.hpp"
 
 namespace nozzle_cleaner {
 
@@ -54,10 +55,17 @@ ConstexprString runout_sequence = "G1 X267.4 Y284.75 F3000\n"
 
 ConstexprString g12_sequence = runout_sequence;
 
+ConstexprString vblade_cut_sequence = "G1 X267.4 Y284.75 F3000\n"
+                                      "G1 X253.4 Y284.75 F3000\n"
+                                      "G1 X267.4 Y284.75 F3000\n"
+                                      "G1 X253.4 Y284.75 F3000\n"
+                                      "G1 X253.4 Y305.0 F3000";
+
 ConstexprString load_filename = "nozzle_cleaner_load";
 ConstexprString unload_filename = "nozzle_cleaner_unload";
 ConstexprString runout_filename = "nozzle_cleaner_runout";
 ConstexprString g12_filename = "nozzle_cleaner_g12";
+ConstexprString vblade_cut_filename = "nozzle_cleaner_vblade_cut";
 
 static GCodeLoader &nozzle_cleaner_gcode_loader_instance() {
     static GCodeLoader nozzle_cleaner_gcode_loader;
@@ -80,6 +88,10 @@ void load_g12_gcode() {
     nozzle_cleaner_gcode_loader_instance().load_gcode(g12_filename, g12_sequence);
 }
 
+void load_vblade_cut_gcode() {
+    nozzle_cleaner_gcode_loader_instance().load_gcode(vblade_cut_filename, vblade_cut_sequence);
+}
+
 bool is_loader_idle() {
     return nozzle_cleaner_gcode_loader_instance().is_idle();
 }
@@ -95,16 +107,21 @@ bool execute() {
     }
 
     auto loader_result = nozzle_cleaner_gcode_loader_instance().get_result();
+    ScopeGuard resetLoader = [&] { // Ensure the loader is always reset (the exception is if we are buffering or not idle, which is handled above)
+        reset();
+    };
 
     // this means the gcode was loaded successfully -> ready to execute it
     if (loader_result.has_value()) {
         GcodeSuite::process_subcommands_now(loader_result.value());
-        nozzle_cleaner_gcode_loader_instance().reset();
         return true;
     } else { // Here we have an error so we finished unsuccessfully and need to reset the loader for the next use
-        nozzle_cleaner_gcode_loader_instance().reset();
         return false;
     }
+}
+
+void reset() {
+    nozzle_cleaner_gcode_loader_instance().reset();
 }
 
 } // namespace nozzle_cleaner

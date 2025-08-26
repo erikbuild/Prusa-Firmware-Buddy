@@ -64,7 +64,10 @@ class ScreenFSM : public screen_t {
     static constexpr size_t frame_static_storage_size = 1324;
 
 public:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     using FrameStorage = StaticStorage<frame_static_storage_size>;
+#pragma GCC diagnostic pop
 
     ScreenFSM(const char *header_txt, Rect16 inner_frame_rect)
         : screen_t()

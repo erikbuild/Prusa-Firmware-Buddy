@@ -96,7 +96,7 @@ static void safe_move_down() {
 
     AutoRestore _se(soft_endstops_enabled, false);
     TemporaryGlobalEndstopsState _ess(true);
-    CallbackHookGuard cb { marlin_server::idle_hook_point,
+    Subscriber cb { marlin_server::idle_publisher,
         [&]() {
             // FSMAndPhase(ClientFSM::Load_unload, pause.getPhaseIndex())
             ProgressPercent progress = ProgressSpan { 0, 100 }.map(to_normalized_progress(current_position.z, target_Z, marlin_vars().native_pos[MARLIN_VAR_INDEX_Z]));

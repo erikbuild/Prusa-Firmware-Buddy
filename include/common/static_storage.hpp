@@ -16,7 +16,7 @@
  * knowledge of the types upfront with some convenience functions.
  */
 template <size_t Size>
-class StaticStorage {
+class [[deprecated("Please use InplaceAny, StaticStorage is prone to UB")]] StaticStorage {
 private:
     alignas(std::max_align_t) std::array<std::byte, Size> bytes;
 

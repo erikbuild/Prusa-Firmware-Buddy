@@ -204,7 +204,7 @@ extern ClientQueue marlin_client_queue[MARLIN_MAX_CLIENTS];
 
 namespace marlin_server {
 
-CallbackHookPoint<> idle_hook_point;
+Publisher<> idle_publisher;
 
 void media_prefetch_lazy_start();
 void media_prefetch_start();
@@ -793,7 +793,7 @@ static void cycle() {
 
     record_fanctl_metrics();
 
-    idle_hook_point.call_all();
+    idle_publisher.call_all();
 
     if (is_cycle_running) {
         return;

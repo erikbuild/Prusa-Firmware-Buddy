@@ -132,7 +132,6 @@
  * M121 - Disable endstops detection.
  * M122 - Debug stepper (Requires at least one _DRIVER_TYPE defined as TMC2130/2160/5130/5160/2208/2209/2660)
  * M140 - Set bed target temp. S<temp>
- * M141 - Set heated chamber target temp. S<temp> (Requires a chamber heater)
  * M150 - Set Status LED Color as R<red> U<green> B<blue> P<bright>. Values 0-255.
  * M155 - Auto-report temperatures with interval of S<seconds>. (Requires AUTO_REPORT_TEMPERATURES)
  * M190 - S<temp> Wait for bed current temp to reach target temp. ** Wait only when heating! **
@@ -594,11 +593,6 @@ private:
   #if HAS_HEATED_BED
     static void M140();
     static void M190();
-  #endif
-
-  #if HAS_HEATED_CHAMBER
-    static void M141();
-    static void M191();
   #endif
 
   #if HAS_TEMP_HEATBREAK_CONTROL

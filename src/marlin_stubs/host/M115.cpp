@@ -182,7 +182,7 @@ void GcodeSuite::M115() {
 
     // THERMAL_PROTECTION
     cap_line(PSTR("THERMAL_PROTECTION")
-#if ((ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_DWARF()) && (ENABLED(THERMAL_PROTECTION_BED) || !HAS_HEATED_BED || HAS_REMOTE_BED()) && (ENABLED(THERMAL_PROTECTION_CHAMBER) || !HAS_HEATED_CHAMBER))
+#if ((ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_DWARF()) && (ENABLED(THERMAL_PROTECTION_BED) || !HAS_HEATED_BED || HAS_REMOTE_BED()) && ENABLED(THERMAL_PROTECTION_CHAMBER))
                  ,
         true
 #endif
@@ -198,10 +198,7 @@ void GcodeSuite::M115() {
 
     // CHAMBER_TEMPERATURE (M141, M191)
     cap_line(PSTR("CHAMBER_TEMPERATURE")
-#if HAS_HEATED_CHAMBER
-                 ,
-        true
-#elif HAS_CHAMBER_API()
+#if HAS_CHAMBER_API()
                  ,
         buddy::chamber().capabilities().temperature_reporting
 #endif

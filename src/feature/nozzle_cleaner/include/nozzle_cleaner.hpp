@@ -9,16 +9,19 @@ extern ConstexprString load_sequence;
 extern ConstexprString unload_sequence;
 extern ConstexprString runout_sequence;
 extern ConstexprString g12_sequence;
+extern ConstexprString vblade_cut_sequence;
 
 extern ConstexprString load_filename;
 extern ConstexprString unload_filename;
 extern ConstexprString runout_filename;
 extern ConstexprString g12_filename;
+extern ConstexprString vblade_cut_filename;
 
 void load_load_gcode();
 void load_runout_gcode();
 void load_unload_gcode();
 void load_g12_gcode();
+void load_vblade_cut_gcode();
 
 bool is_loader_idle();
 bool is_loader_buffering();
@@ -31,5 +34,7 @@ bool is_loader_buffering();
  * @return false if still buffering, failed loading or not even loaded.
  */
 bool execute();
+
+void reset();
 
 } // namespace nozzle_cleaner

@@ -109,11 +109,11 @@ static void report_progress(Pause &pause, ProgressPercent progress) {
 }
 
 /// During its lifetime, automatically reports progress based on the current FSM state (thanks to ProgressMapper) and value of the specified marlin variable (hooks into marlin idle())
-class PauseFsmNotifier : public CallbackHookGuard<> {
+class PauseFsmNotifier : public Subscriber<> {
 
 public:
     PauseFsmNotifier(Pause &pause, float min, float max, const MarlinVariable<float> &var)
-        : CallbackHookGuard<>(marlin_server::idle_hook_point, [this, &var] {
+        : Subscriber<>(marlin_server::idle_publisher, [this, &var] {
             const auto progress = pause_.progress_mapper.update_progress(pause_.get_state(), to_normalized_progress(min_, max_, var.get()));
             report_progress(pause_, progress);
         })
@@ -127,11 +127,11 @@ private:
 };
 
 /// Same as PauseFSMNotifier, but ties the progress to elapsed time instead of marlin variable
-class PauseFsmDurationNotifier : public CallbackHookGuard<> {
+class PauseFsmDurationNotifier : public Subscriber<> {
 
 public:
     PauseFsmDurationNotifier(Pause &pause, uint32_t duration_ms)
-        : CallbackHookGuard<>(marlin_server::idle_hook_point, [this, duration_ms] {
+        : Subscriber<>(marlin_server::idle_publisher, [this, duration_ms] {
             const auto progress = pause_.progress_mapper.update_progress(pause_.get_state(), to_normalized_progress(0, duration_ms, ticks_ms() - start_ms_));
             report_progress(pause_, progress);
         })
@@ -144,11 +144,11 @@ private:
 };
 
 // TODO Removeme; only for parking moves, which are not part of the actual FSM, so they cannot use the ProgressMapper
-class PauseFsmExplicitProgressNotifier : public CallbackHookGuard<> {
+class PauseFsmExplicitProgressNotifier : public Subscriber<> {
 
 public:
     PauseFsmExplicitProgressNotifier(Pause &pause, float min, float max, ProgressPercent progress_min, ProgressPercent progress_max, const MarlinVariable<float> &var)
-        : CallbackHookGuard<>(marlin_server::idle_hook_point, [this, &var] {
+        : Subscriber<>(marlin_server::idle_publisher, [this, &var] {
             const auto progress = progress_span_.map(to_normalized_progress(min_, max_, var.get()));
             report_progress(pause_, progress);
         })
@@ -741,6 +741,10 @@ static constexpr float retract_distance = -4.f; // mm
 static constexpr feedRate_t retract_feedrate = 35; // mm/s
 
 void Pause::purge_process([[maybe_unused]] Response response) {
+#if HAS_NOZZLE_CLEANER()
+    set(LoadState::purge_nozzle_clean);
+    return;
+#endif
     // Extrude filament to get into hotend
     setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
 
@@ -761,15 +765,63 @@ void Pause::purge_process([[maybe_unused]] Response response) {
 
     config_store().set_filament_type(settings.GetExtruder(), filament::get_type_to_load());
 
-    if constexpr (!option::has_human_interactions) {
-        set(LoadState::load_prime);
-        return;
-    }
-
     setPhase(load_type == LoadType::load_purge ? PhasesLoadUnload::IsColorPurge : PhasesLoadUnload::IsColor);
     set(LoadState::color_correct_ask);
     handle_filament_removal(LoadState::filament_push_ask);
 }
+
+#if HAS_NOZZLE_CLEANER()
+void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
+    static constexpr float purge_length = 5.f;
+    static constexpr uint8_t retry_cnt = 3; // Number of maximum retries for the whole nozzle cleaning purge loop
+
+    setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
+    mapi::park(mapi::ZAction::no_move, mapi::park_positions[mapi::ParkPosition::purge]); // park just to be sure
+    planner.synchronize(); // Finish any pending moves before starting the purge
+
+    ScopeGuard resetLoader = [&] {
+        nozzle_cleaner::reset();
+    };
+
+    float purged = 0.f;
+    while (purged < settings.purge_length()) {
+        if (nozzle_cleaner::is_loader_idle()) {
+            nozzle_cleaner::load_vblade_cut_gcode();
+        }
+        if (nozzle_cleaner::is_loader_buffering()) {
+            idle(true); // Wait for the loader to finish buffering
+            continue; // We are not ready yet, we need to wait for the loader to finish buffering
+        }
+        const auto purge_result = do_e_move_notify_progress_hotextrude(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE, StopConditions::All);
+        purged += purge_length;
+        switch (purge_result) {
+        case StopConditions::SideFilamentSensorRunout:
+            set(LoadState::runout_during_load);
+            return;
+        case StopConditions::UserStopped:
+            planner.quick_stop_and_resume();
+            set(LoadState::load_prime);
+            return;
+        default:
+            break;
+        }
+        planner.synchronize(); // Wait for the purge to finish before continuing
+        if (!nozzle_cleaner::execute()) {
+            if (++failed_purge_attempts >= retry_cnt) {
+                // If we failed to purge the nozzle x times, we need to stop the process
+                SERIAL_ECHO_MSG("Purging with nozzle cleaning failed, stopping the process");
+                set(LoadState::stop);
+                failed_purge_attempts = 0; // Reset the failed attempts counter
+                return;
+            }
+            return; // This exits the loop and method and does not change the state so the whole loop will begin again
+        };
+        mapi::park(mapi::ZAction::no_move, mapi::park_positions[mapi::ParkPosition::purge]);
+        planner.synchronize(); // Wait for the park to finish before continuing
+    }
+    set(LoadState::load_prime);
+}
+#endif // HAS_NOZZLE_CLEANER()
 
 void Pause::color_correct_ask_process(Response response) {
     switch (response) {

@@ -107,7 +107,7 @@ void AutoRetract::maybe_retract_from_nozzle() {
             100.0f / sequence.duration_estimate_ms(),
         };
 
-        CallbackHookGuard progress_guard(marlin_server::idle_hook_point, [&] {
+        Subscriber subscriber(marlin_server::idle_publisher, [&] {
             const float progress = std::min((ticks_ms() - progress_data.start_time) * progress_data.progress_coef, 100.0f);
             psm_guard.update<PrintStatusMessage::Type::auto_retracting>({ progress });
         });

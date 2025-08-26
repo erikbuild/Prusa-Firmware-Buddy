@@ -2,13 +2,13 @@
 
 #include "provider.h"
 #include "translation_provider_FILE.hpp"
-#include <fmt/format.h>
+#include <format>
 
 static void test_language(const std::string &language_code) {
     INFO("Testing language: " << language_code);
 
-    const auto mo_path = fmt::format("MO/{}.mo", language_code);
-    const auto txt_path = fmt::format("{}.txt", language_code);
+    const auto mo_path = std::format("MO/{}.mo", language_code);
+    const auto txt_path = std::format("{}.txt", language_code);
 
     // initialize translation provider
     FILETranslationProvider provider { mo_path.c_str() };

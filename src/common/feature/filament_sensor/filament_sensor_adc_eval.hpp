@@ -7,29 +7,34 @@
 
 namespace FSensorADCEval {
 
-static constexpr int32_t filtered_value_not_ready { std::numeric_limits<int32_t>::min() }; // invalid value of fs_filtered_value
-static constexpr int32_t ref_value_not_calibrated { std::numeric_limits<int32_t>::min() }; // invalid value of fs_filtered_value
-static constexpr int32_t lower_limit = // value for detecting disconnected sensor
+using Value = int32_t;
+
+static constexpr Value filtered_value_not_ready { std::numeric_limits<Value>::min() }; // invalid value of fs_filtered_value
+static constexpr Value ref_value_not_calibrated { std::numeric_limits<Value>::min() }; // invalid value of fs_filtered_value
+static constexpr Value lower_limit = // value for detecting disconnected sensor
 #if (BOARD_IS_XLBUDDY())
     20;
 #else
     2000;
 #endif
 
-static constexpr int32_t upper_limit =
+static constexpr Value upper_limit =
 #if (BOARD_IS_XLBUDDY())
     4096; // this is max value of 12 bit ADC, there is no value that would indicate broken sensor on XL
 #else
     2'000'000;
 #endif
 
+inline bool within_limits(Value value) {
+    return value >= lower_limit && value <= upper_limit;
+}
+
 /**
  * @brief Evaluate state of filament sensor
  * @param filtered_value current filtered value from ADC
  * @param fs_ref_nins_value Reference value with filament NOT inserted
  * @param fs_ref_ins_value Reference value with filament inserted
- * @param fs_value_span configured span of fsensor
  */
-FilamentSensorState evaluate_state(int32_t filtered_value, int32_t fs_ref_nins_value, int32_t fs_ref_ins_value, int32_t fs_value_span);
+FilamentSensorState evaluate_state(Value filtered_value, Value fs_ref_nins_value, Value fs_ref_ins_value, FilamentSensorState previous_state, Value value_span_hack);
 
 } // namespace FSensorADCEval
