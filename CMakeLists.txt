@@ -445,6 +445,28 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       BUILD_ALWAYS TRUE
       )
   endif()
+
+  if(NOT ANFC_BINARY_PATH AND HAS_ANFC)
+    get_filename_component(
+      ANFC_BINARY_DIR "${ANFC_BINARY_DIR}" REALPATH BASE_DIR "${CMAKE_SOURCE_DIR}"
+      )
+    get_filename_component(ANFC_BINARY_PATH "firmware.bin" REALPATH BASE_DIR "${ANFC_BINARY_DIR}")
+    ExternalProject_Add(
+      anfc
+      SOURCE_DIR "${ANFC_SOURCE_DIR}"
+      BINARY_DIR "${ANFC_BINARY_DIR}"
+      CMAKE_ARGS
+        --preset ${PRINTER_lower}-anfc_${CMAKE_BUILD_TYPE_lower}_boot -B "${ANFC_BINARY_DIR}"
+        $<$<BOOL:${CUSTOM_COMPILE_OPTIONS}>:-DCUSTOM_COMPILE_OPTIONS=${CUSTOM_COMPILE_OPTIONS}>
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target firmware
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step"
+      BUILD_BYPRODUCTS "${ANFC_BINARY_PATH}" "${ANFC_BINARY_DIR}/firmware"
+      STEP_TARGETS build
+      USES_TERMINAL_BUILD TRUE
+      USES_TERMINAL_INSTALL FALSE
+      BUILD_ALWAYS TRUE
+      )
+  endif()
 endif()
 
 # Unittests

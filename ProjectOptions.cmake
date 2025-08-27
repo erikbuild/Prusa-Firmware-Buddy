@@ -411,6 +411,8 @@ define_enum_option(
   NAME XBUDDY_EXTENSION_VARIANT VALUE "${XBUDDY_EXTENSION_VARIANT}" ALL_VALUES "NONE;STANDARD;iX"
   )
 
+set_feature_for_printers_master_board(HAS_ANFC "COREONE" "COREONEL")
+
 # MK4 technically doesn't have door sensor but needs to check valid FW-HW
 set_feature_for_printers_master_board(HAS_DOOR_SENSOR "COREONE" "COREONEL" "MK4")
 
@@ -761,6 +763,7 @@ define_boolean_option(HAS_DWARF ${HAS_DWARF})
 if(HAS_DWARF
    OR HAS_PUPPY_MODULARBED
    OR HAS_XBUDDY_EXTENSION
+   OR HAS_ANFC
    )
   set(HAS_PUPPIES YES)
 else()
@@ -847,6 +850,17 @@ if(ENABLE_PUPPY_BOOTLOAD)
     set(XBUDDY_EXTENSION_BINARY_DIR
         "${CMAKE_BINARY_DIR}/xbuddy_extension-build"
         CACHE PATH "Where to have build directory for the enclosure extension firmware."
+        )
+  endif()
+
+  if(NOT ANFC_BINARY_PATH)
+    set(ANFC_SOURCE_DIR
+        "${CMAKE_SOURCE_DIR}"
+        CACHE PATH "From which source directory to build the active NFC reader firmware."
+        )
+    set(ANFC_BINARY_DIR
+        "${CMAKE_BINARY_DIR}/anfc-build"
+        CACHE PATH "Where to have build directory for the active NFC reader firmware."
         )
   endif()
 endif()

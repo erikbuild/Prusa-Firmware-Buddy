@@ -117,6 +117,9 @@ if(PUPPY_FLASH_FW)
   if(HAS_AC_CONTROLLER)
     add_resource("${AC_CONTROLLER_BINARY_PATH}" "/puppies/fw-ac_controller.bin")
   endif()
+  if(HAS_ANFC)
+    add_resource("${ANFC_BINARY_PATH}" "/puppies/fw-anfc.bin")
+  endif()
 endif()
 
 # /web directory

@@ -11,6 +11,10 @@
                 "XBUDDY_EXTENSION_BINARY_DIR": {
                     "type": "FILEPATH",
                     "value": "build-vscode-xbuddy-extension"
+                },
+                "ANFC_BINARY_DIR": {
+                    "type": "FILEPATH",
+                    "value": "build-vscode-anfc"
                 }
             }
         },
@@ -24,6 +28,10 @@
                 "XBUDDY_EXTENSION_BINARY_DIR": {
                     "type": "FILEPATH",
                     "value": "build-vscode-xbuddy-extension"
+                },
+                "ANFC_BINARY_DIR": {
+                    "type": "FILEPATH",
+                    "value": "build-vscode-anfc"
                 }
             }
         },
@@ -261,7 +269,7 @@
         },
         {
             "name": "anfc",
-            "description": "Firmware for NFC addon",
+            "description": "Firmware for NFC addon (dev-kit)",
             "cacheVariables": {
                 "PRINTER": "NONE",
                 "BOARD": "ANFC",
@@ -270,7 +278,7 @@
         },
         {
             "name": "anfc-uart",
-            "description": "Firmware for NFC addon (UART virtualization)",
+            "description": "Firmware for NFC addon (with UART-CAN bridge)",
             "cacheVariables": {
                 "PRINTER": "NONE",
                 "BOARD": "ANFC",
@@ -279,11 +287,31 @@
         },
         {
             "name": "slx-anfc",
-            "description": "Firmware for NFC addon",
+            "description": "Firmware for NFC addon for SLX printer",
             "cacheVariables": {
                 "PRINTER": "NONE",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "SLX"
+            }
+        },
+        {
+            "name": "coreone-anfc",
+            "description": "Firmware for NFC addon for CoreOne printer",
+            "cacheVariables": {
+                "PRINTER": "COREONE",
+                "BOARD": "ANFC",
+                "CAN_BUS_TYPE": "PUB6",
+                "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
+            }
+        },
+        {
+            "name": "coreonel-anfc",
+            "description": "Firmware for NFC addon for CoreOneL printer",
+            "cacheVariables": {
+                "PRINTER": "COREONE",
+                "BOARD": "ANFC",
+                "CAN_BUS_TYPE": "PUB6",
+                "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
             }
         }
     ]
