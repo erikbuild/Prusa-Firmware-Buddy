@@ -5611,7 +5611,7 @@
             }
         },
         {
-            "name": "anfc-slx_debug_boot",
+            "name": "slx-anfc_debug_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5662,7 +5662,7 @@
             }
         },
         {
-            "name": "anfc-slx_debug_noboot",
+            "name": "slx-anfc_debug_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5713,7 +5713,7 @@
             }
         },
         {
-            "name": "anfc-slx_release_boot",
+            "name": "slx-anfc_release_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5764,7 +5764,7 @@
             }
         },
         {
-            "name": "anfc-slx_release_noboot",
+            "name": "slx-anfc_release_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {

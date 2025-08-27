@@ -159,9 +159,9 @@ pipeline {
                             'main,mk4,release,yesboot',
                             'main,xl,release,yesboot',
                             'main,ix,release,yesboot',
-                            'all,anfc-slx,release,noboot',
+                            'all,slx-anfc,release,noboot',
                             'all,anfc,release,noboot',
-                            'all,anfc-slx,release,yesboot',
+                            'all,slx-anfc,release,yesboot',
                             'all,anfc,release,yesboot',
                             'all,anfc-uart,release,noboot'
                     }
@@ -200,7 +200,7 @@ pipeline {
                                 }
 
                                 def dfu_arg
-                                if (config.preset.startsWith("anfc-")) {
+                                if (config.preset.contains("anfc")) {
                                     // Do not build DFU, the code is broken and we don't need it
                                     dfu_arg = ""
                                 } else {

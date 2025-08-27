@@ -278,7 +278,7 @@
             }
         },
         {
-            "name": "anfc-slx",
+            "name": "slx-anfc",
             "description": "Firmware for NFC addon",
             "cacheVariables": {
                 "PRINTER": "NONE",
