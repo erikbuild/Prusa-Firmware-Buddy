@@ -15,7 +15,7 @@ public:
     static constexpr size_t MAX_KNOWN_TAGS = 8;
     static constexpr uint32_t PAUSE_BETWEEN_DISCOVERIES_MS = 250;
 
-    LLNFCReader(nfcv::ReaderWriterInterface &reader);
+    LLNFCReader(nfcv::ReaderWriterInterface &reader, NFCAntenna enforced_antenna = INFCReader::no_antenna_enforce);
 
     [[nodiscard]] IOResult<void> read(NFCTagID tag, NFCOffset start, const std::span<std::byte> &buffer) final;
 

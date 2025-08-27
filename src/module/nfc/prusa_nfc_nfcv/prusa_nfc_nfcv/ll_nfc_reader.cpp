@@ -42,9 +42,10 @@ std::unexpected<INFCReader::IOError> to_prusa_unexpected(nfcv::Error error) {
 
 } // namespace
 
-LLNFCReader::LLNFCReader(nfcv::ReaderWriterInterface &reader)
+LLNFCReader::LLNFCReader(nfcv::ReaderWriterInterface &reader, NFCAntenna enforced_antenna)
     : reader(reader) {
     reset_state();
+    enforce_antenna(enforced_antenna);
 }
 
 INFCReader::IOResult<void> LLNFCReader::io_op(NFCTagID tag, NFCOffset start, size_t buffer_size, const stdext::inplace_function<IOOpFunc> &impl) {

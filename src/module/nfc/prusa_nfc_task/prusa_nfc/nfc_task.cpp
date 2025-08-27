@@ -47,8 +47,7 @@ NFCTask::NFCTask(INFCReader &ll_reader, EventCallback &&event_callback, HWReconf
     : event_callback_ { std::move(event_callback) }
     , hw_reconfiguration_callback_ { std::move(hw_reconfiguration_callback) }
     , reader_ { ll_reader } //
-{
-}
+{}
 
 bool NFCTask::enqueue_serialized_request(const std::span<const uint8_t> &data) {
     using ReqTraits = prusa3d_nfc_command_Request_Request_1_0_Traits;

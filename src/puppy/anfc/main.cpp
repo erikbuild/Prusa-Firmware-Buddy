@@ -16,6 +16,7 @@
 #include <device/hal.h>
 #include <o1heap/o1heap.hpp>
 #include <prusa_nfc_nfcv/ll_nfc_reader.hpp>
+#include <option/nfc_st25r3919b_enabled_antennas.h>
 
 // This magical incantation is required for fw_descriptor integration in cmake to work.
 [[maybe_unused]] __attribute__((section(".fw_descriptor"), used)) const std::byte fw_descriptor[48] {};
@@ -73,7 +74,17 @@ can::cyphal::Task can::cyphal::cyphal_task(can_driver, 32, &canard_heap_allocate
 
 anfc::cyphal::ANFCNode can_node(get_uid());
 
-static LLNFCReader ll_reader { nfc::reader_1 };
+static constexpr NFCAntenna convert_antenna(const option::NfcSt25r3919bEnabledAntennas enabled_antennas) {
+    switch (enabled_antennas) {
+    case option::NfcSt25r3919bEnabledAntennas::antenna_1:
+        return NFCAntenna { 0 };
+    case option::NfcSt25r3919bEnabledAntennas::antenna_2:
+        return NFCAntenna { 1 };
+    case option::NfcSt25r3919bEnabledAntennas::both:
+        return INFCReader::no_antenna_enforce;
+    }
+}
+static LLNFCReader ll_reader { nfc::reader_1, convert_antenna(option::nfc_st25r3919b_enabled_antennas) };
 NFCTask nfc_task(
     ll_reader, [](prusa3d_nfc_event_Event_1_0 &event) { can_node.enqueue_event(event); }, nfc::reconfigure_readers);
 
