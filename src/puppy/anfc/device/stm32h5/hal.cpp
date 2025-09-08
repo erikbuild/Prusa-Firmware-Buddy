@@ -35,10 +35,12 @@ void hal::set_status_led(bool set) {
 
 namespace hal {
 void init_clock();
-#if CAN_BUS_TYPE_IS_PUB6()
+#if CAN_BUS_TYPE_IS_PUB6() || CAN_BUS_TYPE_IS_SLX()
 void init_can();
 #elif CAN_BUS_TYPE_IS_UART()
 void init_uart();
+#else
+    #error
 #endif
 void init_spi();
 void init_tim3();
@@ -52,9 +54,14 @@ void init_hash();
 } // namespace hal
 
 namespace hal::peripherals {
+#if CAN_BUS_TYPE_IS_PUB6() || CAN_BUS_TYPE_IS_SLX()
 FDCAN_HandleTypeDef hfdcan1;
-SPI_HandleTypeDef hspi1;
+#elif CAN_BUS_TYPE_IS_UART()
 UART_HandleTypeDef huart2;
+#else
+    #error
+#endif
+SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim2;
 ADC_HandleTypeDef hadc1;
@@ -69,7 +76,7 @@ void hal::init() {
     hal::init_clock();
     hal::init_gpio();
     hal::init_spi();
-#if CAN_BUS_TYPE_IS_PUB6()
+#if CAN_BUS_TYPE_IS_PUB6() || CAN_BUS_TYPE_IS_SLX()
     hal::init_can();
 #elif CAN_BUS_TYPE_IS_UART()
     hal::init_uart();
@@ -137,7 +144,7 @@ void hal::init_clock() {
     __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_2);
 }
 
-#if CAN_BUS_TYPE_IS_PUB6()
+#if CAN_BUS_TYPE_IS_PUB6() || CAN_BUS_TYPE_IS_SLX()
 void hal::init_can() {
     using namespace hal::peripherals;
 
@@ -536,6 +543,7 @@ extern "C" void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
         nfc::irq();
     }
 }
+#if CAN_BUS_TYPE_IS_PUB6() || CAN_BUS_TYPE_IS_SLX()
 /**
  * @brief This function handles FDCAN1 interrupt 0.
  */
@@ -551,14 +559,16 @@ extern "C" void FDCAN1_IT0_IRQHandler(void) {
 extern "C" void FDCAN1_IT1_IRQHandler(void) {
     HAL_FDCAN_IRQHandler(&hal::peripherals::hfdcan1);
 }
-
+#elif CAN_BUS_TYPE_IS_UART()
 /**
  * @brief This function handles UART interrupt.
  */
 extern "C" void USART2_IRQHandler(void) {
     HAL_UART_IRQHandler(&hal::peripherals::huart2);
 }
-
+#else
+    #error
+#endif
 extern "C" void TIM2_IRQHandler(void) {
     HAL_TIM_IRQHandler(&hal::peripherals::htim2);
 }
