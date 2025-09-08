@@ -256,6 +256,15 @@
             }
         },
         {
+            "name": "anfc-c0-uart",
+            "description": "Firmware for NFC addon (UART virtualization)",
+            "cacheVariables": {
+                "PRINTER": "NONE",
+                "BOARD": "ANFC_C0",
+                "CAN_BUS_TYPE": "UART"
+            }
+        },
+        {
             "name": "anfc-slx",
             "description": "Firmware for NFC addon",
             "cacheVariables": {
