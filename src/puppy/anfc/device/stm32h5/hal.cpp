@@ -35,7 +35,7 @@ void hal::set_status_led(bool set) {
 
 namespace hal {
 void init_clock();
-#if CAN_BUS_TYPE_IS_PUB6() || CAN_BUS_TYPE_IS_SLX()
+#if CAN_BUS_TYPE_IS_PUB6()
 void init_can();
 #elif CAN_BUS_TYPE_IS_UART()
 void init_uart();
