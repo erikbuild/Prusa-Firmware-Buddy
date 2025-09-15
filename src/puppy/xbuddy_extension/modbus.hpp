@@ -67,6 +67,23 @@ public:
     virtual Status write_registers(uint8_t device, uint16_t first_address, std::span<const uint16_t> in) = 0;
 };
 
+class Dispatch {
+public:
+    struct Device {
+        uint8_t id;
+        modbus::Callbacks &callbacks;
+    };
+
+    Dispatch(std::span<Device> devices);
+
+    modbus::Callbacks *get_device(uint8_t id);
+
+private:
+    std::span<Device> devices;
+
+    bool all_distinct();
+};
+
 /**
  * Handle MODBUS transaction.
  * @param callbacks Callbacks to call while handling transaction
@@ -78,7 +95,7 @@ public:
  * @return Response ADU, which is a view into response_buffer, possibly empty
  */
 std::span<std::byte> handle_transaction(
-    Callbacks &callbacks,
+    Dispatch &dispatch,
     std::span<std::byte> request,
     std::span<std::byte> response_buffer);
 

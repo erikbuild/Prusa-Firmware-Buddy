@@ -1,6 +1,8 @@
 /// @file
 #include "modbus.hpp"
 
+#include <xbuddy_extension/mmu_bridge.hpp>
+
 #include <cstdlib>
 #include <cassert>
 
@@ -20,6 +22,35 @@ static constexpr std::byte modbus_byte_hi(uint16_t value) {
 
 namespace modbus {
 
+Dispatch::Dispatch(std::span<Device> devices)
+    : devices { devices } {
+    if (!all_distinct()) {
+        abort();
+    }
+}
+
+modbus::Callbacks *Dispatch::get_device(uint8_t id) {
+    for (const auto &device : devices) {
+        if (device.id == id) {
+            return &device.callbacks;
+        }
+    }
+
+    return nullptr;
+}
+
+bool Dispatch::all_distinct() {
+    for (size_t i = 0; i < devices.size(); i++) {
+        for (size_t j = i + 1; j < devices.size(); j++) {
+            if (devices[i].id == devices[j].id) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 uint16_t compute_crc(std::span<const std::byte> bytes) {
     uint16_t crc = 0xffff;
     for (auto byte : bytes) {
@@ -36,8 +67,12 @@ uint16_t compute_crc(std::span<const std::byte> bytes) {
     return crc;
 }
 
+// temporary duplicate definition from app.cpp, do properly
+constexpr uint16_t MY_MODBUS_ADDR = 0x1a + 7;
+constexpr uint16_t MMU_MODBUS_ADDR = xbuddy_extension::mmu_bridge::modbusUnitNr;
+
 std::span<std::byte> handle_transaction(
-    Callbacks &callbacks,
+    Dispatch &dispatch,
     std::span<std::byte> request,
     std::span<std::byte> response_buffer) {
 
@@ -63,12 +98,16 @@ std::span<std::byte> handle_transaction(
         }
     };
 
-    // have at least device, function and valid crc
-    const auto device = request[0];
+    const auto device_id = request[0];
+    modbus::Callbacks *device_callbacks = dispatch.get_device(static_cast<uint8_t>(device_id));
+    if (!device_callbacks) {
+        return {};
+    }
+
     const auto function = request[1];
     request = request.subspan(2, request.size() - 4);
 
-    resp(device);
+    resp(device_id);
     resp(function);
 
     auto status = Status::Ok;
@@ -104,7 +143,7 @@ std::span<std::byte> handle_transaction(
                 abort();
             }
             std::span<uint16_t> out(reinterpret_cast<uint16_t *>(out_buffer), count);
-            status = callbacks.read_registers((uint8_t)device, address, out);
+            status = device_callbacks->read_registers((uint8_t)device_id, address, out);
 
             if (status != Status::Ok) {
                 break;
@@ -139,7 +178,7 @@ std::span<std::byte> handle_transaction(
                 in[i] = get_word(0);
                 request = request.subspan(2);
             }
-            status = callbacks.write_registers((uint8_t)device, address, in);
+            status = device_callbacks->write_registers((uint8_t)device_id, address, in);
             if (status != Status::Ok) {
                 break;
             }

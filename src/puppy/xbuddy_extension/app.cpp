@@ -183,55 +183,6 @@ public:
     }
 };
 
-class Dispatch final : public modbus::Callbacks {
-public:
-    struct SubDevice {
-        uint8_t id;
-        modbus::Callbacks *callbacks;
-    };
-
-private:
-    std::span<SubDevice> sub_devices;
-
-    template <class F>
-    Status with(uint8_t device, F f) {
-        for (const auto &sub_device : sub_devices) {
-            if (sub_device.id == device) {
-                return f(*sub_device.callbacks);
-            }
-        }
-
-        return Status::Ignore;
-    }
-
-    bool all_distinct() {
-        for (size_t i = 0; i < sub_devices.size(); i++) {
-            for (size_t j = i + 1; j < sub_devices.size(); j++) {
-                if (sub_devices[i].id == sub_devices[j].id) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-public:
-    Dispatch(std::span<SubDevice> sub_devices)
-        : sub_devices { sub_devices } {
-        if (!all_distinct()) {
-            abort();
-        }
-    }
-
-    Status read_registers(uint8_t device, uint16_t address, std::span<uint16_t> out) {
-        return with(device, [&](auto &cbacks) { return cbacks.read_registers(device, address, out); });
-    }
-
-    Status write_registers(uint8_t device, uint16_t address, std::span<const uint16_t> in) {
-        return with(device, [&](auto &cbacks) { return cbacks.write_registers(device, address, in); });
-    }
-};
-
 void ensure_silent_interval() {
     // MODBUS over serial line specification and implementation guide V1.02
     // 2.5.1.1 MODBUS Message RTU Framing
@@ -254,15 +205,14 @@ void app::run() {
     AcController ac_controller;
 #endif
 
-    std::array sub_devices = {
-        Dispatch::SubDevice { MY_MODBUS_ADDR, &logic },
-        Dispatch::SubDevice { MMU_MODBUS_ADDR, &mmu },
+    std::array devices = {
+        modbus::Dispatch::Device { MY_MODBUS_ADDR, logic },
+        modbus::Dispatch::Device { MMU_MODBUS_ADDR, mmu },
 #if HAS_AC_CONTROLLER()
-        Dispatch::SubDevice { AC_CONTROLLER_MODBUS_ADDR, &ac_controller },
+        modbus::Dispatch::Device { AC_CONTROLLER_MODBUS_ADDR, ac_controller },
 #endif
     };
-
-    Dispatch modbus_callbacks { sub_devices };
+    modbus::Dispatch modbus_dispatch { devices };
 
     alignas(uint16_t) std::byte response_buffer[64]; // is enough for now
     hal::rs485::start_receiving();
@@ -271,7 +221,7 @@ void app::run() {
         if (request.empty()) {
             cyphal::run_for_a_while();
         } else {
-            const auto response = modbus::handle_transaction(modbus_callbacks, request, response_buffer);
+            const auto response = modbus::handle_transaction(modbus_dispatch, request, response_buffer);
             if (response.size()) {
                 ensure_silent_interval();
                 hal::rs485::transmit_and_then_start_receiving(response);
