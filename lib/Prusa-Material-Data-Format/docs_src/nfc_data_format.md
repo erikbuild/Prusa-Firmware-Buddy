@@ -1,5 +1,7 @@
 # NFC Data Format Specification
+
 ## Used standards
+- [ISO/IEC 15693-3](https://en.wikipedia.org/wiki/ISO/IEC_15693)
 - [NFC Data Exchange Format (NDEF)](https://nfc-forum.org/build/specifications/data-exchange-format-ndef-technical-specification/)
 - [Concise Binary Object Representation (CBOR)](https://cbor.io/)
 
@@ -23,7 +25,6 @@
    <tr>
       <td>Meta section</td>
       <td>Main section</td>
-      <td>Main section signature</td>
       <td class="unused">Unused space</td>
       <td>Auxiliary section</td>
       <td class="unused">Unused space</td>
@@ -45,9 +46,8 @@
    }
 </style>
 
-- The top layer format of the NFC chip is an NDEF message.
+- The top layer format of the NFC tag is an NDEF message.
 - The message has an **NDEF record** of MIME type **application/vnd.prusa3d.mat.nfc**.
-   - The material record should be the first one within the message. Adding further records is allowed.
    - The payload of the record consists of:
       1. **Meta section** (CBOR map)
          - Always at the beginning of the payload.
@@ -58,46 +58,74 @@
          - Positioned at the beginning of the main region.
          - Intended for static information, not intended to be updated by printers.
             - The only situation where this region needs to be updated would be when the container is being repurposed.
-      1. **Main section signature** (optional, CBOR byte string)
-         - Immediately follows the main section, still part of the main region.
-         - Presence determined by the `is_signed` field in the main section.
-         - If present, the signature **MUST** be encoded as CBOR byte string.
-         - We **heavily recommend using ecdsa secp256k1 sha256 DER** signature.
-            - Having the same signature type everywhere enables optimizations for firmware developers.
       1. **Auxiliary section** (optional, CBOR map)
          - Positioned at the beginning of the auxiliary region.
          - Intended for dynamic information, intended to be updated by the printers.
+   - The NDEF record MUST NOT be split into multiple NDEF record chunks.
+      - Splitting the record would break the "virtual space" of the payload and would complicate implementation.
+   - The NDEF message MAY contain other NDEF records. The material NDEF record doesn't need to be the first NDEF record in the message.
+- Unused space in the sections (outside of the region CBOR) SHALL NOT contain any meaningful working data. It SHOULD be filled with zeroes on tag initialization, but there are no requirements on upkeeping that afterwards. Users CAN update the regions with smaller data, leaving remnants of the original data behind.
 
 ## Specification common to all sections
 1. Data of all sections in the specification are represented as a CBOR map.
    - Keys of the map are integers. Semantics of the keys are specific to each section.
-   - The reader must be able to skip all unknown keys, of any data type.
+   - All data sections must be at most 512 bytes long.
+   - All fields MUST follow this specification. Using custom or vendor-specific keys is not permitted (with the exception described in the Aux Region section).
+   - New keys can be added to the specification at any time, so implementations MUST be able to skip all unknown keys, of any type.
+   - Keys can be deprecated at any time. Deprecated keys will never be reused.
 1. `enum` fields are encoded as an integer, according to the enum field mapping
 1. `enum_array` fields are encoded as CBOR arrays of integers, according to the field mapping
 1. `timestamp` fields are encoded as UNIX timestamp integers
-1. `❗` means required, `❕` means recommended
-1. CBOR maps and arrays should be encoded as indefinite containers
-1. `bytes` and `uuid` types are encoded as CBOR byte string
+1. CBOR maps and arrays SHOULD be encoded as indefinite containers
+1. `bytes` and `uuid` types are encoded as CBOR byte string (type 2)
+1. `number` types can be encoded as either unsigned integers (type 0), signed integers (type 1), half floats or floats
 
 ### UUIDs
-The specification optionally employs [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier) to uniquely identify various entities referenced in the data.
-Because UUIDs are expected to take more space, manufacturers can use their brand-specific IDs instead.
+Each entity referenced in the data can be identified by a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). The UUID MAY be explicitly specified through a `XX_uuid`, however that might not be desirable due to space constraints. As an alternative, the following algorithm defines a way to derive UUIDs from other fields.
 
-In that case, the UUIDs can be derived from the brand-specific IDs using UUIDv5 with the `SHA1` hash, as specified in [RFC 4122, section 4.3](https://datatracker.ietf.org/doc/html/rfc4122#section-4.3). All UUIDs and numbers are hashed in the binary form, all strings (and bytes) are hashed including the terminating `\0`.
+UUIDs are be derived from the brand-specific IDs using UUIDv5 with the `SHA1` hash, as specified in [RFC 4122, section 4.3](https://datatracker.ietf.org/doc/html/rfc4122#section-4.3), according to the following table.
+* UUIDs are hashed in the binary form.
+* Strings are encoded as UTF-8.
+* Numbers are encoded as decimal strings.
+* `+` represents binary concatenation.
 
 | UID | Derviation formula | Namespace (`N`) |
 | --- | --- | --- |
-| `brand_uuid` | `N + brand` | `5269dfb7-1559-440a-85be-aba5f3eff2d2` |
-| `material_uuid` | `N + brand_uuid + brand_specific_material_id` | `616fc86d-7d99-4953-96c7-46d2836b9be9` |
-| `package_uuid` | `N + brand_uuid + brand_specific_package_id` | `6f7d485e-db8d-4979-904e-a231cd6602b2` |
-| `instance_uuid` | `N + brand_uid + brand_specific_instance_id` | `ce836047-24e6-49d5-b3e6-3c910c4dfc87` |
-| `instance_uuid` | `N + brand_uid + nfc_tag_uid` | `31062f81-b5bd-4f86-a5f8-46367e841508` |
+| `brand_uuid` | `N + brand_name` | `5269dfb7-1559-440a-85be-aba5f3eff2d2` |
+| `material_uuid` | `N + brand_uuid + material_name` | `616fc86d-7d99-4953-96c7-46d2836b9be9` |
+| `package_uuid` | `N + brand_uuid + gtin` | `6f7d485e-db8d-4979-904e-a231cd6602b2` |
+| `instance_uuid` | `N + brand_uuid + nfc_tag_uid` | `31062f81-b5bd-4f86-a5f8-46367e841508` |
 
 
 For example:
-<!-- Generated using generate_uuid_examples.py -->
-* `brand = "Prusament"` → `brand_uid = "2b2ef3a4-8717-574e-976b-251eea76b074"`
-* `brand_uuid = "2b2ef3a4-8717-574e-976b-251eea76b074"`, `brand_specific_material_id = 0x01` → `material_uuid = "cda45901-c06b-57a7-a4e4-7d1e7a9c6fa2"`
+{% python %}
+import uuid
+
+def generate_uuid(namespace, *args):
+   return uuid.uuid5(uuid.UUID(namespace), b"".join(args))
+
+brand_namespace = "5269dfb7-1559-440a-85be-aba5f3eff2d2"
+brand_name = "Prusament"
+brand_uuid = generate_uuid(brand_namespace, brand_name.encode("utf-8"))
+print(f"brand_uuid = {brand_uuid}")
+
+material_namespace = "616fc86d-7d99-4953-96c7-46d2836b9be9"
+material_name = "PLA Prusa Galaxy Black"
+material_uuid = generate_uuid(material_namespace, brand_uuid.bytes, material_name.encode("utf-8"))
+print(f"material_uuid = {material_uuid}")
+
+material_package_namespace = "6f7d485e-db8d-4979-904e-a231cd6602b2"
+gtin = "1234"
+material_package_uuid = generate_uuid(material_package_namespace, brand_uuid.bytes, gtin.encode("utf-8"))
+print(f"material_package_uuid = {material_package_uuid}")
+{% endpython %}
+
+UUIDs MAY thus be omitted from the in most cases. In the case that a brand changes its name, it SHOULD add `brand_uuid` field with the original UUID whenever the new brand name is used:
+1. `brand_name = Prusament` (present in the data), `brand_uuid = ae5ff34e-298e-50c9-8f77-92a97fb30b0` (not present, can be automatically computed)
+1. Brand gets renamed to `Pepament`
+1. `brand_name = Pepament` (present in the data), `brand_uuid = ae5ff34e-298e-50c9-8f77-92a97fb30b0` (present in the data)
+
+NFC tags have a hardcoded UID (referenced as `nfc_tag_uid` in the table above), which can be used for deriving the `instance_uuid`. This is only admissible when the NFC tag is being filled with data for the first time; when reusing the NFC tag for a different material, a new `instance_uuid` MUST be generated and present in the tag to indicate that the package now holds a different material.
 
 ## Meta section
 1. CBOR map, keys are integers.
@@ -116,41 +144,42 @@ For example:
 ### Field list
 {{ fields_table("main_fields", "") }}
 
-### Field list (FFF-specific)
+#### Field list (FFF-specific)
 {{ fields_table("main_fields", "fff") }}
+
+#### Field list (SLA-specific)
+{{ fields_table("main_fields", "sla") }}
 
 #### `material_class` items
 {{ enum_table("material_class_enum") }}
 
-#### `material_type` items
-{{ enum_table("material_type_enum") }}
+#### `material_type`
+See [Material types](/material_types)
 
-#### `tags` items
-{{ enum_table("tags_enum") }}
+#### `tags`
+See [Material tags](/material_tags)
+
+#### `write_protection` items
+{{ enum_table("write_protection_enum") }}
 
 ## Auxiliary section
 
 ### Field list
-{{ fields_table("aux_fields") }}
+{{ fields_table("aux_fields", "") }}
 
-## Notes & recommendations
-   1. **The NDEF record shall not be split into multiple NDEF record chunks.**
-      - Splitting the record would break the "virtual space" of the payload and would complicate implementation.
-   1. We recommend to **expand the payload of the NDEF record so that the whole available memory of the NFC tag is used.**
-      - The idea is that the factory can fully lock the blocks containing the NDEF  headers and would only the memory pool open. (Possibly write protecting  part of it as well).
-      - Part of the memory pool is auxiliary section, which we want to be able to write to without having to edit other structures/shuffle things around.
-   1. The meta section allows the manufacturers to configure the payload structure so that it fits their purposes and the used NFC tag specifics:
-      1. The auxiliary region can be adjusted or even omitted, based on the NFC tag available memory.
-         - It is not specified that the auxiliary region must be after the main region. Auxiliary region can possibly be located **before** the main region, if the meta section says so. We however recommend **putting the main region before the auxiliary region**, so that it can be protected together with the NDEF header.
-      1. NFC tags can allow block-level locking (`LOCK BLOCK`, making the data completely read-only).
-         - We recommend **aligning the regions with the NFC tag blocks** (typically 4 B).
-         - The NDEF header and the meta section can possibly be fully locked after the first write.
-         - **We do not recommend locking the main region** this way. We aim to keep the NFC tags reusable.
-      1. NFC tags can also support page-level password protection (`PROTECT PAGE`).
-         - **Protecting the auxiliary region is not supported**. The auxiliary region needs to be writable without any protection at all times.
-         - In case of protecting the main region, we recommend:
-            1. Use a unique password for each package instance.
-            1. Put the password on a label somewhere on the container.
-            1. The label should not be accessible without unpacking the container.
-            1. The label should be attached on the container itself.
-            1. The password should be readable for both humans and machines (typically text + QR code).
+#### Field list (SLA-specific)
+{{ fields_table("aux_fields", "sla") }}
+
+#### Vendor-specific fields
+Vendor-specific fields not specified in this document are permitted for keys specified by the following table. Vendors may contact the specification authority to be assigned a key range for them to use.
+
+| Min key | Max key | Vendor |
+| --- | --- | --- |
+| 65400 | 65534 | General purpose |
+| 65300 | 65400 | Prusa |
+
+The "General purpose" key region MAY be used by anyone, provided they follow the following rules:
+1. Each general purpose range user MUST assign themselves a unique enough `general_purpose_range_user` value. This is done with no central authority.
+1. The general purpose range MUST be used only by one user at a time, determined by the `general_purpose_range_user` field.
+1. The users MUST ensure that the `general_purpose_range_user` field is set to the value assigned to them for any read or write access to the general purpose range.
+1. The users MUST delete any general purpose range fields present before changing the value of `general_purpose_range_user`.

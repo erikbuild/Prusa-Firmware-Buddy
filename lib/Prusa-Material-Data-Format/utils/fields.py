@@ -2,6 +2,7 @@ import yaml
 import os
 import numpy
 import uuid
+import sys
 
 
 class Field:
@@ -13,7 +14,7 @@ class Field:
         self.type_name = config["type"]
         self.key = int(config["key"])
         self.name = str(config["name"])
-        self.required = bool(config.get("required", False))
+        self.required = config.get("required", False)
 
 
 class BoolField(Field):
@@ -83,8 +84,8 @@ class EnumField(Field):
 
         items = yaml.safe_load(open(os.path.join(config_dir, config["items_file"]), "r"))
         for item in items:
-            key = int(item["key"])
-            name = str(item["name"])
+            key = int(item[config.get("index_field", "key")])
+            name = str(item[config.get("name_field", "name")])
 
             assert key not in self.items_by_key, f"Key '{key}' already exists"
             assert name not in self.items_by_name, f"Item '{name}' already exists"
@@ -140,21 +141,38 @@ class EnumArrayField(Field):
 
 
 class BytesField(Field):
+    max_len: int | None
+
+    def __init__(self, config, config_dir):
+        super().__init__(config, config_dir)
+        assert "max_length" in config, f"max_length not specified for '{config['name']}'"
+        self.max_len = config["max_length"]
+
     def decode(self, data):
-        return data
+        assert isinstance(data, bytes)
+        return {"hex": data.hex()}
 
     def encode(self, data):
         if isinstance(data, bytes):
-            return data
+            result = data
 
         elif isinstance(data, str):
-            return data.encode("utf-8")
+            result = data.encode("utf-8")
 
         elif isinstance(data, int):
             return data.to_bytes(64, "little").rstrip(b"\x00")
 
+        elif isinstance(data, list):
+            result = bytearray(data)
+
+        elif isinstance(data, dict):
+            result = bytearray.fromhex(data["hex"])
+
         else:
             assert False, f"Cannot encode type {type(data)} to bytes"
+
+        assert self.max_len is None or len(result) <= self.max_len
+        return result
 
 
 class UUIDField(Field):
@@ -181,7 +199,6 @@ field_types = {
 class Fields:
     fields_by_key: dict[int, Field]
     fields_by_name: dict[str, Field]
-    required_fields: list[Field]
 
     def __init__(self):
         self.fields_by_key = dict()
@@ -190,6 +207,9 @@ class Fields:
 
     def init_from_yaml(self, yaml, config_dir):
         for row in yaml:
+            if row.get("deprecated", False):
+                continue
+
             field_type_str = row.get("type")
             assert field_type_str, f"Field type not specified '{row}'"
 
@@ -197,14 +217,11 @@ class Fields:
             assert field_type, f"Unknown field type '{field_type_str}'"
             field = field_type(row, config_dir)
 
-            assert field.key not in self.fields_by_key
+            assert field.key not in self.fields_by_key, f"Field {field.name} duplicit key {field.key}"
             assert field.name not in self.fields_by_name
 
             self.fields_by_key[field.key] = field
             self.fields_by_name[field.name] = field
-
-            if field.required:
-                self.required_fields.append(field)
 
     def from_file(file: str):
         r = Fields()
@@ -219,7 +236,11 @@ class Fields:
             field = self.fields_by_key.get(key)
             assert field, f"Unknown CBOR key '{key}'"
 
-            result[field.name] = field.decode(value)
+            try:
+                result[field.name] = field.decode(value)
+            except Exception as e:
+                e.add_note(f"Field {key} {field.name}")
+                raise
 
         return result
 
@@ -230,10 +251,28 @@ class Fields:
             field = self.fields_by_name.get(key)
             assert field, f"Unknown field '{key}'"
 
-            result[field.key] = field.encode(value)
+            try:
+                result[field.key] = field.encode(value)
+            except Exception as e:
+                e.add_note(f"Field {key} {field.name}")
+                raise
 
         return result
 
     def validate(self, decoded_data):
-        for field in self.required_fields:
-            assert field.name in decoded_data, f"Missing required field '{field.name}'"
+        for field_name, field in self.fields_by_name.items():
+            if field_name in decoded_data:
+                continue
+
+            match field.required:
+                case False:
+                    pass
+
+                case True:
+                    assert False, f"Missing required field '{field.name}'"
+
+                case "recommended":
+                    print(f"Missing recommended field '{field.name}'", file=sys.stderr)
+
+                case _:
+                    assert False, f"Invalid field '{field.name}' 'required' value '{field.required}'"

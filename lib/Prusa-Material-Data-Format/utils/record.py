@@ -11,7 +11,7 @@ from fields import Fields
 
 class Region:
     memory: memoryview
-    offset: int
+    offset: int  # Offset of the region relative to payload start
     fields: Fields
     record: typing.Any
     is_corrupt: bool = False
@@ -19,6 +19,7 @@ class Region:
 
     def __init__(self, record, offset: int, memory: memoryview, fields: Fields):
         assert type(memory) is memoryview
+        assert len(memory) <= 512, "Specification prohibits memory regions larger than 512 bytes"
 
         self.record = record
         self.offset = offset
@@ -35,7 +36,8 @@ class Region:
 
     def info_dict(self):
         result = {
-            "offset": self.offset,
+            "payload_offset": self.offset,
+            "absolute_offset": self.offset + self.record.payload_offset,
             "size": len(self.memory),
             "used_size": self.used_size(),
         }
@@ -79,31 +81,14 @@ class Region:
         assert len(encoded) <= len(self.memory), f"Data of size {len(encoded)} does not fit into region of size {len(self.memory)}"
         self.memory[0 : len(encoded)] = encoded
 
-    def sign(self, sign_f):
-        used_size = self.used_size()
-        signature = self.encode(sign_f(self.memory[0:used_size]))
-        signature_len = len(signature)
-        memory_len = len(self.memory)
-
-        assert used_size + signature_len <= memory_len, f"Signature doesn't fit in the region ({used_size} + {signature_len} > {memory_len})"
-        self.memory[used_size : used_size + signature_len] = signature
-
-    def verify_signature(self, verify_f):
-        used_size = self.used_size()
-        signature = cbor2.loads(self.memory[used_size:])
-        return verify_f(signature, self.memory[:used_size])
-
-    def signature_size(self):
-        data_io = io.BytesIO(self.memory[self.used_size() :])
-        cbor2.load(data_io)
-        return data_io.tell()
-
 
 class Record:
     data: memoryview
     payload: memoryview
+    payload_offset: int  # Offset of the payload relative to the NDEF message start
     config: types.SimpleNamespace
     config_dir: str
+    uri: str = None
 
     meta_region: Region = None
     main_region: Region = None
@@ -130,10 +115,14 @@ class Record:
             case "ndef":
                 data_io = io.BytesIO(data)
                 for record in ndef.message_decoder(data_io):
+                    if type(record) is ndef.UriRecord:
+                        self.uri = record.uri
+
                     if record.type == self.config.mime_type:
                         # We have to create a sub memoryview so that when we update the region, the outer data updates as well
                         end = data_io.tell()
-                        self.payload = data[end - len(record.data) : end]
+                        self.payload_offset = end - len(record.data)
+                        self.payload = data[self.payload_offset : end]
                         assert self.payload == record.data
                         break
 
