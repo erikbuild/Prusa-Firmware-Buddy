@@ -39,6 +39,19 @@ struct TagInfo {
     std::optional<ICRef> ic_ref;
 };
 
+/// Four-byte variant of the capability container
+struct CapabilityContainer4 {
+    static constexpr uint8_t expected_magic_number = 0xE1;
+    uint8_t magic_number;
+    uint8_t version : 4;
+    uint8_t access_conditions : 4;
+
+    /// Size of the chip in bytes divided by 8
+    uint8_t memory_length_8;
+    uint8_t capabilities;
+};
+static_assert(sizeof(CapabilityContainer4) == 4);
+
 enum class MessageFlag : uint8_t {
     two_subcarriers = 1 << 0,
     high_data_rate = 1 << 1,

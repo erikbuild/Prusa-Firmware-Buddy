@@ -197,6 +197,29 @@ INFCReader::IOResult<size_t> LLNFCReader::get_tag_uid(NFCTagID tag, const std::s
     return uid.size();
 }
 
+INFCReader::IOResult<void> LLNFCReader::read_tag_info(NFCTagID tag, TagInfo &target) {
+    if (!is_valid(tag)) {
+        return std::unexpected(IOError::invalid_id);
+    }
+
+    // TODO: Add support for CC8
+    nfcv::CapabilityContainer4 cc;
+    if (auto r = read(tag, 0, std::as_writable_bytes(std::span { &cc, 1 })); !r) {
+        return std::unexpected(r.error());
+    }
+
+    if (cc.magic_number != cc.expected_magic_number) {
+        return std::unexpected(IOError::tag_invalid);
+    }
+
+    target = {
+        // TLV starts right after the CC and ends with the tag
+        .tlv_span = NFCSpan::from_offset_end(sizeof(cc), cc.memory_length_8 * 8),
+    };
+
+    return {};
+}
+
 void LLNFCReader::forget_tag(NFCTagID tag) {
     if (tag >= tags.size()) {
         return;

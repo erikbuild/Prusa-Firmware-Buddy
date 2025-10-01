@@ -4,6 +4,7 @@
 #include <variant>
 #include <expected>
 #include <limits>
+#include <inplace_vector.hpp>
 
 #include "nfc_defines.hpp"
 
@@ -34,6 +35,11 @@ public:
     public:
         /// Automatically forget tags on TagLost event
         bool auto_forget_tag : 1 = false;
+    };
+
+    struct TagInfo {
+        /// Region for TLV records - that's where the PrusaNFCReader operates on
+        NFCSpan tlv_span;
     };
 
     using Event = std::variant<TagDetectedEvent, TagLostEvent>;
@@ -80,6 +86,9 @@ public:
     /// \param result buffer the UID will be written into
     /// \returns size of the read UID in bytes or error
     [[nodiscard]] virtual IOResult<size_t> get_tag_uid(NFCTagID tag, const std::span<std::byte> &buffer) = 0;
+
+    /// Parses the Capability Container of the tag and returns relevant data
+    [[nodiscard]] virtual IOResult<void> read_tag_info(NFCTagID tag, TagInfo &target) = 0;
 
     /// Completely forgets the tag and allows the tag ID to be reused
     /// If the tag is still present, a new TagDetected event will be emitted

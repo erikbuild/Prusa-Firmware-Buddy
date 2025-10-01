@@ -25,6 +25,8 @@ public:
 
     [[nodiscard]] IOResult<size_t> get_tag_uid(NFCTagID tag, const std::span<std::byte> &buffer) final;
 
+    [[nodiscard]] virtual IOResult<void> read_tag_info(NFCTagID tag, TagInfo &target) final;
+
     void forget_tag(NFCTagID tag) final;
 
     void reset_state() final;
