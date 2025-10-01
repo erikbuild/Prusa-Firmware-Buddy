@@ -17,9 +17,6 @@ using ByteString = std::basic_string<std::byte>;
 #include <autogen/sample_data.cpp.in>
 #include <autogen/field_enums.hpp>
 
-/// Expected offset of the payload of the NDEF message - considering the standard prusa mime type
-constexpr NFCOffset payload_offset = 37;
-
 class MockNFCReader final : public INFCReader {
 public:
     struct ReadLog {
@@ -105,7 +102,20 @@ public:
         return tag_uid.size();
     }
 
-    virtual void forget_tag(NFCTagID tag) final {
+    INFCReader::IOResult<void> read_tag_info(NFCTagID tag, TagInfo &target) final {
+        if (!tag_data.contains(tag)) {
+            return std::unexpected(IOError::other);
+        }
+
+        target = {
+            .tlv_span = NFCSpan::from_offset_end(4, tag_data[tag].size()),
+        };
+
+        return {};
+    }
+
+    virtual void
+    forget_tag(NFCTagID tag) final {
     }
 
     virtual void reset_state() final {
@@ -188,7 +198,7 @@ void test_standard_tag_main(PrusaNFCReader &reader, MockNFCReader &mock) {
     CHECK(reader.read_field_int32(field(MainField::transmission_distance)) == std::unexpected(PrusaNFCReader::Error::wrong_field_type));
 
     CHECK(reader.read_field_string(field(MainField::material_name), small_string_buffer) == std::unexpected(PrusaNFCReader::Error::data_too_big));
-    CHECK(reader.read_field_int32(field(MainField::secondary_color_0_rgba)) == std::unexpected(PrusaNFCReader::Error::field_not_present));
+    CHECK(reader.read_field_int32(field(MainField::secondary_color_0)) == std::unexpected(PrusaNFCReader::Error::field_not_present));
 
     CHECK(reader.read_field_uint16_array(field(MainField::tags), small_tags_buffer) == std::unexpected(PrusaNFCReader::Error::data_too_big));
 
@@ -200,14 +210,15 @@ TEST_CASE("PrusaNFCReader::reading_standard_sample_tag") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
-    mock.tag_data[0] = tag_data::standard_sample_tag;
+    namespace td = tag_data::standard_sample_tag;
+    mock.tag_data[0] = td::data;
 
     // Verify metadata structure
     {
         auto meta_r = reader.read_metadata(0);
 
-        // Expecting three reads - NDEF header, NDEF type, metadata region
-        CHECK(mock.log.reads.size() == 3);
+        // Expecting (NOT CC - read_tag_info fakes it), TLV, NDEF header, NDEF type, metadata region
+        CHECK(mock.log.reads.size() == 4);
         CHECK(mock.log.writes.size() == 0);
 
         REQUIRE(meta_r.has_value());
@@ -216,22 +227,15 @@ TEST_CASE("PrusaNFCReader::reading_standard_sample_tag") {
         const PrusaNFCReader::TagMetadata &meta = **meta_r;
         CHECK(meta.is_valid);
 
-        CHECK(meta.meta_region().is_present());
-        CHECK(meta.meta_region().span.offset == payload_offset + 0);
-        CHECK(meta.meta_region().span.size == 11);
-
-        CHECK(meta.main_region().is_present());
-        CHECK(meta.main_region().span.offset == payload_offset + 11);
-        CHECK(meta.main_region().span.size == 252);
-
+        CHECK(meta.region[NFCRegion::meta].span == td::meta_span);
+        CHECK(meta.region[NFCRegion::main].span == td::main_span);
         CHECK(!meta.region[NFCRegion::auxiliary].is_present());
     }
 
-    // Read from meta region
+    // Read from meta region (it's actually empty)
     {
         mock.log = {};
 
-        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == 11);
         CHECK(reader.read_field_int32(field(NFCMetaField::main_region_size)) == std::unexpected(PrusaNFCReader::Error::field_not_present));
 
         // The meta region should be in the cache from the read_metadata call, no extra reads should have happened
@@ -255,7 +259,8 @@ TEST_CASE("PrusaNFCReader::reading_standard_sample_tag_with_aux") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
-    mock.tag_data[0] = tag_data::standard_sample_tag_with_aux;
+    namespace td = tag_data::standard_sample_tag_with_aux;
+    mock.tag_data[0] = td::data;
 
     std::array<NFCField, 32> fields_buffer;
 
@@ -263,8 +268,8 @@ TEST_CASE("PrusaNFCReader::reading_standard_sample_tag_with_aux") {
     {
         auto meta_r = reader.read_metadata(0);
 
-        // Expecting three reads - NDEF header, NDEF type, metadata region
-        CHECK(mock.log.reads.size() == 3);
+        // Expecting - (NOT CC, read_tag_info fakes it), TLV, NDEF header, NDEF type, metadata region
+        CHECK(mock.log.reads.size() == 4);
         CHECK(mock.log.writes.size() == 0);
 
         // Reset log, start tracking from new
@@ -276,28 +281,17 @@ TEST_CASE("PrusaNFCReader::reading_standard_sample_tag_with_aux") {
         const PrusaNFCReader::TagMetadata &meta = **meta_r;
         CHECK(meta.is_valid);
 
-        const auto &meta_region = meta.region[NFCRegion::meta];
-        CHECK(meta_region.is_present());
-        CHECK(meta_region.span.offset == payload_offset + 0);
-        CHECK(meta_region.span.size == 11);
-
-        const auto &main_region = meta.region[NFCRegion::main];
-        CHECK(main_region.is_present());
-        CHECK(main_region.span.offset == payload_offset + 11);
-        CHECK(main_region.span.size == 220);
-
-        const auto &aux_region = meta.region[NFCRegion::auxiliary];
-        CHECK(aux_region.is_present());
-        CHECK(aux_region.span.offset == payload_offset + 231);
-        CHECK(aux_region.span.size == 32);
+        CHECK(meta.region[NFCRegion::meta].span == td::meta_span);
+        CHECK(meta.region[NFCRegion::main].span == td::main_span);
+        CHECK(meta.region[NFCRegion::auxiliary].span == td::aux_span);
     }
 
     // Read from meta region
     {
         mock.log = {};
 
-        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == 11);
-        CHECK(reader.read_field_int32(field(NFCMetaField::aux_region_offset)) == 231);
+        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == std::unexpected(PrusaNFCReader::Error::field_not_present));
+        CHECK(reader.read_field_int32(field(NFCMetaField::aux_region_offset)) == td::aux_payload_offset);
 
         // The meta region should be in the cache from the read_metadata call, no extra reads should have happened
         CHECK(mock.log.reads.size() == 0);
@@ -324,11 +318,12 @@ TEST_CASE("PrusaNFCReader::writing") {
     std::array<char, 128> string_buffer;
     std::array<NFCField, 32> fields_buffer;
 
-    mock.tag_data[0] = tag_data::standard_sample_tag_with_aux;
+    namespace td = tag_data::standard_sample_tag_with_aux;
+    mock.tag_data[0] = td::data;
 
     CHECK(reader.read_field_int32(field(MainField::material_type)) == std::to_underlying(MaterialType::ASA));
-    // Expect reads of NDEF header, mime type, meta region, main region
-    CHECK(mock.log.reads.size() == 4);
+    // Expect reads of (NOT CC - faked), TLV, NDEF header, mime type, meta region, main region
+    CHECK(mock.log.reads.size() == 5);
     mock.log = {};
 
     CHECK(reader.read_field_int32(field(AuxField::consumed_weight)) == 100);
@@ -347,7 +342,7 @@ TEST_CASE("PrusaNFCReader::writing") {
         mock.log = {};
 
         CHECK(reader.read_field_int32(field(MainField::material_type)) == std::to_underlying(MaterialType::PETG));
-        CHECK(mock.tag_data[0] == tag_data::write_sample_1);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_1::data);
         // save_tag_data("write_sample_1.bin", mock.tag_data[0]);
 
         // The write op should have updated the read cache, so we expect no reads
@@ -366,7 +361,7 @@ TEST_CASE("PrusaNFCReader::writing") {
         // Try both reads again
         CHECK(reader.read_field_int32(field(MainField::material_type)) == std::to_underlying(MaterialType::PETG));
         CHECK(reader.read_field_string(field(MainField::material_name), string_buffer) == std::string_view("PLA Kura Balaxy Klack"));
-        CHECK(mock.tag_data[0] == tag_data::write_sample_2);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_2::data);
         // save_tag_data("write_sample_2.bin", mock.tag_data[0]);
 
         CHECK(mock.log.reads.size() == 0);
@@ -377,7 +372,7 @@ TEST_CASE("PrusaNFCReader::writing") {
     {
         CHECK(reader.read_field_float(field(MainField::min_nozzle_diameter)) == std::unexpected(PrusaNFCReader::Error::field_not_present));
         CHECK(reader.write_field_float(field(MainField::min_nozzle_diameter), 12.5f) == PrusaNFCReader::WriteReport { .field_existed = false, .changed = true });
-        CHECK(mock.tag_data[0] == tag_data::write_sample_3);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_3::data);
         // save_tag_data("write_sample_3.bin", mock.tag_data[0]);
 
         CHECK(reader.read_field_float(field(MainField::min_nozzle_diameter)) == 12.5f);
@@ -391,7 +386,7 @@ TEST_CASE("PrusaNFCReader::writing") {
     // Try writing into the aux region
     {
         CHECK(reader.write_field_float(field(AuxField::consumed_weight), 969.12f) == PrusaNFCReader::WriteReport { .field_existed = true, .changed = true });
-        CHECK(mock.tag_data[0] == tag_data::write_sample_4);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_4::data);
         // save_tag_data("write_sample_4.bin", mock.tag_data[0]);
 
         CHECK_THAT(reader.read_field_float(field(AuxField::consumed_weight)).value_or(0), Catch::Matchers::WithinAbs(969.12f, 0.001f));
@@ -405,7 +400,7 @@ TEST_CASE("PrusaNFCReader::writing") {
     // Try writing float that can be encoded as int
     {
         CHECK(reader.write_field_float(field(AuxField::consumed_weight), 12) == PrusaNFCReader::WriteReport { .field_existed = true, .changed = true });
-        CHECK(mock.tag_data[0] == tag_data::write_sample_5);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_5::data);
         // save_tag_data("write_sample_5.bin", mock.tag_data[0]);
 
         CHECK(reader.read_field_float(field(AuxField::consumed_weight)) == 12);
@@ -440,7 +435,7 @@ TEST_CASE("PrusaNFCReader::writing") {
 
         CHECK(mock.log.writes.size() == 1);
         CHECK(mock.log.reads.size() == 0);
-        CHECK(mock.tag_data[0] == tag_data::write_sample_6);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_6::data);
         // save_tag_data("write_sample_6.bin", mock.tag_data[0]);
         mock.log = {};
 
@@ -455,7 +450,7 @@ TEST_CASE("PrusaNFCReader::writing") {
 
         CHECK(mock.log.writes.size() == 1);
         CHECK(mock.log.reads.size() == 1);
-        CHECK(mock.tag_data[0] == tag_data::write_sample_7);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_7::data);
         // save_tag_data("write_sample_7.bin", mock.tag_data[0]);
         mock.log = {};
 
@@ -469,7 +464,7 @@ TEST_CASE("PrusaNFCReader::writing") {
     // Try writing bytes
     {
         CHECK(reader.write_field_bytes(field(MainField::brand_specific_instance_id), ByteString { std::byte(1), std::byte(2) }) == PrusaNFCReader::WriteReport { .field_existed = true, .changed = true });
-        CHECK(mock.tag_data[0] == tag_data::write_sample_8);
+        CHECK(mock.tag_data[0] == tag_data::write_sample_8::data);
         mock.log = {};
     }
 
@@ -496,7 +491,7 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
     PrusaNFCReader reader(mock);
 
     SECTION("Try writing a string that definitely doesn't fit into the memory") {
-        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux;
+        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux::data;
 
         std::vector<char> str;
         str.resize(300);
@@ -511,7 +506,7 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
     }
 
     SECTION("Enumerate fields with a small buffer") {
-        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux;
+        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux::data;
 
         std::array<NFCField, 7> fields_buffer;
         CHECK(reader.enumerate_fields(0, NFCRegion::main, fields_buffer) == std::unexpected(PrusaNFCReader::Error::data_too_big));
@@ -519,17 +514,17 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
 
     SECTION("Tags with invalid metadata") {
         SECTION("Tag with main section outside of the tag itself") {
-            mock.tag_data[0] = tag_data::corrupt_tag_1;
+            mock.tag_data[0] = tag_data::corrupt_tag_1::data;
         }
 
         SECTION("Tag with main section bigger than the payload") {
-            mock.tag_data[0] = tag_data::corrupt_tag_2;
+            mock.tag_data[0] = tag_data::corrupt_tag_2::data;
         }
 
         CHECK(reader.read_field_int32(field(MainField::brand_name)) == std::unexpected(PrusaNFCReader::Error::tag_invalid));
 
-        // Expecting reads of ndef header, ID and meta region
-        CHECK(mock.log.reads.size() == 3);
+        // Expecting reads of (NOT CC - faked), TLV, NDEF header, ID and meta region
+        CHECK(mock.log.reads.size() == 4);
         mock.log = {};
 
         // The tag should be marked as invalid in the cache and we shouldn't be getting any reads
@@ -540,23 +535,23 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
     }
 
     SECTION("Tags with a different mime type") {
-        mock.tag_data[0] = tag_data::wrong_mime;
-        mock.tag_data[1] = tag_data::wrong_mime_2;
-        mock.tag_data[2] = tag_data::standard_sample_tag;
+        mock.tag_data[0] = tag_data::wrong_mime::data;
+        mock.tag_data[1] = tag_data::wrong_mime_2::data;
+        mock.tag_data[2] = tag_data::standard_sample_tag::data;
 
         CHECK(reader.read_field_int32(field(MainField::brand_name, 0)) == std::unexpected(PrusaNFCReader::Error::tag_invalid));
-        UNSCOPED_INFO("Expecting reads of ndef header. Different MIME type length, so we don't even don't need to read it");
-        CHECK(mock.log.reads.size() == 1);
-        mock.log = {};
-
-        CHECK(reader.read_field_float(field(MainField::brand_name, 1)) == std::unexpected(PrusaNFCReader::Error::tag_invalid));
-        UNSCOPED_INFO("Expecting reads of ndef header + mime ID");
+        UNSCOPED_INFO("Expecting reads of a TLV and NDEF headers (NOT CC - faked). Different MIME type length, so we don't even don't need to read it");
         CHECK(mock.log.reads.size() == 2);
         mock.log = {};
 
+        CHECK(reader.read_field_float(field(MainField::brand_name, 1)) == std::unexpected(PrusaNFCReader::Error::tag_invalid));
+        UNSCOPED_INFO("Expecting reads of (NOT CC - faked), TLV, NDEF header + mime ID");
+        CHECK(mock.log.reads.size() == 3);
+        mock.log = {};
+
         CHECK(reader.read_field_int32(field(MainField::material_type, 2)) == std::to_underlying(MaterialType::ASA));
-        UNSCOPED_INFO("Read ndef header, mime type, metadata, main data");
-        CHECK(mock.log.reads.size() == 4);
+        UNSCOPED_INFO("Read (NOT CC - faked), TLV, NDEF header, mime type, metadata, main data");
+        CHECK(mock.log.reads.size() == 5);
         mock.log = {};
 
         {
@@ -577,8 +572,8 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
             CHECK(mock.log.reads.size() == 0);
 
             CHECK(reader.read_field_int32(field(MainField::material_type, 1)) == std::unexpected(PrusaNFCReader::Error::tag_invalid));
-            UNSCOPED_INFO("Should read header & mime type");
-            CHECK(mock.log.reads.size() == 2);
+            UNSCOPED_INFO("Should read (NOT CC - faked) TLV, NDEF header & mime type");
+            CHECK(mock.log.reads.size() == 3);
             mock.log = {};
         }
     }
@@ -586,14 +581,15 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
     SECTION("Tag with a malformed section") {
         std::array<char, 128> string_buffer;
 
-        auto tag_data = tag_data::standard_sample_tag;
-        std::fill(tag_data.begin() + 64, tag_data.end(), std::byte('\xbf')); // bf - indefinite container open
+        namespace td = tag_data::tag_with_big_meta_section;
+        auto tag_data = td::data;
+        std::fill(tag_data.begin() + 96, tag_data.end(), std::byte('\xbf')); // bf - indefinite container open
         mock.tag_data[0] = tag_data;
 
         {
             INFO("Reads in the non-damaged part - should return values still");
-            CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == 11);
-            CHECK(mock.log.reads.size() == 3);
+            CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == td::main_payload_offset);
+            CHECK(mock.log.reads.size() == 4);
             mock.log = {};
 
             CHECK(reader.read_field_string(field(MainField::brand_name), string_buffer) == std::string_view("Prusament"));
@@ -616,7 +612,8 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
     }
 
     SECTION("Tag without the container open") {
-        auto tag_data = tag_data::standard_sample_tag;
+        namespace td = tag_data::empty_tag_with_big_meta_section;
+        auto tag_data = td::data;
         mock.tag_data[0] = tag_data;
 
         const auto main_region_span = (**reader.read_metadata(0)).main_region().span;
@@ -628,23 +625,21 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
         reader.invalidate_cache(0);
 
         // Meta region should be okay
-        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == 11);
+        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == td::main_payload_offset);
 
         // Main region should return corrupt
         CHECK(reader.read_field_int32(field(MainField::brand_name)) == std::unexpected(PrusaNFCReader::Error::region_corrupt));
 
         // Meta region should be still okay
-        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == 11);
+        CHECK(reader.read_field_int32(field(NFCMetaField::main_region_offset)) == td::main_payload_offset);
 
         // Writing to the main region should fail
         CHECK(reader.write_field_float(field(MainField::transmission_distance), 18) == std::unexpected(PrusaNFCReader::Error::region_corrupt));
     }
 
     SECTION("Minimal meta section") {
-        mock.tag_data[0] = tag_data::empty_tag_with_minimal_meta_section;
-
-        // This tag is smaller, so the NDEF payload length is encoded into 1 B instead of 4
-        constexpr NFCOffset payload_offset = 34;
+        namespace td = tag_data::empty_tag_with_minimal_meta_section;
+        mock.tag_data[0] = td::data;
 
         auto meta_r = reader.read_metadata(0);
         REQUIRE(meta_r.has_value());
@@ -652,22 +647,14 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
         const auto &meta = **meta_r;
         CHECK(meta.is_valid);
 
-        CHECK(meta.meta_region().is_present());
-        CHECK(meta.meta_region().span.offset == payload_offset + 0);
-        CHECK(meta.meta_region().span.size == 1);
-
-        CHECK(meta.main_region().is_present());
-        CHECK(meta.main_region().span.offset == payload_offset + 1);
-        CHECK(meta.main_region().span.size == 93);
-
-        CHECK(!meta.aux_region().is_present());
+        CHECK(meta.region[NFCRegion::meta].span == td::meta_span);
+        CHECK(meta.region[NFCRegion::main].span == td::main_span);
+        CHECK(!meta.region[NFCRegion::auxiliary].is_present());
     }
 
     SECTION("Big meta section") {
-        mock.tag_data[0] = tag_data::empty_tag_with_big_meta_section;
-
-        // This tag is smaller, so the NDEF payload length is encoded into 1 B instead of 4
-        constexpr NFCOffset payload_offset = 34;
+        namespace td = tag_data::empty_tag_with_big_meta_section;
+        mock.tag_data[0] = td::data;
 
         auto meta_r = reader.read_metadata(0);
         REQUIRE(meta_r.has_value());
@@ -675,26 +662,18 @@ TEST_CASE("PrusaNFCReader::edge_cases") {
         const auto &meta = **meta_r;
         CHECK(meta.is_valid);
 
-        CHECK(meta.meta_region().is_present());
-        CHECK(meta.meta_region().span.offset == payload_offset + 0);
-        CHECK(meta.meta_region().span.size == 32);
-
-        CHECK(meta.main_region().is_present());
-        CHECK(meta.main_region().span.offset == payload_offset + 32);
-        CHECK(meta.main_region().span.size == 174);
-
-        CHECK(meta.aux_region().is_present());
-        CHECK(meta.aux_region().span.offset == payload_offset + 206);
-        CHECK(meta.aux_region().span.size == 16);
+        CHECK(meta.region[NFCRegion::meta].span == td::meta_span);
+        CHECK(meta.region[NFCRegion::main].span == td::main_span);
+        CHECK(meta.region[NFCRegion::auxiliary].span == td::aux_span);
     }
 
     SECTION("Disallow writing to the meta section") {
-        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux;
+        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux::data;
         CHECK(reader.write_field_int32(field(NFCMetaField::aux_region_offset), 0) == std::unexpected(PrusaNFCReader::Error::write_protected));
     }
 
     SECTION("Disallow writing to the meta section") {
-        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux;
+        mock.tag_data[0] = tag_data::standard_sample_tag_with_aux::data;
         CHECK(reader.write_field_int32(field(NFCMetaField::aux_region_offset), 0) == std::unexpected(PrusaNFCReader::Error::write_protected));
     }
 }
@@ -703,17 +682,18 @@ TEST_CASE("PrusaNFCReader::caching") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
     for (size_t i = 0; i < PrusaNFCReader::metadata_cache_capacity + 2; i++) {
-        mock.tag_data[(NFCTagID)i] = tag_data::standard_sample_tag_with_aux;
+        mock.tag_data[(NFCTagID)i] = tag_data::standard_sample_tag_with_aux::data;
     }
 
     const auto check_full_read = [&](NFCTagID tag) {
         INFO("Full read " << tag);
 
         auto meta_r = reader.read_metadata(tag);
+        volatile auto rr = meta_r;
         CHECK(meta_r.has_value());
 
-        // Expecting reads of ndef header, ID and meta region
-        CHECK(mock.log.reads.size() == 3);
+        // Expecting reads of (NOT CC - faked), TLV, NDEF header, ID and meta region
+        CHECK(mock.log.reads.size() == 4);
         for (const auto &read : mock.log.reads) {
             CHECK(read.tag == tag);
         }
@@ -726,7 +706,6 @@ TEST_CASE("PrusaNFCReader::caching") {
         auto meta_r = reader.read_metadata(tag);
         CHECK(meta_r.has_value());
 
-        // Expecting reads of ndef header, ID and meta region
         CHECK(mock.log.reads.size() == 0);
         mock.log = {};
     };
@@ -776,14 +755,15 @@ TEST_CASE("PrusaNFCReader::not_first_ndef_record") {
     MockNFCReader mock;
     PrusaNFCReader reader(mock);
 
-    mock.tag_data[0] = tag_data::sample_tag_with_uri;
+    namespace td = tag_data::sample_tag_with_uri;
+    mock.tag_data[0] = td::data;
 
     // Verify metadata structure
     {
         auto meta_r = reader.read_metadata(0);
 
-        // Expecting three reads - URI NDEF header, OpenPrintTag NDEF header, NDEF type, metadata region
-        CHECK(mock.log.reads.size() == 4);
+        // Expecting three reads - (NOT CC - faked), TLV, URI NDEF header, OpenPrintTag NDEF header, NDEF type, metadata region
+        CHECK(mock.log.reads.size() == 5);
         CHECK(mock.log.writes.size() == 0);
 
         // Reset log, start tracking from new
@@ -795,21 +775,8 @@ TEST_CASE("PrusaNFCReader::not_first_ndef_record") {
         const PrusaNFCReader::TagMetadata &meta = **meta_r;
         CHECK(meta.is_valid);
 
-        const auto payload_offset = 61;
-
-        const auto &meta_region = meta.region[NFCRegion::meta];
-        CHECK(meta_region.is_present());
-        CHECK(meta_region.span.offset == payload_offset + 0);
-        CHECK(meta_region.span.size == 11);
-
-        const auto &main_region = meta.region[NFCRegion::main];
-        CHECK(main_region.is_present());
-        CHECK(main_region.span.offset == payload_offset + 11);
-        CHECK(main_region.span.size == 196);
-
-        const auto &aux_region = meta.region[NFCRegion::auxiliary];
-        CHECK(aux_region.is_present());
-        CHECK(aux_region.span.offset == payload_offset + 207);
-        CHECK(aux_region.span.size == 32);
+        CHECK(meta.region[NFCRegion::meta].span == td::meta_span);
+        CHECK(meta.region[NFCRegion::main].span == td::main_span);
+        CHECK(meta.region[NFCRegion::auxiliary].span == td::aux_span);
     }
 }

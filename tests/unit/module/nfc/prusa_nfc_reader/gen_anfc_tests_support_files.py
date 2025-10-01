@@ -8,7 +8,7 @@ import os
 import yaml
 import subprocess
 import tempfile
-import ndef
+import yaml
 import uuid
 
 source_dir = os.path.dirname(os.path.abspath(__file__))
@@ -61,24 +61,49 @@ def write_bytes(variable, data):
     f.write("\n};\n\n")
 
 
-def write_sample_data(variable, data):
-    nfc_info = subprocess.run(
-        [
-            sys.executable,
-            os.path.join(materials_dir, "utils", "rec_info.py"),
-            "--show-all",
-            "--show-raw",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        input=data,
-    ).stdout.decode("UTF-8")
+def write_sample_data(namespace, data, info=True):
+    f.write(f"namespace {namespace} {{\n")
 
-    f.write("/*\n")
-    f.write("\n".join([f"* {val}" for val in nfc_info.split("\n")]))
-    f.write("\n*/\n")
+    if info:
+        nfc_info = subprocess.run(
+            [
+                sys.executable,
+                os.path.join(materials_dir, "utils", "rec_info.py"),
+                "--show-all",
+                "--show-raw",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            input=data,
+        ).stdout.decode("UTF-8")
 
-    write_bytes(variable, data)
+        nfc_info_yaml = yaml.safe_load(nfc_info)
+
+        def write_region_info(region):
+            if nfc_info is None:
+                return
+
+            i = nfc_info_yaml["regions"].get(region, None)
+            if i is None:
+                return
+
+            f.write(
+                f"constexpr NFCSpan {region}_span {{ .offset = {i['absolute_offset']}, .size = {i['size']} }};\n"
+            )
+            f.write(
+                f"constexpr NFCOffset {region}_payload_offset = {i['payload_offset']};\n"
+            )
+
+        write_region_info("meta")
+        write_region_info("main")
+        write_region_info("aux")
+
+        f.write("/*\n")
+        f.write("\n".join([f"* {val}" for val in nfc_info.split("\n")]))
+        f.write("\n*/\n")
+
+    write_bytes("data", data)
+    f.write("}\n")
 
 
 def nfc_initialize(params=[]):
@@ -101,25 +126,29 @@ def nfc_update(input_data, update_data: dict = {}, remove_fields: dict = {}):
                            sort_keys=False).encode("UTF-8"))
         f.close()
 
-        return subprocess.run(
+        r = subprocess.run(
             [
                 sys.executable,
-                os.path.join(materials_dir, "utils", "rec_update.py"), f.name,
-                "--no-canonical"
+                os.path.join(materials_dir, "utils", "rec_update.py"),
+                f.name,
+                "--no-canonical",
             ],
             input=input_data,
             stdout=subprocess.PIPE,
-        ).stdout
+        )
+
+        assert r.returncode == 0
+        return r.stdout
 
 
-standard_empty_tag = nfc_initialize(["-s=300", "-b=4"])
-standard_empty_tag_with_aux = nfc_initialize(["-s=300", "-b=4", "-a=32"])
+standard_empty_tag = nfc_initialize(["-s=304", "-b=4"])
+standard_empty_tag_with_aux = nfc_initialize(["-s=304", "-b=4", "-a=32"])
 empty_tag_with_big_meta_section = nfc_initialize(
     ["-s=256", "-m=32", "-a=16", "-b=1"])
 empty_tag_with_minimal_meta_section = nfc_initialize(["-s=128", "-b=1"])
 
 empty_tag_with_uri = nfc_initialize([
-    "-s=300", "-b=4", "-a=32", "--ndef-uri", "https://3dtag.org/c/4ea3c75dc9"
+    "-s=304", "-b=4", "-a=32", "--ndef-uri", "https://3dtag.org/c/4ea3c75dc9"
 ])
 
 material_uuid = uuid.UUID("43dab9d7-326c-4c53-9520-eb36a8fa8315")
@@ -152,6 +181,12 @@ write_sample_data("standard_sample_tag_with_aux", standard_sample_tag_with_aux)
 
 write_sample_data("empty_tag_with_big_meta_section",
                   empty_tag_with_big_meta_section)
+
+write_sample_data(
+    "tag_with_big_meta_section",
+    nfc_update(empty_tag_with_big_meta_section, standard_data),
+)
+
 write_sample_data("empty_tag_with_minimal_meta_section",
                   empty_tag_with_minimal_meta_section)
 
@@ -200,13 +235,13 @@ write_sample = nfc_update(
         "main_region_size": 100
     }},
 )
-write_sample_data("corrupt_tag_1", write_sample)
+write_sample_data("corrupt_tag_1", write_sample, info=False)
 
 write_sample = nfc_update(empty_tag_with_big_meta_section,
                           {"meta": {
                               "main_region_size": 400
                           }})
-write_sample_data("corrupt_tag_2", write_sample)
+write_sample_data("corrupt_tag_2", write_sample, info=False)
 
 sample_tag_with_uri = nfc_update(empty_tag_with_uri, standard_data)
 write_sample_data("sample_tag_with_uri", sample_tag_with_uri)
@@ -214,17 +249,15 @@ write_sample_data("sample_tag_with_uri", sample_tag_with_uri)
 # Wrong mime with different length than our official one
 write_sample_data(
     "wrong_mime",
-    b"".join(
-        ndef.message_encoder(
-            [ndef.Record("application/vnd.prusa3d.mat.nfcc", "", [])])),
+    nfc_initialize(["-s304", "-c", source_dir + "/config_wrong_mime.yaml"]),
+    info=False,
 )
 
 # Wrong mime with same length as our official one
 write_sample_data(
     "wrong_mime_2",
-    b"".join(
-        ndef.message_encoder(
-            [ndef.Record("application/vnd.prusa3d.mat.nfx", "", [])])),
+    nfc_initialize(["-s304", "-c", source_dir + "/config_wrong_mime2.yaml"]),
+    info=False,
 )
 
 f.write("\n}\n\n")
