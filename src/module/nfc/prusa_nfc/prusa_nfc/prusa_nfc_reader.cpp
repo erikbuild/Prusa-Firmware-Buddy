@@ -138,9 +138,8 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
     };
 
     // Chew through the NDEF header
-    NFCOffset next_record_offset = 0;
     NFCSpan payload_span;
-    while (true) {
+    for (NFCOffset next_record_offset = 0;;) {
         const auto record_offset = next_record_offset;
 
         if (record_offset == invalid_nfc_offset) {
@@ -151,7 +150,7 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
         // Copy the header so that we can reuse the read buffer (and also for alignment)
         NDEFRecordFullHeader ndef_header;
         {
-            auto io_result = read_span({ .tag = tag, .span = { .offset = next_record_offset, .size = sizeof(NDEFRecordFullHeader) } });
+            auto io_result = read_span({ .tag = tag, .span = { .offset = record_offset, .size = sizeof(NDEFRecordFullHeader) } });
             if (!io_result) {
                 return handle_error(io_result.error());
             }
@@ -164,7 +163,7 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
         }
 
         // Calculate offset of the next NDEF record
-        next_record_offset = ndef_header.message_end ? invalid_nfc_offset : (next_record_offset + ndef_header.record_length());
+        next_record_offset = ndef_header.message_end ? invalid_nfc_offset : (record_offset + ndef_header.record_length());
 
         if (
             ndef_header.type_name_format != NDEFTypeNameFormat::mime_media_type
