@@ -45,6 +45,9 @@ public:
         /// TagID is invalid (or already invalidated)
         invalid_id,
 
+        /// The tag has been deemed invalid
+        tag_invalid,
+
         /// Other, unspecified error.
         /// Retrying the operation might help.
         other,

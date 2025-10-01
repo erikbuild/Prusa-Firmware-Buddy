@@ -24,6 +24,7 @@ PrusaNFCReader::Error PrusaNFCReader::to_prusa_error(INFCReader::IOError error) 
     switch (error) {
 
     case INFCReader::IOError::outside_of_bounds:
+    case INFCReader::IOError::tag_invalid:
         return Error::tag_invalid;
 
     case INFCReader::IOError::not_implemented:
