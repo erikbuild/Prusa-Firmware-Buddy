@@ -137,9 +137,60 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
         std::abort();
     };
 
+    // Read tag info and determine TLV region
+    INFCReader::TagInfo tag_info;
+    if (auto r = reader_.read_tag_info(tag, tag_info); !r) {
+        return handle_error(to_prusa_error(r.error()));
+    }
+
+    // Chew through the TLV records
+    NFCSpan ndef_message_span;
+    for (NFCOffset tlv_pos = tag_info.tlv_span.offset;;) {
+        static constexpr auto tlv_data_size = 4;
+
+        if (tlv_pos + tlv_data_size > tag_info.tlv_span.end()) {
+            // We've either run out of the chip memory or the remaining TLVs are smaller han tlv_data_size (terminator is single byte for example)
+            // Either way, our NDEF record is definitely not there
+            return tag_invalid_error;
+        }
+
+        // Read the TLV record
+        const auto io_result = read_span({ .tag = tag, .span = { .offset = tlv_pos, .size = tlv_data_size } });
+        if (!io_result) {
+            return handle_error(io_result.error());
+        }
+        const auto &tlv_data = *io_result;
+
+        const NDEFTLVTag tag = static_cast<NDEFTLVTag>(tlv_data[0]);
+        if (tag == NDEFTLVTag::terminator) {
+            // Nothing is after the terminator tag -> we've not found a NDEF TLV record
+            return tag_invalid_error;
+        }
+
+        // Decode TLV length & skip the header
+        NFCOffset value_length;
+        if (tlv_data[1] == std::byte(0xFF)) {
+            value_length = (static_cast<NFCOffset>(tlv_data[2]) << 8) | static_cast<NFCOffset>(tlv_data[3]);
+            tlv_pos += 4;
+        } else {
+            value_length = static_cast<NFCOffset>(tlv_data[1]);
+            tlv_pos += 2;
+        }
+
+        if (tag != NDEFTLVTag::ndef) {
+            // This is not what we're looking for, skip this TLV
+            tlv_pos += value_length;
+            continue;
+        }
+
+        // We've found the NDEF TLV -> break this loop
+        ndef_message_span = { .offset = tlv_pos, .size = value_length };
+        break;
+    }
+
     // Chew through the NDEF header
     NFCSpan payload_span;
-    for (NFCOffset next_record_offset = 0;;) {
+    for (NFCOffset next_record_offset = ndef_message_span.offset;;) {
         const auto record_offset = next_record_offset;
 
         if (record_offset == invalid_nfc_offset) {
@@ -149,15 +200,22 @@ PrusaNFCReader::IOResult<const PrusaNFCReader::TagMetadata *> PrusaNFCReader::re
 
         // Copy the header so that we can reuse the read buffer (and also for alignment)
         NDEFRecordFullHeader ndef_header;
+        const NFCSpan header_span { .offset = record_offset, .size = sizeof(NDEFRecordFullHeader) };
+        if (header_span.end() > ndef_message_span.end()) {
+            // We'd get outside of the NDEF TLV, the tag is either malformed or the last message is smaller than NDEFRecordFullHeader
+            // Messages so small couldn't be what we are looking for
+            return tag_invalid_error;
+        }
+
         {
-            auto io_result = read_span({ .tag = tag, .span = { .offset = record_offset, .size = sizeof(NDEFRecordFullHeader) } });
+            auto io_result = read_span({ .tag = tag, .span = header_span });
             if (!io_result) {
                 return handle_error(io_result.error());
             }
             memcpy(&ndef_header, io_result->data(), sizeof(ndef_header));
         }
 
-        if (record_offset == 0 && !ndef_header.message_begin) {
+        if (record_offset == ndef_message_span.offset && !ndef_header.message_begin) {
             // Not a message begin -> invalid data
             return tag_invalid_error;
         }

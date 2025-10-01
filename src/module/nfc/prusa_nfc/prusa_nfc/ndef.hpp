@@ -13,6 +13,13 @@ enum class NDEFTypeNameFormat : uint8_t {
     reserved = 7,
 };
 
+enum class NDEFTLVTag : uint8_t {
+    null = 0x00,
+    ndef = 0x03,
+    proprietary = 0xfd,
+    terminator = 0xfe,
+};
+
 /// Part of the NDEF header that is static - always the same
 struct NDEFRecordStaticHeader {
     NDEFTypeNameFormat type_name_format : 3;
