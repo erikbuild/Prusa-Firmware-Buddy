@@ -67,3 +67,67 @@ TEST_CASE("atomic_circular_queue", "[atomic_circular_queue]") {
     REQUIRE(queue.count() == 0);
     REQUIRE(queue.dequeue(dequeued) == false);
 }
+
+TEST_CASE("atomic_circular_reservable_queue", "[atomic_circular_queue]") {
+    AtomicReservableCircularQueue<uint8_t, size_t, 8> queue;
+
+    SECTION("Initial state") {
+        REQUIRE(queue.isEmpty() == true);
+        REQUIRE(queue.isFull() == false);
+        REQUIRE(queue.size() == 8);
+        REQUIRE(queue.count() == 0);
+    }
+
+    SECTION("Valid access") {
+        uint8_t *allocated = queue.allocate();
+        *allocated = 31;
+        REQUIRE_NOTHROW(queue.commit(allocated));
+
+        uint8_t dequeued;
+        REQUIRE(queue.dequeue(dequeued) == true);
+        REQUIRE(dequeued == 31);
+    }
+
+    SECTION("Commit without an allocated item") {
+        uint8_t not_allocated = 0;
+        queue.allocate();
+        REQUIRE_THROWS(queue.commit(&not_allocated));
+    }
+
+    SECTION("Allocate two times") {
+        queue.allocate();
+        REQUIRE_THROWS(queue.allocate());
+    }
+
+    SECTION("Fill up the queue") {
+        for (uint8_t i = 0; i < 7; i++) {
+            uint8_t *to_modify = queue.allocate();
+            *to_modify = 1;
+            REQUIRE_NOTHROW(queue.commit(to_modify));
+        }
+        REQUIRE(queue.count() == 7);
+        REQUIRE(queue.isFull() == false);
+        REQUIRE(queue.isEmpty() == false);
+
+        // Commit last
+        uint8_t *last = queue.allocate();
+        *last = 1;
+        REQUIRE_NOTHROW(queue.commit(last));
+
+        // Commit one more (should fail)
+        uint8_t *one_more = queue.allocate();
+        REQUIRE(one_more == nullptr);
+
+        REQUIRE(queue.count() == 8);
+        REQUIRE(queue.isFull() == true);
+
+        for (uint i = 0; i < 8; i++) {
+            uint8_t t;
+            REQUIRE(queue.dequeue(t) == true);
+            REQUIRE(t == 1);
+        }
+        REQUIRE(queue.isEmpty() == true);
+        REQUIRE(queue.isFull() == false);
+        REQUIRE(queue.count() == 0);
+    }
+}
