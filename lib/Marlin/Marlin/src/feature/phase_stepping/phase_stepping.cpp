@@ -11,6 +11,8 @@
 #include "../precise_stepping/precise_stepping.hpp"
 #include "../precise_stepping/internal.hpp"
 #include "../input_shaper/input_shaper.hpp"
+#include "axes.hpp"
+#include "debug_events.hpp"
 #include <config_store/store_instance.hpp>
 
 #include <device/peripherals.h>
@@ -20,6 +22,7 @@
 
 #include <Pin.hpp>
 #include <logging/log.hpp>
+#include <metric.h>
 
 #include <cassert>
 #include <cmath>
@@ -32,6 +35,8 @@ LOG_COMPONENT_DEF(PhaseStepping, logging::Severity::debug);
 using namespace phase_stepping;
 using namespace phase_stepping::opts;
 using namespace buddy::hw;
+
+AtomicCircularQueue<ProblemEvents, uint16_t, 4> phase_stepping::debug_events_queue {};
 
 // Global definitions
 std::array<AxisState, SUPPORTED_AXIS_COUNT> phase_stepping::axis_states = { X_AXIS, Y_AXIS };
@@ -446,6 +451,7 @@ static void enable_phase_stepping(AxisEnum axis_num) {
     axis_state.missed_tx_cnt = 0;
     axis_state.enabled = true;
     axis_state.active = true;
+    axis_state.last_was_empty = true;
 
     auto enable_mask = PHASE_STEPPING_GENERATOR_X << axis_num;
     PreciseStepping::physical_axis_step_generator_types |= enable_mask;
@@ -651,6 +657,14 @@ static bool is_refresh_period_sane(uint32_t now, uint32_t last_timer_tick) {
 
 static FORCE_INLINE FORCE_OFAST void refresh_axis(
     AxisState &axis_state, uint32_t now, uint32_t previous_tick) {
+
+    // At 350 we pass on the cylinder reproducer with bad speeds (aka 350 mm/s!!!)
+    // At 320 we pass bigger parts of the cylinder without the printer stopping (starving)
+    // and skipping
+    // At 340-325 I can hear skips of motors, but eventually we crash
+    static constexpr float speed_diff_threshold = 320.0f;
+    static constexpr float sudden_stop_threshold = 100.0f;
+
     if (!axis_state.active) {
         return;
     }
@@ -700,17 +714,52 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
         if (current_target.has_value()) {
             axis_state.current_target = *current_target;
 
+            if (std::abs(current_target->start_v - axis_state.previous_speed) > speed_diff_threshold) {
+                const auto res = debug_events_queue.enqueue(SuddenSpeedChange { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed, .new_speed = current_target->start_v });
+                if (!res) {
+                    std::abort();
+                }
+            }
+
             axis_state.is_cruising = (current_target->half_accel == 0) && (current_target->duration > 10'000);
             axis_state.is_moving = true;
+            auto [end_speed, end_pos] = axis_position(axis_state, current_target->duration);
+            axis_state.last_was_empty = std::abs(end_speed) < 2; // if < 2 we slowed down
+            if (axis_state.stalled_for != 0) {
+                const auto res = debug_events_queue.enqueue(Stalled {
+                    .timestamp = now,
+                    .axis = axis_index ? 'Y' : 'X',
+                    .number_of_iteration = axis_state.stalled_for,
+                });
+                if (!res) {
+                    std::abort();
+                }
+            }
+            axis_state.stalled_for = 0;
 
             move_position = current_target->initial_pos;
             move_epoch = ticks_diff(now, axis_state.initial_time);
 
             calibration_new_move(axis_state);
         } else {
+            if (axis_state.previous_speed > sudden_stop_threshold) {
+                const auto res = debug_events_queue.enqueue(SuddenStop { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed });
+                if (!res) {
+                    std::abort();
+                }
+            }
             // No new movement
             axis_state.is_cruising = false;
             axis_state.is_moving = false;
+
+            if (planner.draining()) {
+                axis_state.last_was_empty = true;
+            }
+
+            if (axis_state.last_was_empty) {
+                ++axis_state.stalled_for;
+            }
+
             break;
         }
     }
@@ -718,6 +767,8 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
     auto [speed, position] = axis_state.current_target.has_value()
         ? axis_position(axis_state, move_epoch)
         : std::make_tuple(0.f, move_position);
+
+    axis_state.previous_speed = speed;
 
     float physical_position = resolve_axis_inversion(axis_state.inverted, position);
     float physical_speed = resolve_axis_inversion(axis_state.inverted, speed);

@@ -1,4 +1,5 @@
 #include "calibration.hpp"
+#include "axes.hpp"
 #include "phase_stepping.hpp"
 #include "calibration_config.hpp"
 #include "i18n.h"

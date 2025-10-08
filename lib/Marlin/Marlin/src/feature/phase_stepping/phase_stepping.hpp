@@ -11,14 +11,12 @@
 
     #include "common.hpp"
     #include "lut.hpp"
-    #include "axes.hpp"
 
     #include <utils/atomic_circular_queue.hpp>
     #include <core/types.h>
     #include <bsod.h>
 
     #include <algorithm>
-    #include <memory>
     #include <atomic>
     #include <cassert>
     #include <optional>
@@ -185,6 +183,10 @@ struct AxisState {
 
     int original_microsteps = 0;
     bool had_interpolation = false;
+
+    bool last_was_empty = true;
+    unsigned stalled_for = 0;
+    float previous_speed = 0.0f;
 };
 
 /**

@@ -24,15 +24,19 @@
 #include <array>
 #include "filament.hpp"
 #include "marlin_vars.hpp"
+#include "marlin_server.hpp"
 #include "config_features.h"
 #include <option/has_mmu2.h>
 #include <metric_handlers.h>
 #include <utils/timing/rate_limiter.hpp>
+#include <utils/overloaded_visitor.hpp>
+#include <utils/atomic_circular_queue.hpp>
 
-#include "../Marlin/src/module/temperature.h"
-#include "../Marlin/src/module/planner.h"
-#include "../Marlin/src/module/stepper.h"
-#include "../Marlin/src/feature/power.h"
+#include <Marlin/src/module/temperature.h>
+#include <Marlin/src/module/planner.h>
+#include <Marlin/src/module/stepper.h>
+#include <Marlin/src/feature/power.h>
+#include <Marlin/src/feature/phase_stepping/debug_events.hpp>
 
 #include <config_store/store_instance.hpp>
 
@@ -399,6 +403,45 @@ void record_dwarf_internal_temperatures() {
 }
 #endif
 
+#if HAS_PHASE_STEPPING()
+METRIC_DEF(ps_stalled, "ps_stall", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
+METRIC_DEF(ps_sudden_stop, "ps_stopped", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
+METRIC_DEF(ps_speed_change, "ps_spd_chng", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
+
+void record_ps_debug_events() {
+    using namespace phase_stepping;
+    size_t send = 0;
+    while (!debug_events_queue.isEmpty()) {
+        const auto event = debug_events_queue.dequeue();
+        if (marlin_server::is_printing()) {
+            // Only send the metrics when we are printing - we don't care for stalls when we don't move
+            std::visit(Overloaded {
+                           [](const SuddenStop &e) {
+                               metric_record_custom_at_time(&ps_sudden_stop, e.timestamp, " ax=\"%c\",from=%.1f",
+                                   e.axis,
+                                   static_cast<double>(e.original_speed));
+                           },
+                           [](const SuddenSpeedChange &e) {
+                               metric_record_custom_at_time(&ps_speed_change, e.timestamp, " ax=\"%c\",from=%.1f,to=%.1f",
+                                   e.axis,
+                                   static_cast<double>(e.original_speed),
+                                   static_cast<double>(e.new_speed));
+                           },
+                           [](const Stalled &e) {
+                               metric_record_custom_at_time(&ps_stalled, e.timestamp, " ax=\"%c\",its=%lu",
+                                   e.axis,
+                                   e.number_of_iteration);
+                           } },
+                event);
+            ++send;
+        }
+    }
+    if (send > 0) {
+        log_info(Metrics, "Sent %u stalled events", send);
+    }
+}
+#endif
+
 } // namespace
 
 void buddy::metrics::record() {
@@ -406,6 +449,9 @@ void buddy::metrics::record() {
         return;
     }
 
+#if HAS_PHASE_STEPPING()
+    record_ps_debug_events();
+#endif
     RecordMarlinVariables();
     RecordRuntimeStats();
     RecordPrintFilename();
