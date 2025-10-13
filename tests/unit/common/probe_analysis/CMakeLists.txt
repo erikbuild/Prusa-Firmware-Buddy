@@ -22,7 +22,7 @@ target_include_directories(
   probe_position_lookback PUBLIC . ${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/include
   )
 
-target_link_libraries(probe_position_lookback SG14)
+target_link_libraries(probe_position_lookback SG14 raii bsod)
 
 # tell build system about the test case
 add_catch_test(probe_position_lookback)

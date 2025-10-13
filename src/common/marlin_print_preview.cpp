@@ -298,7 +298,7 @@ IPrintPreview::State PrintPreview::stateFromFilamentPresence() const {
         }
 
         // no MMU, do regular check of filament presence in each tool
-        EXTRUDER_LOOP() { // e == physical_extruder
+        for (int8_t e = 0; e < EXTRUDERS; e++) { // e == physical_extruder
             if (check_extruder_need_filament_load_tools_mapping(e)) {
                 return State::filament_not_inserted_wait_user;
             }
@@ -309,7 +309,7 @@ IPrintPreview::State PrintPreview::stateFromFilamentPresence() const {
 
 static void queue_filament_load_gcodes() {
     // Queue load filament gcode for every tool that doesn't have filament loaded
-    EXTRUDER_LOOP() { // e == physical_extruder
+    for (int8_t e = 0; e < EXTRUDERS; e++) { // e == physical_extruder
         auto gcode_extruder = tools_mapping::to_gcode_tool(e);
         if (gcode_extruder == tools_mapping::no_tool) {
             // if this physical extruder is not printing, no need to load anything for it
@@ -338,7 +338,7 @@ static void queue_filament_load_gcodes() {
 
 static void queue_filament_change_gcodes() {
     // Queue change filament gcode for every tool with mismatched filament type
-    EXTRUDER_LOOP() { // e == physical_extruder
+    for (int8_t e = 0; e < EXTRUDERS; e++) { // e == physical_extruder
         auto gcode_extruder = tools_mapping::to_gcode_tool(e);
         if (gcode_extruder == tools_mapping::no_tool) {
             continue; // this extruder doesn't print anything
@@ -373,7 +373,7 @@ IPrintPreview::State PrintPreview::stateFromFilamentType() const {
     }
 
     // Check match of loaded and G-code types
-    EXTRUDER_LOOP() { // e == physical_extruder
+    for (int8_t e = 0; e < EXTRUDERS; e++) { // e == physical_extruder
         if (!check_correct_filament_type_tools_mapping(e)) {
             return State::wrong_filament_wait_user;
         }
@@ -393,7 +393,7 @@ void PrintPreview::tools_mapping_cleanup(bool leaving_to_print) {
 
 #if PRINTER_IS_PRUSA_XL()
     // set dwarf leds to be handled 'normally'
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         prusa_toolchanger.getTool(e).set_cheese_led(); // Default LED config
         prusa_toolchanger.getTool(e).set_status_led(); // Default status LED
     }

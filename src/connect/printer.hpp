@@ -28,6 +28,8 @@
 #include <option/has_cancel_object.h>
 #include <option/xbuddy_extension_variant_standard.h>
 
+#include <option/has_esp.h>
+
 namespace connect_client {
 
 // NOTE: if you are changing this, change also the one in command.hpp,
@@ -205,7 +207,9 @@ public:
 
     enum class Iface {
         Ethernet,
+#if HAS_ESP()
         Wifi,
+#endif
     };
 
     struct NetInfo {

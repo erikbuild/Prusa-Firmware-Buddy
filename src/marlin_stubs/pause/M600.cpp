@@ -246,15 +246,9 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
     } // Initial retract before move to filament change position
     settings.SetExtruder(target_extruder);
 
-    // If paused restore nozzle temperature from pre-paused state
-    if (marlin_server::printer_paused()) {
-        marlin_server::unpause_nozzle(target_extruder);
-    }
-
     const float disp_temp = marlin_vars().hotend(target_extruder).display_nozzle;
     const float targ_temp = Temperature::degTargetHotend(target_extruder);
 
-    marlin_server::nozzle_timeout_off();
     if (disp_temp > targ_temp) {
         Temperature::setTargetHotend(disp_temp, target_extruder);
     }
@@ -267,7 +261,6 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
     filament::set_color_to_load(filament_colour);
     Pause::Instance().filament_change(settings, is_filament_stuck);
 
-    marlin_server::nozzle_timeout_on();
     if (disp_temp > targ_temp) {
         Temperature::setTargetHotend(targ_temp, target_extruder);
     }

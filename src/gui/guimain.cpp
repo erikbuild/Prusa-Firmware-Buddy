@@ -70,7 +70,7 @@ void gui_run(void) {
     gui::knob::RegisterHeldLeftAction(TakeAScreenshot);
     gui::knob::RegisterLongPressScreenAction([]() { Screens::Access()->Open(ScreenFactory::Screen<ScreenMoveZ>); });
 
-    Screens::Init(ScreenFactory::Screen<screen_splash_data_t>);
+    Screens::Init(ScreenFactory::Screen<ScreenSplash>);
     Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<screen_home_data_t>);
 
     // TIMEOUT variable getting value from EEPROM when EEPROM interface is initialized
@@ -117,9 +117,8 @@ void gui_run(void) {
     while (1) {
         gui::StartLoop();
 
-        DialogHandler::Access().Loop();
-
         Screens::Access()->Loop();
+        DialogHandler::Access().Loop();
 
         gui_loop();
         gui::EndLoop();

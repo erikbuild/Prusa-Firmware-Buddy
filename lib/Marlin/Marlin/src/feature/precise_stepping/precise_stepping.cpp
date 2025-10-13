@@ -406,6 +406,11 @@ void classic_step_generator_init(const move_t &move, classic_step_generator_t &s
     step_generator_state.step_generator[axis] = &step_generator;
     step_generator_state.next_step_func[axis] = (generator_next_step_f)classic_step_generator_next_step_event;
 
+    // Set the initial step flags from the last cached values
+    step_generator.step_flags = 0;
+    step_generator.step_flags |= step_generator_state.current_flags & (STEP_EVENT_FLAG_X_DIR << axis);
+    step_generator.step_flags |= step_generator_state.current_flags & (STEP_EVENT_FLAG_X_ACTIVE << axis);
+
     // Set the initial direction and activity flags for the entire next move
     step_generator.move_step_flags = 0;
     step_generator.move_step_flags |= move.flags & (STEP_EVENT_FLAG_X_DIR << axis);
@@ -461,27 +466,13 @@ static bool generate_next_step_event(step_event_i32_t &step_event, step_generato
     auto step_status = step_state.step_events[old_nearest_step_event_idx].status;
     if (step_status == STEP_EVENT_INFO_STATUS_GENERATED_VALID || step_status == STEP_EVENT_INFO_STATUS_GENERATED_KEEP_ALIVE) {
         const double step_time_absolute = step_state.step_events[old_nearest_step_event_idx].time;
-        const uint64_t step_time_absolute_ticks = uint64_t(step_time_absolute * STEPPER_TICKS_PER_SEC);
-        const uint64_t step_time_relative_ticks = step_time_absolute_ticks - step_state.previous_step_time_ticks;
-        // FIXME Commented out:
-        // probably valid assert, but triggering often and making any other debugging difficult.
-        // BFW-5954.
-        // assert(step_time_relative_ticks < std::numeric_limits<uint32_t>::max());
+        const int64_t step_time_absolute_ticks = int64_t(step_time_absolute * STEPPER_TICKS_PER_SEC);
 
-        step_event.time_ticks = int32_t(step_time_relative_ticks);
+        // calculate time ticks and clamp to reasonable values
+        step_event.time_ticks = std::clamp(step_time_absolute_ticks - (int64_t)step_state.previous_step_time_ticks, (int64_t)0, (int64_t)std::numeric_limits<int32_t>::max());
+
         step_event.flags = step_state.step_events[old_nearest_step_event_idx].flags;
         assert(step_event.flags); // ensure flags are non-zero
-
-        // The timer ticks mustn't be negative in any case. Because if it is negative, there is an issue in the code.
-        if (step_event.time_ticks < 0) {
-            /*
-             * FIXME: Same as above (BFW-5954).
-#ifndef NDEBUG
-            bsod("Negative step time: %d, flags: %d", static_cast<int>(step_event.time_ticks), step_event.flags);
-#endif
-*/
-            step_event.time_ticks = 0;
-        }
 
         if (step_state.left_insert_start_of_move_segment) {
             step_event.flags |= STEP_EVENT_FLAG_BEGINNING_OF_MOVE_SEGMENT;
@@ -761,6 +752,8 @@ void PreciseStepping::step_isr() {
     constexpr uint16_t max_time_increment = STEPPER_ISR_MAX_TICKS / 2;
     static_assert(max_time_increment < STEPPER_ISR_MAX_TICKS);
     static_assert(max_time_increment > min_reserve);
+    constexpr uint32_t left_period_min = STEPPER_ISR_MAX_TICKS / 4; // must be higher than min_reserve + max length of other higher priority interrupts
+    static_assert(left_period_min < STEPPER_ISR_MAX_TICKS && left_period_min > min_reserve);
 
     const auto timer_handle = &TimerHandle[STEP_TIMER_NUM].handle;
     const uint32_t compare = __HAL_TIM_GET_COMPARE(timer_handle, TIM_CHANNEL_1);
@@ -801,16 +794,23 @@ void PreciseStepping::step_isr() {
         } else {
             // the next iteration just advances the timer
             left_ticks_to_next_step_event = ticks_to_next_isr - max_ticks;
-            time_increment += max_ticks;
-            ticks_to_next_isr = max_ticks;
+
+            // check if residuum for next period is too short (especially avoid situation when it is below min_reserve)
+            if (left_ticks_to_next_step_event < left_period_min) {
+                left_ticks_to_next_step_event += left_period_min;
+                ticks_to_next_isr = max_ticks - left_period_min;
+            } else {
+                ticks_to_next_isr = max_ticks;
+            }
+
+            time_increment += ticks_to_next_isr;
         }
 
         // actually plan the next deadline and check if we have enough time reserve
         // we need to block PhaseStepping and other high priority interrupts here to have precise timing
         // during setting of the next CC event
         {
-            next = compare + ticks_to_next_isr;
-            uint16_t adjusted_next = next - last_step_isr_delay;
+            next = compare + ticks_to_next_isr - last_step_isr_delay;
 
             buddy::InterruptDisabler _;
             // What follows is a not-straightforward scheduling of the next step ISR
@@ -822,7 +822,7 @@ void PreciseStepping::step_isr() {
             // or equal to (UINT16_MAX / 2). Otherwise, the value returned by counter_signed_diff()
             // will be incorrect.
             tim_counter = __HAL_TIM_GET_COUNTER(timer_handle);
-            diff = counter_signed_diff(adjusted_next, tim_counter);
+            diff = counter_signed_diff(next, tim_counter);
 
             // in case we are behind with steps planning, we allow only limit_steps_merged to be merged
             // and then leave the interrupt for min_reserve[us] in order to give some processing power
@@ -834,9 +834,9 @@ void PreciseStepping::step_isr() {
                     // in case there is a risk to miss next CC, we have to increase time for the next planned event
                     // and compensate it in the next next planned event
                     last_step_isr_delay = min_reserve - diff;
-                    adjusted_next += last_step_isr_delay;
+                    next += last_step_isr_delay;
                 }
-                __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, adjusted_next);
+                __HAL_TIM_SET_COMPARE(timer_handle, TIM_CHANNEL_1, next);
                 break;
             }
         }
@@ -1434,12 +1434,8 @@ void PreciseStepping::step_generator_state_init(const move_t &move) {
         step_event_info.status = STEP_EVENT_INFO_STATUS_NOT_GENERATED;
     }
 
-    // Reset current global and per-axis activity flags to running values
+    // Reset current global activity flags to running values
     step_generator_state.current_flags = (StepEventFlag_t(Stepper::last_direction_bits) << STEP_EVENT_FLAG_DIR_SHIFT) & STEP_EVENT_FLAG_DIR_MASK;
-    for (uint8_t i = 0; i != PS_AXIS_COUNT; ++i) {
-        StepEventFlag_t mask = ((STEP_EVENT_FLAG_X_DIR | STEP_EVENT_FLAG_X_ACTIVE) << i);
-        PreciseStepping::step_generator_state.step_generator[i]->step_flags = step_generator_state.current_flags & mask;
-    }
 
     LOOP_XYZ(i) {
 #ifdef ADVANCED_STEP_GENERATORS

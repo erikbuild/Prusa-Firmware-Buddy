@@ -27,7 +27,6 @@ void ScreenMenuFilamentMMU::windowEvent(window_t *sender, GUI_event_t event, voi
         Item<MI_MMU_CUT_FILAMENT>().set_enabled(!filament_in_nozzle);
         Item<MI_MMU_EJECT_FILAMENT>().set_enabled(!filament_in_nozzle);
         Item<MI_MMU_PRELOAD>().set_enabled(!filament_in_nozzle);
-        Item<MI_MMU_PRELOAD_ADVANCED>().set_enabled(!filament_in_nozzle);
     }
 
     ScreenMenu::windowEvent(sender, event, param);

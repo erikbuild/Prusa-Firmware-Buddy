@@ -20,8 +20,12 @@ void QRStaticStringWindow::unconditionalDraw() {
 }
 
 QRErrorUrlWindow::QRErrorUrlWindow(window_t *parent, Rect16 rect, ErrCode ec)
-    : QRDynamicStringWindow { parent, rect, Align_t::Center() } {
+    : QRErrorUrlWindow(parent, rect) {
     set_error_code(ec);
+}
+
+QRErrorUrlWindow::QRErrorUrlWindow(window_t *parent, Rect16 rect)
+    : QRDynamicStringWindow { parent, rect, Align_t::Center() } {
 }
 
 void QRErrorUrlWindow::set_error_code(ErrCode ec) {

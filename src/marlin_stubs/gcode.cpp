@@ -276,9 +276,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
         case 1702:
             PrusaGcodeSuite::M1702();
             break;
+#if HAS_ESP()
         case 1703:
             PrusaGcodeSuite::M1703();
             break;
+#endif
 #if HAS_INPUT_SHAPER_CALIBRATION()
         case 1959:
             PrusaGcodeSuite::M1959();
@@ -349,9 +351,6 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             break;
         case 123:
             PrusaGcodeSuite::G123();
-            break;
-        case 64:
-            PrusaGcodeSuite::G64();
             break;
 #if HAS_SELFTEST()
         case 162:

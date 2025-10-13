@@ -11,7 +11,7 @@ target_include_directories(
 
 add_catch_test(timer_event_period_tracker_tests)
 
-# rate_limiter_tests
+# atomic_circular_queue_test
 add_executable(
   atomic_circular_queue_test ${CMAKE_CURRENT_SOURCE_DIR}/atomic_circular_queue_test.cpp
   )
@@ -39,3 +39,8 @@ target_include_directories(
   )
 
 add_catch_test(combo_counter_tests)
+
+# timer_tests
+add_executable(timer_tests ${CMAKE_CURRENT_SOURCE_DIR}/timer_tests.cpp)
+target_include_directories(timer_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils)
+add_catch_test(timer_tests)

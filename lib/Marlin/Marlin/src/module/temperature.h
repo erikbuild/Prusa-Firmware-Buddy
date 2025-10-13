@@ -273,11 +273,9 @@ class Temperature {
         #define HOTEND_TEMPS HOTENDS
       static hotend_info_t temp_hotend[HOTEND_TEMPS];
 
-      #if TEMP_RESIDENCY_TIME > 0
-        // timestamp when temeperature reached target +-TEMP_WINDOW, 0 when outside this window
-        // note: 0 is valid timestamp, but if temperature reaches window at time 0, it will just be evaluated again little later, so it doesn't cause any bug
-        static uint32_t temp_hotend_residency_start_ms[HOTEND_TEMPS];
-      #endif
+      // timestamp when temeperature reached target +-TEMP_WINDOW, 0 when outside this window
+      // note: 0 is valid timestamp, but if temperature reaches window at time 0, it will just be evaluated again little later, so it doesn't cause any bug
+      static uint32_t temp_hotend_residency_start_ms[HOTEND_TEMPS];
       
     #endif
 
@@ -529,6 +527,9 @@ class Temperature {
     // Return true if the temperatures have been sampled at least once
     static bool temperatures_ready();
 
+    /// @returns whether all the hotends and the bed have stabilized on the target temperature (or if the target temp is 0)
+    static bool are_all_temperatures_reached();
+
     //high level conversion routines, for use outside of temperature.cpp
     //inline so that there is no performance decrease.
     //deg=degreeCelsius
@@ -557,47 +558,16 @@ class Temperature {
 
     #if HOTENDS
 
-      static void setTargetHotend(const int16_t celsius, const uint8_t E_NAME) {
-        const uint8_t ee = HOTEND_INDEX;
-        const int16_t new_temp = _MIN(celsius, temp_range[ee].maxtemp - HEATER_MAXTEMP_SAFETY_MARGIN);
-
-        #if ENABLED(AUTO_POWER_CONTROL)
-          if (celsius) {
-            powerManager.power_on();
-          }
-        #endif
-        
-        #if TEMP_RESIDENCY_TIME > 0
-          // target changed, reset time when it reached target
-          if (temp_hotend[ee].target != new_temp){
-            temp_hotend_residency_start_ms[ee] = 0;
-          }
-        #endif
-
-        temp_hotend[ee].target = new_temp;
-        
-        start_watching_hotend(ee);
-        #if ENABLED(PRUSA_TOOLCHANGER)
-          prusa_toolchanger.getTool(ee).set_hotend_target_temp(temp_hotend[ee].target);
-        #endif
-
-      }
-
-      FORCE_INLINE static bool isHeatingHotend(const uint8_t E_NAME) {
-        return temp_hotend[HOTEND_INDEX].target > temp_hotend[HOTEND_INDEX].celsius;
-      }
-
-      FORCE_INLINE static bool isCoolingHotend(const uint8_t E_NAME) {
-        return temp_hotend[HOTEND_INDEX].target < temp_hotend[HOTEND_INDEX].celsius;
-      }
-
       #if HAS_TEMP_HOTEND
+        static void setTargetHotend(const int16_t celsius, const uint8_t E_NAME);
+
+        /// @returns whether the hotend has stabilized on the target temperature (or if the target temp is 0)
+        static bool is_hotend_temperature_reached(uint8_t hotend);
+
+        static bool are_hotend_temperatures_reached();
+
         static bool wait_for_hotend(const uint8_t target_extruder, const bool no_wait_for_cooling=true, bool fan_cooling=false);
       #endif
-
-      FORCE_INLINE static bool still_heating(const uint8_t e) {
-        return degTargetHotend(e) > TEMP_HYSTERESIS && ABS(degHotend(e) - degTargetHotend(e)) > TEMP_HYSTERESIS;
-      }
 
     #endif // HOTENDS
 
@@ -644,35 +614,10 @@ class Temperature {
         static inline void start_watching_bed() {}
       #endif
 
-      static void setTargetBed(const int16_t celsius) {
-        #if ENABLED(AUTO_POWER_CONTROL)
-          if (celsius) {
-            powerManager.power_on();
-          }
-        #endif
-        temp_bed.target =
-          #ifdef BED_MAXTEMP
-            _MIN(celsius, BED_MAXTEMP - BED_MAXTEMP_SAFETY_MARGIN)
-          #else
-            celsius
-          #endif
-        ;
+      static void setTargetBed(const int16_t celsius);
 
-        #if HAS_MODULAR_BED()
-          for(uint8_t x = 0; x < X_HBL_COUNT; ++x) {
-            for(uint8_t y = 0; y < Y_HBL_COUNT; ++y) {
-              int16_t target_temp = 0;
-              if(temp_bed.enabled_mask & (1 << advanced_modular_bed->idx(x, y))) {
-                target_temp = temp_bed.target;
-              }
-              advanced_modular_bed->set_target(x, y, target_temp);
-            }
-          }
-          advanced_modular_bed->update_bedlet_temps(temp_bed.enabled_mask, temp_bed.target);
-        #endif
-
-        start_watching_bed();
-      }
+      /// @returns whether the bed has stabilized on the target temperature (or if the target temp is 0)
+      static bool is_bed_temperature_reached();
 
       static bool wait_for_bed(const bool no_wait_for_cooling=true);
 
@@ -739,9 +684,8 @@ private:
      */
     static void disable_heaters(disable_bed_t disable_bed);
   
-    #if TEMP_RESIDENCY_TIME > 0
-      static void update_temp_residency_hotend(uint8_t hotend);
-    #endif
+    static void update_temp_residency_hotend(uint8_t hotend);
+    
 public:
     /**
      * Switch off all heaters, set all target temperatures to 0
@@ -783,7 +727,7 @@ public:
           #endif
           #if ENABLED(PRUSA_TOOLCHANGER)
             // Set PID parameters to all dwarves
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
               buddy::puppies::dwarfs[e].set_pid(Temperature::temp_hotend[e].pid.Kp, Temperature::temp_hotend[e].pid.Ki, Temperature::temp_hotend[e].pid.Kd);
             }
           #endif /*HAS_DWARF()*/

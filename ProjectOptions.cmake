@@ -328,6 +328,7 @@ set_feature_for_printers(
   )
 set_feature_for_printers(HAS_HUMAN_INTERACTIONS "MINI" "MK4" "MK3.5" "XL" "COREONE")
 set_feature_for_printers_master_board(HAS_LOADCELL "MK4" "iX" "XL" "XL_DEV_KIT" "COREONE")
+set_feature_for_printers_master_board(HAS_NEXTRUDER "MK4" "iX" "XL" "XL_DEV_KIT" "COREONE")
 set_feature_for_printers_master_board(HAS_SHEET_PROFILES "MK3.5" "MINI")
 set_feature_for_printers_master_board(HAS_HEATBREAK_TEMP "MK4" "iX" "XL" "XL_DEV_KIT" "COREONE")
 set_feature_for_printers_master_board(HAS_FILAMENT_HEATBREAK_PARAM "iX")
@@ -355,8 +356,7 @@ set_feature_for_printers(HAS_SIDE_FSENSOR "iX" "XL" "COREONE")
 set_feature_for_printers(HAS_ADC_SIDE_FSENSOR "XL")
 set_feature_for_printers(HAS_FILAMENT_SENSORS_MENU "XL" "COREONE")
 
-# iX does not need ESP flashing
-set_feature_for_printers(HAS_ESP_FLASH_TASK "MK4" "MK3.5" "XL" "MINI" "COREONE")
+set_feature_for_printers(HAS_ESP "MK4" "MK3.5" "XL" "MINI" "COREONE")
 
 set_feature_for_printers(HAS_EMBEDDED_ESP32 "XL")
 set(PRINTERS_WITH_SIDE_LEDS "XL" "iX" "COREONE")
@@ -383,7 +383,7 @@ set_feature_for_printers(
   "XL"
   "MINI"
   )
-set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4" "iX")
+set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "MK4" "iX" "XL")
 set_feature_for_printers_master_board(
   HAS_E2EE_SUPPORT
   "MK4"

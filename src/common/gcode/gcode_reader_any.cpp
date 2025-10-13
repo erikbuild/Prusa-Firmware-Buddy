@@ -56,13 +56,13 @@ AnyGcodeFormatReader::AnyGcodeFormatReader(const char *filename, bool allow_decr
         is_partial = true;
     }
 
-    FILE *file = fopen(is_partial ? path.as_partial() : path.as_destination(), "rb");
+    unique_file_ptr file = unique_file_ptr(fopen(is_partial ? path.as_partial() : path.as_destination(), "rb"));
     if (!file) {
         return;
     }
 
     if (filename_is_bgcode(filename)) {
-        storage.emplace<PrusaPackGcodeReader>(*file, info, allow_decryption
+        storage.emplace<PrusaPackGcodeReader>(std::move(file), info, allow_decryption
 #if HAS_E2EE_SUPPORT()
             ,
             identity_check_lvl
@@ -71,11 +71,10 @@ AnyGcodeFormatReader::AnyGcodeFormatReader(const char *filename, bool allow_decr
     }
 
     else if (filename_is_plain_gcode(filename)) {
-        storage.emplace<PlainGcodeReader>(*file, info);
+        storage.emplace<PlainGcodeReader>(std::move(file), info);
     }
 
     else {
-        fclose(file);
         return;
     }
 

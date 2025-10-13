@@ -60,7 +60,7 @@
     serialprint_onoff(extruder_duplication_enabled);
     if (ena) {
       SERIAL_ECHOPGM(" ( ");
-      HOTEND_LOOP() if (TEST(duplication_e_mask, e)) { SERIAL_ECHO(e); SERIAL_CHAR(' '); }
+      for (int8_t e = 0; e < HOTENDS; e++) if (TEST(duplication_e_mask, e)) { SERIAL_ECHO(e); SERIAL_CHAR(' '); }
       SERIAL_CHAR(')');
     }
     SERIAL_EOL();

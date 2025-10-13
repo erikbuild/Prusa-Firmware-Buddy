@@ -470,11 +470,8 @@ inline uint16_t bed() { return adcDma1.get_and_shift_channel(AdcChannel::heatbed
 inline uint16_t heatbreakTemp() { return adcDma1.get_and_shift_channel(AdcChannel::heatbreak_T); }
     #endif
 inline uint16_t boardTemp() { return adcDma3.get_and_shift_channel(AdcChannel::board_T); }
-inline uint16_t heaterVoltage() { return adcDma1.get_and_shift_channel(AdcChannel::hotend_U); }
-
-inline uint16_t inputVoltage() {
-    return adcDma1.get_and_shift_channel(AdcChannel::heatbed_U);
-}
+inline uint16_t heater_voltage() { return adcDma1.get_and_shift_channel(AdcChannel::hotend_U); }
+inline uint16_t bed_voltage() { return adcDma1.get_and_shift_channel(AdcChannel::heatbed_U); }
 
     #if PRINTER_IS_PRUSA_iX()
 inline uint16_t psu_temp() { return adcDma1.get_and_shift_channel(AdcChannel::heatbed_T); }
@@ -484,8 +481,8 @@ inline uint16_t door_sensor() { return adcDma3.get_channel(AdcChannel::door_sens
     #endif
 
 inline uint16_t MMUCurrent() { return adcDma3.get_and_shift_channel(AdcChannel::MMU_I); }
-inline uint16_t heaterCurrent() { return adcDma3.get_and_shift_channel(AdcChannel::hotend_I); }
-inline uint16_t inputCurrent() { return adcDma3.get_and_shift_channel(AdcChannel::board_I); }
+inline uint16_t heater_current() { return adcDma3.get_and_shift_channel(AdcChannel::hotend_I); }
+inline uint16_t input_current() { return adcDma3.get_and_shift_channel(AdcChannel::board_I); }
 inline uint16_t vref() { return adcDma1.get_channel(AdcChannel::vref); } ///< Internal reference necessary for mcu_temperature
 inline uint16_t mcuTemperature() { return adcDma1.get_channel(AdcChannel::mcu_temperature); } ///< Raw sensor, use getMCUTemp() instead
 #endif

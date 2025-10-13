@@ -65,7 +65,7 @@
 
 using buddy::BootstrapStage;
 
-screen_splash_data_t::screen_splash_data_t()
+ScreenSplash::ScreenSplash()
     : screen_t()
     , text_progress(this, Rect16(0, SPLASHSCREEN_VERSION_Y, GuiDefaults::ScreenWidth, 18), is_multiline::no)
     , progress(this, Rect16(SPLASHSCREEN_PROGRESSBAR_X, SPLASHSCREEN_PROGRESSBAR_Y, SPLASHSCREEN_PROGRESSBAR_W, SPLASHSCREEN_PROGRESSBAR_H), COLOR_ORANGE, COLOR_GRAY, 6) {
@@ -77,7 +77,7 @@ screen_splash_data_t::screen_splash_data_t()
 
     snprintf(text_progress_buffer, sizeof(text_progress_buffer), "Firmware %s", version::project_version_full);
     text_progress.SetText(string_view_utf8::MakeRAM(text_progress_buffer));
-    progress.SetProgressPercent(0);
+    progress.set_progress_percent(50);
 
 #if ENABLED(POWER_PANIC)
     // don't present any screen or wizard if there is a powerpanic pending
@@ -220,6 +220,46 @@ screen_splash_data_t::screen_splash_data_t()
         Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<ScreenMenuLanguages, ScreenMenuLanguages::Context::initial_language_selection>);
     }
 #endif
+
+    // Set up progress mapper
+    // Processes with low occurrence or short duration should have small scale number
+    constexpr static ProgressMapperWorkflowArray workflow { std::to_array<ProgressMapperWorkflowStep<BootstrapStage>>(
+        {
+#if RESOURCES() || BOOTLOADER_UPDATE()
+            { BootstrapStage::looking_for_bbf, 1 },
+#endif
+#if RESOURCES()
+                { BootstrapStage::preparing_bootstrap, 1 },
+                { BootstrapStage::copying_files, 50 },
+#endif
+#if BOOTLOADER_UPDATE()
+                { BootstrapStage::preparing_update, 1 },
+                { BootstrapStage::updating, 1 },
+#endif
+#if HAS_ESP()
+                { BootstrapStage::flashing_esp, 1 },
+                { BootstrapStage::reflashing_esp, 1 },
+#endif
+#if HAS_PUPPIES()
+                { BootstrapStage::waking_up_puppies, 1 },
+                { BootstrapStage::looking_for_puppies, 1 },
+                { BootstrapStage::verifying_puppies, 1 },
+    #if HAS_DWARF()
+                { BootstrapStage::flashing_dwarf, 10 },
+                { BootstrapStage::verifying_dwarf, 1 },
+    #endif
+    #if HAS_PUPPY_MODULARBED()
+                { BootstrapStage::flashing_modular_bed, 10 },
+                { BootstrapStage::verifying_modular_bed, 1 },
+    #endif
+    #if HAS_XBUDDY_EXTENSION()
+                { BootstrapStage::flashing_xbuddy_extension, 10 },
+                { BootstrapStage::verifying_xbuddy_extension, 1 },
+    #endif
+#endif
+        }) };
+
+    progress_mapper.setup(workflow);
 }
 
 static const char *message(BootstrapStage stage) {
@@ -241,7 +281,7 @@ static const char *message(BootstrapStage stage) {
     case BootstrapStage::updating:
         return "Updating bootloader";
 #endif
-#if HAS_ESP_FLASH_TASK()
+#if HAS_ESP()
     case BootstrapStage::flashing_esp:
         return "Flashing ESP";
     case BootstrapStage::reflashing_esp:
@@ -277,11 +317,11 @@ static const char *message(BootstrapStage stage) {
     BUDDY_UNREACHABLE();
 }
 
-screen_splash_data_t::~screen_splash_data_t() {
+ScreenSplash::~ScreenSplash() {
     display::enable_resource_file(); // now it is safe to use resources from xFlash
 }
 
-void screen_splash_data_t::draw() {
+void ScreenSplash::draw() {
     Validate();
     progress.Invalidate();
     text_progress.Invalidate();
@@ -296,12 +336,14 @@ void screen_splash_data_t::draw() {
 #endif //_DEBUG
 }
 
-void screen_splash_data_t::windowEvent(window_t *, GUI_event_t event, void *) {
+void ScreenSplash::windowEvent(window_t *, GUI_event_t event, void *) {
     if (event == GUI_event_t::LOOP) {
         const auto bootstrap_state = buddy::bootstrap_state_get();
         text_progress.SetText(bootstrap_state.stage == BootstrapStage::initial
                 ? string_view_utf8::MakeRAM(text_progress_buffer)
                 : string_view_utf8::MakeCPUFLASH(message(bootstrap_state.stage)));
-        progress.SetProgressPercent(bootstrap_state.percent);
+        // FW Splash screen starts from progress bar on 50 %
+        const uint8_t progress_percent = bootstrap_state.stage == BootstrapStage::initial ? 50 : 50 + progress_mapper.update_progress(bootstrap_state.stage, static_cast<float>(bootstrap_state.percent) / 100.f) / 2;
+        progress.set_progress_percent(progress_percent);
     }
 }

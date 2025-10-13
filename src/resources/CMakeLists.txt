@@ -62,7 +62,7 @@ else()
   add_lfs_image(resources-image BLOCK_SIZE 4096 BLOCK_COUNT 512)
 endif()
 
-if(HAS_ESP_FLASH_TASK)
+if(HAS_ESP)
   set(ESP_PARTS ${CMAKE_CURRENT_BINARY_DIR}/include/esp_parts.gen)
   if(HAS_EMBEDDED_ESP32)
     add_resource("esp32/uart_wifi.bin" "/esp/uart_wifi.bin")

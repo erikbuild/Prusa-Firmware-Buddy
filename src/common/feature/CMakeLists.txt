@@ -35,6 +35,7 @@ endif()
 add_subdirectory(print_status_message)
 
 if(HAS_AUTO_RETRACT)
+  add_subdirectory(retract_tracker)
   add_subdirectory(auto_retract)
 endif()
 
@@ -46,5 +47,11 @@ if(FILAMENT_SENSOR)
   add_subdirectory(filament_sensor)
 endif()
 
+if(HAS_LOADCELL)
+  add_subdirectory(nozzle_cleaning_failed)
+endif()
+
 add_subdirectory(ramming)
 add_subdirectory(cork)
+add_subdirectory(safety_timer)
+add_subdirectory(stepper_timeout)

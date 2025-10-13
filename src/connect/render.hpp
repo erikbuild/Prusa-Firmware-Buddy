@@ -95,7 +95,9 @@ struct RenderState {
     FileExtra file_extra;
     // XXX: Variantize
     std::optional<Printer::NetInfo> lan;
+#if HAS_ESP()
     std::optional<Printer::NetInfo> wifi;
+#endif
 
     std::optional<transfers::TransferId> transfer_id = std::nullopt;
     std::optional<CommandId> background_command_id = std::nullopt;

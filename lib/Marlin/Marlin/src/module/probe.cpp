@@ -90,6 +90,16 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
 
 #include <feature/print_status_message/print_status_message_guard.hpp>
 
+#include <option/has_auto_retract.h>
+#include <mapi/motion.hpp>
+#include <gcode/temperature/M104_M109.hpp>
+#include <config_store/store_instance.hpp>
+#include <marlin_vars.hpp>
+
+#if HAS_AUTO_RETRACT()
+  #include <feature/auto_retract/auto_retract.hpp>
+#endif
+
 #if ENABLED(Z_PROBE_SLED)
 
   #ifndef SLED_DOCKING_OFFSET
@@ -684,16 +694,19 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
         METRIC_DEF(analysis_result, "probe_analysis", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
         auto result = loadcell.analysis.Analyse();
 
-        if (result.isGood) {
+        if (result.has_value()) {
           success = true;
-          last_probe_z = result.zCoordinate;
+          last_probe_z = result->z_coordinate;
           metric_record_custom(&analysis_result, " ok=%i,desc=\"all-good\"", true);
           SERIAL_ECHO_MSG("Probe classified as clean and OK");
           break;
+
         } else {
-          metric_record_custom(&analysis_result, " ok=%i,desc=\"%s\"", false, result.description);
+          const auto &err = result.error();
+          metric_record_custom(&analysis_result, " ok=%i,desc=\"%s\",arg=%f", false, err.description, err.arg);
           SERIAL_ECHO_START();
-          SERIAL_ECHOPAIR("Probe classified as NOK (", result.description);
+          SERIAL_ECHOPAIR("Probe classified as NOK (", err.description);
+          SERIAL_ECHOPAIR(", ", err.arg);
           SERIAL_ECHOLN(")");
         }
       #elif TOTAL_PROBING > 2
@@ -763,10 +776,63 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
 
 #if ENABLED(NOZZLE_LOAD_CELL) && ENABLED(PROBE_CLEANUP_SUPPORT)
 
+#if HAS_AUTO_RETRACT()
+void prepare_for_nozzle_cleaning() {
+  // Do not retract on unknown retracted_distance
+  const auto retracted_distance = buddy::auto_retract().retracted_distance().value_or(10);
+  const bool do_not_autoretract = config_store().get_filament_type(active_extruder).parameters().do_not_auto_retract;
+
+  // Do not auto retract filaments marked do_not_auto_retract, they might get tangled in the extruder (BFW-6953)
+  // Skip if retracted distance is known and filament is out of the nozzle
+  if (!do_not_autoretract && retracted_distance < 5.0f) {
+
+    // Save target temperature to put back at the end
+    const auto previous_target_temp = static_cast<float>(thermalManager.degTargetHotend(active_extruder));
+
+    // Ensure safe temperature
+    const M109Flags flags_pre = {
+      // Filament target temperature can be altered through PrusaSlicer
+      // We don't have access to this information here, so we use filament presets
+      // Filament had to be loaded with the preset's temperature anyway, so we should be able to retract with it
+      // TODO: Could be passed to G29 as a parameter
+      .target_temp = static_cast<float>(config_store().get_filament_type(active_extruder).parameters().nozzle_temperature),
+    };
+    M109_no_parser(active_extruder, flags_pre);
+
+    {
+      PrintStatusMessageGuard pmg_retract;
+      pmg_retract.update<PrintStatusMessage::auto_retracting>({});
+
+      // Retract to standard distance 
+      const auto hotend = marlin_vars().active_hotend_id();
+      const auto standard_distance = buddy::AutoRetract::minimum_auto_retract_distance;
+      const auto retract_compensation_distance = (-1) * (standard_distance - retracted_distance);
+      assert(retract_compensation_distance < 0);
+      buddy::auto_retract().set_retracted_distance(hotend, std::nullopt);
+      mapi::extruder_move(retract_compensation_distance, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+      planner.synchronize();
+      buddy::auto_retract().set_retracted_distance(hotend, standard_distance);
+    }
+
+    const M109Flags flags_post = {
+      .target_temp = previous_target_temp,
+      .wait_heat_or_cool = true,
+    };
+    M109_no_parser(active_extruder, flags_post);
+  }
+}
+#endif
+
 /**
  * @brief Probe within a given rectangle in order to cleanup loadcell-based probe.
  */
 bool cleanup_probe(const xy_pos_t &rect_min, const xy_pos_t &rect_max) {
+  GcodeSuite::G28_no_parser(true, true, true,
+    {
+        .only_if_needed = true,
+        .precise = false
+    });
+
   float radius = 1.0f;
   bool probe_deployed = false;
   const int required_clean_cnt = 3;
@@ -786,6 +852,13 @@ bool cleanup_probe(const xy_pos_t &rect_min, const xy_pos_t &rect_max) {
     planner.apply_settings(s);
   }
 
+  #if HAS_AUTO_RETRACT()
+  if (config_store().pre_nozzle_cleaning_retraction_enable.get()) {
+    // If retracted distance is known, we should retract to avoid nozzle cleaning fail often occurring with the filament in the nozzle
+    prepare_for_nozzle_cleaning();
+  }
+  #endif // HAS_AUTO_RETRACT()
+  
   PrintStatusMessageGuard pmg;
   pmg.update<PrintStatusMessage::nozzle_cleaning>({});
 
@@ -836,7 +909,7 @@ bool cleanup_probe(const xy_pos_t &rect_min, const xy_pos_t &rect_max) {
   if (probe_deployed) {
     STOW_PROBE();
   }
-
+  
   return consecutive_clean_cnt >= required_clean_cnt;
 }
 #endif

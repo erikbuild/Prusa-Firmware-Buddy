@@ -141,19 +141,6 @@
 
 // @section extruder
 
-// Extruder runout prevention.
-// If the machine is idle and the temperature over MINTEMP
-// then extrude some filament every couple of SECONDS.
-//#define EXTRUDER_RUNOUT_PREVENT
-#if ENABLED(EXTRUDER_RUNOUT_PREVENT)
-    #define EXTRUDER_RUNOUT_MINTEMP 190
-    #define EXTRUDER_RUNOUT_SECONDS 30
-    #define EXTRUDER_RUNOUT_SPEED 1500 // (mm/m)
-    #define EXTRUDER_RUNOUT_EXTRUDE 5 // (mm)
-#endif
-
-// @section extruder
-
 /**
  * Extruder cooling fans
  *
@@ -1354,14 +1341,6 @@
 //#define SPEED_POWER_MIN       10
 //#define SPEED_POWER_MAX      100      // 0-100%
 #endif
-
-/**
- * CNC Coordinate Systems
- *
- * Enables G53 and G54-G59.3 commands to select coordinate systems
- * and G92.1 to reset the workspace to native machine space.
- */
-//#define CNC_COORDINATE_SYSTEMS
 
 /**
  * Auto-report temperatures with M155 S<seconds>

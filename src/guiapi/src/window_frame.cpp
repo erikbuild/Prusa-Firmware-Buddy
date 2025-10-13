@@ -23,6 +23,9 @@ window_frame_t::window_frame_t(window_t *parent, Rect16 rect, positioning sub_wi
 }
 
 window_frame_t::~window_frame_t() {
+    // The frame should have no children
+    assert(!first_normal);
+    assert(!last_normal);
 }
 
 void window_frame_t::SetMenuTimeoutClose() { flags.timeout_close = is_closed_on_timeout_t::yes; }

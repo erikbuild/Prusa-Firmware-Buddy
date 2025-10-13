@@ -349,7 +349,7 @@ Sleep Planner::sleep(Duration amount, http::Connection *wake_on_readable, bool c
         wake_on_readable = nullptr;
     }
 
-    // Don't do anything "extra" during bluescreen/redscreen.
+    // Don't do anything "extra" in error screen.
     if (printer.is_in_error()) {
         return Sleep(amount, nullptr, nullptr, wake_on_readable, false, false);
     }

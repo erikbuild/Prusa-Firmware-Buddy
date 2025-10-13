@@ -51,7 +51,7 @@ const char *BlockSequenceValidator::metadata_found(FileHeader file_header, Block
 }
 
 const char *BlockSequenceValidator::identity_block_found(FileHeader file_header, BlockHeader block_header) {
-    if (last_metadata_pos_end != block_header.get_position()) {
+    if (last_metadata_pos_end != 0 && last_metadata_pos_end != block_header.get_position()) {
         return additional_data;
     }
     have_identity_block = true;

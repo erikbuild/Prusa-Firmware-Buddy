@@ -375,6 +375,7 @@ namespace {
                             JSON_MAC("lan_mac", state.lan->mac) JSON_COMMA;
                             JSON_IP("lan_ipv4", state.lan->ip) JSON_COMMA;
                         }
+#if HAS_ESP()
                         if (state.wifi.has_value()) {
                             if (strlen(creds.ssid) > 0) {
                                 JSON_FIELD_STR("wifi_ssid", creds.ssid) JSON_COMMA;
@@ -382,6 +383,7 @@ namespace {
                             JSON_MAC("wifi_mac", state.wifi->mac) JSON_COMMA;
                             JSON_IP("wifi_ipv4", state.wifi->ip) JSON_COMMA;
                         }
+#endif
                         JSON_FIELD_STR("hostname", creds.hostname);
                     JSON_OBJ_END JSON_COMMA;
 
@@ -1082,7 +1084,9 @@ RenderState::RenderState(const Printer &printer, const Action &action, optional<
     : printer(printer)
     , action(action)
     , lan(printer.net_info(Printer::Iface::Ethernet))
+#if HAS_ESP()
     , wifi(printer.net_info(Printer::Iface::Wifi))
+#endif
     , transfer_id(Monitor::instance.id())
     , background_command_id(background_command_id) {
     memset(&st, 0, sizeof st);

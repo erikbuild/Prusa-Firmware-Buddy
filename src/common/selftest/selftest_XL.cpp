@@ -436,11 +436,6 @@ void CSelftest::Loop() {
 void CSelftest::phaseDidSelftestPass() {
     m_result = config_store().selftest_result.get();
     SelftestResult_Log(m_result);
-
-    // dont run wizard again
-    if (SelftestResult_Passed_All(m_result)) {
-        config_store().run_selftest.set(false);
-    }
 }
 
 bool CSelftest::Abort() {
@@ -481,7 +476,7 @@ void CSelftest::phaseSelftestStart() {
 
     if (m_Mask & to_one_hot(stsHeaters_noz_ena)) {
         // no need to preheat nozzle, it heats up much faster than bed
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             thermalManager.setTargetHotend(0, e);
             marlin_server::set_temp_to_display(0, e);
         }
@@ -504,7 +499,7 @@ void CSelftest::phaseSelftestStart() {
         m_result.bed = TestResult_Unknown;
     }
     if (m_Mask & to_one_hot(stsHeaters_noz_ena)) {
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             m_result.tools[e].nozzle = TestResult_Unknown;
         }
     }
@@ -514,7 +509,7 @@ void CSelftest::phaseSelftestStart() {
 void CSelftest::restoreAfterSelftest() {
     // disable heater target values - thermalManager.disable_all_heaters does not do that
     thermalManager.setTargetBed(0);
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (buddy::puppies::dwarfs[e].is_enabled()) {
             thermalManager.setTargetHotend(0, e);
         }

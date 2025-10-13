@@ -38,6 +38,9 @@
 #include <inject_queue.hpp>
 #include <buddy/unreachable.hpp>
 #include <utils/string_builder.hpp>
+#include <utils/mutex_atomic.hpp>
+#include <feature/safety_timer/safety_timer.hpp>
+#include <feature/stepper_timeout/stepper_timeout.hpp>
 
 #include "../Marlin/src/lcd/extensible_ui/ui_api.h"
 #include "../Marlin/src/gcode/queue.h"
@@ -79,6 +82,7 @@
 #include "metric.h"
 #include "app_metrics.h"
 #include "media_prefetch_instance.hpp"
+#include <common/sensor_data.hpp>
 
 #include <option/has_leds.h>
 
@@ -100,6 +104,7 @@
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_emergency_stop.h>
 #include <option/has_uneven_bed_prompt.h>
+#include <option/has_nextruder.h>
 
 #if HAS_DWARF()
     #include <puppies/Dwarf.hpp>
@@ -175,6 +180,7 @@
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
     #include <feature/auto_retract/auto_retract.hpp>
+    #include <feature/retract_tracker/retract_tracker.hpp>
 #endif
 
 #include <option/buddy_enable_wui.h>
@@ -209,6 +215,16 @@ Publisher<> idle_publisher;
 void media_prefetch_lazy_start();
 void media_prefetch_start();
 
+/// Queue for requests with parameters
+RequestQueue request_queue;
+
+/// Bitset for requests that don't need parameters
+std::atomic<uint32_t> request_flags = 0;
+static_assert(std::to_underlying(RequestFlag::_cnt) <= 32, "There are more flags than bits");
+
+/// FSM response to be processed by the server
+static MutexAtomic<EncodedFSMResponse, freertos::Mutex> fsm_response = empty_encoded_fsm_response;
+
 namespace {
 
     struct server_t {
@@ -220,14 +236,10 @@ namespace {
 #if ENABLED(CRASH_RECOVERY) //
         bool aborting_did_crash_trigger = false; // To remember crash_s state when aborting
 #endif /*ENABLED(CRASH_RECOVERY)*/
-        uint32_t paused_ticks; // tick count in moment when printing paused
         resume_state_t resume; // resume data (state before pausing)
-        bool enable_nozzle_temp_timeout; // enables nozzle temperature timeout in print pause
         uint32_t last_update; // last update tick count
         uint16_t flags; // server flags (MARLIN_SFLG)
-        uint32_t knob_click_counter = 0; // Hold user knob clicks for safety timer
-        uint32_t knob_move_counter = 0; // Holds user knob moves for safety timer
-        KnobMove last_knob_move = KnobMove::NoMove; // Last knob move direction (used for belt tuning)
+        int32_t knob_position = 0; /// Increased with each knob move up, decreased with each knob move down
 #if ENABLED(AXIS_MEASURE)
         /// length of axes measured after crash
         /// negative numbers represent undefined length
@@ -240,8 +252,6 @@ namespace {
         bool mmu_maintenance_checked = false;
 #endif
     };
-    std::atomic<uint32_t> request_flags = 0;
-    static_assert(std::to_underlying(RequestFlag::_cnt) <= 32, "There are more flags than bits");
 
     server_t server; // server structure - initialize task to zero
 
@@ -310,7 +320,7 @@ namespace {
             }
 
             if (disable_hotend) {
-                HOTEND_LOOP() {
+                for (int8_t e = 0; e < HOTENDS; e++) {
                     thermalManager.setTargetHotend(0, e);
                     set_temp_to_display(0, e);
                 }
@@ -448,10 +458,7 @@ namespace {
         SerialPrinting::pause();
 
         print_job_timer.pause();
-        HOTEND_LOOP() {
-            server.resume.nozzle_temp[e] = marlin_vars().hotend(e).target_nozzle; // save nozzle target temp
-        }
-        server.resume.nozzle_temp_paused = true;
+        server.resume.nozzle_temp = buddy::safety_timer().original_hotend_targets();
         server.resume.fan_speed = marlin_vars().print_fan_speed; // save fan speed
         server.resume.print_speed = marlin_vars().print_speed;
 #if FAN_COUNT > 0
@@ -543,6 +550,11 @@ static void update_warning_fsm() {
         // Avoid reinit of warning timestamp timer if warning is already shown
         if (!fsm_states[ClientFSM::Warning].has_value() || fsm_states[ClientFSM::Warning]->GetData() != data) {
             active_warning_pop_timestamp_sec = ticks_s();
+
+            // Clear any pending responses for this FSM.
+            // The displayed warning has changed, we don't want some stray response to be accidentally processed
+            clear_fsm_response(ClientFSM::Warning);
+
             fsm_create(warning_type_phase(type), data);
         }
     } else {
@@ -551,8 +563,7 @@ static void update_warning_fsm() {
 }
 
 void set_warning(WarningType type) {
-    log_warning(MarlinServer, "Warning type %d set", (int)type);
-    log_info(MarlinServer, "WARNING: %" PRIu32, std::to_underlying(type));
+    log_info(MarlinServer, "set_warning(%" PRIu32 ")", std::to_underlying(type));
 
     warning_flags.set(std::to_underlying(type));
     update_warning_fsm();
@@ -597,8 +608,15 @@ void fsm_destroy(ClientFSM type) {
 void fsm_change(FSMAndPhase fsm_and_phase, fsm::PhaseData data) {
     const auto base_data = fsm::BaseData(fsm_and_phase.phase, data);
 
-    if (fsm_states[fsm_and_phase.fsm] != base_data) {
-        fsm_states[fsm_and_phase.fsm] = base_data;
+    auto &fsm_state = fsm_states[fsm_and_phase.fsm];
+
+    if (fsm_state->GetPhase() != fsm_and_phase.phase) {
+        // Clear any pending responses for this FSM. They might have been sent a long time ago and we don't want them to affect the behavior.
+        marlin_server::clear_fsm_response(fsm_and_phase.fsm);
+    }
+
+    if (fsm_state != base_data) {
+        fsm_state = base_data;
         commit_fsm_states();
     }
 }
@@ -613,13 +631,6 @@ static void fsm_destroy_and_create(ClientFSM old_type, ClientFSM new_type, fsm::
 // variables
 
 osThreadId server_task = 0; // task handle
-ServerQueue server_queue;
-
-constexpr EncodedFSMResponse empty_encoded_fsm_response = {
-    .response = {},
-    .fsm_and_phase = FSMAndPhase(static_cast<ClientFSM>(0xff), 0xff),
-};
-static EncodedFSMResponse server_side_encoded_fsm_response = empty_encoded_fsm_response;
 
 /// Whether marlin_server::cycle() is currently running - for nesting prevention
 static bool is_cycle_running = false;
@@ -649,7 +660,6 @@ void init(void) {
         server.notify_changes[i] = 0; // by default nothing
     }
     server_task = osThreadGetId();
-    server.enable_nozzle_temp_timeout = true;
 
     // Random at boot, to avoid chance of reusing the same (0/1) dialog ID
     // after a reboot.
@@ -791,6 +801,12 @@ static void cycle() {
     buddy::xbuddy_extension().step();
 #endif
 
+    buddy::safety_timer().step();
+
+    // Although the timeout should never trigger within idle() (= when a gcode is run),
+    // We still need to run the step() there to prevent "sampling bias" so that the timer could reset itself during movements and single-injected gcodes
+    buddy::stepper_timeout().step();
+
     record_fanctl_metrics();
 
     idle_publisher.call_all();
@@ -843,7 +859,7 @@ static void cycle() {
 
     process_request_flags();
 
-    if (Request request; server_queue.try_receive(request, 0)) {
+    if (Request request; request_queue.try_receive(request, 0)) {
         _process_server_request(request);
     }
 
@@ -864,6 +880,20 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
         return false; // We are not ready yet, we need to wait for the loader to finish buffering
     }
 #endif // HAS_NOZZLE_CLEANER()
+
+#if HAS_AUTO_RETRACT()
+    // During multi tool printing, slicer handles retraction/ramming and keeps FW in the dark
+    // RetractTracker keeps track of retracted distances on each hotend
+    // This overwrites retracted distances in persistent storage with temporary ones from RetractTracker
+    for (uint8_t i = 0; i < HOTENDS; i++) {
+        const auto dist = buddy::retract_tracker().get_retracted_distance(i);
+        // Do not save retract_tracker value before it was validated
+        if (dist.has_value()) {
+            // update only used hotends
+            buddy::auto_retract().set_retracted_distance(i, dist);
+        }
+    }
+#endif
 
 #if ENABLED(PRUSA_MMU2)
     if (MMU2::mmu2.Enabled() && (!finished || GCodeInfo::getInstance().is_singletool_gcode())) {
@@ -1110,7 +1140,7 @@ static void settings_load() {
     Temperature::temp_bed.pid.Kd = config_store().pid_bed_d.get();
 #endif
 #if ENABLED(PIDTEMP)
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         Temperature::temp_hotend[e].pid.Kp = config_store().pid_nozzle_p.get();
         Temperature::temp_hotend[e].pid.Ki = config_store().pid_nozzle_i.get();
         Temperature::temp_hotend[e].pid.Kd = config_store().pid_nozzle_d.get();
@@ -1197,6 +1227,9 @@ bool is_processing() {
     return queue.has_commands_queued()
         || planner.processing()
         || gcode.busy_state != GcodeSuite::NOT_BUSY // We might be still in the gcode (while no commands are queued)
+#if HAS_SELFTEST()
+        || SelftestInstance().IsInProgress() // Some selftests are still not gcodes :(
+#endif
         || !inject_queue.is_empty() //
         ;
 }
@@ -1303,7 +1336,7 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
             get_LFN(filename_lfn.data(), filename_lfn.size(), filepath_sfn.data());
         });
         while (async_job.is_active()) {
-            ::idle(true, true);
+            ::idle(true);
         }
 
         // Update marlin vars
@@ -1435,15 +1468,6 @@ void print_pause(void) {
     }
 }
 
-/**
- * @brief Restore paused nozzle temperature to enable filament change
- */
-void unpause_nozzle(const uint8_t extruder) {
-    thermalManager.setTargetHotend(server.resume.nozzle_temp[extruder], extruder);
-    set_temp_to_display(server.resume.nozzle_temp[extruder], extruder);
-    server.resume.nozzle_temp_paused = false;
-}
-
 #if ENABLED(CRASH_RECOVERY)
 /**
  * @brief Go to homing or measure axis and follow with homing.
@@ -1473,7 +1497,7 @@ static void prepare_tool_pickup() {
     disable_XY(); // Let user move the carriage
 
     // Disable heaters
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if ((marlin_vars().hotend(e).target_nozzle > 0)) {
             thermalManager.setTargetHotend(0, e);
             set_temp_to_display(0, e);
@@ -1710,7 +1734,7 @@ void update_sfn() {
     });
 
     while (async_job.is_active()) {
-        ::idle(true, true);
+        ::idle(true);
     }
 
     // We haven't found the file -> do nothing. Fail open is sorted out later in the code.
@@ -1764,25 +1788,6 @@ void try_recover_from_media_error() {
         // print_state.recover_media_error_backoff.get().reset();
         print_resume();
     }
-}
-
-// Fast temperature recheck.
-// Does not check stability of the temperature.
-bool print_reheat_ready() {
-    // check nozzles
-    HOTEND_LOOP() {
-        auto &extruder = marlin_vars().hotend(e);
-        if (extruder.target_nozzle != server.resume.nozzle_temp[e] || (extruder.target_nozzle > 0 && extruder.temp_nozzle < (extruder.target_nozzle - TEMP_HYSTERESIS))) {
-            return false;
-        }
-    }
-
-    // check bed
-    if (marlin_vars().temp_bed < (marlin_vars().target_bed - TEMP_BED_HYSTERESIS)) {
-        return false;
-    }
-
-    return true;
 }
 
 #if ENABLED(POWER_PANIC)
@@ -1893,25 +1898,6 @@ void set_axes_length(xy_float_t xy) {
 }
 #endif // ENABLED(AXIS_MEASURE)
 
-static const uint8_t PAUSE_NOZZLE_TIMEOUT = 45; // nozzle "sleep" after 45s inside paused state
-
-void nozzle_timeout_on() {
-    server.enable_nozzle_temp_timeout = true;
-};
-void nozzle_timeout_off() {
-    server.enable_nozzle_temp_timeout = false;
-}
-void nozzle_timeout_loop() {
-    if ((ticks_ms() - server.paused_ticks > (1000 * PAUSE_NOZZLE_TIMEOUT)) && server.enable_nozzle_temp_timeout) {
-        HOTEND_LOOP() {
-            if ((marlin_vars().hotend(e).target_nozzle > 0)) {
-                thermalManager.setTargetHotend(0, e);
-                set_temp_to_display(0, e);
-            }
-        }
-    }
-}
-
 // Checking valid behaviour of Heatbreak fan & Print fan of currently active extruder/tool
 bool active_extruder_fan_checks() {
     if (marlin_vars().fan_check_enabled
@@ -1941,6 +1927,8 @@ bool active_extruder_fan_checks() {
 }
 
 static void resuming_reheating() {
+    buddy::safety_timer().reset_restore_nonblocking();
+
     if (hotendErrorChecker.isFailed()) {
         set_warning(WarningType::HotendTempDiscrepancy);
         thermalManager.setTargetHotend(0, 0);
@@ -1948,6 +1936,7 @@ static void resuming_reheating() {
         thermalManager.set_fan_speed(0, 255);
 #endif
         server.print_state = State::Paused;
+        return;
     }
 
     if (active_extruder_fan_checks()) {
@@ -1956,15 +1945,15 @@ static void resuming_reheating() {
     }
 
     // Check if nozzles are being reheated
-    HOTEND_LOOP() {
-        if (thermalManager.degTargetHotend(e) == 0 && server.resume.nozzle_temp[e] > 0) {
+    for (uint8_t hotend = 0; hotend < HOTENDS; hotend++) {
+        if (Temperature::degTargetHotend(hotend) != server.resume.nozzle_temp[hotend]) {
             // Stopped reheating, can happen if there is an error during reheating
             server.print_state = State::Paused;
             return;
         }
     }
 
-    if (!print_reheat_ready()) {
+    if (!Temperature::are_all_temperatures_reached()) {
         return;
     }
 
@@ -2083,12 +2072,14 @@ static void _server_print_loop(void) {
                 bool is_relative = gcode.axis_is_relative(AxisEnum::E_AXIS);
 
                 enqueue_gcode("M82"); // set E to absolute positions
-    #if HAS_LOADCELL()
+    #if HAS_NEXTRUDER()
                 enqueue_gcode("G1 E25 F1860"); // push filament into the nozzle - load distance from fsensor into nozzle tuned (hardcoded) for now
                 enqueue_gcode("G1 E35 F300"); // slowly push another 10mm (absolute E)
-    #else
+    #elif PRINTER_IS_PRUSA_MK3_5()
                 enqueue_gcode("G1 E50 F1860"); // push filament into the nozzle - load distance from fsensor into nozzle tuned (hardcoded) for now
                 enqueue_gcode("G1 E62 F300"); // slowly push another 12mm (absolute E)
+    #else
+        #error
     #endif
                 if (is_relative) {
                     enqueue_gcode("M83"); // set E back to relative positions
@@ -2119,7 +2110,7 @@ static void _server_print_loop(void) {
             feedrate_percentage = 100;
 
             // Reset flow factor for all extruders
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
                 planner.flow_percentage[e] = 100;
                 planner.refresh_e_factor(e);
             }
@@ -2225,13 +2216,10 @@ static void _server_print_loop(void) {
         break;
     case State::Pausing_ParkHead:
         if (!planner.processing()) {
-            server.paused_ticks = ticks_ms(); // time when printing paused
             server.print_state = State::Paused;
         }
         break;
     case State::Paused:
-        nozzle_timeout_loop();
-        gcode.reset_stepper_timeout(); // prevent disable axis
         // resume queuing serial commands (to be able to resume)
         GCodeQueue::pause_serial_commands = false;
 
@@ -2406,10 +2394,11 @@ static void _server_print_loop(void) {
         }
 
         thermalManager.disable_all_heaters();
+
 #if FAN_COUNT > 0
         thermalManager.set_fan_speed(0, 0);
 #endif
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             set_temp_to_display(0, e);
         }
 
@@ -2581,7 +2570,6 @@ static void _server_print_loop(void) {
     #if HAS_TOOLCHANGER()
     case State::CrashRecovery_ToolchangePowerPanic: {
         // server.resume.nozzle_temp is already configured by powerpanic
-        server.resume.nozzle_temp_paused = true; // Nozzle temperatures are stored in server.resume
         endstops.enable_globally(false);
         crash_recovery_begin_toolchange(); // Also sets server.print_state
         break;
@@ -2670,7 +2658,6 @@ static void _server_print_loop(void) {
         } else {
             Crash_recovery_tool_fsm cr_fsm(prusa_toolchanger.get_enabled_mask(), prusa_toolchanger.get_parked_mask());
             fsm_change(PhasesCrashRecovery::tool_recovery, cr_fsm.Serialize());
-            gcode.reset_stepper_timeout(); // Prevent disable axis
         }
         break;
     }
@@ -2705,7 +2692,6 @@ static void _server_print_loop(void) {
             fsm_destroy(ClientFSM::CrashRecovery);
             break;
         }
-        server.paused_ticks = ticks_ms(); // time when printing paused
     #if ENABLED(AXIS_MEASURE)
         Axis_length_t alok = xy_axes_length_ok();
         if (alok != Axis_length_t::ok) {
@@ -2722,7 +2708,6 @@ static void _server_print_loop(void) {
         break;
     }
     case State::CrashRecovery_HOMEFAIL: {
-        nozzle_timeout_loop();
         switch (marlin_server::get_response_from_phase(PhasesCrashRecovery::home_fail)) {
         case Response::Retry: {
             Crash_recovery_fsm cr_fsm(SelftestSubtestState_t::running, SelftestSubtestState_t::undef);
@@ -2733,11 +2718,9 @@ static void _server_print_loop(void) {
         default:
             break;
         }
-        gcode.reset_stepper_timeout(); // Prevent disable axis
         break;
     }
     case State::CrashRecovery_Axis_NOK: {
-        nozzle_timeout_loop();
         switch (marlin_server::get_response_from_phase(PhasesCrashRecovery::axis_NOK)) {
         case Response::Retry:
             measure_axes_and_home();
@@ -2755,11 +2738,9 @@ static void _server_print_loop(void) {
             server.print_state = State::Paused;
             fsm_destroy(ClientFSM::CrashRecovery);
         }
-        gcode.reset_stepper_timeout(); // prevent disable axis
         break;
     }
     case State::CrashRecovery_Repeated_Crash: {
-        nozzle_timeout_loop();
         switch (marlin_server::get_response_from_phase(PhasesCrashRecovery::repeated_crash)) {
         case Response::Resume:
             server.print_state = State::Resuming_Begin;
@@ -2771,7 +2752,6 @@ static void _server_print_loop(void) {
             server.print_state = State::Paused;
             fsm_destroy(ClientFSM::CrashRecovery);
         }
-        gcode.reset_stepper_timeout(); // prevent disable axis
         break;
     }
 #endif // ENABLED(CRASH_RECOVERY)
@@ -2795,7 +2775,7 @@ static void _server_print_loop(void) {
 #endif
 
     if (do_fan_check) {
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
 #if !PRINTER_IS_PRUSA_iX()
             const auto fan_state = Fans::heat_break(e).get_state();
             hotendFanErrorChecker[e].checkTrue(fan_state != CFanCtlCommon::FanState::error_running && fan_state != CFanCtlCommon::FanState::error_starting, WarningType::HotendFanError, true, true);
@@ -2829,7 +2809,7 @@ static void _server_print_loop(void) {
 #endif
     }
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (Fans::heat_break(e).get_rpm_is_ok()) {
             hotendFanErrorChecker[e].reset();
         }
@@ -2839,7 +2819,7 @@ static void _server_print_loop(void) {
     }
 
 #if HAS_TEMP_HEATBREAK
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
     #if ENABLED(PRUSA_TOOLCHANGER)
         if (!prusa_toolchanger.is_tool_enabled(e)) {
             continue;
@@ -2868,7 +2848,7 @@ static void _server_print_loop(void) {
     // Check MCU temperatures
     mcuMaxTempErrorChecker.check(AdcGet::getMCUTemp(), WarningType::BuddyMCUMaxTemp, "Buddy");
 #if HAS_DWARF()
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (prusa_toolchanger.is_tool_enabled(e)) {
             dwarfMaxTempErrorChecker[e].check(buddy::puppies::dwarfs[e].get_mcu_temperature(), WarningType::DwarfMCUMaxTemp, dwarf_names[e]);
         }
@@ -2881,14 +2861,14 @@ static void _server_print_loop(void) {
 
 void resuming_begin(void) {
     // Reset errors, so it can be triggered immediately again
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         hotendFanErrorChecker[e].reset();
     }
     printFanErrorChecker.reset();
 
     mcuMaxTempErrorChecker.reset();
 #if HAS_DWARF()
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (prusa_toolchanger.is_tool_enabled(e)) {
             dwarfMaxTempErrorChecker[e].reset();
         }
@@ -2898,28 +2878,15 @@ void resuming_begin(void) {
     modbedMaxTempErrorChecker.reset();
 #endif /*HAS_REMOTE_BED()*/
 
-    nozzle_timeout_on(); // could be turned off after pause by changing temperature.
-    if (print_reheat_ready()) {
-
-#if ENABLED(CRASH_RECOVERY)
-        if (crash_s.get_state() == Crash_s::REPEAT_WAIT) {
-            // Skip unpark when recovering from toolcrash or homing fail
-            server.print_state = State::Resuming_UnparkHead_ZE;
-        } else
-#endif /*ENABLED(CRASH_RECOVERY)*/
-        {
-            unpark_head_XY();
-            server.print_state = State::Resuming_UnparkHead_XY;
-        }
-    } else {
-        HOTEND_LOOP() {
-            unpause_nozzle(e);
-        }
-#if FAN_COUNT > 0
-        thermalManager.set_fan_speed(0, 0); // disable print fan
-#endif
-        server.print_state = State::Resuming_Reheating;
+    for (uint8_t hotend = 0; hotend < HOTENDS; hotend++) {
+        thermalManager.setTargetHotend(server.resume.nozzle_temp[hotend], hotend);
+        set_temp_to_display(server.resume.nozzle_temp[hotend], hotend);
     }
+
+#if FAN_COUNT > 0
+    thermalManager.set_fan_speed(0, 0); // disable print fan
+#endif
+    server.print_state = State::Resuming_Reheating;
 
     if (!server.print_is_serial) {
         media_prefetch_start();
@@ -2946,6 +2913,13 @@ void set_media_position(uint32_t set) {
 }
 
 void retract() {
+#if HAS_AUTO_RETRACT()
+    if (buddy::auto_retract().will_deretract()) {
+        // Filament is already retracted, don't retact it more
+        return;
+    }
+#endif
+
 // server.motion_param.save_reset();  // TODO: currently disabled (see Crash_s::save_parameters())
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
     float mm = PAUSE_PARK_RETRACT_LENGTH / planner.e_factor[active_extruder];
@@ -2956,7 +2930,7 @@ void retract() {
 void lift_head() {
     const float distance = std::min<float>(
                                std::max<float>({
-                                   Z_NOZZLE_PARK_RISE + current_position.z,
+                                   Z_NOZZLE_PARK_RISE + std::max(current_position.z, planner.max_printed_z),
 #ifdef Z_NOZZLE_PARK_POINT_MIN
                                    Z_NOZZLE_PARK_POINT_MIN,
 #endif
@@ -2976,12 +2950,15 @@ void lift_head() {
         // If the Z is not homed, do a "homing" move with quickstops that will stop as soon as we hit the limits
         TemporaryGlobalEndstopsState _es(true);
 
+        auto cpz = current_position.z;
+
         // do_homing_move does not update current position, we have to do it manually
         // have to use HOMING_FEEDRATE, otherwise the stallguards might not trigger
         if (do_homing_move(Z_AXIS, distance, MMM_TO_MMS(HOMING_FEEDRATE_INVERTED_Z))) {
             current_position.z = Z_MAX_POS;
         } else {
-            current_position.z += distance;
+            // BFW-7734 but sometimes it zeroes Z - this is to prevent ceiling hit tests from triggering in such a case
+            current_position.z = cpz + distance;
         }
         sync_plan_position();
     }
@@ -3086,18 +3063,8 @@ void set_resume_data(const resume_state_t *data) {
     server.resume = *data;
 }
 
-extern uint32_t get_user_click_count(void) {
-    return server.knob_click_counter;
-}
-
-extern uint32_t get_user_move_count(void) {
-    return server.knob_move_counter;
-}
-
-extern KnobMove get_last_knob_move(void) {
-    KnobMove move = server.last_knob_move;
-    server.last_knob_move = KnobMove::NoMove; // reset after reading
-    return move;
+int32_t get_knob_position() {
+    return server.knob_position;
 }
 
 //-----------------------------------------------------------------------------
@@ -3198,7 +3165,7 @@ static void _server_update_vars() {
         marlin_vars().logical_curr_pos[i] = curr_pos_mm[i];
     }
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         auto &extruder = marlin_vars().hotend(e);
 
         extruder.temp_nozzle = thermalManager.degHotend(e);
@@ -3346,9 +3313,6 @@ bool _process_server_valid_request(const Request &request, int client_id) {
     case Request::Type::SetWarning:
         set_warning(request.warning_type);
         return true;
-    case Request::Type::FSM:
-        server_side_encoded_fsm_response = request.encoded_fsm_response;
-        return true;
     case Request::Type::EventMask:
         server.notify_events[client_id] = request.event_mask;
         // Send Event::MediaInserted event if media currently inserted
@@ -3419,15 +3383,15 @@ static void process_request_flags() {
             print_exit();
             break;
         case RequestFlag::KnobMoveUp:
-            server.last_knob_move = KnobMove::Up;
-            server.knob_move_counter++;
+            buddy::safety_timer().reset_norestore();
+            server.knob_position++;
             break;
         case RequestFlag::KnobMoveDown:
-            server.last_knob_move = KnobMove::Down;
-            server.knob_move_counter++;
+            buddy::safety_timer().reset_norestore();
+            server.knob_position--;
             break;
         case RequestFlag::KnobClick:
-            server.knob_click_counter++;
+            buddy::safety_timer().reset_restore_nonblocking();
             break;
 #if HAS_SELFTEST()
         case RequestFlag::TestAbort:
@@ -3501,17 +3465,10 @@ static void _server_set_var(const Request &request) {
     }
 
     // Now see if extruder variable is set
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         auto &extruder = marlin_vars().hotend(e);
         if (reinterpret_cast<uintptr_t>(&extruder.target_nozzle) == variable_identifier) {
             extruder.target_nozzle = request.set_variable.float_value;
-
-            // if print is paused we want to change the resume temp and turn off timeout
-            // this prevents going back to temperature before pause and enables to heat nozzle during pause
-            if (server.print_state == State::Paused) {
-                nozzle_timeout_off();
-                server.resume.nozzle_temp[e] = extruder.target_nozzle;
-            }
             thermalManager.setTargetHotend(extruder.target_nozzle, e);
             return;
         } else if (reinterpret_cast<uintptr_t>(&extruder.flow_factor) == variable_identifier) {
@@ -3534,28 +3491,45 @@ FSMResponseVariant get_response_variant_from_phase(FSMAndPhase fsm_and_phase, bo
     // If it isn't, something's probably wrong
     assert(fsm_states[fsm_and_phase.fsm].has_value());
 
-    const EncodedFSMResponse value = server_side_encoded_fsm_response;
-    if (value.fsm_and_phase == fsm_and_phase) {
-        if (consume_response) {
-            server_side_encoded_fsm_response = empty_encoded_fsm_response;
+    FSMResponseVariant result;
+
+    fsm_response.transform([&](EncodedFSMResponse &value) {
+        if (value.fsm_and_phase != fsm_and_phase) {
+            // The response is for a different phase -> do not consume it, do not return it
+            return;
         }
-        return value.response;
-    } else {
-        return {};
+
+        result = value.response;
+
+        if (consume_response) {
+            value = empty_encoded_fsm_response;
+        }
+    });
+
+    if (result != FSMResponseVariant {}) {
+        // Receiving a valid response from anywhere (for example Connect) counts as activity, prolong the activity heaters timeout
+        buddy::safety_timer().reset_norestore();
     }
+
+    return result;
+}
+
+void set_response(const EncodedFSMResponse &response) {
+    fsm_response = response;
+}
+
+/// Clears any pending response for the provided FSM
+void clear_fsm_response(ClientFSM fsm) {
+    fsm_response.transform([fsm](EncodedFSMResponse &response) {
+        if (response.fsm_and_phase.fsm == fsm) {
+            response = empty_encoded_fsm_response;
+        }
+    });
 }
 
 Response wait_for_response(FSMAndPhase fsm_and_phase, uint32_t timeout_ms) {
     // Warning phase response is consumed in marlin_server::handle_warnings
     assert(fsm_and_phase != PhasesWarning::Warning);
-
-    // If marlin_server::cycle is currently running, that means that it will not be called nestedly inside the idle() we are using here
-    // Responses are processed in _process_server_valid_request that is called from cycle()
-    // That means that in this case the server would never process any response and we would get stuck in an infinite loop.
-    // At this point we can as well do a bsod so that we can easily analyse the issue.
-    if (is_cycle_running) {
-        bsod("wait_for_response inside cycle");
-    }
 
     const auto wait_start = ticks_ms();
 
@@ -3568,18 +3542,7 @@ Response wait_for_response(FSMAndPhase fsm_and_phase, uint32_t timeout_ms) {
             return Response::_none;
         }
 
-        // The second true - don't disable steppers. If we are sitting in some
-        // kind of dialog (eg. nozzle cleaning failed), we do _not_ want to
-        // disable it during the dialog, because we would lose homing and that
-        // can lead to very interesting behavior (especially for example on XL
-        // with tool changer).
-        //
-        // It might also prevent disabling it in some rare cases where we would
-        // prefer to save the power (mostly out of the print), but that's
-        // significantly smaller problem.
-        //
-        // BFW-6914.
-        ::idle(true, true);
+        ::idle(true);
     }
 }
 
@@ -3612,6 +3575,8 @@ void onStartup() {
 void onIdle() {
     idle();
 
+    // update sensor values for metrics and sensor screens
+    sensor_data().update();
     buddy::metrics::record();
 
     print_utils_loop();

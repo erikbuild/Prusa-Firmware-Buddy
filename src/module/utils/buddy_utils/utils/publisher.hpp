@@ -12,16 +12,16 @@ class Subscriber;
 /// Represented as a linked list
 /// !!! Not thread-safe
 template <typename... Args>
-class Publisher : Uncopyable {
+class PublisherBase : Uncopyable {
 
 public:
-    using Item = Subscriber<Args...>;
-    friend Item;
+    using Subscriber = ::Subscriber<Args...>;
+    friend Subscriber;
 
-public:
-    /// Calls all registered hooks
+protected:
+    /// Calls callbacks of all registered Subscribers
     /// The execution order depends on the insertion order - newer hooks execute first.
-    /// Warning - if a hook removes itself during the call, it will cause UB or crash.
+    /// Warning - if a hook removes itself during the call, it can cause UB or crash.
     void call_all(Args &&...args) {
         for (auto it = first_; it; it = it->next_) {
             it->callback_(std::forward<Args>(args)...);
@@ -29,13 +29,13 @@ public:
     }
 
 private:
-    void insert(Item *item) {
+    void insert(Subscriber *item) {
         item->next_ = first_;
         first_ = item;
     }
 
-    void remove(Item *item) {
-        Item **current = &first_;
+    void remove(Subscriber *item) {
+        Subscriber **current = &first_;
         while (*current != item) {
             assert(*current);
             current = &((*current)->next_);
@@ -44,7 +44,14 @@ private:
     }
 
 private:
-    Item *first_ = nullptr;
+    Subscriber *first_ = nullptr;
+};
+
+template <typename... Args>
+class Publisher : public PublisherBase<Args...> {
+
+public:
+    using PublisherBase<Args...>::call_all;
 };
 
 /// Guard that registers the provided callback to the specified point
@@ -52,26 +59,53 @@ private:
 /// !!! Not thread safe
 template <typename... Args>
 class Subscriber : Uncopyable {
-    friend class Publisher<Args...>;
 
 public:
     using Callback = stdext::inplace_function<void(Args...)>;
-    using Point = Publisher<Args...>;
+    using Publisher = ::PublisherBase<Args...>;
+    friend Publisher;
 
 public:
+    Subscriber() {
+    }
+
+    Subscriber(const auto &callback) {
+        set_callback(callback);
+    }
+
     // Note: Template deducation problems without the "auto"
-    Subscriber(Publisher<Args...> &point, const auto &cb)
-        : point_(point)
-        , callback_(cb) {
-        point_.insert(this);
+    Subscriber(Publisher &publisher, const auto &callback) {
+        set_callback(callback);
+        bind(publisher);
     }
 
     ~Subscriber() {
-        point_.remove(this);
+        unbind();
+    }
+
+public:
+    void bind(Publisher &publisher) {
+        unbind();
+
+        assert(callback_);
+        publisher.insert(this);
+        publisher_ = &publisher;
+    }
+
+    void unbind() {
+        if (publisher_) {
+            publisher_->remove(this);
+            publisher_ = nullptr;
+        }
+    }
+
+    // Note: Template deducation problems without the "auto"
+    void set_callback(const auto &callback) {
+        callback_ = callback;
     }
 
 private:
-    Point &point_;
+    Publisher *publisher_ = nullptr;
     Subscriber *next_ = nullptr;
-    Callback callback_;
+    Callback callback_ = {};
 };

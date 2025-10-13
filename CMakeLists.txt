@@ -425,7 +425,7 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       "${XBUDDY_EXTENSION_BINARY_DIR}"
       )
     ExternalProject_Add(
-      xbuddy_extension
+      xbuddy_extension_firmware
       SOURCE_DIR "${XBUDDY_EXTENSION_SOURCE_DIR}"
       BINARY_DIR "${XBUDDY_EXTENSION_BINARY_DIR}"
       CMAKE_ARGS

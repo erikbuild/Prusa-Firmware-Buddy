@@ -25,8 +25,8 @@ void PowerCheckBoth::Callback([[maybe_unused]] CSelftestPart_Heater &part) {
     const uint32_t nozzle_pwm = advancedpower.get_nozzle_pwm(part.m_config.tool_nr);
     const float nozzle_power_W = nozzle_voltage_V * nozzle_current_A;
 #else
-    const float nozzle_current_A = advancedpower.GetHeaterCurrent();
-    const float nozzle_voltage_V = advancedpower.GetHeaterVoltage();
+    const float nozzle_current_A = advancedpower.heater_current();
+    const float nozzle_voltage_V = advancedpower.heater_voltage();
     const uint32_t nozzle_pwm = thermalManager.temp_hotend[0].soft_pwm_amount;
     const float nozzle_power_W = nozzle_voltage_V * nozzle_current_A;
 #endif
@@ -37,8 +37,8 @@ void PowerCheckBoth::Callback([[maybe_unused]] CSelftestPart_Heater &part) {
     const float bed_power_W = bed_current_A * bed_voltage_V;
     [[maybe_unused]] const float total_current_A = nozzle_current_A + bed_current_A;
 #else
-    const float bed_voltage_V = advancedpower.GetBedVoltage();
-    [[maybe_unused]] const float total_current_A = advancedpower.GetInputCurrent();
+    const float bed_voltage_V = advancedpower.bed_voltage();
+    [[maybe_unused]] const float total_current_A = advancedpower.input_current();
     const float total_power_W = bed_voltage_V * total_current_A;
     const float bed_power_W = total_power_W - nozzle_power_W;
 

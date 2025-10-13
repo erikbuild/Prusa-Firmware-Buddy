@@ -26,7 +26,6 @@
 #include "../gcode.h"
 
 #include "bsod.h"
-#include "homing_reporter.hpp"
 
 #include "../../module/endstops.h"
 #include "../../module/planner.h"
@@ -380,13 +379,14 @@ void GcodeSuite::G28() {
 
 bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   struct AxisHomingRequirement {
-    /// Initial home level of the axis at homing start
-    AxisHomeLevel initial_level = AxisHomeLevel::not_homed;
-
+    // !!! Keep before initial_level, someone might be not using a designated initializer and expect .expand({AxisHomeLevel::something}) to work.
     AxisHomeLevel required_level = AxisHomeLevel::not_homed;
 
     /// Whether the homing is optional or enforced
     bool force = false;
+
+    /// Initial home level of the axis at homing start
+    AxisHomeLevel initial_level = AxisHomeLevel::not_homed;
 
     void expand(const AxisHomingRequirement &other, bool condition = true) {
       if(condition) {
@@ -429,7 +429,9 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // On Z_SAFE_HOMING, if we need to home Z, we need to have X and Y homed as well
   if(ENABLED(Z_SAFE_HOMING) && should_home_at_all(Z_AXIS)) {
-    static constexpr AxisHomingRequirement req {AxisHomeLevel::imprecise };
+    static constexpr AxisHomingRequirement req {
+      .required_level = AxisHomeLevel::imprecise,
+    };
     requirements[X_AXIS].expand(req);
     requirements[Y_AXIS].expand(req);
   }
@@ -468,7 +470,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   PrintStatusMessageGuard statusGuard;
   statusGuard.update<PrintStatusMessage::homing>({});
-  HomingReporter reporter;
 
   #if HAS_CEILING_CLEARANCE()
   buddy::CeilingClearanceCheckDisabler ccd;
@@ -523,9 +524,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // Reset to the XY plane
   TERN_(CNC_WORKSPACE_PLANES, workspace_plane = PLANE_XY);
-
-  // Count this command as movement / activity
-  reset_stepper_timeout();
 
   #define HAS_CURRENT_HOME(N) (defined(N##_CURRENT_HOME) && N##_CURRENT_HOME != N##_CURRENT)
   #if HAS_CURRENT_HOME(X) || HAS_CURRENT_HOME(X2) || HAS_CURRENT_HOME(Y) || HAS_CURRENT_HOME(Y2) || HAS_CURRENT_HOME(I) || HAS_CURRENT_HOME(J) || HAS_CURRENT_HOME(K) || HAS_CURRENT_HOME(U) || HAS_CURRENT_HOME(V) || HAS_CURRENT_HOME(W)
@@ -733,17 +731,17 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // Home Y (before X)
   if (ENABLED(HOME_Y_BEFORE_X) && !failed && should_home_to_level(Y_AXIS, AxisHomeLevel::imprecise)) {
-    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate);
+    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate, true, flags.throw_homing_failed);
   }
 
   // Home X
   if (!failed && should_home_to_level(X_AXIS, AxisHomeLevel::imprecise)) {
-    failed = !homeaxis(X_AXIS, fr_mm_s, false, reenable_wt_X, flags.can_calibrate);
+    failed = !homeaxis(X_AXIS, fr_mm_s, false, reenable_wt_X, flags.can_calibrate, true, flags.throw_homing_failed);
   }
 
   // Home Y (after X)
   if (DISABLED(HOME_Y_BEFORE_X) && !failed && should_home_to_level(Y_AXIS, AxisHomeLevel::imprecise)) {
-    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate);
+    failed = !homeaxis(Y_AXIS, fr_mm_s, false, reenable_wt_Y, flags.can_calibrate, true, flags.throw_homing_failed);
   }
 
   #if HAS_PRECISE_HOMING_COREXY()
@@ -987,7 +985,7 @@ RefineResult corexy_calibrate_homing_during_G28(float xy_mm_s, const G28Flags &f
   // In both cases, we want a clean slate so that the user is not bothered with "please recalibrate" right away
   config_store().precise_homing_instability_history.set(0);
 
-  if(!calibration_approved) {
+  if(calibration_approved == false) {
     // User decided to not do the calibration at his own risk -> consider the point refined
     return RefineResult::success;
   }
@@ -1056,8 +1054,9 @@ RefineResult corexy_refine_during_G28_once(float fr_mm_s, const G28Flags &flags)
       static_assert(history_window <= sizeof(History) * 8);
       static constexpr History history_mask = ((1 << history_window) - 1);
 
-      if(std::popcount(static_cast<History>(config_store().precise_homing_instability_history.get() & history_mask)) >= history_threshold) {
-        break; // Break out of the loop -> trigger calibration
+      const auto recent_instability_count = std::popcount(static_cast<History>(config_store().precise_homing_instability_history.get() & history_mask));
+      if(flags.can_calibrate && recent_instability_count >= history_threshold) {
+        break; // Break out of the loop -> offer calibration
       }
 
       return RefineResult::success;

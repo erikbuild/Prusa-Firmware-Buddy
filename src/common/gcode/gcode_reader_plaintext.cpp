@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <cinttypes>
 
-PlainGcodeReader::PlainGcodeReader(FILE &f, const struct stat &stat_info)
-    : GcodeReaderCommon(f) {
+PlainGcodeReader::PlainGcodeReader(unique_file_ptr &&f, const struct stat &stat_info)
+    : GcodeReaderCommon(std::move(f)) {
     this->ptr_stream_getc = static_cast<stream_getc_type>(&PlainGcodeReader::stream_getc_impl);
     file_size = stat_info.st_size;
 }
@@ -224,21 +224,6 @@ bool PlainGcodeReader::IsBeginThumbnail(GcodeBuffer &buffer, uint16_t expected_w
 
     num_bytes = details->num_bytes;
     return true;
-}
-
-IGcodeReader::FileVerificationResult PlainGcodeReader::verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const {
-    // If plain gcode starts with bgcode magic, that means it's most like a binary gcode -> it's not a valid plain gcode
-    if (check_file_starts_with_BGCODE_magic()) {
-        return { .error_str = N_("The file seems to be a binary gcode with a wrong suffix.") };
-    }
-
-    // Plain GCode does not have CRC checking
-    (void)crc_calc_buffer;
-
-    // No more checks for different levels for now
-    (void)level;
-
-    return { .is_ok = true };
 }
 
 bool PlainGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {

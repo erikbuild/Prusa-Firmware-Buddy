@@ -11,10 +11,10 @@
  * - Centered title
  * - Centered text (alignment can be changed)
  */
-class FrameWait : public window_frame_t {
+class FrameWait {
 
 public:
-    FrameWait(window_t *parent, const string_view_utf8 &text);
+    FrameWait(window_frame_t *parent, const string_view_utf8 &text);
 
 public:
     inline void set_text(const string_view_utf8 &text) {

@@ -2,6 +2,13 @@
 
 #include <Marlin/src/module/planner.h>
 
+#include <option/has_remote_accelerometer.h>
+#include <option/has_toolchanger.h>
+
+#if HAS_REMOTE_ACCELEROMETER() && HAS_TOOLCHANGER()
+    #include <module/tool_change.h>
+#endif
+
 #include <raii/auto_restore.hpp>
 #include "src/module/motion.h"
 
@@ -25,7 +32,8 @@ bool extruder_move(float distance, float feed_rate, bool ignore_flow_factor) {
     // Only .z should ever differ because of MBL application.
     current_position.e = pos.e;
 
-    return planner.buffer_line(pos, feed_rate);
+    // ! Imporant - do not use buffer_line, it would reapply modifiers on top of the position_float
+    return planner.buffer_segment(pos, feed_rate);
 }
 
 float extruder_schedule_turning(float feed_rate, float step) {
@@ -35,6 +43,14 @@ float extruder_schedule_turning(float feed_rate, float step) {
     }
 
     return 0;
+}
+
+void ensure_tool_with_accelerometer_picked() {
+#if HAS_REMOTE_ACCELEROMETER()
+    if (!prusa_toolchanger.has_tool()) {
+        tool_change(/*tool_index=*/0, tool_return_t::no_return, tool_change_lift_t::no_lift, /*z_down=*/false);
+    }
+#endif
 }
 
 } // namespace mapi

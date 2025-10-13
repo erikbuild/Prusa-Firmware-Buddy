@@ -40,8 +40,6 @@
 
 #include "metric.h"
 
-#include "homing_reporter.hpp"
-
 #if HAS_BED_PROBE
   #include "probe.h"
 #endif
@@ -149,7 +147,7 @@ xyze_pos_t destination; // {0}
       "Offsets for the first hotend must be 0.0."
     );
     // Transpose from [XYZ][HOTENDS] to [HOTENDS][XYZ]
-    HOTEND_LOOP() LOOP_XYZ(a) hotend_offset[e][a] = tmp[a][e];
+    for (int8_t e = 0; e < HOTENDS; e++) LOOP_XYZ(a) hotend_offset[e][a] = tmp[a][e];
   }
 #endif
 
@@ -961,57 +959,11 @@ void set_axis_is_at_home(const AxisEnum axis, AxisHomeLevel level, [[maybe_unuse
 
   axes_home_level[axis] = level; 
 
-  #ifdef WORKSPACE_HOME
-    /*Fill workspace_homes[] with data from config*/
-    xyz_pos_t workspace_homes[MAX_COORDINATE_SYSTEMS]={{{{0}}}};
-
-    #ifdef WORKSPACE_0_X_POS
-      workspace_homes[0].set(WORKSPACE_0_X_POS, WORKSPACE_0_Y_POS, WORKSPACE_0_Z_POS);
-    #endif
-    #ifdef WORKSPACE_1_X_POS
-      workspace_homes[1].set(WORKSPACE_1_X_POS, WORKSPACE_1_Y_POS, WORKSPACE_1_Z_POS);
-    #endif
-    #ifdef WORKSPACE_2_X_POS
-      workspace_homes[2].set(WORKSPACE_2_X_POS, WORKSPACE_2_Y_POS, WORKSPACE_2_Z_POS);
-    #endif
-    #ifdef WORKSPACE_3_X_POS
-      workspace_homes[3].set(WORKSPACE_3_X_POS, WORKSPACE_3_Y_POS, WORKSPACE_3_Z_POS);
-    #endif
-    #ifdef WORKSPACE_4_X_POS
-      workspace_homes[4].set(WORKSPACE_4_X_POS, WORKSPACE_4_Y_POS, WORKSPACE_4_Z_POS);
-    #endif
-    #ifdef WORKSPACE_5_X_POS
-      workspace_homes[5].set(WORKSPACE_5_X_POS, WORKSPACE_5_Y_POS, WORKSPACE_5_Z_POS);
-    #endif
-    #ifdef WORKSPACE_6_X_POS
-      workspace_homes[6].set(WORKSPACE_6_X_POS, WORKSPACE_6_Y_POS, WORKSPACE_6_Z_POS);
-    #endif
-    #ifdef WORKSPACE_7_X_POS
-      workspace_homes[7].set(WORKSPACE_7_X_POS, WORKSPACE_7_Y_POS, WORKSPACE_7_Z_POS);
-    #endif
-    #ifdef WORKSPACE_8_X_POS
-      workspace_homes[8].set(WORKSPACE_8_X_POS, WORKSPACE_8_Y_POS, WORKSPACE_8_Z_POS);
-    #endif
-    #ifdef WORKSPACE_9_X_POS
-      workspace_homes[9].set(WORKSPACE_9_X_POS, WORKSPACE_9_Y_POS, WORKSPACE_9_Z_POS);
-    #endif
-
-
-    int8_t active_coordinate_system = GcodeSuite::get_coordinate_system();
-    if (active_coordinate_system == -1){ /*If base coordinate system, proceed as usual*/
-      current_position[axis] = base_home_pos(axis);
-    } else { /*If in alternate system, update position shift and system offset from base system*/
-      position_shift[axis] = - current_position[axis] + workspace_homes[active_coordinate_system][axis];
-      GcodeSuite::set_coordinate_system_offset(0, axis, position_shift[axis]);
-      update_workspace_offset(axis);
-    }
-  #else
     current_position[axis] = base_home_pos(axis)
       #if HAS_PRECISE_HOMING()
         - calibrated_home_offset(axis)
       #endif
     ;
-  #endif
 
   /**
    * Z Probe Z Homing? Account for the probe's Z offset.
@@ -1131,7 +1083,7 @@ void homing_failed(stdext::inplace_function<void()> fallback_error, [[maybe_unus
  * @return true on success
  */
 bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_dir,
-  void (*enable_wavetable)(AxisEnum), [[maybe_unused]] bool can_calibrate, bool homing_z_with_probe) {
+  void (*enable_wavetable)(AxisEnum), [[maybe_unused]] bool can_calibrate, bool homing_z_with_probe, bool throw_homing_failed) {
 
   // clear the axis state while running
   axes_home_level[axis] = AxisHomeLevel::not_homed;
@@ -1207,7 +1159,7 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
       // not OK run out attempts
       set_axis_is_not_at_home(axis);
       
-      if (!HomingReporter::block_red_screen()) {
+      if (throw_homing_failed) {
         static constexpr std::array error_codes {
           ErrCode::ERR_ELECTRO_HOMING_ERROR_X,
           ErrCode::ERR_ELECTRO_HOMING_ERROR_Y,

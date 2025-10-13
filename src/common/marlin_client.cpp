@@ -117,7 +117,7 @@ static bool try_send(Request &request) {
     request.response_required = 1;
 
     client->events &= ~(make_mask(Event::Acknowledge) | make_mask(Event::NotAcknowledge));
-    server_queue.send(request);
+    request_queue.send(request);
     for (;;) {
         receive_and_process_client_message(client, 1000);
         if (client->events & make_mask(Event::Acknowledge)) {
@@ -157,7 +157,7 @@ static void _send_request_to_server_noreply(Request &request) {
     }
     request.client_id = client->id;
     request.response_required = 0;
-    server_queue.send(request);
+    request_queue.send(request);
 }
 
 void set_event_notify(uint64_t event_mask) {
@@ -392,11 +392,9 @@ void set_warning(WarningType type) {
 
 //-----------------------------------------------------------------------------
 // responses from client finite state machine (like button click)
-void FSM_encoded_response(EncodedFSMResponse encoded_fsm_response) {
-    Request request;
-    request.type = Request::Type::FSM;
-    request.encoded_fsm_response = encoded_fsm_response;
-    _send_request_to_server_and_wait(request);
+void FSM_encoded_response(const EncodedFSMResponse &encoded_fsm_response) {
+    // marlin_server::set_response is thread safe, just use that one
+    marlin_server::set_response(encoded_fsm_response);
 }
 
 bool is_printing() {

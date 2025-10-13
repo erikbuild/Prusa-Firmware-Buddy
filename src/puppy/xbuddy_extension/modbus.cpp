@@ -2,6 +2,7 @@
 #include "modbus.hpp"
 
 #include <cstdlib>
+#include <cassert>
 
 using Status = modbus::Callbacks::Status;
 
@@ -37,12 +38,16 @@ uint16_t compute_crc(std::span<const std::byte> bytes) {
 
 std::span<std::byte> handle_transaction(
     Callbacks &callbacks,
-    std::span<const std::byte> request,
+    std::span<std::byte> request,
     std::span<std::byte> response_buffer) {
 
     if (request.size() < 4 || modbus::compute_crc(request) != 0) {
         return {};
     }
+
+    assert(reinterpret_cast<intptr_t>(response_buffer.data()) % alignof(uint16_t) == 0);
+    assert(reinterpret_cast<intptr_t>(request.data()) % alignof(uint16_t) == 0);
+    std::byte *orig_request = request.data();
 
     auto response = response_buffer.begin();
     const auto resp_end = response_buffer.end();
@@ -85,12 +90,27 @@ std::span<std::byte> handle_transaction(
 
             const uint8_t bytes = 2 * count;
             resp(std::byte { bytes });
-            for (uint16_t i = 0; i < count; ++i) {
-                uint16_t value;
-                status = callbacks.read_register((uint8_t)device, address + i, value);
-                if (status != Status::Ok) {
-                    break;
-                }
+
+            // Using the response buffer for the data directly, then arranging the endians in-place.
+            // This _should_ be OK, as uint8_t/byte is allowed to alias, so we
+            // are fine pointing both byte * and uint16_t * into the same
+            // place.
+            std::byte *out_buffer = response_buffer.data() + (response - response_buffer.begin());
+            if (reinterpret_cast<intptr_t>(out_buffer) % alignof(uint16_t) != 0) {
+                // Should be OK, there's one extra byte for CRC
+                out_buffer++;
+            }
+            if ((resp_end - response - 1 /*for the ++/CRC above*/) / 2 < count) {
+                abort();
+            }
+            std::span<uint16_t> out(reinterpret_cast<uint16_t *>(out_buffer), count);
+            status = callbacks.read_registers((uint8_t)device, address, out);
+
+            if (status != Status::Ok) {
+                break;
+            }
+            for (size_t i = 0; i < count; i++) {
+                uint16_t value = out[i];
                 resp(modbus_byte_hi(value));
                 resp(modbus_byte_lo(value));
             }
@@ -109,13 +129,19 @@ std::span<std::byte> handle_transaction(
                 return {};
             }
 
-            for (uint16_t i = 0; i < count; ++i) {
-                const uint16_t value = get_word(0);
+            std::span<uint16_t> in(reinterpret_cast<uint16_t *>(orig_request), count);
+            // Rearanging bytes in-place in the buffer. Allowed, since:
+            // * The input is aligned (we require it in our interface and we have checked).
+            // * byte and uint16_t are allowed to alias.
+            // * We overwrite only the ones we have already read.
+            // * Function return is a sequence point.
+            for (size_t i = 0; i < count; ++i) {
+                in[i] = get_word(0);
                 request = request.subspan(2);
-                status = callbacks.write_register((uint8_t)device, address + i, value);
-                if (status != Status::Ok) {
-                    break;
-                }
+            }
+            status = callbacks.write_registers((uint8_t)device, address, in);
+            if (status != Status::Ok) {
+                break;
             }
             resp(modbus_byte_hi(address));
             resp(modbus_byte_lo(address));

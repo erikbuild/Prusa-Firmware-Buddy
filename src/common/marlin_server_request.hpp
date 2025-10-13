@@ -1,10 +1,12 @@
 #pragma once
 
-#include <common/encoded_fsm_response.hpp>
+#include <encoded_fsm_response.hpp>
 #include <freertos/queue.hpp>
-#include <common/marlin_events.h>
+#include <marlin_events.h>
 #include <gcode/inject_queue_actions.hpp>
 #include <warning_type.hpp>
+#include <option/has_selftest.h>
+#include <option/has_cancel_object.h>
 
 namespace marlin_server {
 
@@ -20,7 +22,6 @@ struct Request {
         TestStart,
 #endif
         PrintStart,
-        FSM,
         CancelObjectID,
         UncancelObjectID,
         SetWarning,
@@ -43,7 +44,6 @@ struct Request {
         } test_start; // Type::TestStart
         char gcode[MARLIN_MAX_REQUEST + 1]; // Type::Gcode
         InjectQueueRecord inject; // Type::Inject
-        EncodedFSMResponse encoded_fsm_response; // Type::FSM
         float babystep; // Type::Babystep
         struct {
             marlin_server::PreviewSkipIfAble skip_preview;
@@ -59,7 +59,25 @@ struct Request {
     Type type;
 };
 
-using ServerQueue = freertos::Queue<Request, 1>;
-extern ServerQueue server_queue;
+using RequestQueue = freertos::Queue<Request, 1>;
+extern RequestQueue request_queue;
+
+enum class RequestFlag : uint8_t {
+    PrintAbort,
+    PrintPause,
+    PrintResume,
+    TryRecoverFromMediaError,
+    PrintExit,
+    KnobMoveUp,
+    KnobMoveDown,
+    KnobClick,
+#if HAS_SELFTEST()
+    TestAbort,
+#endif
+#if HAS_CANCEL_OBJECT()
+    CancelCurrentObject,
+#endif
+    _cnt
+};
 
 } // namespace marlin_server

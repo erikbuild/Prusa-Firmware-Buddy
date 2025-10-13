@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -13,9 +16,6 @@ void *malloc_fallible(size_t size);
 
 // Malloc, but returns null on failure, not a redscreen.
 void *malloc_fallible(size_t size);
-
-void setup_isr_stack_overflow_trap();
-void check_isr_stack_overflow();
 
 #ifdef __cplusplus
 }

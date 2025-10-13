@@ -82,6 +82,11 @@ void LEDManager::init() {
 }
 
 void LEDManager::update() {
+    const uint32_t now = ticks_ms();
+    if (!rate_limiter.check(now)) {
+        return;
+    }
+
     std::lock_guard lock(power_panic_mutex);
     if (power_panic) {
         return;

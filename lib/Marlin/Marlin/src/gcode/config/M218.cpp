@@ -60,7 +60,7 @@ void GcodeSuite::M218() {
   if (!parser.seen("XYZ")) {
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM(MSG_HOTEND_OFFSET);
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
       SERIAL_CHAR(' ');
       SERIAL_ECHO(hotend_offset[e].x);
       SERIAL_CHAR(',');

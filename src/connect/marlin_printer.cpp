@@ -28,6 +28,8 @@
     #include <leds/side_strip_handler.hpp>
 #endif
 
+#include <option/has_esp.h>
+
 #if XL_ENCLOSURE_SUPPORT()
     #include <xl_enclosure.hpp>
     #include <fanctl.hpp>
@@ -411,9 +413,11 @@ std::optional<Printer::NetInfo> MarlinPrinter::net_info(Printer::Iface iface) co
     case Iface::Ethernet:
         id = NETDEV_ETH_ID;
         break;
+#if HAS_ESP()
     case Iface::Wifi:
         id = NETDEV_ESP_ID;
         break;
+#endif
     default:
         assert(0);
         return nullopt;
@@ -435,7 +439,9 @@ std::optional<Printer::NetInfo> MarlinPrinter::net_info(Printer::Iface iface) co
 Printer::NetCreds MarlinPrinter::net_creds() const {
     NetCreds result = {};
     strlcpy(result.pl_password, config_store().prusalink_password.get_c_str(), sizeof(result.pl_password));
+#if HAS_ESP()
     strlcpy(result.ssid, config_store().wifi_ap_ssid.get_c_str(), sizeof(result.ssid));
+#endif
     netdev_get_hostname(netdev_get_active_id(), result.hostname, sizeof(result.hostname));
     return result;
 }
@@ -579,7 +585,7 @@ bool MarlinPrinter::is_printing() const {
 }
 
 bool MarlinPrinter::is_in_error() const {
-    // This is true in redscreens, bluescreens and similar. These don't even
+    // This is true in error screens. These don't even
     // initialize a MarlinPrinter but ErrorPrinter.
     return false;
 }
@@ -608,8 +614,12 @@ void MarlinPrinter::reset_printer() {
 }
 
 const char *MarlinPrinter::dialog_action(printer_state::DialogId dialog_id, Response response) {
-    const fsm::States fsm_states = marlin_vars().get_fsm_states();
-    const std::optional<fsm::States::Top> top = fsm_states.get_top();
+    fsm::StateId fsm_gen;
+    std::optional<fsm::States::Top> top;
+    marlin_vars().peek_fsm_states([&](const auto &states) {
+        fsm_gen = states.get_state_id();
+        top = states.get_top();
+    });
 
     // We always send dialog from the top FSM, so we can
     // just check the dialog_id and if it is the same
@@ -618,7 +628,7 @@ const char *MarlinPrinter::dialog_action(printer_state::DialogId dialog_id, Resp
         return "No buttons";
     }
 
-    if (fsm_states.get_state_id() != dialog_id) {
+    if (fsm_gen != dialog_id) {
         return "Invalid dialog id";
     }
 

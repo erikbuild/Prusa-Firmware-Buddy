@@ -11,7 +11,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   add_subdirectory(common)
   add_subdirectory(feature)
 
-  if(HAS_ESP_FLASH_TASK)
+  if(HAS_ESP)
     add_subdirectory(buddy-esp-serial-flasher)
     target_link_libraries(firmware PRIVATE buddy-esp-serial-flasher)
   endif()
@@ -51,10 +51,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
 
   if(HAS_PUPPIES)
     add_subdirectory(puppies)
-  endif()
-
-  if(HAS_XBUDDY_EXTENSION)
-    add_subdirectory(puppy/xbuddy_extension_shared)
   endif()
 
   if(HAS_LEDS)
@@ -102,7 +98,6 @@ elseif(BOARD STREQUAL "MODULARBED")
   target_link_libraries(firmware PRIVATE FreeRTOS::CMSIS)
 elseif(BOARD STREQUAL "XBUDDY_EXTENSION")
   add_subdirectory(freertos)
-  add_subdirectory(puppy/xbuddy_extension_shared)
   add_subdirectory(puppy/xbuddy_extension)
 
 elseif(BOARD MATCHES "^ANFC_")

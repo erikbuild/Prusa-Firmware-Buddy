@@ -117,7 +117,6 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/src/common/utils
           ${CMAKE_SOURCE_DIR}/src/common/marlin_server_types
           ${CMAKE_SOURCE_DIR}/src/persistent_stores
-          ${CMAKE_SOURCE_DIR}/src/puppy/xbuddy_extension_shared
           ${CMAKE_SOURCE_DIR}/lib/jsmn
           ${CMAKE_SOURCE_DIR}/lib/WUI
           ${CMAKE_SOURCE_DIR}/lib/heatshrink
@@ -129,7 +128,7 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src/
           ${CMAKE_BINARY_DIR}/lib/libbgcode/src/
   )
-target_link_libraries(connect_tests mbedTLS bgcode_core raii)
+target_link_libraries(connect_tests mbedTLS bgcode_core raii xbuddy_extension)
 
 file(GLOB AUTOMATA_GENERATORS ${PROJECT_ROOT_DIR}/utils/gen-automata/*.py)
 
@@ -239,7 +238,6 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/src/gui
           ${CMAKE_SOURCE_DIR}/src
           ${CMAKE_SOURCE_DIR}/src/lang
-          ${CMAKE_SOURCE_DIR}/src/puppy/xbuddy_extension_shared
           ${CMAKE_SOURCE_DIR}/lib/jsmn
           ${CMAKE_SOURCE_DIR}/lib/WUI
           ${CMAKE_SOURCE_DIR}/lib/Middlewares/Third_Party/mbedtls/include
@@ -252,7 +250,7 @@ target_include_directories(
   )
 add_dependencies(connect_planner_tests generate-httpc-automata-tests-connect)
 
-target_link_libraries(connect_planner_tests raii)
+target_link_libraries(connect_planner_tests raii xbuddy_extension)
 
 add_executable(
   connect_registration_tests
@@ -338,7 +336,6 @@ target_include_directories(
           ${CMAKE_SOURCE_DIR}/src/common/marlin_server_types
           ${CMAKE_SOURCE_DIR}/src/common/utils
           ${CMAKE_SOURCE_DIR}/src/gui
-          ${CMAKE_SOURCE_DIR}/src/puppy/xbuddy_extension_shared
           ${CMAKE_SOURCE_DIR}/lib/Middlewares/Third_Party/mbedtls/include
           ${CMAKE_SOURCE_DIR}/include/usb_host
           ${CMAKE_SOURCE_DIR}/lib/WUI
@@ -351,7 +348,7 @@ target_include_directories(
   )
 add_dependencies(connect_registration_tests generate-httpc-automata-tests-connect)
 
-target_link_libraries(connect_registration_tests raii)
+target_link_libraries(connect_registration_tests raii xbuddy_extension)
 
 add_catch_test(connect_tests)
 add_catch_test(connect_planner_tests)

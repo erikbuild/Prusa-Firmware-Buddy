@@ -48,6 +48,7 @@ target_sources(
           screen_menu_enclosure.cpp
           screen_menu_error_test.cpp
           screen_menu_fail_stat.cpp
+          screen_menu_fan_info.cpp
           screen_menu_filament.cpp
           screen_menu_footer_settings.cpp
           screen_menu_hardware.cpp
@@ -71,7 +72,6 @@ target_sources(
           screen_menu_user_interface.cpp
           screen_messages.cpp
           screen_move_z.cpp
-          screen_network_setup.cpp
           screen_print_preview.cpp
           screen_printer_setup.cpp
           screen_printing.cpp
@@ -154,7 +154,6 @@ if(HAS_MMU2)
             screen_menu_mmu_eject_filament.cpp
             screen_menu_mmu_load_test_filament.cpp
             screen_menu_mmu_load_to_nozzle.cpp
-            screen_menu_mmu_preload_to_mmu.cpp
             screen_tools_mapping.cpp
     )
 endif()
@@ -202,6 +201,10 @@ endif()
 
 if(CONNECT)
   target_sources(firmware PRIVATE screen_menu_connect.cpp)
+endif()
+
+if(HAS_ESP)
+  target_sources(firmware PRIVATE screen_network_setup.cpp)
 endif()
 
 if(HAS_INPUT_SHAPER_CALIBRATION)

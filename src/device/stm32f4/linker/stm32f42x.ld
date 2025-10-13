@@ -122,14 +122,14 @@ SECTIONS
   .init_array :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
-    KEEP (*(SORT(.init_array.*)))
+    KEEP (*(.init_array.*))
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
   } >FLASH
   .fini_array :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);
-    KEEP (*(SORT(.fini_array.*)))
+    KEEP (*(.fini_array.*))
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
@@ -148,7 +148,7 @@ SECTIONS
     PROVIDE_HIDDEN (__end_log_components = .);
 
     PROVIDE_HIDDEN (__start_metric_definitions = .);
-    KEEP(*(.data.metric_definitions))
+    KEEP(*(SORT(.data.metric_definitions.*)))
     PROVIDE_HIDDEN (__end_metric_definitions = .);
 
     *(.data)           /* .data sections */
@@ -158,7 +158,7 @@ SECTIONS
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } >RAM AT> FLASH
+  } >RAM AT > FLASH
 
   _siccmram = LOADADDR(.ccmram);
 

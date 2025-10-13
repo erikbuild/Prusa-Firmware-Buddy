@@ -26,9 +26,6 @@ class ClosedReader final : public IGcodeReader {
     }
     void set_restore_info(const StreamRestoreInfo &) override {
     }
-    FileVerificationResult verify_file(FileVerificationLevel, std::span<uint8_t> = std::span<uint8_t>()) const override {
-        return { .is_ok = has_error(), .error_str = error_str() };
-    }
     Result_t stream_getc(char &) override {
         return Result_t::RESULT_ERROR;
     }

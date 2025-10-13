@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "FreeRTOS.h"
+#include <cmsis_gcc.h>
 #include "hal.hpp"
 #include "task.h"
 #include <freertos/timing.hpp>
@@ -13,6 +14,9 @@
 
 extern uint32_t __shared_data_start__[];
 extern uint32_t __shared_data_end__[];
+
+extern char _isr_stack_start[];
+extern char _isr_stack_end[];
 
 constexpr const size_t main_task_stack_size = 200;
 alignas(32) NON_SHARED_DATA StackType_t main_task_stack[main_task_stack_size];
@@ -34,6 +38,9 @@ static void hal_task_code(void *) {
 }
 
 extern "C" int main() {
+    // Set up ISR stack overflow checking
+    __set_MSPLIM(reinterpret_cast<uint32_t>(&_isr_stack_start));
+
     // This has to be called before we yield control to FreeRTOS scheduler
     // because MPU would prevent us from accessing some important registers.
     hal::init();

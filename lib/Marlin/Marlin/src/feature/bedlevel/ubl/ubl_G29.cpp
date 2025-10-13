@@ -718,6 +718,10 @@
         int xStep = is_odd_y_position ? GRID_MAJOR_STEP : -GRID_MAJOR_STEP;
 
         for (int x = x0; GRID_BORDER <= x && x < GRID_MAX_POINTS_X - GRID_BORDER; x += xStep) {
+          if(ubl.g29_probing_failed) {
+            return;
+          }
+          
           xy_pos_t pos = {mesh_index_to_xpos(x), mesh_index_to_ypos(y)};
 
           // skip points the probe can't reach
@@ -778,7 +782,6 @@
 
       if (std::isnan(measured_z)) {
         ubl.g29_probing_failed = true;
-        STOW_PROBE();
         return;
       }
       z_values[x][y] = measured_z;
@@ -802,9 +805,6 @@
 
     #ifdef Z_AFTER_PROBING
       move_z_after_probing();
-    #endif
-    #if ENABLED(EXTENSIBLE_UI)
-      ui.reset_status();
     #endif
 
     #if UBL_TRAVEL_ACCELERATION

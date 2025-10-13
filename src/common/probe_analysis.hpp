@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cmath>
 #include <atomic>
+#include <expected>
 #if __has_include("metric.h") && !defined(PROBE_ANALYSIS_DISABLE_METRICS) && !defined(UNITTESTS)
     #define PROBE_ANALYSIS_WITH_METRICS
     #include "metric.h"
@@ -29,62 +30,28 @@ public:
     /// Zero is at the beginning of the window. Xth sample has time of samplingInterval * X.
     using Time = float;
 
-    /// Analysis result
-    struct Result {
-        /// True if the probe is considered precise/good and zCoordinate is set.
-        bool isGood;
+    struct AnalysisResult {
+        /// Coordinate of the bed
+        float z_coordinate;
+    };
 
-        /// Explanation for the classification result. Might be nullptr.
+    struct AnalysisError {
+        /// Explanation for the classification result.
         const char *description;
 
-        /// Coordinate of the bed (if isGood == true)
-        float zCoordinate;
-
-    public:
-        /// Create a result where the probe is classified as good
-        static inline Result Good(float zCoordinate) {
-            return Result { true, nullptr, zCoordinate };
-        }
-
-        /// Create a result where the probe is classified as bad
-        static inline Result Bad(const char *description) {
-            return Result { false, description, std::numeric_limits<float>::quiet_NaN() };
-        }
+        /// Value of the failed parameter
+        float arg = 0;
     };
+
+    using Result = std::expected<AnalysisResult, AnalysisError>;
 
     /// Entry of the moving window used for analysis.
     struct Record {
-        /// Z is expected to be 0 +- a few mm
-        /// 1 bit sign, 5 bits (+- 31) whole, 10 bits (+-0.001) decimal
-        static constexpr float z_mult = 1024;
+        /// Extruder's Z coordinate [mm]
+        float z;
 
-        /// Load tends to fluctuate betwen +- 200 g
-        /// 1 bit sign, 8 bits (+- 255) whole, 7 bits (+-0.01) decimal
-        static constexpr float load_mult = 128;
-
-        constexpr Record() = default;
-
-        Record(float z, float load)
-            : z_fixpoint(std::clamp<float>(z * z_mult, std::numeric_limits<int16_t>::min(), std::numeric_limits<int16_t>::max()))
-            , load_fixpoint(std::clamp<float>(load * load_mult, std::numeric_limits<int16_t>::min(), std::numeric_limits<int16_t>::max())) {}
-
-        /// Extruder's Z coordinate [mm ]
-        constexpr inline float z() const {
-            static constexpr float coef = 1.0f / z_mult;
-            return static_cast<float>(z_fixpoint) * coef;
-        }
-
-        /// Extruder's Z coordinate [mm * z_mult]
-        int16_t z_fixpoint;
-
-        /// Load measured [grams ]
-        constexpr inline float load() const {
-            static constexpr float coef = 1.0f / load_mult;
-            return static_cast<float>(load_fixpoint) * coef;
-        }
-
-        /// Load measured [grams * load_mult]
-        int16_t load_fixpoint;
+        /// Load measured [grams]
+        float load;
     };
 
     /// Represents a single sample
@@ -329,7 +296,7 @@ public:
     std::tuple<Sample, Line, Line> FindBestTwoLinesApproximation(SamplesRange samples, size_t gapSamples);
 
     /// Compensate for the fact that loadcell data are delayed in respect to Z axis coordinates.
-    bool CompensateForSystemDelay();
+    std::expected<void, AnalysisError> CompensateForSystemDelay();
 
     /// Calculate fallEnd and riseStart features
     void CalculateHaltSpan(Features &features);
@@ -337,7 +304,7 @@ public:
     /// Calculates the analysisStart and analysisEnd features.
     ///
     /// Returns true if we have enough data in the window. False otherwise.
-    bool CalculateAnalysisRange(Features &features);
+    std::expected<void, AnalysisError> CalculateAnalysisRange(Features &features);
 
     bool CalculateLoadLineApproximationFeatures(Features &features);
 

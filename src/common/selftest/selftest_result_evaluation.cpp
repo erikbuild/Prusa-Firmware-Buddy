@@ -42,7 +42,7 @@ bool is_selftest_successfully_completed() {
     }
 #endif /* HAS_SHEET_PROFILES() */
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
 #if HAS_TOOLCHANGER()
         if (!prusa_toolchanger.is_tool_enabled(e)) {
             continue;

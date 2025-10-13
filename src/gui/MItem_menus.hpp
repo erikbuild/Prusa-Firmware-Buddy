@@ -17,6 +17,8 @@
 #include <img_resources.hpp>
 #include <ScreenFactory.hpp>
 
+#include <option/has_esp.h>
+
 class MI_SCREEN_BASE : public IWindowMenuItem {
 protected:
     // Two constructors for flash saving (so that we don't need to pass that many parameters)
@@ -57,6 +59,9 @@ using MI_REORDER_FILAMENTS
 using MI_FILAMENTS_VISIBILITY
     = MI_SCREEN<N_("Enable Filaments"), class ScreenFilamentsVisibility>;
 
+using MI_FAN_INFO
+    = MI_SCREEN<N_("Fan Info"), class ScreenMenuFanInfo>;
+
 using MI_VERSION_INFO
     = MI_SCREEN<N_("Version Info"), class ScreenMenuVersionInfo>;
 
@@ -81,8 +86,10 @@ using MI_METRICS_SETTINGS
 using MI_ETH_SETTINGS
     = MI_SCREEN<N_("Ethernet"), class ScreenMenuEthernetSettings, &img::lan_16x16>;
 
+#if HAS_ESP()
 using MI_WIFI_SETTINGS
     = MI_SCREEN<N_("Wi-Fi"), class ScreenMenuWifiSettings, &img::wifi_16x16>;
+#endif
 
 using MI_MESSAGES
     = MI_SCREEN<N_("Message History"), class screen_messages_data_t>;

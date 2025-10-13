@@ -436,11 +436,6 @@ void CSelftest::Loop() {
 void CSelftest::phaseDidSelftestPass() {
     m_result = config_store().selftest_result.get();
     SelftestResult_Log(m_result);
-
-    // dont run wizard again
-    if (SelftestResult_Passed_All(m_result)) {
-        config_store().run_selftest.set(false);
-    }
 }
 
 bool CSelftest::Abort() {

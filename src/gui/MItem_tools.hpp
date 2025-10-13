@@ -19,6 +19,7 @@
 #include <option/has_side_leds.h>
 #include <option/buddy_enable_connect.h>
 #include <option/has_belt_tuning.h>
+#include <option/has_auto_retract.h>
 #include <meta_utils.hpp>
 #include <gui/menu_item/menu_item_gcode_action.hpp>
 
@@ -289,16 +290,6 @@ public:
     MI_INFO_SIDE_FILL_SENSOR();
 };
 
-class MI_INFO_PRINT_FAN : public WI_FAN_LABEL_t {
-public:
-    MI_INFO_PRINT_FAN();
-};
-
-class MI_INFO_HBR_FAN : public WI_FAN_LABEL_t {
-public:
-    MI_INFO_HBR_FAN();
-};
-
 class MI_PRINT_PROGRESS_TIME : public WiSpin {
 
 public:
@@ -376,6 +367,12 @@ public:
 };
 
 #if BOARD_IS_XBUDDY()
+
+class MI_INFO_BED_VOLTAGE : public MenuItemAutoUpdatingLabel<float> {
+public:
+    MI_INFO_BED_VOLTAGE();
+};
+
 class MI_INFO_HEATER_VOLTAGE : public MenuItemAutoUpdatingLabel<float> {
 public:
     MI_INFO_HEATER_VOLTAGE();
@@ -413,11 +410,6 @@ public:
     MI_INFO_BUDDY_5V_CURRENT();
 };
 #endif
-
-class MI_INFO_INPUT_VOLTAGE : public MenuItemAutoUpdatingLabel<float> {
-public:
-    MI_INFO_INPUT_VOLTAGE();
-};
 
 class MI_INFO_BOARD_TEMP : public MenuItemAutoUpdatingLabel<float> {
 public:
@@ -643,3 +635,11 @@ public:
     MI_LOG_TO_TXT();
     void OnChange(size_t) final;
 };
+
+#if HAS_AUTO_RETRACT()
+class MI_PRE_NOZZLE_CLEANING_RETRACT : public WI_ICON_SWITCH_OFF_ON_t {
+public:
+    MI_PRE_NOZZLE_CLEANING_RETRACT();
+    void OnChange(size_t) final;
+};
+#endif

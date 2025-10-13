@@ -38,4 +38,13 @@ constexpr auto array_sub_copy(auto &&source, size_t offset = 0) {
     return result;
 }
 
+/// Concatenates two std::array objects of the same value_type
+template <typename T, size_t N1, size_t N2>
+constexpr auto array_concat(const std::array<T, N1> &a1, const std::array<T, N2> &a2) {
+    std::array<T, N1 + N2> result {};
+    std::copy(a1.begin(), a1.end(), result.begin());
+    std::copy(a2.begin(), a2.end(), result.begin() + N1);
+    return result;
+}
+
 } // namespace stdext

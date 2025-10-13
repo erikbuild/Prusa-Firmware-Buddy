@@ -44,7 +44,6 @@
 LOG_COMPONENT_REF(Selftest);
 
 using namespace fan_selftest;
-using namespace buddy;
 using marlin_server::wait_for_response;
 
 namespace {
@@ -284,21 +283,21 @@ private:
         config_store().selftest_result.set(result);
 
 #if HAS_CHAMBER_API()
-        switch (chamber().backend()) {
+        switch (buddy::chamber().backend()) {
 
     #if XL_ENCLOSURE_SUPPORT()
-        case Chamber::Backend::xl_enclosure:
+        case buddy::Chamber::Backend::xl_enclosure:
             config_store().xl_enclosure_fan_selftest_result.set(TestResult_Unknown);
             break;
     #endif /* XL_ENCLOSURE_SUPPORT() */
 
     #if XBUDDY_EXTENSION_VARIANT_STANDARD()
-        case Chamber::Backend::xbuddy_extension:
+        case buddy::Chamber::Backend::xbuddy_extension:
             config_store().xbe_fan_test_results.set({});
             break;
     #endif
 
-        case Chamber::Backend::none:
+        case buddy::Chamber::Backend::none:
             break;
         }
 #endif /* HAS_CHAMBER_API() */
@@ -332,7 +331,7 @@ private:
 #endif
 #if XBUDDY_EXTENSION_VARIANT_STANDARD()
             case FanType::xbe_chamber: {
-                assert(fan->get_desc_num() < puppies::XBuddyExtension::FAN_CNT);
+                assert(fan->get_desc_num() < buddy::puppies::XBuddyExtension::FAN_CNT);
                 auto res = config_store().xbe_fan_test_results.get();
                 res.fans[fan->get_desc_num()] = fan->test_result();
                 config_store().xbe_fan_test_results.set(res);
@@ -419,14 +418,14 @@ void M1978() {
         XBEFanHandler(FanType::xbe_chamber, 1, chamber_fan_range),
         XBEFanHandler(FanType::xbe_chamber, 2, filtration_fan_range),
     };
-    static_assert(puppies::XBuddyExtension::FAN_CNT == 3);
+    static_assert(buddy::puppies::XBuddyExtension::FAN_CNT == 3);
 #endif
 
 #if HAS_CHAMBER_API()
-    switch (chamber().backend()) {
+    switch (buddy::chamber().backend()) {
 
     #if XL_ENCLOSURE_SUPPORT()
-    case Chamber::Backend::xl_enclosure: {
+    case buddy::Chamber::Backend::xl_enclosure: {
         fan_container[container_index++] = &xl_enclosure_fan;
         break;
     }
@@ -434,8 +433,8 @@ void M1978() {
 
     #if XBUDDY_EXTENSION_VARIANT_STANDARD()
         static_assert(HAS_CHAMBER_FILTRATION_API());
-    case Chamber::Backend::xbuddy_extension:
-        if (xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
+    case buddy::Chamber::Backend::xbuddy_extension:
+        if (buddy::xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
             fan_container[container_index++] = &xbe_fans[2];
         } else {
             fan_container[container_index++] = &xbe_fans[0];
@@ -444,7 +443,7 @@ void M1978() {
         break;
     #endif
 
-    case Chamber::Backend::none:
+    case buddy::Chamber::Backend::none:
         break;
     }
 #endif /* HAS_CHAMBER_API() */

@@ -109,7 +109,7 @@ void adc_dma_init(DMA_HandleTypeDef *dma, DMA_Stream_TypeDef *dma_stream, uint32
     dma->Init.Priority = DMA_PRIORITY_LOW;
     dma->Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(dma) != HAL_OK) {
-        Error_Handler();
+        bsod_system();
     }
 }
 
@@ -433,7 +433,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi2_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi2_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi2_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmarx, hdma_spi2_rx);
@@ -451,7 +451,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi2_tx.Init.Priority = DMA_PRIORITY_MEDIUM;
         hdma_spi2_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi2_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi2_tx);
@@ -488,7 +488,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi3_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi3_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi3_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmarx, hdma_spi3_rx);
@@ -505,7 +505,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi3_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi3_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi3_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi3_tx);
@@ -546,7 +546,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi4_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi4_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi4_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi4_tx);
@@ -582,7 +582,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi5_tx.Init.Priority = DMA_PRIORITY_MEDIUM;
         hdma_spi5_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi5_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi5_tx);
 
@@ -598,7 +598,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi5_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi5_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi5_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmarx, hdma_spi5_rx);
@@ -634,7 +634,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi6_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi6_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi6_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi6_tx);
@@ -682,7 +682,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi2_tx.Init.Priority = DMA_PRIORITY_MEDIUM;
         hdma_spi2_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi2_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi2_tx);
@@ -699,7 +699,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi2_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi2_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi2_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmarx, hdma_spi2_rx);
@@ -736,7 +736,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi3_tx.Init.Priority = DMA_PRIORITY_MEDIUM;
         hdma_spi3_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi3_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
         __HAL_LINKDMA(hspi, hdmatx, hdma_spi3_tx);
 
@@ -752,7 +752,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
         hdma_spi3_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_spi3_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_spi3_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(hspi, hdmarx, hdma_spi3_rx);
@@ -961,7 +961,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim) {
         hdma_tim8.Init.Priority = DMA_PRIORITY_HIGH;
         hdma_tim8.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_tim8) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(htim, hdma[TIM_DMA_ID_UPDATE], hdma_tim8);
@@ -1041,7 +1041,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmarx, hdma_usart1_rx);
@@ -1075,7 +1075,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart2_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart2_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart2_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         // Link with DMA
@@ -1120,7 +1120,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart6_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart6_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart6_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         // Link with DMA
@@ -1138,7 +1138,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart6_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart6_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart6_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         // Link with DMA
@@ -1196,7 +1196,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart3_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart3_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart3_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmarx, hdma_usart3_rx);
@@ -1213,7 +1213,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart3_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart3_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart3_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmatx, hdma_usart3_tx);
@@ -1260,7 +1260,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_uart8_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_uart8_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_uart8_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmarx, hdma_uart8_rx);
@@ -1277,7 +1277,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_uart8_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_uart8_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_uart8_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmatx, hdma_uart8_tx);
@@ -1324,7 +1324,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart6_rx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart6_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart6_rx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmarx, hdma_usart6_rx);
@@ -1341,7 +1341,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         hdma_usart6_tx.Init.Priority = DMA_PRIORITY_LOW;
         hdma_usart6_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
         if (HAL_DMA_Init(&hdma_usart6_tx) != HAL_OK) {
-            Error_Handler();
+            bsod_system();
         }
 
         __HAL_LINKDMA(huart, hdmatx, hdma_usart6_tx);

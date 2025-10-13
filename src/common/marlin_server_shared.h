@@ -3,8 +3,6 @@
 #include "cmsis_os.h" // for osThreadId
 #include <limits>
 #include <time.h>
-#include <option/has_selftest.h>
-#include <option/has_cancel_object.h>
 
 namespace marlin_server {
 
@@ -15,27 +13,4 @@ inline constexpr uint8_t CURRENT_TOOL = std::numeric_limits<uint8_t>::max();
 
 extern osThreadId server_task; // task of marlin server
 
-enum class RequestFlag : uint8_t {
-    PrintAbort,
-    PrintPause,
-    PrintResume,
-    TryRecoverFromMediaError,
-    PrintExit,
-    KnobMoveUp,
-    KnobMoveDown,
-    KnobClick,
-#if HAS_SELFTEST()
-    TestAbort,
-#endif
-#if HAS_CANCEL_OBJECT()
-    CancelCurrentObject,
-#endif
-    _cnt
-};
-
-enum class KnobMove : uint8_t {
-    NoMove,
-    Up,
-    Down,
-};
 } // namespace marlin_server

@@ -339,7 +339,7 @@ void homing_failed(stdext::inplace_function<void()> fallback_error, bool crash_w
 
 // Home a single logical axis
 [[nodiscard]] bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s=0.0, bool invert_home_dir = false,
-  void (*enable_wavetable)(AxisEnum) = NULL, bool can_calibrate = true, bool homing_z_with_probe = true);
+  void (*enable_wavetable)(AxisEnum) = NULL, bool can_calibrate = true, bool homing_z_with_probe = true, bool throw_homing_failed = true);
 
 // Perform a single homing probe on a logical axis
 float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const feedRate_t fr_mm_s = 0.0,

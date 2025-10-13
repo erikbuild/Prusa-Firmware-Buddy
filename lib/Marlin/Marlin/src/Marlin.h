@@ -32,8 +32,8 @@
 #include <stdlib.h>
 
 void stop();
-void idle(bool waiting, bool no_stepper_sleep=false);
-void manage_inactivity(const bool ignore_stepper_queue=false);
+void idle(bool waiting);
+void manage_inactivity();
 
 #if ENABLED(G38_PROBE_TARGET)
   extern uint8_t G38_move;          // Flag to tell the ISR that G38 is in progress, and the type
@@ -79,9 +79,6 @@ extern bool wait_for_heatup;
 #endif
 
 extern uint16_t job_id;
-
-// Inactivity shutdown timer
-extern millis_t max_inactive_time, stepper_inactive_time;
 
 #if HAS_POWER_SWITCH
   extern bool powersupply_on;

@@ -10,7 +10,7 @@
 #include <temperature.hpp>
 #include <pwm_utils.hpp>
 
-#include <xbuddy_extension_shared/xbuddy_extension_shared_enums.hpp>
+#include <xbuddy_extension/shared_enums.hpp>
 #include <option/xbuddy_extension_variant_standard.h>
 
 namespace buddy {
@@ -26,12 +26,12 @@ public: // General things, status
         ready,
     };
 
-    using FilamentSensorState = xbuddy_extension_shared::FilamentSensorState;
+    using FilamentSensorState = xbuddy_extension::FilamentSensorState;
 
 #if XBUDDY_EXTENSION_VARIANT_STANDARD()
     using FanRPM = uint16_t;
     using FanPWM = PWM255;
-    using Fan = xbuddy_extension_shared::Fan;
+    using Fan = xbuddy_extension::Fan;
     using FanPWMOrAuto = PWM255OrAuto;
 #endif
 
@@ -150,7 +150,7 @@ private:
     uint32_t last_fan_update_ms;
 
     // keeps fan power up timestamp to measure headstart delay
-    EnumArray<Fan, uint32_t, xbuddy_extension_shared::fan_count> fan_start_timestamp = {};
+    EnumArray<Fan, uint32_t, xbuddy_extension::fan_count> fan_start_timestamp = {};
 
     bool can_auto_cool_ = false;
     bool overheating_warning_shown = false;

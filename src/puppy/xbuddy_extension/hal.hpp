@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
-#include <xbuddy_extension_shared/xbuddy_extension_shared_enums.hpp>
+#include <xbuddy_extension/shared_enums.hpp>
 
 namespace hal {
 
@@ -69,7 +69,7 @@ namespace temperature {
 }
 
 namespace filament_sensor {
-    using State = xbuddy_extension_shared::FilamentSensorState;
+    using State = xbuddy_extension::FilamentSensorState;
 
     State get();
 } // namespace filament_sensor

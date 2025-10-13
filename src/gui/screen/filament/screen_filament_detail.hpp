@@ -55,9 +55,14 @@ public:
     void set_filament_type(FilamentType set);
     void OnChange(size_t) override;
 
+protected:
+    /// If true, the displayed toggle value will be inverse of the actual parameter value
+    void set_invert_value(bool set);
+
 private:
     Parameter param_;
     FilamentType filament_type;
+    bool invert_value = false;
 };
 
 class MI_FILAMENT_NAME final : public WiInfo<32> {
@@ -125,9 +130,9 @@ public:
     MI_FILAMENT_IS_ABRASIVE();
 };
 
-class MI_FILAMENT_IS_FLEXIBLE final : public MI_TOGGLE {
+class MI_FILAMENT_AUTO_RETRACT final : public MI_TOGGLE {
 public:
-    MI_FILAMENT_IS_FLEXIBLE();
+    MI_FILAMENT_AUTO_RETRACT();
 };
 
 class MI_FILAMENT_VISIBLE final : public WI_ICON_SWITCH_OFF_ON_t {
@@ -163,7 +168,7 @@ using ScreenFilamentDetail_ = ScreenMenu<EFooter::Off,
     MI_FILAMENT_MAX_CHAMBER_TEMPERATURE,
 #endif
     MI_FILAMENT_IS_ABRASIVE,
-    MI_FILAMENT_IS_FLEXIBLE,
+    MI_FILAMENT_AUTO_RETRACT,
 #if HAS_CHAMBER_API()
     MI_FILAMENT_REQUIRES_FILTRATION,
 #endif

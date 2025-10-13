@@ -154,19 +154,6 @@
 
 // @section extruder
 
-// Extruder runout prevention.
-// If the machine is idle and the temperature over MINTEMP
-// then extrude some filament every couple of SECONDS.
-//#define EXTRUDER_RUNOUT_PREVENT
-#if ENABLED(EXTRUDER_RUNOUT_PREVENT)
-    #define EXTRUDER_RUNOUT_MINTEMP 190
-    #define EXTRUDER_RUNOUT_SECONDS 30
-    #define EXTRUDER_RUNOUT_SPEED 1500 // (mm/m)
-    #define EXTRUDER_RUNOUT_EXTRUDE 5 // (mm)
-#endif
-
-// @section extruder
-
 /**
  * Extruder cooling fans
  *
@@ -1366,34 +1353,6 @@
 //#define SPEED_POWER_INTERCEPT  0
 //#define SPEED_POWER_MIN       10
 //#define SPEED_POWER_MAX      100      // 0-100%
-#endif
-
-/**
- * CNC Coordinate Systems
- *
- * Enables G53 and G54-G59.3 commands to select coordinate systems
- * and G92.1 to reset the workspace to native machine space.
- */
-#define CNC_COORDINATE_SYSTEMS
-
-
-
-/**
- * Z Axis height calibration.
- *
- *
- */
-
-#define Z_AXIS_CALIBRATION //Enable G64 - measure Z axis size and save it to eeprom
-
-#ifdef Z_AXIS_CALIBRATION
-    #ifdef CNC_COORDINATE_SYSTEMS
-        #define Z_SHIFTED_COOR_SYS 0    //Load Z axis size from eeprom to CNC_COORDINATE_SYSTEMS 0=G54 ... 9=G59.3
-        #define MIN_SAVE_DIFFERENCE 0.5 //Don't save new Z_HEIGHT if difference between new and old Z_HEIGHT is lower than MIN_SAVE_DIFFERENCE. Used to extend EEPROM lifetime.
-    #else
-        #error This feature is useless without CNC_COORDINATE_SYSTEMS. Better disable it completly.
-    #endif
-
 #endif
 
 /**

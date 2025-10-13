@@ -33,8 +33,6 @@
     #include "filament_sensor_ix_side.hpp"
 #endif
 
-using namespace buddy;
-
 static auto *extruder_filament_sensor(uint8_t index) {
 #if FILAMENT_SENSOR_IS_ADC()
     static FSensorADC extruder_filament_sensor(0, false);
@@ -61,7 +59,7 @@ IFSensor *GetSideFSensor([[maybe_unused]] uint8_t index) {
 #endif
 
 #if HAS_XBUDDY_EXTENSION()
-    if (index == 0 && xbuddy_extension().status() != XBuddyExtension::Status::disabled) {
+    if (index == 0 && buddy::xbuddy_extension().status() != buddy::XBuddyExtension::Status::disabled) {
         static FSensorXBuddyExtension xbe_filament_sensor;
         return &xbe_filament_sensor;
     }

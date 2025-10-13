@@ -1,6 +1,7 @@
 #pragma once
 
 #include <option/has_dwarf.h>
+#include <option/has_esp.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_toolchanger.h>
 #include <option/has_loadcell.h>
@@ -35,7 +36,9 @@ enum class ClientFSM : uint8_t {
     Selftest,
     FansSelftest,
     #endif
+    #if HAS_ESP()
     NetworkSetup,
+    #endif
     Printing, // not a dialog
     #if ENABLED(CRASH_RECOVERY)
     CrashRecovery,
@@ -47,7 +50,7 @@ enum class ClientFSM : uint8_t {
     ColdPull,
     #endif
     #if HAS_MANUAL_BELT_TUNING()
-    BeltTuning,
+    ManualBeltTuning,
     #endif
     #if HAS_PHASE_STEPPING_CALIBRATION()
     PhaseSteppingCalibration,
@@ -64,6 +67,10 @@ enum class ClientFSM : uint8_t {
     #if HAS_DOOR_SENSOR_CALIBRATION()
     DoorSensorCalibration,
     #endif
+    #if HAS_LOADCELL()
+    NozzleCleaningFailed,
+    #endif
+    SafetyTimer,
     Wait, ///< FSM that only blocks the screen with a "please wait" text
     _none, // cannot be created, must have same index as _count
     _count = _none

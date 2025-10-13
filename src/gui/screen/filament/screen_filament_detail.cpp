@@ -23,11 +23,19 @@ MI_TOGGLE::MI_TOGGLE(Parameter param, const char *label)
 }
 void MI_TOGGLE::set_filament_type(FilamentType set) {
     filament_type = set;
-    set_value(filament_type.parameters().*param_);
+    // The XOR inverts the value if `invert_value == true`
+    set_value(filament_type.parameters().*param_ ^ invert_value);
     set_enabled(filament_type.is_customizable());
 }
 void MI_TOGGLE::OnChange(size_t) {
-    filament_type.modify_parameters([&](auto &p) { p.*param_ = value(); });
+    // The XOR inverts the value if `invert_value == true`
+    filament_type.modify_parameters([&](auto &p) { p.*param_ = (value() ^ invert_value); });
+}
+
+void MI_TOGGLE::set_invert_value(bool set) {
+    // Should only be called during initialization
+    assert(filament_type == FilamentType::none);
+    invert_value = set;
 }
 
 // * MI_FILAMENT_NAME
@@ -121,9 +129,11 @@ MI_FILAMENT_REQUIRES_FILTRATION::MI_FILAMENT_REQUIRES_FILTRATION()
 MI_FILAMENT_IS_ABRASIVE::MI_FILAMENT_IS_ABRASIVE()
     : MI_TOGGLE(&FilamentTypeParameters::is_abrasive, N_("Is Abrasive")) {}
 
-// * MI_FILAMENT_IS_FLEXIBLE
-MI_FILAMENT_IS_FLEXIBLE::MI_FILAMENT_IS_FLEXIBLE()
-    : MI_TOGGLE(&FilamentTypeParameters::is_flexible, N_("Is Flexible")) {}
+// * MI_FILAMENT_AUTO_RETRACT
+MI_FILAMENT_AUTO_RETRACT::MI_FILAMENT_AUTO_RETRACT()
+    : MI_TOGGLE(&FilamentTypeParameters::do_not_auto_retract, N_("Auto Retract")) {
+    set_invert_value(true);
+}
 
 // * MI_FILAMENT_VISIBLE
 MI_FILAMENT_VISIBLE::MI_FILAMENT_VISIBLE()

@@ -24,11 +24,11 @@ enum class Error : uint8_t {
  * @tparam Args Additional arguments to pass to the subscribers.
  */
 template <typename Publication, size_t QueueSize, typename... Args>
-class QueuedPublisher : public Publisher<std::expected<Publication, queued_publisher::Error>, Args...> {
+class QueuedPublisher : public PublisherBase<const std::expected<Publication, queued_publisher::Error> &, Args...> {
+
+public:
     using Error = queued_publisher::Error;
     using Expected = std::expected<Publication, Error>;
-    using Unexpected = std::unexpected<Error>;
-    using PublisherArgs = Publisher<Expected, Args...>;
 
 public:
     /// Can be called from a thread different to the one calling `call_all()`.
@@ -49,21 +49,38 @@ public:
     }
 
     /**
-     * @brief Call all subscribers with the data from the queue.
-     * If the queue is empty, it will not call any subscribers.
+     * @brief Publishes one event/data entry to all publishers.
      *
      * @param args additional arguments to pass to the subscribers
+     * @returns true if there was something to publish
      */
-    void call_all(Args &&...args) {
-        Publication data;
-        if (data_to_publish.dequeue(data)) {
+    bool publish_one(Args &&...args) {
+        Expected value {};
+        if (data_to_publish.dequeue(*value)) {
             // Call all subscribers with the data and additional arguments
-            PublisherArgs::call_all(Expected(data), args...);
+
         } else if (overflow_flag) {
-            // Call all subscribers with the overflow status
-            PublisherArgs::call_all(Unexpected(Error::overflow), std::forward<Args>(args)...);
+            value = std::unexpected(Error::overflow);
             overflow_flag = false; // Reset the overflow flag after reporting
+
+        } else {
+            return false;
         }
+
+        this->call_all(value, std::forward<Args>(args)...);
+        return true;
+    }
+
+    /**
+     * @brief Publishes all available events/data entries to the publishers
+     * @returns true if anything was published
+     */
+    bool publish_all() {
+        bool result = false;
+        while (publish_one()) {
+            result = true;
+        }
+        return result;
     }
 
     bool is_empty() const {

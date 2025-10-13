@@ -1,8 +1,12 @@
 #include "printer_state.hpp"
+#include "client_fsm_types.h"
+#include "custom_uint31_t.hpp"
 
 #include <fsm_states.hpp>
 #include <client_response.hpp>
 #include <marlin_vars.hpp>
+#include <fsm/safety_timer_phases.hpp>
+#include <option/has_esp.h>
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_mmu2.h>
@@ -18,6 +22,11 @@
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_side_fsensor.h>
 #include <option/has_belt_tuning.h>
+
+#if HAS_LOADCELL()
+    #include <fsm/nozzle_cleaning_failed_phases.hpp>
+    #include <fsm/nozzle_cleaning_failed_mapper.hpp>
+#endif
 
 using namespace marlin_server;
 using namespace printer_state;
@@ -178,8 +187,17 @@ bool state_is_active(DeviceState state) {
 namespace printer_state {
 
 DeviceState get_state(bool ready) {
-    const auto &fsm_states = marlin_vars().get_fsm_states();
-    const auto &top = fsm_states.get_top();
+    std::optional<fsm::States::Top> top;
+    bool is_changing_filament, is_printing, is_preheating;
+    marlin_vars().peek_fsm_states([&](const auto &states) {
+        top = states.get_top();
+        is_changing_filament = states.is_active(ClientFSM::Load_unload);
+        is_printing = states.is_active(ClientFSM::Printing);
+        is_preheating = states.is_active(ClientFSM::Preheat);
+    });
+
+    const DeviceState busy_state = is_printing ? DeviceState::Printing : DeviceState::Busy;
+
     State state = marlin_vars().print_state;
     if (!top) {
         // No FSM present...
@@ -199,8 +217,8 @@ DeviceState get_state(bool ready) {
         // NOTE: handled in get_print_state, it can be Printing, Paused or Stopped
         break;
     case ClientFSM::Load_unload:
-        if (fsm_states.is_active(ClientFSM::Printing)) {
-            if (load_unload_attention_while_printing(*fsm_states[ClientFSM::Load_unload])) {
+        if (is_printing) {
+            if (load_unload_attention_while_printing(top->data)) {
                 return DeviceState::Attention;
             } else {
                 return DeviceState::Printing;
@@ -217,16 +235,25 @@ DeviceState get_state(bool ready) {
 #endif
     case ClientFSM::QuickPause:
         return DeviceState::Paused;
+#if HAS_LOADCELL()
+    case ClientFSM::NozzleCleaningFailed:
+        if (nozzle_cleaning_failed_phase_error_code_mapper(GetEnumFromPhaseIndex<PhaseNozzleCleaningFailed>(data.GetPhase()))) {
+            return DeviceState::Attention;
+        }
+        break;
+#endif
 #if HAS_SELFTEST()
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
 #endif
+#if HAS_ESP()
     case ClientFSM::NetworkSetup:
+#endif
 #if HAS_COLDPULL()
     case ClientFSM::ColdPull:
 #endif
 #if HAS_MANUAL_BELT_TUNING()
-    case ClientFSM::BeltTuning:
+    case ClientFSM::ManualBeltTuning:
 #endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:
@@ -252,7 +279,10 @@ DeviceState get_state(bool ready) {
         // preheat menu to be the only menu screen to not be Idle... :-(
     case ClientFSM::Preheat:
     case ClientFSM::Wait:
-        return DeviceState::Busy;
+        return busy_state;
+
+    case ClientFSM::SafetyTimer:
+        return safety_timer_is_phase_attention.test(data.GetPhase()) ? DeviceState::Attention : busy_state;
 
     case ClientFSM::Warning: {
         auto result = get_print_state(state, ready);
@@ -269,7 +299,7 @@ DeviceState get_state(bool ready) {
         // server, not at full FSM states and can't detect some things - in
         // particular, load / unload from menu is not detectable by this (if
         // "covered" by the warning).
-        if (state_is_active(result) || is_warning_attention(data) || fsm_states.is_active(ClientFSM::Load_unload) || fsm_states.is_active(ClientFSM::Preheat)) {
+        if (state_is_active(result) || is_warning_attention(data) || is_changing_filament || is_preheating) {
             return DeviceState::Attention;
         } else {
             return result;
@@ -367,18 +397,21 @@ DeviceState get_print_state(State state, bool ready) {
 StateWithDialog get_state_with_dialog(bool ready) {
     // Get the state and slap top FSM dialog on top of it, if any
     DeviceState state = get_state(ready);
-    const auto &fsm_states = marlin_vars().get_fsm_states();
-    const auto &fsm_gen = fsm_states.get_state_id();
-    const auto &top = fsm_states.get_top();
-    if (!top) {
-        return state;
-    }
+
+    std::optional<fsm::States::Top> top;
+    fsm::StateId fsm_gen;
+    bool is_printing;
+    marlin_vars().peek_fsm_states([&](const fsm::States &states) {
+        top = states.get_top();
+        fsm_gen = states.get_state_id();
+        is_printing = states.is_active(ClientFSM::Printing);
+    });
 
     const auto &data = top->data;
     switch (top->fsm_type) {
     case ClientFSM::Load_unload:
-        if (fsm_states.is_active(ClientFSM::Printing)) {
-            if (auto attention_code = load_unload_attention_while_printing(*fsm_states[ClientFSM::Load_unload]); attention_code.has_value()) {
+        if (is_printing) {
+            if (auto attention_code = load_unload_attention_while_printing(top->data); attention_code.has_value()) {
                 const Response *buttons = ClientResponses::get_available_responses(GetEnumFromPhaseIndex<PhasesLoadUnload>(data.GetPhase())).data();
                 return { state, attention_code, fsm_gen, buttons };
             }
@@ -409,6 +442,16 @@ StateWithDialog get_state_with_dialog(bool ready) {
         }
         break;
     }
+#if HAS_LOADCELL()
+    case ClientFSM::NozzleCleaningFailed: {
+        auto phase = GetEnumFromPhaseIndex<PhaseNozzleCleaningFailed>(data.GetPhase());
+        if (auto attention_code = nozzle_cleaning_failed_phase_error_code_mapper(phase); attention_code.has_value()) {
+            const Response *available_responses = ClientResponses::get_available_responses(phase).data();
+            return { state, attention_code, fsm_gen, available_responses };
+        }
+        break;
+    }
+#endif
 
     // These have no buttons or phase
     case ClientFSM::Wait:
@@ -420,12 +463,14 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::Selftest:
     case ClientFSM::FansSelftest:
 #endif
+#if HAS_ESP()
     case ClientFSM::NetworkSetup:
+#endif
 #if HAS_COLDPULL()
     case ClientFSM::ColdPull:
 #endif
 #if HAS_MANUAL_BELT_TUNING()
-    case ClientFSM::BeltTuning:
+    case ClientFSM::ManualBeltTuning:
 #endif
 #if HAS_PHASE_STEPPING_CALIBRATION()
     case ClientFSM::PhaseSteppingCalibration:
@@ -443,15 +488,17 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::DoorSensorCalibration:
 #endif
     case ClientFSM::Preheat:
-        // TODO: On some future sunny day, we want to cover all the selftests
+    case ClientFSM::SafetyTimer:
+        // TODO: On some future sunny day, we want to cover all of these
         // and ESP flashing with actual dialogs too; currently we only show a
         // possible warning dialog sitting _on top_ of these.
         //
         // But that's a lot of work, complex, etc, and may need some „special“
         // dialogs too. Leaving it out for now.
         break;
-        // Not possible, we would already return, if no FSM is set, here just to satisfy compiler, that it is handled
+
     case ClientFSM::_none:
+        // Not possible, we would already return, if no FSM is set, here just to satisfy compiler, that it is handled
         break;
     }
 
@@ -483,9 +530,8 @@ bool has_job() {
     case DeviceState::Paused:
         return true;
     case DeviceState::Attention: {
-        const auto &fsm_states = marlin_vars().get_fsm_states();
         // Attention while printing or one of these questions before print(eg. wrong filament)
-        return (fsm_states[ClientFSM::Printing] || fsm_states[ClientFSM::PrintPreview]);
+        return marlin_vars().peek_fsm_states([](const auto &states) { return states[ClientFSM::Printing] || states[ClientFSM::PrintPreview]; });
     }
     default:
         return false;
@@ -579,10 +625,6 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 #endif
     case WarningType::FilamentSensorsDisabled:
         return ErrCode::ERR_MECHANICAL_FILAMENT_SENSORS_DISABLED;
-#if HAS_LOADCELL() && ENABLED(PROBE_CLEANUP_SUPPORT)
-    case WarningType::NozzleCleaningFailed:
-        return ErrCode::CONNECT_NOZZLE_CLEANING_FAILED;
-#endif
 #if _DEBUG
     case WarningType::SteppersTimeout:
         return ErrCode::CONNECT_STEPPERS_TIMEOUT;

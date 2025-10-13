@@ -256,9 +256,6 @@ namespace state {
                 .precise = false,
             };
             GcodeSuite::G28_no_parser(true, true, false, flags); // XY only
-#if HAS_TOOLCHANGER()
-            tool_change(/*tool_index=*/0, tool_return_t::no_return, tool_change_lift_t::no_lift, /*z_down=*/false);
-#endif
         }
         Planner::synchronize();
 

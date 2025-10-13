@@ -35,6 +35,7 @@
 #include <option/filament_sensor.h>
 #include <option/has_side_leds.h>
 #include <option/has_coldpull.h>
+#include <option/has_auto_retract.h>
 #include <raii/auto_restore.hpp>
 #include <time.h>
 #include <footer_items_heaters.hpp>
@@ -569,25 +570,6 @@ MI_INFO_SIDE_FILL_SENSOR::MI_INFO_SIDE_FILL_SENSOR()
     set_is_hidden(GetSideFSensor(marlin_vars().active_extruder.get()) == nullptr);
 }
 
-/*****************************************************************************/
-// MI_INFO_PRINT_FAN
-
-MI_INFO_PRINT_FAN::MI_INFO_PRINT_FAN()
-    : WI_FAN_LABEL_t(_("Print Fan"),
-        [](auto) { return FanPWMAndRPM {
-                       .pwm = marlin_vars().print_fan_speed,
-                       .rpm = marlin_vars().active_hotend().print_fan_rpm,
-                   }; } //
-    ) {}
-
-MI_INFO_HBR_FAN::MI_INFO_HBR_FAN()
-    : WI_FAN_LABEL_t(PRINTER_IS_PRUSA_MK3_5() ? _("Hotend Fan") : _("Heatbreak Fan"),
-        [](auto) { return FanPWMAndRPM {
-                       .pwm = static_cast<uint8_t>(sensor_data().hbrFan),
-                       .rpm = marlin_vars().active_hotend().heatbreak_fan_rpm,
-                   }; } //
-    ) {}
-
 MI_ODOMETER_DIST::MI_ODOMETER_DIST(const string_view_utf8 &label, const img::Resource *icon, is_enabled_t enabled, is_hidden_t hidden, float initVal)
     : WI_FORMATABLE_LABEL_t<float>(label, icon, enabled, hidden, initVal, [&](const std::span<char> &buffer) {
         float value_m = value() / 1000; // change the unit from mm to m
@@ -622,52 +604,52 @@ MI_ODOMETER_TIME::MI_ODOMETER_TIME()
     }) {}
 
 #if BOARD_IS_XBUDDY()
+MI_INFO_BED_VOLTAGE::MI_INFO_BED_VOLTAGE()
+    : MenuItemAutoUpdatingLabel(_("Bed Voltage"), "%.1f V",
+        [](auto) { return sensor_data().bed_voltage.load(); } //
+    ) {}
+
 MI_INFO_HEATER_VOLTAGE::MI_INFO_HEATER_VOLTAGE()
     : MenuItemAutoUpdatingLabel(_("Heater Voltage"), "%.1f V",
-        [](auto) { return sensor_data().heaterVoltage; } //
+        [](auto) { return sensor_data().heater_voltage.load(); } //
     ) {}
 
 MI_INFO_HEATER_CURRENT::MI_INFO_HEATER_CURRENT()
     : MenuItemAutoUpdatingLabel(_("Heater Current"), "%.1f A",
-        [](auto) { return sensor_data().heaterCurrent; } //
+        [](auto) { return sensor_data().heater_current.load(); } //
     ) {}
 
 MI_INFO_INPUT_CURRENT::MI_INFO_INPUT_CURRENT()
     : MenuItemAutoUpdatingLabel(_("Input Current"), "%.1f A",
-        [](auto) { return sensor_data().inputCurrent; } //
+        [](auto) { return sensor_data().input_current.load(); } //
     ) {}
 
 MI_INFO_MMU_CURRENT::MI_INFO_MMU_CURRENT()
     : MenuItemAutoUpdatingLabel(_("MMU Current"), "%.1f A",
-        [](auto) { return sensor_data().mmuCurrent; } //
+        [](auto) { return sensor_data().mmuCurrent.load(); } //
     ) {}
 #endif
 
 #if BOARD_IS_XLBUDDY()
 MI_INFO_5V_VOLTAGE::MI_INFO_5V_VOLTAGE()
     : MenuItemAutoUpdatingLabel(_("5V Voltage"), "%.1f V",
-        [](auto) { return sensor_data().sandwich5VVoltage; } //
+        [](auto) { return sensor_data().sandwich5VVoltage.load(); } //
     ) {}
 
 MI_INFO_SANDWICH_5V_CURRENT::MI_INFO_SANDWICH_5V_CURRENT()
     : MenuItemAutoUpdatingLabel(_("Sandwich 5V Current"), "%.2f A",
-        [](auto) { return sensor_data().sandwich5VCurrent; } //
+        [](auto) { return sensor_data().sandwich5VCurrent.load(); } //
     ) {}
 
 MI_INFO_BUDDY_5V_CURRENT::MI_INFO_BUDDY_5V_CURRENT()
     : MenuItemAutoUpdatingLabel(_("XL Buddy 5V Current"), "%.2f A",
-        [](auto) { return sensor_data().buddy5VCurrent; } //
+        [](auto) { return sensor_data().buddy5VCurrent.load(); } //
     ) {}
 #endif
 
-MI_INFO_INPUT_VOLTAGE::MI_INFO_INPUT_VOLTAGE()
-    : MenuItemAutoUpdatingLabel(_("Input Voltage"), "%.1f V",
-        [](auto) { return sensor_data().inputVoltage; } //
-    ) {}
-
 MI_INFO_BOARD_TEMP::MI_INFO_BOARD_TEMP()
     : MenuItemAutoUpdatingLabel(_("Board Temperature"), standard_print_format::temp_c,
-        [](auto) { return sensor_data().boardTemp; } //
+        [](auto) { return sensor_data().boardTemp.load(); } //
     ) {
 }
 
@@ -676,7 +658,7 @@ MI_INFO_DOOR_SENSOR::MI_INFO_DOOR_SENSOR()
     : MenuItemAutoUpdatingLabel(
         _("Door Sensor"),
         [this](const std::span<char> &buffer) { print_val(buffer); },
-        [](auto) { return sensor_data().door_sensor_detailed_state; } //
+        [](auto) { return sensor_data().door_sensor_detailed_state.load(); } //
     ) {
 }
 
@@ -695,7 +677,7 @@ void MI_INFO_DOOR_SENSOR::print_val(const std::span<char> &buffer) const {
 
 MI_INFO_MCU_TEMP::MI_INFO_MCU_TEMP()
     : MenuItemAutoUpdatingLabel(_("MCU Temperature"), standard_print_format::temp_c,
-        [](auto) { return sensor_data().MCUTemp; } //
+        [](auto) { return sensor_data().MCUTemp.load(); } //
     ) {}
 
 MI_FOOTER_RESET::MI_FOOTER_RESET()
@@ -881,7 +863,7 @@ MI_TOOL_LEDS_ENABLE::MI_TOOL_LEDS_ENABLE()
     : WI_ICON_SWITCH_OFF_ON_t(config_store().tool_leds_enabled.get(), _(label), nullptr, is_enabled_t::yes, prusa_toolchanger.is_toolchanger_enabled() ? is_hidden_t::no : is_hidden_t::yes) {
 }
 void MI_TOOL_LEDS_ENABLE::OnChange(size_t old_index) {
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         prusa_toolchanger.getTool(e).set_cheese_led(!old_index ? 0xff : 0x00, 0x00);
     }
     config_store().tool_leds_enabled.set(!old_index);
@@ -967,3 +949,12 @@ void MI_LOG_TO_TXT::OnChange(size_t) {
     MsgBoxInfo(_("The printer will now save all logs to file until restart.\n\nLog file: %s").formatted(fmt_buf, filename), Responses_Ok);
     MsgBoxWarning(_("Turn the logging off before disconnecting the USB drive, or you risk damaging the filesystem!"), Responses_Ok);
 }
+
+#if HAS_AUTO_RETRACT()
+MI_PRE_NOZZLE_CLEANING_RETRACT::MI_PRE_NOZZLE_CLEANING_RETRACT()
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().pre_nozzle_cleaning_retraction_enable.get(), _("Nozzle Cleaning Retraction")) {}
+
+void MI_PRE_NOZZLE_CLEANING_RETRACT::OnChange(size_t) {
+    config_store().pre_nozzle_cleaning_retraction_enable.set(value());
+}
+#endif

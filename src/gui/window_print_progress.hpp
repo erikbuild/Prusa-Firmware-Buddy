@@ -7,7 +7,7 @@
 
 // to be used in ctor
 
-class WindowPrintProgress : public window_numberless_progress_t {
+class WindowPrintProgress : public WindowProgressBar {
     int8_t last_sd_percent_done;
 
 public:

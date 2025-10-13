@@ -25,13 +25,11 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             filepath_operation.cpp
             footer_def.cpp
             footer_eeprom.cpp
-            fsm_network_setup.cpp
             fsm_states.cpp
             general_response.cpp
             hardware_rng.cpp
             hardware_serial.cpp
             heap.cpp
-            homing_reporter.cpp
             hwio_pindef_check.cpp
             i2c.cpp
             ini_handler.cpp
@@ -97,6 +95,9 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   if(HAS_SHEET_PROFILES)
     target_sources(firmware PRIVATE SteelSheets.cpp)
   endif()
+  if(HAS_ESP)
+    target_sources(firmware PRIVATE fsm_network_setup.cpp)
+  endif()
   if(HAS_E2EE_SUPPORT)
     add_subdirectory(e2ee)
   endif()
@@ -105,7 +106,6 @@ elseif(BOARD STREQUAL "DWARF")
     firmware
     PRIVATE adc.cpp
             heap.cpp
-            homing_reporter.cpp
             marlin_log_component.cpp
             otp.cpp
             Pin.cpp
@@ -129,7 +129,6 @@ elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
             ExtInterruptHandler.cpp
             fsm_states.cpp
             heap.cpp
-            homing_reporter.cpp
             hwio_XLBuddy.cpp # todo: replace
             i2c.cpp
             marlin_client.cpp

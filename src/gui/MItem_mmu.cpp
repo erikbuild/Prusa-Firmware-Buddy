@@ -11,7 +11,6 @@
     #include "ScreenSelftest.hpp"
 #endif
 
-#include "screen_menu_mmu_preload_to_mmu.hpp"
 #include "screen_menu_mmu_load_test_filament.hpp"
 #include "screen_menu_mmu_eject_filament.hpp"
 #include "screen_menu_mmu_cut_filament.hpp"
@@ -25,27 +24,15 @@
 
 /**********************************************************************************************/
 // MI_MMU_LOAD_FILAMENT
-MI_MMU_PRELOAD_ADVANCED::MI_MMU_PRELOAD_ADVANCED()
+MI_MMU_PRELOAD::MI_MMU_PRELOAD()
     : IWindowMenuItem(_(label), nullptr,
         // enable the PreLoad menu only if there is no filament already loaded
         FSensors_instance().WhereIsFilament() == MMU2::FilamentState::AT_FSENSOR ? is_enabled_t::no : is_enabled_t::yes,
         is_hidden_t::no,
         expands_t::yes) {
 }
-void MI_MMU_PRELOAD_ADVANCED::click(IWindowMenu & /*window_menu*/) {
-    Screens::Access()->Open(ScreenFactory::Screen<ScreenChangeAllFilaments>);
-}
-
-/**********************************************************************************************/
-// MI_MMU_PRELOAD
-MI_MMU_PRELOAD::MI_MMU_PRELOAD()
-    : IWindowMenuItem(_(label), nullptr,
-        FSensors_instance().WhereIsFilament() == MMU2::FilamentState::AT_FSENSOR ? is_enabled_t::no : is_enabled_t::yes,
-        is_hidden_t::no,
-        expands_t::yes) {
-}
 void MI_MMU_PRELOAD::click(IWindowMenu & /*window_menu*/) {
-    Screens::Access()->Open(ScreenFactory::Screen<ScreenMenuMMUPreloadToMMU>);
+    Screens::Access()->Open(ScreenFactory::Screen<ScreenChangeAllFilaments>);
 }
 
 /**********************************************************************************************/
@@ -103,10 +90,9 @@ void MI_MMU_ISSUE_GCODE::click(IWindowMenu & /*window_menu*/) {
 }
 
 /**********************************************************************************************/
-// MI_MMU_ISSUE_GCODE_SLOT
-MI_MMU_ISSUE_GCODE_SLOT::MI_MMU_ISSUE_GCODE_SLOT(uint8_t slot_i, const char *label_prefix, const char *gcode_fmt)
+// MI_MMU_ITEM_WITH_SLOT
+MI_MMU_ITEM_WITH_SLOT::MI_MMU_ITEM_WITH_SLOT(uint8_t slot_i, const char *label_prefix)
     : IWindowMenuItem({})
-    , gcode_fmt_(gcode_fmt)
     , slot_i_(slot_i) {
 
 #pragma GCC diagnostic push
@@ -118,9 +104,36 @@ MI_MMU_ISSUE_GCODE_SLOT::MI_MMU_ISSUE_GCODE_SLOT(uint8_t slot_i, const char *lab
 #pragma GCC diagnostic pop
 }
 
-void MI_MMU_ISSUE_GCODE_SLOT::click(IWindowMenu &) {
+/**********************************************************************************************/
+// MI_MMU_ISSUE_GCODE_SLOT_FMT
+MI_MMU_ISSUE_GCODE_SLOT_FMT::MI_MMU_ISSUE_GCODE_SLOT_FMT(uint8_t slot_i, const char *label_prefix, const char *gcode_fmt)
+    : MI_MMU_ITEM_WITH_SLOT(slot_i, label_prefix)
+    , gcode_fmt_(gcode_fmt) {
+}
+
+void MI_MMU_ISSUE_GCODE_SLOT_FMT::click(IWindowMenu &) {
     std::array<char, MAX_CMD_SIZE> gcode;
     snprintf(gcode.data(), gcode.size(), gcode_fmt_, slot_i_);
+    gui_try_gcode_with_msg(gcode.data());
+}
+
+/**********************************************************************************************/
+// MI_MMU_ISSUE_LOAD_TO_NOZZLE_SLOT
+MI_MMU_ISSUE_LOAD_TO_NOZZLE_SLOT::MI_MMU_ISSUE_LOAD_TO_NOZZLE_SLOT(uint8_t slot_i, const char *label_prefix)
+    : MI_MMU_ITEM_WITH_SLOT(slot_i, label_prefix) {}
+
+void MI_MMU_ISSUE_LOAD_TO_NOZZLE_SLOT::click(IWindowMenu &) {
+    std::array<char, MAX_CMD_SIZE> gcode;
+    FilamentType f = config_store().get_filament_type(slot_i_);
+
+    if (f == FilamentType::none) {
+        // if, for some reason, no filament type is known on a specific slot, we shall omit the S parameter from the M701 gcode
+        // Also, un-preloaded filament slots shall be grayed-out to prevent the user from getting into these edge-cases
+        snprintf(gcode.data(), gcode.size(), "M701 W2 P%i", slot_i_);
+    } else {
+        snprintf(gcode.data(), gcode.size(), "M701 S\"%s\" W2 P%i", f.parameters().name.data(), slot_i_);
+    }
+
     gui_try_gcode_with_msg(gcode.data());
 }
 

@@ -83,7 +83,6 @@ if(BOARD_IS_MASTER_BOARD)
             Marlin/Marlin/src/gcode/control/M350_M351.cpp
             Marlin/Marlin/src/gcode/control/M7-M9.cpp
             Marlin/Marlin/src/gcode/control/M80_M81.cpp
-            Marlin/Marlin/src/gcode/control/M85.cpp
             Marlin/Marlin/src/gcode/control/M86.cpp
             Marlin/Marlin/src/gcode/control/M999.cpp
             Marlin/Marlin/src/gcode/eeprom/M500-M504.cpp
@@ -101,7 +100,6 @@ if(BOARD_IS_MASTER_BOARD)
             Marlin/Marlin/src/gcode/feature/trinamic/M906.cpp
             Marlin/Marlin/src/gcode/feature/trinamic/M911-M914.cpp
             Marlin/Marlin/src/gcode/gcode.cpp
-            Marlin/Marlin/src/gcode/geometry/G53-G59.cpp
             Marlin/Marlin/src/gcode/geometry/G92.cpp
             Marlin/Marlin/src/gcode/geometry/M206_M428.cpp
             Marlin/Marlin/src/gcode/host/M110.cpp
@@ -248,5 +246,5 @@ target_link_libraries(
 target_link_libraries(Marlin PRIVATE CppStdExtensions logging freertos)
 
 if(HAS_XBUDDY_EXTENSION)
-  target_link_libraries(Marlin PUBLIC XBuddyExtensionShared)
+  target_link_libraries(Marlin PUBLIC xbuddy_extension)
 endif()

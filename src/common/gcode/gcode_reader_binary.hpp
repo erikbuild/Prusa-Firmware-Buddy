@@ -23,9 +23,9 @@ extern "C" {
 /**
  * @brief Implementation of IGcodeReader for PrusaPack files
  */
-class PrusaPackGcodeReader final : public GcodeReaderCommon {
+class PrusaPackGcodeReader : public GcodeReaderCommon {
 public:
-    PrusaPackGcodeReader(FILE &f, const struct stat &stat_info, bool allow_decryption = false
+    PrusaPackGcodeReader(unique_file_ptr &&f, const struct stat &stat_info, bool allow_decryption = false
 #if HAS_E2EE_SUPPORT()
         ,
         e2ee::IdentityCheckLevel identity_check_lvl = e2ee::IdentityCheckLevel::AnyIdentity
@@ -42,8 +42,6 @@ public:
     // Call this only after already decrypting the asymmetric stuff for encrypted gcodes
     virtual uint32_t get_gcode_stream_size_estimate() override;
     virtual uint32_t get_gcode_stream_size() override;
-
-    virtual FileVerificationResult verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const override;
 
     StreamRestoreInfo get_restore_info() override {
         return { .data = stream_restore_info };
@@ -203,4 +201,20 @@ private:
     ThumbnailReader thumbnail_reader;
 
     std::optional<ThumbnailDetails> thumbnail_details(const bgcode::core::BlockHeader &block_header);
+
+    /**
+     * @brief Is this block of the correct type?
+     *
+     * This considers the inner encrypted type in case we have encrypted blocks.
+     *
+     * Defaults to false in case there are errors (eg. corrupt block or block
+     * we are unable to decrypt isn't of the correct type).
+     */
+    bool is_of_type(const bgcode::core::BlockHeader &block_header, bgcode::core::EBlockType type);
+    /**
+     * @brief Is the printer metadata block readable to us?
+     *
+     * That is, format we can handle, compression we can handle.
+     */
+    bool is_readable_metadata(const bgcode::core::BlockHeader &block_header);
 };

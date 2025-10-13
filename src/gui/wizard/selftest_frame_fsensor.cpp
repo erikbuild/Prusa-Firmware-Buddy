@@ -55,7 +55,7 @@ SelftestFrameFSensor::SelftestFrameFSensor(window_t *parent, PhasesSelftest ph, 
           footer::Item::f_sensor_side,
 #endif /*HAS_SIDE_FSENSOR()*/
           footer::Item::f_sensor)
-    , progress(this, WizardDefaults::row_1)
+    , line { this, WizardDefaults::row_1 }
     , text_left(this, Rect16(col_0, top_of_changeable_area, text_left_width, height_of_changeable_area), is_multiline::yes)
     , text_right(this, Rect16(col_0 + icon_left_width + text_icon_space, top_of_changeable_area, text_right_width, height_of_changeable_area), is_multiline::yes)
 
@@ -65,7 +65,6 @@ SelftestFrameFSensor::SelftestFrameFSensor(window_t *parent, PhasesSelftest ph, 
     , animation(this, { int16_t(GuiDefaults::ScreenWidth / 2), int16_t(row_2) })
     , text_animation(this, Rect16(WizardDefaults::col_0, row_3, WizardDefaults::X_space, WizardDefaults::row_h), is_multiline::no, is_closed_on_click_t::no, _("in progress"))
     , text_result(this, ChangeableRect, is_multiline::no) {
-    progress.SetProgressPercent(100); // just orange line
     animation.SetRect(animation.GetRect() - Rect16::Left_t(animation.GetRect().Width() / 2));
     text_animation.SetAlignment(Align_t::Center());
     text_left.SetAlignment(Align_t::LeftCenter());

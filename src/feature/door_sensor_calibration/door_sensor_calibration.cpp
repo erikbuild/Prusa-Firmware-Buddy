@@ -36,7 +36,7 @@ private:
         switch (wait_for_response(curr_phase)) {
         case Response::Skip:
             config_store().selftest_result_door_sensor.set(TestResult_Skipped);
-            fsm_change(PhaseDoorSensorCalibration::finish);
+            check_and_prompt_enable_safety_feature();
             break;
         case Response::Calibrate:
             fsm_change(PhaseDoorSensorCalibration::confirm_closed);
@@ -69,7 +69,7 @@ private:
         switch (wait_for_response(curr_phase)) {
         case Response::Continue:
             config_store().selftest_result_door_sensor.set(TestResult_Passed);
-            fsm_change(PhaseDoorSensorCalibration::finish);
+            check_and_prompt_enable_safety_feature();
             break;
         default:
             BUDDY_UNREACHABLE();
@@ -92,7 +92,7 @@ private:
         switch (wait_for_response(curr_phase)) {
         case Response::Skip:
             config_store().selftest_result_door_sensor.set(TestResult_Skipped);
-            fsm_change(PhaseDoorSensorCalibration::finish);
+            check_and_prompt_enable_safety_feature();
             break;
         case Response::Back:
             fsm_change(last_phase);
@@ -100,6 +100,44 @@ private:
         default:
             BUDDY_UNREACHABLE();
             break;
+        }
+    }
+
+    void ask_enable_safety_features() {
+        switch (wait_for_response(curr_phase)) {
+        case Response::Yes:
+            config_store().emergency_stop_enable.set(true);
+            fsm_change(PhaseDoorSensorCalibration::finish);
+            break;
+        case Response::No:
+            fsm_change(PhaseDoorSensorCalibration::warn_disabled_sensor);
+            break;
+        default:
+            BUDDY_UNREACHABLE();
+            break;
+        }
+    }
+
+    void warn_disabled_sensor() {
+        switch (wait_for_response(curr_phase)) {
+        case Response::Disable:
+            config_store().emergency_stop_enable.set(false);
+            fsm_change(PhaseDoorSensorCalibration::finish);
+            break;
+        case Response::Cancel:
+            fsm_change(PhaseDoorSensorCalibration::ask_enable_safety_features);
+            break;
+        default:
+            BUDDY_UNREACHABLE();
+            break;
+        }
+    }
+
+    void check_and_prompt_enable_safety_feature() {
+        if (config_store().emergency_stop_enable.get()) {
+            fsm_change(PhaseDoorSensorCalibration::finish);
+        } else {
+            fsm_change(PhaseDoorSensorCalibration::ask_enable_safety_features);
         }
     }
 
@@ -131,6 +169,12 @@ private:
             break;
         case PhaseDoorSensorCalibration::loosen_screw_quarter:
             continue_abort_phases(buddy::DoorSensor::State::door_open, PhaseDoorSensorCalibration::done, PhaseDoorSensorCalibration::repeat);
+            break;
+        case PhaseDoorSensorCalibration::ask_enable_safety_features:
+            ask_enable_safety_features();
+            break;
+        case PhaseDoorSensorCalibration::warn_disabled_sensor:
+            warn_disabled_sensor();
             break;
         case PhaseDoorSensorCalibration::done:
             done();

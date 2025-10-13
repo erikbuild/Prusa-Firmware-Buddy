@@ -22,9 +22,9 @@ void XBuddyExtension::set_fan_pwm(size_t fan_idx, uint8_t pwm) {
 
     assert(fan_idx < FAN_CNT);
 
-    if (requirement.value.fan_pwm[fan_idx] != pwm) {
-        requirement.value.fan_pwm[fan_idx] = pwm;
-        requirement.dirty = true;
+    if (config.value.fan_pwm[fan_idx] != pwm) {
+        config.value.fan_pwm[fan_idx] = pwm;
+        config.dirty = true;
     }
 }
 
@@ -33,20 +33,20 @@ uint8_t XBuddyExtension::get_requested_fan_pwm(size_t fan_idx) {
 
     assert(fan_idx < FAN_CNT);
 
-    return requirement.value.fan_pwm[fan_idx];
+    return config.value.fan_pwm[fan_idx];
 }
 
 bool XBuddyExtension::get_usb_power() const {
     Lock lock(mutex);
-    return requirement.value.usb_power_enable;
+    return config.value.usb_power;
 }
 
 void XBuddyExtension::set_white_led(uint8_t intensity) {
     Lock lock(mutex);
 
-    if (requirement.value.white_led != intensity) {
-        requirement.value.white_led = intensity;
-        requirement.dirty = true;
+    if (config.value.w_led_pwm != intensity) {
+        config.value.w_led_pwm = intensity;
+        config.dirty = true;
     }
 }
 
@@ -57,9 +57,9 @@ void XBuddyExtension::set_white_strobe_frequency(std::optional<uint16_t> freq) {
 
     Lock lock(mutex);
 
-    if (requirement.value.white_led_freq != freq_raw) {
-        requirement.value.white_led_freq = freq_raw;
-        requirement.dirty = true;
+    if (config.value.w_led_frequency != freq_raw) {
+        config.value.w_led_frequency = freq_raw;
+        config.dirty = true;
     }
 }
 
@@ -69,8 +69,9 @@ void XBuddyExtension::set_rgbw_led(std::array<uint8_t, 4> color) {
     bool same = true;
 
     // A cycle, because uint8_t vs uint16_t
+    uint16_t *rgbw_fields[] = { &config.value.rgbw_led_r_pwm, &config.value.rgbw_led_g_pwm, &config.value.rgbw_led_b_pwm, &config.value.rgbw_led_w_pwm };
     for (size_t i = 0; i < 4; i++) {
-        if (color[i] != requirement.value.rgbw_led[i]) {
+        if (color[i] != *rgbw_fields[i]) {
             same = false;
         }
     }
@@ -80,36 +81,36 @@ void XBuddyExtension::set_rgbw_led(std::array<uint8_t, 4> color) {
     }
 
     for (size_t i = 0; i < 4; i++) {
-        requirement.value.rgbw_led[i] = color[i];
+        *rgbw_fields[i] = color[i];
     }
 
-    requirement.dirty = true;
+    config.dirty = true;
 }
 
 void XBuddyExtension::set_usb_power(bool enabled) {
     Lock lock(mutex);
 
-    if (enabled != requirement.value.usb_power_enable) {
-        requirement.value.usb_power_enable = enabled;
-        requirement.dirty = true;
+    if (enabled != config.value.usb_power) {
+        config.value.usb_power = enabled;
+        config.dirty = true;
     }
 }
 
 void XBuddyExtension::set_mmu_power(bool enabled) {
     Lock lock(mutex);
 
-    if (enabled != requirement.value.mmu_power_enable) {
-        requirement.value.mmu_power_enable = enabled;
-        requirement.dirty = true;
+    if (enabled != config.value.mmu_power) {
+        config.value.mmu_power = enabled;
+        config.dirty = true;
     }
 }
 
 void XBuddyExtension::set_mmu_nreset(bool enabled) {
     Lock lock(mutex);
 
-    if (enabled != requirement.value.mmu_nreset) {
-        requirement.value.mmu_nreset = enabled;
-        requirement.dirty = true;
+    if (enabled != config.value.mmu_nreset) {
+        config.value.mmu_nreset = enabled;
+        config.dirty = true;
     }
 }
 
@@ -122,7 +123,7 @@ std::optional<uint16_t> XBuddyExtension::get_fan_rpm(size_t fan_idx) const {
         return std::nullopt;
     }
 
-    return static_cast<uint16_t>(status.value.fan_rpm[fan_idx]);
+    return status.value.fan_rpm[fan_idx];
 }
 
 std::array<uint16_t, XBuddyExtension::FAN_CNT> XBuddyExtension::get_fans_rpm() const {
@@ -142,7 +143,7 @@ std::optional<float> XBuddyExtension::get_chamber_temp() const {
         return std::nullopt;
     }
 
-    return static_cast<float>(status.value.chamber_temp) / 10.0f;
+    return static_cast<float>(status.value.temperature) / 10.0f;
 }
 
 std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_filament_sensor_state() const {
@@ -152,7 +153,7 @@ std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_filamen
         return std::nullopt;
     }
 
-    return static_cast<FilamentSensorState>(status.value.filament_sensor_state);
+    return static_cast<FilamentSensorState>(status.value.filament_sensor);
 }
 
 CommunicationStatus XBuddyExtension::refresh_input(uint32_t max_age) {
@@ -178,7 +179,7 @@ CommunicationStatus XBuddyExtension::refresh_input(uint32_t max_age) {
 CommunicationStatus XBuddyExtension::refresh_holding() {
     // Already locked by caller
 
-    return bus.write(unit, requirement);
+    return bus.write(unit, config);
 }
 
 CommunicationStatus XBuddyExtension::refresh() {
@@ -211,7 +212,7 @@ CommunicationStatus XBuddyExtension::initial_scan() {
     Lock lock(mutex);
 
     const auto input = refresh_input(0);
-    requirement.dirty = true;
+    config.dirty = true;
     return input;
 }
 
@@ -276,7 +277,7 @@ XBuddyExtension::MMUModbusRequest XBuddyExtension::MMUModbusRequest::make_query(
 
 XBuddyExtension::MMUModbusRequest XBuddyExtension::MMUModbusRequest::make_command(uint8_t command, uint8_t param) {
     MMUModbusRequest request;
-    request.u.command.cp = xbuddy_extension_shared::mmu_bridge::pack_command(command, param);
+    request.u.command.cp = xbuddy_extension::mmu_bridge::pack_command(command, param);
     request.rw = RW::command;
     return request;
 }
@@ -290,9 +291,9 @@ CommunicationStatus XBuddyExtension::refresh_mmu() {
     case MMUModbusRequest::RW::read: {
         mmuModbusRq.rw = MMUModbusRequest::RW::read_inactive; // deactivate as it will be processed shortly
         // even if the communication fails, the MMU state machine handles it, it is not required to performs repeats at the MODBUS level
-        auto rv = bus.read_holding(xbuddy_extension_shared::mmu_bridge::modbusUnitNr, &mmuModbusRq.u.read.value, 1, mmuModbusRq.u.read.address, mmuModbusRq.timestamp_ms, 0);
+        auto rv = bus.read_holding(xbuddy_extension::mmu_bridge::modbusUnitNr, &mmuModbusRq.u.read.value, 1, mmuModbusRq.u.read.address, mmuModbusRq.timestamp_ms, 0);
         log_debug(MMU2, "read holding(uni=%" PRIu8 " val=%" PRIu16 " adr=%" PRIu16 " ts=%" PRIu32 " rv=%" PRIu8,
-            xbuddy_extension_shared::mmu_bridge::modbusUnitNr, mmuModbusRq.u.read.value, mmuModbusRq.u.read.address, mmuModbusRq.timestamp_ms, (uint8_t)rv);
+            xbuddy_extension::mmu_bridge::modbusUnitNr, mmuModbusRq.u.read.value, mmuModbusRq.u.read.address, mmuModbusRq.timestamp_ms, (uint8_t)rv);
         if (rv == CommunicationStatus::OK) {
             mmuModbusRq.u.read.accepted = true; // this is a bit speculative
             mmuValidResponseReceived = true;
@@ -305,10 +306,10 @@ CommunicationStatus XBuddyExtension::refresh_mmu() {
     case MMUModbusRequest::RW::write: {
         mmuModbusRq.rw = MMUModbusRequest::RW::write_inactive; // deactivate as it will be processed shortly
         bool dirty = true; // force send the MODBUS message
-        auto rv = bus.write_holding(xbuddy_extension_shared::mmu_bridge::modbusUnitNr, &mmuModbusRq.u.write.value, 1, mmuModbusRq.u.write.address, dirty);
+        auto rv = bus.write_holding(xbuddy_extension::mmu_bridge::modbusUnitNr, &mmuModbusRq.u.write.value, 1, mmuModbusRq.u.write.address, dirty);
         mmuModbusRq.timestamp_ms = last_ticks_ms(); // write_holding doesn't update the timestamp, must be done manually
         log_debug(MMU2, "write holding(uni=%" PRIu8 " val=%" PRIu16 " adr=%" PRIu16 " ts=%" PRIu32 " rv=%" PRIu8,
-            xbuddy_extension_shared::mmu_bridge::modbusUnitNr, mmuModbusRq.u.write.value, mmuModbusRq.u.write.address, mmuModbusRq.timestamp_ms, (uint8_t)rv);
+            xbuddy_extension::mmu_bridge::modbusUnitNr, mmuModbusRq.u.write.value, mmuModbusRq.u.write.address, mmuModbusRq.timestamp_ms, (uint8_t)rv);
         if (rv == CommunicationStatus::OK) {
             mmuModbusRq.u.write.accepted = true; // this is a bit speculative
             mmuValidResponseReceived = true;
@@ -320,7 +321,7 @@ CommunicationStatus XBuddyExtension::refresh_mmu() {
 
     case MMUModbusRequest::RW::query: {
         mmuModbusRq.rw = MMUModbusRequest::RW::query_inactive; // deactivate as it will be processed shortly
-        auto rv = bus.read(xbuddy_extension_shared::mmu_bridge::modbusUnitNr, mmuQuery, 0);
+        auto rv = bus.read(xbuddy_extension::mmu_bridge::modbusUnitNr, mmuQuery, 0);
         log_debug(MMU2, "read=%" PRIu8, (uint8_t)rv);
         if (rv == CommunicationStatus::OK) {
             mmuModbusRq.timestamp_ms = mmuQuery.last_read_timestamp_ms;
@@ -333,9 +334,9 @@ CommunicationStatus XBuddyExtension::refresh_mmu() {
         mmuModbusRq.rw = MMUModbusRequest::RW::command_inactive; // deactivate as it will be processed shortly
         bool dirty = true; // force send the MODBUS message
         log_debug(MMU2, "command");
-        auto rv = bus.write_holding(xbuddy_extension_shared::mmu_bridge::modbusUnitNr, &mmuModbusRq.u.command.cp, 1, xbuddy_extension_shared::mmu_bridge::commandInProgressRegisterAddress, dirty);
+        auto rv = bus.write_holding(xbuddy_extension::mmu_bridge::modbusUnitNr, &mmuModbusRq.u.command.cp, 1, xbuddy_extension::mmu_bridge::commandInProgressRegisterAddress, dirty);
         if (rv != CommunicationStatus::OK) {
-            const auto [command, param] = xbuddy_extension_shared::mmu_bridge::unpack_command(mmuModbusRq.u.command.cp);
+            const auto [command, param] = xbuddy_extension::mmu_bridge::unpack_command(mmuModbusRq.u.command.cp);
             log_info(MMU2, "command %d failed, param %d", command, param);
             return rv;
         }
@@ -349,7 +350,7 @@ CommunicationStatus XBuddyExtension::refresh_mmu() {
         // Beware: this command's round-trip may span over 10-20 ms which is close to the MODBUS timeout which is being used for the MMU protocol_logic as well.
         // If the round-trips become longer, MMU protocol_logic must get a larger timeout in mmu_response_received (should cause no harm afterall)
         mmuQuery.value.cip = mmuModbusRq.u.command.cp;
-        rv = bus.read_holding(xbuddy_extension_shared::mmu_bridge::modbusUnitNr, &mmuQuery.value.commandStatus, 1, xbuddy_extension_shared::mmu_bridge::commandStatusRegisterAddress, mmuModbusRq.timestamp_ms, 0);
+        rv = bus.read_holding(xbuddy_extension::mmu_bridge::modbusUnitNr, &mmuQuery.value.commandStatus, 1, xbuddy_extension::mmu_bridge::commandStatusRegisterAddress, mmuModbusRq.timestamp_ms, 0);
 
         if (rv == CommunicationStatus::OK) {
             log_debug(MMU2, "command query result ok");

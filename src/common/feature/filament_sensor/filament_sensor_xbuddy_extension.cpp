@@ -2,42 +2,40 @@
 
 #include <feature/xbuddy_extension/xbuddy_extension.hpp>
 
-using namespace buddy;
-
 void FSensorXBuddyExtension::cycle() {
     state = interpret_state();
 }
 
 int32_t FSensorXBuddyExtension::GetFilteredValue() const {
-    return xbuddy_extension().filament_sensor().transform([](auto v) { return static_cast<int>(v); }).value_or(-1);
+    return buddy::xbuddy_extension().filament_sensor().transform([](auto v) { return static_cast<int>(v); }).value_or(-1);
 }
 
 FilamentSensorState FSensorXBuddyExtension::interpret_state() const {
-    switch (xbuddy_extension().status()) {
+    switch (buddy::xbuddy_extension().status()) {
 
-    case XBuddyExtension::Status::disabled:
+    case buddy::XBuddyExtension::Status::disabled:
         return FilamentSensorState::Disabled;
 
-    case XBuddyExtension::Status::not_connected:
+    case buddy::XBuddyExtension::Status::not_connected:
         return FilamentSensorState::NotConnected;
 
-    case XBuddyExtension::Status::ready:
+    case buddy::XBuddyExtension::Status::ready:
         // Continue
         break;
     }
 
-    switch (xbuddy_extension().filament_sensor().value_or(XBuddyExtension::FilamentSensorState::uninitialized)) {
+    switch (buddy::xbuddy_extension().filament_sensor().value_or(buddy::XBuddyExtension::FilamentSensorState::uninitialized)) {
 
-    case XBuddyExtension::FilamentSensorState::disconnected:
+    case buddy::XBuddyExtension::FilamentSensorState::disconnected:
         return FilamentSensorState::NotConnected;
 
-    case XBuddyExtension::FilamentSensorState::uninitialized:
+    case buddy::XBuddyExtension::FilamentSensorState::uninitialized:
         return FilamentSensorState::NotInitialized;
 
-    case XBuddyExtension::FilamentSensorState::has_filament:
+    case buddy::XBuddyExtension::FilamentSensorState::has_filament:
         return FilamentSensorState::HasFilament;
 
-    case XBuddyExtension::FilamentSensorState::no_filament:
+    case buddy::XBuddyExtension::FilamentSensorState::no_filament:
         return FilamentSensorState::NoFilament;
     }
 

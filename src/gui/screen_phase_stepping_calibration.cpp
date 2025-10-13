@@ -66,7 +66,7 @@ namespace frame {
     private:
         window_text_t text;
         window_text_t title;
-        window_numberless_progress_t progress_bar;
+        WindowProgressBar progress_bar;
         window_text_t phase_x_of_y;
         std::array<char, 10> phase_x_of_y_buffer;
 
@@ -121,11 +121,11 @@ namespace frame {
                 snprintf(phase_x_of_y_buffer.data(), phase_x_of_y_buffer.size(), "%d / %d", current_calibration_phase + 1, calibration_phases_count);
                 phase_x_of_y.SetText(string_view_utf8::MakeRAM(phase_x_of_y_buffer.data()));
                 phase_x_of_y.Invalidate();
-                progress_bar.SetProgressPercent(progress);
+                progress_bar.set_progress_percent(progress);
             } else {
                 phase_x_of_y.SetText(string_view_utf8::MakeNULLSTR());
                 phase_x_of_y.Invalidate();
-                progress_bar.SetProgressPercent(0);
+                progress_bar.set_progress_percent(0);
             }
         }
     };

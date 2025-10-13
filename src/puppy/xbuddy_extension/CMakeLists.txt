@@ -39,7 +39,7 @@ target_link_libraries(
           STM32H5::HAL
           STM32H5_HAL_Config
           freertos
-          XBuddyExtensionShared
+          xbuddy_extension
           mmu_protocol
           buddy_utils
   )

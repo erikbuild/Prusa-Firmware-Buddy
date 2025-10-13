@@ -1,8 +1,6 @@
 #pragma once
-#include <stdint.h>
-#include <cmath>
-#include <tuple>
-#include "bsod.h"
+
+#include <cstdint>
 
 namespace leds {
 
@@ -44,8 +42,7 @@ struct ColorRGBW {
     static ColorRGBW from_hsv(ColorHSV hsv);
 
     bool operator==(const ColorRGBW &other) const {
-        ColorRGBW cmp = other;
-        return cmp.data == data;
+        return data == other.data;
     }
 
     bool operator!=(const ColorRGBW &other) const {

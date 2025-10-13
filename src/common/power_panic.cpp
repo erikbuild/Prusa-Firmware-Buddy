@@ -90,6 +90,7 @@
 
 #include <usb_host/usbh_async_diskio.hpp>
 #include <gcode/gcode_reader_restore_info.hpp>
+#include <feature/safety_timer/safety_timer.hpp>
 
 namespace {
 
@@ -117,6 +118,10 @@ void ac_fault_task_main([[maybe_unused]] void const *argument) {
 
     // stop & disable endstops
     marlin_server::print_quick_stop_powerpanic();
+#if HAS_REMOTE_BED()
+    remote_bed::safe_state();
+#endif
+
     endstops.enable_globally(false);
 
     // disable unnecessary threads
@@ -292,13 +297,7 @@ void resume_loop() {
         resume.pos = state_buf.crash.crash_current_position;
         resume.fan_speed = state_buf.planner.fan_speed;
         resume.print_speed = state_buf.planner.print_speed;
-        resume.nozzle_temp_paused = state_buf.planner.was_paused; // Nozzle temperatures are stored in resume
-        HOTEND_LOOP() {
-            resume.nozzle_temp[e] = state_buf.planner.target_nozzle[e];
-            if (state_buf.planner.was_paused) {
-                marlin_server::set_temp_to_display(state_buf.planner.target_nozzle[e], e);
-            }
-        }
+        resume.nozzle_temp = state_buf.planner.target_nozzle;
         marlin_server::set_resume_data(&resume);
 
         // Set sdpos
@@ -380,10 +379,11 @@ void resume_loop() {
         if (state_buf.planner.was_paused) {
             resume_state = ResumeState::ParkForPause;
         } else {
-            // Set temperature for all nozzles at once
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
+                marlin_server::set_temp_to_display(state_buf.planner.target_nozzle[e], e);
                 thermalManager.setTargetHotend(state_buf.planner.target_nozzle[e], e);
             }
+            // setTargetBed is already called higher up in this function
 
             resume_state = ResumeState::WaitForHeaters;
         }
@@ -391,18 +391,12 @@ void resume_loop() {
     }
 
     case ResumeState::WaitForHeaters: {
-        // enqueue a proper wait-for-temperature loop
-        char cmd_buf[16];
-        HOTEND_LOOP() {
-            if (state_buf.planner.target_nozzle[e]) {
-                snprintf(cmd_buf, sizeof(cmd_buf), "M109 S%d T%d", state_buf.planner.target_nozzle[e], e);
-                marlin_server::enqueue_gcode(cmd_buf);
-            }
+        buddy::safety_timer().reset_restore_nonblocking();
+
+        if (!Temperature::are_all_temperatures_reached()) {
+            break;
         }
-        if (state_buf.planner.target_bed) {
-            snprintf(cmd_buf, sizeof(cmd_buf), "M190 S%d", state_buf.planner.target_bed);
-            marlin_server::enqueue_gcode(cmd_buf);
-        }
+
 #if HAS_NOZZLE_CLEANER()
         marlin_server::enqueue_gcode("G12"); // clean nozzle
 #endif
@@ -453,7 +447,7 @@ void resume_loop() {
         }
 
         // original planner state
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             planner.flow_percentage[e] = state_buf.planner.flow_percentage[e];
         }
         gcode.axis_relative = state_buf.planner.axis_relative;
@@ -861,9 +855,6 @@ void ac_fault_isr() {
     power_panic_state = PPState::Triggered;
 
     // power off devices in order of power draw
-#if HAS_REMOTE_BED()
-    remote_bed::safe_state();
-#endif
     runtime_state.orig_axes_home_level = axes_home_level;
     disable_XY();
     buddy::hw::hsUSBEnable.write(buddy::hw::Pin::State::high);
@@ -918,15 +909,13 @@ void ac_fault_isr() {
         state_buf.crash.counters = crash_s.counters.backup_data();
 
         // save print temperatures
-        if (state_buf.planner.was_paused || resume.nozzle_temp_paused) { // Paused print or whenever nozzle is cooled down
-            HOTEND_LOOP() {
-                state_buf.planner.target_nozzle[e] = resume.nozzle_temp[e];
-            }
+        if (state_buf.planner.was_paused) { // Paused print or whenever nozzle is cooled down
+            state_buf.planner.target_nozzle = resume.nozzle_temp;
+
         } else {
-            HOTEND_LOOP() {
-                state_buf.planner.target_nozzle[e] = thermalManager.degTargetHotend(e);
-            }
+            state_buf.planner.target_nozzle = buddy::safety_timer().original_hotend_targets();
         }
+
         if (state_buf.planner.was_paused) {
             state_buf.planner.fan_speed = resume.fan_speed;
             state_buf.planner.print_speed = resume.print_speed;
@@ -944,7 +933,7 @@ void ac_fault_isr() {
 #endif
 
         // remaining planner parameters
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
             state_buf.planner.flow_percentage[e] = planner.flow_percentage[e];
         }
         state_buf.planner.axis_relative = gcode.axis_relative;

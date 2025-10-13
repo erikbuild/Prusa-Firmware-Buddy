@@ -17,7 +17,7 @@
  * tail are not masked (masking is performed only when accessing the elements) allowing to
  * distinguish between empty and full without losing a slot.
  */
-template <typename T, typename index_t, index_t N>
+template <typename T, typename index_t, auto N>
 class AtomicCircularQueue {
     static_assert(std::numeric_limits<index_t>::is_integer, "Buffer index has to be an integer type");
     static_assert(!std::numeric_limits<index_t>::is_signed, "Buffer index has to be an unsigned type");

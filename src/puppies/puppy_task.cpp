@@ -26,6 +26,8 @@
     #include <puppies/xbuddy_extension.hpp>
 #endif
 
+#define PUPPY_TASK_DEBUG() false
+
 LOG_COMPONENT_DEF(Puppies, logging::Severity::debug);
 
 namespace buddy::puppies {
@@ -83,7 +85,11 @@ static void verify_puppies_running() {
             osDelay(200);
             continue;
         } else {
+#if PUPPY_TASK_DEBUG()
+            log_error(Puppies, "ErrCode::ERR_SYSTEM_PUPPY_RUN_TIMEOUT");
+#else
             fatal_error(ErrCode::ERR_SYSTEM_PUPPY_RUN_TIMEOUT);
+#endif
         }
     } while (true);
 }
@@ -172,7 +178,11 @@ static void puppy_task_loop() {
                 // TODO: Deal with possibility of extension being optional
                 CommunicationStatus status = xbuddy_extension.refresh();
                 if (status == CommunicationStatus::ERROR) {
+    #if PUPPY_TASK_DEBUG()
+                    log_error(Puppies, "xbuddy_extension.refresh() == CommunicationStatus::ERROR")
+    #else
                     return;
+    #endif
                 }
 
                 worked |= status == CommunicationStatus::OK;

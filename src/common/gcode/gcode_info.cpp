@@ -130,7 +130,7 @@ void GCodeInfo::load(IGcodeReader &reader) {
         }
 
     } else {
-        log_error(Buddy, "Metadata in gcode not found");
+        log_warning(Buddy, "Metadata in gcode not found");
     }
 
     // parse first few gcodes

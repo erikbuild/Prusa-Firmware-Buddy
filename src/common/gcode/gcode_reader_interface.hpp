@@ -45,24 +45,6 @@ public:
         ImgType type;
     };
 
-    enum class FileVerificationLevel {
-        /// Quick verification, does not perform full CRC check,
-        /// just checks for some markers that the file is valid (for exapmle GCDE at the beginning)
-        quick,
-
-        /// Everything from quick verify plus full CRC check, if the format supports it
-        full,
-    };
-
-    struct FileVerificationResult {
-        bool is_ok = false;
-        const char *error_str = nullptr; ///< Oblitagory error message
-
-        inline explicit operator bool() const {
-            return is_ok;
-        }
-    };
-
     using StreamRestoreInfo = GCodeReaderStreamRestoreInfo;
 
     /// What is currently being streamed (determined by the last stream_XX_start and its success)
@@ -192,12 +174,6 @@ public:
     virtual void set_restore_info(const StreamRestoreInfo &) = 0;
 
     /**
-     * @brief Verify file contents validity (CRC and such). Not available for all formats.
-     * @returns nullptr on success, error message on failure
-     */
-    virtual FileVerificationResult verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer = std::span<uint8_t>()) const = 0;
-
-    /**
      * @brief Get one character from current stream
      * @param out Character that was read
      * @return Result_t status of reading
@@ -245,8 +221,8 @@ protected:
     // For unittest purposes only.
     GcodeReaderCommon() {}
 
-    GcodeReaderCommon(FILE &f)
-        : file(&f) {}
+    GcodeReaderCommon(unique_file_ptr &&f)
+        : file(std::move(f)) {}
 
     GcodeReaderCommon(GcodeReaderCommon &&other) = default;
 

@@ -8,6 +8,7 @@
 #include <journal/store.hpp>
 #include <footer_eeprom.hpp>
 #include <str_utils.hpp>
+#include <crc32.h>
 
 namespace config_store_ns::old_eeprom {
 void eeprom_init_ram_mirror(eeprom_data &eeprom_ram_mirror) {
@@ -138,7 +139,6 @@ void migrate(old_eeprom::current::vars_body_t &body, journal::Backend &backend) 
         backend.save(id, { buffer.data(), length });
     };
 
-    migrate_one(journal::hash("Run Selftest"), body.RUN_SELFTEST);
     migrate_one(journal::hash("Run XYZ Calibration"), body.RUN_XYZCALIB);
     migrate_one(journal::hash("Run First Layer"), body.RUN_FIRSTLAY);
 

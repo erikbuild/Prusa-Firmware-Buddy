@@ -33,11 +33,19 @@ static inline constexpr const AxisCalibrationConfig xy_axis_calibration_config {
     .speed_range = { 0.2f, 4.f },
     .enabled_harmonics = 0b1010,
 };
-#elif PRINTER_IS_PRUSA_XL() || PRINTER_IS_PRUSA_iX()
+#elif PRINTER_IS_PRUSA_XL()
 // 200-step motors
 static inline constexpr const AxisCalibrationConfig xy_axis_calibration_config {
     .speed_range = { 0.1f, 3.f },
     .enabled_harmonics = 0b1010,
+    .min_magnitude = 0.016f,
+    .magnitude_quotient = 1.4f
+};
+#elif PRINTER_IS_PRUSA_iX()
+static inline constexpr const AxisCalibrationConfig xy_axis_calibration_config {
+    .speed_range = { 0.1f, 3.f },
+    .enabled_harmonics = 0b1010,
+    .magnitude_quotient = 1.4f
 };
 #else
     #error

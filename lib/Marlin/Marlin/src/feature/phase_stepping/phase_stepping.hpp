@@ -36,11 +36,9 @@ struct MoveTarget {
     float start_v = 0;
     uint32_t duration = 0; // Movement duration in us
     float target_pos = 0;
-    float end_time = 0; // Absolute movement end (s)
 
 private:
     float target_position() const;
-    float move_end_time(double end_time) const;
 };
 
 struct AxisState {
@@ -76,13 +74,102 @@ struct AxisState {
     // is reached the cycle repeats, until no more targets are present and current_target is reset.
     std::optional<MoveTarget> current_target; // Current target to move
     AtomicCircularQueue<MoveTarget, unsigned, 16> pending_targets; // 16 element queue of pre-processed elements
-    MoveTarget next_target; // Next planned target to move
+    /// Synchronization primitive to allow phase stepping to "steal" the next target.
+    ///
+    /// The scenario is, the next target is "owned" by the stepper interrupt,
+    /// where it is being prepared and then inserted into the pending_targets
+    /// queue. By that, it passes to the ownership of the phase stepping
+    /// interrupt. But under some circumstances, the phase stepping interrupt
+    /// needs to "steal" this move early, before passing it through the pending
+    /// targets.
+    ///
+    /// What we use for this to work:
+    ///
+    /// * There's the `state` companion variable. That one works somewhat as an
+    ///   atomic lock with the `updating` state - when the thing is being
+    ///   written, that one is locked (combination with acquire/release
+    ///   orderings).
+    /// * Whenever anyone wants to take it out, it is replaced (with acquire)
+    ///   with empty. That person atomically gains ownership and is allowed to
+    ///   read it.
+    /// * It can't be overwritten at that time, because:
+    ///   - Only the stepping interrupt writes. If that one acquired the
+    ///     ownership, it'll not write before it reads first.
+    ///   - The phase stepping interrupt has higher priority. That means that if
+    ///     that one acquries ownership, it will not get interrupted by the
+    ///     stepping interrupt before it finishes reading simply because the
+    ///     scheduling mechanism.
+    class StealableTarget {
+    private:
+        enum class State {
+            empty,
+            full,
+            updating,
+        };
+        MoveTarget value;
+        std::atomic<State> state = State::empty;
+        static_assert(decltype(state)::is_always_lock_free);
 
-    // current_target_end_time is used to ensure pending_targets is replenished from the move ISR
-    // whenever the current_target completes, and we want to ensure the type is lock free
-    std::atomic<float> current_target_end_time; // Absolute end time (s) for the current target
-    static_assert(decltype(current_target_end_time)::is_always_lock_free);
+    public:
+        /// Overwrites the value.
+        ///
+        /// To be called from the stepping interrupt.
+        void set(const MoveTarget &v) {
+            state.store(State::updating, std::memory_order_acquire);
+            value = v;
+            state.store(State::full, std::memory_order_release);
+        }
+        /// Have a look at the value without locking/acquiring.
+        ///
+        /// Used during initialization within the stepper interrupt, no need to
+        /// protect against anything / synchronize in any way - it only reads
+        /// and only the stepper interrupt writes (and it doesn't care if the
+        /// value was logically "consumed" or not).
+        const MoveTarget &peek() const {
+            return value;
+        }
+        /// Extract the value the "proper" way.
+        ///
+        /// To be called from the stepping interrupt.
+        std::optional<MoveTarget> take() {
+            State old = state.exchange(State::empty, std::memory_order_acquire);
+            switch (old) {
+            case State::empty:
+                return std::nullopt;
+            case State::full:
+                return value;
+            case State::updating:
+                bsod_unreachable();
+            }
+            bsod_unreachable();
+        }
+        /// Steal the value.
+        ///
+        /// This is to be called by the phase stepping interrupt.
+        ///
+        /// This can return nullopt either when the value is empty or when it
+        /// is being updated. The latter means a slight delay (likely until our
+        /// next iteration of the interrupt) and we are probably going to get a
+        /// proper move by then. So we _are_ moving forward and aren't stalled.
+        std::optional<MoveTarget> steal() {
+            State old = State::full;
+            if (state.compare_exchange_strong(old, State::empty, std::memory_order_acquire, std::memory_order_relaxed)) {
+                // Successfully replaced full with empty -> it's ours.
+                //
+                // We can copy it out, we are in higher-priority interrupt and
+                // it the owner won't touch it now.
+                return value;
+            } else {
+                // There was either empty (nothing to steal) or updating (not a
+                // consistent state -> we don't want garbage and we can wait,
+                // because we'll get something soon through the usual path).
+                return std::nullopt;
+            }
+        }
+    };
+    StealableTarget next_target; // Next planned target to move
 
+    double next_target_end_time; // Absolute end time (s) for the next planned target
     std::atomic<bool> is_moving = false;
     std::atomic<bool> is_cruising = false;
 

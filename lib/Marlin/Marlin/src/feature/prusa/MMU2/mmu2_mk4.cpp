@@ -624,6 +624,7 @@ bool MMU2::ToolChangeCommonOnce(uint8_t slot) {
 }
 
 void MMU2::ToolChangeCommon(uint8_t slot) {
+    UpdateCurrentFilamentType(slot);
     while (!ToolChangeCommonOnce(slot)) { // while not successfully fed into extruder's PTFE tube
         if (planner_draining()) {
             return; // power panic happening, pretend the G-code finished ok
@@ -723,9 +724,9 @@ bool MMU2::tool_change(char code, uint8_t slot) {
     } break;
 
     case 'x': {
-        thermal_setExtrudeMintemp(0); // Allow cold extrusion since Tx only loads to the gears not nozzle
+        auto emt = thermal_setExtrudeMintemp(0); // Allow cold extrusion since Tx only loads to the gears not nozzle
         tool_change(slot);
-        thermal_setExtrudeMintemp(EXTRUDE_MINTEMP);
+        thermal_setExtrudeMintemp(emt);
     } break;
 
     case 'c': {
@@ -768,7 +769,22 @@ bool MMU2::set_filament_type(uint8_t /*slot*/, uint8_t /*type*/) {
     return true;
 }
 
+void MMU2::UnloadObeyAutoRetracted() {
+    CommandInProgressGuard cipg(CommandInProgress::UnloadFilament, commandInProgressManager);
+    if (!marlin_is_retracted()) {
+        // if not already auto-retracted, do the ramming ourself
+        WaitForHotendTargetTempBeep();
+        UnloadInner(PreUnloadPolicy::Ramming);
+    } else {
+        // otherwise it's not even necessary to wait for temperature, the filament can be pulled out of the nube directly
+        auto emt = thermal_setExtrudeMintemp(0); // Allow cold extrusion since Tx only loads to the gears not nozzle
+        UnloadInner(PreUnloadPolicy::RelieveFilament);
+        thermal_setExtrudeMintemp(emt);
+    }
+}
+
 void MMU2::UnloadInner(PreUnloadPolicy preUnloadPolicy) {
+    UpdateCurrentFilamentType(extruder); // this is probably the only place where we need to rely on the "extruder" variable matching the currently unloaded slot
     FSensorBlockRunout blockRunout;
     BlockEStallDetection blockEStallDetection;
 
@@ -828,11 +844,7 @@ bool MMU2::unload() {
         return false;
     }
 
-    {
-        CommandInProgressGuard cipg(CommandInProgress::UnloadFilament, commandInProgressManager);
-        WaitForHotendTargetTempBeep();
-        UnloadInner(PreUnloadPolicy::Ramming);
-    }
+    UnloadObeyAutoRetracted();
 
     ScreenUpdateEnable();
     marlin_finalize_unload();
@@ -855,6 +867,7 @@ bool MMU2::cut_filament(uint8_t slot, bool enableFullScreenMsg /*= true*/) {
         return false;
     }
 
+    UpdateCurrentFilamentType(slot);
     if (enableFullScreenMsg) {
         FullScreenMsgCut(slot);
     }
@@ -879,11 +892,11 @@ bool MMU2::loading_test(uint8_t slot) {
         CommandInProgressGuard cipg(CommandInProgress::TestLoad, commandInProgressManager);
         FSensorBlockRunout blockRunout;
         BlockEStallDetection blockEStallDetection;
-        thermal_setExtrudeMintemp(0); // Allow cold extrusion - load test doesn't push filament all the way into the nozzle
+        auto emt = thermal_setExtrudeMintemp(0); // Allow cold extrusion - load test doesn't push filament all the way into the nozzle
         ToolChangeCommon(slot);
         planner_synchronize();
         UnloadInner(PreUnloadPolicy::RelieveFilament);
-        thermal_setExtrudeMintemp(EXTRUDE_MINTEMP);
+        thermal_setExtrudeMintemp(emt);
     }
     ScreenUpdateEnable();
     return true;
@@ -894,6 +907,7 @@ bool MMU2::load_filament(uint8_t slot) {
         return false;
     }
 
+    UpdateCurrentFilamentType(slot);
     FullScreenMsgLoad(slot);
     {
         CommandInProgressGuard cipg(CommandInProgress::LoadFilament, commandInProgressManager);
@@ -920,19 +934,19 @@ bool MMU2::load_filament_to_nozzle(uint8_t slot) {
     {
         // used for MMU-menu operation "Load to Nozzle"
         CommandInProgressGuard cipg(ExtendedCommandInProgress::LoadToNozzle, commandInProgressManager);
-        FSensorBlockRunout blockRunout;
-        BlockEStallDetection blockEStallDetection;
-
-        WaitForHotendTargetTempBeep();
 
         if (extruder != MMU2_NO_TOOL) { // we already have some filament loaded - free it + shape its tip properly
-            filament_ramming();
+            UnloadObeyAutoRetracted();
         }
+        WaitForHotendTargetTempBeep(); // heat up to target temp of the new filament
+        {
+            FSensorBlockRunout blockRunout;
+            BlockEStallDetection blockEStallDetection;
+            ToolChangeCommon(slot);
 
-        ToolChangeCommon(slot);
-
-        // Finish loading to the nozzle with finely tuned steps.
-        execute_load_to_nozzle_sequence();
+            // Finish loading to the nozzle with finely tuned steps.
+            execute_load_to_nozzle_sequence();
+        }
         MakeSound(Confirm);
     }
     ScreenUpdateEnable();
@@ -944,6 +958,7 @@ bool MMU2::eject_filament(uint8_t slot, bool enableFullScreenMsg /* = true */) {
         return false;
     }
 
+    UpdateCurrentFilamentType(slot);
     if (enableFullScreenMsg) {
         FullScreenMsgEject(slot);
     }
@@ -1149,8 +1164,7 @@ bool MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
         // - still running -> wait normally in idle()
         // - failed -> then do the safety moves on the printer like before
         // - finished ok -> proceed with reading other commands
-        marlin_idle(true, true); // calls LogicStep() and remembers its return status
-                                 // also disables stepper motor unlocking
+        marlin_idle(true); // calls LogicStep() and remembers its return status
         if (planner_draining()) {
             return true; // power panic happening, pretend we finished OK (and hope for the best).
         }

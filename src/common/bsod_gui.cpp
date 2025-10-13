@@ -1,6 +1,7 @@
-// bsod_gui.cpp - blue screen of death
-#include "bsod.h"
+/// @file
 #include "bsod_gui.hpp"
+
+#include "bsod.h"
 #include "display.hpp"
 #include <find_error.hpp>
 #include "wdt.hpp"

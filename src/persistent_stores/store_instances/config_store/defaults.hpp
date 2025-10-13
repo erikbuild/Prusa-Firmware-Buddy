@@ -25,6 +25,7 @@
 
 #include <option/has_sheet_support.h>
 #include <option/has_loadcell.h>
+#include <option/has_phase_stepping.h>
 
 namespace config_store_ns {
 
@@ -282,11 +283,18 @@ namespace defaults {
         .nozzle_preheat_temperature = 170,
     };
 
-    // Prusa CORE One has phase stepping enabled by default.
-    // Due to its 400-step motors and CoreXY kinematics, the classic stepping
-    // algorithm can't keep up with the increased demands caused by larger speeds.
-    inline constexpr bool phase_stepping_enabled_x = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE();
-    inline constexpr bool phase_stepping_enabled_y = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE();
+#if PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_XL()
+    static_assert(HAS_PHASE_STEPPING());
+    inline constexpr bool phase_stepping_enabled = true;
+
+#elif PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI()
+    // On these printers, the phstep is either disabled or only enabled for testing and should be off by default
+    inline constexpr bool phase_stepping_enabled = false;
+
+#else
+    #error
+#endif
+
     inline constexpr bool heat_entire_bed = PRINTER_IS_PRUSA_iX();
 } // namespace defaults
 

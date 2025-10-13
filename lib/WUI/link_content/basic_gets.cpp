@@ -19,6 +19,8 @@
 #include "printers.h"
 #include <common/directory.hpp>
 #include <option/has_mmu2.h>
+#include <version/version.hpp>
+#include <common/printer_model.hpp>
 
 using namespace json;
 using namespace marlin_server;
@@ -193,6 +195,7 @@ JsonResult get_version(size_t resume_point, JsonOutput &output) {
     char hostname[HOSTNAME_LEN + 1];
     netdev_get_hostname(netdev_get_active_id(), hostname, sizeof hostname);
     float nozzle_diameter = config_store().get_nozzle_diameter(0);
+    const auto &printer_model_info = PrinterModelInfo::current();
 
     // Keep the indentation of the JSON in here!
     // clang-format off
@@ -206,6 +209,8 @@ JsonResult get_version(size_t resume_point, JsonOutput &output) {
         JSON_FIELD_FFIXED("nozzle_diameter", nozzle_diameter, 2) JSON_COMMA;
         JSON_FIELD_STR("text", "PrusaLink") JSON_COMMA;
         JSON_FIELD_STR("hostname", hostname) JSON_COMMA;
+        JSON_FIELD_STR("firmware", version::project_version_full) JSON_COMMA;
+        JSON_FIELD_STR_FORMAT("printer", "%i.%i.%i", printer_model_info.version.type, printer_model_info.version.version, printer_model_info.version.subversion) JSON_COMMA;
         JSON_FIELD_OBJ("capabilities");
             JSON_FIELD_BOOL("upload-by-put", true);
         JSON_OBJ_END;

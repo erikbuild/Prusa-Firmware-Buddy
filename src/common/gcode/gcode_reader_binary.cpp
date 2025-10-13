@@ -30,13 +30,13 @@ using bgcode::core::ECompressionType;
 using bgcode::core::EGCodeEncodingType;
 using bgcode::core::FileHeader;
 
-PrusaPackGcodeReader::PrusaPackGcodeReader(FILE &f, const struct stat &stat_info, bool allow_decryption
+PrusaPackGcodeReader::PrusaPackGcodeReader(unique_file_ptr &&f, const struct stat &stat_info, bool allow_decryption
 #if HAS_E2EE_SUPPORT()
     ,
     e2ee::IdentityCheckLevel identity_check_lvl
 #endif
     )
-    : GcodeReaderCommon(f)
+    : GcodeReaderCommon(std::move(f))
     , allow_decryption(allow_decryption)
 #if HAS_E2EE_SUPPORT()
     , identity_check_lvl(identity_check_lvl)
@@ -179,10 +179,15 @@ bool PrusaPackGcodeReader::stream_metadata_start(const Index *index) {
     {
         BlockHeader header;
 
-        const auto res = seek_block_header(header, index ? index->metadata : Index::not_indexed, false, [](BlockHeader &block_header) {
+        const auto res = seek_block_header(header, index ? index->metadata : Index::not_indexed, false, [this](BlockHeader &block_header) {
             switch (bgcode::core::EBlockType(block_header.type)) {
-            case bgcode::core::EBlockType::PrinterMetadata:
-                return IterateResult_t::Return;
+            case bgcode::core::EBlockType::PrinterMetadata: {
+                if (is_readable_metadata(block_header)) {
+                    return IterateResult_t::Return;
+                } else {
+                    return IterateResult_t::Continue;
+                }
+            }
             case bgcode::core::EBlockType::GCode:
             case bgcode::core::EBlockType::EncryptedBlock:
                 // No chance of finding it past this point.
@@ -200,6 +205,9 @@ bool PrusaPackGcodeReader::stream_metadata_start(const Index *index) {
         stream.current_plain_block_header = header;
     }
 
+    // Note: We have already checked the encoding previously (either in
+    // building the index or in the closure above). But we need to skip it to
+    // start at the actual data.
     uint16_t encoding;
     if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
         return false;
@@ -243,10 +251,14 @@ void PrusaPackGcodeReader::generate_index(Index &out, bool ignore_crc) {
             out.gcode = header.get_position();
             // All the interesting stuff is before actual gcodes. No reason to index further.
             return IterateResult_t::End;
-        case EBlockType::PrinterMetadata:
-            // Note: We are not really interested in the other metadata blocks.
-            out.metadata = header.get_position();
+        case EBlockType::PrinterMetadata: {
+            auto position = header.get_position();
+            if (is_readable_metadata(header)) {
+                // Note: We are not really interested in the other metadata blocks.
+                out.metadata = position;
+            }
             return IterateResult_t::Continue;
+        }
         case EBlockType::Thumbnail: {
             const auto details = thumbnail_details(header);
             if (!details.has_value()) {
@@ -300,9 +312,9 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_gcode_start(uint32_t offset,
     const bool check_crc = verify && !ignore_crc;
 
     if (offset == 0) {
-        const auto res = seek_block_header(start_block, index ? index->gcode : Index::not_indexed, check_crc, [](BlockHeader &block_header) {
+        const auto res = seek_block_header(start_block, index ? index->gcode : Index::not_indexed, check_crc, [this](BlockHeader &block_header) {
             // check if correct type, if so, return this block
-            if ((bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::GCode || (bgcode::core::EBlockType)block_header.type == bgcode::core::EBlockType::EncryptedBlock) {
+            if (is_of_type(block_header, bgcode::core::EBlockType::GCode)) {
                 return IterateResult_t::Return;
             }
 
@@ -580,8 +592,11 @@ IGcodeReader::Result_t PrusaPackGcodeReader::stream_getc_decrypted(char &out) {
 }
 
 void PrusaPackGcodeReader::init_decryption() {
-    stream.decryptor = std::unique_ptr<e2ee::Decryptor>(new e2ee::Decryptor);
-    stream.decryptor->set_cipher_info(symmetric_info);
+    if (!stream.decryptor) {
+        // Only if needed...
+        stream.decryptor = std::unique_ptr<e2ee::Decryptor>(new e2ee::Decryptor);
+        stream.decryptor->set_cipher_info(symmetric_info);
+    }
 }
 #endif
 
@@ -693,6 +708,32 @@ std::optional<PrusaPackGcodeReader::ThumbnailDetails> PrusaPackGcodeReader::thum
         .num_bytes = block_header.uncompressed_size,
         .type = thumbnail_format_to_type(static_cast<bgcode::core::EThumbnailFormat>(thumb_header.format)),
     };
+}
+
+bool PrusaPackGcodeReader::is_readable_metadata(const BlockHeader &header) {
+    if ((ECompressionType)header.compressed_size != bgcode::core::ECompressionType::None) {
+        // We don't support compressed metadata (at least not now). Ignore this
+        // particular metadata block.
+        return false;
+    }
+
+    uint16_t encoding;
+    if (fread(&encoding, sizeof(encoding), 1, file.get()) != 1) {
+        return false;
+    }
+
+    if (fseek(file.get(), -sizeof(encoding), SEEK_CUR) == -1) {
+        return false;
+    }
+
+    if (encoding != (uint16_t)bgcode::core::EMetadataEncodingType::INI) {
+        // We don't know metadata headers of other formats. They could exist,
+        // but we don't know what to do about them - ignore this particular
+        // block. Maybe there'll be other block with metadata we can read.
+        return false;
+    }
+
+    return true;
 }
 
 AbstractByteReader *PrusaPackGcodeReader::stream_thumbnail_start(uint16_t expected_width, uint16_t expected_height, ImgType expected_type, bool allow_larger) {
@@ -867,29 +908,6 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size() {
     return size_context.gcode_stream_size_uncompressed;
 }
 
-IGcodeReader::FileVerificationResult PrusaPackGcodeReader::verify_file(FileVerificationLevel level, std::span<uint8_t> crc_calc_buffer) const {
-    // Every binary gcode has to start a magic sequence
-    if (!check_file_starts_with_BGCODE_magic()) {
-        return { .error_str = N_("The file is not a valid bgcode file.") };
-    }
-
-    // Further checks are for FileVerificationLevel::full
-    if (int(level) < int(FileVerificationLevel::full)) {
-        return { .is_ok = true };
-    }
-
-    // Check CRC
-    {
-        // todo: this doesn't respect file validity
-        rewind(file.get());
-        if (bgcode::core::is_valid_binary_gcode(*file, true, crc_calc_buffer.data(), crc_calc_buffer.size()) != bgcode::core::EResult::Success) {
-            return { .error_str = N_("The file is not a valid bgcode file.") };
-        }
-    }
-
-    return { .is_ok = true };
-}
-
 bool PrusaPackGcodeReader::init_decompression() {
     // first setup decompression step
     const ECompressionType compression = static_cast<ECompressionType>(stream.current_plain_block_header.compression);
@@ -950,7 +968,9 @@ public:
 };
 } // namespace
 
-bool PrusaPackGcodeReader::valid_for_print([[maybe_unused]] bool full_check) {
+bool PrusaPackGcodeReader::valid_for_print(bool full_check) {
+    symmetric_info = {};
+    identity_block_info = {};
     ValidationContext valid_context(full_check);
     if (full_check) {
         // To have the file_header initialized for the hash
@@ -1120,4 +1140,33 @@ void PrusaPackGcodeReader::stream_t::reset() {
     uncompressed_offset = 0; //< offset of next char that will be outputted
     hs_decoder.reset();
     meatpack.reset_state();
+}
+
+bool PrusaPackGcodeReader::is_of_type(const bgcode::core::BlockHeader &block_header, bgcode::core::EBlockType type) {
+    if (static_cast<bgcode::core::EBlockType>(block_header.type) == type) {
+        return true;
+    }
+
+#if HAS_E2EE_SUPPORT()
+    if (static_cast<bgcode::core::EBlockType>(block_header.type) == bgcode::core::EBlockType::EncryptedBlock) {
+        // It is encrypted, it's worth looking inside.
+        // Does init only in case we need it.
+        //
+        // Note: We do _not_ check the integrity of this block right now and
+        // here. If we become interested in it, it'll get checked properly
+        // later on.
+        auto block_start = ftell(file.get());
+        init_decryption();
+        if (init_encrypted_block_streaming(block_header) != Result_t::RESULT_OK) {
+            return false;
+        }
+        if (fseek(file.get(), block_start, SEEK_SET) != 0) {
+            return false;
+        }
+
+        return static_cast<bgcode::core::EBlockType>(stream.current_plain_block_header.type) == type;
+    }
+#endif
+
+    return false;
 }

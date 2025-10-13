@@ -46,9 +46,8 @@ bool phaseAxis(IPartHandler *&m_pAxis, const AxisConfig_t &config_axis, Separate
         case Z_AXIS:
             // clang-format off
         m_pAxis = selftest::Factory::CreateDynamical<CSelftestPart_Axis>(config_axis, staticResults[config_axis.axis],
+            &CSelftestPart_Axis::stateCycleMark2, // A small hack to cause initial fsm_change
             &CSelftestPart_Axis::stateHomeZ,
-            &CSelftestPart_Axis::stateWaitHome,
-            &CSelftestPart_Axis::stateEnableZProbe,
             &CSelftestPart_Axis::stateInitProgressTimeCalculation,
 
             &CSelftestPart_Axis::stateCycleMark2,
@@ -62,10 +61,8 @@ bool phaseAxis(IPartHandler *&m_pAxis, const AxisConfig_t &config_axis, Separate
         case X_AXIS:
         case Y_AXIS:
             m_pAxis = selftest::Factory::CreateDynamical<CSelftestPart_Axis>(config_axis, staticResults[config_axis.axis],
-                &CSelftestPart_Axis::stateActivateHomingReporter,
+                &CSelftestPart_Axis::stateCycleMark2, // A small hack to cause initial fsm_change
                 &CSelftestPart_Axis::stateHomeXY,
-                &CSelftestPart_Axis::stateWaitHomingReporter,
-                &CSelftestPart_Axis::stateEvaluateHomingXY,
                 &CSelftestPart_Axis::stateInitProgressTimeCalculation,
 
                 &CSelftestPart_Axis::stateCycleMark2,

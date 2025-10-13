@@ -20,8 +20,8 @@
     #include <gui/menu_item/specific/menu_items_chamber_filtration.hpp>
 #endif
 
-#include <option/has_xbuddy_extension.h>
-#if HAS_XBUDDY_EXTENSION()
+#include <option/xbuddy_extension_variant_standard.h>
+#if XBUDDY_EXTENSION_VARIANT_STANDARD()
     #include <gui/menu_item/specific/menu_items_xbuddy_extension.hpp>
 #endif
 
@@ -45,7 +45,7 @@ using ScreenBase
         // BFW-6719
         MI_CHAMBER_FILTRATION_BACKEND,
 #endif
-#if HAS_XBUDDY_EXTENSION()
+#if XBUDDY_EXTENSION_VARIANT_STANDARD()
         MI_CAM_USB_PWR,
 #endif
         MI_DONE>;

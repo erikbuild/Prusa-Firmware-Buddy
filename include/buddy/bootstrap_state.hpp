@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <option/bootloader_update.h>
 #include <option/has_dwarf.h>
-#include <option/has_esp_flash_task.h>
+#include <option/has_esp.h>
 #include <option/has_puppies.h>
 #include <option/has_puppy_modularbed.h>
 #include <option/has_xbuddy_extension.h>
@@ -25,7 +25,7 @@ enum class BootstrapStage : uint8_t {
     preparing_update,
     updating,
 #endif
-#if HAS_ESP_FLASH_TASK()
+#if HAS_ESP()
     flashing_esp,
     reflashing_esp,
 #endif

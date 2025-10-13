@@ -125,7 +125,9 @@ uint32_t Printer::info_fingerprint() const {
     };
 
     update_net(Iface::Ethernet);
+#if HAS_ESP()
     update_net(Iface::Wifi);
+#endif
 
     const auto creds = net_creds();
     const auto &parameters = params();

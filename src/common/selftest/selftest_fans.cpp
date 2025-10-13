@@ -10,7 +10,6 @@
 LOG_COMPONENT_REF(Selftest);
 
 using namespace fan_selftest;
-using namespace buddy;
 
 void FanHandler::evaluate() {
     calculate_avg_rpm();
@@ -63,23 +62,23 @@ void CommonFanHandler::record_sample() {
 
 #if XBUDDY_EXTENSION_VARIANT_STANDARD()
 
-static_assert(puppies::XBuddyExtension::FAN_CNT == XBEFanTestResults::fan_count, "Adjust the fan result structure in EEPROM (xbuddy_expansion_fan_result.hpp)");
+static_assert(buddy::puppies::XBuddyExtension::FAN_CNT == XBEFanTestResults::fan_count, "Adjust the fan result structure in EEPROM (xbuddy_expansion_fan_result.hpp)");
 
 XBEFanHandler::XBEFanHandler(const FanType type, uint8_t desc_num, FanRPMRange fan_range)
     : FanHandler(type, fan_range, desc_num, benevolent_fan_range) {
-    original_pwm = xbuddy_extension().fan_target_pwm(static_cast<XBuddyExtension::Fan>(desc_num));
+    original_pwm = buddy::xbuddy_extension().fan_target_pwm(static_cast<buddy::XBuddyExtension::Fan>(desc_num));
 }
 
 XBEFanHandler::~XBEFanHandler() {
-    xbuddy_extension().set_fan_target_pwm(static_cast<XBuddyExtension::Fan>(desc_num), original_pwm);
+    buddy::xbuddy_extension().set_fan_target_pwm(static_cast<buddy::XBuddyExtension::Fan>(desc_num), original_pwm);
 }
 
 void XBEFanHandler::set_pwm(uint8_t pwm) {
-    xbuddy_extension().set_fan_target_pwm(static_cast<XBuddyExtension::Fan>(desc_num), XBuddyExtension::FanPWM { pwm });
+    buddy::xbuddy_extension().set_fan_target_pwm(static_cast<buddy::XBuddyExtension::Fan>(desc_num), buddy::XBuddyExtension::FanPWM { pwm });
 }
 
 void XBEFanHandler::record_sample() {
-    const std::optional<uint16_t> rpm = xbuddy_extension().fan_rpm(static_cast<XBuddyExtension::Fan>(desc_num));
+    const std::optional<uint16_t> rpm = buddy::xbuddy_extension().fan_rpm(static_cast<buddy::XBuddyExtension::Fan>(desc_num));
     if (rpm.has_value()) {
         sample_count++;
         sample_sum += rpm.value();

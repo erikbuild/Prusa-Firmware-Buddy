@@ -5,11 +5,8 @@
 #include <espif.h>
 #include <esp_flash.hpp>
 #include <tasks.hpp>
-#include <option/has_esp_flash_task.h>
 #include <option/has_embedded_esp32.h>
 #include <logging/log.hpp>
-
-static_assert(HAS_ESP_FLASH_TASK());
 
 LOG_COMPONENT_REF(Buddy);
 

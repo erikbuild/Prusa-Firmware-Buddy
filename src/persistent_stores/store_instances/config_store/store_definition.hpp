@@ -153,9 +153,6 @@ struct CurrentStore
     /// Stores newest_migration_version of the previous firmware
     StoreItem<uint8_t, 0, ItemFlag::special, journal::hash("Config Version")> config_version;
 
-    // wizard flags
-    StoreItem<bool, true, ItemFlag::calibrations, journal::hash("Run Selftest")> run_selftest;
-
     /// If false, a ScreenPrinterSetup will appear on printer boot
     StoreItem<bool, false, ItemFlag::calibrations, journal::hash("Printer setup done")> printer_setup_done;
 
@@ -592,8 +589,8 @@ struct CurrentStore
 
 #if HAS_PHASE_STEPPING()
     static constexpr bool phase_stepping_ram_only = true;
-    StoreItem<bool, defaults::phase_stepping_enabled_x, ItemFlag::features, journal::hash("Phase Stepping Enabled X"), 1, phase_stepping_ram_only> phase_stepping_enabled_x;
-    StoreItem<bool, defaults::phase_stepping_enabled_y, ItemFlag::features, journal::hash("Phase Stepping Enabled Y"), 1, phase_stepping_ram_only> phase_stepping_enabled_y;
+    StoreItem<bool, defaults::phase_stepping_enabled, ItemFlag::features, journal::hash("Phase Stepping Enabled X"), 1, phase_stepping_ram_only> phase_stepping_enabled_x;
+    StoreItem<bool, defaults::phase_stepping_enabled, ItemFlag::features, journal::hash("Phase Stepping Enabled Y"), 1, phase_stepping_ram_only> phase_stepping_enabled_y;
 
     bool get_phase_stepping_enabled();
     bool get_phase_stepping_enabled(AxisEnum axis);
@@ -692,9 +689,21 @@ struct CurrentStore
 #endif
 
 #if HAS_AUTO_RETRACT()
-    /// Bitset, one bit for each hotend
-    /// !!! Do not set directly, always use auto_retract().mark_as_retracted
-    StoreItem<uint8_t, 0, ItemFlag::printer_state, journal::hash("Filament auto-retracted")> filament_auto_retracted_bitset;
+    StoreItem<bool, true, ItemFlag::printer_state, journal::hash("Pre-nozzle cleaning retraction enabled")> pre_nozzle_cleaning_retraction_enable;
+
+    /// Global enable for auto-retract
+    /// Setting FALSE does NOT disable the feature completely, just prevents MAYBE_DERETRACT() from happening
+    /// Retracted filaments will auto-deretract in every case
+    StoreItem<bool, true, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Enable auto-retract")> auto_retract_enabled;
+
+    // Each hotend holds retracted distance. This value is compressed (casted to uint8) to range < 0 ; 255 > with 255 being special value reserved for unknown distance
+    // DO NOT ACCESS THIS ARRAY DIRECTLY, user getter/setter instead
+    StoreItemArray<uint8_t, uint8_t { 255 }, ItemFlag::printer_state, journal::hash("Filament retracted distances"), 8, HOTENDS> filament_retracted_distances;
+
+    // Casts float of range < 0.0f ; 254f > to uint8. Value 255 is reserved to unknown value
+    void set_filament_retracted_distance(uint8_t tool_idx, std::optional<float> dist);
+    std::optional<float> get_filament_retracted_distance(uint8_t tool_idx);
+
     static_assert(HOTENDS <= 8);
 #endif
 
@@ -705,6 +714,8 @@ struct CurrentStore
 #if HAS_MANUAL_BELT_TUNING()
     StoreItem<bool, false, ItemFlag::calibrations, journal::hash("Manual Belt Tuning Completed")> manual_belt_tuning_completed;
 #endif
+
+    StoreItem<bool, DEVELOPMENT_ITEMS(), ItemFlag::user_interface | ItemFlag::common_misconfigurations, journal::hash("Fast Draw Enabled")> fast_draw_enabled;
 
 private:
     void perform_config_migrations();
@@ -819,6 +830,10 @@ struct DeprecatedStore
     #endif
 #endif
 
+#if HAS_AUTO_RETRACT()
+    StoreItem<uint8_t, 0, journal::hash("Filament auto-retracted")> filament_auto_retracted_bitset;
+#endif
+
     /*
         Having these guys in the comments is actually engouh for the scraper to find the journal hash
 
@@ -834,6 +849,8 @@ struct DeprecatedStore
         StoreItem<uint32_t, defaults::side_fs_value_span, ItemFlag::calibrations | ItemFlag::dev_items, journal::hash("Side FS Value Span 3")> side_fs_value_span_3;
         StoreItem<uint32_t, defaults::side_fs_value_span, ItemFlag::calibrations | ItemFlag::dev_items, journal::hash("Side FS Value Span 4")> side_fs_value_span_4;
         StoreItem<uint32_t, defaults::side_fs_value_span, ItemFlag::calibrations | ItemFlag::dev_items, journal::hash("Side FS Value Span 5")> side_fs_value_span_5;
+
+        StoreItem<bool, true, ItemFlag::calibrations, journal::hash("Run Selftest")> run_selftest;
         */
 };
 

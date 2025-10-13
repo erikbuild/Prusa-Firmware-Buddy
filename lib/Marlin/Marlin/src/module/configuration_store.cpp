@@ -383,7 +383,7 @@ void MarlinSettings::reset() {
   //
 
   #if ENABLED(PIDTEMP)
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
       PID_PARAM(Kp, e) = float(DEFAULT_Kp);
       PID_PARAM(Ki, e) = scalePID_i(DEFAULT_Ki);
       PID_PARAM(Kd, e) = scalePID_d(DEFAULT_Kd);
@@ -408,7 +408,7 @@ void MarlinSettings::reset() {
   #endif
 
   #if ENABLED(PIDTEMPHEATBREAK)
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
       thermalManager.temp_heatbreak[e].pid.Kp = DEFAULT_heatbreakKp;
       thermalManager.temp_heatbreak[e].pid.Ki = scalePID_i(DEFAULT_heatbreakKi);
       thermalManager.temp_heatbreak[e].pid.Kd = scalePID_d(DEFAULT_heatbreakKd);
@@ -444,14 +444,6 @@ void MarlinSettings::reset() {
   #endif /* HAS_PLANNER() */
 
   reset_stepper_drivers();
-
-  //
-  // CNC Coordinate System
-  //
-
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    (void)gcode.select_coordinate_system(-1); // Go back to machine space
-  #endif
 
   //
   // Skew Correction
@@ -767,7 +759,7 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_HEADING("PID settings:");
 
       #if ENABLED(PIDTEMP)
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
           CONFIG_ECHO_START();
           SERIAL_ECHOPAIR("  M301"
             #if HOTENDS > 1 && ENABLED(PID_PARAMS_PER_HOTEND)

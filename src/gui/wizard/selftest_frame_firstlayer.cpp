@@ -25,22 +25,21 @@ SelftestFrameFirstLayer::SelftestFrameFirstLayer(window_t *parent, PhasesSelftes
           ,
           footer::Item::filament)
     , text(this, Rect16(WizardDefaults::MarginLeft, 40, GuiDefaults::RectScreen.Width() - WizardDefaults::MarginLeft * 2, 150), is_multiline::yes, is_closed_on_click_t::no, _(text_str))
-    , progress(this, Rect16(WizardDefaults::MarginLeft, 190 + 30, GuiDefaults::RectScreen.Width() - 2 * WizardDefaults::MarginLeft, 8))
+    , progress(this, Rect16(WizardDefaults::MarginLeft, 190 + 30, GuiDefaults::RectScreen.Width() - 2 * WizardDefaults::MarginLeft, 8), COLOR_LIME, COLOR_GRAY)
     , live_z(this, { int16_t(WizardDefaults::MarginLeft), 190 }, Width() - WizardDefaults::MarginLeft * 2) {
     CaptureNormalWindow(live_z);
-    live_z.Idle();
-    progress.SetColor(COLOR_LIME);
+    set_live_z_enable(false);
 }
 
 void SelftestFrameFirstLayer::change() {
-    progress.SetProgressPercent(data_current[0]);
+    progress.set_progress_percent(data_current[0]);
 
     switch (phase_current) {
     case PhasesSelftest::FirstLayer_mbl:
-        live_z.Idle();
+        set_live_z_enable(false);
         break;
     case PhasesSelftest::FirstLayer_print:
-        live_z.Activate();
+        set_live_z_enable(true);
         break;
     default:
         break;

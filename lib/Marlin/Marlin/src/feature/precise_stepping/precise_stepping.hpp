@@ -11,10 +11,6 @@
 #include <timing.h>
 #include <atomic>
 
-#ifdef COREXY
-    #define COREXY_CONVERT_LIMITS
-#endif
-
 // Minimum number of free slots in the move segment queue must be available in the queue in all circumstances.
 // 1 free slot is required to ensure that we can add the empty ending move anytime.
 constexpr const uint8_t MOVE_SEGMENT_QUEUE_MIN_FREE_SLOTS = 1;

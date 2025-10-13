@@ -66,8 +66,8 @@ GcodeSuite gcode;
 #include <option/has_phase_stepping.h>
 #include <option/has_phase_stepping_calibration.h>
 #include <marlin_vars.hpp>
-
-millis_t GcodeSuite::previous_move_ms;
+#include <utils/serial_logging_disabler.hpp>
+#include <feature/safety_timer/safety_timer.hpp>
 
 // Relative motion mode for each logical axis
 static constexpr xyze_bool_t ar_init = AXIS_RELATIVE_MODES;
@@ -87,11 +87,6 @@ PrinterGCodeCompatibilityReport GcodeSuite::compatibility;
 
 #if ENABLED(CNC_WORKSPACE_PLANES)
   GcodeSuite::WorkspacePlane GcodeSuite::workspace_plane = PLANE_XY;
-#endif
-
-#if ENABLED(CNC_COORDINATE_SYSTEMS)
-  int8_t GcodeSuite::active_coordinate_system = -1; // machine space
-  xyz_pos_t GcodeSuite::coordinate_system[MAX_COORDINATE_SYSTEMS];
 #endif
 
 int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> extruder, const bool is_physical) {
@@ -197,9 +192,9 @@ void GcodeSuite::get_destination_from_command() {
 /**
  * Dwell waits immediately. It does not synchronize. Use M400 instead of G4
  */
-void GcodeSuite::dwell(millis_t time, bool no_stepper_delay) {
+void GcodeSuite::dwell(millis_t time) {
   time += millis();
-  while (!planner.draining() && PENDING(millis(), time)) idle(true, no_stepper_delay);
+  while (!planner.draining() && PENDING(millis(), time)) idle(true);
 }
 
 /**
@@ -315,16 +310,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
             #endif
           )) G38(parser.subcode);                                 // G38.4, G38.5: Probe away from target
           break;
-      #endif
-
-      #if ENABLED(CNC_COORDINATE_SYSTEMS)
-        case 53: G53(); break;
-        case 54: G54(); break;
-        case 55: G55(); break;
-        case 56: G56(); break;
-        case 57: G57(); break;
-        case 58: G58(); break;
-        case 59: G59(); break;
       #endif
 
       #if ENABLED(GCODE_MOTION_MODES) || HAS_GCODE_COMPATIBILITY()
@@ -472,7 +457,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       case 82: M82(); break;                                      // M82: Set E axis normal mode (same as other axes)
       case 83: M83(); break;                                      // M83: Set E axis relative mode
       case 18: case 84: M18_M84(); break;                         // M18/M84: Disable Steppers / Set Timeout
-      case 85: M85(); break;                                      // M85: Set inactivity stepper shutdown timeout
       case 86: M86(); break;                                      // M86: Set Safety Timer expiration time
       case 92: M92(); break;                                      // M92: Set the steps-per-unit for one or more axes
       case 114: M114(); break;                                    // M114: Report current position
@@ -749,6 +733,9 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
  * This is called from the main loop()
  */
 void GcodeSuite::process_next_command() {
+  // We're doing something, don't go to sleep
+  buddy::safety_timer().reset_norestore();
+
   char * const current_command = queue.command_buffer[queue.index_r];
 
   PORT_REDIRECT(queue.port[queue.index_r]);
@@ -764,6 +751,9 @@ void GcodeSuite::process_next_command() {
   marlin_vars().gcode_command = marlin_server::Cmd(parser.command_letter << 16 | parser.codenum);
   process_parsed_command();
   marlin_vars().gcode_command = marlin_server::Cmd();
+
+  // The gcode might have taken a long time, again mark that we're doing something
+  buddy::safety_timer().reset_norestore();
 }
 
 /**
@@ -807,6 +797,9 @@ void GcodeSuite::process_subcommands_now(char * gcode) {
    * while the machine is not accepting commands.
    */
   void GcodeSuite::host_keepalive() {
+    // Do not log keeaplive messages, only print to serial
+    SerialLoggingDisabler sld;
+
     const millis_t ms = millis();
     static millis_t next_busy_signal_ms = 0;
     if (!suspend_auto_report && host_keepalive_interval && busy_state != NOT_BUSY) {

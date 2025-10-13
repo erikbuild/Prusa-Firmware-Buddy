@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <gcode/inject_queue_actions.hpp>
 #include <marlin_server_shared.h>
+#include <marlin_server_request.hpp>
 #include <utils/publisher.hpp>
 
 #include <serial_printing.hpp>
@@ -101,9 +102,6 @@ void print_abort();
 //
 void print_resume();
 
-//
-bool print_reheat_ready();
-
 // Quick stop to avoid harm to the user
 void quick_stop();
 
@@ -127,16 +125,13 @@ bool print_preview();
 
 struct resume_state_t {
     xyze_pos_t pos = {}; // resume position for unpark_head
-    float nozzle_temp[EXTRUDERS] = {}; // resume nozzle temperature
-    bool nozzle_temp_paused = false; // True if nozzle_temp is valid and hotend cools down
+    std::array<int16_t, HOTENDS> nozzle_temp; // target nozzle temperatures
     uint8_t fan_speed = 0; // resume fan speed
     uint16_t print_speed = 0; // resume printing speed
 };
 
 //
 void print_pause();
-
-void unpause_nozzle(const uint8_t extruder);
 
 // return true if the printer is currently aborting or already aborted the print
 bool aborting_or_aborted();
@@ -205,22 +200,7 @@ void set_media_position(uint32_t set);
 
 void print_quick_stop_powerpanic();
 
-uint32_t get_user_click_count();
-uint32_t get_user_move_count();
-KnobMove get_last_knob_move();
-
-void nozzle_timeout_on();
-void nozzle_timeout_off();
-
-class DisableNozzleTimeout {
-public:
-    DisableNozzleTimeout() {
-        nozzle_timeout_off();
-    }
-    ~DisableNozzleTimeout() {
-        nozzle_timeout_on();
-    }
-};
+int32_t get_knob_position();
 
 // user can stop waiting for heating/cooling by pressing a button
 bool can_stop_wait_for_heatup();
@@ -229,6 +209,12 @@ void can_stop_wait_for_heatup(bool val);
 /// If the phase matches currently recorded response, return it and consume it.
 /// Otherwise, return std::monostate and do not consume it.
 FSMResponseVariant get_response_variant_from_phase(FSMAndPhase fsm_and_phase, bool consume_response = true);
+
+/// Sets a FSM response to be processed
+void set_response(const EncodedFSMResponse &response);
+
+/// Clears any pending response for the provided FSM
+void clear_fsm_response(ClientFSM fsm);
 
 /// If the phase matches currently recorded response, return it and consume it.
 /// Otherwise, return Response::_none and do not consume it.

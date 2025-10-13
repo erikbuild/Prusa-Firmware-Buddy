@@ -29,10 +29,10 @@ using FrameError = WithConstructorArgs<FramePrompt, Phase::error, N_("Error"), N
 // but at the same time we need to keep the parameter compatbility with the standard ones.
 // So I've created this class that holds the screen data, but implicitly casts to window_t* parent pointer that is expected by the standard frames
 struct FrameParent {
-    window_t *parent;
+    window_frame_t *parent;
     ScreenBeltTuningWizard *screen;
 
-    inline operator window_t *() const {
+    inline operator window_frame_t *() const {
         return parent;
     }
 };
@@ -86,7 +86,7 @@ public:
 
     void update(const fsm::PhaseData &data_) {
         const auto data = fsm::deserialize_data<BeltTuningWizardCalibratingData>(data_);
-        progress_bar.SetProgressPercent(static_cast<float>(data.progress_0_255) / 255.0f * 100.0f);
+        progress_bar.set_progress_percent(static_cast<float>(data.progress_0_255) / 255.0f * 100.0f);
     }
 };
 
@@ -95,10 +95,10 @@ class FrameMeasuring : public FrameProgressPrompt {
 public:
     FrameMeasuring(FrameParent parent)
         : FrameProgressPrompt(parent, Phase::measuring, N_("Measuring belt tension"), nullptr)
-        , graph(this)
+        , graph(parent)
         , screen(*parent.screen) //
     {
-        static constexpr std::initializer_list layout {
+        static constexpr std::array layout {
             // Title
             StackLayoutItem { .height = 64 },
 
@@ -114,7 +114,8 @@ public:
             // Radio
             standard_stack_layout::for_radio,
         };
-        layout_vertical_stack(GetRect(), { &title, &progress_bar, &info, &graph, &radio }, layout);
+        std::array<window_t *, layout.size()> windows { &title, &progress_bar, &info, &graph, &radio };
+        layout_vertical_stack(parent.parent->GetRect(), windows, layout);
 
         // Reset the graph data, we will be sequentially filling it during the measuring
         screen.graph_data.fill(0);
@@ -123,7 +124,7 @@ public:
     void update(const fsm::PhaseData &data_) {
         const auto data = fsm::deserialize_data<BeltTuninigWizardMeasuringData>(data_);
         const float frequency = static_cast<float>(data.encoded_frequency) / data.frequency_mult;
-        progress_bar.SetProgressPercent(data.progress_0_255 / 255.0f * 100.0f);
+        progress_bar.set_progress_percent(data.progress_0_255 / 255.0f * 100.0f);
 
         if (data.encoded_frequency) {
             info.SetText(string_view_utf8::MakeCPUFLASH("%.1f Hz").formatted(info_params, frequency));
@@ -161,7 +162,7 @@ class FrameResults : public FramePrompt {
 public:
     FrameResults(FrameParent parent, PhaseBeltTuning phase = PhaseBeltTuning::results)
         : FramePrompt(parent, phase, nullptr, nullptr)
-        , graph(this)
+        , graph(parent)
         , phase(phase)
         , screen(*parent.screen) //
     {
@@ -178,7 +179,9 @@ public:
             // Radio
             standard_stack_layout::for_radio,
         };
-        layout_vertical_stack(GetRect(), { &title, &info, &graph, &radio }, layout);
+
+        std::array<window_t *, layout.size()> windows { &title, &info, &graph, &radio };
+        layout_vertical_stack(parent.parent->GetRect(), windows, layout);
     }
 
     void update(const fsm::PhaseData &serialized_data) {
@@ -239,7 +242,6 @@ ScreenBeltTuningWizard::ScreenBeltTuningWizard()
     : ScreenFSM(N_("BELT TUNING"), GuiDefaults::RectScreenNoHeader) //
 {
     header.SetIcon(&img::wizard_16x16);
-    CaptureNormalWindow(inner_frame);
     create_frame();
 }
 

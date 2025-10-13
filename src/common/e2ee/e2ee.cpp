@@ -249,6 +249,23 @@ std::optional<SymmetricCipherInfo> decrypt_key_block(FILE *file, const bgcode::c
     // early return, so we don't allocate buffers etc.
     if (encryption != std::to_underlying(EKeyBlockEncryption::None)
         && encryption != std::to_underlying(EKeyBlockEncryption::RSA_ENC_SHA256_SIGN)) {
+        // We don't understand this algorithm, so the key is certainly not for
+        // us. But we still need to update the hash according to it. Do so in
+        // reasonable sized chunks, as we don't have an upper bound for a key
+        // size of unknown type.
+        constexpr size_t STEP_SIZE = 64;
+        std::array<uint8_t, STEP_SIZE> buffer;
+        size_t left = block_header.uncompressed_size;
+        while (left > 0) {
+            size_t step = std::min(STEP_SIZE, left);
+            left -= step;
+            if (!read_from_file(buffer.data(), step, file)) {
+                return std::nullopt;
+            }
+            if (hash) {
+                hash->update(buffer.data(), step);
+            }
+        }
         return std::nullopt;
     }
 

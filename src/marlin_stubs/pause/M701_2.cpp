@@ -55,7 +55,7 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     {
 #if ENABLED(PREVENT_COLD_EXTRUSION) && HAS_AUTO_RETRACT()
         const bool is_unload = load_type == Pause::LoadType::unload || load_type == Pause::LoadType::unload_confirm || load_type == Pause::LoadType::unload_from_gears;
-        const bool allow_cold = is_unload && buddy::auto_retract().is_retracted(hotend_from_extruder(rSettings.GetExtruder()));
+        const bool allow_cold = is_unload && buddy::auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(rSettings.GetExtruder()));
         AutoRestore ar_ce(thermalManager.allow_cold_extrude, true, allow_cold);
 #endif
 
@@ -78,11 +78,6 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
 
 void filament_gcodes::M701_no_parser(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request) {
     InProgress progress;
-
-    marlin_server::DisableNozzleTimeout disableNozzleTimeout;
-    if (marlin_server::printer_paused()) {
-        marlin_server::unpause_nozzle(target_extruder);
-    }
 
     const bool do_purge_only = fast_load_length.has_value() && fast_load_length <= 0.0f;
 
@@ -145,12 +140,8 @@ void filament_gcodes::M701_no_parser(FilamentType filament_to_be_loaded, const s
 void filament_gcodes::M702_no_parser(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, bool ask_unloaded) {
     InProgress progress;
 
-    marlin_server::DisableNozzleTimeout disableNozzleTimeout;
-    if (marlin_server::printer_paused()) {
-        marlin_server::unpause_nozzle(target_extruder);
-    }
 #if HAS_AUTO_RETRACT()
-    if (op_preheat && !buddy::auto_retract().is_retracted(hotend_from_extruder(target_extruder))) {
+    if (op_preheat && !buddy::auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(target_extruder))) {
 #else
     if (op_preheat) {
 #endif
@@ -354,7 +345,13 @@ void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, uint8_
 
     PreheatStatus::SetResult(PreheatStatus::Result::DoneHasFilament);
 
-    preheat_to(filament, target_extruder, PreheatBehavior::no_force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
+#if HAS_AUTO_RETRACT()
+    if (!buddy::auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(target_extruder))) {
+#else
+    {
+#endif
+        preheat_to(filament, target_extruder, PreheatBehavior::no_force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
+    }
     xyze_pos_t current_position_tmp = current_position;
 
     pause::Settings settings;

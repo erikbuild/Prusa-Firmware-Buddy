@@ -5,6 +5,7 @@
 #include "window_header.hpp"
 #include "window_frame.hpp"
 #include <common/fsm_base_types.hpp>
+#include <IDialogMarlin.hpp>
 
 namespace common_frames {
 // Blank screen is often needed to avoid short flicker of the lower screen when switching from (different FSM's) dialog to ScreenFSM
@@ -17,7 +18,7 @@ concept is_update_callable = std::is_invocable_v<decltype(&T::update), T &, fsm:
 
 }; // namespace common_frames
 
-template <auto Phase, class Frame>
+template <auto Phase, class Frame, auto... constructor_args>
 struct FrameDefinition {
     using FrameType = Frame;
     static constexpr auto phase = Phase;
@@ -25,18 +26,15 @@ struct FrameDefinition {
 
 template <class Storage, class... T>
 struct FrameDefinitionList {
-    template <class F>
-    using FrameType = typename F::FrameType;
-
-    static_assert(Storage::template has_enough_space_for<FrameType<T>...>());
-
     static void create_frame(Storage &storage, auto phase, auto... args) {
-        auto f = [&]<typename FD> {
-            if (phase == FD::phase) {
-                storage.template create<typename FD::FrameType>(args...);
+        auto f = [&]<auto phase_, typename Frame, auto... constructor_args>(FrameDefinition<phase_, Frame, constructor_args...>) {
+            static_assert(!std::is_base_of_v<window_t, Frame>, "Frames should not inherit from window_t (ideally from anything), it incrases flash usage");
+
+            if (phase == phase_) {
+                storage.template create<Frame>(args..., constructor_args...);
             }
         };
-        (f.template operator()<T>(), ...);
+        (f(T {}), ...);
     }
 
     static void destroy_frame(Storage &storage, auto phase) {
@@ -60,20 +58,20 @@ struct FrameDefinitionList {
     }
 };
 
-class ScreenFSM : public screen_t {
-    static constexpr size_t frame_static_storage_size = 1324;
-
+template <typename Parent, size_t FrameStorageSize>
+class WindowFSM : public Parent {
 public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    using FrameStorage = StaticStorage<frame_static_storage_size>;
+    using FrameStorage = StaticStorage<FrameStorageSize>;
 #pragma GCC diagnostic pop
 
-    ScreenFSM(const char *header_txt, Rect16 inner_frame_rect)
-        : screen_t()
-        , header { this, _(header_txt) }
+    template <typename... Args>
+    WindowFSM(Rect16 inner_frame_rect, Args &&...args)
+        : Parent(std::forward<Args>(args)...)
         , inner_frame { this, inner_frame_rect } {
-        ClrMenuTimeoutClose();
+        this->ClrMenuTimeoutClose();
+        this->CaptureNormalWindow(inner_frame);
     }
 
     void Change(fsm::BaseData new_fsm_base_data) {
@@ -86,6 +84,23 @@ public:
         }
         update_frame();
     }
+
+protected:
+    window_frame_t inner_frame;
+    FrameStorage frame_storage;
+    fsm::BaseData fsm_base_data;
+
+    virtual void create_frame() = 0;
+    virtual void destroy_frame() = 0;
+    virtual void update_frame() = 0;
+};
+
+class ScreenFSM : public WindowFSM<screen_t, 1368> {
+
+public:
+    ScreenFSM(const char *header_txt, Rect16 inner_frame_rect = GuiDefaults::RectScreenNoHeader)
+        : WindowFSM(inner_frame_rect)
+        , header { this, _(header_txt) } {}
 
     virtual void InitState(screen_init_variant var) override {
         if (auto fsm_base_data = var.GetFsmBaseData()) {
@@ -101,11 +116,13 @@ public:
 
 protected:
     window_header_t header;
-    window_frame_t inner_frame;
-    FrameStorage frame_storage;
-    fsm::BaseData fsm_base_data;
+};
 
-    virtual void create_frame() = 0;
-    virtual void destroy_frame() = 0;
-    virtual void update_frame() = 0;
+class DialogFSM : public WindowFSM<IDialogMarlin, 1124> {
+
+public:
+    DialogFSM(fsm::BaseData data)
+        : WindowFSM(GuiDefaults::RectScreenNoHeader, GuiDefaults::RectScreenNoHeader) {
+        fsm_base_data = data;
+    }
 };

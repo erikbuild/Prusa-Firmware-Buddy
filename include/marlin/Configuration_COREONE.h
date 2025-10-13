@@ -1252,7 +1252,7 @@
     #define Y_NOZZLE_PARK_POINT (Y_MIN_POS + 10.0f)
     #define Z_NOZZLE_PARK_POINT (20.0f)
     #define Z_NOZZLE_PARK_POINT_MIN 168.0f // Always raise the nozzle by this amount when parking on print end
-    #define Z_NOZZLE_PARK_RISE 20.0f // Relative Z rise
+    #define Z_NOZZLE_PARK_RISE 50.0f // Relative Z rise
 
     #define XYZ_NOZZLE_PARK_POINT \
         {X_NOZZLE_PARK_POINT, Y_NOZZLE_PARK_POINT, Z_NOZZLE_PARK_POINT}
@@ -1285,6 +1285,10 @@
      * When disabled, similar functionality can be still achieved with slicer "End G-code"
      */
     #define PARK_HEAD_ON_PRINT_FINISH
+
+    #define Z_NOZZLE_CLEANING_FAILED_POINT 60
+    #define XYZ_NOZZLE_CLEANINIG_FAILED_POINT \
+        {X_NOZZLE_PARK_POINT_M600, Y_NOZZLE_PARK_POINT_M600, Z_NOZZLE_CLEANING_FAILED_POINT}
 
 /**
  * Print Job Timer

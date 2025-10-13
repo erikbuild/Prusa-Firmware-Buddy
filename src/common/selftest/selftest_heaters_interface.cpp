@@ -176,7 +176,7 @@ bool phaseHeaters(std::array<IPartHandler *, HOTENDS> &pNozzles, IPartHandler **
 
     // just finished noz or bed, it is extremely unlikely they would finish both at same time
     SelftestResult eeres = config_store().selftest_result.get();
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (just_finished_noz[e]) {
             eeres.tools[e].nozzle = pNozzles[e]->GetResult();
         }

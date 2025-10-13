@@ -10,14 +10,19 @@ namespace leds {
 using namespace marlin_server;
 
 static StateAnimation marlin_to_anim_state() {
+    fsm::States::State load_unload_state;
+    bool is_preheating;
+    marlin_vars().peek_fsm_states([&](const auto &states) {
+        load_unload_state = states[ClientFSM::Load_unload];
+        is_preheating = states.is_active(ClientFSM::Preheat);
+    });
 
-    const auto fsm_states = marlin_vars().get_fsm_states();
 #if PRINTER_IS_PRUSA_iX()
     /*
      * These comments all refer to states in diagram provided in [BFW-6938]
      */
-    if (fsm_states.is_active(ClientFSM::Load_unload)) {
-        const PhasesLoadUnload phase = static_cast<PhasesLoadUnload>(fsm_states[ClientFSM::Load_unload]->GetPhase());
+    if (load_unload_state.has_value()) {
+        const PhasesLoadUnload phase = static_cast<PhasesLoadUnload>(load_unload_state->GetPhase());
         switch (phase) {
         // Unloading + waiting for filament removal (there is no way to distinguish between them (extruder fs = in gears))
         case PhasesLoadUnload::Ramming_stoppable:
@@ -113,7 +118,7 @@ static StateAnimation marlin_to_anim_state() {
     case State::Resuming_Reheating:
     case State::Resuming_UnparkHead_XY:
     case State::Resuming_UnparkHead_ZE: {
-        if (fsm_states.is_active(ClientFSM::Load_unload) || fsm_states.is_active(ClientFSM::Preheat)) {
+        if (load_unload_state.has_value() || is_preheating) {
             return StateAnimation::Warning;
         } else {
             return StateAnimation::Printing;

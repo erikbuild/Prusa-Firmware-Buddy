@@ -11,9 +11,9 @@
 #include "i_selftest.hpp"
 #include "algorithm_scale.hpp"
 #include "printers.h"
-#include "homing_reporter.hpp"
 #include "config_store/store_instance.hpp"
 #include <utils/string_builder.hpp>
+#include <Marlin/src/gcode/gcode.h>
 
 #include <limits>
 #include <option/has_loadcell.h>
@@ -128,50 +128,20 @@ uint32_t CSelftestPart_Axis::estimate_move(float len_mm, float fr_mms) {
     return move_time;
 }
 
-LoopResult CSelftestPart_Axis::stateActivateHomingReporter() {
-    HomingReporter::enable();
-    return LoopResult::RunNext;
-}
-
 LoopResult CSelftestPart_Axis::stateHomeXY() {
-    // Mark axis as not homed in case it was marked as homed before
-    set_axis_is_not_at_home(AxisEnum(config.axis));
-
-    // Trigger home on axis
-    ArrayStringBuilder<12> sb;
-#if PRINTER_IS_PRUSA_MK4()
-    // MK4 needs to be able to calibrate homing here, i.e.
-    // not have "D"o not calibrate parameter set
-    // (yes, those double negatives are fun).
-    sb.append_printf("G28 %c P", iaxis_codes[config.axis]);
-#else
-    sb.append_printf("G28 %c I D P", iaxis_codes[config.axis]);
-#endif
-    queue.enqueue_one_now(sb.str());
 
     log_info(Selftest, "%s home single axis", config.partname);
 
-    return LoopResult::RunNext;
-}
+    const auto home_result = GcodeSuite::G28_no_parser(config.axis == X_AXIS, config.axis == Y_AXIS, false,
+        G28Flags {
+            // Non-CoreXY machines need precise homing here
+            .can_calibrate = HAS_PRECISE_HOMING(),
+            .precise = HAS_PRECISE_HOMING(),
 
-LoopResult CSelftestPart_Axis::stateWaitHomingReporter() {
-    HomingReporter::State state = HomingReporter::consume_done();
-
-    switch (state) {
-    case HomingReporter::State::disabled:
-    case HomingReporter::State::enabled:
-        log_error(Selftest, "%s homing reporter is in wrong state", config.partname);
-        [[fallthrough]];
-    case HomingReporter::State::done:
-        return LoopResult::RunNext;
-    case HomingReporter::State::in_progress:
-        break;
-    }
-    return LoopResult::RunCurrent;
-}
-
-LoopResult CSelftestPart_Axis::stateEvaluateHomingXY() {
-    if (axes_need_homing(_BV(config.axis))) {
+            // Do not raise redscreen, only return false
+            .throw_homing_failed = false,
+        });
+    if (!home_result) {
         return LoopResult::Fail;
     }
 
@@ -183,26 +153,18 @@ LoopResult CSelftestPart_Axis::stateHomeZ() {
 #if HAS_TOOLCHANGER()
     // The next Z axis check needs to be done with a tool. This will re-home XY on-demand
     if (prusa_toolchanger.is_toolchanger_enabled() && (prusa_toolchanger.has_tool() == false)) {
-        queue.enqueue_one_now("T0 S1");
+        if (!prusa_toolchanger.tool_change(0, tool_return_t::no_return, {})) {
+            return LoopResult::Fail;
+        }
     }
 #endif
 
-    // We have Z safe homing enabled, so trash Z position and re-home without calibrations
-    axes_home_level[Z_AXIS] = AxisHomeLevel::not_homed;
-    queue.enqueue_one_now("G28 I O D P");
-
-    return LoopResult::RunNext;
-}
-
-LoopResult CSelftestPart_Axis::stateWaitHome() {
-    if (queue.has_commands_queued() || planner.processing()) {
-        return LoopResult::RunCurrent;
+    const auto home_result = GcodeSuite::G28_no_parser(false, false, true, { .precise = false });
+    if (!home_result) {
+        return LoopResult::Fail;
     }
-    endstops.enable(true);
-    return LoopResult::RunNext;
-}
 
-LoopResult CSelftestPart_Axis::stateEnableZProbe() {
+    endstops.enable(true);
     endstops.enable_z_probe();
     return LoopResult::RunNext;
 }
@@ -235,6 +197,11 @@ LoopResult CSelftestPart_Axis::stateMoveFinishCycle() {
     if ((++m_Step) < config.steps) {
         return LoopResult::GoToMark2;
     }
+
+    // Disable the endstops now (BFW-7792)
+    endstops.enable(false);
+    endstops.enable_z_probe(false);
+
     return LoopResult::RunNext;
 }
 

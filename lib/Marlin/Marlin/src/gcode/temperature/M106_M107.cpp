@@ -81,14 +81,17 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
     #if XBUDDY_EXTENSION_VARIANT_STANDARD()
     using XBE = buddy::XBuddyExtension;
     static_assert(FAN_COUNT < 3, "Fan 3 is dedicated to extboard");
-    if (fan == 3) {
+
+    switch (fan) {
+    case 3:
         // Cooling fan 2 has shared PWM line
         buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::cooling_fan_1, set_auto ? buddy::XBuddyExtension::FanPWMOrAuto(pwm_auto) : buddy::XBuddyExtension::FanPWM(speed));
         return true;
-    }
-    if (fan == 4) {
+    case 4:
         buddy::xbuddy_extension().set_fan_target_pwm(XBE::Fan::filtration_fan, set_auto ? buddy::XBuddyExtension::FanPWMOrAuto(pwm_auto) : buddy::XBuddyExtension::FanPWM(speed));
         return true;
+    default:
+        break;
     }
     #endif
 
@@ -110,6 +113,11 @@ static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool 
  *
  * - `S` - Speed between 0-255
  * - `P` - Fan index, if more than one fan
+ *     - `0` - Print fan
+ *     - `1` - Heatbreak fan
+ *     - `2` - ...
+ *     - `3` - Cooling fan (if supported) or Enclosure fan (XL)
+ *     - `4` - Filtration fan (if supported)
  * - `R` - Set the to auto control (if supported by the fan)
  * - `A` - ???
  * - `T` - Select which tool if the same fan is on multiple tools, active_extruder if not specified
@@ -148,6 +156,11 @@ void GcodeSuite::M106() {
  *#### Parameters
  *
  * - `P` - Fan index
+ *     - `0` - Print fan
+ *     - `1` - Heatbreak fan
+ *     - `2` - ...
+ *     - `3` - Cooling fan (if supported) or Enclosure fan (XL)
+ *     - `4` - Filtration fan (if supported)
  * - `T` - Select which tool if there are multiple fans, one on each tool
  */
 void GcodeSuite::M107() {

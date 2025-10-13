@@ -24,6 +24,10 @@ _bsod(const char *fmt, const char *file_name, int line_number, ...);
 /// fold them and prevent setting breakpoints.
 #define bsod_unreachable() bsod("unreachable")
 
+/// Convenience bsod() macro for system errors
+// Every HAL_init fail does not necessarily need a custom message
+#define bsod_system() bsod("system error")
+
 #ifdef __cplusplus
 }
 #endif

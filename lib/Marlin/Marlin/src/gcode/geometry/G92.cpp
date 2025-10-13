@@ -87,15 +87,6 @@ void GcodeSuite::G92() {
 
   switch (subcode_G92) {
     default: break;
-    #if ENABLED(CNC_COORDINATE_SYSTEMS)
-      case 1: {
-        // Zero the G92 values and restore current position
-        LOOP_XYZ(i) if (position_shift[i]) {
-          position_shift[i] = 0;
-          update_workspace_offset((AxisEnum)i);
-        }
-      } return;
-    #endif
     case 0: {
       LOOP_XYZE(i) {
         if (parser.seenval(axis_codes[i])) {
@@ -121,12 +112,6 @@ void GcodeSuite::G92() {
       }
     } break;
   }
-
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    // Apply workspace offset to the active coordinate system
-    if (WITHIN(active_coordinate_system, 0, MAX_COORDINATE_SYSTEMS - 1))
-      coordinate_system[active_coordinate_system] = position_shift;
-  #endif
 
   if    (didXYZ) sync_plan_position();
   else if (didE) sync_plan_position_e();

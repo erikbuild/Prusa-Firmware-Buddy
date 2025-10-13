@@ -12,39 +12,51 @@ class MockCallbacks final : public Callbacks {
 public:
     static constexpr size_t reg_count = 4;
     std::array<uint16_t, reg_count> registers = { 0, 1, 2, 3 };
-    virtual Status read_register(uint8_t device, uint16_t address, uint16_t &out) override {
+    virtual Status read_registers(uint8_t device, uint16_t address, std::span<uint16_t> out) override {
+        REQUIRE(reinterpret_cast<intptr_t>(out.data()) % alignof(uint16_t) == 0);
         if (device != 1) {
             return Status::Ignore;
         }
 
-        if (address >= reg_count) {
+        if (address + out.size() >= reg_count) {
             return Status::IllegalAddress;
         }
 
-        out = registers[address];
+        for (size_t i = 0; i < out.size(); i++) {
+            out[i] = registers[address + i];
+        }
 
         return Status::Ok;
     }
-    virtual Status write_register(uint8_t device, uint16_t address, uint16_t value) override {
+    virtual Status write_registers(uint8_t device, uint16_t address, std::span<const uint16_t> in) override {
+        REQUIRE(reinterpret_cast<intptr_t>(in.data()) % alignof(uint16_t) == 0);
         if (device != 1) {
             return Status::Ignore;
         }
 
-        if (address >= reg_count) {
+        if (address + in.size() >= reg_count) {
             return Status::IllegalAddress;
         }
 
-        registers[address] = value;
+        for (size_t i = 0; i < in.size(); i++) {
+            registers[address + i] = in[i];
+        }
 
         return Status::Ok;
     }
 };
 
-std::span<const std::byte> s2b(const char *s, size_t len) {
-    return std::span(reinterpret_cast<const std::byte *>(s), len);
+std::vector<std::byte> s2b(const char *s, size_t len) {
+    const std::byte *begin = reinterpret_cast<const std::byte *>(s);
+    auto result = std::vector(begin, begin + len);
+    // We assume this is true due to allocator that gives data to vector.
+    // If not, we'll have to manually fix this in the tests (eg. the failure
+    // would be problem of tests, not of the tested code).
+    REQUIRE(reinterpret_cast<intptr_t>(result.data()) % alignof(uint16_t) == 0);
+    return result;
 }
 
-std::span<const std::byte> s2b(const char *s) {
+std::vector<std::byte> s2b(const char *s) {
     const size_t len = strlen(s);
     return s2b(s, len);
 }
@@ -55,6 +67,10 @@ std::span<const std::byte> trans_with_crc(Callbacks &callbacks, const char *s, s
     uint16_t crc = compute_crc(in);
     in.push_back(static_cast<std::byte>(crc & 0xFF));
     in.push_back(static_cast<std::byte>(crc >> 8));
+    // We assume this is true due to allocator that gives data to vector.
+    // If not, we'll have to manually fix this in the tests (eg. the failure
+    // would be problem of tests, not of the tested code).
+    REQUIRE(reinterpret_cast<intptr_t>(in.data()) % alignof(uint16_t) == 0);
 
     return handle_transaction(callbacks, in, out);
 }
@@ -63,7 +79,7 @@ std::span<const std::byte> trans_with_crc(Callbacks &callbacks, const char *s, s
 
 TEST_CASE("Modbus transaction - refused inputs") {
     MockCallbacks callbacks;
-    std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
 
     SECTION("Too short") {
         REQUIRE(handle_transaction(callbacks, {}, out_buffer).empty());
@@ -71,7 +87,8 @@ TEST_CASE("Modbus transaction - refused inputs") {
 
     SECTION("Garbage") {
         // Complete nonsense
-        REQUIRE(handle_transaction(callbacks, s2b("hello world"), out_buffer).empty());
+        auto in = s2b("hello world");
+        REQUIRE(handle_transaction(callbacks, in, out_buffer).empty());
     }
 
     SECTION("Wrong CRC") {
@@ -81,7 +98,8 @@ TEST_CASE("Modbus transaction - refused inputs") {
         // address: 1
         // count: 1
         // crc: XX
-        REQUIRE(handle_transaction(callbacks, s2b("\1\4\0\1\0\1XX", 8), out_buffer).empty());
+        auto in = s2b("\1\4\0\1\0\1XX", 8);
+        REQUIRE(handle_transaction(callbacks, in, out_buffer).empty());
     }
 
     SECTION("Other device") {
@@ -103,7 +121,7 @@ TEST_CASE("Modbus transaction - refused inputs") {
 
 TEST_CASE("Invalid function") {
     MockCallbacks callbacks;
-    std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
 
     auto response = trans_with_crc(callbacks, "\1\x22\0\1\0\2\4\0AA\0", 11, out_buffer);
     REQUIRE(response.size() == 5);
@@ -118,7 +136,7 @@ TEST_CASE("Invalid function") {
 
 TEST_CASE("Invalid address") {
     MockCallbacks callbacks;
-    std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
 
     // 3 is in-range, 4 is out of range
     auto response = trans_with_crc(callbacks, "\1\x10\0\3\0\2\4\0AA\0", 11, out_buffer);
@@ -134,7 +152,7 @@ TEST_CASE("Invalid address") {
 
 TEST_CASE("Success write") {
     MockCallbacks callbacks;
-    std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
 
     auto response = trans_with_crc(callbacks, "\1\x10\0\1\0\2\4\0AA\0", 11, out_buffer);
     REQUIRE(response.size() == 8);
@@ -153,7 +171,7 @@ TEST_CASE("Success write") {
 
 TEST_CASE("Success read") {
     MockCallbacks callbacks;
-    std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
 
     auto response = trans_with_crc(callbacks, "\1\3\0\1\0\2", 6, out_buffer);
     REQUIRE(response.size() == 9);

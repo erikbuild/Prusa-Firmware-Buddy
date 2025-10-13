@@ -57,8 +57,9 @@
 #include "module/temperature.h"
 #include "module/configuration_store.h"
 #include "module/printcounter.h"
-#include "feature/safety_timer.h"
-#if !BOARD_IS_DWARF()
+
+#include <option/board_is_master_board.h>
+#if BOARD_IS_MASTER_BOARD()
 #include "pause_stubbed.hpp"
 #endif
 
@@ -142,10 +143,6 @@ bool wait_for_heatup = true;
 #if HAS_AUTO_REPORTING || ENABLED(HOST_KEEPALIVE_FEATURE)
   bool suspend_auto_report; // = false
 #endif
-
-// Inactivity shutdown
-millis_t max_inactive_time, // = 0
-         stepper_inactive_time = (DEFAULT_STEPPER_DEACTIVE_TIME) * 1000UL;
 
 #if PIN_EXISTS(CHDK)
   extern millis_t chdk_timeout;
@@ -286,7 +283,7 @@ bool anyHeatherIsActive() {
   #if HAS_HEATED_BED
     active |= thermalManager.degTargetBed() != 0;
   #endif
-  HOTEND_LOOP() active |= thermalManager.degTargetHotend(e) != 0;
+  for (int8_t e = 0; e < HOTENDS; e++) active |= thermalManager.degTargetHotend(e) != 0;
   return active;
 }
 
@@ -294,17 +291,14 @@ bool anyHeatherIsActive() {
  * Manage several activities:
  *  - Check for Filament Runout
  *  - Keep the command buffer full
- *  - Check for maximum inactive time between commands
- *  - Check for maximum inactive time between stepper commands
  *  - Check if CHDK_PIN needs to go LOW
  *  - Check for KILL button held down
  *  - Check for HOME button held down
  *  - Check if cooling fan needs to be switched on
- *  - Check if an idle but hot extruder needs filament extruded (EXTRUDER_RUNOUT_PREVENT)
  *  - Pulse FET_SAFETY_PIN if it exists
  */
 
-void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
+void manage_inactivity() {
 
   #if HAS_FILAMENT_SENSOR
     runout.run();
@@ -312,20 +306,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
 
   if (queue.length < BUFSIZE) queue.get_available_commands();
 
-  const millis_t ms = millis();
-
-  SafetyTimer::expired_t expired = SafetyTimer::Instance().Loop();
-  if (expired ==  SafetyTimer::expired_t::yes)  {
-    #ifdef ACTION_ON_SAFETY_TIMER_EXPIRED
-      host_action_safety_timer_expired();
-    #endif
-  }
-
-  if (max_inactive_time && ELAPSED(ms, gcode.previous_move_ms + max_inactive_time)) {
-    SERIAL_ERROR_START();
-    SERIAL_ECHOLNPAIR(MSG_KILL_INACTIVE_TIME, parser.command_ptr);
-    kill(PSTR("Inactive time kill"), parser.command_ptr);
-  }
+  [[maybe_unused]] const millis_t ms = millis();
 
   // Prevent steppers timing-out in the middle of M600
   #if BOTH(ADVANCED_PAUSE_FEATURE, PAUSE_PARK_NO_STEPPER_TIMEOUT)
@@ -333,49 +314,6 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
   #else
     #define MOVE_AWAY_TEST true
   #endif
-
-  #if HAS_PLANNER()
-    if (stepper_inactive_time) {
-      static bool already_shutdown_steppers; // = false
-      if (planner.processing())
-        gcode.reset_stepper_timeout();
-      else if (MOVE_AWAY_TEST && !ignore_stepper_queue && ELAPSED(ms, gcode.previous_move_ms + stepper_inactive_time)) {
-        if (!already_shutdown_steppers) {
-          already_shutdown_steppers = true;  // L6470 SPI will consume 99% of free time without this
-
-          #if _DEBUG && !BOARD_IS_DWARF()
-          // Report steppers being disabled to the user
-          // Skip if position not trusted to avoid warnings when position is not important
-          if(axes_home_level != AxesHomeLevel::no_axes_homed) {
-            /// @note Hacky link from marlin_server which cannot be included here.
-            /// @todo Remove when stepper timeout screen is solved properly.
-            extern void marlin_server_steppers_timeout_warning();
-            marlin_server_steppers_timeout_warning();
-          }
-          #endif
-
-          #if (ENABLED(XY_LINKED_ENABLE) && (ENABLED(DISABLE_INACTIVE_X) || ENABLED(DISABLE_INACTIVE_Y)))
-            disable_XY();
-          #else
-            #if ENABLED(DISABLE_INACTIVE_X)
-              disable_X();
-            #endif
-            #if ENABLED(DISABLE_INACTIVE_Y)
-              disable_Y();
-            #endif
-          #endif
-          #if ENABLED(DISABLE_INACTIVE_Z)
-            disable_Z();
-          #endif
-          #if ENABLED(DISABLE_INACTIVE_E)
-            disable_e_steppers();
-          #endif
-        }
-      }
-      else
-        already_shutdown_steppers = false;
-    }
-  #endif /* HAS_PLANNER() */
 
   #if PIN_EXISTS(CHDK) // Check if pin should be set to LOW (after M240 set it HIGH)
     if (chdk_timeout && ELAPSED(ms, chdk_timeout)) {
@@ -423,61 +361,6 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
     powerManager.check();
   #endif
 
-  #if ENABLED(EXTRUDER_RUNOUT_PREVENT)
-    if (thermalManager.degHotend(active_extruder) > EXTRUDER_RUNOUT_MINTEMP
-      && ELAPSED(ms, gcode.previous_move_ms + (EXTRUDER_RUNOUT_SECONDS) * 1000UL)
-      && !planner.busy()
-    ) {
-      bool oldstatus;
-      switch (active_extruder) {
-        default: oldstatus = E0_ENABLE_READ(); enable_E0(); break;
-        #if E_STEPPERS > 1
-          case 1: oldstatus = E1_ENABLE_READ(); enable_E1(); break;
-          #if E_STEPPERS > 2
-            case 2: oldstatus = E2_ENABLE_READ(); enable_E2(); break;
-            #if E_STEPPERS > 3
-              case 3: oldstatus = E3_ENABLE_READ(); enable_E3(); break;
-              #if E_STEPPERS > 4
-                case 4: oldstatus = E4_ENABLE_READ(); enable_E4(); break;
-                #if E_STEPPERS > 5
-                  case 5: oldstatus = E5_ENABLE_READ(); enable_E5(); break;
-                #endif // E_STEPPERS > 5
-              #endif // E_STEPPERS > 4
-            #endif // E_STEPPERS > 3
-          #endif // E_STEPPERS > 2
-        #endif // E_STEPPERS > 1
-      }
-
-      const float olde = current_position.e;
-      current_position.e += EXTRUDER_RUNOUT_EXTRUDE;
-      line_to_current_position(MMM_TO_MMS(EXTRUDER_RUNOUT_SPEED));
-      current_position.e = olde;
-      planner.set_e_position_mm(olde);
-      planner.synchronize();
-
-      switch (active_extruder) {
-        case 0: E0_ENABLE_WRITE(oldstatus); break;
-        #if E_STEPPERS > 1
-          case 1: E1_ENABLE_WRITE(oldstatus); break;
-          #if E_STEPPERS > 2
-            case 2: E2_ENABLE_WRITE(oldstatus); break;
-            #if E_STEPPERS > 3
-              case 3: E3_ENABLE_WRITE(oldstatus); break;
-              #if E_STEPPERS > 4
-                case 4: E4_ENABLE_WRITE(oldstatus); break;
-                #if E_STEPPERS > 5
-                  case 5: E5_ENABLE_WRITE(oldstatus); break;
-                #endif // E_STEPPERS > 5
-              #endif // E_STEPPERS > 4
-            #endif // E_STEPPERS > 3
-          #endif // E_STEPPERS > 2
-        #endif // E_STEPPERS > 1
-      }
-
-      gcode.reset_stepper_timeout();
-    }
-  #endif // EXTRUDER_RUNOUT_PREVENT
-
   #if ENABLED(MONITOR_DRIVER_STATUS)
     monitor_motor_drivers();
   #endif
@@ -515,7 +398,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
  *   @par @c true Keep steppers from disabling on timeout
  *   @par @c false Allow steppers to release (and lose position) on timeout
  */
-void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
+void idle(bool waiting) {
   #if HAS_PLANNER()
     endstops.event_handler();
   #endif
@@ -528,7 +411,7 @@ void idle(bool waiting, bool no_stepper_sleep/*=false*/) {
     gcode.host_keepalive();
   #endif
 
-  manage_inactivity(no_stepper_sleep);
+  manage_inactivity();
 
   thermalManager.manage_heater();
 
@@ -808,7 +691,7 @@ void setup() {
   #endif
 
   #if HAS_TEMP_HEATBREAK_CONTROL
-    HOTEND_LOOP(){
+    for (int8_t e = 0; e < HOTENDS; e++){
       thermalManager.setTargetHeatbreak(DEFAULT_HEATBREAK_TEMPERATURE, e);
     }
   #endif

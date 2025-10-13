@@ -108,7 +108,6 @@
  * M83  - Set E codes relative while in Absolute (G90) mode.
  * M84  - Disable steppers until next move, or use S<seconds> to specify an idle
  *        duration after which steppers should turn off. S0 disables the timeout.
- * M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
  * M86  - Set Safety Timer expiration time (S<seconds>). Set to zero to disable the timer.
  * M92  - Set planner.settings.axis_steps_per_mm for one or more axes.
  * M104 - Set extruder target temp.
@@ -278,6 +277,10 @@ struct G28Flags {
   #if ENABLED(DETECT_PRINT_SHEET)
     bool check_sheet = false;
   #endif
+
+  /// If set to false, homing_failed() function will not be called on homing failure
+  // This means that the G28 will return false instead of a crash/redscreen
+  bool throw_homing_failed = true;
 };
 
 class GcodeSuite {
@@ -323,17 +326,6 @@ public:
     static WorkspacePlane workspace_plane;
   #endif
 
-  #define MAX_COORDINATE_SYSTEMS 9
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    static int8_t active_coordinate_system;
-    static xyz_pos_t coordinate_system[MAX_COORDINATE_SYSTEMS];
-    static bool select_coordinate_system(const int8_t _new);
-    static int8_t get_coordinate_system();
-    static void set_coordinate_system_offset(int8_t system, AxisEnum axis, float offset);
-  #endif
-  static millis_t previous_move_ms;
-  FORCE_INLINE static void reset_stepper_timeout() { previous_move_ms = millis(); }
-
   /// Validates that the option value is valid and may pass it through tool mapping (depending on is_physical flag)
   static int8_t get_target_extruder_from_option_value(std::optional<uint8_t> option_value, const bool is_physical);
 
@@ -378,7 +370,7 @@ public:
 
   // Dwell waits immediately with low precision (+10ms depending on GUI/background activities)
   // while allowing background processing. It does not synchronize.
-  static void dwell(millis_t time, bool no_stepper_sleep=false);
+  static void dwell(millis_t time);
 
   static void M104();
 
@@ -453,16 +445,6 @@ private:
 
   #if HAS_MESH
     static void G42();
-  #endif
-
-  #if ENABLED(CNC_COORDINATE_SYSTEMS)
-    static void G53();
-    static void G54();
-    static void G55();
-    static void G56();
-    static void G57();
-    static void G58();
-    static void G59();
   #endif
 
   #if ENABLED(GCODE_MOTION_MODES) || HAS_GCODE_COMPATIBILITY()
@@ -551,7 +533,6 @@ private:
   static void M81();
   static void M82();
   static void M83();
-  static void M85();
   static void M86();
   static void M92();
 

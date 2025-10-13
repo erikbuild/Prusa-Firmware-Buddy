@@ -24,6 +24,7 @@
 #include <option/has_belt_tuning.h>
 #include <option/has_coldpull.h>
 #include <option/has_emergency_stop.h>
+#include <option/has_esp.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_loadcell.h>
@@ -370,6 +371,7 @@ enum class PhasesFansSelftest : PhaseUnderlyingType {
 constexpr inline ClientFSM client_fsm_from_phase(PhasesFansSelftest) { return ClientFSM::FansSelftest; }
 #endif
 
+#if HAS_ESP()
 enum class PhaseNetworkSetup : PhaseUnderlyingType {
     init,
 
@@ -378,11 +380,11 @@ enum class PhaseNetworkSetup : PhaseUnderlyingType {
     wifi_scan, ///< Scanning available wi-fi networks (the scanning is fully handled on the GUI thread)
     wait_for_ini_file, ///< Prompting user to insert a flash drive with creds
     ask_delete_ini_file, ///< Asking the user if he wants to delete the ini file
-#if HAS_NFC()
+    #if HAS_NFC()
     ask_use_prusa_app, ///< User is prompted if he wants to use the Prusa app to connect to the wi-fi
     wait_for_nfc, ///< Prompting user to provide the credentials through NFW
     nfc_confirm, ///< Loaded credentials via NFC, asking for confirmation
-#endif
+    #endif
     connecting_finishable, ///< The user is connecting to a Wi-Fi. The screen offers a "Finish" button that keeps connecting on the background and "Cancel" to go back.
     connecting_nonfinishable, ///< The user is connecting to a Wi-Fi. The screen only offers a "Cancel" button to go back.
     connected,
@@ -397,6 +399,7 @@ enum class PhaseNetworkSetup : PhaseUnderlyingType {
     _last = finish,
 };
 constexpr inline ClientFSM client_fsm_from_phase(PhaseNetworkSetup) { return ClientFSM::NetworkSetup; }
+#endif
 
 #if ENABLED(CRASH_RECOVERY)
 enum class PhasesCrashRecovery : PhaseUnderlyingType {
@@ -460,10 +463,6 @@ enum class PhasesWarning : PhaseUnderlyingType {
 #if HAS_UNEVEN_BED_PROMPT()
     /// A prompt offering Z align calibration when uneven bed is detected
     BedUnevenAlignmentPrompt,
-#endif
-
-#if HAS_LOADCELL() && ENABLED(PROBE_CLEANUP_SUPPORT)
-    NozzleCleaningFailed,
 #endif
 
 #if HAS_CEILING_CLEARANCE()
@@ -543,14 +542,14 @@ constexpr inline ClientFSM client_fsm_from_phase(PhasesPhaseStepping) { return C
 
 #if HAS_INPUT_SHAPER_CALIBRATION()
 enum class PhasesInputShaperCalibration : PhaseUnderlyingType {
-    info,
-    parking,
     #if HAS_ATTACHABLE_ACCELEROMETER()
+    info,
     connect_to_board,
     wait_for_extruder_temperature,
     attach_to_extruder,
     attach_to_bed,
     #endif
+    parking,
     measuring_x_axis,
     measuring_y_axis,
     measurement_failed,
@@ -637,6 +636,8 @@ enum class PhaseDoorSensorCalibration : PhaseUnderlyingType {
     loosen_screw_half,
     finger_test,
     loosen_screw_quarter,
+    ask_enable_safety_features,
+    warn_disabled_sensor,
     done,
     finish,
     _last = finish,
@@ -895,6 +896,7 @@ inline constexpr PhaseResponses FanSelftestResponses[] = {
 static_assert(std::size(ClientResponses::FanSelftestResponses) == CountPhases<PhasesFansSelftest>());
 #endif
 
+#if HAS_ESP()
 inline constexpr EnumArray<PhaseNetworkSetup, PhaseResponses, CountPhases<PhaseNetworkSetup>()> network_setup_responses {
     { PhaseNetworkSetup::init, {} },
         { PhaseNetworkSetup::ask_switch_to_wifi, { Response::Yes, Response::No } },
@@ -904,11 +906,11 @@ inline constexpr EnumArray<PhaseNetworkSetup, PhaseResponses, CountPhases<PhaseN
         { PhaseNetworkSetup::wifi_scan, { Response::Back } },
         { PhaseNetworkSetup::wait_for_ini_file, { Response::Cancel } },
         { PhaseNetworkSetup::ask_delete_ini_file, { Response::Yes, Response::No } },
-#if HAS_NFC()
+    #if HAS_NFC()
         { PhaseNetworkSetup::ask_use_prusa_app, { Response::Yes, Response::No } },
         { PhaseNetworkSetup::wait_for_nfc, { Response::Cancel } },
         { PhaseNetworkSetup::nfc_confirm, { Response::Ok, Response::Cancel } },
-#endif
+    #endif
         { PhaseNetworkSetup::connecting_finishable, { Response::Finish, Response::Cancel } },
         { PhaseNetworkSetup::connecting_nonfinishable, { Response::Cancel } },
         { PhaseNetworkSetup::connected, { Response::Ok } },
@@ -920,6 +922,7 @@ inline constexpr EnumArray<PhaseNetworkSetup, PhaseResponses, CountPhases<PhaseN
         { PhaseNetworkSetup::help_qr, { Response::Back } },
         { PhaseNetworkSetup::finish, {} },
 };
+#endif
 
 #if ENABLED(CRASH_RECOVERY)
 inline constexpr PhaseResponses CrashRecoveryResponses[] = {
@@ -967,9 +970,6 @@ inline constexpr EnumArray<PhasesWarning, PhaseResponses, CountPhases<PhasesWarn
 #endif
 #if HAS_UNEVEN_BED_PROMPT()
         { PhasesWarning::BedUnevenAlignmentPrompt, { Response::Yes, Response::No } },
-#endif
-#if HAS_LOADCELL() && ENABLED(PROBE_CLEANUP_SUPPORT)
-        { PhasesWarning::NozzleCleaningFailed, { Response::Retry, Response::Ignore, Response::Abort } },
 #endif
 #if HAS_CEILING_CLEARANCE()
         { PhasesWarning::CeilingClearanceViolation, { Response::Continue, Response::Abort } },
@@ -1038,14 +1038,14 @@ inline constexpr EnumArray<PhasesPhaseStepping, PhaseResponses, CountPhases<Phas
 
 #if HAS_INPUT_SHAPER_CALIBRATION()
 inline constexpr EnumArray<PhasesInputShaperCalibration, PhaseResponses, CountPhases<PhasesInputShaperCalibration>()> input_shaper_calibration_responses {
-    { PhasesInputShaperCalibration::info, { Response::Continue, Response::Abort } },
-        { PhasesInputShaperCalibration::parking, {} },
     #if HAS_ATTACHABLE_ACCELEROMETER()
+    { PhasesInputShaperCalibration::info, { Response::Continue, Response::Abort } },
         { PhasesInputShaperCalibration::connect_to_board, { Response::Abort } },
         { PhasesInputShaperCalibration::wait_for_extruder_temperature, { Response::Abort } },
         { PhasesInputShaperCalibration::attach_to_extruder, { Response::Continue, Response::Abort } },
         { PhasesInputShaperCalibration::attach_to_bed, { Response::Continue, Response::Abort } },
     #endif
+        { PhasesInputShaperCalibration::parking, {} },
         { PhasesInputShaperCalibration::measuring_x_axis, { Response::Abort } },
         { PhasesInputShaperCalibration::measuring_y_axis, { Response::Abort } },
         { PhasesInputShaperCalibration::measurement_failed, { Response::Retry, Response::Abort } },
@@ -1096,6 +1096,8 @@ inline constexpr EnumArray<PhaseDoorSensorCalibration, PhaseResponses, CountPhas
     { PhaseDoorSensorCalibration::loosen_screw_half, { Response::Continue, Response::Abort } },
     { PhaseDoorSensorCalibration::finger_test, { Response::Continue, Response::Abort } },
     { PhaseDoorSensorCalibration::loosen_screw_quarter, { Response::Continue, Response::Abort } },
+    { PhaseDoorSensorCalibration::ask_enable_safety_features, { Response::Yes, Response::No } },
+    { PhaseDoorSensorCalibration::warn_disabled_sensor, { Response::Cancel, Response::Disable } }, // Cancel is first to have it selected (temporary solution till we rewrite the frames used to have radio button in as well to be able to change focus from inside the frame)
     { PhaseDoorSensorCalibration::done, { Response::Continue } },
     { PhaseDoorSensorCalibration::finish, {} },
 };

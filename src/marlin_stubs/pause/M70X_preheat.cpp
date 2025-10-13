@@ -41,7 +41,7 @@ static FSMResponseVariant preheatTempUnKnown(PreheatData preheat_data, bool brea
             return FSMResponseVariant();
         }
 
-        idle(true, true);
+        idle(true);
     }
 }
 
@@ -167,7 +167,7 @@ void filament_gcodes::M1700_no_parser(const M1700Args &args) {
     if (response == Response::Cooldown || args.target_extruder < 0) {
         // Set temperature to all tools
         // Cooldown is always applied to all tools
-        HOTEND_LOOP() {
+        for (int8_t e = 0; e < HOTENDS; e++) {
 #if ENABLED(PRUSA_TOOLCHANGER)
             if (!prusa_toolchanger.is_tool_enabled(e)) {
                 continue;
@@ -207,7 +207,7 @@ void filament_gcodes::M1700_no_parser(const M1700Args &args) {
 
     if (args.save) {
         if (args.target_extruder < 0) {
-            HOTEND_LOOP() {
+            for (int8_t e = 0; e < HOTENDS; e++) {
                 config_store().set_filament_type(e, filament);
             }
         } else {

@@ -291,7 +291,7 @@ void PrusaToolChangerUtils::save_tool_offsets() {
 }
 
 void PrusaToolChangerUtils::load_tool_offsets() {
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         if (e < static_cast<int8_t>(config_store_ns::max_tool_count)) {
             ToolOffset offset = config_store().get_tool_offset(e);
             hotend_offset[e].x = offset.x;
@@ -366,7 +366,7 @@ bool PrusaToolChangerUtils::save_tool_offsets_to_file(const char *filename) {
         return false;
     }
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         std::array<char, 40> buffer;
         int n = snprintf(buffer.data(), buffer.size(), "%f %f %f\n", hotend_offset[e].x, hotend_offset[e].y, hotend_offset[e].z);
         fwrite(buffer.data(), sizeof(char), std::min<int>(n, buffer.size() - 1), file);
@@ -384,7 +384,7 @@ bool PrusaToolChangerUtils::load_tool_offsets_from_usb() {
         return false;
     }
 
-    HOTEND_LOOP() {
+    for (int8_t e = 0; e < HOTENDS; e++) {
         std::array<char, 40> buffer;
         size_t pos = 0;
 
@@ -531,7 +531,7 @@ bool PrusaToolChangerUtils::wait(stdext::inplace_function<bool()> function, uint
     while (!(result = function()) // Wait for this and remember its state for return
         && !planner.draining() // This triggers on powerpanic and quickstop
         && (ticks_ms() - start_time) < timeout_ms) { // Timeout
-        idle(true, true);
+        idle(true);
     }
     return result;
 }

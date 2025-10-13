@@ -9,11 +9,10 @@ const constexpr int second_text_y_offset = GuiDefaults::EnableDialogBigLayout ? 
 
 } // namespace
 
-FrameWait::FrameWait(window_t *parent, const string_view_utf8 &text)
-    : window_frame_t(parent, parent->GetRect())
-    , text_wait(this, { parent->GetRect().Left(), int16_t(parent->GetRect().Top() + text_y_offset), parent->GetRect().Width(), uint16_t(30) }, is_multiline::no, is_closed_on_click_t::no, _("Please wait"))
-    , text_custom(this, { int16_t(parent->GetRect().Left() + GuiDefaults::FramePadding), int16_t(parent->GetRect().Top() + second_text_y_offset), uint16_t(parent->GetRect().Width() - 2 * GuiDefaults::FramePadding), uint16_t(60) }, is_multiline::yes, is_closed_on_click_t::no, text)
-    , animation(this, { int16_t(parent->GetRect().Left() + animation_x), int16_t(parent->GetRect().Top() + animation_y) }) //
+FrameWait::FrameWait(window_frame_t *parent, const string_view_utf8 &text)
+    : text_wait(parent, { parent->GetRect().Left(), int16_t(parent->GetRect().Top() + text_y_offset), parent->GetRect().Width(), uint16_t(30) }, is_multiline::no, is_closed_on_click_t::no, _("Please wait"))
+    , text_custom(parent, { int16_t(parent->GetRect().Left() + GuiDefaults::FramePadding), int16_t(parent->GetRect().Top() + second_text_y_offset), uint16_t(parent->GetRect().Width() - 2 * GuiDefaults::FramePadding), uint16_t(60) }, is_multiline::yes, is_closed_on_click_t::no, text)
+    , animation(parent, { int16_t(parent->GetRect().Left() + animation_x), int16_t(parent->GetRect().Top() + animation_y) }) //
 {
     text_wait.set_font(GuiDefaults::FontBig);
     text_wait.SetAlignment(Align_t::Center());

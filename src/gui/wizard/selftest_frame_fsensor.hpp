@@ -14,7 +14,7 @@
 
 class SelftestFrameFSensor : public SelftestFrameNamedWithRadio {
     FooterLine footer;
-    window_wizard_progress_t progress;
+    window_wizard_line_t line;
 
     window_text_t text_left;
     window_text_t text_right;

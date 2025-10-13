@@ -3,6 +3,7 @@
 #include <option/buddy_enable_connect.h>
 #include "screen_messages.hpp"
 #include "translator.hpp"
+#include "screen_menu_fan_info.hpp"
 #include "screen_menu_temperature.hpp"
 #include "screen_menu_move.hpp"
 #include "screen_menu_sensor_info.hpp"
@@ -39,6 +40,8 @@
 #include <screen/filament/screen_filaments_visibility.hpp>
 #include <screen/toolhead/screen_toolhead_settings.hpp>
 #include <gui/screen/screen_factory_reset.hpp>
+
+#include <option/has_esp.h>
 
 #if PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI()
     #include <screen_menu_bed_level_correction.hpp>
@@ -95,6 +98,7 @@ template struct MI_SCREEN_CTOR<ScreenFilamentManagement>;
 template struct MI_SCREEN_CTOR<ScreenFilamentManagementList>;
 template struct MI_SCREEN_CTOR<ScreenFilamentsReorder>;
 template struct MI_SCREEN_CTOR<ScreenFilamentsVisibility>;
+template struct MI_SCREEN_CTOR<ScreenMenuFanInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuVersionInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuSensorInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuOdometer>;
@@ -103,7 +107,9 @@ template struct MI_SCREEN_CTOR<ScreenMenuTemperature>;
 template struct MI_SCREEN_CTOR<ScreenMenuMove>;
 template struct MI_SCREEN_CTOR<ScreenMenuMetricsSettings>;
 template struct MI_SCREEN_CTOR<ScreenMenuEthernetSettings>;
+#if HAS_ESP()
 template struct MI_SCREEN_CTOR<ScreenMenuWifiSettings>;
+#endif
 template struct MI_SCREEN_CTOR<screen_messages_data_t>;
 template struct MI_SCREEN_CTOR<ScreenMenuConnect>;
 template struct MI_SCREEN_CTOR<ScreenMenuPrusaLink>;
@@ -196,8 +202,7 @@ template struct MI_SCREEN_CTOR<ScreenChamberFiltration>;
     #include <feature/prusa/MMU2/mmu2_mk4.h>
 
 MI_HW_MMU::MI_HW_MMU()
-    : IWindowMenuItem(_("MMU")) {
-    set_is_hidden(!MMU2::mmu2.Enabled());
+    : IWindowMenuItem(_("MMU"), nullptr, is_enabled_t::yes, MMU2::mmu2.Enabled() ? is_hidden_t::no : is_hidden_t::yes, expands_t::yes) {
 }
 
 void MI_HW_MMU::click(IWindowMenu &) {
