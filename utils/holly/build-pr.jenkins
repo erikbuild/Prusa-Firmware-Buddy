@@ -159,8 +159,9 @@ pipeline {
                             'main,xl,release,yesboot',
                             'main,ix,release,yesboot',
                             'all,anfc-slx,release,noboot',
-                            'all,anfc-h5,release,noboot',
                             'all,anfc-c0,release,noboot',
+                            'all,anfc-slx,release,yesboot',
+                            'all,anfc-c0,release,yesboot',
                             'all,anfc-c0-uart,release,noboot'
                     }
                 }
