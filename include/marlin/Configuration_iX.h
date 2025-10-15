@@ -583,8 +583,8 @@
 //
 // Use Junction Deviation instead of traditional Jerk Limiting
 //
-//#define JUNCTION_DEVIATION
-#define CLASSIC_JERK
+// #define JUNCTION_DEVIATION
+// #define CLASSIC_JERK
 #if DISABLED(CLASSIC_JERK)
     #define JUNCTION_DEVIATION_MM 0.01f // (mm) Distance from real junction edge
     #define JD_SMALL_SEGMENT_HANDLING   // Handle small segments (< 1 mm) with large junction angles (> 135°) based on a local curvature estimate, instead of just the junction angle.
