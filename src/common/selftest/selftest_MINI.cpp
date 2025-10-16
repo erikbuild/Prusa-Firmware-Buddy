@@ -355,7 +355,6 @@ void CSelftest::phaseSelftestStart() {
         thermalManager.setTargetBed(35);
         // no need to preheat nozzle, it heats up much faster than bed
         thermalManager.setTargetHotend(0, 0);
-        marlin_server::set_temp_to_display(0, 0);
     }
 
     m_result = config_store().selftest_result.get(); // read previous result
@@ -379,7 +378,6 @@ void CSelftest::restoreAfterSelftest() {
     // disable heater target values - thermalManager.disable_all_heaters does not do that
     thermalManager.setTargetBed(0);
     thermalManager.setTargetHotend(0, 0);
-    marlin_server::set_temp_to_display(0, 0);
 
     thermalManager.disable_all_heaters();
     disable_all_steppers();

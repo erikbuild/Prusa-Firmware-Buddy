@@ -100,7 +100,7 @@ static consteval HeaterConfig_t make_nozzle_config(const char *name) {
         .type = heater_type_t::Nozzle,
         .tool_nr = index,
         .getTemp = []() { return thermalManager.temp_hotend[index].celsius; },
-        .setTargetTemp = [](int target_temp) { marlin_server::set_temp_to_display(target_temp, index); thermalManager.setTargetHotend(target_temp, index); },
+        .setTargetTemp = [](int target_temp) { thermalManager.setTargetHotend(target_temp, index); },
         .refKp = Temperature::temp_hotend[index].pid.Kp,
         .refKi = Temperature::temp_hotend[index].pid.Ki,
         .refKd = Temperature::temp_hotend[index].pid.Kd,
@@ -459,10 +459,7 @@ void CSelftest::phaseSelftestStart() {
 
     if (m_Mask & to_one_hot(stsHeaters_noz_ena)) {
         // no need to preheat nozzle, it heats up much faster than bed
-        for (int8_t e = 0; e < HOTENDS; e++) {
-            thermalManager.setTargetHotend(0, e);
-            marlin_server::set_temp_to_display(0, e);
-        }
+        thermalManager.disable_hotend();
     }
 
     m_result = config_store().selftest_result.get(); // read previous result
@@ -496,7 +493,6 @@ void CSelftest::restoreAfterSelftest() {
         if (buddy::puppies::dwarfs[e].is_enabled()) {
             thermalManager.setTargetHotend(0, e);
         }
-        marlin_server::set_temp_to_display(0, e);
     }
 
     thermalManager.disable_all_heaters();

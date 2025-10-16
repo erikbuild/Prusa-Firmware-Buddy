@@ -53,7 +53,6 @@ void preheat() {
 
     // nozzle temperature preheat
     thermalManager.setTargetHotend(filament_desc.nozzle_preheat_temperature, 0);
-    marlin_server::set_temp_to_display(filament_desc.nozzle_temperature, 0);
     // bed temperature
     thermalManager.setTargetBed(filament_desc.heatbed_temperature);
 }

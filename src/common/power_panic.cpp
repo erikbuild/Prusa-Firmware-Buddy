@@ -382,7 +382,6 @@ void resume_loop() {
             resume_state = ResumeState::ParkForPause;
         } else {
             for (int8_t e = 0; e < HOTENDS; e++) {
-                marlin_server::set_temp_to_display(state_buf.planner.target_nozzle[e], e);
                 thermalManager.setTargetHotend(state_buf.planner.target_nozzle[e], e);
             }
             // setTargetBed is already called higher up in this function

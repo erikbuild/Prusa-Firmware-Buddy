@@ -2473,9 +2473,6 @@ static void _server_print_loop(void) {
 #if FAN_COUNT > 0
         thermalManager.set_fan_speed(0, 0);
 #endif
-        for (int8_t e = 0; e < HOTENDS; e++) {
-            set_temp_to_display(0, e);
-        }
 
         server.print_state = State::Aborting_UnloadFilament;
         break;
@@ -2977,7 +2974,6 @@ void resuming_begin(void) {
 
     for (uint8_t hotend = 0; hotend < HOTENDS; hotend++) {
         thermalManager.setTargetHotend(server.resume.nozzle_temp[hotend], hotend);
-        set_temp_to_display(server.resume.nozzle_temp[hotend], hotend);
     }
 
 #if FAN_COUNT > 0

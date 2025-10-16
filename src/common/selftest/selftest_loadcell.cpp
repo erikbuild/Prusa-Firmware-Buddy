@@ -31,7 +31,6 @@ static constexpr int32_t acceptable_noise_range_g = 60;
 
 auto set_extruder_temperature = [](int16_t temperature, uint8_t extruder) {
     thermalManager.setTargetHotend(temperature, extruder);
-    marlin_server::set_temp_to_display(temperature, extruder);
 };
 
 CSelftestPart_Loadcell::CSelftestPart_Loadcell(IPartHandler &state_machine, const LoadcellConfig_t &config,

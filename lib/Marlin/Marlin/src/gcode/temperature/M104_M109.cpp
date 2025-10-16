@@ -91,7 +91,10 @@ void GcodeSuite::M104() {
     #endif
   }
 
-  marlin_server::set_temp_to_display(parser.seenval('D') ? parser.value_celsius() : thermalManager.degTargetHotend(target_extruder), target_extruder);
+  if(parser.seenval('D')) {
+    // Override display_temp set by setTargetHotend
+    marlin_server::set_temp_to_display( parser.value_celsius(), target_extruder);
+  }
 
   #if ENABLED(AUTOTEMP)
     planner.autotemp_M104_M109();
@@ -146,6 +149,10 @@ void M109_no_parser(uint8_t target_extruder, const M109Flags& flags) {
       if (target_extruder != active_extruder) return;
     #endif
     thermalManager.setTargetHotend(temp, target_extruder);
+    if(flags.display_temp.has_value()) {
+      // Override display_temp set by setTargetHotend
+      marlin_server::set_temp_to_display(*flags.display_temp, target_extruder);
+    }
 
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
     // TODO: this doesn't work properly for multitool, temperature of last tool decides whenever printjob timer is started or not
@@ -166,7 +173,6 @@ void M109_no_parser(uint8_t target_extruder, const M109Flags& flags) {
     planner.autotemp_M104_M109();
   #endif
   if (set_temp) {
-    marlin_server::set_temp_to_display(flags.display_temp.value_or(flags.target_temp), target_extruder);
     (void)thermalManager.wait_for_hotend(target_extruder, no_wait_for_cooling, flags.autotemp);
   }
 

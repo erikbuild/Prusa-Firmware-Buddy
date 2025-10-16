@@ -88,7 +88,6 @@ void SafetyTimer::reset_restore_nonblocking() {
 
         const auto temp = nozzle_temperatures_to_restore_[hotend];
         thermalManager.setTargetHotend(temp, hotend);
-        marlin_server::set_temp_to_display(temp, hotend);
     }
 }
 

@@ -337,7 +337,6 @@ static void queue_filament_load_gcodes() {
         // We're loading a new filament, do not fallback into ad-hoc one -> extruder_index = std::nullopt
         const auto target_temp = FilamentType::from_name(filament_name).parameters().nozzle_temperature;
         thermalManager.setTargetHotend(target_temp, e);
-        marlin_server::set_temp_to_display(target_temp, e);
 #endif
         marlin_server::enqueue_gcode_printf("M701 S\"%s\" T%d W2", filament_name, e);
     }
@@ -366,7 +365,6 @@ static void queue_filament_change_gcodes() {
         auto temp_old = config_store().get_filament_type(e).parameters().nozzle_temperature;
 
         thermalManager.setTargetHotend(temp_old, e);
-        marlin_server::set_temp_to_display(temp_old, e);
 #endif
 
         // M1600 - change, R - add return option, U1 - Ask filament type if unknown, T - tool, Sxxx - preselect filament type

@@ -232,13 +232,10 @@ bool SpoolJoin::do_join(uint8_t current_tool) {
 
     // transfer target temperature from one tool to another
     auto target_temp = thermalManager.degTargetHotend(current_tool);
-    float display_temp = marlin_vars().hotend(current_tool).display_nozzle;
     thermalManager.setTargetHotend(target_temp, new_tool);
-    marlin_server::set_temp_to_display(display_temp, new_tool);
 
     // cool down current tool
     thermalManager.setTargetHotend(0, current_tool);
-    marlin_server::set_temp_to_display(0, current_tool);
 
     // We intentinally keep loaded filament type in EEPROM. That makes it possible for user to click "Change Filament" and printer will know what temperature to preheat to.
     // Filament sensor should say that there is no filament, so it will not be possible to start print in this state.

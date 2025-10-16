@@ -58,7 +58,6 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     if (marlin_server::printer_idle() && !res) { // Failed when printer is not printing
         // Disable nozzle heater
         thermalManager.setTargetHotend(0, rSettings.GetExtruder());
-        marlin_server::set_temp_to_display(0, rSettings.GetExtruder());
         return false;
     }
 
@@ -195,14 +194,12 @@ void filament_gcodes::M70X_process_user_response(PreheatStatus::Result res, uint
     case PreheatStatus::Result::DoneHasFilament: {
         const float disp_temp = config_store().get_filament_type(target_extruder).parameters().nozzle_preheat_temperature;
         thermalManager.setTargetHotend(static_cast<int16_t>(disp_temp), target_extruder);
-        marlin_server::set_temp_to_display(disp_temp, target_extruder);
         break;
     }
     case PreheatStatus::Result::CooledDown:
         // set temperatures to zero
         thermalManager.setTargetHotend(0, target_extruder);
         thermalManager.setTargetBed(0);
-        marlin_server::set_temp_to_display(0, target_extruder);
         thermalManager.set_fan_speed(0, 0);
         break;
     case PreheatStatus::Result::DoneNoFilament:
@@ -248,7 +245,6 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
 
     ScopeGuard fail_guard = [&] {
         thermalManager.setTargetHotend(orig_temp, active_extruder);
-        marlin_server::set_temp_to_display(orig_temp, active_extruder);
         PreheatStatus::SetResult(PreheatStatus::Result::DoneNoFilament);
     };
 
@@ -258,7 +254,6 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
 
     if (orig_temp < EXTRUDE_MINTEMP) {
         thermalManager.setTargetHotend(EXTRUDE_MINTEMP, active_extruder);
-        marlin_server::set_temp_to_display(EXTRUDE_MINTEMP, active_extruder);
     }
 
     // catch filament in gear and then ask for temp

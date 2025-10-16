@@ -83,18 +83,6 @@ void filament_gcodes::preheat_to(FilamentType filament, uint8_t target_extruder,
     if (preheat_arg.force_temp || thermalManager.degTargetHotend(target_extruder) < fil_cnf.nozzle_temperature) {
         thermalManager.setTargetHotend(fil_cnf.nozzle_temperature, target_extruder);
 
-        const uint8_t extruder =
-#if HAS_MMU2()
-            // MMU has multiple slots (target_extruder can be >0) but only a single nozzle
-            // -> we need the correct temperature per active slot
-            // but we also need marlin_server::set_temp_to_display not to crash due to target_extruder > 0
-            0;
-
-#else
-            target_extruder;
-#endif
-
-        marlin_server::set_temp_to_display(fil_cnf.nozzle_temperature, extruder);
         if (preheat_arg.preheat_bed && (preheat_arg.force_temp || (thermalManager.degTargetBed() < fil_cnf.heatbed_temperature))) {
             thermalManager.setTargetBed(fil_cnf.heatbed_temperature);
         }
@@ -155,7 +143,6 @@ void filament_gcodes::M1700_no_parser(const M1700Args &args) {
 
     const auto set_extruder_temp = [&](uint8_t extruder) {
         thermalManager.setTargetHotend(args.enforce_target_temp ? fil_cnf.nozzle_temperature : fil_cnf.nozzle_preheat_temperature, extruder);
-        marlin_server::set_temp_to_display(fil_cnf.nozzle_temperature, extruder);
     };
 
     if (response == Response::Cooldown || args.target_extruder < 0) {

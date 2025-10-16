@@ -16,7 +16,6 @@ void set_nozzle_temps(int16_t temp) {
     for (uint8_t tool_nr = 0; tool_nr < HOTENDS; tool_nr++) {
         if (is_tool_selftest_enabled(tool_nr, ToolMask::AllTools)) { // set temperature on all tools, its not possible to calibrate just one tool
             thermalManager.setTargetHotend(temp, tool_nr);
-            marlin_server::set_temp_to_display(temp, tool_nr);
         }
     }
 }

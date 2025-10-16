@@ -80,7 +80,7 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
         .partname = "Nozzle",
         .type = heater_type_t::Nozzle,
         .getTemp = []() { return thermalManager.temp_hotend[0].celsius; },
-        .setTargetTemp = [](int target_temp) { marlin_server::set_temp_to_display(target_temp, 0); thermalManager.setTargetHotend(target_temp, 0); },
+        .setTargetTemp = [](int target_temp) { thermalManager.setTargetHotend(target_temp, 0); },
         .refKp = Temperature::temp_hotend[0].pid.Kp,
         .refKi = Temperature::temp_hotend[0].pid.Ki,
         .refKd = Temperature::temp_hotend[0].pid.Kd,
@@ -352,7 +352,6 @@ void CSelftest::phaseSelftestStart() {
         thermalManager.setTargetBed(35);
         // no need to preheat nozzle, it heats up much faster than bed
         thermalManager.setTargetHotend(0, 0);
-        marlin_server::set_temp_to_display(0, 0);
     }
 
     m_result = config_store().selftest_result.get(); // read previous result
@@ -379,7 +378,6 @@ void CSelftest::restoreAfterSelftest() {
     // disable heater target values - thermalManager.disable_all_heaters does not do that
     thermalManager.setTargetBed(0);
     thermalManager.setTargetHotend(0, 0);
-    marlin_server::set_temp_to_display(0, 0);
 
     // restore fan behavior
     Fans::print(0).exit_selftest_mode();

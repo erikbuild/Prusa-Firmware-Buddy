@@ -361,14 +361,11 @@ void FirstLayer::run() {
 
     // nozzle temperature print
     thermalManager.setTargetHotend(temp_nozzle, 0);
-    marlin_server::set_temp_to_display(temp_nozzle, 0);
     thermalManager.wait_for_hotend(0, false);
 
     print_shape_2();
 
     thermalManager.setTargetHotend(0, 0);
-    marlin_server::set_temp_to_display(0, 0);
-
     thermalManager.setTargetBed(0);
 }
 

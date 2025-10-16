@@ -328,7 +328,6 @@ namespace {
 
     bool heat_up(const uint16_t target_hotend_temp, PhasesColdPull current_phase) {
         thermalManager.setTargetHotend(target_hotend_temp, active_extruder);
-        marlin_server::set_temp_to_display(target_hotend_temp, active_extruder);
 
         auto too_cold = []() {
             return static_cast<uint16_t>(Temperature::degHotend(active_extruder)) < Temperature::degTargetHotend(active_extruder);
@@ -373,7 +372,6 @@ namespace {
 
     PhasesColdPull automatic_pull() {
         thermalManager.setTargetHotend(HOTEND_END_TEMP, active_extruder);
-        marlin_server::set_temp_to_display(HOTEND_END_TEMP, active_extruder);
 
         {
     #if ENABLED(PREVENT_COLD_EXTRUSION)
@@ -504,7 +502,6 @@ void M1702() {
     // Clean up
     thermalManager.zero_fan_speeds();
     thermalManager.disable_all_heaters();
-    marlin_server::set_temp_to_display(0, active_extruder);
 }
 
 #else
