@@ -127,7 +127,7 @@ static int syslog_message_init(char *buffer, int buffer_len, int64_t timestamp) 
 
 extern "C" void metric_handler(metric_point_t *point) {
     static uint32_t buffer_reference_timestamp = 0;
-    static char buffer_has_header = false;
+    static bool buffer_has_header = false;
     static char buffer[1024];
     static unsigned int buffer_used = 0;
 
