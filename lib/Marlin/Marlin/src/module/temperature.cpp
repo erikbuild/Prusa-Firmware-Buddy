@@ -47,6 +47,11 @@
 #include "../marlin_stubs/skippable_gcode.hpp"
 #include <option/has_toolchanger.h>
 
+#include <option/board_is_master_board.h>
+#if BOARD_IS_MASTER_BOARD()
+#include <marlin_server.hpp>
+#endif
+
 #include <option/has_planner.h>
 #if HAS_PLANNER()
   #include "planner.h"
@@ -3001,6 +3006,9 @@ void Temperature::isr() {
         }
 
         temp_hotend[ee].target = new_temp;
+    #if BOARD_IS_MASTER_BOARD()
+        marlin_server::set_temp_to_display(new_temp, ee);
+    #endif
 
         start_watching_hotend(ee);
     #if HAS_TOOLCHANGER()
