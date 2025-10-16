@@ -184,7 +184,7 @@ void test_standard_tag_main(PrusaNFCReader &reader, MockNFCReader &mock) {
     CHECK(reader.read_field_string(field(MainField::brand_name), string_buffer) == std::string_view("Prusament"));
     CHECK(reader.read_field_string(field(MainField::material_name), string_buffer) == std::string_view("PLA Prusa Galaxy Black"));
 
-    CHECK(reader.read_field_bytes(field(MainField::brand_specific_instance_id), bytes_buffer) == ByteString { std::byte { 0x01 } });
+    CHECK(reader.read_field_string(field(MainField::brand_specific_instance_id), string_buffer) == std::string_view { "1" });
     CHECK(reader.read_field_bytes(field(MainField::material_uuid), bytes_buffer) == tag_data::material_uuid);
 
     CHECK(reader.read_field_uint16_array(field(MainField::tags), tags_buffer) == std::array { (uint16_t)MaterialTag::glitter, (uint16_t)MaterialTag::abrasive });
@@ -463,7 +463,7 @@ TEST_CASE("PrusaNFCReader::writing") {
 
     // Try writing bytes
     {
-        CHECK(reader.write_field_bytes(field(MainField::brand_specific_instance_id), ByteString { std::byte(1), std::byte(2) }) == PrusaNFCReader::WriteReport { .field_existed = true, .changed = true });
+        CHECK(reader.write_field_string(field(MainField::brand_specific_instance_id), "12") == PrusaNFCReader::WriteReport { .field_existed = true, .changed = true });
         CHECK(mock.tag_data[0] == tag_data::write_sample_8::data);
         mock.log = {};
     }

@@ -163,7 +163,7 @@ standard_data = {
         "nominal_netto_full_weight": 0x1FFFFFFFF,
         "transmission_distance": 0.3,
         "tags": ["glitter", "abrasive"],
-        "brand_specific_instance_id": 1,
+        "brand_specific_instance_id": "1",
         "material_uuid": str(material_uuid),
     }
 }
@@ -222,10 +222,10 @@ write_sample = nfc_update(write_sample,
                           remove_fields={"aux": ["consumed_weight"]})
 write_sample_data("write_sample_7", write_sample)
 
-write_sample = nfc_update(
-    write_sample, {"main": {
-        "brand_specific_instance_id": b"\x01\x02"
-    }})
+write_sample = nfc_update(write_sample,
+                          {"main": {
+                              "brand_specific_instance_id": "12"
+                          }})
 write_sample_data("write_sample_8", write_sample)
 
 write_sample = nfc_update(
