@@ -161,6 +161,7 @@ public:
         subscribe<uavcan_node_GetInfo_Response_1_0>();
         subscribe<uavcan_node_Heartbeat_1_0>();
         subscribe<uavcan_pnp_NodeIDAllocationData_2_0>();
+        subscribe<uavcan_diagnostic_Record_1_1>();
 #if HAS_AC_CONTROLLER()
         subscribe<prusa3d_ac_controller_Status_1_0>();
 #endif
@@ -197,6 +198,8 @@ private:
                 return receive_helper<uavcan_node_Heartbeat_1_0>(now, transfer);
             case uavcan_pnp_NodeIDAllocationData_2_0_FIXED_PORT_ID_:
                 return receive_helper<uavcan_pnp_NodeIDAllocationData_2_0>(now, transfer);
+            case uavcan_diagnostic_Record_1_1_FIXED_PORT_ID_:
+                return receive_helper<uavcan_diagnostic_Record_1_1>(now, transfer);
 #if HAS_AC_CONTROLLER()
             case prusa3d_ac_controller_Status_1_0_FIXED_PORT_ID_:
                 return receive_helper<prusa3d_ac_controller_Status_1_0>(now, transfer);
@@ -270,6 +273,12 @@ private:
             now,
             transfer.metadata.transfer_id,
             request.offset);
+    }
+
+    void receive(const cyphal::TimePoint, const CanardRxTransfer &transfer, const uavcan_diagnostic_Record_1_1 &message) {
+        application.receive_diagnostic_record(
+            cyphal::NodeId { transfer.metadata.remote_node_id },
+            cyphal::Bytes { (std::byte *)message.text.elements, message.text.count });
     }
 
 #if HAS_AC_CONTROLLER()

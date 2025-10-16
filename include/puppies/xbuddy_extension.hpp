@@ -148,6 +148,9 @@ private:
     using Status = xbuddy_extension::modbus::Status;
     ModbusInputRegisterBlock<Status::address, Status> status;
 
+    // Track last log sequence to detect new log messages
+    uint16_t last_log_message_sequence = 0;
+
     // To not send activity updates too often.
     uint32_t last_activity_update = 0;
 
@@ -172,6 +175,7 @@ private:
     CommunicationStatus refresh_mmu();
     CommunicationStatus write_chunk();
     CommunicationStatus write_digest();
+    CommunicationStatus refresh_log_message();
 };
 
 extern XBuddyExtension xbuddy_extension;

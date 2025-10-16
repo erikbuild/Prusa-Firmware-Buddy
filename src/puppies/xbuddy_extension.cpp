@@ -383,6 +383,7 @@ CommunicationStatus XBuddyExtension::refresh() {
         // the request ASAP, it's changing after each sent chunk.
         refresh_input(flash_fd != -1 ? 0 : 250),
         refresh_holding(),
+        refresh_log_message(),
         write_chunk(),
         write_digest(),
     };
@@ -560,6 +561,41 @@ CommunicationStatus XBuddyExtension::refresh_mmu() {
     default:
         return CommunicationStatus::SKIPPED;
     }
+}
+
+CommunicationStatus XBuddyExtension::refresh_log_message() {
+    // Already locked by caller
+
+    // Check if log_message_sequence changed at all
+    if (status.value.log_message_sequence == last_log_message_sequence) {
+        return CommunicationStatus::OK;
+    }
+
+    using xbuddy_extension::modbus::LogMessage;
+    ModbusInputRegisterBlock<LogMessage::address, LogMessage> log_message;
+    uint32_t max_age_ms = 0;
+    const auto result = bus.read(unit, log_message, max_age_ms);
+    if (result != CommunicationStatus::OK) {
+        // Do not update last_log_message_sequence, it will be retried on next cycle
+        log_warning(Buddy, "XBE: failed to read log message");
+        return result;
+    }
+
+    // Check if we missed any messages, work in modular arithmetic
+    const uint16_t expected_sequence = static_cast<uint16_t>(last_log_message_sequence + 1);
+    if (log_message.value.sequence != expected_sequence) {
+        // If we missed message, we at least log...
+        log_info(Buddy, "XBE: missed log message(s)");
+        // ...and continue with the newest message.
+    }
+
+    static_assert(std::endian::native == std::endian::little);
+    const auto text_size = std::min((size_t)log_message.value.text_size, 2 * log_message.value.text_data.size());
+    const auto text_data = (const char *)log_message.value.text_data.data();
+    log_info(Buddy, "XBE: %.*s", text_size, text_data);
+
+    last_log_message_sequence = log_message.value.sequence;
+    return CommunicationStatus::OK;
 }
 
 bool XBuddyExtension::mmu_response_received(uint32_t rqSentTimestamp_ms) const {

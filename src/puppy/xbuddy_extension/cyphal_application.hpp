@@ -68,6 +68,7 @@ public:
     virtual void receive_node_get_info_response(NodeId remote_node_id, Bytes name) = 0;
     virtual void receive_file_read_request(NodeId remote_node_id, TimePoint now, uint8_t transfer_id, uint32_t offset) = 0;
     virtual void receive_ac_controller_status(const ac_controller::Config &, const ac_controller::Status &) = 0;
+    virtual void receive_diagnostic_record(NodeId remote_node_id, const Bytes &text) = 0;
 
     // Called by modbus handlers.
 
@@ -76,6 +77,13 @@ public:
     [[nodiscard]] virtual bool receive(const ac_controller::Config &) = 0;
     virtual const ModbusRequest &request() = 0;
     virtual void request(xbuddy_extension::NodeState &, ac_controller::Status &) = 0;
+
+    /// Log message buffer structure exposed via Modbus
+    struct LogData {
+        uint16_t sequence;
+        std::span<const std::byte> text;
+    };
+    virtual LogData get_log() const = 0;
 };
 
 /// Run the cyphal application for a while.

@@ -31,6 +31,17 @@ void read_register_file_callback(xbuddy_extension::modbus::Status &status) {
     status.digest_request.file_id = static_cast<uint16_t>(flash_data.hash_request);
     status.digest_request.salt_lo = static_cast<uint16_t>(flash_data.hash_salt & 0xFFFF);
     status.digest_request.salt_hi = static_cast<uint16_t>(flash_data.hash_salt >> 16);
+    const auto log = cyphal::application().get_log();
+    status.log_message_sequence = log.sequence;
+}
+
+void read_register_file_callback(xbuddy_extension::modbus::LogMessage &log_message) {
+    static_assert(std::endian::native == std::endian::little);
+    const auto log = cyphal::application().get_log();
+    const auto text_size = std::min(sizeof(log_message.text_data), log.text.size());
+    log_message.sequence = log.sequence;
+    log_message.text_size = text_size;
+    memcpy(log_message.text_data.data(), log.text.data(), text_size);
 }
 
 bool write_register_file_callback(const xbuddy_extension::modbus::Config &config) {
@@ -163,6 +174,10 @@ public:
             status_result != Status::IllegalAddress) {
             return status_result;
         }
+        if (const auto log_message_result = read_register_file<xbuddy_extension::modbus::LogMessage>(address, out);
+            log_message_result != Status::IllegalAddress) {
+            return log_message_result;
+        }
         return Status::IllegalAddress;
     }
 
@@ -214,7 +229,7 @@ void app::run() {
     };
     modbus::Dispatch modbus_dispatch { devices };
 
-    alignas(uint16_t) std::byte response_buffer[64]; // is enough for now
+    alignas(uint16_t) std::byte response_buffer[256];
     hal::rs485::start_receiving();
     for (;;) {
         const auto request = hal::rs485::receive_timeout(1);

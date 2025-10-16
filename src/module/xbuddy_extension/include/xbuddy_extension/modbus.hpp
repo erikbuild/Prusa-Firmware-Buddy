@@ -41,6 +41,8 @@ struct Status {
     ChunkRequest chunk_request; ///< request to receive a chunk
 
     DigestRequest digest_request; ///< request to compute digest
+
+    uint16_t log_message_sequence; ///< increments when new log message available
 };
 
 /// MODBUS register file for setting desired config of xBuddyExtension from motherboard.
@@ -88,6 +90,15 @@ struct Digest {
 
     DigestRequest request; ///< echoed back to prevent mixup
     std::array<uint16_t, 16> data; ///< actual bytes of the digest (little endian)
+};
+
+/// MODBUS register file for reporting log messages from xBuddyExtension to motherboard.
+struct LogMessage {
+    static constexpr uint16_t address = 0x9300;
+
+    uint16_t sequence; ///< sequence number when this record was written, see Status::log_message_sequence
+    uint16_t text_size; ///< length of valid text_data in bytes
+    std::array<uint16_t, 121> text_data; ///< actual bytes of log message (little endian)
 };
 
 } // namespace xbuddy_extension::modbus

@@ -20,7 +20,7 @@ extern uint32_t __shared_data_end__[];
 extern char _isr_stack_start[];
 extern char _isr_stack_end[];
 
-constexpr const size_t main_task_stack_size = 512;
+constexpr const size_t main_task_stack_size = 512 + 256;
 alignas(32) NON_SHARED_DATA StackType_t main_task_stack[main_task_stack_size];
 NON_SHARED_DATA StaticTask_t main_task_control_block;
 static void main_task_code(void *) {

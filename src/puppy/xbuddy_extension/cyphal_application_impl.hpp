@@ -150,6 +150,13 @@ private:
     };
     AcController ac_controller;
 
+    /// Buffer for the latest log message; messages not fitting will be truncated.
+    struct LogBuffer {
+        size_t text_size = 0;
+        uint16_t sequence = 0;
+        std::array<std::byte, sizeof(xbuddy_extension::modbus::LogMessage::text_data)> text;
+    } log_buffer;
+
     /// Represents all the info we have/need about the node.
     struct Node {
         UniqueId unique_id;
@@ -859,6 +866,20 @@ public:
         ac_controller.active = config;
         ac_controller.status = status;
         ac_controller.seen_status = true;
+    }
+
+    void receive_diagnostic_record(NodeId, const Bytes &text) final {
+        log_buffer.sequence++;
+        log_buffer.text_size = std::min(text.size(), log_buffer.text.size());
+        memcpy(log_buffer.text.data(), text.data(), log_buffer.text_size);
+    }
+
+    LogData get_log() const final {
+        auto text = std::span { log_buffer.text };
+        return LogData {
+            .sequence = log_buffer.sequence,
+            .text = text.subspan(0, log_buffer.text_size),
+        };
     }
 };
 
