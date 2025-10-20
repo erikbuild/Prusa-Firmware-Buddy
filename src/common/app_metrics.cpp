@@ -403,8 +403,8 @@ void record_dwarf_internal_temperatures() {
 #endif
 
 #if HAS_PHASE_STEPPING()
-METRIC_DEF(ps_stalled, "ps_stall", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
-METRIC_DEF(ps_speed_change, "ps_spd_chng", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
+METRIC_DEF(ps_stalled, "ps_stall", METRIC_VALUE_CUSTOM, 0, METRIC_DISABLED);
+METRIC_DEF(ps_speed_change, "ps_spd_chng", METRIC_VALUE_CUSTOM, 0, METRIC_DISABLED);
 
 void record_ps_debug_events() {
     using namespace phase_stepping;
