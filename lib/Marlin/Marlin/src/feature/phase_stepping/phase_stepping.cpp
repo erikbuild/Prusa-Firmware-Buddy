@@ -715,10 +715,7 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
             axis_state.current_target = *current_target;
 
             if (std::abs(current_target->start_v - axis_state.previous_speed) > speed_diff_threshold) {
-                const auto res = debug_events_queue.enqueue(SuddenSpeedChange { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed, .new_speed = current_target->start_v });
-                if (!res) {
-                    std::abort();
-                }
+                [[maybe_unused]] const auto res = debug_events_queue.enqueue(SuddenSpeedChange { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed, .new_speed = current_target->start_v });
             }
 
             axis_state.is_cruising = (current_target->half_accel == 0) && (current_target->duration > 10'000);
@@ -726,14 +723,11 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
             auto [end_speed, end_pos] = axis_position(axis_state, current_target->duration);
             axis_state.last_was_empty = std::abs(end_speed) < 2; // if < 2 we slowed down
             if (axis_state.stalled_for != 0) {
-                const auto res = debug_events_queue.enqueue(Stalled {
+                [[maybe_unused]] const auto res = debug_events_queue.enqueue(Stalled {
                     .timestamp = now,
                     .axis = axis_index ? 'Y' : 'X',
                     .number_of_iteration = axis_state.stalled_for,
                 });
-                if (!res) {
-                    std::abort();
-                }
             }
             axis_state.stalled_for = 0;
 
@@ -743,10 +737,7 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
             calibration_new_move(axis_state);
         } else {
             if (axis_state.previous_speed > sudden_stop_threshold) {
-                const auto res = debug_events_queue.enqueue(SuddenStop { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed });
-                if (!res) {
-                    std::abort();
-                }
+                [[maybe_unused]] const auto res = debug_events_queue.enqueue(SuddenStop { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed });
             }
             // No new movement
             axis_state.is_cruising = false;
