@@ -9,7 +9,9 @@
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
 #endif
 
-#include "fsm/selftest_fsensors_phases.hpp"
+#if HAS_SELFTEST()
+    #include "fsm/selftest_fsensors_phases.hpp"
+#endif
 
 namespace ClientResponses {
 
