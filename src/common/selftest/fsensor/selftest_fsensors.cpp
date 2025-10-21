@@ -209,8 +209,14 @@ void SelftestFSensors::initialize() {
     }
 
 #if HAS_SIDE_FSENSOR()
-    if (add_calibrator(GetSideFSensor(params_.tool))) {
-        config_store().fsensor_side_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool); });
+    #if HAS_MMU2()
+    // If MMU is enabled, the side fsensor would end up being the one from the MMU.
+    if (!config_store().mmu2_enabled.get())
+    #endif
+    {
+        if (add_calibrator(GetSideFSensor(params_.tool))) {
+            config_store().fsensor_side_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool); });
+        }
     }
 #endif
 
