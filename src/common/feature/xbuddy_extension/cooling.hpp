@@ -22,7 +22,7 @@ public:
     static constexpr Temperature critical_temp = 65.0f;
 
     /// Temperature at which the normal fan control may be restored, after emergency temperature
-    static constexpr Temperature recovery_temp = 60.0f;
+    static constexpr Temperature recovery_temp = 55.0f;
 
     // Numbers pulled out of thin air
     static constexpr FanPWM max_pwm { 255 };
