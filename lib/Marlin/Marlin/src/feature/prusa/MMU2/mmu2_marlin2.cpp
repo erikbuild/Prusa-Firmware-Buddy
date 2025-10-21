@@ -183,12 +183,6 @@ int16_t thermal_degHotend() {
     return thermalManager.degHotend(active_extruder);
 }
 
-int16_t thermal_setExtrudeMintemp(int16_t t) {
-    int16_t rv = thermalManager.extrude_min_temp;
-    thermalManager.extrude_min_temp = t;
-    return rv;
-}
-
 void thermal_setTargetHotend(int16_t t) {
     thermalManager.setTargetHotend(t, active_extruder);
 }

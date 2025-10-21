@@ -113,13 +113,6 @@ int16_t thermal_degHotend() {
     return hotendTemp;
 }
 
-int16_t thermal_setExtrudeMintemp(int16_t t) {
-    int16_t rv = extrudeMinTemp;
-    extrudeMinTemp = t;
-    mockLog_RecordFnTemp(t);
-    return rv;
-}
-
 void thermal_setTargetHotend(int16_t t) {
     mockLog_RecordFnTemp(t);
 }

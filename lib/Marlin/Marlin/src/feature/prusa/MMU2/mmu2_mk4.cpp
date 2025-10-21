@@ -28,9 +28,11 @@
 #ifndef UNITTEST
     // because it brings in whole Marlin and the unit tests commit suicide ...
     #include "../../../module/prusa/spool_join.hpp"
+    #include "../../../../../../../src/common/mapi/cold_extrude.hpp"
     #include <metric.h>
 #else
     #include "stubs/spool_join_stub.h"
+    #include <stubs/cold_extrude_stub.hpp>
 #endif
 
 #include "../../../../../../../src/mmu2/mmu2_bootloader.hpp"
@@ -726,9 +728,9 @@ bool MMU2::tool_change(char code, uint8_t slot) {
     } break;
 
     case 'x': {
-        auto emt = thermal_setExtrudeMintemp(0); // Allow cold extrusion since Tx only loads to the gears not nozzle
+        // Allow cold extrusion since Tx only loads to the gears not nozzle
+        mapi::ColdExtrudeGuard cold_extrude_guard;
         tool_change(slot);
-        thermal_setExtrudeMintemp(emt);
     } break;
 
     case 'c': {
@@ -779,9 +781,9 @@ void MMU2::UnloadObeyAutoRetracted() {
         UnloadInner(PreUnloadPolicy::Ramming);
     } else {
         // otherwise it's not even necessary to wait for temperature, the filament can be pulled out of the nube directly
-        auto emt = thermal_setExtrudeMintemp(0); // Allow cold extrusion since Tx only loads to the gears not nozzle
+        // Allow cold extrusion since Tx only loads to the gears not nozzle
+        mapi::ColdExtrudeGuard cold_extrude_guard;
         UnloadInner(PreUnloadPolicy::RelieveFilament);
-        thermal_setExtrudeMintemp(emt);
     }
 }
 
@@ -894,11 +896,11 @@ bool MMU2::loading_test(uint8_t slot) {
         CommandInProgressGuard cipg(CommandInProgress::TestLoad, commandInProgressManager);
         FSensorBlockRunout blockRunout;
         BlockEStallDetection blockEStallDetection;
-        auto emt = thermal_setExtrudeMintemp(0); // Allow cold extrusion - load test doesn't push filament all the way into the nozzle
+        // Allow cold extrusion since Tx only loads to the gears not nozzle
+        mapi::ColdExtrudeGuard cold_extrude_guard;
         ToolChangeCommon(slot);
         planner_synchronize();
         UnloadInner(PreUnloadPolicy::RelieveFilament);
-        thermal_setExtrudeMintemp(emt);
     }
     ScreenUpdateEnable();
     return true;

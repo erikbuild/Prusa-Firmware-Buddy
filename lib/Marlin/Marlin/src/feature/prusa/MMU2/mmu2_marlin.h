@@ -75,9 +75,6 @@ bool marlin_is_retracted();
 int16_t thermal_degTargetHotend();
 int16_t thermal_degHotend();
 
-/// @returns the old extruder mintemp value which can be used to restore the setting later
-int16_t thermal_setExtrudeMintemp(int16_t t);
-
 void thermal_setTargetHotend(int16_t t);
 
 void safe_delay_keep_alive(uint16_t t);
