@@ -1745,3 +1745,19 @@ Errors:
     id: "UNTRUSTED_IDENTITY"
     type: "CONNECT"
     approved: true
+
+  - code: "XX849"
+    printers: [COREONEL]
+    title: "Warning"
+    text: "Bed fan is not spinning. Check it for possible debris, then inspect the wiring."
+    id: "BED_FAN_ERROR"
+    type: "CONNECT"
+    approved: false
+
+  - code: "XX850"
+    printers: [COREONEL]
+    title: "Warning"
+    text: "PSU fan is not spinning. Check it for possible debris, then inspect the wiring."
+    id: "PSU_FAN_ERROR"
+    type: "CONNECT"
+    approved: false
