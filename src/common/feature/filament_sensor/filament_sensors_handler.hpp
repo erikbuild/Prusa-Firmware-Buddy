@@ -51,7 +51,6 @@ public:
         return has_mmu;
     }
     bool MMUReadyToPrint();
-    bool ToolHasFilament(uint8_t tool_nr);
 
     void DecEvLock();
     void IncEvLock();

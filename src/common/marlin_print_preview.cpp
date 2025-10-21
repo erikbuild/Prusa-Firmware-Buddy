@@ -228,8 +228,10 @@ bool PrintPreview::check_extruder_need_filament_load(uint8_t physical_extruder, 
         return false;
     }
 
-    // when tool doesn't have filament, it needs load
-    return !FSensors_instance().ToolHasFilament(physical_extruder);
+    FilamentSensorState extruder_state = GetExtruderFSensor(physical_extruder) ? GetExtruderFSensor(physical_extruder)->get_state() : FilamentSensorState::Disabled;
+    FilamentSensorState side_state = GetSideFSensor(physical_extruder) ? GetSideFSensor(physical_extruder)->get_state() : FilamentSensorState::Disabled;
+
+    return (extruder_state == FilamentSensorState::NoFilament) || (side_state == FilamentSensorState::NoFilament);
 }
 
 static bool check_extruder_need_filament_load_tools_mapping(uint8_t physical_extruder) {

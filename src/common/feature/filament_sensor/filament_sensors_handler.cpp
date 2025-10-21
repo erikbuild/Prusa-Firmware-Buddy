@@ -328,13 +328,6 @@ bool FilamentSensors::MMUReadyToPrint() {
     return logical_sensor_states_[LogicalFilamentSensor::primary_runout] == FilamentSensorState::NoFilament;
 }
 
-bool FilamentSensors::ToolHasFilament(uint8_t tool_nr) {
-    FilamentSensorState extruder_state = GetExtruderFSensor(tool_nr) ? GetExtruderFSensor(tool_nr)->get_state() : FilamentSensorState::Disabled;
-    FilamentSensorState side_state = GetSideFSensor(tool_nr) ? GetSideFSensor(tool_nr)->get_state() : FilamentSensorState::Disabled;
-
-    return (extruder_state == FilamentSensorState::HasFilament || extruder_state == FilamentSensorState::Disabled) && (side_state == FilamentSensorState::HasFilament || side_state == FilamentSensorState::Disabled || side_state == FilamentSensorState::NotConnected);
-}
-
 /**
  * @brief encode printer sensor state to MMU enum
  * TODO distinguish between at fsensor and in nozzle
