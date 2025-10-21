@@ -155,20 +155,6 @@ namespace migrations {
     }
 #endif
 
-    void fsensor_enabled_v1(journal::Backend &backend) {
-        // See selftest_result_pre_23 (above) for in-depth commentary
-        using FSensorEnabledV1T = decltype(DeprecatedStore::fsensor_enabled_v1);
-        FSensorEnabledV1T::value_type fs_enabled_v1 { FSensorEnabledV1T::default_val };
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
-            if (header.id == FSensorEnabledV1T::hashed_id) {
-                memcpy(&fs_enabled_v1, buffer.data(), header.len);
-            }
-        };
-        backend.read_items_for_migrations(callback);
-        bool new_fs_enabled { fs_enabled_v1 };
-        backend.save_migration_item<bool>(journal::hash("FSensor Enabled V2"), new_fs_enabled);
-    }
-
 #if PRINTER_IS_PRUSA_MK4()
     void extended_printer_type(journal::Backend &backend) {
         // See selftest_result_pre_23 (above) for in-depth commentary
@@ -388,6 +374,13 @@ namespace migrations {
 
         using SecondNewItem = decltype(CurrentStore::printer_network_setup_done);
         backend.save_migration_item<SecondNewItem::value_type>(SecondNewItem::hashed_id, old_value);
+    }
+
+    void fsensor_enabled(journal::Backend &backend) {
+        const auto old_value = read_old_item_value<decltype(DeprecatedStore::fsensor_enabled_v2)>(backend);
+
+        using NewItem = decltype(CurrentStore::fsensor_enabled);
+        backend.save_migration_item<NewItem::value_type>(NewItem::hashed_id, old_value);
     }
 } // namespace migrations
 } // namespace config_store_ns

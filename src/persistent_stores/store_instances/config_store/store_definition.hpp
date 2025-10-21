@@ -163,7 +163,7 @@ struct CurrentStore
     StoreItem<bool, false, ItemFlag::hw_config, journal::hash("Printer hw-config done")> printer_hw_config_done;
 
     /// Global filament sensor enable
-    StoreItem<bool, defaults::fsensor_enabled, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("FSensor Enabled V2")> fsensor_enabled;
+    StoreItem<bool, true, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("FSensor Enabled")> fsensor_enabled;
 
     /// BFW-5545 When filament sensor is not responding during filament change, the user has an option to disable it.
     /// This is a flag to remind them to turn it back on again when they finis printing
@@ -766,9 +766,6 @@ struct DeprecatedStore
     // Selftest Result version before adding Gearbox Alignment result to EEPROM
     StoreItem<SelftestResult_pre_gears, defaults::selftest_result_pre_gears, journal::hash("Selftest Result V23")> selftest_result_pre_gears;
 
-    // Changing Filament Sensor default state to remove necessity of FS dialog on startup
-    StoreItem<bool, true, journal::hash("FSensor Enabled")> fsensor_enabled_v1;
-
     // An item was added to the middle of the footer enum and it caused eeprom corruption. This store footer item  was deleted and a new one is created without migration so as to force default footer value onto everyone, which is better than 'random values' (especially on mini where it could cause duplicated items shown). Default value was removed since we no longer need to keep it
     StoreItem<uint32_t, 0, journal::hash("Footer Setting")> footer_setting_v1;
 
@@ -879,6 +876,15 @@ struct DeprecatedStore
 
     // This was replaced by 2 separate items for network and hw_config
     StoreItem<bool, false, journal::hash("Printer setup done")> printer_setup_done;
+
+    static inline constexpr bool fsensor_enabled_v2_default {
+#if PRINTER_IS_PRUSA_MINI() || PRINTER_IS_PRUSA_MK3_5()
+        true // MINI and 3.5 do not require any calibration
+#else
+        false
+#endif
+    };
+    StoreItem<bool, fsensor_enabled_v2_default, journal::hash("FSensor Enabled V2")> fsensor_enabled_v2;
 };
 
 } // namespace config_store_ns
