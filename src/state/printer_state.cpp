@@ -22,6 +22,7 @@
 #include <option/xbuddy_extension_variant_standard.h>
 #include <option/has_side_fsensor.h>
 #include <option/has_belt_tuning.h>
+#include <option/has_bed_fan.h>
 
 #if HAS_LOADCELL()
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
@@ -717,6 +718,10 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::CONNECT_UNFINISHED_SELFTEST;
 #endif
 
+#if HAS_BED_FAN()
+    case WarningType::BedFanError:
+        return ErrCode::CONNECT_BED_FAN_ERROR;
+#endif
     case WarningType::_cnt:
         // Fallthrough to unreachable
         break;

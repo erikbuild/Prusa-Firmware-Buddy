@@ -197,6 +197,7 @@
 
 #include "option/has_bed_fan.h"
 #if HAS_BED_FAN()
+    #include <feature/bed_fan/bed_fan.hpp>
     #include <feature/bed_fan/controller.hpp>
 #endif
 
@@ -425,6 +426,9 @@ namespace {
     constinit ErrorChecker enclosure_fan_checker;
 #endif
 
+#if HAS_BED_FAN()
+    constinit ErrorChecker bed_fan_checker; // Handles both bed_fans
+#endif
 #ifdef HAS_TEMP_HEATBREAK
     constinit std::array<ErrorChecker, HOTENDS> heatBreakThermistorErrorChecker;
 #endif
@@ -2819,6 +2823,14 @@ static void _server_print_loop(void) {
         if (enclosure_fan_ok) {
             enclosure_fan_checker.reset();
         }
+#endif
+#if HAS_BED_FAN()
+        const bool bed_fans_ok = bed_fan::bed_fan().is_rpm_ok();
+        bed_fan_checker.checkTrue(bed_fans_ok, WarningType::BedFanError, false, false);
+        if (bed_fans_ok) {
+            bed_fan_checker.reset();
+        }
+#endif
 #endif
     }
 
