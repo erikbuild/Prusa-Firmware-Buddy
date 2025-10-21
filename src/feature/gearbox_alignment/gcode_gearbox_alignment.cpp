@@ -10,6 +10,7 @@
 #include <Marlin/src/Marlin.h>
 #include <Marlin/src/module/temperature.h>
 #include <Marlin/src/gcode/gcode.h>
+#include <mapi/cold_extrude.hpp>
 
 namespace {
 class GearboxAlignmentWizard {
@@ -68,8 +69,7 @@ private:
     }
 
     void move_gear() {
-        AutoRestore<bool> CE(thermalManager.allow_cold_extrude);
-        thermalManager.allow_cold_extrude = true;
+        mapi::ColdExtrudeGuard cold_extrude_guard;
         constexpr const float feedrate = 8;
         mapi::extruder_schedule_turning(feedrate, -0.6);
     }

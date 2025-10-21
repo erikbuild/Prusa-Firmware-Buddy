@@ -14,6 +14,7 @@
 #include <client_response.hpp>
 #include <common/marlin_server.hpp>
 #include <raii/auto_restore.hpp>
+#include <mapi/cold_extrude.hpp>
 
 #if HAS_AUTO_RETRACT()
     #include <feature/auto_retract/auto_retract.hpp>
@@ -376,7 +377,7 @@ namespace {
 
         {
     #if ENABLED(PREVENT_COLD_EXTRUSION)
-            AutoRestore cold_extrude_restore(thermalManager.allow_cold_extrude, true);
+            mapi::ColdExtrudeGuard cold_extrude_guard;
     #endif
             plan_move_by(50, 0, 0, 0, -std::min(300, EXTRUDE_MAXLENGTH));
             planner.synchronize();

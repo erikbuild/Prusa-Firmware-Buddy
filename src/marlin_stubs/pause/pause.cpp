@@ -52,6 +52,7 @@
 #include <buddy/unreachable.hpp>
 #include <sound.hpp>
 #include <feature/safety_timer/safety_timer.hpp>
+#include <mapi/cold_extrude.hpp>
 
 #include <option/has_human_interactions.h>
 #include <option/has_wastebin.h>
@@ -352,7 +353,7 @@ bool Pause::ensureSafeTemperatureNotifyProgress() {
 }
 
 [[nodiscard]] Pause::StopConditions Pause::do_e_move_notify_progress_coldextrude(const float &length, const feedRate_t &fr_mm_s, StopConditions check_for) {
-    AutoRestore cold_extrude_guard(thermalManager.allow_cold_extrude, true);
+    mapi::ColdExtrudeGuard cold_extrude_guard;
     return do_e_move_notify_progress(length, fr_mm_s, check_for);
 }
 
@@ -508,7 +509,7 @@ void Pause::filament_push_ask_process(Response response) {
         // BFW-5134
         if (settings.extruder_mmu_rework) {
 #if ENABLED(PREVENT_COLD_EXTRUSION)
-            AutoRestore ar_ce(thermalManager.allow_cold_extrude, true);
+            mapi::ColdExtrudeGuard cold_extrude_guard;
 #endif
             mapi::extruder_schedule_turning(3);
         }
@@ -598,8 +599,7 @@ void Pause::assist_insertion_process([[maybe_unused]] Response response) {
     }
 
 #if ENABLED(PREVENT_COLD_EXTRUSION)
-    AutoRestore<bool> CE(thermalManager.allow_cold_extrude);
-    thermalManager.allow_cold_extrude = true;
+    mapi::ColdExtrudeGuard cold_extrude_guard;
 #endif
     // Enqueue an E move, but only if there are no more than 4 moves scheduled.
     // This ensures that there is always 0.4mm of movement enqueued in advance,

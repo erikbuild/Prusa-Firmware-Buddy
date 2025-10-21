@@ -13,6 +13,7 @@
 #include <option/has_side_fsensor.h>
 #include <option/has_adc_side_fsensor.h>
 #include <option/has_nextruder.h>
+#include <mapi/cold_extrude.hpp>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -172,7 +173,7 @@ SelftestFSensorsResult SelftestFSensors::run() {
 
 #if SELFTEST_FSENSOR_EXTRUDER_ASSIST()
     /// We should not leave the filament in the gears. Move back in the last round.
-    AutoRestore cold_extrude_guard { thermalManager.allow_cold_extrude, true };
+    mapi::ColdExtrudeGuard cold_extrude_guard;
     mapi::extruder_move(-assisted_insertion_safe_distance_mm, extruder_assist_fast_feedrate);
 #endif
 
@@ -340,7 +341,7 @@ void SelftestFSensors::calibrate(FilamentSensorCalibrator::CalibrationPhase phas
     marlin_server::fsm_change(Phase::calibrating);
 
 #if SELFTEST_FSENSOR_EXTRUDER_ASSIST()
-    AutoRestore cold_extrude_guard { thermalManager.allow_cold_extrude, true };
+    mapi::ColdExtrudeGuard cold_extrude_guard;
     float extruded_distance = 0;
 #endif
 
@@ -456,7 +457,7 @@ SelftestFSensors::EarlyFailCheckResult SelftestFSensors::check_early_fail([[mayb
 
 bool SelftestFSensors::ask_insert_filament() {
 #if SELFTEST_FSENSOR_EXTRUDER_ASSIST()
-    AutoRestore cold_extrude_guard { thermalManager.allow_cold_extrude, true };
+    mapi::ColdExtrudeGuard cold_extrude_guard;
     float inserted_distance = 0;
 
     // On failure, revert to the original extruder position
@@ -512,7 +513,7 @@ bool SelftestFSensors::ask_insert_filament() {
 
 bool SelftestFSensors::ask_remove_filament() {
 #if SELFTEST_FSENSOR_EXTRUDER_ASSIST()
-    AutoRestore cold_extrude_guard { thermalManager.allow_cold_extrude, true };
+    mapi::ColdExtrudeGuard cold_extrude_guard;
 #endif
 
     while (true) {
