@@ -187,7 +187,7 @@ static void puppy_task_loop() {
                 CommunicationStatus status = xbuddy_extension.refresh();
                 if (status == CommunicationStatus::ERROR) {
     #if PUPPY_TASK_DEBUG()
-                    log_error(Puppies, "xbuddy_extension.refresh() == CommunicationStatus::ERROR")
+                    log_error(Puppies, "xbuddy_extension.refresh() == CommunicationStatus::ERROR");
     #else
                     return;
     #endif
