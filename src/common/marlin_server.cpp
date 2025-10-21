@@ -201,6 +201,11 @@
     #include <feature/bed_fan/controller.hpp>
 #endif
 
+#include <option/has_psu_fan.h>
+#if HAS_PSU_FAN()
+    #include <feature/psu_fan/psu_fan.hpp>
+#endif
+
 using namespace ExtUI;
 
 using ClientQueue = marlin_client::ClientQueue;
@@ -429,6 +434,10 @@ namespace {
 #if HAS_BED_FAN()
     constinit ErrorChecker bed_fan_checker; // Handles both bed_fans
 #endif
+#if HAS_PSU_FAN()
+    constinit ErrorChecker psu_fan_checker;
+#endif
+
 #ifdef HAS_TEMP_HEATBREAK
     constinit std::array<ErrorChecker, HOTENDS> heatBreakThermistorErrorChecker;
 #endif
@@ -2831,6 +2840,12 @@ static void _server_print_loop(void) {
             bed_fan_checker.reset();
         }
 #endif
+#if HAS_PSU_FAN()
+        const bool psu_fan_ok = psu_fan::psu_fan().is_rpm_ok();
+        psu_fan_checker.checkTrue(psu_fan_ok, WarningType::PsuFanError, false, false);
+        if (psu_fan_ok) {
+            psu_fan_checker.reset();
+        }
 #endif
     }
 
