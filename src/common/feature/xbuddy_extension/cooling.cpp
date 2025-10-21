@@ -8,6 +8,11 @@ namespace buddy {
 FanCooling::FanPWM FanCooling::compute_auto_regulation_step(Temperature current_temperature, Temperature target_temperature, FanPWM max_auto_pwm) {
     /**
      * #### XBuddyExtension Chamber Fan Auto Control Logic (fans 3 & 4 on CORE ONE printers)
+     * For compatibility reasons, two chamber fan regulators are implemented. New algorithm is more oriented on airflow stability,
+     * while legacy algorithm is more oriented on absolute temperature control. On print start and end, the regulator is switched
+     * to legacy mode to keep compatibility with old gcodes. When M106 with parameters N or G is sent, the regulator is switched to new algorithm.
+     *
+     * ##### New algorithm
      * - Chamber Fan control algorithm is ramp function with hysteresis on top of it
      * - If temperature is below target, ramp function output is ramp_breakpoint_pwm (Parameter N)
      *   The minimal PWM is to ensure good airflow to cool the extruded material fast enough, which is necessary even when the chamber is on the target temperature.
@@ -17,8 +22,15 @@ FanCooling::FanPWM FanCooling::compute_auto_regulation_step(Temperature current_
      * - Hysteresis is applied on top of the ramp function to avoid fan premature kick-start and reduce kick-starts frequency
      * - The PWM output is also modified based on the filtration backend to adjust for different fan configurations
      *
+     * ##### Legacy algorithm
+     * - Legacy Fan control algorithm is PID regulator with only I component used.
+     *
      * !! This comment is also doubled in GcodeSuite::M106. If you do changes here, update the other one, too.
      */
+
+    if (target_temperature == 0.0f) {
+        return FanPWM { 0 };
+    }
 
     const auto filtration_backend = chamber_filtration().backend();
     float ramp_mult = 1.0f; // Parameter multipliers for filters.
@@ -55,6 +67,23 @@ FanCooling::FanPWM FanCooling::compute_auto_regulation_step(Temperature current_
     return FanPWM { desired };
 }
 
+FanCooling::FanPWM FanCooling::compute_auto_regulation_step_legacy(Temperature current_temperature, Temperature target_temperature, FanPWM max_auto_pwm) {
+    FanPWM::Value desired = 0;
+
+    const float error = current_temperature - target_temperature;
+
+    // Simple Feedback Regulator calculation - PID regulator, but only Integration part is used
+    float regulation_output = last_regulation_output + (integration_constant * error);
+
+    regulation_output = std::clamp<float>(regulation_output, 0.0f, static_cast<float>(max_auto_pwm.value));
+
+    // convert float result to integer, while keeping the range of float for next loop
+    desired = static_cast<FanPWM::Value>(regulation_output);
+    last_regulation_output = regulation_output;
+
+    return FanPWM { desired };
+}
+
 FanCooling::FanPWM FanCooling::apply_pwm_overrides(bool already_spinning, FanPWM pwm) const {
     if (overheating_temp_flag || critical_temp_flag) {
         // Max cooling after temperature overshoot
@@ -86,7 +115,11 @@ FanCooling::FanPWM FanCooling::compute_pwm_step(Temperature current_temperature,
     // Make sure the target_pwm contains the value we would _like_ to
     // run at.
     if (target_pwm == pwm_auto && target_temperature.has_value()) {
-        result = compute_auto_regulation_step(current_temperature, *target_temperature, max_auto_pwm);
+        if (regulator_legacy) { // We need to keep legacy regulator for old gcode compatibility
+            result = compute_auto_regulation_step_legacy(current_temperature, *target_temperature, max_auto_pwm);
+        } else {
+            result = compute_auto_regulation_step(current_temperature, *target_temperature, max_auto_pwm);
+        }
 
     } else {
         // Reset regulator if we lose the control

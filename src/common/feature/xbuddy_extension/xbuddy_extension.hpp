@@ -57,12 +57,19 @@ public: // Fans
     /// * Please note than PWM control for the cooling fans is shared (so calling this with Fan::cooling_fan_1 does the same as with Fan::cooling_fan_2)
     void set_fan_target_pwm(Fan fan, FanPWMOrAuto target);
 
+    // called on print start to use legacy chamber regulator for compatibility with old gcodes
+    void set_chamber_regulator_legacy(bool legacy) {
+        chamber_cooling.regulator_legacy = legacy;
+    };
+
     void set_chamber_regulator_ramp_breakpoint_pwm(uint8_t pwm) {
         chamber_cooling.ramp_breakpoint_pwm = pwm;
+        chamber_cooling.regulator_legacy = false;
     };
 
     void set_chamber_regulator_ramp_slope(float slope) {
         chamber_cooling.ramp_slope = slope;
+        chamber_cooling.regulator_legacy = false;
     };
 
     /// A convenience function returning a structure of data to be used in the Connect interface

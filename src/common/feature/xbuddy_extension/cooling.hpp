@@ -32,6 +32,8 @@ public:
     // time step for regulation loop
     static constexpr float dt_s = 1.0f;
 
+    static constexpr float integration_constant = 1.5f * dt_s; // used for legacy regulator only
+
     /// Applies spinup and emergency fan overrides
     [[nodiscard]] FanPWM apply_pwm_overrides(bool already_spinning, FanPWM pwm) const;
 
@@ -44,10 +46,12 @@ public:
 
     uint8_t ramp_breakpoint_pwm = 0;
     float ramp_slope = 10.0f;
+    bool regulator_legacy = true; // Legacy regulator for old gcode compatibility
 
 private:
     /// Computes a PWM ramping function
     FanPWM compute_auto_regulation_step(Temperature current_temperature, Temperature target_temperature, FanPWM max_auto_pwm);
+    FanPWM compute_auto_regulation_step_legacy(Temperature current_temperature, Temperature target_temperature, FanPWM max_auto_pwm);
 
     float last_regulation_output = 0.0f;
 

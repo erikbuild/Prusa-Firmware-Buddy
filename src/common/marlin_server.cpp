@@ -1017,6 +1017,10 @@ void static finalize_print(bool finished) {
     buddy::chamber_filtration().check_filter_expiration();
 #endif
 
+#if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
+    buddy::xbuddy_extension().set_chamber_regulator_legacy(true); // For compatibility with old gcodes on coreone
+#endif
+
     if (config_store().show_fsensors_disabled_warning_after_print.get()) {
         config_store().show_fsensors_disabled_warning_after_print.set(false);
         set_warning(WarningType::FilamentSensorsDisabled);
@@ -2215,6 +2219,9 @@ static void _server_print_loop(void) {
 #endif
 #if HAS_CHAMBER_FILTRATION_API()
         buddy::chamber_filtration().check_filter_expiration();
+#endif
+#if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
+        buddy::xbuddy_extension().set_chamber_regulator_legacy(true); // For compatibility with old gcodes on coreone
 #endif
         break;
 
