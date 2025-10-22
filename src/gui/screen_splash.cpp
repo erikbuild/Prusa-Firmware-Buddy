@@ -18,6 +18,7 @@
 #include "bsod.h"
 #include <guiconfig/guiconfig.h>
 #include <feature/factory_reset/factory_reset.hpp>
+#include <window_msgbox_happy_printing.hpp>
 
 #include <option/bootloader.h>
 #include <option/developer_mode.h>
@@ -92,6 +93,8 @@ ScreenSplash::ScreenSplash()
     // don't present any screen or wizard
     return;
 #endif
+
+    Screens::Access()->PushBeforeCurrent(ScreenFactory::Screen<PseudoScreenCallback, MsgBoxHappyPrinting>);
 
 #if HAS_EMERGENCY_STOP()
     static constexpr auto needs_emergency_stop_consent = [] {
