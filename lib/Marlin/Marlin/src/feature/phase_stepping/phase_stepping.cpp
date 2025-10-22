@@ -739,7 +739,7 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
                 axis_state.is_slowed_down = true;
             }
 
-            if (axis_state.is_slowed_down) {
+            if (!axis_state.is_slowed_down) {
                 ++axis_state.stalled_for;
             }
 
