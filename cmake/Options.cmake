@@ -46,6 +46,13 @@ function(define_enum_option)
   set(multi_value_args ALL_VALUES)
   cmake_parse_arguments(ARG "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
+  if(NOT ARG_VALUE IN_LIST ARG_ALL_VALUES)
+    message(
+      FATAL_ERROR
+        "Option ${ARG_NAME} has invalid value: \"${ARG_VALUE}\". Valid values are: ${ARG_ALL_VALUES}"
+      )
+  endif()
+
   set(option_name "${ARG_NAME}")
   set(option_value "${ARG_VALUE}")
   string(TOLOWER "${option_name}" option_name_lower)
