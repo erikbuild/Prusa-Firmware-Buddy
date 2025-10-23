@@ -347,7 +347,7 @@ struct CurrentStore
 
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Run LEDs")> run_leds;
     StoreItem<bool, defaults::heat_entire_bed, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Heat Entire Bed")> heat_entire_bed;
-    StoreItem<bool, false, ItemFlag::user_interface, journal::hash("Touch Enabled")> touch_enabled;
+    StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Touch Enabled")> touch_enabled;
     StoreItem<bool, false, ItemFlag::user_interface | ItemFlag::hw_config | ItemFlag::common_misconfigurations, journal::hash("Touch Sig Workaround")> touch_sig_workaround;
 
 #if HAS_TOOLCHANGER() // for now not ifdefing per-extruder as well for simplicity

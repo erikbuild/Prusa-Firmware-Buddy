@@ -43,10 +43,6 @@ void CurrentStore::perform_config_check() {
     if (is_first_run || force_default_hw_config.get()) {
         force_default_hw_config.set(false);
 
-#if HAS_TOUCH()
-        touch_enabled.set(true);
-#endif
-
 #if PRINTER_IS_PRUSA_MK4()
         static_assert(extended_printer_type_model[1] == PrinterModel::mk4s);
         extended_printer_type.set(1);
