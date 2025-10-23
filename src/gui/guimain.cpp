@@ -99,7 +99,7 @@ void gui_run(void) {
     // Close bootstrap screen, open home screen
     Screens::Access()->Close();
 
-    Sound_Play(eSOUND_TYPE::Start);
+    sound::play(SoundType::start);
 
 #if HAS_SIDE_LEDS()
     leds::SideStripHandler::instance().activity_ping();

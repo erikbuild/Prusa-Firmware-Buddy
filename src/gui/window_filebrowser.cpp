@@ -59,7 +59,7 @@ void WindowFileBrowser::windowEvent(window_t *sender, GUI_event_t event, void *p
 
     case GUI_event_t::TOUCH_SWIPE_LEFT:
     case GUI_event_t::TOUCH_SWIPE_RIGHT:
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         go_up();
         return;
 

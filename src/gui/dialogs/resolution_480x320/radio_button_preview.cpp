@@ -95,7 +95,7 @@ void RadioButtonPreview::windowEvent(window_t *sender, GUI_event_t event, void *
 
         if (new_index) {
             SetBtnIndex(*new_index);
-            // Sound_Play(eSOUND_TYPE::ButtonEcho);
+            // sound::play(SoundType::button_echo);
             // Generate click for itself
             WindowEvent(this, GUI_event_t::CLICK, param);
         }

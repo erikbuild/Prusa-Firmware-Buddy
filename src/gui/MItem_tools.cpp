@@ -325,23 +325,23 @@ void MI_TIMEOUT::OnChange(size_t old_index) {
 
 /*****************************************************************************/
 // MI_SOUND_MODE
-static constexpr EnumArray<eSOUND_MODE, const char *, eSOUND_MODE::_count> sound_mode_values {
-    { eSOUND_MODE::ONCE, N_("Once") },
-    { eSOUND_MODE::LOUD, N_("Loud") },
-    { eSOUND_MODE::SILENT, N_("Silent") },
-    { eSOUND_MODE::ASSIST, N_("Assist") },
+static constexpr EnumArray<SoundMode, const char *, SoundMode::_count> sound_mode_values {
+    { SoundMode::once, N_("Once") },
+    { SoundMode::loud, N_("Loud") },
+    { SoundMode::silent, N_("Silent") },
+    { SoundMode::assist, N_("Assist") },
 };
 
 size_t MI_SOUND_MODE::init_index() const {
-    eSOUND_MODE sound_mode = Sound_GetMode();
-    return (size_t)(sound_mode > eSOUND_MODE::_last ? eSOUND_MODE::_default_sound : sound_mode);
+    SoundMode sound_mode = sound::get_mode();
+    return (size_t)(sound_mode > SoundMode::_last ? SoundMode::_default_sound : sound_mode);
 }
 MI_SOUND_MODE::MI_SOUND_MODE()
     : MenuItemSwitch(_("Sound Mode"), sound_mode_values, init_index()) {
 }
 
 void MI_SOUND_MODE::OnChange(size_t /*old_index*/) {
-    Sound_SetMode(static_cast<eSOUND_MODE>(get_index()));
+    sound::set_mode(static_cast<SoundMode>(get_index()));
 }
 
 /*****************************************************************************/
@@ -352,10 +352,10 @@ static constexpr NumericInputConfig sound_volume_spin_config = {
 };
 
 MI_SOUND_VOLUME::MI_SOUND_VOLUME()
-    : WiSpin(static_cast<uint8_t>(Sound_GetVolume()), sound_volume_spin_config, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+    : WiSpin(static_cast<uint8_t>(sound::get_volume()), sound_volume_spin_config, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 
 void MI_SOUND_VOLUME::OnClick() {
-    Sound_SetVolume(GetVal());
+    sound::set_volume(GetVal());
 }
 
 /*****************************************************************************/

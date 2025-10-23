@@ -2,7 +2,7 @@
 
 #include <module/temperature.h>
 #include <config.h>
-#include <sound_enum.h>
+#include <sound_enum.hpp>
 #include <footer_eeprom.hpp>
 #include <time_tools.hpp>
 #include <filament.hpp>
@@ -85,7 +85,7 @@ namespace defaults {
     inline constexpr std::array<char, wifi_max_ssid_len + 1> wifi_ap_ssid { "" };
     inline constexpr std::array<char, wifi_max_passwd_len + 1> wifi_ap_password { "" };
 
-    inline constexpr eSOUND_MODE sound_mode { eSOUND_MODE::_undef };
+    inline constexpr SoundMode sound_mode { SoundMode::_undef };
     inline constexpr uint8_t sound_volume { 5 };
     inline constexpr uint16_t language { 0xffff };
 

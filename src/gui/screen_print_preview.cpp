@@ -193,7 +193,7 @@ void ScreenPrintPreview::windowEvent([[maybe_unused]] window_t *sender, [[maybe_
     case GUI_event_t::TOUCH_SWIPE_LEFT:
     case GUI_event_t::TOUCH_SWIPE_RIGHT: {
         if (phase == PhasesPrintPreview::main_dialog) {
-            Sound_Play(eSOUND_TYPE::ButtonEcho);
+            sound::play(SoundType::button_echo);
             marlin_client::FSM_response(phase, Response::Back);
         }
     }

@@ -116,8 +116,8 @@ extern osThreadId displayTaskHandle;
     };
 
     // Stop any sound plays. We will be entering a critical section and don't want to hear a long beep during all that wiping
-    Sound_Stop();
-    Sound_Update1ms();
+    sound::stop();
+    sound::update_1ms();
 
     // !!! Do this before entering the critical section, as it does all sorts of file access and logging
     if (!hard_reset) {

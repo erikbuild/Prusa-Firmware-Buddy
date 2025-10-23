@@ -95,7 +95,7 @@ void ScreenHelpFWUpdate::windowEvent([[maybe_unused]] window_t *sender, GUI_even
         // Touch swipe left/right = selecting the "back" response
     case GUI_event_t::TOUCH_SWIPE_LEFT:
     case GUI_event_t::TOUCH_SWIPE_RIGHT: {
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         Screens::Access()->Close();
         break;
     }

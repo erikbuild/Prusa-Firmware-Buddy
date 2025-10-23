@@ -1,6 +1,5 @@
 #include "catch2/catch.hpp"
 
-#include "sound_enum.h"
 #include "ScreenHandler.hpp"
 #include "gui_time.hpp" //gui::GetTick
 #include "mock_windows.hpp"

@@ -290,8 +290,7 @@ namespace frame {
     public:
         explicit HeatUp(window_t *parent)
             : ProgressFrame(parent, _(text1), _(text2)) {
-            Sound_Play(eSOUND_TYPE::SingleBeep);
-            Sound_Play(eSOUND_TYPE::SingleBeep);
+            sound::play(SoundType::single_beep);
         }
 
         void update(fsm::PhaseData fsm_data) {
@@ -309,7 +308,7 @@ namespace frame {
     public:
         explicit AutomaticPull(window_t *parent)
             : TextFrame(parent, _(text1)) {
-            Sound_Play(eSOUND_TYPE::SingleBeep);
+            sound::play(SoundType::single_beep);
         }
 
         static constexpr const char *text1 = N_("Unloading");

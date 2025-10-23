@@ -16,7 +16,7 @@
 #include <Marlin/src/feature/input_shaper/input_shaper_config.hpp>
 #include <module/temperature.h>
 #include <config.h>
-#include <sound_enum.h>
+#include <sound_enum.hpp>
 #include <footer_eeprom.hpp>
 #include <time_tools.hpp>
 #include <encoded_filament.hpp>
@@ -212,7 +212,7 @@ struct CurrentStore
     // General network settings
     StoreItem<std::array<char, lan_hostname_max_len + 1>, defaults::net_hostname, ItemFlag::network, journal::hash("Hostname")> hostname;
 
-    StoreItem<eSOUND_MODE, defaults::sound_mode, ItemFlag::user_interface, journal::hash("Sound Mode")> sound_mode;
+    StoreItem<SoundMode, defaults::sound_mode, ItemFlag::user_interface, journal::hash("Sound Mode")> sound_mode;
     StoreItem<uint8_t, defaults::sound_volume, ItemFlag::user_interface, journal::hash("Sound Volume")> sound_volume;
     StoreItem<uint16_t, defaults::language, ItemFlag::user_interface, journal::hash("Language")> language;
     StoreItem<uint8_t, 0, ItemFlag::user_interface, journal::hash("File Sort")> file_sort; // filebrowser file sort options

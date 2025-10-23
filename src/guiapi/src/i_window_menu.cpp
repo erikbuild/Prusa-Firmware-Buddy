@@ -63,12 +63,12 @@ bool IWindowMenu::scroll_page(PageScrollDirection direction) {
         : std::min(scroll_offset() + step_size, max_scroll_offset());
 
     if (scroll_offset() == new_scroll_offset) {
-        Sound_Play(eSOUND_TYPE::BlindAlert);
+        sound::play(SoundType::blind_alert);
         return false;
     }
 
     // Play the sound before setting the index (set index could take some time, the sound response should be immediate)
-    Sound_Play(eSOUND_TYPE::EncoderMove);
+    sound::play(SoundType::encoder_move);
 
     set_scroll_offset(new_scroll_offset);
     if (direction == PageScrollDirection::up) {
@@ -108,7 +108,7 @@ bool IWindowMenu::move_focus_by(int amount, YNPlaySound play_sound) {
 
         if (new_index == old_index) {
             if (static_cast<bool>(play_sound)) {
-                Sound_Play(eSOUND_TYPE::BlindAlert);
+                sound::play(SoundType::blind_alert);
             }
             return false;
         }
@@ -125,7 +125,7 @@ bool IWindowMenu::move_focus_by(int amount, YNPlaySound play_sound) {
     }
 
     if (static_cast<bool>(play_sound)) {
-        Sound_Play(eSOUND_TYPE::EncoderMove);
+        sound::play(SoundType::encoder_move);
     }
 
     return true;
@@ -294,7 +294,7 @@ void IWindowMenu::windowEvent(window_t *sender, GUI_event_t event, void *param) 
 
     case GUI_event_t::ENC_DN:
         if (focused_item && focused_item->is_edited()) {
-            Sound_Play(focused_item->Decrement(std::bit_cast<int>(param)) ? eSOUND_TYPE::EncoderMove : eSOUND_TYPE::BlindAlert);
+            sound::play(focused_item->Decrement(std::bit_cast<int>(param)) ? SoundType::encoder_move : SoundType::blind_alert);
             break;
         }
 
@@ -303,7 +303,7 @@ void IWindowMenu::windowEvent(window_t *sender, GUI_event_t event, void *param) 
 
     case GUI_event_t::ENC_UP:
         if (focused_item && focused_item->is_edited()) {
-            Sound_Play(focused_item->Increment(std::bit_cast<int>(param)) ? eSOUND_TYPE::EncoderMove : eSOUND_TYPE::BlindAlert);
+            sound::play(focused_item->Increment(std::bit_cast<int>(param)) ? SoundType::encoder_move : SoundType::blind_alert);
             break;
         }
 

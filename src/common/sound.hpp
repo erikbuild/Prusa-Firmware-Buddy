@@ -1,15 +1,19 @@
 #pragma once
 
 #include <stdint.h>
-#include "sound_enum.h"
+#include "sound_enum.hpp"
 
-eSOUND_MODE Sound_GetMode();
-int Sound_GetVolume();
-void Sound_SetMode(eSOUND_MODE eSMode);
-void Sound_SetVolume(int volume);
-void Sound_Play(eSOUND_TYPE eSoundType);
-void Sound_Stop();
-void Sound_Update1ms();
+namespace sound {
+
+SoundMode get_mode();
+int get_volume();
+void set_mode(SoundMode);
+void set_volume(int);
+void play(SoundType);
+void stop();
+void update_1ms();
+
+} // namespace sound
 
 /*!
  * Simple Sound class
@@ -26,10 +30,10 @@ public:
     Sound(const Sound &) = delete;
     Sound &operator=(const Sound &) = delete;
 
-    eSOUND_MODE getMode() const;
+    SoundMode getMode() const;
     int getVolume() { return displayed_volume(varVolume); }
 
-    void setMode(eSOUND_MODE eSMode);
+    void setMode(SoundMode eSMode);
     void setVolume(int vol);
 
     /**
@@ -39,7 +43,7 @@ public:
      */
     void restore_from_eeprom();
 
-    void play(eSOUND_TYPE eSoundType);
+    void play(SoundType eSoundType);
     void stop();
     void update1ms();
     void singleSound(float frq, int16_t dur, float vol);
@@ -52,7 +56,7 @@ private:
     void saveMode();
     void saveVolume(); // + one louder
     void _sound(int rep, float frq, int16_t dur, int16_t del, float vol, bool f);
-    void _playSound(eSOUND_TYPE type, eSOUND_MODE mode);
+    void _playSound(SoundType type, SoundMode mode);
     void nextRepeat();
     float real_volume(int displayed_volume); ///< converts displayed / saved volume to volume used by beeper
     uint8_t displayed_volume(float real_volume); ///< converts beeper volume to displayed / saved one
@@ -65,7 +69,7 @@ private:
     float varVolume = 0; ///< varVolume is float 0-1 if it's not on One Louder (then it's 11)
     int16_t delay_active = 0; ///< live variable used for delay measure
     int16_t delay_set = 100; ///< added variable for delay between beeps
-    eSOUND_MODE eSoundMode = eSOUND_MODE::_default_sound; ///< current mode
+    SoundMode eSoundMode = SoundMode::_default_sound; ///< current mode
 
 public:
     /// main constant of main volume which is maximal volume that we allow

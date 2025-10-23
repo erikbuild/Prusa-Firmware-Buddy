@@ -65,7 +65,7 @@ void WindowMenu::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t even
     case GUI_event_t::TOUCH_SWIPE_RIGHT:
         for (auto it = pContainer->FindFirstVisible(); it.HasValue(); it = pContainer->FindNextVisible(it)) {
             if (it.item->has_return_behavior() && it.item->IsEnabled()) {
-                Sound_Play(eSOUND_TYPE::ButtonEcho);
+                sound::play(SoundType::button_echo);
 
                 // Move focus, because some returns items are handled based on focus by a parent class
                 // cough cough screen_menu_filament_changeall::DMI_RETURN

@@ -106,7 +106,7 @@ bool gui::knob::EventClick(BtnState_t state) {
         Screens::Access()->ScreenEvent(nullptr, GUI_event_t::BTN_DN, 0);
         break;
     case BtnState_t::Released:
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         Screens::Access()->ScreenEvent(nullptr, GUI_event_t::BTN_UP, 0);
         if (!dont_click_on_next_release && capture_ptr) {
             capture_ptr->WindowEvent(capture_ptr, GUI_event_t::CLICK, 0);
@@ -119,24 +119,24 @@ bool gui::knob::EventClick(BtnState_t state) {
         marlin_client::notify_server_about_knob_click();
         break;
     case BtnState_t::Held:
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         break;
     case BtnState_t::HeldAndRight:
         dont_click_on_next_release = true;
         // want to send only to current screen and not send it to all subwindows
         if (gui::knob::HeldRightAction()) {
-            Sound_Play(eSOUND_TYPE::ButtonEcho);
+            sound::play(SoundType::button_echo);
         } else {
-            Sound_Play(eSOUND_TYPE::StandardAlert);
+            sound::play(SoundType::standard_alert);
         }
         break;
     case BtnState_t::HeldAndLeft:
         dont_click_on_next_release = true;
         // want to send only to current screen and not send it to all subwindows
         if (gui::knob::HeldLeftAction()) {
-            Sound_Play(eSOUND_TYPE::ButtonEcho);
+            sound::play(SoundType::button_echo);
         } else {
-            Sound_Play(eSOUND_TYPE::StandardAlert);
+            sound::play(SoundType::standard_alert);
         }
         break;
     case BtnState_t::HeldAndReleased:

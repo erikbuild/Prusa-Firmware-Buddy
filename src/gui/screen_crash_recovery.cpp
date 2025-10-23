@@ -114,15 +114,15 @@ static constexpr const char *en_text_homefail_info = N_("Try checking belt tensi
 static constexpr const char *en_text_tool_careful = N_("!! Careful, tools are hot !!");
 
 RepeatedBeep::RepeatedBeep() {
-    Sound_Play(eSOUND_TYPE::WaitingBeep);
+    sound::play(SoundType::waiting_beep);
 }
 
 RepeatedBeep::~RepeatedBeep() {
-    Sound_Stop();
+    sound::stop();
 }
 
 SingleBeep::SingleBeep() {
-    Sound_Play(eSOUND_TYPE::SingleBeep);
+    sound::play(SoundType::single_beep);
 }
 
 SingleBeep::~SingleBeep() {
@@ -268,7 +268,7 @@ ScreenCrashRecovery::ScreenCrashRecovery()
 }
 
 ScreenCrashRecovery::~ScreenCrashRecovery() {
-    Sound_Stop();
+    sound::stop();
 }
 
 bool ScreenCrashRecovery::Change(fsm::BaseData data) {

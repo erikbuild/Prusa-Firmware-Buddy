@@ -122,13 +122,13 @@ void WindowLiveAdjustZ::windowEvent(window_t *sender, GUI_event_t event, void *p
 
     case GUI_event_t::ENC_UP:
         Change(1);
-        Sound_Play(eSOUND_TYPE::EncoderMove);
+        sound::play(SoundType::encoder_move);
         arrows.SetState(WindowArrows::State_t::up);
         break;
 
     case GUI_event_t::ENC_DN:
         Change(-1);
-        Sound_Play(eSOUND_TYPE::EncoderMove);
+        sound::play(SoundType::encoder_move);
         arrows.SetState(WindowArrows::State_t::down);
         break;
 
@@ -217,7 +217,7 @@ void ScreenLiveAdjustZ::windowEvent(window_t *sender, GUI_event_t event, void *p
     case GUI_event_t::ENC_UP:
     case GUI_event_t::ENC_DN:
         adjuster.WindowEvent(sender, event, param);
-        Sound_Play(eSOUND_TYPE::EncoderMove);
+        sound::play(SoundType::encoder_move);
         moveNozzle();
         break;
 
@@ -227,7 +227,7 @@ void ScreenLiveAdjustZ::windowEvent(window_t *sender, GUI_event_t event, void *p
 
     case GUI_event_t::TOUCH_SWIPE_LEFT:
     case GUI_event_t::TOUCH_SWIPE_RIGHT:
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         Screens::Access()->Close();
         break;
 

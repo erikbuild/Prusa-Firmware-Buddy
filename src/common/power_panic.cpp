@@ -782,7 +782,7 @@ void panic_loop() {
 
         log_info(PowerPanic, "powerpanic complete");
         if (should_beep) {
-            Sound_Play(eSOUND_TYPE::CriticalAlert);
+            sound::play(SoundType::critical_alert);
         }
         power_panic_state = PPState::WaitingToDie;
         break;

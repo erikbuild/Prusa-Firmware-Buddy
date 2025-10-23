@@ -51,9 +51,9 @@ IRadioButton &IRadioButton::operator++() {
     int8_t index = GetBtnIndex();
     if (isIndexValid(index + 1)) {
         SetBtnIndex(index + 1);
-        Sound_Play(eSOUND_TYPE::EncoderMove);
+        sound::play(SoundType::encoder_move);
     } else {
-        Sound_Play(eSOUND_TYPE::BlindAlert);
+        sound::play(SoundType::blind_alert);
     }
     return *this;
 }
@@ -63,9 +63,9 @@ IRadioButton &IRadioButton::operator--() {
     uint8_t index = GetBtnIndex();
     if (index > 0 && (isIndexValid(index - 1))) {
         SetBtnIndex(index - 1);
-        Sound_Play(eSOUND_TYPE::EncoderMove);
+        sound::play(SoundType::encoder_move);
     } else {
-        Sound_Play(eSOUND_TYPE::BlindAlert);
+        sound::play(SoundType::blind_alert);
     }
     return *this;
 }
@@ -125,7 +125,7 @@ void IRadioButton::windowEvent(window_t *sender, GUI_event_t event, void *param)
             SetBtnIndex(*new_index);
 
             // generate click sound??
-            // Sound_Play(eSOUND_TYPE::ButtonEcho);
+            // sound::play(SoundType::button_echo);
 
             // generate click and send it to itself
             // child class might handle it, if not GUI_event_t::CLICK from this switch will be called

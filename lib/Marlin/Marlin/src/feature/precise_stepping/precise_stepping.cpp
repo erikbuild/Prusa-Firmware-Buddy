@@ -1067,7 +1067,7 @@ void PreciseStepping::loop() {
     if (step_dl_miss_buf) {
         step_dl_miss_buf = __atomic_exchange_n(&step_dl_miss, 0, __ATOMIC_RELAXED);
         SERIAL_ECHOLNPAIR("STEP DEADLINES MISSED: ", step_dl_miss_buf);
-        Sound_Play(eSOUND_TYPE::SingleBeep);
+        sound::play(SoundType::single_beep);
     }
 #endif
 #ifdef ISR_EVENT_DEBUGGING
@@ -1075,7 +1075,7 @@ void PreciseStepping::loop() {
     if (step_ev_miss_buf) {
         step_ev_miss_buf = __atomic_exchange_n(&step_ev_miss, 0, __ATOMIC_RELAXED);
         SERIAL_ECHOLNPAIR("STEP EVENTS MISSED: ", step_ev_miss_buf);
-        Sound_Play(eSOUND_TYPE::SingleBeep);
+        sound::play(SoundType::single_beep);
     }
 #endif
 }

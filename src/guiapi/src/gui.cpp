@@ -104,7 +104,7 @@ void gui_handle_touch() {
     Screens::Access()->ResetTimeout();
 
     if (touch_event.type == GUI_event_t::TOUCH_CLICK) {
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         marlin_client::notify_server_about_knob_click();
     }
 

@@ -1153,7 +1153,7 @@ void enqueue_gcode_printf(const char *gcode, ...) {
 
 bool inject(InjectQueueRecord record) {
     if (!queue.inject(record)) {
-        // TODO: If requested, figure out thread-safe way to call Sound_Play(eSOUND_TYPE::SingleBeepAlwaysLoud);
+        // TODO: If requested, figure out thread-safe way to call sound::play(SoundType::single_beep_always_loud);
         return false;
     }
     return true;

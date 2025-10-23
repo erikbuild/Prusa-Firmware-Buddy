@@ -417,7 +417,7 @@ void Pause::load_start_process([[maybe_unused]] Response response) {
 
         // Filament should be already out of gears by now, we move it just to be sure it's removable manually
         std::ignore = do_e_move_notify_progress_coldextrude(-20.f, (FILAMENT_CHANGE_UNLOAD_FEEDRATE), StopConditions::Accomplished);
-        Sound_Play(eSOUND_TYPE::SingleBeep);
+        sound::play(SoundType::single_beep);
         set(LoadState::loading_obstruction);
         return;
     }

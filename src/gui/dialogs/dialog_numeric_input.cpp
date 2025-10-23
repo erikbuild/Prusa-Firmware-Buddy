@@ -295,7 +295,7 @@ void DialogNumericInput::screenEvent(window_t *sender, GUI_event_t event, void *
             return;
         }
 
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         close(false);
         return;
 

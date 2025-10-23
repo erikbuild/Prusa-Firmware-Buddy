@@ -19,15 +19,15 @@ struct SoundSettings {
     float volume; /// volumes of signals in ms
     bool forced; /// forced types of sounds - mainly for ERROR sounds. Ignores volume settings.
 
-    const SoundPattern &pattern(eSOUND_MODE mode) const {
+    const SoundPattern &pattern(SoundMode mode) const {
         switch (mode) {
-        case eSOUND_MODE::ONCE:
+        case SoundMode::once:
             return once;
-        case eSOUND_MODE::LOUD:
+        case SoundMode::loud:
             return loud;
-        case eSOUND_MODE::SILENT:
+        case SoundMode::silent:
             return silent;
-        case eSOUND_MODE::ASSIST:
+        case SoundMode::assist:
             return assist;
         default:
             bsod("sound pattern");
@@ -46,27 +46,27 @@ struct AllSoundSettings {
     SoundSettings single_beep;
     SoundSettings waiting_beep;
 
-    const SoundSettings &settings(eSOUND_TYPE type) const {
+    const SoundSettings &settings(SoundType type) const {
         switch (type) {
-        case eSOUND_TYPE::ButtonEcho:
+        case SoundType::button_echo:
             return button_echo;
-        case eSOUND_TYPE::StandardPrompt:
+        case SoundType::standard_prompt:
             return standard_prompt;
-        case eSOUND_TYPE::StandardAlert:
+        case SoundType::standard_alert:
             return standard_alert;
-        case eSOUND_TYPE::CriticalAlert:
+        case SoundType::critical_alert:
             return critical_alert;
-        case eSOUND_TYPE::EncoderMove:
+        case SoundType::encoder_move:
             return encoder_move;
-        case eSOUND_TYPE::BlindAlert:
+        case SoundType::blind_alert:
             return blind_alert;
-        case eSOUND_TYPE::Start:
+        case SoundType::start:
             return start;
-        case eSOUND_TYPE::SingleBeep:
+        case SoundType::single_beep:
             return single_beep;
-        case eSOUND_TYPE::WaitingBeep:
+        case SoundType::waiting_beep:
             return waiting_beep;
-        case eSOUND_TYPE::SingleBeepAlwaysLoud:
+        case SoundType::single_beep_always_loud:
             return single_beep;
         default:
             bsod("sound pattern");
@@ -158,15 +158,13 @@ static constexpr AllSoundSettings all_sound_settings = {
     },
 };
 
-eSOUND_MODE Sound_GetMode() { return Sound::getInstance().getMode(); }
-int Sound_GetVolume() { return Sound::getInstance().getVolume(); }
-void Sound_SetMode(eSOUND_MODE eSMode) { Sound::getInstance().setMode(eSMode); }
-void Sound_SetVolume(int volume) { Sound::getInstance().setVolume(volume); }
-void Sound_Play(eSOUND_TYPE eSoundType) { Sound::getInstance().play(eSoundType); }
-void Sound_Stop() { Sound::getInstance().stop(); }
-void Sound_Update1ms() {
-    Sound::getInstance().update1ms();
-}
+SoundMode sound::get_mode() { return Sound::getInstance().getMode(); }
+int sound::get_volume() { return Sound::getInstance().getVolume(); }
+void sound::set_mode(SoundMode eSMode) { Sound::getInstance().setMode(eSMode); }
+void sound::set_volume(int volume) { Sound::getInstance().setVolume(volume); }
+void sound::play(SoundType eSoundType) { Sound::getInstance().play(eSoundType); }
+void sound::stop() { Sound::getInstance().stop(); }
+void sound::update_1ms() { Sound::getInstance().update1ms(); }
 
 /*!
  * Sound signals implementation
@@ -177,19 +175,19 @@ void Sound_Update1ms() {
 
 void Sound::restore_from_eeprom() {
     // Restore mode
-    eSOUND_MODE eeprom_mode = config_store().sound_mode.get();
-    if (eeprom_mode <= eSOUND_MODE::_last) {
+    SoundMode eeprom_mode = config_store().sound_mode.get();
+    if (eeprom_mode <= SoundMode::_last) {
         setMode(eeprom_mode);
     }
     // Restore volume
     varVolume = real_volume(config_store().sound_volume.get());
 }
 
-eSOUND_MODE Sound::getMode() const {
+SoundMode Sound::getMode() const {
     return eSoundMode;
 }
 
-void Sound::setMode(eSOUND_MODE eSMode) {
+void Sound::setMode(SoundMode eSMode) {
     eSoundMode = eSMode;
     saveMode();
 }
@@ -218,7 +216,7 @@ void Sound::stop() {
     delay_active = 0;
 }
 
-void Sound::_playSound(eSOUND_TYPE type, eSOUND_MODE mode) {
+void Sound::_playSound(SoundType type, SoundMode mode) {
     const SoundSettings &settings = all_sound_settings.settings(type);
     const SoundPattern &pattern = settings.pattern(mode);
     if (pattern.duration) {
@@ -230,22 +228,22 @@ void Sound::_playSound(eSOUND_TYPE type, eSOUND_MODE mode) {
  * Generag [play] method with sound type parameter where dependetly on set mode is played.
  * Every mode handle just his own signal types.
  */
-void Sound::play(eSOUND_TYPE eSoundType) {
-    eSOUND_MODE mode = eSoundMode;
+void Sound::play(SoundType eSoundType) {
+    SoundMode mode = eSoundMode;
 
-    if (eSoundType == eSOUND_TYPE::CriticalAlert || eSoundType == eSOUND_TYPE::SingleBeepAlwaysLoud) {
-        mode = eSOUND_MODE::LOUD;
+    if (eSoundType == SoundType::critical_alert || eSoundType == SoundType::single_beep_always_loud) {
+        mode = SoundMode::loud;
     }
 
     switch (mode) {
-    case eSOUND_MODE::ONCE:
-    case eSOUND_MODE::SILENT:
-    case eSOUND_MODE::ASSIST:
-    case eSOUND_MODE::LOUD:
+    case SoundMode::once:
+    case SoundMode::silent:
+    case SoundMode::assist:
+    case SoundMode::loud:
         _playSound(eSoundType, mode);
         break;
     default:
-        _playSound(eSoundType, eSOUND_MODE::LOUD);
+        _playSound(eSoundType, SoundMode::loud);
         break;
     }
 }

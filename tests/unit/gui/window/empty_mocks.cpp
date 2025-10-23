@@ -6,7 +6,7 @@
  */
 
 #include "guitypes.hpp"
-#include "sound_enum.h"
+#include "sound.hpp"
 #include "ScreenHandler.hpp"
 #include "cmsis_os.h" //HAL_GetTick
 #include "mock_windows.hpp"
@@ -14,7 +14,7 @@
 #include <memory>
 
 void gui_invalidate(void) {}
-void Sound_Play(eSOUND_TYPE eSoundType) {}
+void sound::play(SoundType) {}
 void gui_loop() {}
 
 namespace marlin_client {

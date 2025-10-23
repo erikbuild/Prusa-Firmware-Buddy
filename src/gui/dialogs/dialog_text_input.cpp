@@ -89,7 +89,7 @@ void DialogTextInput::screenEvent([[maybe_unused]] window_t *sender, GUI_event_t
             return;
         }
 
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         cancelled_ = true;
         Screens::Access()->Close();
         return;

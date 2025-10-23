@@ -109,13 +109,13 @@ void MakeSound(SoundType s) {
     return; // @@TODO currently broken
     switch (s) {
     case Confirm:
-        Sound_Play(eSOUND_TYPE::SingleBeep);
+        sound::play(::SoundType::single_beep);
         break;
     case Prompt:
-        Sound_Play(eSOUND_TYPE::StandardPrompt);
+        sound::play(::SoundType::standard_prompt);
         break;
     default:
-        Sound_Play(eSOUND_TYPE::StandardAlert);
+        sound::play(::SoundType::standard_alert);
         break;
     }
 }

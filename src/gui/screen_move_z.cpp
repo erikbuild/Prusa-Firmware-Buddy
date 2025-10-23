@@ -96,7 +96,7 @@ void ScreenMoveZ::windowEvent(window_t *sender, GUI_event_t event, void *param) 
 
     case GUI_event_t::TOUCH_SWIPE_LEFT:
     case GUI_event_t::TOUCH_SWIPE_RIGHT:
-        Sound_Play(eSOUND_TYPE::ButtonEcho);
+        sound::play(SoundType::button_echo);
         Screens::Access()->Close();
         break;
 

@@ -256,10 +256,10 @@ void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t 
         while (pWin && dif--) {
             window_t *const pPrev = GetPrevEnabledSubWin(pWin);
             if (!pPrev) {
-                Sound_Play(eSOUND_TYPE::BlindAlert);
+                sound::play(SoundType::blind_alert);
                 break;
             } else {
-                Sound_Play(eSOUND_TYPE::EncoderMove);
+                sound::play(SoundType::encoder_move);
             }
             pWin = pPrev;
         }
@@ -273,9 +273,9 @@ void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t 
             window_t *const pNext = GetNextEnabledSubWin(pWin);
 
             if (pNext && pNext->IsVisible()) {
-                Sound_Play(eSOUND_TYPE::EncoderMove);
+                sound::play(SoundType::encoder_move);
             } else {
-                Sound_Play(eSOUND_TYPE::BlindAlert);
+                sound::play(SoundType::blind_alert);
                 break;
             }
             pWin = pNext;

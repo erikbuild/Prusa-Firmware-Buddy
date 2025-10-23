@@ -306,7 +306,7 @@ void adc_tick_1ms(void) {
 
 void app_tim14_tick(void) {
     // run sound first, so it is more synchronized
-    Sound_Update1ms();
+    sound::update_1ms();
 
     Fans::tick();
 

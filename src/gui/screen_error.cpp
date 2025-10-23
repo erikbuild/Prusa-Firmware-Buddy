@@ -57,8 +57,8 @@ ScreenError::ScreenError()
 
     header.SetIcon(&img::error_16x16);
 
-    Sound_Stop();
-    Sound_Play(eSOUND_TYPE::CriticalAlert);
+    sound::stop();
+    sound::play(SoundType::critical_alert);
 
     if constexpr (!GuiDefaults::EnableDialogBigLayout) {
         txt_err_desc.set_font(Font::small);
@@ -175,7 +175,7 @@ void ScreenError::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t eve
     case GUI_event_t::ENC_DN:
     case GUI_event_t::HOLD:
     case GUI_event_t::CLICK:
-        Sound_Stop();
+        sound::stop();
         break;
     default:
         break;
