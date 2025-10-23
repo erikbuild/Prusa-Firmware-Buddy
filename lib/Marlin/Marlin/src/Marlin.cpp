@@ -664,12 +664,6 @@ void setup() {
     update_case_light();
   #endif
 
-  #if ENABLED(MK2_MULTIPLEXER)
-    SET_OUTPUT(E_MUX0_PIN);
-    SET_OUTPUT(E_MUX1_PIN);
-    SET_OUTPUT(E_MUX2_PIN);
-  #endif
-
   #if ENABLED(BLTOUCH)
     bltouch.init(/*set_voltage=*/true);
   #endif

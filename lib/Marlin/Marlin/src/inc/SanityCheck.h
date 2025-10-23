@@ -561,17 +561,8 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     #error "TOOLCHANGE_ZRAISE required for EXTRUDERS > 1. Please update your Configuration_adv.h."
   #endif
 
-#elif ENABLED(MK2_MULTIPLEXER)
-  #error "MK2_MULTIPLEXER requires 2 or more EXTRUDERS."
 #elif ENABLED(SINGLENOZZLE)
   #error "SINGLENOZZLE requires 2 or more EXTRUDERS."
-#endif
-
-/**
- * Sanity checking for the Průša MK2 Multiplexer
- */
-#ifdef SNMM
-  #error "SNMM is now MK2_MULTIPLEXER. Please update your configuration."
 #endif
 
 #if HAS_REMOTE_ACCELEROMETER() && !HAS_TOOLCHANGER()
@@ -963,10 +954,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #endif
 #endif
 
-/**
- * Test Extruder Stepper Pins
- */
-#if DISABLED(MK2_MULTIPLEXER) // MK2_MULTIPLEXER uses E0 stepper only
   #if E_STEPPERS
     #if !(PINS_EXIST(E0_STEP, E0_DIR) && HAS_E0_ENABLE)
       #error "E0_STEP_PIN, E0_DIR_PIN, or E0_ENABLE_PIN not defined for this board."
@@ -997,7 +984,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
       #endif // E_STEPPERS > 2
     #endif // E_STEPPERS > 1
   #endif // E_STEPPERS
-#endif
 
 /**
  * Endstop Tests
