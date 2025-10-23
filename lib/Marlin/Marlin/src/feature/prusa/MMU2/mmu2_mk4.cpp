@@ -567,6 +567,19 @@ bool MMU2::ToolChangeCommonOnce(uint8_t slot) {
             Disable_E0(); // it may seem counterintuitive to disable the E-motor, but it gets enabled in the planner whenever the E-motor is to move
             tool_change_extruder = slot;
 
+            allowPrematureFinish = true;
+
+            // The idea here is to activate the MMU earlier than the printer is actually ready to unload the filament,
+            // because engaging of the MMU's Idler takes ~1 second.
+            // Thefore the MMU prepares the Idler into a close intermediate position and waits for printer's fsensor to turn off.
+            // Once the FS is off, the MMU engages the Idler fully (which is much faster than engaging from the parking position),
+            // pulls the filament out and pushes a new one in.
+            // If the FS doesn't turn off within 4 seconds, the MMU reports an error.
+            // Therefore we issue the MMU command ToolChange at this spot - even before the filament is freed from the drive gear.
+            // Also, this is the only reason why MMU FW 3.0.3 is incompatible with 3.0.4 - it's an important change of the unload process.
+            // But - we save a significant amount of time per toolchange -> shorter print times.
+            logic.ToolChange(slot);
+
             // The gcode is expected to do ramming which ends with the filament
             // tip still in extruder gears. Rotate the extruder some more to
             // get the filament (including a potential string) completely out
@@ -592,8 +605,6 @@ bool MMU2::ToolChangeCommonOnce(uint8_t slot) {
                 metric_record_float(&metric_unloadDistanceFSOff, unloadEPosOnFSOff);
 #endif
             }
-            allowPrematureFinish = true;
-            logic.ToolChange(slot); // let the MMU pull the filament out and push a new one in
             if (manage_response(true, true)) {
                 allowPrematureFinish = false;
                 if (planner_draining()) {
