@@ -279,12 +279,6 @@ void Sound::_sound(int rep, float frq, int16_t dur, int16_t del, [[maybe_unused]
         duration_set = dur;
         delay_set = del;
         volume = tmpVol;
-#ifdef _DEBUG
-        /// for BSOD debugging
-        if (eSoundMode == eSOUND_MODE::DEBUG) {
-            volume = 0;
-        }
-#endif
 
         /// end previous beep
         hwio_beeper_notone();

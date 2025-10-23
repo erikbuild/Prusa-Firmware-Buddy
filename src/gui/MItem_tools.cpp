@@ -330,9 +330,6 @@ static constexpr EnumArray<eSOUND_MODE, const char *, eSOUND_MODE::_count> sound
     { eSOUND_MODE::LOUD, N_("Loud") },
     { eSOUND_MODE::SILENT, N_("Silent") },
     { eSOUND_MODE::ASSIST, N_("Assist") },
-#ifdef _DEBUG
-    { eSOUND_MODE::DEBUG, N_("Debug") },
-#endif
 };
 
 size_t MI_SOUND_MODE::init_index() const {
