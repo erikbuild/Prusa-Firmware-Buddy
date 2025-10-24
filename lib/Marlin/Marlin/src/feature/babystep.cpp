@@ -50,7 +50,7 @@ void Babystep::step_axis(const AxisEnum axis) {
 }
 
 void Babystep::task() {
-  #if EITHER(BABYSTEP_XY, I2C_POSITION_ENCODERS)
+  #if ENABLED(BABYSTEP_XY)
     LOOP_XYZ(axis) step_axis((AxisEnum)axis);
   #else
     step_axis(Z_AXIS);

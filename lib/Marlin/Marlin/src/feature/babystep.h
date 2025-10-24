@@ -23,7 +23,7 @@
 
 #include "../inc/MarlinConfigPre.h"
 
-#if IS_CORE || EITHER(BABYSTEP_XY, I2C_POSITION_ENCODERS)
+#if IS_CORE || ENABLED(BABYSTEP_XY)
   #define BS_TODO_AXIS(A) A
 #else
   #define BS_TODO_AXIS(A) 0

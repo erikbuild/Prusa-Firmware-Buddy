@@ -97,10 +97,6 @@
   #include "module/servo.h"
 #endif
 
-#if ENABLED(I2C_POSITION_ENCODERS)
-  #include "feature/I2CPositionEncoder.h"
-#endif
-
 #if HAS_CUTTER
   #include "feature/spindle_laser.h"
 #endif
@@ -147,10 +143,6 @@ bool wait_for_heatup = true;
 
 #if PIN_EXISTS(CHDK)
   extern millis_t chdk_timeout;
-#endif
-
-#if ENABLED(I2C_POSITION_ENCODERS)
-  I2CPositionEncodersMgr I2CPEM;
 #endif
 
 uint16_t job_id = 0;
@@ -416,17 +408,6 @@ void idle(bool waiting) {
 
   thermalManager.manage_heater();
 
-  #if ENABLED(I2C_POSITION_ENCODERS)
-    static millis_t i2cpem_next_update_ms;
-    if (planner.busy()) {
-      const millis_t ms = millis();
-      if (ELAPSED(ms, i2cpem_next_update_ms)) {
-        I2CPEM.update();
-        i2cpem_next_update_ms = ms + I2CPE_MIN_UPD_TIME_MS;
-      }
-    }
-  #endif
-
   #ifdef HAL_IDLETASK
     HAL_idletask();
   #endif
@@ -667,10 +648,6 @@ void setup() {
 
   #if ENABLED(BLTOUCH)
     bltouch.init(/*set_voltage=*/true);
-  #endif
-
-  #if ENABLED(I2C_POSITION_ENCODERS)
-    I2CPEM.init();
   #endif
 
   #if ENABLED(USE_WATCHDOG)

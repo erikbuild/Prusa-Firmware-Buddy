@@ -677,19 +677,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 800: parser.debug(); break;                          // M800: GCode Parser Test for M
       #endif
 
-      #if ENABLED(I2C_POSITION_ENCODERS)
-        case 860: M860(); break;                                  // M860: Report encoder module position
-        case 861: M861(); break;                                  // M861: Report encoder module status
-        case 862: M862(); break;                                  // M862: Perform axis test
-        case 863: M863(); break;                                  // M863: Calibrate steps/mm
-        case 864: M864(); break;                                  // M864: Change module address
-        case 865: M865(); break;                                  // M865: Check module firmware version
-        case 866: M866(); break;                                  // M866: Report axis error count
-        case 867: M867(); break;                                  // M867: Toggle error correction
-        case 868: M868(); break;                                  // M868: Set error correction threshold
-        case 869: M869(); break;                                  // M869: Report axis error
-      #endif
-
       #if HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER()
         case 958: M958(); break;
         case 959: M959(); break;

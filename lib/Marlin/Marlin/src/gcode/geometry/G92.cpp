@@ -24,10 +24,6 @@
 #include "../../module/motion.h"
 #include "../../module/stepper.h"
 
-#if ENABLED(I2C_POSITION_ENCODERS)
-  #include "../../feature/I2CPositionEncoder.h"
-#endif
-
 /** \addtogroup G-Codes
  * @{
  */
