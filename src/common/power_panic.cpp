@@ -40,7 +40,7 @@
     #include <feature/cancel_object/cancel_object.hpp>
 #endif
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
     #include "module/prusa/tool_mapper.hpp"
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)
@@ -333,7 +333,7 @@ void resume_loop() {
 #if HAS_CANCEL_OBJECT()
         buddy::cancel_object().set_state(state_buf.cancel_object);
 #endif
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
         tool_mapper.deserialize(state_buf.tool_mapping);
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)
@@ -700,7 +700,7 @@ void panic_loop() {
 #if HAS_CANCEL_OBJECT()
         state_buf.cancel_object = buddy::cancel_object().state();
 #endif
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
         tool_mapper.serialize(state_buf.tool_mapping);
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)

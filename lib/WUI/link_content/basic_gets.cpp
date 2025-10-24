@@ -4,6 +4,7 @@
 #include "lwip/init.h"
 #include "netdev.h"
 #include <config_store/store_instance.hpp>
+#include <option/has_tool_mapping.h>
 
 #include <segmented_json_macros.h>
 #include <json_encode.h>
@@ -18,7 +19,6 @@
 #include <cstdio>
 #include "printers.h"
 #include <common/directory.hpp>
-#include <option/has_mmu2.h>
 #include <version/version.hpp>
 #include <common/printer_model.hpp>
 
@@ -118,7 +118,7 @@ JsonResult get_printer(size_t resume_point, JsonOutput &output) {
     case State::Idle:
     case State::PrintPreviewInit:
     case State::PrintPreviewImage:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
     case State::PrintInit:
@@ -317,7 +317,7 @@ JsonResult get_job_octoprint(size_t resume_point, JsonOutput &output) {
     case State::Idle:
     case State::PrintPreviewInit:
     case State::PrintPreviewImage:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
     case State::PrintInit:

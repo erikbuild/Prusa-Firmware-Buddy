@@ -213,7 +213,7 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M853();
             break;
 #endif
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
         case 863:
             PrusaGcodeSuite::M863();
             break;

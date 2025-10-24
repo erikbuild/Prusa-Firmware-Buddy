@@ -11,9 +11,8 @@
 #include <window_icon.hpp>
 #include <window_colored_rect.hpp>
 #include <gcode_info.hpp>
-#include <option/has_toolchanger.h>
-#include <option/has_mmu2.h>
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#include <option/has_tool_mapping.h>
+#if HAS_TOOL_MAPPING()
     #include <module/prusa/spool_join.hpp>
     #include <module/prusa/tool_mapper.hpp>
 #endif

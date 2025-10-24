@@ -5,7 +5,7 @@
 #include "PrusaGcodeSuite.hpp"
 #include "module/prusa/spool_join.hpp"
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if ENABLED(PRUSA_SPOOL_JOIN)
 /** \addtogroup G-Codes
  * @{
  */

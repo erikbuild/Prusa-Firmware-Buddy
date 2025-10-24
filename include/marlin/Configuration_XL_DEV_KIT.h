@@ -160,7 +160,6 @@
 
 #if HAS_TOOLCHANGER()
 #define PRUSA_TOOLCHANGER
-#define PRUSA_TOOL_MAPPING
 #define PRUSA_SPOOL_JOIN
 #endif
 

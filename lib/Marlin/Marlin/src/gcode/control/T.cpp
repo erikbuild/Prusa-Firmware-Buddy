@@ -23,7 +23,9 @@
 #include "../gcode.h"
 #include "../../module/tool_change.h"
 #include "bsod.h"
-#if ENABLED(PRUSA_TOOL_MAPPING)
+
+#include <option/has_tool_mapping.h>
+#if HAS_TOOL_MAPPING()
   #include "module/prusa/tool_mapper.hpp"
 #endif
 
@@ -77,7 +79,7 @@
  */
 void GcodeSuite::T(uint8_t tool_index) {
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
   const bool map = !parser.seen('M') || parser.boolval('M', true);
   if (map) {
     tool_index = tool_mapper.to_physical(tool_index);

@@ -5,7 +5,7 @@
 #include "PrusaGcodeSuite.hpp"
 #include "module/prusa/tool_mapper.hpp"
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
 
 /** \addtogroup G-Codes
  * @{

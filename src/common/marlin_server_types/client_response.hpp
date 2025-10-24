@@ -33,6 +33,7 @@
 #include <option/has_phase_stepping_calibration.h>
 #include <option/has_selftest.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_mapping.h>
 #include <option/xl_enclosure_support.h>
 #include <option/has_chamber_api.h>
 #include <option/has_chamber_filtration_api.h>
@@ -140,7 +141,7 @@ enum class PhasesPrintPreview : PhaseUnderlyingType {
 #if HAS_MMU2()
     mmu_filament_inserted,
 #endif
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     tools_mapping,
 #endif
     wrong_filament,
@@ -579,7 +580,7 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
                                                          Response::No,
                                                      } },
 #endif
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
         { PhasesPrintPreview::tools_mapping, {
                                                  Response::Back,
                                                  Response::Filament,

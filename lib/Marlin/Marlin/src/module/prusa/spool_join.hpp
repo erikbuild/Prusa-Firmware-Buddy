@@ -5,12 +5,11 @@
 #include <array>
 #include <optional>
 #include <mutex>
+#include <option/has_tool_mapping.h>
 
 #if ENABLED(PRUSA_SPOOL_JOIN)
 
-    #if DISABLED(PRUSA_TOOL_MAPPING)
-        #error PRUSA_SPOOL_JOIN need PRUSA_TOOL_MAPPING
-    #endif
+static_assert(HAS_TOOL_MAPPING());
 
 /**
  * @brief Feature that allows spools to join together. When filament runs out in

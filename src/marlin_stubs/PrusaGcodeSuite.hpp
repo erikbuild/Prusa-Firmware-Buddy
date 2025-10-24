@@ -6,6 +6,7 @@
 
 #include <option/has_esp.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_mapping.h>
 #include <option/has_side_leds.h>
 #include <option/has_belt_tuning.h>
 #include <option/has_manual_belt_tuning.h>
@@ -108,7 +109,7 @@ void M862_6(); //< Check gcode level
 /// @}
 #endif
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
 void M863(); //< tool mapping control
 #endif
 

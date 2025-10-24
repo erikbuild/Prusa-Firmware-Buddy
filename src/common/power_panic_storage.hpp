@@ -25,7 +25,7 @@
     #include <feature/cancel_object/cancel_object.hpp>
 #endif
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
     #include "module/prusa/tool_mapper.hpp"
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)
@@ -172,7 +172,7 @@ struct state_t {
 #if HAS_CANCEL_OBJECT()
     buddy::CancelObject::State cancel_object;
 #endif
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
     ToolMapper::serialized_state_t tool_mapping;
 #endif
 #if ENABLED(PRUSA_SPOOL_JOIN)

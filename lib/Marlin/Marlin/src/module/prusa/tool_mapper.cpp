@@ -3,8 +3,9 @@
 #include <iterator>
 #include <mutex>
 #include <option/has_mmu2.h>
+#include <option/has_tool_mapping.h>
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
 
     #include "module/prusa/tool_mapper.hpp"
     #include "mmu2_toolchanger_common.hpp"

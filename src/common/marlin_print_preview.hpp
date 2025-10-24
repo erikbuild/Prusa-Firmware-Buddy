@@ -10,7 +10,7 @@
 #include <bitset>
 #include "gcode_info.hpp"
 #include <option/has_mmu2.h>
-#include <option/has_toolchanger.h>
+#include <option/has_tool_mapping.h>
 #include <async_job/async_job.hpp>
 #include <inplace_function.hpp>
 
@@ -43,7 +43,7 @@ public:
         mmu_filament_inserted_unload,
 #endif
 
-#if HAS_MMU2() || HAS_TOOLCHANGER()
+#if HAS_TOOL_MAPPING()
         tools_mapping_wait_user,
 #endif
 
@@ -87,7 +87,7 @@ public:
         Image,
         // Asking the user something (wrong printer, etc).
         Questions,
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
         ToolsMapping,
 #endif
         MarkStarted,
@@ -138,7 +138,7 @@ public:
      */
     static bool check_extruder_need_filament_load(uint8_t physical_extruder, uint8_t no_gcode_value, stdext::inplace_function<uint8_t(uint8_t)> gcode_extruder_getter);
 
-#if ENABLED(PRUSA_SPOOL_JOIN) && ENABLED(PRUSA_TOOL_MAPPING)
+#if ENABLED(PRUSA_SPOOL_JOIN) && HAS_TOOL_MAPPING()
     struct ToolsMappingValidty {
         std::bitset<EXTRUDERS> unassigned_gcodes {};
         std::bitset<EXTRUDERS> mismatched_filaments {};

@@ -54,7 +54,8 @@ GcodeSuite gcode;
 
 #include "odometer.hpp"
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#include <option/has_tool_mapping.h>
+#if HAS_TOOL_MAPPING()
   #include "module/prusa/tool_mapper.hpp"
 #endif
 
@@ -96,7 +97,7 @@ int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> 
     e = *extruder;
 
     if(!is_physical) {
-    #if ENABLED(PRUSA_TOOL_MAPPING)
+    #if HAS_TOOL_MAPPING()
       // map logical tool to physical tool if mapping is enabled
       const uint8_t mapped = tool_mapper.to_physical(e);
       e = mapped == ToolMapper::NO_TOOL_MAPPED ? -1 : mapped;
@@ -140,7 +141,7 @@ int8_t GcodeSuite::get_target_extruder_from_command_p() {
  */
 int8_t GcodeSuite::get_target_e_stepper_from_command() {
   int8_t e = parser.intval('T', -1);
-  #if ENABLED(PRUSA_TOOL_MAPPING)
+  #if HAS_TOOL_MAPPING()
     // map logical tool to physical tool if mapping is enabled
     const uint8_t mapped = tool_mapper.to_physical(e);
     e = mapped == ToolMapper::NO_TOOL_MAPPED ? -1 : mapped;

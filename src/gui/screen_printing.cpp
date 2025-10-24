@@ -19,6 +19,7 @@
 #include <option/has_loadcell.h>
 #include <option/has_mmu2.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_mapping.h>
 #include <buddy/unreachable.hpp>
 #include <utils/string_builder.hpp>
 
@@ -757,7 +758,7 @@ void screen_printing_data_t::change_print_state() {
         case State::PrintPreviewImage:
         case State::PrintPreviewConfirmed:
         case State::PrintPreviewQuestions:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
         case State::PrintPreviewToolsMapping:
 #endif
         case State::PrintInit:

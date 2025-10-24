@@ -8,10 +8,9 @@
 #include "static_alocation_ptr.hpp"
 #include <common/fsm_base_types.hpp>
 #include <guiconfig/guiconfig.h>
-#include <option/has_toolchanger.h>
-#include <option/has_mmu2.h>
+#include <option/has_tool_mapping.h>
 #include <find_error.hpp>
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     #include "screen_tools_mapping.hpp"
 #endif
 
@@ -58,7 +57,7 @@ class ScreenPrintPreview : public ScreenPrintPreviewBase {
     using UniquePtrBox = static_unique_ptr<MsgBoxIconned>;
     UniquePtrBox pMsgbox;
 
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     using UniquePtrMapping = static_unique_ptr<ToolsMappingBody>;
     UniquePtrMapping tools_mapping;
 

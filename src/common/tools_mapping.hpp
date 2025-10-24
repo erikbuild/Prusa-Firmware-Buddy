@@ -30,7 +30,7 @@ uint8_t to_physical_tool(uint8_t gcode_tool);
  */
 uint8_t to_gcode_tool(uint8_t physical_tool);
 
-#if ENABLED(PRUSA_SPOOL_JOIN) && ENABLED(PRUSA_TOOL_MAPPING)
+#if ENABLED(PRUSA_SPOOL_JOIN) && HAS_TOOL_MAPPING()
 /**
  * @brief Returns the gcode_tool that is printed by given physical_tool, with the given mapper/joiner configuration
  *

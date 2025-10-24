@@ -156,7 +156,6 @@
  * Tool mapping and spool join - adopted from XL's toolchange, reimplemented for MMU2
  */
 #if HAS_MMU2()
-#define PRUSA_TOOL_MAPPING
 #define PRUSA_SPOOL_JOIN
 #endif
 

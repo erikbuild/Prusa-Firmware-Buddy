@@ -477,7 +477,7 @@ bool MarlinPrinter::job_control(JobControl control) {
     return false;
 }
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
 namespace {
     const char *handle_tool_mapping(const ToolMapping &tool_mapping) {
     #if HAS_MMU2()
@@ -527,7 +527,7 @@ const char *MarlinPrinter::start_print(const char *path, [[maybe_unused]] const 
     }
 
     if (tools_mapping.has_value()) {
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
         if (const char *error = handle_tool_mapping(tools_mapping.value()); error != nullptr) {
             return error;
         }

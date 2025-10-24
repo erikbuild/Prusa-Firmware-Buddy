@@ -5,6 +5,7 @@
 #include "marlin_vars.hpp"
 #include <fsm/filament_change_phases.hpp>
 #include <option/has_mmu2.h>
+#include <option/has_tool_mapping.h>
 #include <option/has_side_fsensor.h>
 
 namespace leds {
@@ -101,7 +102,7 @@ static StateAnimation marlin_to_anim_state() {
     case State::PrintPreviewImage:
     case State::PrintPreviewConfirmed:
     case State::PrintPreviewQuestions:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
     case State::Exit:

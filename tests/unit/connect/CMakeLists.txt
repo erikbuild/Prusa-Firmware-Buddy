@@ -1,6 +1,5 @@
 # Common dependencies for all tests
 link_libraries(SG14 freertos_tests buddy_utils logging-mock)
-add_definitions(-DPRUSA_TOOL_MAPPING)
 
 add_executable(
   connect_tests

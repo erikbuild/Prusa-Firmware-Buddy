@@ -563,6 +563,12 @@ set_feature_for_printers(
   "XL_DEV_KIT"
   )
 
+if(HAS_TOOLCHANGER OR HAS_MMU2)
+  define_boolean_option(HAS_TOOL_MAPPING yes)
+else()
+  define_boolean_option(HAS_TOOL_MAPPING no)
+endif()
+
 # Set printer board
 set(BOARDS_WITH_ADVANCED_POWER "XBUDDY" "XLBUDDY" "DWARF")
 set(BOARDS_WITH_ILI9488 "XBUDDY" "XLBUDDY")

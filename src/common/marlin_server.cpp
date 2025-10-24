@@ -92,6 +92,7 @@
 
 #include <option/has_gui.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_mapping.h>
 #include <option/has_selftest.h>
 #include <option/has_dwarf.h>
 #include <option/has_remote_bed.h>
@@ -990,7 +991,7 @@ void static finalize_print(bool finished) {
     print_area.reset_bounding_rect();
 #endif
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
     tool_mapper.reset();
     spool_join.reset();
 #endif
@@ -1231,7 +1232,7 @@ bool print_preview() {
         || server.print_state == State::PrintPreviewImage
         || server.print_state == State::PrintPreviewConfirmed
         || server.print_state == State::PrintPreviewQuestions
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
         || server.print_state == State::PrintPreviewToolsMapping
 #endif
         ;
@@ -1244,7 +1245,7 @@ bool is_printing() {
     case State::Finished:
     case State::PrintPreviewInit:
     case State::PrintPreviewImage:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
         return false;
@@ -1327,7 +1328,7 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
     case State::PrintPreviewImage:
     case State::PrintPreviewConfirmed:
     case State::PrintPreviewQuestions:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
         // These are acceptable states from which we can start the print -> continue executing the function
@@ -1453,7 +1454,7 @@ void print_abort(void) {
     case State::PrintPreviewImage:
     case State::PrintPreviewConfirmed:
     case State::PrintPreviewQuestions:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
         server.print_state = State::Aborting_Preview;
@@ -2018,7 +2019,7 @@ static void _server_print_loop(void) {
 
     case State::PrintPreviewImage:
     case State::PrintPreviewConfirmed:
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
 #endif
     case State::PrintPreviewQuestions: {
@@ -2069,7 +2070,7 @@ static void _server_print_loop(void) {
             fsm_destroy(ClientFSM::PrintPreview);
             break;
 
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
         case PrintPreview::Result::ToolsMapping:
             new_state = State::PrintPreviewToolsMapping;
             break;
@@ -2146,7 +2147,7 @@ static void _server_print_loop(void) {
             }
         }
 
-#if ENABLED(PRUSA_TOOL_MAPPING) && (HOTENDS > 1)
+#if HAS_TOOL_MAPPING() && (HOTENDS > 1)
         if (!server.print_is_serial) {
             // Cooldown unused tools
             // Ignore spool join - spool joined tools will get heated as spool join is activated
@@ -2465,7 +2466,7 @@ static void _server_print_loop(void) {
             break;
         }
 
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
         if (PrintPreview::Instance().GetState() == PrintPreview::State::tools_mapping_wait_user) {
             PrintPreview::tools_mapping_cleanup();
         }

@@ -11,6 +11,8 @@
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_mmu2.h>
+#include <option/has_tool_mapping.h>
+#include <option/has_toolchanger.h>
 #include <option/has_dwarf.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_phase_stepping_calibration.h>
@@ -86,7 +88,7 @@ optional<ErrCode> attention_while_printpreview(const PhasesPrintPreview preview_
 #endif
     case PhasesPrintPreview::file_error:
         return ErrCode::CONNECT_PRINT_PREVIEW_FILE_ERROR;
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case PhasesPrintPreview::tools_mapping:
         return ErrCode::CONNECT_PRINT_PREVIEW_TOOLS_MAPPING;
 #endif
@@ -333,7 +335,7 @@ DeviceState get_print_state(State state, bool ready) {
     case State::CrashRecovery_Tool_Pickup:
         return DeviceState::Attention;
 #endif
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::PrintPreviewToolsMapping:
         return DeviceState::Attention;
 #endif

@@ -4,8 +4,9 @@
 #include "inc/MarlinConfig.h"
 #include <limits>
 #include <mutex>
+#include <option/has_tool_mapping.h>
 
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
 
 /**
  * @brief Tool mapper allows user to assign tools in GUI/GCODE to other tools, depending on where he has filament he wants to use

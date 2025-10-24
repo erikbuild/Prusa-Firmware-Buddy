@@ -68,7 +68,7 @@ std::optional<PhasesPrintPreview> IPrintPreview::getCorrespondingPhase(IPrintPre
     case State::new_firmware_available_wait_user:
         return PhasesPrintPreview::new_firmware_available;
 
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     case State::tools_mapping_wait_user:
         return PhasesPrintPreview::tools_mapping;
 #endif
@@ -130,7 +130,7 @@ Response IPrintPreview::GetResponse() {
     return phase ? marlin_server::get_response_from_phase(*phase) : Response::_none;
 }
 
-#if ENABLED(PRUSA_SPOOL_JOIN) && ENABLED(PRUSA_TOOL_MAPPING)
+#if ENABLED(PRUSA_SPOOL_JOIN) && HAS_TOOL_MAPPING()
 
 bool PrintPreview::ToolsMappingValidty::all_ok() const {
     return unassigned_gcodes.count() == 0 &&
@@ -388,7 +388,7 @@ void PrintPreview::tools_mapping_cleanup(bool leaving_to_print) {
     if (!leaving_to_print) {
         // stop preheating bed
         marlin_server::set_target_bed(0);
-#if ENABLED(PRUSA_TOOL_MAPPING)
+#if HAS_TOOL_MAPPING()
         tool_mapper.reset();
         spool_join.reset();
 #endif
@@ -594,7 +594,7 @@ PrintPreview::Result PrintPreview::Loop() {
         }
         break;
 
-#if HAS_MMU2() || HAS_TOOLCHANGER()
+#if HAS_TOOL_MAPPING()
     case State::tools_mapping_wait_user:
         switch (response) {
 
@@ -765,7 +765,7 @@ PrintPreview::Result PrintPreview::Loop() {
 #endif
 
         if (tools_mapping::is_tool_mapping_possible()) {
-#if ENABLED(PRUSA_SPOOL_JOIN) && ENABLED(PRUSA_TOOL_MAPPING)
+#if ENABLED(PRUSA_SPOOL_JOIN) && HAS_TOOL_MAPPING()
             if ((skip_if_able >= marlin_server::PreviewSkipIfAble::tool_mapping) && PrintPreview::check_tools_mapping_validity(tool_mapper, spool_join, gcode_info).all_ok()) {
                 // we can skip tools mapping if there is not warning/error in global tools mapping
                 ChangeState(State::done);
@@ -828,7 +828,7 @@ PrintPreview::Result PrintPreview::stateToResult() const {
     case State::done:
         return Result::Inactive;
 
-#if HAS_MMU2() || HAS_TOOLCHANGER()
+#if HAS_TOOL_MAPPING()
     case State::tools_mapping_wait_user:
         return Result::ToolsMapping;
 #endif

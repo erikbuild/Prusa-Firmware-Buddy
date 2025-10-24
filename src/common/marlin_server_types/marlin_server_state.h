@@ -2,6 +2,7 @@
 
 #include <option/has_mmu2.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_mapping.h>
 
 namespace marlin_server {
 
@@ -11,7 +12,7 @@ enum class State {
     PrintPreviewImage, ///< Showing print preview and waiting for user to click print
     PrintPreviewConfirmed, ///< Print is confirmed to be printed (either user clicked print, or WUI/Connect started print without confirmation on printer)
     PrintPreviewQuestions, ///< Some problems with print detected, ask user to skip/fix them
-#if HAS_TOOLCHANGER() || HAS_MMU2()
+#if HAS_TOOL_MAPPING()
     PrintPreviewToolsMapping, ///< Waiting for user to do the tool mapping/spool join
 #endif
     PrintInit,
