@@ -15,7 +15,7 @@
 
 namespace {
 
-using Buffer = std::array<char, 29>;
+using Buffer = std::array<char, 31>;
 // Generate a link into the provided buffer, return the pointer to the buffer (for convenience).
 //
 // Eg. prusa.io/mk4-phstep-qr
