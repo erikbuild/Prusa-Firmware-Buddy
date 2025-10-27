@@ -23,7 +23,7 @@ struct ProgressSpan {
 inline float to_normalized_progress(const float min, const float max, const float value) {
     // Handle edge case where min >= max (avoid division by zero)
     const float range = max - min;
-    if (range <= 0.0f) {
+    if (range <= 1e-6f) {
         return 1.0f;
     }
 

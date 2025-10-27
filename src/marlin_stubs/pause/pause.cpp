@@ -1441,7 +1441,7 @@ void Pause::unpark_nozzle_and_notify() {
     }
 
     // Unretract
-    if (settings.retract) {
+    if (std::abs(settings.retract) < 1e-6f) {
         plan_e_move(-settings.retract, PAUSE_PARK_RETRACT_FEEDRATE);
     }
 }

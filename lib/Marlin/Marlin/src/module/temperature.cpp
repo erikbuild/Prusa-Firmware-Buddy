@@ -1014,7 +1014,7 @@ void Temperature::min_temp_error(const heater_ind_t heater) {
               #endif
               work_pid[ee].Kc = 0;
               if (this_hotend) {
-                constexpr float distance_to_volume = M_PI * pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2);
+                constexpr float distance_to_volume = std::numbers::pi_v<float> * std::pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2.f);
                 constexpr float distance_to_volume_per_second = distance_to_volume * sample_frequency;
                 uint32_t e_position = stepper.position(E_AXIS);
                 const int32_t e_pos_diff = e_position - last_e_position;

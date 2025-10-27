@@ -463,7 +463,7 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
                         continue;
                     }
 
-                    const float dist = std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2)); // distance between bedlets
+                    const float dist = std::hypot<float, float>(x2 - x1, y2 - y1); // distance between bedlets
                     if (dist > bedlet_gradient_cutoff) {
                         continue; // if bedlet distance is over BEDLET_GRADIENT_CUTOFF, don't do anything, temperature is already zero
                     }

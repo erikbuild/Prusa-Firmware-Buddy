@@ -231,7 +231,7 @@ inline void report_hotend_offsets() {
 }
 
 xy_pos_t closest_point_on_circle(const xy_pos_t point, const xy_pos_t center, const float radius) {
-    const float distance_factor = sqrt(pow(point.x - center.x, 2) + pow(point.y - center.y, 2));
+    const float distance_factor = std::hypot(point.x - center.x, point.y - center.y);
 
     if (distance_factor == 0) {
         return { { { .x = center.x + radius,

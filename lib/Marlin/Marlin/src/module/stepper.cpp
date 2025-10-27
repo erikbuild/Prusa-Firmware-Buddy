@@ -415,7 +415,7 @@ void Stepper::endstop_triggered(const AxisEnum axis) {
         (axis == CORE_AXIS_2
                 ? CORESIGN(count_position[CORE_AXIS_1] - count_position[CORE_AXIS_2])
                 : count_position[CORE_AXIS_1] + count_position[CORE_AXIS_2])
-        * 0.5f
+        / 2
 #else // !IS_CORE
         count_position[axis]
 #endif

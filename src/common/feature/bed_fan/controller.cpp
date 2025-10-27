@@ -50,9 +50,9 @@ void Controller::step() {
 }
 
 uint8_t Controller::AutomaticMode::calculate_pwm() const {
-    constexpr float min_pwm = 0.1f * 255; // minimum PWM is 10% of largest possible PWM
-    const float max_pwm = this->max_pwm; // compute in float to prevent promotion to double
-    if (max_pwm < min_pwm) {
+    constexpr uint8_t min_pwm = 255 / 10; // minimum PWM is 10% of largest possible PWM
+    const uint8_t max_pwm = this->max_pwm;
+    if (max_pwm <= min_pwm) {
         return min_pwm;
     }
     const float scale = [this] {
@@ -80,7 +80,7 @@ uint8_t Controller::AutomaticMode::calculate_pwm() const {
 
         return 0.0f;
     }();
-    const float pwm = std::lerp(min_pwm, max_pwm, scale);
+    const auto pwm = static_cast<uint8_t>(std::lerp(min_pwm, max_pwm, scale));
     return std::clamp(pwm, min_pwm, max_pwm);
 }
 

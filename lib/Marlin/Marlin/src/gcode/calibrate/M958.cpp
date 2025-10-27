@@ -1144,8 +1144,8 @@ static Shaper_result fit_shaper(const FindBestShaperProgressHook &progress_hook,
             /// Exact damping ratio of the printer is unknown, pessimizing
             /// remaining vibrations over possible damping values
             float shaper_vibrations = 0.f;
-            for (double damping_ratio = 0.05; damping_ratio <= 0.15 + epsilon; damping_ratio += 0.05) {
-                double vibrations = remaining_vibrations(shaper, damping_ratio, psd, default_vibration_reduction);
+            for (float damping_ratio = 0.05f; damping_ratio <= 0.15f + epsilon; damping_ratio += 0.05f) {
+                float vibrations = remaining_vibrations(shaper, damping_ratio, psd, default_vibration_reduction);
                 if (vibrations > shaper_vibrations) {
                     shaper_vibrations = vibrations;
                 }
@@ -1158,7 +1158,7 @@ static Shaper_result fit_shaper(const FindBestShaperProgressHook &progress_hook,
             /// The score trying to minimize vibrations, but also accounting
             /// the growth of smoothing. The formula itself does not have any
             /// special meaning, it simply shows good results on real user data
-            const float shaper_score = shaper_smoothing * (pow(shaper_vibrations, 1.5) + shaper_vibrations * .2 + .01);
+            const float shaper_score = shaper_smoothing * (std::pow(shaper_vibrations, 1.5f) + shaper_vibrations * .2f + .01f);
 
             if (Action::find_best_result == action && shaper_vibrations < best_result.vibrs) {
                 Result result = { .frequency = frequency, .score = shaper_score, .smoothing = shaper_smoothing, .vibrs = shaper_vibrations };
