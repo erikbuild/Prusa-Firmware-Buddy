@@ -1127,7 +1127,7 @@ static void idle(void) {
 }
 
 void do_babystep_Z(float offs) {
-    babystep.add_steps(Z_AXIS, std::round(offs * planner.settings.axis_steps_per_mm[Z_AXIS]));
+    babystep.add_steps(Z_AXIS, static_cast<int16_t>(std::round(offs * planner.settings.axis_steps_per_mm[Z_AXIS])));
 }
 
 extern void move_axis(float pos, float feedrate, size_t axis) {
@@ -3301,7 +3301,7 @@ static void _server_update_vars() {
         if (progress_data.percent_done.mIsActual(marlin_vars().print_duration)) {
             return static_cast<uint8_t>(progress_data.percent_done.mGetValue());
         } else if (prefetch_metrics.stream_size_estimate > 0) {
-            return std::min<uint8_t>(std::round(100.0f * queue.last_executed_sdpos / prefetch_metrics.stream_size_estimate), 99);
+            return std::min<uint8_t>(static_cast<uint8_t>(std::round(100.0f * queue.last_executed_sdpos / prefetch_metrics.stream_size_estimate)), 99);
         } else {
             return 0;
         }

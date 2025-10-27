@@ -108,7 +108,7 @@ public:
 
 private:
     static int amplitudeRoundToSteps(float amplitude_not_rounded, float step_len) {
-        return ceil(amplitude_not_rounded / step_len);
+        return static_cast<int>(std::ceil(amplitude_not_rounded / step_len));
     }
 
     const int m_amplitude_steps; ///< amplitude rounded to steps
@@ -1085,7 +1085,7 @@ static float smoothing(const input_shaper::Shaper &shaper) {
     offset_90 *= (inv_D * sqrt(2.));
     offset_180 *= inv_D;
 
-    return max(offset_90, offset_180);
+    return static_cast<float>(max(offset_90, offset_180));
 }
 
 namespace {

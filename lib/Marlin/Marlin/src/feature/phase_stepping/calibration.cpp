@@ -472,11 +472,11 @@ static DftSweepResult motor_harmonic_dft_sweep(
         float arg = 2 * std::numbers::pi_v<float> * idx * analysis_freq * sampling_period;
         float s = convert(signal[idx]);
 
-        const int int_arg = opts::SIN_PERIOD * std::fmod(arg, 2 * std::numbers::pi_v<float>) / (2 * std::numbers::pi_v<float>);
+        const int int_arg = static_cast<int>(opts::SIN_PERIOD * std::fmod(arg, 2 * std::numbers::pi_v<float>) / (2 * std::numbers::pi_v<float>));
         return std::make_tuple(sin_lut(int_arg) * s, cos_lut(int_arg) * s);
     };
 
-    int step_size_idx = std::max<int>(1, step_size * motor_period_duration * sampling_freq);
+    int step_size_idx = std::max(1, static_cast<int>(step_size * motor_period_duration * sampling_freq));
     int total_steps = signal.size() / step_size_idx;
 
     DftSweepResult result {
@@ -544,7 +544,7 @@ static std::array<DftSweepResult, 2> motor_speed_dft_sweep(SignalView signal,
 
         if (freq < sampling_freq / 2) {
             float s = convert(signal[idx]);
-            const int int_arg = opts::SIN_PERIOD * std::fmod(arg, 2 * std::numbers::pi_v<float>) / (2 * std::numbers::pi_v<float>);
+            const int int_arg = static_cast<int>(opts::SIN_PERIOD * std::fmod(arg, 2 * std::numbers::pi_v<float>) / (2 * std::numbers::pi_v<float>));
             return std::make_tuple(sin_lut(int_arg) * s, cos_lut(int_arg) * s);
         } else {
             return std::make_tuple(0.f, 0.f);
@@ -552,7 +552,7 @@ static std::array<DftSweepResult, 2> motor_speed_dft_sweep(SignalView signal,
     };
 
     std::array<DftSweepResult, 2> result;
-    const int step_size_idx = std::max<int>(step_size * sampling_freq, 1);
+    const int step_size_idx = std::max(static_cast<int>(step_size * sampling_freq), 1);
     const int result_samples = signal.size() / 2 / step_size_idx;
     const float top_analyzed_speed = start_speed + (top_speed - start_speed) * result_samples * step_size_idx / ramp_samples;
     for (SweepDirection ramp : { SweepDirection::Up, SweepDirection::Down }) {
@@ -1326,7 +1326,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
 
     // First, capture the speed sweep there and back
     SignalContainer forward_samples;
-    forward_samples.reserve(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration);
+    forward_samples.reserve(static_cast<size_t>(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration));
     auto forward_annotation = capture_speed_sweep_samples(axis,
         start_speed, end_speed, calibration_config.max_movement_revs,
         [&](const auto &sample) {
@@ -1344,7 +1344,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     ABORT_CHECK();
 
     SignalContainer backward_samples;
-    backward_samples.reserve(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration);
+    backward_samples.reserve(static_cast<size_t>(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration));
     auto backward_annotation = capture_speed_sweep_samples(axis,
         start_speed, end_speed, -calibration_config.max_movement_revs,
         [&](const auto &sample) {
@@ -1448,7 +1448,7 @@ static std::expected<float, CalibrateAxisError> find_approx_mag(AxisEnum axis,
     int dir = 1;
 
     SignalContainer samples;
-    samples.reserve(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration);
+    samples.reserve(static_cast<size_t>(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration));
 
     while (magnitude < calib_config.max_magnitude) {
         ABORT_CHECK();
@@ -1480,7 +1480,7 @@ static std::expected<float, CalibrateAxisError> find_approx_mag(AxisEnum axis,
 
         auto signal = locate_signal(annotation, samples);
 
-        int analysis_step = std::max<int>(1, dir * revs * get_motor_steps(axis) / 4 / calib_config.param_sweep_bins);
+        int analysis_step = std::max(1, static_cast<int>(dir * revs * get_motor_steps(axis) / 4 / calib_config.param_sweep_bins));
         auto analysis = motor_harmonic_dft_sweep(signal, annotation.sampling_freq,
             speed, get_motor_steps(axis), harmonic, calib_config.analysis_window_periods, analysis_step);
 
@@ -1538,7 +1538,7 @@ static std::expected<float, CalibrateAxisError> find_approx_mag(AxisEnum axis,
     static const float PHA_END = PHA_CYCLES * 2 * std::numbers::pi_v<float> + 1.f;
 
     SignalContainer samples;
-    samples.reserve(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * duration);
+    samples.reserve(static_cast<size_t>(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * duration));
 
     SweepParams params {
         .pha_start = PHA_START,
@@ -1583,7 +1583,7 @@ collect_param_sweep_response(AxisEnum axis, const AxisCalibrationConfig &calib_c
     std::array<std::vector<float>, 2> responses;
 
     SignalContainer samples;
-    samples.reserve(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration);
+    samples.reserve(static_cast<size_t>(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * move_characteristics.duration));
 
     const float revs = calib_config.fine_movement_duration * speed;
     for (SweepDirection sweep_dir : { SweepDirection::Up, SweepDirection::Down }) {
@@ -1610,7 +1610,7 @@ collect_param_sweep_response(AxisEnum axis, const AxisCalibrationConfig &calib_c
             ABORT_CHECK();
             auto signal = locate_signal(annotation, samples);
 
-            int analysis_step = std::max<int>(1, movement_dir * revs * get_motor_steps(axis) / 4 / calib_config.param_sweep_bins);
+            int analysis_step = std::max(1, static_cast<int>(movement_dir * revs * get_motor_steps(axis) / 4 / calib_config.param_sweep_bins));
             auto analysis = motor_harmonic_dft_sweep(signal, annotation.sampling_freq,
                 speed, get_motor_steps(axis), harmonic, calib_config.analysis_window_periods, analysis_step);
 

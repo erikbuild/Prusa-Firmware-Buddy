@@ -487,12 +487,12 @@ DialogNumericInput::ResultAccumulator DialogNumericInput::ResultAccumulator::fro
         val = -val;
     }
 
-    r.accum = floor(val);
+    r.accum = static_cast<uint32_t>(std::floor(val));
     val -= r.accum;
 
     while (val != 0 && r.decimal_places.value_or(0) < config.max_decimal_places) {
         val *= 10;
-        const auto flr = floor(val);
+        const auto flr = static_cast<uint32_t>(std::floor(val));
         r.accum = r.accum * 10 + flr;
         val -= flr;
         r.decimal_places = r.decimal_places.value_or(0) + 1;

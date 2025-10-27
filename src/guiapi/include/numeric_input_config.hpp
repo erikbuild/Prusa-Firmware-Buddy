@@ -43,7 +43,7 @@ public:
 
     /// \returns number of digits of the provided value (excluding decimal ones)
     static constexpr uint8_t num_digits(uint32_t value) {
-        return std::max<float>(floor(log10(value)), 0) + 1;
+        return std::max<uint8_t>(static_cast<uint8_t>(std::floor(std::log10(static_cast<float>(value)))), 0) + 1;
     }
 
     using MaxValueStrlenArgs = NumericInputConfig_MaxValueStrlenArgs;

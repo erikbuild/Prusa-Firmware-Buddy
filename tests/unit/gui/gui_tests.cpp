@@ -14,6 +14,7 @@ TEST_CASE("gui::numeric_input_config") {
         CHECK(NumericInputConfig::num_digits(9999) == 4);
         CHECK(NumericInputConfig::num_digits(10000) == 5);
         CHECK(NumericInputConfig::num_digits(99999) == 5);
+        CHECK(NumericInputConfig::num_digits(UINT32_MAX) == 10);
 
         CHECK(NumericInputConfig { .min_value = 0, .max_value = 0 }.max_value_strlen() == 1);
         CHECK(NumericInputConfig { .min_value = 0, .max_value = 9 }.max_value_strlen() == 1);
