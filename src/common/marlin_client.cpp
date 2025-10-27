@@ -478,13 +478,13 @@ void marlin_set_variable(MarlinVariable<T> &variable, T value) {
     _send_request_to_server_and_wait(request);
 }
 
-void set_target_nozzle(float val, uint8_t hotend) {
+void set_target_nozzle(int16_t val, uint8_t hotend) {
     return marlin_set_variable(marlin_vars().hotend(hotend).target_nozzle, val);
 }
 void set_display_nozzle(float val, uint8_t hotend) {
     return marlin_set_variable(marlin_vars().hotend(hotend).display_nozzle, val);
 }
-void set_target_bed(float val) {
+void set_target_bed(int16_t val) {
     return marlin_set_variable(marlin_vars().target_bed, val);
 }
 void set_fan_speed(uint8_t val) {

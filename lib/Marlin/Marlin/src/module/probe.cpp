@@ -789,7 +789,7 @@ void prepare_for_nozzle_cleaning() {
   if (!do_not_autoretract && retracted_distance < 5.0f) {
 
     // Save target temperature to put back at the end
-    const auto previous_target_temp = static_cast<float>(thermalManager.degTargetHotend(active_extruder));
+    const auto previous_target_temp = thermalManager.degTargetHotend(active_extruder);
 
     // Ensure safe temperature
     const M109Flags flags_pre = {
@@ -797,7 +797,7 @@ void prepare_for_nozzle_cleaning() {
       // We don't have access to this information here, so we use filament presets
       // Filament had to be loaded with the preset's temperature anyway, so we should be able to retract with it
       // TODO: Could be passed to G29 as a parameter
-      .target_temp = static_cast<float>(config_store().get_filament_type(active_extruder).parameters().nozzle_temperature),
+      .target_temp = config_store().get_filament_type(active_extruder).parameters().nozzle_temperature,
     };
     M109_no_parser(active_extruder, flags_pre);
 

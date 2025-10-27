@@ -21,7 +21,7 @@ class CSelftestPart_Loadcell {
     IPartHandler &rStateMachine;
     const LoadcellConfig_t &rConfig;
     SelftestLoadcell_t &rResult;
-    float begin_target_temp;
+    int16_t begin_target_temp;
     uint32_t time_start;
     uint32_t time_start_countdown;
     uint32_t time_start_tap;

@@ -3134,7 +3134,7 @@ void set_exclusive_mode(int exclusive) {
     }
 }
 
-void set_target_bed(float value) {
+void set_target_bed(int16_t value) {
     marlin_vars().target_bed = value;
     thermalManager.setTargetBed(value);
 }
@@ -3530,7 +3530,7 @@ static void _server_set_var(const Request &request) {
 
     // Set normal (non-extruder) variables
     if (variable_identifier == reinterpret_cast<uintptr_t>(&marlin_vars().target_bed)) {
-        marlin_vars().target_bed = request.set_variable.float_value;
+        marlin_vars().target_bed = static_cast<int16_t>(request.set_variable.float_value);
         thermalManager.setTargetBed(marlin_vars().target_bed);
         return;
     }
@@ -3562,7 +3562,7 @@ static void _server_set_var(const Request &request) {
     for (int8_t e = 0; e < HOTENDS; e++) {
         auto &extruder = marlin_vars().hotend(e);
         if (reinterpret_cast<uintptr_t>(&extruder.target_nozzle) == variable_identifier) {
-            extruder.target_nozzle = request.set_variable.float_value;
+            extruder.target_nozzle = static_cast<int16_t>(request.set_variable.float_value);
             thermalManager.setTargetHotend(extruder.target_nozzle, e);
             return;
         } else if (reinterpret_cast<uintptr_t>(&extruder.flow_factor) == variable_identifier) {

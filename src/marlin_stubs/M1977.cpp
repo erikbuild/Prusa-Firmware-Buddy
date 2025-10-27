@@ -290,7 +290,7 @@ namespace state {
                 return PhasesPhaseStepping::finish;
             case Response::_none:
                 if (const float temperature = Temperature::degHotend(hotend); temperature > safe_temperature) {
-                    const uint16_t uint16_temperature = temperature;
+                    const uint16_t uint16_temperature = static_cast<uint16_t>(temperature);
                     const fsm::PhaseData data = {
                         static_cast<uint8_t>((uint16_temperature >> 8) & 0xff),
                         static_cast<uint8_t>((uint16_temperature >> 0) & 0xff),

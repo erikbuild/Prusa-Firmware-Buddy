@@ -31,7 +31,7 @@ static SelftestHeaters_t resultHeaters;
 static void HeatbreakCorrelation(CSelftestPart_Heater &h) {
     assert(h.m_config.type == heater_type_t::Nozzle);
     const uint8_t tool_nr = h.m_config.tool_nr;
-    int32_t temp = thermalManager.degHeatbreak(tool_nr);
+    const float temp = thermalManager.degHeatbreak(tool_nr);
     if ((temp > h.m_config.heatbreak_max_temp) || (temp < h.m_config.heatbreak_min_temp)) {
         resultHeaters.noz[tool_nr].heatbreak_error = true;
         h.state_machine.Fail();

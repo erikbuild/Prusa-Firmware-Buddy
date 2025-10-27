@@ -120,7 +120,7 @@ void waitForHotendTargetTemp(uint16_t delay, F f) {
         safe_delay_keep_alive(delay);
 
         if (mmu2.commandInProgressManager.isCommandInProgress()) {
-            ReportProgressHook(ProgressData(mmu2.commandInProgressManager.commandInProgress(), ExtendedProgressCode::WaitingForTemperature, (thermal_degHotend() - startTemp) * 100 / (thermal_degTargetHotend() - startTemp)));
+            ReportProgressHook(ProgressData(mmu2.commandInProgressManager.commandInProgress(), ExtendedProgressCode::WaitingForTemperature, static_cast<uint8_t>((thermal_degHotend() - startTemp) * 100 / (thermal_degTargetHotend() - startTemp))));
         }
     }
 }

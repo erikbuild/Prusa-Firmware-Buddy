@@ -249,7 +249,7 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
     const float targ_temp = Temperature::degTargetHotend(target_extruder);
 
     if (disp_temp > targ_temp) {
-        Temperature::setTargetHotend(disp_temp, target_extruder);
+        Temperature::setTargetHotend(static_cast<int16_t>(disp_temp), target_extruder);
     }
 
     if (filament_type.has_value()) {
@@ -261,7 +261,7 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
     Pause::Instance().filament_change(settings, is_filament_stuck);
 
     if (disp_temp > targ_temp) {
-        Temperature::setTargetHotend(targ_temp, target_extruder);
+        Temperature::setTargetHotend(static_cast<int16_t>(targ_temp), target_extruder);
     }
 
 #if HAS_TOOLCHANGER()

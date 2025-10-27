@@ -2146,7 +2146,7 @@ void Temperature::init() {
   void Temperature::start_watching_hotend(const uint8_t E_NAME) {
     const uint8_t ee = HOTEND_INDEX;
     if (degTargetHotend(ee) && degHotend(ee) < degTargetHotend(ee) - (WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1)) {
-      watch_hotend[ee].target = degHotend(ee) + WATCH_TEMP_INCREASE;
+      watch_hotend[ee].target = static_cast<int16_t>(degHotend(ee)) + WATCH_TEMP_INCREASE;
       watch_hotend[ee].next_ms = millis() + (WATCH_TEMP_PERIOD) * 1000UL;
     }
     else
@@ -2162,7 +2162,7 @@ void Temperature::init() {
    */
   void Temperature::start_watching_bed() {
     if (degTargetBed() && degBed() < degTargetBed() - (WATCH_BED_TEMP_INCREASE + TEMP_BED_HYSTERESIS + 1)) {
-      watch_bed.target = degBed() + WATCH_BED_TEMP_INCREASE;
+      watch_bed.target = static_cast<int16_t>(degBed()) + WATCH_BED_TEMP_INCREASE;
       watch_bed.next_ms = millis() + (WATCH_BED_TEMP_PERIOD) * 1000UL;
     }
     else
@@ -2181,7 +2181,7 @@ void Temperature::init() {
 
     // If the target temperature is set and the heatbreak is above the target + offset, keep watching the cooling
     if (degTargetHeatbreak(ee) > 0 && degHeatbreak(ee) > degTargetHeatbreak(ee) + HEATBREAK_MAXTEMP_OFFSET) {
-      watch_heatbreak[ee].target = degHeatbreak(ee) - WATCH_HEATBREAK_TEMP_DECREASE;
+      watch_heatbreak[ee].target = static_cast<int16_t>(degHeatbreak(ee)) - WATCH_HEATBREAK_TEMP_DECREASE;
       watch_heatbreak[ee].next_ms = millis() + (WATCH_HEATBREAK_TEMP_PERIOD) * 1000UL;
     }
     else {

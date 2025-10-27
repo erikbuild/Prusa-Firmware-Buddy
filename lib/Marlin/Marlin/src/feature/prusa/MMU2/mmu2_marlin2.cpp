@@ -177,7 +177,7 @@ int16_t thermal_degTargetHotend() {
     return thermalManager.degTargetHotend(active_extruder);
 }
 
-int16_t thermal_degHotend() {
+float thermal_degHotend() {
     return thermalManager.degHotend(active_extruder);
 }
 

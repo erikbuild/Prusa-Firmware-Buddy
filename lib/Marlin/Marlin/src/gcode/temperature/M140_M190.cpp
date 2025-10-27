@@ -52,7 +52,7 @@
  */
 void GcodeSuite::M140() {
   if (DEBUGGING(DRYRUN)) return;
-  if (parser.seenval('S')) thermalManager.setTargetBed(parser.value_celsius());
+  if (parser.seenval('S')) thermalManager.setTargetBed(static_cast<int16_t>(parser.value_celsius()));
 }
 
 /**
@@ -72,7 +72,7 @@ void GcodeSuite::M190() {
 
   const bool no_wait_for_cooling = parser.seenval('S');
   if (no_wait_for_cooling || parser.seenval('R')) {
-    thermalManager.setTargetBed(parser.value_celsius());
+    thermalManager.setTargetBed(static_cast<int16_t>(parser.value_celsius()));
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
       if (parser.value_celsius() > BED_MINTEMP)
         print_job_timer.start();

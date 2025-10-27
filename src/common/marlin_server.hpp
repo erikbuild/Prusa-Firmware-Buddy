@@ -182,7 +182,7 @@ void set_exclusive_mode(int exclusive);
 void set_temp_to_display(float value, uint8_t extruder);
 
 // called to set target bed (sets both marlin_vars and thermal_manager)
-void set_target_bed(float value);
+void set_target_bed(int16_t value);
 
 bool get_media_inserted();
 

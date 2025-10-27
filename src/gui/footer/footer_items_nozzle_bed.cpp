@@ -175,7 +175,7 @@ int FooterItemNozzle::static_readValue() {
     static const uint cold = 45;
 
     const uint current = static_cast<uint>(round(marlin_vars().active_hotend().temp_nozzle));
-    const uint target = static_cast<uint>(round(marlin_vars().active_hotend().target_nozzle));
+    const uint target = static_cast<uint>(marlin_vars().active_hotend().target_nozzle);
     const uint display = static_cast<uint>(round(marlin_vars().active_hotend().display_nozzle));
 #if HAS_TOOLCHANGER()
     const bool no_tool = marlin_vars().active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED;
@@ -205,7 +205,7 @@ int FooterItemNozzlePWM::static_readValue() {
 
 int FooterItemBed::static_readValue() {
     uint current = static_cast<uint>(round(marlin_vars().temp_bed));
-    uint target = static_cast<uint>(round(marlin_vars().target_bed));
+    int16_t target = marlin_vars().target_bed;
 
     HeatState state = getState(current, target, target, COLD); // display == target will disable green blinking preheat
     StateAndTemps temps(state, current, target, false);
