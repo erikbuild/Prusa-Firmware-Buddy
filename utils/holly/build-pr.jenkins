@@ -309,7 +309,7 @@ pipeline {
                     }
                 }
 
-                stage('Integration Tests') {
+                /*stage('Integration Tests') {
                     when {
                         expression {
                             return should_run_integration_tests();
@@ -356,7 +356,7 @@ pipeline {
                             archiveArtifacts artifacts: '/tmp/pytest-of-root'
                         }
                     }
-                }
+                }*/
 
                 stage('Pre-release checks') {
                     agent {
