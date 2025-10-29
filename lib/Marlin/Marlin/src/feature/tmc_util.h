@@ -73,7 +73,7 @@
  * @param steps_per_mm Axis steps per mm
  * @return Feedrate in mm/s
  */
-float tmc_period_to_feedrate(AxisEnum axis_id, uint16_t msteps, const uint32_t period, const uint32_t steps_per_mm);
+float tmc_period_to_feedrate(AxisEnum axis_id, uint16_t msteps, const uint32_t period, const float steps_per_mm);
 
 /**
  * @brief Return the TMC period value for a given feedrate `feedrate`.
@@ -82,7 +82,7 @@ float tmc_period_to_feedrate(AxisEnum axis_id, uint16_t msteps, const uint32_t p
  * @param steps_per_mm Axis steps per mm
  * @return TMC period value
  */
-uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float feedrate, const uint32_t steps_per_mm);
+uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float feedrate, const float steps_per_mm);
 
 uint32_t get_homing_stall_threshold(AxisEnum axis_id);
 

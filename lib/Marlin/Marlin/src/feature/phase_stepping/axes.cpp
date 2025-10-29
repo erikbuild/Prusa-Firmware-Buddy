@@ -12,12 +12,12 @@ struct AxisMotorParams {
     float rev_to_mm = 0;
     int phase_per_ustep = 0;
 
-    static AxisMotorParams make_for_motor(int steps_per_rev, int steps_per_unit, int microsteps) {
+    static AxisMotorParams make_for_motor(int steps_per_rev, float steps_per_unit, int microsteps) {
         return {
             .steps_per_rev = steps_per_rev,
-            .pos_to_phase = 256.f * steps_per_unit / microsteps,
-            .pos_to_steps = float(steps_per_unit),
-            .pos_to_msteps = float(steps_per_unit) / PLANNER_STEPS_MULTIPLIER,
+            .pos_to_phase = 256 * steps_per_unit / microsteps,
+            .pos_to_steps = steps_per_unit,
+            .pos_to_msteps = steps_per_unit / PLANNER_STEPS_MULTIPLIER,
             .mm_to_rev = 1.f / (steps_per_rev * float(microsteps) / steps_per_unit),
             .rev_to_mm = steps_per_rev * float(microsteps) / steps_per_unit,
             .phase_per_ustep = 256 / microsteps
