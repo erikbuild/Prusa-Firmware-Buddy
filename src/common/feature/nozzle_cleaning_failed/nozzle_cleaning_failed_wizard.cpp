@@ -197,8 +197,8 @@ public:
         fsm_change(Phase::purge);
         constexpr int16_t purge_length = 20;
 
-        const int16_t total_length = buddy::auto_retract().retracted_distance().value_or(0) + purge_length; // We need to ensure we purge even if the value is invalid (nullopt)
-        int16_t reference_e_pos = marlin_vars().native_pos[MARLIN_VAR_INDEX_E];
+        const int16_t total_length = static_cast<int16_t>(buddy::auto_retract().retracted_distance().value_or(0)) + purge_length; // We need to ensure we purge even if the value is invalid (nullopt)
+        int16_t reference_e_pos = static_cast<int16_t>(marlin_vars().native_pos[MARLIN_VAR_INDEX_E]);
 
         Subscriber subscriber(marlin_server::idle_publisher, [reference_e_pos, total_length, this] {
             if (marlin_server::get_response_from_phase(Phase::purge) == Response::Abort) {

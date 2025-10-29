@@ -364,7 +364,7 @@ public:
 
     static double get_first_move_delay();
     static uint32_t get_first_move_delay_us() {
-        return get_first_move_delay() * 1e6;
+        return static_cast<uint32_t>(get_first_move_delay() * 1e6);
     }
 
     // This function must be called after the whole actual move segment is processed or the artificially

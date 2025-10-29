@@ -1250,7 +1250,7 @@ uint32_t Pause::parkMoveZPercent(float z_move_len, float xy_move_len) const {
         return 50; // due abs should not happen except both == 0
     }
 
-    return 100.f * (Z_time_ratio / (Z_time_ratio + XY_time_ratio));
+    return static_cast<uint32_t>(100.f * (Z_time_ratio / (Z_time_ratio + XY_time_ratio)));
 }
 
 uint32_t Pause::parkMoveXYPercent(float z_move_len, float xy_move_len) const {

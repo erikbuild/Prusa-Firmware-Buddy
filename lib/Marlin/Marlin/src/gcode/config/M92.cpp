@@ -110,7 +110,7 @@ void GcodeSuite::M92() {
               s.max_jerk.e *= factor;
             #endif
             s.max_feedrate_mm_s[E_AXIS_N(target_extruder)] *= factor;
-            planner.max_acceleration_msteps_per_s2[E_AXIS_N(target_extruder)] *= factor;
+            planner.max_acceleration_msteps_per_s2[E_AXIS_N(target_extruder)] = static_cast<uint32_t>(planner.max_acceleration_msteps_per_s2[E_AXIS_N(target_extruder)] * factor);
           }
           s.axis_steps_per_mm[E_AXIS_N(target_extruder)] = value;
           s.axis_msteps_per_mm[E_AXIS_N(target_extruder)] = value * PLANNER_STEPS_MULTIPLIER;

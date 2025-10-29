@@ -38,7 +38,7 @@ float remote_bed::get_heater_voltage() {
 }
 
 uint16_t remote_bed::get_mcu_temperature() {
-    return buddy::puppies::ac_controller.get_mcu_temp().value_or(0);
+    return static_cast<uint16_t>(buddy::puppies::ac_controller.get_mcu_temp().value_or(0));
 }
 
 void remote_bed::safe_state() {

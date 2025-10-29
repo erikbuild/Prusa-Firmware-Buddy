@@ -382,7 +382,7 @@ int Dwarf::get_heater_pwm() {
     // BFW-6219.
     // Lock guard(*mutex);
 
-    return (float)RegisterGeneralStatus.value.HotendPWMState;
+    return RegisterGeneralStatus.value.HotendPWMState;
 }
 
 bool Dwarf::is_picked() const {

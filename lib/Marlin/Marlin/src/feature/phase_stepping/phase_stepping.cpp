@@ -613,7 +613,7 @@ template <float breakpoint, float endpoint, int reduction_to>
 
     // speed optimized calculation of original formula:
     // current = reduction_to + (speed  - breakpoint) * slope
-    return (speed * slope) + precalculated_const;
+    return static_cast<int>((speed * slope) + precalculated_const);
 }
 
 // Given axis and speed, return current adjustment expressed as range <0, 255>

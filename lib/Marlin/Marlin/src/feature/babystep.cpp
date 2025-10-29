@@ -58,7 +58,7 @@ void Babystep::task() {
 }
 
 void Babystep::add_mm(const AxisEnum axis, const float &mm) {
-  add_steps(axis, mm * planner.settings.axis_steps_per_mm[axis]);
+  add_steps(axis, static_cast<int16_t>(mm * planner.settings.axis_steps_per_mm[axis]));
 }
 
 void Babystep::add_steps(const AxisEnum axis, const int16_t distance) {

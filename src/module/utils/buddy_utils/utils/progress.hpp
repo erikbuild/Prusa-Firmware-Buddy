@@ -13,7 +13,8 @@ struct ProgressSpan {
 
     constexpr ProgressPercent map(float normalized_progress) const {
         assert(normalized_progress >= 0 && normalized_progress <= 1);
-        return min + normalized_progress * (max - min);
+        const float percent = min + normalized_progress * (max - min);
+        return static_cast<ProgressPercent>(percent);
     }
 
     constexpr bool operator==(const ProgressSpan &o) const = default;

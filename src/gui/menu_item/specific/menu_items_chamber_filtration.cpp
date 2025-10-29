@@ -56,7 +56,7 @@ MI_CHAMBER_PRINT_FILTRATION_POWER::MI_CHAMBER_PRINT_FILTRATION_POWER()
     : WiSpin(config_store().chamber_mid_print_filtration_pwm.get().to_percent(), print_power_numeric_config, _("Minimum Power")) {}
 
 void MI_CHAMBER_PRINT_FILTRATION_POWER::OnClick() {
-    config_store().chamber_mid_print_filtration_pwm.set(PWM255::from_percent(value()));
+    config_store().chamber_mid_print_filtration_pwm.set(PWM255::from_percent(static_cast<int8_t>(value())));
 }
 
 void MI_CHAMBER_PRINT_FILTRATION_POWER::Loop() {
@@ -85,7 +85,7 @@ MI_CHAMBER_POST_PRINT_FILTRATION_POWER::MI_CHAMBER_POST_PRINT_FILTRATION_POWER()
     : WiSpin(config_store().chamber_post_print_filtration_pwm.get().to_percent(), post_print_power_numeric_config, _("Post-print Power")) {}
 
 void MI_CHAMBER_POST_PRINT_FILTRATION_POWER::OnClick() {
-    config_store().chamber_post_print_filtration_pwm.set(PWM255::from_percent(value()));
+    config_store().chamber_post_print_filtration_pwm.set(PWM255::from_percent(static_cast<int8_t>(value())));
 }
 
 void MI_CHAMBER_POST_PRINT_FILTRATION_POWER::Loop() {
@@ -104,7 +104,7 @@ MI_CHAMBER_POST_PRINT_FILTRATION_DURATION::MI_CHAMBER_POST_PRINT_FILTRATION_DURA
     : WiSpin(config_store().chamber_post_print_filtration_duration_min.get(), duration_numeric_config, _("Post-print Duration")) {}
 
 void MI_CHAMBER_POST_PRINT_FILTRATION_DURATION::OnClick() {
-    config_store().chamber_post_print_filtration_duration_min.set(value());
+    config_store().chamber_post_print_filtration_duration_min.set(static_cast<uint8_t>(value()));
 }
 
 void MI_CHAMBER_POST_PRINT_FILTRATION_DURATION::Loop() {
@@ -134,7 +134,7 @@ MI_CHAMBER_FILTER_TIME_USED::MI_CHAMBER_FILTER_TIME_USED()
 void MI_CHAMBER_FILTER_TIME_USED::OnClick() {
     // Allow the user to change this value. It is informative for the user comfort and there is no reason to disallow adjusting if it the user decides so
     // At the very least, this will be handy for testing purposes
-    config_store().chamber_filter_time_used_s.set(value() * 3600);
+    config_store().chamber_filter_time_used_s.set(static_cast<uint32_t>(value() * 3600));
 }
 
 void MI_CHAMBER_FILTER_TIME_USED::Loop() {

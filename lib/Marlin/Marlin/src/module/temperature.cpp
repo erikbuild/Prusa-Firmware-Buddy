@@ -486,12 +486,12 @@ volatile bool Temperature::temp_meas_ready = false;
               bias += (d * (t_high - t_low)) / (t_low + t_high);
               LIMIT(bias, 20, max_pow - 20);
               float delta_bias = bias - last_bias;
-              if(delta_bias > 10) bias = last_bias + 10;
-              if(delta_bias < -10) bias = last_bias - 10;
+              if(delta_bias > 10) bias = static_cast<long>(last_bias + 10);
+              if(delta_bias < -10) bias = static_cast<long>(last_bias - 10);
               d = (bias > max_pow >> 1) ? max_pow - 1 - bias : bias;
               float delta_d = d - last_d;
-              if(delta_d > 10) d = last_d + 10;
-              if(delta_d < -10) d = last_d - 10;
+              if(delta_d > 10) d = static_cast<long>(last_d + 10);
+              if(delta_d < -10) d = static_cast<long>(last_d - 10);
 
               SERIAL_ECHOPAIR(MSG_BIAS, bias, MSG_D, d, MSG_T_MIN, minT, MSG_T_MAX, maxT);
               if (cycles > 2) {
@@ -891,7 +891,7 @@ void Temperature::min_temp_error(const heater_ind_t heater) {
 
       constexpr float epsilon = 0.01f;
       constexpr float transport_delay_seconds = 5.60f;
-      constexpr int transport_delay_cycles = transport_delay_seconds * sample_frequency;
+      constexpr int transport_delay_cycles = static_cast<int>(transport_delay_seconds * sample_frequency);
       constexpr float transport_delay_cycles_inv = 1.0f / transport_delay_cycles;
       constexpr float deg_per_second = 3.58f; //!< temperature rise at full power at zero cooling loses
       constexpr float deg_per_cycle = deg_per_second / sample_frequency;

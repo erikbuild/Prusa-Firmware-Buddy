@@ -210,8 +210,8 @@ void EmergencyStop::step() {
     if (want_emergency && !in_emergency()) {
         log_info(EmergencyStop, "Emergency start");
         const auto steps = get_steps_per_unit_z();
-        allowed_steps = allowed_mm * steps;
-        extra_emergency_steps = extra_emergency_mm * steps;
+        allowed_steps = static_cast<int32_t>(allowed_mm * steps);
+        extra_emergency_steps = static_cast<int32_t>(extra_emergency_mm * steps);
         start_z = current_z();
     } else if (!want_emergency && in_emergency()) {
         log_info(EmergencyStop, "Emergency over");

@@ -1036,7 +1036,7 @@ uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float f
   #ifdef STALL_THRESHOLD_TMC2130
           return STALL_THRESHOLD_TMC2130;
   #else
-          return static_cast<uint32_t>(tmc_period_to_feedrate(X_AXIS, get_microsteps_x(), HOMING_FEEDRATE_XY / 60 * 0.8f, get_steps_per_unit_x()));
+          return static_cast<uint32_t>(tmc_period_to_feedrate(X_AXIS, get_microsteps_x(), static_cast<uint32_t>(HOMING_FEEDRATE_XY / 60 * 0.8f), get_steps_per_unit_x()));
   #endif
       case Z_AXIS:
           return 400;

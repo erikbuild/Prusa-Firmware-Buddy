@@ -136,7 +136,7 @@ public:
 
         const float next_delay = abs(next_delay_dir);
         const float next_delay_us = next_delay * m_ticks_per_second + m_step_us_fraction;
-        retval.step_us = next_delay_us;
+        retval.step_us = static_cast<int>(next_delay_us);
         m_step_us_fraction = next_delay_us - retval.step_us;
 
         return retval;
@@ -268,7 +268,7 @@ float get_accelerometer_sample_period(const SamplePeriodProgressHook &progress_h
         accelerometer.clear();
     }
     constexpr int request_samples_num = 20'000;
-    constexpr uint32_t max_duration_ms = 2.f * 1000.f * expected_accelerometer_sample_period * request_samples_num;
+    constexpr uint32_t max_duration_ms = static_cast<uint32_t>(2 * 1000 * expected_accelerometer_sample_period * request_samples_num);
     const uint32_t start_time = millis();
     uint32_t duration_ms = 0;
 
@@ -502,7 +502,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
 
     const bool do_delayed_measurement = (args.measurement_cycles != 0);
     const auto measurement_cycles = do_delayed_measurement ? args.measurement_cycles : args.excitation_cycles;
-    const uint32_t samples_to_collect = excitation_period * measurement_cycles / accelerometer_sample_period;
+    const float samples_to_collect = excitation_period * measurement_cycles / accelerometer_sample_period;
     bool enough_samples_collected = false;
 
     TEMPORARY_AUTO_REPORT_OFF(suspend_auto_report);
@@ -608,7 +608,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
 
         // Then wait for the specified time
         {
-            const uint32_t end_time = millis() + excitation_period * args.wait_cycles * 1000.f;
+            const uint32_t end_time = millis() + static_cast<uint32_t>(excitation_period) * args.wait_cycles * 1000;
             while (ticks_diff(millis(), end_time) > 0) {
                 accelerometer.clear();
                 idle(true);
@@ -618,7 +618,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
         // And then finally do the measurement
         accelerometer.clear();
 
-        uint32_t max_duration_ms = 2.f * 1000.f * samples_to_collect * accelerometer_sample_period;
+        uint32_t max_duration_ms = 2 * 1000 * static_cast<uint32_t>(samples_to_collect * accelerometer_sample_period);
         const uint32_t start_time = millis();
         uint32_t duration_ms = 0;
 
@@ -985,7 +985,7 @@ static void naive_zv_tune(VibrateMeasureParams &args, const VibrateMeasureRange 
 }
 
 static float limit_end_frequency(const float start_frequency, float end_frequency, const float frequency_increment, const size_t max_samples) {
-    const size_t requested_samples = (end_frequency - start_frequency + epsilon) / frequency_increment + 1;
+    const size_t requested_samples = static_cast<size_t>((end_frequency - start_frequency + epsilon) / frequency_increment + 1);
     if (requested_samples > max_samples) {
         end_frequency = start_frequency + (max_samples - 1) * frequency_increment;
     }

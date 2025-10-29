@@ -45,15 +45,15 @@ int phase_stepping::get_motor_steps(AxisEnum axis) {
 }
 
 int32_t phase_stepping::pos_to_phase(AxisEnum axis, float position) {
-    return normalize_motor_phase(position * axis_motor_params[axis].pos_to_phase);
+    return normalize_motor_phase(static_cast<int>(position * axis_motor_params[axis].pos_to_phase));
 }
 
 int32_t phase_stepping::pos_to_steps(AxisEnum axis, float position) {
-    return position * axis_motor_params[static_cast<int>(axis)].pos_to_steps;
+    return static_cast<int32_t>(position * axis_motor_params[static_cast<int>(axis)].pos_to_steps);
 }
 
 int32_t phase_stepping::pos_to_msteps(AxisEnum axis, float position) {
-    return position * axis_motor_params[static_cast<int>(axis)].pos_to_msteps;
+    return static_cast<int32_t>(position * axis_motor_params[static_cast<int>(axis)].pos_to_msteps);
 }
 
 float phase_stepping::mm_to_rev(AxisEnum axis, float mm) {

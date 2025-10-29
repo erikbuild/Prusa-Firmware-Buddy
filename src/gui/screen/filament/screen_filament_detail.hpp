@@ -33,7 +33,7 @@ public:
 
     void OnClick() override {
         if constexpr (std::is_arithmetic_v<T>) {
-            filament_type.modify_parameters([&](auto &p) { p.*param_ = this->value(); });
+            filament_type.modify_parameters([&](auto &p) { p.*param_ = static_cast<int16_t>(this->value()); });
         } else {
             // If T is std::optional, we use utilize the optional support of the spin as well
             filament_type.modify_parameters([&](auto &p) { p.*param_ = this->value_opt(); });

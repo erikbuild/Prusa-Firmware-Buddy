@@ -23,7 +23,7 @@ METRIC_DEF(metric_puppy_average_drift_ppb, "puppy_adrif", METRIC_VALUE_CUSTOM, 0
 TimeSync::TimeSync(const uint8_t id)
     : id(id)
     , drift_filter(120000, 0.01, 120000, 0, [](double value, uint32_t) { return value; })
-    , offset_filter(100, 0.1, 100, 0, [this](double value, uint32_t now_us) { return correct_offset(value, now_us); }) {
+    , offset_filter(100, 0.1, 100, 0, [this](double value, uint32_t now_us) { return correct_offset(static_cast<int32_t>(value), now_us); }) {
     init();
 }
 
@@ -58,9 +58,9 @@ void TimeSync::sync(const uint32_t puppy_time_us, const RequestTiming timing) {
 
     // Compute filtered offset and drift
     if (last_offset_us != std::numeric_limits<int32_t>::max()) {
-        average_puppy_offset_us = offset_filter.filter(puppy_offset_us, buddy_time_us);
+        average_puppy_offset_us = static_cast<int32_t>(offset_filter.filter(puppy_offset_us, buddy_time_us));
         const int32_t puppy_drift_ppb = 1'000'000'000 * static_cast<int64_t>(puppy_offset_us - last_offset_us) / sync_interval_us;
-        average_drift_ppb = drift_filter.filter(puppy_drift_ppb, 0);
+        average_drift_ppb = static_cast<int32_t>(drift_filter.filter(puppy_drift_ppb, 0));
 
 #ifdef TIME_SYNC_DEBUG
         metric_record_custom(&metric_sync_roundtrip_us, ",n=%d v=%d", id, roundtrip_us);

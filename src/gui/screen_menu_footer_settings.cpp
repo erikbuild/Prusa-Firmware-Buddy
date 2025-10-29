@@ -63,7 +63,7 @@ MI_FOOTER_CENTER_N::MI_FOOTER_CENTER_N()
     : WiSpin(uint8_t(FooterLine::GetCenterN()), footer_center_N_spin_config, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 
 void MI_FOOTER_CENTER_N::OnClick() {
-    FooterLine::SetCenterN(value());
+    FooterLine::SetCenterN(static_cast<size_t>(value()));
 }
 
 void ScreenMenuFooterSettings::windowEvent(window_t *sender, GUI_event_t event, void *param) {

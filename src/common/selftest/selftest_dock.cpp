@@ -195,8 +195,8 @@ LoopResult CSelftestPart_Dock::state_measure() {
 
     // Assumes user just positioned head to dock position by hand
     // Reset current position to expected state - otherwise the current position may be negative and this would block G0 movements
-    current_position.x = static_cast<double>(PrusaToolChanger::DOCK_DEFAULT_FIRST_X_MM + (config.dock_id) * PrusaToolChanger::DOCK_OFFSET_X_MM);
-    current_position.y = static_cast<double>(PrusaToolChanger::DOCK_DEFAULT_Y_MM);
+    current_position.x = PrusaToolChanger::DOCK_DEFAULT_FIRST_X_MM + (config.dock_id) * PrusaToolChanger::DOCK_OFFSET_X_MM;
+    current_position.y = PrusaToolChanger::DOCK_DEFAULT_Y_MM;
     planner.synchronize();
     sync_plan_position();
 

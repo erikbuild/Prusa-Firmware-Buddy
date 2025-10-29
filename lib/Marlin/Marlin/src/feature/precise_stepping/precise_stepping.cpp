@@ -616,11 +616,11 @@ void PreciseStepping::reset_from_halt(bool preserve_step_fraction) {
 
 #if HAS_PHASE_STEPPING()
     #ifdef COREXY
-    phase_stepping::set_phase_origin(X_AXIS, total_start_pos[X_AXIS] + total_start_pos[Y_AXIS]);
-    phase_stepping::set_phase_origin(Y_AXIS, total_start_pos[X_AXIS] - total_start_pos[Y_AXIS]);
+    phase_stepping::set_phase_origin(X_AXIS, static_cast<float>(total_start_pos[X_AXIS] + total_start_pos[Y_AXIS]));
+    phase_stepping::set_phase_origin(Y_AXIS, static_cast<float>(total_start_pos[X_AXIS] - total_start_pos[Y_AXIS]));
     #else
-    phase_stepping::set_phase_origin(X_AXIS, total_start_pos[X_AXIS]);
-    phase_stepping::set_phase_origin(Y_AXIS, total_start_pos[Y_AXIS]);
+    phase_stepping::set_phase_origin(X_AXIS, static_cast<float>(total_start_pos[X_AXIS]));
+    phase_stepping::set_phase_origin(Y_AXIS, static_cast<float>(total_start_pos[Y_AXIS]));
     #endif
 #endif
 
@@ -1271,7 +1271,7 @@ static void check_step_time(const step_event_i32_t &step_event) {
     const double last_move_time_end = last_move->print_time + last_move_time;
     assert(last_move_time_end >= prev_move_time);
 
-    const int32_t max_move_ticks = float(last_move_time_end - prev_move_time) * float(STEPPER_TICKS_PER_SEC);
+    const int32_t max_move_ticks = static_cast<int32_t>((last_move_time_end - prev_move_time) * STEPPER_TICKS_PER_SEC);
     assert(step_event.time_ticks <= max_move_ticks);
 }
 #endif

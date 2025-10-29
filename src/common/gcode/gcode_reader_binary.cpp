@@ -860,7 +860,7 @@ uint32_t PrusaPackGcodeReader::get_gcode_stream_size_estimate() {
 
     float compressionn_ratio = static_cast<float>(estimate_context.stats.gcode_stream_size_compressed) / estimate_context.stats.gcode_stream_size_uncompressed;
     uint32_t compressed_gcode_stream = file_size - estimate_context.stats.first_gcode_block_pos;
-    uint32_t uncompressed_file_size = compressed_gcode_stream / compressionn_ratio;
+    uint32_t uncompressed_file_size = static_cast<uint32_t>(compressed_gcode_stream / compressionn_ratio);
 
     [[maybe_unused]] auto seek_res = fseek(file, pos, SEEK_SET);
     assert(seek_res == 0);

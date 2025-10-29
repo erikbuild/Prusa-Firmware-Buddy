@@ -46,7 +46,7 @@ void layout_vertical_stack(const Rect16 &rect, const std::span<window_t *> &wind
 
         const int item_height = std::visit([&]<typename T>(T val) -> int {
             if constexpr (std::is_same_v<T, StackLayoutItem::Stretch>) {
-                const int result = remaining_stretch_space * val.ratio / remaining_stretch_ratio_sum;
+                const int result = static_cast<int>(remaining_stretch_space * val.ratio / remaining_stretch_ratio_sum);
                 remaining_stretch_ratio_sum -= val.ratio;
                 remaining_stretch_space -= result;
                 return result;

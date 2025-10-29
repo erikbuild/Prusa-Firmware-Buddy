@@ -61,8 +61,8 @@ struct HeatbedletInfo {
     bool m_PID_IsON = false;
     float m_PID_Err;
     float m_PID_P_Action;
-    double m_PID_I_Action;
-    double m_PID_I_ActionDelta;
+    float m_PID_I_Action;
+    float m_PID_I_ActionDelta;
     float m_PID_D_Action;
 
     bool m_TemperatureStable_Detected;

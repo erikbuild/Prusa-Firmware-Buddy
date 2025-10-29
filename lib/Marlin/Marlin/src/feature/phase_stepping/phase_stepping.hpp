@@ -271,16 +271,16 @@ template <typename Pos>
 float extract_physical_position(AxisEnum axis, const Pos &pos) {
     #ifdef COREXY
     if (axis == X_AXIS) {
-        return pos[0] + pos[1];
+        return static_cast<float>(pos[0] + pos[1]);
     } else if (axis == Y_AXIS) {
-        return pos[0] - pos[1];
+        return static_cast<float>(pos[0] - pos[1]);
     } else if (axis == Z_AXIS) {
-        return pos[2];
+        return static_cast<float>(pos[2]);
     } else {
         bsod("Unsupported AXIS");
     }
     #else
-    return pos[axis];
+    return static_cast<float>(pos[axis]);
     #endif
 }
 

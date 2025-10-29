@@ -251,7 +251,7 @@ string_view_utf8 FooterItemNozzle::static_makeView(int value) {
 string_view_utf8 FooterItemNozzleDiameter::static_makeView(float value) {
     static std::array<char, 8> buff;
     StringBuilder b(buff);
-    b.append_float((double)value, { .max_decimal_places = nozzle_diameter_spin_config.max_decimal_places, .skip_zero_before_dot = true });
+    b.append_float(value, { .max_decimal_places = nozzle_diameter_spin_config.max_decimal_places, .skip_zero_before_dot = true });
     b.append_string("mm");
     return string_view_utf8::MakeRAM(buff.data());
 }

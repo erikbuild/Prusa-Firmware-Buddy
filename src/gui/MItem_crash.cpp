@@ -55,7 +55,7 @@ MI_CRASH_SENSITIVITY_X::MI_CRASH_SENSITIVITY_X()
 void MI_CRASH_SENSITIVITY_X::OnClick() {
 
     xy_long_t se = crash_s.get_sensitivity();
-    se.x = value();
+    se.x = static_cast<int>(value());
     crash_s.set_sensitivity(se);
 }
 
@@ -64,7 +64,7 @@ MI_CRASH_SENSITIVITY_Y::MI_CRASH_SENSITIVITY_Y()
 }
 void MI_CRASH_SENSITIVITY_Y::OnClick() {
     xy_long_t se = crash_s.get_sensitivity();
-    se.y = value();
+    se.y = static_cast<int>(value());
     crash_s.set_sensitivity(se);
 }
 
@@ -80,7 +80,7 @@ MI_CRASH_MAX_PERIOD_X::MI_CRASH_MAX_PERIOD_X()
 }
 void MI_CRASH_MAX_PERIOD_X::OnClick() {
     xy_long_t mp = crash_s.get_max_period();
-    mp.x = value();
+    mp.x = static_cast<int>(value());
     crash_s.set_max_period(mp);
 }
 
@@ -89,7 +89,7 @@ MI_CRASH_MAX_PERIOD_Y::MI_CRASH_MAX_PERIOD_Y()
 }
 void MI_CRASH_MAX_PERIOD_Y::OnClick() {
     xy_long_t mp = crash_s.get_max_period();
-    mp.y = value();
+    mp.y = static_cast<int>(value());
     crash_s.set_max_period(mp);
 }
 

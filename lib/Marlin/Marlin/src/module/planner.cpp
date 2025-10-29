@@ -1101,8 +1101,8 @@ static void get_multi_axis_position_mm(float* pos, const uint8_t cnt) {
     #if CORE_IS_XY
       int32_t a = axis_steps[A_AXIS];
       int32_t b = axis_steps[B_AXIS];
-      axis_steps[X_AXIS] = (a + b) * 0.5f;
-      axis_steps[Y_AXIS] = CORESIGN(a - b) * 0.5f;
+      axis_steps[X_AXIS] = (a + b) / 2;
+      axis_steps[Y_AXIS] = CORESIGN(a - b) / 2;
     #else
       #error "unsupported core type"
     #endif
@@ -1284,7 +1284,7 @@ bool Planner::_populate_block(block_t * const block,
 
   #if EXTRUDERS
     const float e_msteps_float = de * e_factor[extruder];
-    const uint32_t e_msteps = ABS(e_msteps_float) + 0.5f;
+    const uint32_t e_msteps = static_cast<uint32_t>(std::abs(e_msteps_float) + 0.5f);
   #else
     constexpr uint32_t e_msteps = 0;
   #endif
@@ -1581,7 +1581,7 @@ bool Planner::_populate_block(block_t * const block,
 
       // Do not slowdown when implicitly stopping and/or when the queue still contains at least one command
       if (!draining() && !emptying_buffer && queue.length <= 3 && WITHIN(total_blocks_queued, 2, (BLOCK_BUFFER_SIZE) / (SLOWDOWN_DIVISOR) - 1)) {
-        const int32_t time_diff = settings.min_segment_time_us - segment_time_us;
+        const int32_t time_diff = static_cast<int32_t>(settings.min_segment_time_us) - segment_time_us;
         if (time_diff > 0) {
           // Buffer is draining so add extra time. The amount of time added increases if the buffer is still emptied more.
           const uint32_t nst = segment_time_us + LROUND(2 * time_diff / total_blocks_queued);
@@ -1677,7 +1677,7 @@ bool Planner::_populate_block(block_t * const block,
 
     // Compute and limit the acceleration rate for the trapezoid generator.
     const float msteps_per_mm = block->mstep_event_count * inverse_millimeters;
-    uint32_t accel;
+    float accel;
     if (!block->msteps.a && !block->msteps.b && !block->msteps.c) {
       // convert to: acceleration steps/sec^2
       accel = CEIL(settings.retract_acceleration * msteps_per_mm);
@@ -1685,7 +1685,7 @@ bool Planner::_populate_block(block_t * const block,
     else {
       #define LIMIT_ACCEL_LONG(AXIS,INDX) do{ \
         if (block->msteps[AXIS] && max_acceleration_msteps_per_s2[AXIS+INDX] < accel) { \
-          const uint32_t comp = max_acceleration_msteps_per_s2[AXIS+INDX] * block->mstep_event_count; \
+          const uint32_t comp = static_cast<uint32_t>(max_acceleration_msteps_per_s2[AXIS+INDX] * block->mstep_event_count); \
           if (accel * block->msteps[AXIS] > comp) accel = comp / block->msteps[AXIS]; \
         } \
       }while(0)
@@ -2710,10 +2710,10 @@ void Planner::refresh_acceleration_rates() {
   #endif
   uint32_t highest_rate = 1;
   LOOP_XYZE_N(i) {
-    max_acceleration_msteps_per_s2[i] = settings.max_acceleration_mm_per_s2[i] * settings.axis_msteps_per_mm[i];
-    if (AXIS_CONDITION) NOLESS(highest_rate, max_acceleration_msteps_per_s2[i]);
+    max_acceleration_msteps_per_s2[i] = static_cast<uint32_t>(settings.max_acceleration_mm_per_s2[i] * settings.axis_msteps_per_mm[i]);
+    if (AXIS_CONDITION) NOLESS(highest_rate, static_cast<uint32_t>(max_acceleration_msteps_per_s2[i]));
   }
-  cutoff_long = 4294967295UL / highest_rate; // 0xFFFFFFFFUL
+  cutoff_long = std::numeric_limits<uint32_t>::max() / highest_rate;
   #if HAS_LINEAR_E_JERK
     recalculate_max_e_jerk();
   #endif
@@ -2768,7 +2768,7 @@ void Planner::set_max_acceleration(const uint8_t axis, float targetValue) {
   #endif
 
   auto new_settings = user_settings;
-  new_settings.max_acceleration_mm_per_s2[axis] = targetValue;
+  new_settings.max_acceleration_mm_per_s2[axis] = static_cast<uint32_t>(targetValue);
   apply_settings(new_settings);
 }
 

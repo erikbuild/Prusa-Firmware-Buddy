@@ -629,7 +629,7 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
 
         // Sync enough samples before moving downwards to ensure the pre-compression line can be fit
         // when the Z move is very short
-        loadcell.WaitBarrier(ticks_us() + loadcell.analysis.analysisLookback * 1e6);
+        loadcell.WaitBarrier(static_cast<uint32_t>(ticks_us() + loadcell.analysis.analysisLookback * 1e6f));
       #endif
 
       // Probe downward slowly to find the bed
@@ -1027,8 +1027,8 @@ float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE
   }
 
   {
-      int logical_x = LOGICAL_X_POSITION(pos.x);
-      int logical_y = LOGICAL_Y_POSITION(pos.y);
+      int logical_x = static_cast<int>(LOGICAL_X_POSITION(pos.x));
+      int logical_y = static_cast<int>(LOGICAL_Y_POSITION(pos.y));
       metric_record_custom(&metric_probe_z, " x=%i,y=%i,v=%.3f", logical_x, logical_y, (double)measured_z);
   }
 

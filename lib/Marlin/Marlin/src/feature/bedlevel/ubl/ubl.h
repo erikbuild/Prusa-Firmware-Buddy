@@ -127,12 +127,12 @@ class unified_bed_leveling {
     FORCE_INLINE static void set_z(const int8_t px, const int8_t py, const float &z) { z_values[px][py] = z; }
 
     static int8_t cell_index_x(const float &x) {
-      const int8_t cx = (x - (MESH_MIN_X)) * RECIPROCAL(MESH_X_DIST);
+      const int8_t cx = static_cast<int8_t>((x - (MESH_MIN_X)) * RECIPROCAL(MESH_X_DIST));
       return cap_cell_index_x(cx);
     }
 
     static int8_t cell_index_y(const float &y) {
-      const int8_t cy = (y - (MESH_MIN_Y)) * RECIPROCAL(MESH_Y_DIST);
+      const int8_t cy = static_cast<int8_t>((y - (MESH_MIN_Y)) * RECIPROCAL(MESH_Y_DIST));
       return cap_cell_index_y(cy);
     }
 
@@ -161,11 +161,11 @@ class unified_bed_leveling {
     static inline xy_int8_t cell_indexes(const xy_pos_t &xy) { return cell_indexes(xy.x, xy.y); }
 
     static int8_t closest_x_index(const float &x) {
-      const int8_t px = (x - (MESH_MIN_X) + (MESH_X_DIST) * 0.5f) * RECIPROCAL(MESH_X_DIST);
+      const int8_t px = static_cast<int8_t>((x - (MESH_MIN_X) + (MESH_X_DIST) * 0.5f) * RECIPROCAL(MESH_X_DIST));
       return WITHIN(px, 0, GRID_MAX_POINTS_X - 1) ? px : -1;
     }
     static int8_t closest_y_index(const float &y) {
-      const int8_t py = (y - (MESH_MIN_Y) + (MESH_Y_DIST) * 0.5f) * RECIPROCAL(MESH_Y_DIST);
+      const int8_t py = static_cast<int8_t>((y - (MESH_MIN_Y) + (MESH_Y_DIST) * 0.5f) * RECIPROCAL(MESH_Y_DIST));
       return WITHIN(py, 0, GRID_MAX_POINTS_Y - 1) ? py : -1;
     }
     static inline xy_int8_t closest_indexes(const xy_pos_t &xy) {
