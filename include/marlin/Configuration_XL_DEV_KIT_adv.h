@@ -836,14 +836,6 @@
         //   Filament can be extruded repeatedly from the Filament Change menu
         //   until extrusion is consistent, and to purge old filament.
     #define ADVANCED_PAUSE_RESUME_PRIME 0 // (mm) Extra distance to prime nozzle after returning from park.
-
-// Filament Unload does a Retract, Delay, and Purge first:
-    #define FILAMENT_UNLOAD_RETRACT_LENGTH 0 // (mm) Unload initial retract length.
-    #define FILAMENT_UNLOAD_DELAY 0 // (ms) Delay for the filament to cool after retract.
-    #define FILAMENT_UNLOAD_PURGE_LENGTH 15 // (mm) An unretract is done, then this length is purged.
-    #define FILAMENT_UNLOAD_PURGE_FEEDRATE 24 // (mm/s)
-	#define FILAMENT_UNLOAD_PHASE1_LENGHT       20  // (mm)fast phase
-	#define FILAMENT_UNLOAD_PHASE2_LENGHT       30  // (mm)slow phase
 #endif
 
 // @section tmc
