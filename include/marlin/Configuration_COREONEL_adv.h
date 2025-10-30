@@ -848,8 +848,6 @@
     #define FILAMENT_UNLOAD_PURGE_FEEDRATE 66 // (mm/s)
     #define FILAMENT_UNLOAD_PHASE1_LENGHT 20 // (mm)fast phase
     #define FILAMENT_UNLOAD_PHASE2_LENGHT 30 // (mm)slow phase
-
-    #define PAUSE_PARK_NOZZLE_TIMEOUT 45 // (seconds) Time limit before the nozzle is turned off for safety.
 #endif
 
 // @section tmc
