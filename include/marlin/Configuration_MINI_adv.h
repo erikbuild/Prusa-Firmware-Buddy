@@ -825,7 +825,6 @@
     #define FILAMENT_UNLOAD_PHASE2_LENGHT 45 // (mm)slow phase
 
     #define PAUSE_PARK_NOZZLE_TIMEOUT 45 // (seconds) Time limit before the nozzle is turned off for safety.
-    #define FILAMENT_CHANGE_ALERT_BEEPS 10 // Number of alert beeps to play when a response is needed.
 #endif
 
 // @section tmc
