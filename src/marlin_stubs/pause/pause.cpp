@@ -96,8 +96,7 @@ static void nozzle_cleaner_load_or_runout_load_gcode(Pause::LoadType load_type) 
 #if (!ENABLED(EXTENSIBLE_UI)) || \
     (!ENABLED(ADVANCED_PAUSE_FEATURE)) || \
     HAS_FILAMENT_SENSOR || \
-    NUM_RUNOUT_SENSORS > 1 || \
-    ENABLED(ADVANCED_PAUSE_CONTINUOUS_PURGE)
+    NUM_RUNOUT_SENSORS > 1
 #error unsupported
 #endif
 // clang-format on
