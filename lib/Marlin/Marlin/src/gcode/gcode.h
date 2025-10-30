@@ -195,8 +195,8 @@
  * M604 - Abort (serial) print
  * M605 - Set Dual X-Carriage movement mode: "M605 S<mode> [X<x_offset>] [R<temp_offset>]". (Requires MULTI_NOZZLE_DUPLICATION)
  * M666 - Set/get offsets for dual endstops (Requires [XYZ]_DUAL_ENDSTOPS).
- * M701 - Load filament (Requires FILAMENT_LOAD_UNLOAD_GCODES)
- * M702 - Unload filament (Requires FILAMENT_LOAD_UNLOAD_GCODES)
+ * M701 - Load filament
+ * M702 - Unload filament
  * M851 - Set Z probe's XYZ offsets in current units. (Negative values: X=left, Y=front, Z=below)
  * M852 - Set skew factors: "M852 [I<xy>] [J<xz>] [K<yz>]". (Requires SKEW_CORRECTION_GCODE, and SKEW_CORRECTION_FOR_Z for IJ)
  * M876 - Handle Prompt Response. (Requires HOST_PROMPT_SUPPORT and not EMERGENCY_PARSER)
@@ -721,10 +721,8 @@ private:
     static void M666();
   #endif
 
-  #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
-    static void M701();
-    static void M702();
-  #endif
+  static void M701();
+  static void M702();
 
   #if HAS_BED_PROBE
     static void M851();

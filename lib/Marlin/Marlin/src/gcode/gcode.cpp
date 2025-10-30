@@ -596,10 +596,8 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 605: M605(); break;                                  // M605: Set Dual X Carriage movement mode
       #endif
 
-      #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
-        case 701: M701(); break;                                  // M701: Load Filament
-        case 702: M702(); break;                                  // M702: Unload Filament
-      #endif
+      case 701: M701(); break;                                    // M701: Load Filament
+      case 702: M702(); break;                                    // M702: Unload Filament
 
       #if ENABLED(MAX7219_GCODE)
         case 7219: M7219(); break;                                // M7219: Set LEDs, columns, and rows

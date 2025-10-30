@@ -1,11 +1,4 @@
 #include "config_features.h"
-
-// clang-format off
-#if !ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
-    #error unsupported
-#endif
-// clang-format on
-
 #include "../../../lib/Marlin/Marlin/src/gcode/gcode.h"
 #include "../../../lib/Marlin/Marlin/src/Marlin.h"
 #include "../../../lib/Marlin/Marlin/src/module/motion.h"

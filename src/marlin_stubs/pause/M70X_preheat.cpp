@@ -2,13 +2,6 @@
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <config_store/store_instance.hpp>
 #include <option/has_mmu2.h>
-
-// clang-format off
-#if !ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
-    #error unsupported
-#endif
-// clang-format on
-
 #include "../../../lib/Marlin/Marlin/src/Marlin.h"
 #include "../../../lib/Marlin/Marlin/src/module/motion.h"
 #include "../../../lib/Marlin/Marlin/src/module/planner.h"
