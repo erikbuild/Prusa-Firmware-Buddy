@@ -49,7 +49,7 @@
  * G5: Cubic B-spline
  */
 void GcodeSuite::G5() {
-  if (MOTION_CONDITIONS) {
+  if (IsRunning()) {
 
     #if ENABLED(CNC_WORKSPACE_PLANES)
       if (workspace_plane != PLANE_XY) {

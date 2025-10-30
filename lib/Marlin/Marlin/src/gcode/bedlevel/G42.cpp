@@ -53,7 +53,7 @@
  *    G42 I3 J4 P F3000 ; Move the probe to grid coordinate 3, 4
  */
 void GcodeSuite::G42() {
-  if (MOTION_CONDITIONS) {
+  if (IsRunning()) {
     const bool hasI = parser.seenval('I');
     const int8_t ix = hasI ? parser.value_int() : 0;
     const bool hasJ = parser.seenval('J');

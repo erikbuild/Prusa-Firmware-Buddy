@@ -1,8 +1,7 @@
 #include "config_features.h"
 
 // clang-format off
-#if (!ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)) || \
-    ENABLED(NO_MOTION_BEFORE_HOMING)
+#if !ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
     #error unsupported
 #endif
 // clang-format on

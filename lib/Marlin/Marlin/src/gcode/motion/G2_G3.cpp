@@ -435,7 +435,7 @@ void plan_arc(
  *      G3 X20 Y12 R14   ; CCW circle with r=14 ending at X20 Y12
  */
 void GcodeSuite::G2_G3(const bool clockwise) {
-  if (!MOTION_CONDITIONS) return;
+  if (!IsRunning()) return;
 
   TERN_(FULL_REPORT_TO_HOST_FEATURE, set_and_report_grblstate(M_RUNNING));
 
