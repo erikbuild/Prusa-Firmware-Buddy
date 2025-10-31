@@ -356,18 +356,20 @@ void MediaPrefetchManager::fetch_routine(AsyncJobExecutionControl &control) {
                 return;
             }
 
-            if (!s.gcode_reader->valid_for_print(true)) {
-                log_debug(MediaPrefetch, "Gcode corrupted, not valid for print");
+            // Needs to be checked BEFORE has_error, because it is STATEFUL and can set the error checked by has_error
+            // Reportedly, this is needed to extract the symmetric cipher info from the file.
+            const bool is_valid_for_print = s.gcode_reader->valid_for_print(true);
 
+            if (s.gcode_reader->has_error()) {
+                log_debug(MediaPrefetch, "reader error: %s", s.gcode_reader->error_str());
+                fetch_handle_error(control, IGcodeReader::Result_t::RESULT_CORRUPT);
+                return;
+            }
+
+            if (!is_valid_for_print) {
                 // Not valid with no error means we just don't have enough data yet
-                if (s.gcode_reader->has_error()) {
-                    log_debug(MediaPrefetch, "reader error: %s", s.gcode_reader->error_str());
-                    fetch_handle_error(control, IGcodeReader::Result_t::RESULT_CORRUPT);
-                }
-
-                // close the reader, so we try to initialize again next time
-                s.gcode_reader = {};
-
+                // Why this needs to be handled separately out of stream_gcode_start?
+                fetch_handle_error(control, IGcodeReader::Result_t::RESULT_OUT_OF_RANGE);
                 return;
             }
 
