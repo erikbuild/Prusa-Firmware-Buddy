@@ -202,7 +202,6 @@ PausePrivatePhase::PausePrivatePhase()
 void PausePrivatePhase::setPhase(PhasesLoadUnload ph) {
     phase = ph;
     if (load_unload_mode) {
-        log_info(MarlinServer, "setPhase %i %i", int(ph), int(state));
         // Do not call progress_mapper.update_progress() here. We want to completely skip states that do nothing and remap the remaining progress
         // If we update progress here, the phase would be included in the progress mapping
         marlin_server::fsm_change(phase, fsm::serialize_data(FSMLoadUnloadData { .mode = *load_unload_mode, .progress = progress_mapper.current_progress() }));
