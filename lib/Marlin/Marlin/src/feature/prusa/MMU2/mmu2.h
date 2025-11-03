@@ -23,10 +23,6 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if HAS_FILAMENT_SENSOR
-    #include "../runout.h"
-#endif
-
 struct E_Step;
 
 class MMU2 {
@@ -69,11 +65,6 @@ private:
 
     static inline void set_runout_valid(const bool valid) {
         finda_runout_valid = valid;
-#if HAS_FILAMENT_SENSOR
-        if (valid) {
-            runout.reset();
-        }
-#endif
     }
 };
 

@@ -94,9 +94,7 @@ static void nozzle_cleaner_load_or_runout_load_gcode(Pause::LoadType load_type) 
 // filament sensor is no longer part of marlin thus it must be disabled
 // clang-format off
 #if (!ENABLED(EXTENSIBLE_UI)) || \
-    (!ENABLED(ADVANCED_PAUSE_FEATURE)) || \
-    HAS_FILAMENT_SENSOR || \
-    NUM_RUNOUT_SENSORS > 1
+    (!ENABLED(ADVANCED_PAUSE_FEATURE))
 #error unsupported
 #endif
 // clang-format on

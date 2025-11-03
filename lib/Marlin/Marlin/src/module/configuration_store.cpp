@@ -87,10 +87,6 @@
   #include "../feature/backlash.h"
 #endif
 
-#if HAS_FILAMENT_SENSOR
-  #include "../feature/runout.h"
-#endif
-
 #if EXTRUDERS > 1
   #include "tool_change.h"
   void M217_report();
@@ -256,18 +252,6 @@ void MarlinSettings::reset() {
 
   #if HAS_HOTEND_OFFSET
     reset_hotend_offsets();
-  #endif
-
-  //
-  // Filament Runout Sensor
-  //
-
-  #if HAS_FILAMENT_SENSOR
-    runout.enabled = true;
-    runout.reset();
-    #ifdef FILAMENT_RUNOUT_DISTANCE_MM
-      runout.set_runout_distance(FILAMENT_RUNOUT_DISTANCE_MM);
-    #endif
   #endif
 
   //
@@ -1123,17 +1107,6 @@ void MarlinSettings::reset() {
         " Z", LINEAR_UNIT(backlash.distance_mm.z)
         #ifdef BACKLASH_SMOOTHING_MM
           , " S", LINEAR_UNIT(backlash.smoothing_mm)
-        #endif
-      );
-    #endif
-
-    #if HAS_FILAMENT_SENSOR
-      CONFIG_ECHO_HEADING("Filament runout sensor:");
-      CONFIG_ECHO_START();
-      SERIAL_ECHOLNPAIR(
-        "  M412 S", int(runout.enabled)
-        #ifdef FILAMENT_RUNOUT_DISTANCE_MM
-          , " D", LINEAR_UNIT(runout.runout_distance())
         #endif
       );
     #endif

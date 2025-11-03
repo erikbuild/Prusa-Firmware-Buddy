@@ -114,10 +114,6 @@
   #include "feature/pause.h"
 #endif
 
-#if HAS_FILAMENT_SENSOR
-  #include "feature/runout.h"
-#endif
-
 #if HAS_CASE_LIGHT
   #include "feature/caselight.h"
 #endif
@@ -251,7 +247,6 @@ bool anyHeatherIsActive() {
 
 /**
  * Manage several activities:
- *  - Check for Filament Runout
  *  - Keep the command buffer full
  *  - Check if CHDK_PIN needs to go LOW
  *  - Check for KILL button held down
@@ -261,10 +256,6 @@ bool anyHeatherIsActive() {
  */
 
 void manage_inactivity() {
-
-  #if HAS_FILAMENT_SENSOR
-    runout.run();
-  #endif
 
   if (queue.length < BUFSIZE) queue.get_available_commands();
 
@@ -452,10 +443,6 @@ void stop() {
 void setup() {
 
   HAL_init();
-
-  #if HAS_FILAMENT_SENSOR
-    runout.setup();
-  #endif
 
   setup_killpin();
 

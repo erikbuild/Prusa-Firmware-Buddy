@@ -37,7 +37,6 @@
   #undef PIDTEMP
   #undef AUTOTEMP
   #undef PID_EXTRUSION_SCALING
-  #undef FILAMENT_RUNOUT_SENSOR
   #undef ADVANCED_PAUSE_FEATURE
   #undef FILAMENT_RUNOUT_DISTANCE_MM
   #undef DISABLE_INACTIVE_EXTRUDER
@@ -88,13 +87,5 @@
   #endif
   #ifndef ACTION_ON_SAFETY_TIMER_EXPIRED
     #define ACTION_ON_SAFETY_TIMER_EXPIRED "safety_timer_expired"
-  #endif
-  #if HAS_FILAMENT_SENSOR
-    #ifndef ACTION_ON_FILAMENT_RUNOUT
-      #define ACTION_ON_FILAMENT_RUNOUT "filament_runout"
-    #endif
-    #ifndef ACTION_REASON_ON_FILAMENT_RUNOUT
-      #define ACTION_REASON_ON_FILAMENT_RUNOUT "filament_runout"
-    #endif
   #endif
 #endif

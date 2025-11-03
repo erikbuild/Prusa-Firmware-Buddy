@@ -173,7 +173,6 @@
  * M402 - Deactivate and stow Z probe. (Requires a probe)
  * M403 - Set filament type for PRUSA MMU2
  * M410 - Quickstop. Abort all planned moves.
- * M412 - Enable / Disable Filament Runout Detection. (Requires FILAMENT_RUNOUT_SENSOR)
  * M420 - Enable/Disable Leveling (with current values) S1=enable S0=disable (Requires ABL)
  * M421 - Set a single Z coordinate in the Mesh Leveling grid. X<units> Y<units> Z<units> (Requires AUTO_BED_LEVELING_UBL)
  * M422 - Set Z Stepper automatic alignment position using probe. X<units> Y<units> A<axis> (Requires Z_STEPPER_AUTO_ALIGN)
@@ -655,10 +654,6 @@ private:
 
   #if HAS_MMU2()
     static void M403();
-  #endif
-
-  #if HAS_FILAMENT_SENSOR
-    static void M412();
   #endif
 
   #if HAS_LEVELING

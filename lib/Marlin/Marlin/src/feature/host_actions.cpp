@@ -33,10 +33,6 @@
   #include "../gcode/queue.h"
 #endif
 
-#if HAS_FILAMENT_SENSOR
-  #include "runout.h"
-#endif
-
 void host_action(const char * const pstr, const bool eol) {
   SERIAL_ECHOPGM("//action:");
   serialprintPGM(pstr);
@@ -121,25 +117,11 @@ void host_action(const char * const pstr, const bool eol) {
           host_action_prompt_end();   // Close current prompt
           host_action_prompt_begin(PSTR("Paused"));
           host_action_prompt_button(PSTR("Purge More"));
-          if (false
-            #if HAS_FILAMENT_SENSOR
-              || runout.filament_ran_out
-            #endif
-          )
-            host_action_prompt_button(PSTR("DisableRunout"));
-          else {
             host_prompt_reason = PROMPT_FILAMENT_RUNOUT;
             host_action_prompt_button(PSTR("Continue"));
-          }
           host_action_prompt_show();
         }
         else if (response == 1) {
-          #if HAS_FILAMENT_SENSOR
-            if (runout.filament_ran_out) {
-              runout.enabled = false;
-              runout.reset();
-            }
-          #endif
           #if ENABLED(ADVANCED_PAUSE_FEATURE)
             pause_menu_response = PAUSE_RESPONSE_RESUME_PRINT;
           #endif

@@ -784,7 +784,6 @@
  * Adds the GCode M600 for initiating filament change.
  *
  * Requires an LCD display.
- * This feature is required for the default FILAMENT_RUNOUT_SCRIPT.
  */
 #define ADVANCED_PAUSE_FEATURE HAS_PAUSE()
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
