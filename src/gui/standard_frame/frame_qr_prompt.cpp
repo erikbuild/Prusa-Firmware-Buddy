@@ -109,12 +109,14 @@ FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, cons
 {
     StringBuilder(link_buffer)
         .append_string("prusa.io/")
-        .append_string(qr_suffix);
+        .append_string(qr_suffix)
+        .check();
     link.SetText(string_view_utf8::MakeRAM(link_buffer.data()));
 
     qr.get_string_builder()
         .append_string("https://prusa.io/")
-        .append_string(qr_suffix);
+        .append_string(qr_suffix)
+        .check();
 
     qr.SetAlignment(Align_t::CenterTop());
     parent->CaptureNormalWindow(radio);
