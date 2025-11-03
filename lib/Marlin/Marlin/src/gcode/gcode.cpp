@@ -496,10 +496,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 304: M304(); break;                                  // M304: Set bed PID parameters
       #endif
 
-      #if ENABLED(PHOTO_GCODE)
-        case 240: M240(); break;                                  // M240: Trigger a camera
-      #endif
-
       #if HAS_I2C_EXPANDER()
         case 260: M260(); break;                                  // M260: Send data to an i2c slave
         case 261: M261(); break;                                  // M261: Request data from an i2c slave

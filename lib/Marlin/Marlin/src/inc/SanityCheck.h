@@ -273,8 +273,6 @@
   #error "G0_FEEDRATE is now used to set the G0 feedrate. Please update your configuration."
 #elif defined(MBL_Z_STEP)
   #error "MBL_Z_STEP is now MESH_EDIT_Z_STEP. Please update your configuration."
-#elif defined(CHDK)
-  #error "CHDK is now CHDK_PIN. Please update your Configuration_adv.h."
 #elif defined(SPINDLE_LASER_ENABLE)
   #error "SPINDLE_LASER_ENABLE is now SPINDLE_FEATURE or LASER_FEATURE. Please update your Configuration_adv.h."
 #elif defined(SPINDLE_LASER_ENABLE_PIN)
@@ -1508,23 +1506,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 
 #if ENABLED(GRADIENT_MIX) && MIXING_VIRTUAL_TOOLS < 2
   #error "GRADIENT_MIX requires 2 or more MIXING_VIRTUAL_TOOLS."
-#endif
-
-/**
- * Photo G-code requirements
- */
-#if ENABLED(PHOTO_GCODE)
-  #if (PIN_EXISTS(CHDK) + PIN_EXISTS(PHOTOGRAPH) + defined(PHOTO_SWITCH_POSITION)) > 1
-    #error "Please define only one of CHDK_PIN, PHOTOGRAPH_PIN, or PHOTO_SWITCH_POSITION."
-  #elif defined(PHOTO_SWITCH_POSITION) && !defined(PHOTO_POSITION)
-    #error "PHOTO_SWITCH_POSITION requires PHOTO_POSITION. Please update your Configuration_adv.h."
-  #elif PIN_EXISTS(CHDK) && defined(CHDK_DELAY)
-    #error "CHDK_DELAY has been replaced by PHOTO_SWITCH_MS. Please update your Configuration_adv.h."
-  #elif PIN_EXISTS(CHDK) && !defined(PHOTO_SWITCH_MS)
-    #error "PHOTO_SWITCH_MS is required with CHDK_PIN. Please update your Configuration_adv.h."
-  #elif defined(PHOTO_RETRACT_MM)
-    static_assert(PHOTO_RETRACT_MM + 0 >= 0, "PHOTO_RETRACT_MM must be >= 0.");
-  #endif
 #endif
 
 /**

@@ -168,7 +168,7 @@ PauseMenuResponse pause_menu_response;
 // cannot be class member (externed in marlin)
 uint8_t did_pause_print = 0;
 
-// cannot be class member (externed in marlin and used by M240 and tool_change)
+// cannot be class member (externed in marlin and used by tool_change)
 void do_pause_e_move(const float &length, const feedRate_t &fr_mm_s) {
     mapi::extruder_move(length, fr_mm_s);
     planner.synchronize();

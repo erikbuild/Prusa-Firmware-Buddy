@@ -152,7 +152,6 @@
  * M218 - Set/get a tool offset: "M218 T<index> X<offset> Y<offset>". (Requires 2 or more extruders)
  * M220 - Set Feedrate Percentage: "M220 S<percent>" (i.e., "FR" on the LCD)
  * M221 - Set Flow Percentage: "M221 S<percent>"
- * M240 - Trigger a camera to take a photograph. (Requires PHOTO_GCODE)
  * M260 - i2c Send Data
  * M261 - i2c Request Data
  * M280 - Set servo position absolute: "M280 P<index> S<angle|µs>". (Requires servos)
@@ -594,10 +593,6 @@ private:
 
   #if EXTRUDERS
     static void M221();
-  #endif
-
-  #if ENABLED(PHOTO_GCODE)
-    static void M240();
   #endif
 
   #if HAS_I2C_EXPANDER()
