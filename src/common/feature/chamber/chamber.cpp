@@ -43,6 +43,10 @@ namespace {
 constexpr buddy::Temperature chamber_maxtemp = 65;
 constexpr buddy::Temperature chamber_maxtemp_safety_margin = 5;
 } // namespace
+#elif PRINTER_IS_PRUSA_XL()
+// Not used for chamber on XL
+#else
+    #error
 #endif
 
 namespace buddy {
