@@ -5203,7 +5203,7 @@
             }
         },
         {
-            "name": "anfc-c0_debug_boot",
+            "name": "anfc_debug_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5217,7 +5217,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5254,7 +5254,7 @@
             }
         },
         {
-            "name": "anfc-c0_debug_noboot",
+            "name": "anfc_debug_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5268,7 +5268,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5305,7 +5305,7 @@
             }
         },
         {
-            "name": "anfc-c0_release_boot",
+            "name": "anfc_release_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5319,7 +5319,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5356,7 +5356,7 @@
             }
         },
         {
-            "name": "anfc-c0_release_noboot",
+            "name": "anfc_release_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5370,7 +5370,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5407,7 +5407,7 @@
             }
         },
         {
-            "name": "anfc-c0-uart_debug_boot",
+            "name": "anfc-uart_debug_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5421,7 +5421,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5458,7 +5458,7 @@
             }
         },
         {
-            "name": "anfc-c0-uart_debug_noboot",
+            "name": "anfc-uart_debug_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5472,7 +5472,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5509,7 +5509,7 @@
             }
         },
         {
-            "name": "anfc-c0-uart_release_boot",
+            "name": "anfc-uart_release_boot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5523,7 +5523,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5560,7 +5560,7 @@
             }
         },
         {
-            "name": "anfc-c0-uart_release_noboot",
+            "name": "anfc-uart_release_noboot",
             "generator": "Ninja",
             "binaryDir": "build-vscode-anfc",
             "cacheVariables": {
@@ -5574,7 +5574,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5625,7 +5625,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5676,7 +5676,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5727,7 +5727,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -5778,7 +5778,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "ANFC_C0"
+                    "value": "ANFC"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",

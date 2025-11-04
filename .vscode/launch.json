@@ -291,7 +291,7 @@
                 "set $pc = &Reset_Handler"
             ],
             "configFiles": [
-                "${workspaceRoot}/utils/debug/anfc_c0.cfg",
+                "${workspaceRoot}/utils/debug/anfc.cfg",
             ],
             "toolchainPrefix": "arm-none-eabi",
             "device": "STM32C092RC",

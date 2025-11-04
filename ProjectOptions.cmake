@@ -27,7 +27,7 @@ set(BOARD_VALID_OPTS
     "MODULARBED"
     "XL_DEV_KIT_XLB"
     "XBUDDY_EXTENSION"
-    "ANFC_C0"
+    "ANFC"
     )
 set(MCU_VALID_OPTS
     "<default>"
@@ -175,7 +175,7 @@ if(${MCU} STREQUAL "<default>")
     set(MCU "STM32G070RBT6")
   elseif(${BOARD} STREQUAL "XBUDDY_EXTENSION")
     set(MCU "STM32H503CBU7")
-  elseif(${BOARD} STREQUAL "ANFC_C0")
+  elseif(${BOARD} STREQUAL "ANFC")
     set(MCU "STM32C092KCUX")
   else()
     message(FATAL_ERROR "Don't know what MCU to set as default for this board/version")
