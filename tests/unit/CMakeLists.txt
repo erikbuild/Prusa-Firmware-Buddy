@@ -21,9 +21,9 @@ link_libraries(bsod_catch)
 include_directories(${CMAKE_SOURCE_DIR}/tests/stubs/host)
 
 # include catch_discover_tests function from Catch2
-include(${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
+include(${Catch2_SOURCE_DIR}/extras/Catch.cmake)
 add_library(catch_main ${CMAKE_CURRENT_SOURCE_DIR}/test_main.cpp)
-target_link_libraries(catch_main Catch2::Catch2 CppStdExtensions)
+target_link_libraries(catch_main PRIVATE Catch2::Catch2WithMain)
 
 # registers given target as a catch test
 function(add_catch_test target)
