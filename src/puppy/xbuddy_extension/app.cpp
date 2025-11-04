@@ -233,6 +233,7 @@ void app::run() {
     hal::rs485::start_receiving();
     for (;;) {
         const auto request = hal::rs485::receive_timeout(1);
+
         if (request.empty()) {
             cyphal::run_for_a_while();
         } else {
@@ -244,5 +245,7 @@ void app::run() {
                 hal::rs485::start_receiving();
             }
         }
+
+        hal::rs485::housekeeping();
     }
 }

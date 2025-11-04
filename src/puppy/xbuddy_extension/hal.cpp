@@ -13,6 +13,7 @@
 #include <stm32h5xx_ll_rng.h>
 
 #include <utils/timing/timer_event_period_tracker.hpp>
+#include <atomic>
 
 const std::span<std::byte> hal::memory::peripheral_address_region(reinterpret_cast<std::byte *>(PERIPH_BASE_NS), 0x10000000);
 
@@ -20,6 +21,7 @@ static UART_HandleTypeDef huart_rs485;
 alignas(uint16_t) static std::byte rx_buf_rs485[256];
 static volatile size_t rx_len_rs485;
 static freertos::BinarySemaphore tx_semaphore_rs485;
+static std::atomic<bool> ore_occurred_rs485;
 
 static UART_HandleTypeDef huart_mmu;
 static std::byte rx_byte_mmu;
@@ -87,8 +89,12 @@ extern "C" void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
 }
 
 extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    // TODO
-    (void)huart;
+    // TODO add ORE handling for MMU too
+    if (huart->ErrorCode & HAL_UART_ERROR_ORE) {
+        if (huart == &huart_rs485) {
+            ore_occurred_rs485 = true;
+        }
+    }
 }
 
 static void rx_callback_rs485(UART_HandleTypeDef *huart, uint16_t size) {
@@ -847,6 +853,14 @@ std::span<std::byte> hal::rs485::receive_timeout(uint32_t timeout_ms) {
 
 void hal::rs485::transmit_and_then_start_receiving(std::span<std::byte> payload) {
     HAL_UART_Transmit_IT(&huart_rs485, (uint8_t *)payload.data(), payload.size());
+}
+
+void hal::rs485::housekeeping() {
+    if (ore_occurred_rs485) {
+        HAL_UART_AbortReceive_IT(&huart_rs485);
+        HAL_UARTEx_ReceiveToIdle_IT(&huart_rs485, (uint8_t *)rx_buf_rs485, sizeof(rx_buf_rs485));
+        ore_occurred_rs485 = false;
+    }
 }
 
 void hal::mmu::transmit(std::span<const std::byte> payload) {
