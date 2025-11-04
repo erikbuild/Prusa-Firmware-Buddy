@@ -113,9 +113,7 @@ private:
     void intro() {
         switch (marlin_server::wait_for_response(PhaseGearboxAlignment::intro)) {
         case Response::Skip:
-            // Skipped gearvox alignment is considered passed;
-            // this is meant for users with prebuilt printer.
-            finish(TestResult_Passed);
+            finish(TestResult_Skipped);
             return;
         case Response::Continue:
 #if HAS_TOOLCHANGER()
