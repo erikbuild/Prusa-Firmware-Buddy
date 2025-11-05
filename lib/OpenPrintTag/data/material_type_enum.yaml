@@ -188,7 +188,7 @@
   abbreviation: PCL
   name: Polycaprolactone
   category: FFF
-  description: A biodegradable polyester with a very low melting point (~627°C), allowing it to be reshaped by hand in hot water.
+  description: A biodegradable polyester with a very low melting point (~60 °C), allowing it to be reshaped by hand in hot water.
 
 - key: 32
   abbreviation: PES
@@ -231,3 +231,9 @@
   name: Thermoplastic Polyimide
   category: FFF
   description: An ultra-high-performance polymer with one of the highest glass transition temperatures and excellent thermal stability.
+
+- key: 39
+  abbreviation: SBS
+  name: Styrene-Butadiene-Styrene
+  category: FFF
+  description: A flexible, rubber-like material (a type of TPE) known for good durability. It is relatively easy to print for a flexible filament.

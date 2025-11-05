@@ -1,12 +1,12 @@
 import os
 import ndef
 import yaml
-import cbor2_local as cbor2
+import cbor2
 import io
 import types
 import typing
 
-from fields import Fields
+from fields import Fields, EncodeConfig
 
 
 class Region:
@@ -15,7 +15,6 @@ class Region:
     fields: Fields
     record: typing.Any
     is_corrupt: bool = False
-    canonical: bool = True  # Encode the CBOR canonically (order the map entries)
 
     def __init__(self, record, offset: int, memory: memoryview, fields: Fields):
         assert type(memory) is memoryview
@@ -55,31 +54,29 @@ class Region:
         cbor2.load(data_io)
         return data_io.tell()
 
-    def read(self):
+    def read(self, out_unknown_fields: dict[any, any] = None) -> dict[str, any]:
         if self.is_corrupt:
             return {}
 
-        return self.fields.decode(cbor2.loads(self.memory))
+        return self.fields.decode(io.BytesIO(self.memory), out_unknown_fields=out_unknown_fields)
 
-    def encode(self, data):
-        data_io = io.BytesIO()
-        encoder = cbor2.CBOREncoder(
-            data_io,
-            canonical=self.record.canonical,
-            indefinite_containers=self.record.encode_indefinite_containers,
-        )
+    def write(self, data: dict[str, any]):
+        return self.update(data, clear=True)
 
-        # Encode float optimally, even in non-canonical mode
-        encoder._encoders[float] = cbor2.CBOREncoder.encode_minimal_float
+    def update(self, update_fields: dict[str, any], remove_fields: list[str] = [], clear: bool = False):
+        if len(update_fields) == 0 and len(remove_fields) == 0 and not clear:
+            # Nothing to do
+            return
 
-        encoder.encode(data)
-        return data_io.getvalue()
+        encoded = self.fields.update(original_data=io.BytesIO(self.memory) if not clear else None, update_fields=update_fields, remove_fields=remove_fields, config=self.record.encode_config)
+        encoded_len = len(encoded)
 
-    def write(self, data):
+        assert encoded_len <= len(self.memory), f"Data of size {encoded_len} does not fit into region of size {len(self.memory)}"
+
+        # Write zeroes to the whole region
         self.memory[:] = bytearray(len(self.memory))
-        encoded = self.encode(self.fields.encode(data))
-        assert len(encoded) <= len(self.memory), f"Data of size {len(encoded)} does not fit into region of size {len(self.memory)}"
-        self.memory[0 : len(encoded)] = encoded
+        self.memory[0:encoded_len] = encoded
+        return encoded_len
 
 
 class Record:
@@ -96,12 +93,13 @@ class Record:
 
     regions: dict[str, Region] = None
 
-    encode_indefinite_containers: bool = False
+    encode_config: EncodeConfig
 
     def __init__(self, config_file: str, data: memoryview):
         assert type(data) is memoryview
 
         self.data = data
+        self.encode_config = EncodeConfig()
 
         self.config_dir = os.path.dirname(config_file)
         with open(config_file, "r") as f:
@@ -111,6 +109,7 @@ class Record:
         match self.config.root:
             case "none":
                 self.payload = data
+                self.payload_offset = 0
 
             case "nfcv":
                 data_io = io.BytesIO(data)
