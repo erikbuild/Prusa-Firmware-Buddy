@@ -11,13 +11,13 @@
 
 #include <openprinttag/opt_reader.hpp>
 #include <openprinttag/opt_backend.hpp>
+#include <openprinttag/opt_fields.hpp>
 
 using namespace openprinttag;
 
 using ByteString = std::basic_string<std::byte>;
 
 #include <autogen/sample_data.cpp.in>
-#include <autogen/field_enums.hpp>
 
 class OPTBackend_Mock final : public OPTBackend {
 public:
@@ -124,18 +124,8 @@ public:
     }
 };
 
-Section section_for_field(MetaField) {
-    return Section::meta;
-}
-Section section_for_field(MainField) {
-    return Section::main;
-}
-Section section_for_field(AuxField) {
-    return Section::auxiliary;
-}
-
 OPTReader::TagField field(auto f, TagID tag = 0) {
-    return { .tag = tag, .section = section_for_field(f), .field = std::to_underlying(f) };
+    return { .tag = tag, .section = field_section(f), .field = std::to_underlying(f) };
 };
 
 namespace std {
