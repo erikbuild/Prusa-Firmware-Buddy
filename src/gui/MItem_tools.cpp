@@ -468,14 +468,6 @@ MI_INFO_MMU::MI_INFO_MMU()
     : WI_INFO_t(_(label), nullptr, is_enabled_t::yes, is_hidden_t::yes) {
 }
 
-MI_INFO_BOARD::MI_INFO_BOARD()
-    : WI_INFO_t(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
-}
-
-MI_INFO_SERIAL_NUM::MI_INFO_SERIAL_NUM()
-    : WiInfo<28>(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
-}
-
 /*****************************************************************************/
 // MI_FS_AUTOLOAD
 static is_hidden_t get_autoload_hide_state() {

@@ -9,7 +9,9 @@
 
 using ScreenMenuInfo__ = ScreenMenu<EFooter::On, MI_RETURN,
     MI_NETWORK_STATUS,
-    MI_SENSOR_INFO, MI_VERSION_INFO, MI_PRINT_STATISTICS>;
+    MI_SENSOR_INFO,
+    MI_VERSION_INFO,
+    MI_PRINT_STATISTICS>;
 
 class ScreenMenuInfo : public ScreenMenuInfo__ {
     virtual void windowEvent(window_t *sender, GUI_event_t event, void *param) override;

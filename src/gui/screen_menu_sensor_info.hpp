@@ -13,7 +13,6 @@
 #include <screen_menu.hpp>
 #include <MItem_tools.hpp>
 
-#include <MItem_love_board.hpp>
 #include <MItem_menus.hpp>
 #include <MItem_print.hpp>
 

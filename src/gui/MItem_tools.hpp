@@ -245,20 +245,6 @@ public:
     MI_INFO_MMU();
 };
 
-class MI_INFO_BOARD : public WI_INFO_t {
-    static constexpr const char *const label = N_("Buddy Board");
-
-public:
-    MI_INFO_BOARD();
-};
-
-class MI_INFO_SERIAL_NUM : public WiInfo<28> {
-    static constexpr const char *const label = N_("Serial Number");
-
-public:
-    MI_INFO_SERIAL_NUM();
-};
-
 class MI_FS_AUTOLOAD : public WI_ICON_SWITCH_OFF_ON_t {
     constexpr static const char *const label = N_("Filament Autoloading");
 

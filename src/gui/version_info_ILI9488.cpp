@@ -5,7 +5,6 @@
 #include <version/version.hpp>
 #include "img_resources.hpp"
 #include "shared_config.h" //BOOTLOADER_VERSION_ADDRESS
-#include "../common/otp.hpp"
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <utils/string_builder.hpp>
 
@@ -19,17 +18,6 @@
 ScreenMenuVersionInfo::ScreenMenuVersionInfo()
     : ScreenMenuVersionInfo__(_(label)) {
     header.SetIcon(&img::info_16x16);
-
-    {
-        serial_nr_t serial_nr;
-        otp_get_serial_nr(serial_nr);
-        uint8_t bom_id = otp_get_bom_id().value_or(0);
-
-        // len of serial number plus '/' and max 3-digit number and null
-        ArrayStringBuilder<serial_nr.size() + 1 + 3 + 1> sb;
-        sb.append_printf("%s/%u", serial_nr.data(), bom_id);
-        Item<MI_INFO_SERIAL_NUM>().ChangeInformation(sb.str());
-    }
 
     Item<MI_INFO_FW>().ChangeInformation(version::project_version_full);
 
@@ -59,12 +47,6 @@ ScreenMenuVersionInfo::ScreenMenuVersionInfo()
         Item<MI_INFO_MMU>().hide();
     }
 #endif
-
-    {
-        ArrayStringBuilder<4> sb;
-        sb.append_printf("%d", otp_get_board_revision().value_or(0));
-        Item<MI_INFO_BOARD>().ChangeInformation(sb.str());
-    }
 
     EnableLongHoldScreenAction();
 }
