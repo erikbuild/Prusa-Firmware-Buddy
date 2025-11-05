@@ -5,6 +5,7 @@
 #include <device/hal.h>
 #include <option/can_bus_type.h>
 #include <option/nfc_board_has_left_right_detection_pin.h>
+#include <option/nfc_board_has_filament_sensors.h>
 
 extern "C" {
 #include <FreeRTOSConfig.h>
@@ -64,7 +65,9 @@ UART_HandleTypeDef huart1;
     #error
 #endif
 SPI_HandleTypeDef hspi1;
+#if NFC_BOARD_HAS_FILAMENT_SENSORS()
 TIM_HandleTypeDef htim3;
+#endif
 TIM_HandleTypeDef htim2;
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
@@ -92,7 +95,9 @@ void hal::init() {
     #error
 #endif
     hal::init_tim2();
+#if NFC_BOARD_HAS_FILAMENT_SENSORS()
     hal::init_tim3();
+#endif
     hal::init_adc();
 }
 
@@ -341,65 +346,104 @@ void hal::init_spi() {
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 }
 
+static constexpr uint32_t source_clock_speed = 48'000'000;
+
+#if NFC_BOARD_HAS_FILAMENT_SENSORS()
+void hal::set_fs_led_l_pwm(uint8_t pwm) {
+    using namespace hal::peripherals;
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, pwm);
+}
+
+void hal::set_fs_led_r_pwm(uint8_t pwm) {
+    using namespace hal::peripherals;
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm);
+}
+
 void hal::init_tim3() {
     using namespace hal::peripherals;
 
-    GPIO_InitTypeDef GPIO_InitStruct {};
-    TIM_ClockConfigTypeDef sClockSourceConfig = {};
-    TIM_MasterConfigTypeDef sMasterConfig = {};
-    TIM_OC_InitTypeDef sConfigOC = {};
-
-    // FS_LED_PWM_R - PA8 - TIM3_CH3
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    GPIO_InitStruct.Pin = GPIO_PIN_8;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF3_TIM3;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    // FS_LED_PWM2_L - PC6 - TIM3_CH1
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    GPIO_InitStruct.Pin = GPIO_PIN_6;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF3_TIM3;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    __HAL_RCC_TIM3_CLK_ENABLE();
+
+    {
+        // FS_LED_PWM_R - PA8 - TIM3_CH3
+        static constexpr GPIO_InitTypeDef GPIO_InitStruct {
+            .Pin = GPIO_PIN_8,
+            .Mode = GPIO_MODE_AF_PP,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_LOW,
+            .Alternate = GPIO_AF11_TIM3,
+        };
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    }
+
+    {
+        // FS_LED_PWM2_L - PC6 - TIM3_CH1
+        static constexpr GPIO_InitTypeDef GPIO_InitStruct {
+            .Pin = GPIO_PIN_6,
+            .Mode = GPIO_MODE_AF_PP,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_LOW,
+            .Alternate = GPIO_AF1_TIM3,
+        };
+        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    }
+
+    static constexpr uint32_t desired_frequency = 1'000;
+    static constexpr uint32_t clock_resolution = 256;
+    static constexpr uint32_t prescaler = (source_clock_speed / (desired_frequency * clock_resolution)) - 1;
 
     // common part for STM32C0 timer initialization
     htim3.Instance = TIM3;
-    htim3.Init.Prescaler = 0;
+    htim3.Init.Prescaler = static_cast<uint16_t>(prescaler);
     htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim3.Init.Period = 65535;
+    htim3.Init.Period = clock_resolution - 1;
     htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
-        hal::panic();
-    }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
-        hal::panic();
-    }
     if (HAL_TIM_PWM_Init(&htim3) != HAL_OK) {
         hal::panic();
     }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
-        hal::panic();
+
+    {
+        TIM_MasterConfigTypeDef sMasterConfig = {};
+        sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+        sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+        if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
+            hal::panic();
+        }
     }
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = 0;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
-        hal::panic();
-    }
-    if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK) {
-        hal::panic();
+
+    {
+        static constexpr TIM_OC_InitTypeDef sConfigOC = {
+            .OCMode = TIM_OCMODE_PWM1,
+            .Pulse = clock_resolution - 1,
+            .OCPolarity = TIM_OCPOLARITY_HIGH,
+            .OCNPolarity = TIM_OCNPOLARITY_HIGH,
+            .OCFastMode = TIM_OCFAST_DISABLE,
+            .OCIdleState = TIM_OCIDLESTATE_RESET,
+            .OCNIdleState = TIM_OCNIDLESTATE_RESET,
+        };
+
+        if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+            hal::panic();
+        }
+
+        if (HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1) != HAL_OK) {
+            hal::panic();
+        }
+
+        if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK) {
+            hal::panic();
+        }
+
+        if (HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3) != HAL_OK) {
+            hal::panic();
+        }
     }
 }
+
+#endif
 
 void hal::init_tim2() {
     using namespace hal::peripherals;

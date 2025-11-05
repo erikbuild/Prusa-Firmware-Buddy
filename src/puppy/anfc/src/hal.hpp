@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include <option/can_bus_type.h>
+#include <option/nfc_board_has_filament_sensors.h>
 
 namespace hal {
 
@@ -26,6 +27,11 @@ static constexpr const bool enable_bit_rate_switch =
 
 void init();
 void set_status_led(bool set);
+
+#if NFC_BOARD_HAS_FILAMENT_SENSORS()
+void set_fs_led_r_pwm(uint8_t pwm);
+void set_fs_led_l_pwm(uint8_t pwm);
+#endif
 
 void __attribute__((noreturn)) panic();
 void __attribute__((noreturn)) reset();
