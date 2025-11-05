@@ -17,7 +17,7 @@ inline ostream &operator<<(ostream &os, const basic_string_view<byte> &bytes) {
     const auto flags = os.flags();
     os << hex;
     for (auto byte : bytes) {
-        os << (int)byte;
+        os << setw(2) << setfill('0') << (int)byte;
     }
     os.flags(flags);
     return os;
