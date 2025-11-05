@@ -505,6 +505,7 @@ void hal::init_adc() {
 
     ADC_ChannelConfTypeDef sConfig = {};
     // Ambient Temperature - ADC1_IN0 - PA0
+    static_assert(std::to_underlying(adc::Channel::board_temp) == 0); // verify chanel number to enum mapping
     sConfig.Channel = ADC_CHANNEL_0;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
