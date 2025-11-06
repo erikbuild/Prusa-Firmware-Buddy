@@ -51745,4 +51745,4 @@ constexpr uint8_t font_bold_13x22_data[] = {
     0x00,
     0x00,
 };
-constexpr font_t font_bold_13x22 = { 13, 22, 7, font_bold_13x22_data, FontCharacterSet::full };
+constexpr font_t font_bold_13x22 = { 13, 22, FontCharacterSet::full, font_bold_13x22_data };

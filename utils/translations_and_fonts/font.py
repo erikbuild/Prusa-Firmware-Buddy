@@ -68,7 +68,7 @@ def bin2cc(charset_data, dst_file, var_name, w, h, charset_enum):
 
     dst_file.write('};\n')
     dst_file.write(
-        f'constexpr font_t {font_name} = {{ {w}, {h}, {math.ceil(w/2)}, {font_name}_data, FontCharacterSet::{charset_enum} }};\n'
+        f'constexpr font_t {font_name} = {{ {w}, {h}, FontCharacterSet::{charset_enum}, {font_name}_data }};\n'
     )
 
 

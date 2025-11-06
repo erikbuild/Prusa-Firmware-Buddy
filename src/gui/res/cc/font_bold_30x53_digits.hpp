@@ -12721,4 +12721,4 @@ constexpr uint8_t font_bold_30x53_data[] = {
     0x00,
     0x00,
 };
-constexpr font_t font_bold_30x53 = { 30, 53, 15, font_bold_30x53_data, FontCharacterSet::digits };
+constexpr font_t font_bold_30x53 = { 30, 53, FontCharacterSet::digits, font_bold_30x53_data };

@@ -227,7 +227,7 @@ void store_char_in_buffer(uint16_t char_cnt, uint16_t curr_char_idx, unichar c, 
 
     const uint16_t char_w = pf->w; // char width
     const uint16_t char_h = pf->h; // char height
-    const uint8_t bpr = pf->bpr; // bytes per row
+    const uint8_t bpr = (char_w + 1) / 2; // bytes per row
     const uint16_t bpc = bpr * char_h; // bytes per char
     const uint8_t bpp = 8 * bpr / char_w; // bits per pixel
     const uint8_t ppb = 8 / bpp; // pixels per byte
