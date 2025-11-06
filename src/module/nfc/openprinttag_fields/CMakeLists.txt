@@ -1,6 +1,6 @@
 # Library that autogenerates enums based on YAMLS in the openprinttag repository
 
-add_library(openprinttag_fields)
+add_library(openprinttag_fields STATIC)
 
 set(OPT_DIR "${PROJECT_ROOT_DIR}/lib/OpenPrintTag")
 set(GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/autogen_include/openprinttag/autogen")
