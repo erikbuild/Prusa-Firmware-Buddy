@@ -1,0 +1,1 @@
+target_sources(firmware PRIVATE gcode_exception.cpp gcode_exception_instance.cpp)
