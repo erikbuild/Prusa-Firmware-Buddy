@@ -251,34 +251,32 @@ void store_char_in_buffer(uint16_t char_cnt, uint16_t curr_char_idx, unichar c, 
 
     const uint16_t char_w = pf->w; // char width
     const uint16_t char_h = pf->h; // char height
-    const uint8_t bpr = (char_w + 1) / 2; // bytes per row
-    const uint16_t bpc = bpr * char_h; // bytes per char
-    const uint8_t bpp = 8 * bpr / char_w; // bits per pixel
-    const uint8_t ppb = 8 / bpp; // pixels per byte
-    const uint8_t pms = std::min(size_t((1 << bpp) - 1), BuffAlphaLen - 1); // pixel mask, cannot be bigger than array to store alpha channel combinations
-
-    uint8_t *pch; // character data pointer
-    uint8_t crd = 0; // current row byte data
-    uint8_t *pc; // character data row pointer
+    const uint16_t bpc = (char_w * char_h + 1) >> 1; // bytes per char
+    const uint8_t pms = 15; // pixel mask, cannot be bigger than array to store alpha channel combinations
 
     DispBuffer buff(pms, clr_bg, clr_fg);
 
-    uint32_t buffer_offset = 0; // buffer byte offset
+    uint8_t *pch = (uint8_t *)(pf->pcs) + (chr * bpc); // font data pointer
+    bool load = true; // load next byte from font data?
+    uint8_t crd = 0; // current byte of font data
 
-    pch = (uint8_t *)(pf->pcs) + (chr * bpc);
-
-    uint8_t pixel_size = STORE_FN_PIXEL_SIZE;
-
+    uint32_t buffer_offset = curr_char_idx * char_w * STORE_FN_PIXEL_SIZE;
+    uint32_t buffer_row_increment = (char_cnt - 1) * char_w * STORE_FN_PIXEL_SIZE;
     for (uint16_t j = 0; j < char_h; j++) {
-        pc = pch + j * bpr;
-        buffer_offset = j * char_cnt * char_w * pixel_size + curr_char_idx * char_w * pixel_size;
         for (uint16_t i = 0; i < char_w; i++) {
-            if ((i % ppb) == 0) {
-                crd = *(pc++);
+            uint8_t color;
+            if (load) {
+                crd = *pch++;
+                color = crd >> 4;
+            } else {
+                color = crd & 0x0f;
             }
-            buff.OffsetInsert(crd >> (8 - bpp), buffer_offset + i * pixel_size);
-            crd <<= bpp;
+            load = !load;
+
+            buff.OffsetInsert(color, buffer_offset);
+            buffer_offset += STORE_FN_PIXEL_SIZE;
         }
+        buffer_offset += buffer_row_increment;
     }
 }
 

@@ -21,8 +21,7 @@ def png2font(src_img, char_w, char_h, columns, rows):
 
     # Initialize charset data with zeros
     # Constants for 4 bits per pixel (2 pixels per byte)
-    char_bpr = (char_w + 1) >> 1  # bytes per row
-    char_size = char_h * char_bpr  # character size in bytes
+    char_size = (char_h * char_w + 1) >> 1  # character size in bytes
     char_count = columns * rows  # character count
     charset_size = char_size * char_count  # charset size in bytes
     charset_data = bytearray(charset_size)
@@ -41,12 +40,11 @@ def png2font(src_img, char_w, char_h, columns, rows):
             char_offs = char_code * char_size  # character offset in charset [bytes]
             char_x = x % char_w  # character pixel x-coord (0..char_w-1)
             char_y = y % char_h  # character pixel y-coord (0..char_h-1)
-            char_row_offs = char_y * char_bpr  # character row offset [bytes]
-            char_pix_offs = char_x >> 1  # character pixel offset [bytes]
-            offs = char_offs + char_row_offs + char_pix_offs  # total offset in charset [bytes]
+            char_pix_offs = char_y * char_w + char_x  # character pixel offset [pixels]
+            offs = char_offs + char_pix_offs >> 1  # total offset in charset [bytes]
 
             # Calculate bit shift (4 bits per pixel, 2 pixels per byte)
-            i = char_x % 2
+            i = char_pix_offs % 2
             i = 4 - (i * 4)
 
             # Update character pixel data
