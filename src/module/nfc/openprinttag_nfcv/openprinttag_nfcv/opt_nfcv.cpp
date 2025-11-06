@@ -7,7 +7,7 @@ using namespace openprinttag;
 
 namespace {
 
-OPTBackend::IOError to_prusa_error(nfcv::Error error) {
+OPTBackend::IOError to_backend_error(nfcv::Error error) {
     using E = nfcv::Error;
     using R = OPTBackend::IOError;
 
@@ -38,8 +38,8 @@ OPTBackend::IOError to_prusa_error(nfcv::Error error) {
     std::unreachable();
 }
 
-std::unexpected<OPTBackend::IOError> to_prusa_unexpected(nfcv::Error error) {
-    return std::unexpected(to_prusa_error(error));
+std::unexpected<OPTBackend::IOError> to_backend_unexpected(nfcv::Error error) {
+    return std::unexpected(to_backend_error(error));
 }
 
 } // namespace
@@ -62,7 +62,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::io_op(TagID tag, PayloadPos start, s
 
     nfcv::FieldGuard field_guard { reader, tag_data.antenna };
     if (!field_guard.result) {
-        return to_prusa_unexpected(field_guard.result.error());
+        return to_backend_unexpected(field_guard.result.error());
     }
 
     if (const auto r = impl(tag_data); !r.has_value()) {
@@ -257,7 +257,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::initialize_tag(TagID tag, const Init
             // The chip will stop responding if we try to do a command with wrong password, we need to power cycle
             reader.field_down();
             if (auto r = reader.field_up(tag_data.antenna); !r) {
-                return std::unexpected(to_prusa_error(r.error()));
+                return std::unexpected(to_backend_error(r.error()));
             }
 
             if (clear_on_failure) {
@@ -273,7 +273,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::initialize_tag(TagID tag, const Init
 
     nfcv::FieldGuard field_guard(reader, tag_data.antenna);
     if (!field_guard.result) {
-        return to_prusa_unexpected(field_guard.result.error());
+        return to_backend_unexpected(field_guard.result.error());
     }
 
     // Set up various registers
@@ -408,7 +408,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::unlock_tag(TagID tag, uint32_t passw
 
     nfcv::FieldGuard field_guard(reader, tag_data.antenna);
     if (!field_guard.result) {
-        return to_prusa_unexpected(field_guard.result.error());
+        return to_backend_unexpected(field_guard.result.error());
     }
 
     for (const auto reg : { nfcv::ReaderWriterInterface::Register::read_password, nfcv::ReaderWriterInterface::Register::write_password }) {
@@ -444,7 +444,7 @@ bool OPTBackend_NFCV::is_valid(TagID tag_id) {
 
 std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag, nfcv::Error error) {
     if (!is_valid(tag)) {
-        return std::unexpected(to_prusa_error(error));
+        return std::unexpected(to_backend_error(error));
     }
 
     if (error == nfcv::Error::no_response) {
@@ -455,7 +455,7 @@ std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag,
         }
     }
 
-    return std::unexpected(to_prusa_error(error));
+    return std::unexpected(to_backend_error(error));
 }
 
 void OPTBackend_NFCV::run_next_discovery() {
