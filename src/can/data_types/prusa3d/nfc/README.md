@@ -1,4 +1,4 @@
-# Prusa NFC reader protocol
+# OpenPrintTag reader protocol
 
 ## Basic concepts
 NFC reads/writes are asynchronous.

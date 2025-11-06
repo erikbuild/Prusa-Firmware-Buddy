@@ -55,7 +55,7 @@ public:
         /// Re-reading the section won't help, but clear_section() could.
         region_corrupt = 3,
 
-        /// The tag has been determined to be not a valid Prusa NFC tag (wrong mime, corrupted contents, ...)
+        /// The tag has been determined to be not a valid OpenPrintTag tag (wrong mime, corrupted contents, ...)
         /// Retrying won't help, the chip needs to be re-formatted.
         tag_invalid = 4,
 

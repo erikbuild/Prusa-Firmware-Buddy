@@ -13,7 +13,7 @@ uint8 WRITE_PROTECTED = 2
 # Re-reading the section won't help, but clear_section() could.
 uint8 REGION_CORRUPT = 3
 
-# The tag has been determined to be not a valid Prusa NFC tag (wrong mime, corrupted contents, ...)
+# The tag has been determined to be not a valid OpenPrintTag (wrong mime, corrupted contents, ...)
 # Retrying won't help, the tag needs to be re-formatted.
 uint8 TAG_INVALID = 4
 
