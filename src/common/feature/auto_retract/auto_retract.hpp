@@ -35,7 +35,8 @@ public:
     void maybe_deretract_to_nozzle();
 
     /// Retracts the filament quickly to minimal distance, with no ramming
-    void ensure_retracted_no_ramming();
+    /// @param purge_length if > 0.f, extrudes this much before retracting
+    void ensure_retracted_no_ramming(float purge_length = 0.f);
 
     /// Save values to persistent storage
     void set_retracted_distance(uint8_t hotend, std::optional<float> distance);

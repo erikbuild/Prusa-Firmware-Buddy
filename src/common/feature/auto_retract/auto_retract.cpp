@@ -172,7 +172,8 @@ void AutoRetract::maybe_deretract_to_nozzle() {
     set_retracted_distance(hotend, 0.0f);
 }
 
-void AutoRetract::ensure_retracted_no_ramming() {
+void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
+    assert(purge_length >= 0.0f); // no sense having negative purge length
     if (this->retracted_distance() >= minimum_auto_retract_distance) {
         return; // should not do anything when already retracted more than standard distance
     }
@@ -187,6 +188,11 @@ void AutoRetract::ensure_retracted_no_ramming() {
 
     {
         BlockEStallDetection estall_blocker;
+        // Purge a little
+        if (purge_length > 0.f) {
+            mapi::extruder_move(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE);
+            planner.synchronize();
+        }
         // Retract
         const float retracted_distance = this->retracted_distance().value_or(0.f);
         // There's a generic trap on the extruder moves, which prevents any extruder retraction once we are already auto-retracted.
