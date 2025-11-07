@@ -101,6 +101,8 @@
   #include <feature/ceiling_clearance/ceiling_clearance.hpp>
 #endif
 
+#include <feature/gcode_exception/gcode_exception.hpp>
+
 #define XYZ_CONSTS(T, NAME, OPT) const PROGMEM XYZval<T> NAME##_P = { X_##OPT, Y_##OPT, Z_##OPT }
 
 XYZ_CONSTS(float, base_min_pos,   MIN_POS);
@@ -1210,7 +1212,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     }
   #endif
 
-  const auto initial_quick_stop_count = planner.quick_stop_count;
+  const auto initial_throw_count = gcode_exceptions().throw_count();
 
   // Set flags for X, Y, Z motor locking
   #if HAS_EXTRA_ENDSTOPS
@@ -1283,7 +1285,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Home 2 Slow:");
 
     // Early abort if a quick stop was issued
-    if (planner.draining() || planner.quick_stop_count != initial_quick_stop_count)
+    if (planner.draining() || gcode_exceptions().throw_count() != initial_throw_count)
       return NAN;
 
     #if HOMING_Z_WITH_PROBE && ENABLED(BLTOUCH) && DISABLED(BLTOUCH_HS_MODE)
@@ -1427,7 +1429,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
   #endif
 
     // Check if any of the moves were aborted and avoid setting any state
-    if (planner.draining() || planner.quick_stop_count != initial_quick_stop_count)
+    if (planner.draining() || gcode_exceptions().throw_count() != initial_throw_count)
       return NAN;
 
   if (!invert_home_dir) {

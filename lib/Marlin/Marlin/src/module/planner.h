@@ -351,10 +351,6 @@ class Planner {
      */
     static xyze_long_t position;
 
-    /// Increased with every quick stop
-    /// Useful for tracking whether a quick stop occured during a procedure
-    static uint32_t quick_stop_count;
-
   private:
     /**
      * Speed of previous path line segment
@@ -390,9 +386,6 @@ class Planner {
       // Segment times (in µs). Used for speed calculations
       static xy_ulong_t axis_segment_time_us[3];
     #endif
-
-    // A flag to drop queuing of blocks and abort any pending move
-    static bool draining_buffer;
 
     // A flag to indicate that that buffer is being emptied intentionally (= we're in the middle of planner.synchronize())
     static bool emptying_buffer;
@@ -762,19 +755,20 @@ class Planner {
      */
     static abce_pos_t get_machine_position_mm() { return position_float; }
 
-    // Called to force a quick stop of the machine (for example, when
-    // a Full Shutdown is required, or when endstops are hit).
-    // Will implicitly call drain().
+    // Deprecated alias for gcode_exceptions().throw_unhandled()
+    // TODO replace all usages one day
     static void quick_stop();
 
     // Called to force a quick stop of the machine and wait for it to finish
     // Will wait for the buffers to empty and then resume queuing
     static void quick_stop_and_resume();
 
-    // Return the draining status
-    static bool draining() { return draining_buffer; }
+    // Deprecated alias for gcode_exceptions().is_unwinding()
+    // TODO replace all usages one day
+    static bool draining();
 
-    // Resume queuing after being held by drain()
+    // Deprecated alias for gcode_exceptions().finish_unwinding_unhandled_exception()
+    // TODO replace all usages one day
     static void resume_queuing();
 
     // Force any planned move to start immediately

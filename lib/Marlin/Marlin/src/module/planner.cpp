@@ -120,6 +120,7 @@
 
 #include <feature/safety_timer/safety_timer.hpp>
 #include <freertos/critical_section.hpp>
+#include <feature/gcode_exception/gcode_exception.hpp>
 
 #include <marlin_vars.hpp>
 #include "configuration_store.h"
@@ -146,9 +147,6 @@ volatile uint8_t Planner::block_buffer_head,    // Index of the next block to be
                  Planner::block_buffer_tail;    // Index of the busy block, if any
 uint32_t Planner::delay_before_delivering;      // Initial milliseconds of delay for planner optimization
 std::atomic<bool> Planner::recalculating = false;
-
-// A flag to drop queuing of blocks and abort any pending move
-bool Planner::draining_buffer;
 
 // A flag to indicate that that buffer is being emptied intentionally
 bool Planner::emptying_buffer;
@@ -264,8 +262,6 @@ skew_factor_t Planner::skew_factor; // Initialized by settings.load()
 // private:
 
 xyze_long_t Planner::position{0};
-
-uint32_t Planner::quick_stop_count = 0;
 
 uint32_t Planner::cutoff_long;
 
@@ -979,17 +975,12 @@ void Planner::check_axes_activity() {
 
 #endif // HAS_LEVELING
 
+bool Planner::draining() {
+  return gcode_exceptions().is_unwinding();
+}
+
 void Planner::quick_stop() {
-  // Immediately stop motion: all pending moves will be discarded later
-  PreciseStepping::quick_stop();
-
-  // Start draining the planner (requires one full marlin loop to complete!)
-  draining_buffer = true;
-
-  quick_stop_count ++;
-
-  // Reset the block delay for the first movement
-  delay_before_delivering = 0;
+  gcode_exceptions().throw_unhandled();
 }
 
 void Planner::quick_stop_and_resume() {
@@ -1004,12 +995,7 @@ void Planner::quick_stop_and_resume() {
 }
 
 void Planner::resume_queuing() {
-  if (PreciseStepping::stopping()) {
-    // If stop_pending hasn't been processed yet, do so now before new moves are processed
-    PreciseStepping::loop();
-    assert(!PreciseStepping::stopping());
-  }
-  draining_buffer = false;
+  gcode_exceptions().finish_unwinding_unhandled_exception();
 }
 
 // Called from ISR
@@ -2409,16 +2395,19 @@ bool Planner::buffer_segment(const abce_pos_t &abce
   // Also doing any printer movement resets the timer
   buddy::safety_timer().reset_restore_blocking();
 
-#if HAS_EMERGENCY_STOP()
-  // E-moves alone are always allowed
-  if (target.x != position.x || target.y != position.y || target.z != position.z) {
-    buddy::emergency_stop().maybe_block();
-    buddy::emergency_stop().assert_can_plan_movement();
 
-    // Check once more (this could have changed during the maybe_block)
-    if (draining() || PreciseStepping::stopping()) return false;
+  if (target.x != position.x || target.y != position.y || target.z != position.z) {
+    #if HAS_EMERGENCY_STOP()
+      // E-moves alone are always allowed
+      buddy::emergency_stop().maybe_block();
+      buddy::emergency_stop().assert_can_plan_movement();
+
+      // Check once more (this could have changed during the maybe_block)
+      if (draining() || PreciseStepping::stopping()) return false;
+    #endif
+
+    gcode_exceptions().report_xyz_move();
   }
-#endif
 
 #if HAS_AUTO_RETRACT()
   if (target.e != position.e) {
@@ -2876,4 +2865,3 @@ void Motion_Parameters::load() const {
 void Motion_Parameters::reset(const bool no_limits) {
   MarlinSettings::reset_motion(no_limits);
 }
-
