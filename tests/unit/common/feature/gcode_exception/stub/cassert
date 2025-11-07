@@ -1,0 +1,9 @@
+#pragma once
+
+struct assert_error {};
+
+inline void assert(bool condition) {
+    if (!condition) {
+        throw assert_error {};
+    }
+}
