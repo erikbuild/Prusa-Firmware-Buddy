@@ -46,6 +46,7 @@
 #include <option/has_manual_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_side_fsensor.h>
+#include <option/has_human_interactions.h>
 
 #include <option/has_hotend_type_support.h>
 #if HAS_HOTEND_TYPE_SUPPORT()
@@ -361,7 +362,7 @@ enum class PhasesWarning : PhaseUnderlyingType {
     HomingCalibrationFromMenuNeeded,
 #endif
 
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     DisplayProblemDetected,
 #endif
 
@@ -762,7 +763,7 @@ inline constexpr EnumArray<PhasesWarning, PhaseResponses, CountPhases<PhasesWarn
         { PhasesWarning::HomingRefinementFailed, { Response::Retry, Response::Abort, Response::Ignore } },
         { PhasesWarning::HomingCalibrationFromMenuNeeded, { Response::Abort, Response::Ignore } },
 #endif
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
         { PhasesWarning::DisplayProblemDetected, { Response::Yes, Response::No } },
 #endif
         { PhasesWarning::MetricsConfigChangePrompt, { Response::Yes, Response::No } },

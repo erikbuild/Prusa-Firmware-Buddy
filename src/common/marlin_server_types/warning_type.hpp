@@ -11,6 +11,7 @@
 #include <option/has_bed_fan.h>
 #include <option/has_psu_fan.h>
 #include <option/has_mmu2.h>
+#include <option/has_human_interactions.h>
 
 enum class WarningType : uint32_t {
 #if HAS_EMERGENCY_STOP()
@@ -102,7 +103,7 @@ enum class WarningType : uint32_t {
 #if HAS_PSU_FAN()
     PsuFanError,
 #endif
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     DisplayProblemDetected,
 #endif
     _cnt,
