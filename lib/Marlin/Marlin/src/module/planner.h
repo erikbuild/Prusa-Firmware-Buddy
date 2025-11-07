@@ -394,7 +394,7 @@ class Planner {
     // A flag to drop queuing of blocks and abort any pending move
     static bool draining_buffer;
 
-    // A flag to indicate that that buffer is being emptied intentionally
+    // A flag to indicate that that buffer is being emptied intentionally (= we're in the middle of planner.synchronize())
     static bool emptying_buffer;
 
   public:
