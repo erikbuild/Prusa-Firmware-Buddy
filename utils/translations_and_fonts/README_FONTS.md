@@ -47,21 +47,18 @@ No we have to select, what character set option we want to generate. There are 3
 4. "latin_and_katakana" - contains full standard ASCII (32-127) + all needed non-ascii characters + katakana
 5. "latin_and_cyrillic" - contains full standard ASCII (32-127) + all needed non-ascii characters + cyrillic alphabet
 
-1. Run utils/translations_and_fonts/font.py. This script will generate png containing symbols of selected :
+1. Run utils/translations_and_fonts/font.py. This script generates C++ header files directly from source font images.
 ```bash
-charset_option      - character set option, see above
-required_chars      - path to XXX-chars file generated in previous steps, only the .txt variant works; "{path}XXX-chars.txt" (XXX can be "full" / "latin" / "digits" / "latin-and-katakana" / "latin-and-cyrillic")
-src_png             - path to source pngs with all necessary symbols; if source png is not of RGB type, script will return ERROR; "src/gui/res/fnt_src/{name}"
-katakana_src_png    - path to katakana source pngs with all necessary japanese symbols; if source png is not of RGB type, script will return ERROR; "src/gui/res/fnt_src/{name}"
-cyrillic_src_png    - path to cyrillic source pngs with all necessary cyrillic symbols; if source png is not of RGB type, script will return ERROR; "src/gui/res/fnt_src/{name}"
-char_width          - pixel width of given font
-char_height         - pixel height of given font
-dst_png             - destination path with name of the to be gnerated png;" src/gui/res/fnt_png/{name}"; convention is "font_{type}_{w}x{h}.png" e.g. "font_bold_9x16.png"
-ipp_path            - destination path with name of the to be generated ipp file; ipp file contains indexes of all chars required within generated png, therefore every character set option must have it's own ipp file.
-                      ipp file needs to be included within the "src/guiapi/include/", there is no problem with it being rewritten multiple times.
-                      It's either "src/guiapi/include/fnt-full-indices.ipp" or "src/guiapi/include/fnt-latin-indices.ipp" or "src/guiapi/include/fnt-digits-indices.ipp" or "src/guiapi/include/fnt-latin-and-katakana-indices.ipp" or "src/guiapi/include/fnt-latin-and-cyrillic-indices.ipp"
+--width             - character width in pixels
+--height            - character height in pixels
+--charset           - character set option (full, latin, digits, latin_and_katakana, latin_and_cyrillic)
+                      Automatically determines required chars file and IPP path
+--type              - font type (regular, bold, ...)
+--src-latin         - path to source PNG with Latin characters; must be RGB mode; "src/gui/res/fnt_src/{name}"
+--src-katakana      - path to source PNG with Katakana characters; must be RGB mode; "src/gui/res/fnt_src/{name}"
+--src-cyrillic      - path to source PNG with Cyrillic characters; must be RGB mode; "src/gui/res/fnt_src/{name}"
+--output            - destination C++ header file path; "src/gui/res/cc/{name}.hpp"
 ```
 
-2. Run utils/translations_and_fonts/png2cc.py to generate C++ header from PNG
-3. Redo steps 1-2 for all fonts that are to be changed
-4. At last change includes in src/gui/fonts.cpp to the ones just added and cleanup unused ones
+2. Redo step 1 for all fonts that are to be changed
+3. At last change includes in src/gui/fonts.cpp to the ones just added and cleanup unused ones
