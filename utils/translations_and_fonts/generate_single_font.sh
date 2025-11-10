@@ -66,18 +66,15 @@ else
 fi
 rm -rf full-chars.txt latin-chars.txt digits-chars.txt latin-and-katakana-chars.txt latin-and-cyrillic-chars.txt
 
-# Build png2font binary
-mkdir -p build_tests
-cd build_tests
-../.dependencies/cmake-3.28.3/bin/cmake -D CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=YES -D CMAKE_C_FLAGS="-O0 -ggdb3" -D CMAKE_CXX_FLAGS="-O0 -ggdb3 -std=c++20" -D CMAKE_BUILD_TYPE=Debug -D BOARD=XBUDDY .. -G Ninja
-ninja utils/translations_and_fonts/png2font/png2font
-cd ../
-
 # Generate binary from the font
-./build_tests/utils/translations_and_fonts/png2font/png2font -src=${png_dst}${dst_name}.png -dst=${png_dst}${dst_name}_preview.png -out=${dst_name}.bin -bpp=4 -w=${w} -h=${h} -c=16 -r=${char_rows}
+python3 utils/translations_and_fonts/png2font.py \
+ --source="${png_dst}${dst_name}.png" \
+ --output="${dst_name}.bin" \
+ --width=${w} \
+ --height=${h} \
+ --columns=16 \
+ --rows=${char_rows}
 
 # Generate C++ header from binary
 python3 utils/translations_and_fonts/bin2cc.py ${dst_name}.bin src/gui/res/cc/${dst_name}.hpp ${type} ${w} ${h} FontCharacterSet::${charset_option}
 rm -rf ${dst_name}.bin
-
-echo -e "\nSUCCEEDED: ${dst_name}.hpp generation completed\n"

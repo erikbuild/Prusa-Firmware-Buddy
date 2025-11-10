@@ -97,7 +97,6 @@ class BuildType(CaseInsensitiveEnum):
 class HostTool(CaseInsensitiveEnum):
     """Known host tools."""
 
-    png2font = "png2font"
     unittests = "unittests"
 
 
@@ -695,7 +694,7 @@ def main():
     parser.add_argument(
         '--host-tools',
         action='store_true',
-        help=('Build host tools (png2font and others). '
+        help=('Build host tools. '
               'Turned on by default with --generate-cproject only.')
     )
     parser.add_argument(
