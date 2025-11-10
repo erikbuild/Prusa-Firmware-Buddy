@@ -7,6 +7,7 @@
 #include <bsod.h>
 #include <sys/fcntl.h>
 #include <sys/unistd.h>
+#include <logging/log.hpp>
 
 #if HAS_ST7789_DISPLAY()
     #include "st7789v.hpp"
@@ -211,6 +212,27 @@ static inline void store_to_buffer(uint8_t *buffer, Rect16 rect, uint16_t artefa
     return;
 }
 
+LOG_COMPONENT_REF(GUI);
+
+#if 0
+struct StoreCharInBufferMeasure {
+    const font_t *font;
+    const uint32_t cyccnt;
+    explicit StoreCharInBufferMeasure(const font_t *font_)
+        : font { font_ }
+        , cyccnt { DWT->CYCCNT } {}
+    ~StoreCharInBufferMeasure() {
+        const auto w = font->w;
+        const auto h = font->h;
+        log_info(GUI, "store_char_in_buffer %dx%d -> %lu", w, h, DWT->CYCCNT - cyccnt);
+    }
+};
+#else
+struct StoreCharInBufferMeasure {
+    StoreCharInBufferMeasure(...) {}
+};
+#endif
+
 namespace display {
 
 /// Draws a single character according to selected font
@@ -223,6 +245,8 @@ void draw_char(point_ui16_t pt, unichar c, const font_t *pf, Color clr_bg, Color
 }
 
 void store_char_in_buffer(uint16_t char_cnt, uint16_t curr_char_idx, unichar c, const font_t *pf, Color clr_bg, Color clr_fg) {
+    [[maybe_unused]] StoreCharInBufferMeasure measure { pf };
+
     uint32_t chr = get_char_position_in_font(c, pf);
 
     const uint16_t char_w = pf->w; // char width
