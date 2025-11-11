@@ -15,7 +15,7 @@ enum class Restore { no,
     yes };
 
 #if HAS_LOADCELL()
-void m591_no_parser(std::optional<bool> opt_enable_e_stall, IsPermanent is_permanent, Restore restore) {
+void m591_no_parser(std::optional<bool> opt_enable_e_stall, IsPermanent is_permanent, Restore restore, std::optional<std::tuple<uint32_t, uint32_t>> ignore) {
     if (restore == Restore::yes) {
         bool enabled_in_eeprom = config_store().stuck_filament_detection.get();
         EMotorStallDetector::Instance().SetEnabled(enabled_in_eeprom);
@@ -38,6 +38,11 @@ void m591_no_parser(std::optional<bool> opt_enable_e_stall, IsPermanent is_perma
         // restore and opt_enable_e_stall parameters not supplied
         SERIAL_ECHOLNPAIR_F("Filament stuck detection ", EMotorStallDetector::Instance().Enabled() ? "on" : "off");
     }
+
+    if (ignore.has_value()) {
+        auto [count, forget] = ignore.value();
+        EMotorStallDetector::Instance().SetIgnore(count, forget);
+    }
 }
 #endif // HAS_LOADCELL()
 } // anonymous namespace
@@ -59,6 +64,11 @@ void m591_no_parser(std::optional<bool> opt_enable_e_stall, IsPermanent is_perma
  * - `S` - Enable / Disable
  * - `P` - change is permanent
  * - `R` - restore, this parameter has priority over `S` and `P` and discards them
+ * - `I` - ignore this many skips before reporting (0 = report immediatelly, 1 - report the second if within the forget time)
+ * - `F` - forget a skip after this time (in combination with I, in ms)
+ *   Set both at once.
+ *
+ *   TODO: Can one parameter take two numbers?
  *
  * Without parameters prints the current state of Filament stuck monitoring (on/off)
  *
@@ -73,7 +83,11 @@ void PrusaGcodeSuite::M591() {
     }
     IsPermanent is_permanent = parser.seen('P') ? IsPermanent::yes : IsPermanent::no;
     Restore restore = parser.seen('R') ? Restore::yes : Restore::no;
-    m591_no_parser(enable_e_stall, is_permanent, restore);
+    std::optional<std::tuple<uint32_t, uint32_t>> ignore = std::nullopt;
+    if (parser.seen('I') && parser.seen('F')) {
+        ignore = std::make_tuple(parser.ulongval('I'), parser.ulongval('F'));
+    }
+    m591_no_parser(enable_e_stall, is_permanent, restore, ignore);
 #else
     SERIAL_ECHOLN("Filament stuck detection not supported");
 #endif // HAS_LOADCELL()
