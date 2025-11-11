@@ -29,7 +29,6 @@ struct font_t {
     uint8_t h; // char height [pixels]
     uint8_t bpr; // bytes per row
     const void *pcs; // charset data pointer
-    char asc_min; // min ascii code (first character)
     FontCharacterSet charset; // character set (see README_FONT)
 };
 

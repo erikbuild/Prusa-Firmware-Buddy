@@ -16641,4 +16641,4 @@ constexpr uint8_t font_regular_9x16_data[] = {
     0x00,
     0x00,
 };
-constexpr font_t font_regular_9x16 = { 9, 16, 5, font_regular_9x16_data, 32, FontCharacterSet::latin_and_katakana };
+constexpr font_t font_regular_9x16 = { 9, 16, 5, font_regular_9x16_data, FontCharacterSet::latin_and_katakana };

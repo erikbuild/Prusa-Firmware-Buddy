@@ -241,7 +241,7 @@ void store_char_in_buffer(uint16_t char_cnt, uint16_t curr_char_idx, unichar c, 
 
     uint32_t buffer_offset = 0; // buffer byte offset
 
-    pch = (uint8_t *)(pf->pcs) + ((chr /*- pf->asc_min*/) * bpc);
+    pch = (uint8_t *)(pf->pcs) + (chr * bpc);
 
     uint8_t pixel_size = STORE_FN_PIXEL_SIZE;
 

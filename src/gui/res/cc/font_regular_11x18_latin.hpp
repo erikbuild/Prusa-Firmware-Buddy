@@ -19009,4 +19009,4 @@ constexpr uint8_t font_regular_11x18_data[] = {
     0x00,
     0x00,
 };
-constexpr font_t font_regular_11x18 = { 11, 18, 6, font_regular_11x18_data, 32, FontCharacterSet::latin };
+constexpr font_t font_regular_11x18 = { 11, 18, 6, font_regular_11x18_data, FontCharacterSet::latin };

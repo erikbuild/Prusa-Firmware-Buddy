@@ -59,7 +59,8 @@ bool hasASCII(FontCharacterSet charset_option) {
 }
 
 uint32_t get_char_position_in_font(unichar c, const font_t *pf) {
-    if (c < uint8_t(pf->asc_min)) { // this really happens with non-utf8 characters on filesystems
+    const unichar asc_min = 32;
+    if (c < asc_min) { // this really happens with non-utf8 characters on filesystems
         return get_char_position_in_font('?', pf);
     }
 
@@ -67,7 +68,7 @@ uint32_t get_char_position_in_font(unichar c, const font_t *pf) {
         // standard ASCII character
         // This means that fonts with FontCharacterSet::full have to have all standard ASCII characters even though some of them are not used
         // We take this trade off - we waste a little bit of space, but no lower_bound is necessary for standard character indices
-        return c - pf->asc_min;
+        return c - asc_min;
     }
 
     // extended utf8 character - must search in the font_XXX_char_indices map
