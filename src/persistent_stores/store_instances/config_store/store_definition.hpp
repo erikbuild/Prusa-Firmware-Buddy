@@ -41,6 +41,7 @@
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_precise_homing.h>
 #include <option/has_chamber_filtration_api.h>
+#include <option/has_esp.h>
 #include <option/has_auto_retract.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_chamber_vents.h>
@@ -159,7 +160,7 @@ struct CurrentStore
     StoreItem<uint8_t, 0, ItemFlag::special, journal::hash("Config Version")> config_version;
 
     /// If false, a ScreenPrinterSetup will appear on printer boot
-    StoreItem<bool, false, ItemFlag::network, journal::hash("Printer network done")> printer_network_setup_done;
+    StoreItem<bool, !HAS_ESP(), ItemFlag::network, journal::hash("Printer network done")> printer_network_setup_done;
     StoreItem<bool, false, ItemFlag::hw_config, journal::hash("Printer hw-config done")> printer_hw_config_done;
 
     /// Global filament sensor enable
