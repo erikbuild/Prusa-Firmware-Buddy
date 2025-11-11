@@ -6,6 +6,7 @@ add_executable(
   )
 target_include_directories(
   Marlin_EStallDetector_tests PUBLIC . ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src/feature/prusa
+                                     ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
   )
 
 add_catch_test(Marlin_EStallDetector_tests)

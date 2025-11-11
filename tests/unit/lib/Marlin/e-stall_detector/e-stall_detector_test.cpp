@@ -46,35 +46,37 @@ TEST_CASE("Marlin::MotorStallFilter filter", "[Marlin][EStallDetector]") {
 // check performed on top of multiple data records
 TEST_CASE("Marlin::EStallDetector", "[Marlin][EStallDetector]") {
     auto &emsd = EMotorStallDetector::Instance();
+    // Effectively disable the leaky bucket delay of reporting.
+    emsd.SetIgnore(0, 1000);
     emsd.SetEnabled();
     REQUIRE_FALSE(emsd.Reported());
     REQUIRE_FALSE(emsd.DetectedUnreported());
     REQUIRE(emsd.Enabled());
 
     // put some data through the detector - this data should work (from the previous test)
-    emsd.ProcessSample(1997572);
+    emsd.ProcessSample(1997572, 1);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2054684);
+    emsd.ProcessSample(2054684, 2);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2096993);
+    emsd.ProcessSample(2096993, 3);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2125882);
+    emsd.ProcessSample(2125882, 4);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2072601);
+    emsd.ProcessSample(2072601, 5);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(585962); // now this drop shall be almost detected
+    emsd.ProcessSample(585962, 6); // now this drop shall be almost detected
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(1976478);
+    emsd.ProcessSample(1976478, 7);
     REQUIRE(emsd.DetectedUnreported());
     REQUIRE_FALSE(emsd.Reported());
 
     // put some more data through the filter - the FW may not respond to the flag immediately
     // the Detected flag should remain intact as well as the Blocked flag
-    emsd.ProcessSample(1997572);
+    emsd.ProcessSample(1997572, 8);
     REQUIRE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2054684);
+    emsd.ProcessSample(2054684, 9);
     REQUIRE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2096993);
+    emsd.ProcessSample(2096993, 10);
     REQUIRE(emsd.DetectedUnreported());
 
     { // now simulate what the firmware would do - process an injected M600
@@ -89,19 +91,19 @@ TEST_CASE("Marlin::EStallDetector", "[Marlin][EStallDetector]") {
     REQUIRE_FALSE(emsd.DetectedUnreported());
     REQUIRE_FALSE(emsd.Reported());
 
-    emsd.ProcessSample(1997572);
+    emsd.ProcessSample(1997572, 11);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2054684);
+    emsd.ProcessSample(2054684, 12);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2096993);
+    emsd.ProcessSample(2096993, 13);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2125882);
+    emsd.ProcessSample(2125882, 14);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(2072601);
+    emsd.ProcessSample(2072601, 15);
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(585962); // now this drop shall be almost detected
+    emsd.ProcessSample(585962, 16); // now this drop shall be almost detected
     CHECK_FALSE(emsd.DetectedUnreported());
-    emsd.ProcessSample(1976478);
+    emsd.ProcessSample(1976478, 17);
     CHECK(emsd.DetectedUnreported());
     CHECK_FALSE(emsd.Reported());
 }
@@ -181,19 +183,21 @@ TEST_CASE("Marlin::MotorStall disabled", "[Marlin][EStallDetector]") {
         1997572, 2054684, 2096993, 2125882, 2072601, 585962, 1976478
     };
 
-    const auto testData = [&](EMotorStallDetector &emsd) {
+    const auto testData = [&](EMotorStallDetector &emsd, uint32_t when) {
         for (const auto data : raw) {
             REQUIRE_FALSE(emsd.DetectedUnreported());
-            emsd.ProcessSample(data);
+            emsd.ProcessSample(data, when);
         }
     };
 
-    {
-        estall_suppressed_trigger_count = 0;
+    estall_suppressed_trigger_count = 0;
 
+    SECTION("Enabled") {
         EMotorStallDetector emsd;
+        // Effectively disable the leaky bucket delay of reporting.
+        emsd.SetIgnore(0, 1000);
         emsd.SetEnabled();
-        testData(emsd);
+        testData(emsd, 0);
         REQUIRE(emsd.DetectedUnreported());
 
         REQUIRE(emsd.Evaluate(true, true));
@@ -201,13 +205,14 @@ TEST_CASE("Marlin::MotorStall disabled", "[Marlin][EStallDetector]") {
         REQUIRE(estall_suppressed_trigger_count == 0);
     }
 
-    {
-        estall_suppressed_trigger_count = 0;
+    SECTION("Disabled") {
 
         EMotorStallDetector emsd;
+        // Effectively disable the leaky bucket delay of reporting.
+        emsd.SetIgnore(0, 1000);
         emsd.SetEnabled(false);
 
-        testData(emsd);
+        testData(emsd, 0);
         REQUIRE(!emsd.DetectedUnreported());
         REQUIRE(!emsd.Evaluate(true, true));
         REQUIRE(emsd.DetectedRaw());
@@ -217,11 +222,68 @@ TEST_CASE("Marlin::MotorStall disabled", "[Marlin][EStallDetector]") {
         REQUIRE(!emsd.Evaluate(false, false));
         REQUIRE(!emsd.DetectedRaw());
 
-        testData(emsd);
+        testData(emsd, 0);
         REQUIRE(!emsd.DetectedUnreported());
         REQUIRE(!emsd.Evaluate(true, true));
         REQUIRE(emsd.DetectedRaw());
         REQUIRE(estall_suppressed_trigger_count == 2);
+    }
+
+    SECTION("Enabled with delay") {
+        EMotorStallDetector emsd;
+        emsd.SetIgnore(2, 1000);
+        emsd.SetEnabled();
+
+        // First two are ignored.
+        testData(emsd, 0);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(!emsd.DetectedUnreported());
+        REQUIRE(!emsd.Evaluate(true, true));
+
+        // One millisecond later (yes, this is in us).
+        testData(emsd, 1000);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(!emsd.DetectedUnreported());
+        REQUIRE(!emsd.Evaluate(true, true));
+
+        REQUIRE(estall_suppressed_trigger_count == 0);
+
+        // The third one is reported.
+        testData(emsd, 2000);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(emsd.DetectedUnreported());
+        REQUIRE(emsd.Evaluate(true, true));
+    }
+
+    SECTION("Enabled with delay, long intervals") {
+        EMotorStallDetector emsd;
+        emsd.SetIgnore(2, 1000);
+        emsd.SetEnabled();
+
+        // First two are ignored.
+        testData(emsd, 0);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(!emsd.DetectedUnreported());
+        REQUIRE(!emsd.Evaluate(true, true));
+
+        // One millisecond later (yes, this is in us).
+        testData(emsd, 1000);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(!emsd.DetectedUnreported());
+        REQUIRE(!emsd.Evaluate(true, true));
+
+        // A third one is a full second later from the first.
+        // We have forgotten the first by now.
+        testData(emsd, 1000000);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(!emsd.DetectedUnreported());
+        REQUIRE(!emsd.Evaluate(true, true));
+
+        // But when a fourth one arrives soon-ish, that one already accumulates 3 events.
+        testData(emsd, 1000500);
+        REQUIRE(emsd.DetectedRaw());
+        REQUIRE(emsd.DetectedUnreported());
+        REQUIRE(emsd.Evaluate(true, true));
     }
 }
 
@@ -245,6 +307,8 @@ TEST_CASE("Marlin::MotorStallFilter stall3-300Hz", "[Marlin][EStallDetector]") {
 
     {
         auto &emsd = EMotorStallDetector::Instance();
+        // Effectively disable the leaky bucket delay of reporting.
+        emsd.SetIgnore(0, 1000);
         std::fill(emsd.emf.buffer.begin(), emsd.emf.buffer.end(), 0.F);
         // run the same sequence through the whole detector stack
         EStallDetectionStateLatch esdsl;
@@ -257,7 +321,7 @@ TEST_CASE("Marlin::MotorStallFilter stall3-300Hz", "[Marlin][EStallDetector]") {
         emsd.SetDetectionThreshold(500'000.F);
 
         for (size_t i = 0; i < raw.size(); ++i) {
-            emsd.ProcessSample(raw[i]);
+            emsd.ProcessSample(raw[i], i);
             if (emsd.Evaluate(true, true)) {
                 INFO(i);
                 break;

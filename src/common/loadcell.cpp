@@ -349,7 +349,7 @@ void Loadcell::ProcessSample(int32_t loadcellRaw, uint32_t time_us) {
     }
 
     // Perform E motor stall detection
-    EMotorStallDetector::Instance().ProcessSample(this->loadcellRaw);
+    EMotorStallDetector::Instance().ProcessSample(this->loadcellRaw, time_us);
 }
 
 void Loadcell::HomingSafetyCheck() const {

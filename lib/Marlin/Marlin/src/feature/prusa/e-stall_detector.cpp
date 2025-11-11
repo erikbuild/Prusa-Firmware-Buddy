@@ -69,8 +69,13 @@ void EMotorStallDetector::SetEnabled(bool set) {
 }
 
 #if HAS_LOADCELL()
-void EMotorStallDetector::ProcessSample(int32_t value) {
-    detected |= emf.ProcessSample(value);
+void EMotorStallDetector::ProcessSample(int32_t value, uint32_t time_us) {
+    const bool detected_now = emf.ProcessSample(value);
+    detected |= detected_now;
+    if (detected_now && !bucket.add_sample(time_us)) {
+        // false -> sample didn't "fit" -> there were many in short time
+        detected_many = true;
+    }
 }
 
 bool EMotorStallDetector::Evaluate(bool movingE, bool directionE) {
@@ -82,7 +87,7 @@ bool EMotorStallDetector::Evaluate(bool movingE, bool directionE) {
         return false;
     }
 
-    if (!detected) {
+    if (!detected_many) {
         return false;
     }
 
@@ -106,6 +111,6 @@ bool EMotorStallDetector::Evaluate(bool movingE, bool directionE) {
 #else
 // Empty implementation when there is no LoadCell available
 // Shall drop all references to unused code along with it.
-void EMotorStallDetector::ProcessSample(int32_t value) {}
+void EMotorStallDetector::ProcessSample(int32_t value, uint32_t time_us) {}
 bool EMotorStallDetector::Evaluate(bool movingE, bool directionE) { return false; }
 #endif
