@@ -18,7 +18,6 @@
 #include <option/has_leds.h>
 #include <option/has_side_leds.h>
 #include <option/buddy_enable_connect.h>
-#include <option/has_belt_tuning.h>
 #include <option/has_auto_retract.h>
 #include <option/has_toolchanger.h>
 #include <meta_utils.hpp>
@@ -591,10 +590,6 @@ public:
 protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
-#endif
-
-#if HAS_BELT_TUNING()
-using MI_BELT_TUNING = WithConstructorArgs<MenuItemGcodeAction, N_("Belt Tuning"), "M960 W"_tstr>;
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()
