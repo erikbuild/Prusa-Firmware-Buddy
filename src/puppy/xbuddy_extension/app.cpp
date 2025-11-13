@@ -26,10 +26,10 @@ void read_register_file_callback(xbuddy_extension::modbus::Status &status) {
     status.temperature = static_cast<uint16_t>(10 * temperature::raw_to_celsius(hal::temperature::get_raw()));
     status.filament_sensor = hal::filament_sensor::get();
     const auto flash_data = cyphal::application().request();
-    status.chunk_request.file_id = static_cast<uint16_t>(flash_data.flash_request);
+    status.chunk_request.file_id = xbuddy_extension::modbus::serialize_file_id(flash_data.flash_request);
     status.chunk_request.offset_lo = static_cast<uint16_t>(flash_data.offset & 0xFFFF);
     status.chunk_request.offset_hi = static_cast<uint16_t>(flash_data.offset >> 16);
-    status.digest_request.file_id = static_cast<uint16_t>(flash_data.hash_request);
+    status.digest_request.file_id = xbuddy_extension::modbus::serialize_file_id(flash_data.hash_request);
     status.digest_request.salt_lo = static_cast<uint16_t>(flash_data.hash_salt & 0xFFFF);
     status.digest_request.salt_hi = static_cast<uint16_t>(flash_data.hash_salt >> 16);
     const auto log = cyphal::application().get_log();

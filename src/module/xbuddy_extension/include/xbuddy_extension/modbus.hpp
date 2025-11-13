@@ -14,7 +14,7 @@ namespace xbuddy_extension::modbus {
 
 /// Helper struct to group chunk request parameters together.
 struct ChunkRequest {
-    uint16_t file_id; ///< request to receive a chunk of this file
+    uint16_t file_id; ///< request to receive a chunk of this file (FileId)
     uint16_t offset_lo; ///< request to receive a chunk with this offset (lower 16 bits)
     uint16_t offset_hi; ///< request to receive a chunk with this offset (upper 16 bits)
 
@@ -23,7 +23,7 @@ struct ChunkRequest {
 
 /// Helper struct to group digest request parameters together.
 struct DigestRequest {
-    uint16_t file_id; ///< request to compute digest of this file
+    uint16_t file_id; ///< request to compute digest of this file (FileId)
     uint16_t salt_lo; ///< request to compute digest with this salt (lower 16 bits)
     uint16_t salt_hi; ///< request to compute digest with this salt (upper 16 bits)
 
@@ -100,5 +100,11 @@ struct LogMessage {
     uint16_t text_size; ///< length of valid text_data in bytes
     std::array<uint16_t, 121> text_data; ///< actual bytes of log message (little endian)
 };
+
+/// Parse FileId from modbus structure.
+FileId parse_file_id(uint16_t);
+
+/// Serialize FileId to modbus structure.
+uint16_t serialize_file_id(FileId);
 
 } // namespace xbuddy_extension::modbus
