@@ -13,13 +13,23 @@ namespace {
 
     /// The following constants define key positions for controlling a vent lever.
     /// These coordinates are absolute in the printer's coordinate system.
-#if PRINTER_IS_PRUSA_COREONEL()
+#if PRINTER_IS_PRUSA_COREONE()
+    static constexpr auto Y_SAFE = -3.f; ///< Safe Y line with no risk of coming in contact with lever
+    static constexpr auto Y_LEVER = -18.f; ///< In line with the lever
+    static constexpr auto X_OPEN_START_POS = 37.f; ///< An X-axis position to the right of the lever, where opening move starts.
+    static constexpr auto X_OPEN_END_POS = 24.f; ///< The X-axis position to move to on Y_LEVER to open the vents.
+    static constexpr auto X_CLOSE_START_POS = 11.f; ///< An X-axis position to the left of the lever, where closing move starts.
+    static constexpr auto X_CLOSE_END_POS = 26.f; ///< The X-axis position to move to on Y_LEVER to close the vents.
+    static constexpr auto X_LEVER_MOVE_AWAY = 4.f; ///< The X-axis distance to move away from the lever after switch
+    static constexpr auto lever_move_feedrate = feedRate_t(40.0f);
+#elif PRINTER_IS_PRUSA_COREONEL()
     static constexpr auto Y_SAFE = 10.f; ///< Safe Y line with no risk of coming in contact with lever
     static constexpr auto Y_LEVER = -7.f; ///< In line with the lever
-    static constexpr auto X_LEFT_OF_LEVER = 25.f; ///< An X-axis position to the left of the lever.
-    static constexpr auto X_RIGHT_OF_LEVER = 50.f; ///< An X-axis position to the right of the lever.
-    static constexpr auto X_SWITCH_OFF = 35.f; ///< The X-axis position to move to on Y_LEVER to close the vents.
-    static constexpr auto X_SWITCH_ON = 42.f; ///< The X-axis position to move to on Y_LEVER to open the vents.
+    static constexpr auto X_OPEN_START_POS = 25.f; ///< An X-axis position to the left of the lever, where opening move starts.
+    static constexpr auto X_OPEN_END_POS = 42.f; ///< The X-axis position to move to on Y_LEVER to open the vents.
+    static constexpr auto X_CLOSE_START_POS = 50.f; ///< An X-axis position to the right of the lever, where closing move starts.
+    static constexpr auto X_CLOSE_END_POS = 35.f; ///< The X-axis position to move to on Y_LEVER to close the vents.
+    static constexpr auto X_LEVER_MOVE_AWAY = -4.f; ///< The X-axis distance to move away from the lever after switch (COREONEL has inverted open/close direction)
     static constexpr auto lever_move_feedrate = feedRate_t(17.0f);
 #else
     #error
@@ -66,11 +76,13 @@ namespace {
         // Move to a safe Y-axis position to avoid the lever.
         plan_to_y(Y_SAFE);
         // Move to a horizontal position (left or right) of the lever.
-        plan_to_x(wanted_state == VentState::open ? X_LEFT_OF_LEVER : X_RIGHT_OF_LEVER);
+        plan_to_x(wanted_state == VentState::open ? X_OPEN_START_POS : X_CLOSE_START_POS);
         // Move into the lever's Y-axis line.
         plan_to_y(Y_LEVER);
         // Move horizontally to engage the lever and switch it.
-        plan_to_x(wanted_state == VentState::open ? X_SWITCH_ON : X_SWITCH_OFF, lever_move_feedrate);
+        plan_to_x(wanted_state == VentState::open ? X_OPEN_END_POS : X_CLOSE_END_POS, lever_move_feedrate);
+        // Move horizontally to release the lever tension
+        plan_to_x(wanted_state == VentState::open ? X_OPEN_END_POS + X_LEVER_MOVE_AWAY : X_CLOSE_END_POS - X_LEVER_MOVE_AWAY, lever_move_feedrate);
         // Back out to the safe Y-axis position to avoid a collision on future moves.
         plan_to_y(Y_SAFE);
     }
