@@ -17,7 +17,7 @@
 #include <option/has_leds.h>
 #include <option/has_manual_belt_tuning.h>
 #include <option/has_door_sensor_calibration.h>
-#include <option/has_automatic_chamber_vents.h>
+#include <option/has_chamber_vents.h>
 #include <option/has_spool_join.h>
 
 #if HAS_LOADCELL()
@@ -227,7 +227,7 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M865();
             break;
 
-#if HAS_AUTOMATIC_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
         case 870:
             PrusaGcodeSuite::M870();
             break;

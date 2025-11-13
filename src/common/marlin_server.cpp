@@ -112,8 +112,8 @@
 #include <option/has_emergency_stop.h>
 #include <option/has_uneven_bed_prompt.h>
 #include <option/has_nextruder.h>
-#include <option/has_automatic_chamber_vents.h>
 #include <option/has_human_interactions.h>
+#include <option/has_chamber_vents.h>
 
 #if HAS_DWARF()
     #include <puppies/Dwarf.hpp>
@@ -535,7 +535,7 @@ static void handle_warnings() {
         // The only response is OK, at which point we just consume the response and hide the warning.
         break;
 
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case PhasesWarning::ChamberVents:
         if (response == Response::Disable) {
             config_store().check_chamber_vent_state.set(false);
@@ -2244,10 +2244,8 @@ static void _server_print_loop(void) {
                 fsm_create(PhasesPrinting::active);
             }
         }
-#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
-        if (config_store().check_chamber_vent_state.get()) {
-            buddy::chamber().manage_ventilation_state();
-        }
+#if HAS_CHAMBER_VENTS()
+        buddy::chamber().manage_ventilation_state();
 #endif
 #if HAS_CHAMBER_FILTRATION_API()
         buddy::chamber_filtration().check_filter_expiration();

@@ -44,8 +44,7 @@
 #include <option/has_esp.h>
 #include <option/has_auto_retract.h>
 #include <option/has_door_sensor_calibration.h>
-#include <option/has_manual_chamber_vents.h>
-#include <option/has_automatic_chamber_vents.h>
+#include <option/has_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_e2ee_support.h>
 #include <option/has_manual_belt_tuning.h>
@@ -727,7 +726,7 @@ struct CurrentStore
     static_assert(HOTENDS <= 8);
 #endif
 
-#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     StoreItem<bool, true, ItemFlag::printer_state, journal::hash("Check chamber ventilation state")> check_chamber_vent_state;
 #endif
 

@@ -34,7 +34,7 @@ constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
         return PhasesWarning::EnclosureFilterExpiration;
 #endif
 
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case WarningType::OpenChamberVents:
         return PhasesWarning::ChamberVents;
     case WarningType::CloseChamberVents:
@@ -87,7 +87,7 @@ PhasesWarning warning_type_phase(WarningType warning) {
 
 constexpr uint32_t warning_lifespan_sec_constexpr(WarningType type) {
     switch (type) {
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case WarningType::OpenChamberVents:
     case WarningType::CloseChamberVents:
         return 60;
@@ -113,7 +113,7 @@ static_assert([] {
         const auto phi = std::to_underlying(ph);
 
         bool phase_warning_exception = ph == PhasesWarning::Warning;
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
         phase_warning_exception |= ph == PhasesWarning::ChamberVents;
 #endif
 

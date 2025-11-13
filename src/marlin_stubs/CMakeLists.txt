@@ -102,6 +102,6 @@ if(HAS_ESP)
   target_sources(firmware PRIVATE M1703.cpp)
 endif()
 
-if(HAS_AUTOMATIC_CHAMBER_VENTS)
+if(HAS_CHAMBER_VENTS)
   target_sources(firmware PRIVATE M870.cpp)
 endif()
