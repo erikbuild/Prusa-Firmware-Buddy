@@ -159,16 +159,19 @@ static void manufacture_report_endless_loop() {
 #if HAS_ESP()
     // ESP reset (needed for XL, since it has embedded ESP)
     HAL_GPIO_WritePin(ESP_RST_GPIO_Port, ESP_RST_Pin, GPIO_PIN_RESET);
+    UART_HandleTypeDef uart_for_tester = uart_handle_for_esp;
+#else
+    UART_HandleTypeDef uart_for_tester = uart_handle_for_puppies;
+#endif
 
     constexpr const uint8_t endl = '\n';
     constexpr const char *str_fw = "FW:";
     while (true) {
-        HAL_UART_Transmit(&uart_handle_for_esp, reinterpret_cast<const uint8_t *>(str_fw), strlen(str_fw), 1000);
-        HAL_UART_Transmit(&uart_handle_for_esp, reinterpret_cast<const uint8_t *>(version::project_version_full), strlen(version::project_version_full), 1000);
-        HAL_UART_Transmit(&uart_handle_for_esp, &endl, sizeof(endl), 1000);
+        HAL_UART_Transmit(&uart_for_tester, reinterpret_cast<const uint8_t *>(str_fw), strlen(str_fw), 1000);
+        HAL_UART_Transmit(&uart_for_tester, reinterpret_cast<const uint8_t *>(version::project_version_full), strlen(version::project_version_full), 1000);
+        HAL_UART_Transmit(&uart_for_tester, &endl, sizeof(endl), 1000);
         osDelay(500); // tester needs 500ms, do not change this value!
     }
-#endif
 }
 
 #if ENABLED(RESOURCES()) && ENABLED(BOOTLOADER_UPDATE())
@@ -361,8 +364,10 @@ extern "C" void main_cpp(void) {
 #endif
 
 #if HAS_PUPPIES()
-    uart_init_puppies();
-    buddy::puppies::PuppyBus::Open();
+    uart_init_puppies(running_in_tester_mode());
+    if (!running_in_tester_mode()) {
+        buddy::puppies::PuppyBus::Open();
+    }
 #endif
 
     hw_rtc_init();

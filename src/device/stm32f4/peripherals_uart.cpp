@@ -71,9 +71,9 @@ buddy::hw::BufferedSerial uart_for_puppies {
     sizeof(uart_for_puppies_rx_data),
     buddy::hw::BufferedSerial::CommunicationMode::DMA,
 };
-void uart_init_puppies() {
+void uart_init_puppies(bool tester_mode) {
     uart_handle_for_puppies.Instance = UART_PUPPIES;
-    uart_handle_for_puppies.Init.BaudRate = 230'400;
+    uart_handle_for_puppies.Init.BaudRate = tester_mode ? 115'200 : 230'400;
     uart_handle_for_puppies.Init.WordLength = UART_WORDLENGTH_8B;
     uart_handle_for_puppies.Init.StopBits = UART_STOPBITS_1;
     uart_handle_for_puppies.Init.Parity = UART_PARITY_NONE;
