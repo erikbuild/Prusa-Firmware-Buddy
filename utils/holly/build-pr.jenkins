@@ -153,12 +153,23 @@ pipeline {
                         // pr_type==all: build on all branches and pull requests
                         // pr_type==pr: build on pull requests only
                         // pr_type==main: build in branches
-                        values 'main,coreone,release,yesboot',
-                            'main,coreonel,release,yesboot',
-                            'main,mini-en-cs,release,yesboot',
-                            'main,mk4,release,yesboot',
-                            'main,xl,release,yesboot',
-                            'main,ix,release,yesboot',
+                        values 'all,coreone,release,yesboot',
+                            'all,coreonel,release,yesboot',
+                            'all,mini-en-cs,release,yesboot', // Always build for testing
+                            'main,mini-en-de,release,yesboot',
+                            'main,mini-en-es,release,yesboot',
+                            'main,mini-en-fr,release,yesboot',
+                            'main,mini-en-it,release,yesboot',
+                            'main,mini-en-ja,release,yesboot',
+                            'main,mini-en-uk,release,yesboot',
+                            'all,mini-en-pl,release,yesboot', // Always build due to largest memory requirement
+                            'all,mk3.5,release,yesboot',
+                            'all,mk4,release,yesboot',
+                            'all,mk4,release,noboot', // Needed for integration tests, please don't delete
+                            'all,xl,release,yesboot',
+                            'main,xl-burst,release,yesboot',
+                            'main,xl-minimal,release,yesboot', // Test optional features on the most complex target
+                            'all,ix,release,yesboot',
                             'all,slx-anfc,release,noboot',
                             'all,anfc,release,noboot',
                             'all,slx-anfc,release,yesboot',
@@ -288,7 +299,7 @@ pipeline {
                     }
                 }
 
-                /*stage('Marlin_server_types python module') {
+                stage('Marlin_server_types python module') {
                     agent {
                         dockerfile {
                             label 'docker-v2'
@@ -310,7 +321,7 @@ pipeline {
                     }
                 }
 
-                stage('Integration Tests') {
+                /*stage('Integration Tests') {
                     when {
                         expression {
                             return should_run_integration_tests();
