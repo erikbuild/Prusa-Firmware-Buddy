@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <freertos/timing.hpp>
 #include <option/has_ac_controller.h>
+#include <option/has_anfc.h>
 #include <span>
 #include <string.h>
 #include <uavcan/diagnostic/Record_1_1.h>
@@ -20,6 +21,12 @@
 #if HAS_AC_CONTROLLER()
     #include <prusa3d/ac_controller/Config_1_0.h>
     #include <prusa3d/ac_controller/Status_1_0.h>
+#endif
+
+#if HAS_ANFC()
+    #include <prusa3d/nfc/command/AcceptEvent_1_0.h>
+    #include <prusa3d/nfc/command/Request_1_0.h>
+    #include <prusa3d/nfc/event/Event_1_0.h>
 #endif
 
 // Nunavut code generation is nice, but we would like it to be even better.
@@ -68,6 +75,11 @@ struct NunavutTraits;
 #if HAS_AC_CONTROLLER()
     #define prusa3d_ac_controller_Config_Request_1_0_FIXED_PORT_ID_ 21
     #define prusa3d_ac_controller_Status_1_0_FIXED_PORT_ID_         600
+#endif
+#if HAS_ANFC()
+    #define prusa3d_nfc_command_AcceptEvent_Request_1_0_FIXED_PORT_ID_ 100
+    #define prusa3d_nfc_command_Request_Request_1_0_FIXED_PORT_ID_     101
+    #define prusa3d_nfc_event_Event_1_0_FIXED_PORT_ID_                 1000
 #endif
 
 // Define traits for all transfers we are using.
@@ -138,6 +150,12 @@ static uint16_t convert(const prusa3d_common_FanState_1_0 &fan_state) {
 
 #endif
 
+#if HAS_ANFC()
+TRAITS(prusa3d_nfc_command_AcceptEvent_Request_1_0, CanardTransferKindRequest);
+TRAITS(prusa3d_nfc_command_Request_Request_1_0, CanardTransferKindRequest);
+TRAITS(prusa3d_nfc_event_Event_1_0, CanardTransferKindMessage);
+#endif
+
 class CyphalApp : cyphal::Presentation {
 private:
     // We use distinct transfer ID for distinct outgoing transfers.
@@ -150,6 +168,10 @@ private:
         uint8_t pnp = 0;
 #if HAS_AC_CONTROLLER()
         uint8_t ac_controller_config = 0;
+#endif
+#if HAS_ANFC()
+        uint8_t nfc_command_accept_event = 0;
+        uint8_t nfc_command_request = 0;
 #endif
     } transfer_id;
     cyphal::Application &application = cyphal::application();
@@ -164,6 +186,16 @@ public:
         subscribe<uavcan_diagnostic_Record_1_1>();
 #if HAS_AC_CONTROLLER()
         subscribe<prusa3d_ac_controller_Status_1_0>();
+#endif
+#if HAS_ANFC()
+        // We intentionally do not subscribe to NFC command responses here.
+        // Each subscription costs RAM. Even if we subscribed to responses,
+        // reporting them upstream would be too complicated.
+        // Failures should be rare anyway and they will be properly handled
+        // by timeout/retry mechanism on the motherboard.
+
+        // We of course need to subscribe to broadcasted events.
+        subscribe<prusa3d_nfc_event_Event_1_0>();
 #endif
     }
 
@@ -203,6 +235,10 @@ private:
 #if HAS_AC_CONTROLLER()
             case prusa3d_ac_controller_Status_1_0_FIXED_PORT_ID_:
                 return receive_helper<prusa3d_ac_controller_Status_1_0>(now, transfer);
+#endif
+#if HAS_ANFC()
+            case prusa3d_nfc_event_Event_1_0_FIXED_PORT_ID_:
+                return receive_helper<prusa3d_nfc_event_Event_1_0>(now, transfer);
 #endif
             }
             return;
@@ -304,6 +340,16 @@ private:
     }
 #endif
 
+#if HAS_ANFC()
+    void receive(const cyphal::TimePoint, const CanardRxTransfer &transfer, const prusa3d_nfc_event_Event_1_0 &) {
+        application.receive_nfc_event(
+            cyphal::NodeId { transfer.metadata.remote_node_id },
+            std::span<const std::byte> {
+                (const std::byte *)transfer.payload,
+                transfer.payload_size });
+    }
+#endif
+
     static constexpr cyphal::NodeId anonymous {};
     static_assert(anonymous == cyphal::NodeId { CANARD_NODE_ID_UNSET });
 
@@ -399,6 +445,26 @@ private:
 #else
         (void)remote_node_id;
         (void)r;
+#endif
+    }
+
+    bool transmit_nfc_command_request(cyphal::NodeId remote_node_id, std::span<const std::byte> data) override {
+#if HAS_ANFC()
+        return transmit<prusa3d_nfc_command_Request_Request_1_0>(data, remote_node_id, transfer_id.nfc_command_request++);
+#else
+        (void)remote_node_id;
+        (void)data;
+        return false;
+#endif
+    }
+
+    bool transmit_nfc_command_accept_event(cyphal::NodeId remote_node_id, std::span<const std::byte> data) override {
+#if HAS_ANFC()
+        return transmit<prusa3d_nfc_command_AcceptEvent_Request_1_0>(data, remote_node_id, transfer_id.nfc_command_accept_event++);
+#else
+        (void)remote_node_id;
+        (void)data;
+        return false;
 #endif
     }
 

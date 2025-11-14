@@ -131,6 +131,14 @@ public:
         abort();
     }
 
+    bool transmit_nfc_command_request(NodeId remote_node_id, std::span<const std::byte>) final {
+        abort();
+    }
+
+    bool transmit_nfc_command_accept_event(NodeId remote_node_id, std::span<const std::byte>) final {
+        abort();
+    }
+
     constexpr auto operator<=>(const MockPresentation &) const = default;
 };
 

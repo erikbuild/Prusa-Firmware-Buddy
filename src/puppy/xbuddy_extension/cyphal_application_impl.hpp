@@ -905,6 +905,12 @@ public:
             .text = text.subspan(0, log_buffer.text_size),
         };
     }
+
+    void receive_nfc_event(cyphal::NodeId node_id, std::span<const std::byte> data) final {
+        // TODO BFW-8076 perform some useful work here
+        (void)node_id;
+        (void)data;
+    }
 };
 
 } // namespace cyphal

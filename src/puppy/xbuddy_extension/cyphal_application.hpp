@@ -68,6 +68,7 @@ public:
     virtual void receive_file_read_request(NodeId remote_node_id, TimePoint now, uint8_t transfer_id, uint32_t offset) = 0;
     virtual void receive_ac_controller_status(const ac_controller::Config &, const ac_controller::Status &) = 0;
     virtual void receive_diagnostic_record(NodeId remote_node_id, const Bytes &text) = 0;
+    virtual void receive_nfc_event(cyphal::NodeId remote_node_id, std::span<const std::byte>) = 0;
 
     // Called by modbus handlers.
 
