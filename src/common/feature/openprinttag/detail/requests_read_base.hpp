@@ -1,10 +1,12 @@
 /// @file
 #pragma once
 
+#include <array>
 #include <string_view>
 
 #include <feature/openprinttag/tool_tag.hpp>
 #include <feature/openprinttag/detail/requests_base.hpp>
+#include <openprinttag/opt_fields.hpp>
 
 namespace buddy::openprinttag {
 
@@ -12,15 +14,14 @@ class ReadFieldRequestBase : public Request {
 
 public:
     explicit ReadFieldRequestBase(ToolTagField tag_field)
-        : Request(tag_field.section)
-        , tag_field_(tag_field) {}
+        : Request(tag_field.section, tag_field.tag)
+        , field_(tag_field.field) {}
 
-    inline ToolTagField tag_field() const {
-        return tag_field_;
-    }
+    ToolTagField tag_field() const;
+    Field field() const { return field_; }
 
 protected:
-    const ToolTagField tag_field_;
+    const Field field_;
 };
 
 template <typename T, typename Parent = ReadFieldRequestBase>
@@ -57,22 +58,79 @@ class ReadInt32FieldRequest : public ReadRequestMixin<int32_t> {
 public:
     // Inherit constructor
     using ReadRequestMixin<int32_t>::ReadRequestMixin;
+
+    void serialize(RequestID, TagID, anfc::modbus::Request &) final;
+    void complete(std::span<const std::byte> event_data) final;
 };
 
-template <typename Enum>
-class ReadEnumFieldRequest : public ReadRequestMixin<Enum> {
+class ReadEnumFieldRequestBase : public ReadFieldRequestBase {
 
 public:
     // Inherit constructor
-    using ReadRequestMixin<Enum>::ReadRequestMixin;
+    using ReadFieldRequestBase::ReadFieldRequestBase;
+
+    void serialize(RequestID, TagID, anfc::modbus::Request &request) final;
+    void complete(std::span<const std::byte>) final;
+
+protected:
+    virtual void set_result(int32_t value) = 0;
 };
 
 template <typename Enum>
-class ReadEnumArrayFieldRequest : public ReadRequestMixin<std::span<const Enum>> {
+class ReadEnumFieldRequest : public ReadRequestMixin<Enum, ReadEnumFieldRequestBase> {
 
 public:
     // Inherit constructor
-    using ReadRequestMixin<std::span<const Enum>>::ReadRequestMixin;
+    using ReadRequestMixin<Enum, ReadEnumFieldRequestBase>::ReadRequestMixin;
+
+private:
+    void set_result(int32_t value) final {
+        // Validate the enum value is within capacity bounds
+        if (value < 0 || static_cast<size_t>(value) >= ::openprinttag::enum_capacity<Enum>()) {
+            this->set_finished(std::unexpected(Request::Error::field_not_present));
+            return;
+        }
+        this->result_ = static_cast<Enum>(value);
+        this->set_finished({});
+    }
+};
+
+class ReadEnumArrayRequestBase : public ReadFieldRequestBase {
+
+public:
+    // Inherit constructor
+    using ReadFieldRequestBase::ReadFieldRequestBase;
+
+    void serialize(RequestID, TagID, anfc::modbus::Request &request) final;
+    void complete(std::span<const std::byte>) final;
+
+protected:
+    virtual void set_result(const uint16_t *elements, size_t count) = 0;
+};
+
+template <typename Enum, size_t max_size>
+class ReadEnumArrayFieldRequest : public ReadRequestMixin<std::span<const Enum>, ReadEnumArrayRequestBase> {
+
+public:
+    // Inherit constructor
+    using ReadRequestMixin<std::span<const Enum>, ReadEnumArrayRequestBase>::ReadRequestMixin;
+
+private:
+    void set_result(const uint16_t *elements, size_t count) final {
+        count = std::min(count, max_size);
+        size_t valid_count = 0;
+        const auto capacity = ::openprinttag::enum_capacity<Enum>();
+        for (size_t i = 0; i < count; ++i) {
+            // Validate each enum value is within capacity bounds
+            if (elements[i] < capacity) {
+                buffer_[valid_count++] = static_cast<Enum>(elements[i]);
+            }
+        }
+        this->result_ = { buffer_.data(), valid_count };
+        this->set_finished({});
+    }
+
+    std::array<Enum, max_size> buffer_;
 };
 
 class ReadFloatFieldRequest : public ReadRequestMixin<float> {
@@ -80,6 +138,9 @@ class ReadFloatFieldRequest : public ReadRequestMixin<float> {
 public:
     // Inherit constructor
     using ReadRequestMixin<float>::ReadRequestMixin;
+
+    void serialize(RequestID, TagID, anfc::modbus::Request &) final;
+    void complete(std::span<const std::byte> event_data) final;
 };
 
 class ReadStringRequestBase : public ReadRequestMixin<std::string_view> {
@@ -90,6 +151,9 @@ public:
         : ReadRequestMixin(tag_field)
         , buffer_(buffer) {
     }
+
+    void serialize(RequestID, TagID, anfc::modbus::Request &) final;
+    void complete(std::span<const std::byte> event_data) final;
 
 protected:
     inline void set_buffer(std::span<char> set) {

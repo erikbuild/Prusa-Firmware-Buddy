@@ -10,9 +10,32 @@ thread_local std::vector<const Request *> request_log;
 
 const ToolTag tool_tag { VirtualToolIndex::from_raw(0), 10 };
 
+Request::~Request() {}
+
+void Request::set_finished(std::expected<std::monostate, Error> result) {
+    assert(!finished_);
+    finished_ = true;
+    error_ = result.error_or(Error::_cnt);
+}
+
 void Request::issue() {
-    issued_ = true;
     request_log.push_back(this);
+}
+
+void ReadInt32FieldRequest::complete(std::span<const std::byte> event_data) {}
+void ReadFloatFieldRequest::complete(std::span<const std::byte> event_data) {}
+void ReadStringRequestBase::complete(std::span<const std::byte> event_data) {}
+
+void ReadInt32FieldRequest::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+void ReadFloatFieldRequest::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+void ReadStringRequestBase::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+
+std::optional<ToolTag> ToolTag::for_tool_ephemeral(VirtualToolIndex tool) {
+    return std::nullopt;
+}
+
+std::optional<ToolTag> ToolTag::for_tool_assigned(VirtualToolIndex tool) {
+    return std::nullopt;
 }
 
 TEST_CASE("buddy::openprinttag::MultiRequest") {

@@ -33,6 +33,12 @@
     #include <puppies/ac_controller.hpp>
 #endif
 
+#include <option/has_anfc.h>
+#if HAS_ANFC()
+    #include <anfc/modbus.hpp>
+    #include <feature/openprinttag/request_manager.hpp>
+#endif
+
 #if HAS_PUPPY_MODULARBED()
     #include <puppies/modular_bed.hpp>
 #endif
@@ -51,6 +57,31 @@
 LOG_COMPONENT_DEF(Puppies, logging::Severity::debug);
 
 namespace buddy::puppies {
+
+#if HAS_ANFC()
+namespace {
+    class AnfcModbusClient final : public anfc::modbus::Client {
+    private:
+        PuppyModbus &bus;
+
+    public:
+        explicit AnfcModbusClient(PuppyModbus &bus)
+            : bus { bus } {}
+
+        bool read(anfc::Device device, anfc::modbus::Event &event) final {
+            return bus.read_input_registers(anfc::modbus::server_address(device), event);
+        }
+
+        bool write(anfc::Device device, const anfc::modbus::Request &request) final {
+            return bus.write_holding_registers(anfc::modbus::server_address(device), request);
+        }
+
+        bool write(anfc::Device device, const anfc::modbus::AcceptEvent &accept_event) final {
+            return bus.write_holding_registers(anfc::modbus::server_address(device), accept_event);
+        }
+    };
+} // namespace
+#endif
 
 osThreadId puppy_task_handle;
 
@@ -240,6 +271,13 @@ static void puppy_task_loop(PuppyModbus &bus) {
                 }
 
                 worked |= status == CommunicationStatus::OK;
+            }
+#endif
+#if HAS_ANFC()
+            if (AnfcModbusClient client { bus }; buddy::openprinttag::manager().step(client)) {
+                worked = true;
+            } else {
+                return;
             }
 #endif
 

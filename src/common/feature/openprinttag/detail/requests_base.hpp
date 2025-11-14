@@ -1,15 +1,33 @@
 /// @file
 #pragma once
 
-#include <cassert>
-
-#include <openprinttag/opt_reader.hpp>
-#include <utils/uncopyable.hpp>
-#include <compact_pointer.hpp>
-
 #include "defines.hpp"
+#include <anfc/modbus.hpp>
+#include <anfc/types.hpp>
+#include <cassert>
+#include <compact_pointer.hpp>
+#include <feature/openprinttag/tool_tag.hpp>
+#include <openprinttag/opt_reader.hpp>
+#include <span>
+#include <tool_index.hpp>
+#include <utils/uncopyable.hpp>
 
 namespace buddy::openprinttag {
+
+/// Represents a type-safe request ID.
+class RequestID {
+    uint16_t value;
+
+public:
+    constexpr RequestID() = default;
+
+    constexpr explicit RequestID(uint16_t value)
+        : value { value } {}
+
+    constexpr uint16_t to_underlying() const { return value; }
+
+    constexpr bool operator==(const RequestID &) const = default;
+};
 
 /// Base class for any OpenPrintTag reader request.
 /// - The system is asynchronous:
@@ -27,12 +45,20 @@ public:
 
 public:
     /// Issues the request.
-    /// If the request is already issues, the issuement is cancelled and it gets reissued again
-    virtual void issue();
+    /// If the request is already issued, the issuement is cancelled and it gets reissued again
+    void issue();
+
+    /// Serializes the request into the modbus request buffer
+    virtual void serialize(RequestID, TagID, anfc::modbus::Request &) = 0;
+
+    /// Called when the request completes with event data
+    virtual void complete(std::span<const std::byte> event_data) = 0;
+
+    /// @returns the ToolTag associated with this request (for tag_id lookup)
+    const ToolTag &tool_tag() const { return tool_tag_; };
 
     /// @returns whether the request is still running or not
     bool finished() const {
-        assert(issued_);
         return finished_;
     }
 
@@ -57,12 +83,17 @@ public:
 
 protected:
     /// This is an kinda-interface base class, cannot be constructed on its own
-    Request(std::optional<Region> region)
-        : region_(region.value_or(Region::_cnt)) {}
+    Request(std::optional<Region> region, const ToolTag &tool_tag)
+        : region_(region.value_or(Region::_cnt))
+        , tool_tag_(tool_tag) {}
+
+    ~Request();
 
     void set_finished(std::expected<std::monostate, Error> result);
 
 private:
+    friend class Manager;
+
     /// Next request in the linked list of requests
     CompactRAMPointer<Request> next_request;
 
@@ -76,8 +107,9 @@ private:
     Region region_ : 2 = Region::_cnt;
     static_assert(std::to_underlying(Region::_cnt) < (1 << 2));
 
-    bool issued_ : 1 = false;
     bool finished_ : 1 = false;
+
+    ToolTag tool_tag_;
 };
 
 } // namespace buddy::openprinttag

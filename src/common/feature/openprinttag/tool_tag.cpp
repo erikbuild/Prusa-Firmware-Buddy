@@ -1,3 +1,4 @@
+/// @file
 #include "tool_tag.hpp"
 
 #include <bsod/bsod.h>

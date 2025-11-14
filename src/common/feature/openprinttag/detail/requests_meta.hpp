@@ -40,6 +40,6 @@ struct FieldTypeTraits<FieldType::enum_> {
 template <>
 struct FieldTypeTraits<FieldType::enum_array> {
     template <auto field>
-    using ReadFieldRequest = ReadEnumArrayFieldRequest<typename FieldTraits<field>::Enum>;
+    using ReadFieldRequest = ReadEnumArrayFieldRequest<typename FieldTraits<field>::Enum, FieldTraits<field>::max_length>;
 };
 }; // namespace buddy::openprinttag

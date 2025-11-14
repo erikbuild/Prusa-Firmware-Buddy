@@ -155,7 +155,7 @@ FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::tool_init_asy
             continue;
         }
 
-        log_error(OpenPrintTag, "tool_init read error field=%i err=%i", (int)static_cast<ReadFieldRequestBase *>(req)->tag_field().field, (int)req->error());
+        log_error(OpenPrintTag, "tool_init read error field=%i err=%i", (int)static_cast<ReadFieldRequestBase *>(req)->field(), (int)req->error());
 
         using Error = Request::Error;
         switch (req->error()) {

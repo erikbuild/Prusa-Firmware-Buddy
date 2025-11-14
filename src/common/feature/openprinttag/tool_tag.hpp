@@ -31,15 +31,7 @@ public:
     /// @returns tag that is currently detected at the specified tool spool slot
     /// This can be a different tag than @p for_tool_assigned in case the user removes the assignes pool
     /// !!! NOT to be used for anything related to printing, use for_tool_assigned for that
-    static std::optional<ToolTag> for_tool_ephemeral(VirtualToolIndex tool) {
-        // Just a stub for testing
-        // TODO proper implementation
-        if (tool.to_raw() < 2) {
-            return ToolTag { tool, 1 };
-        } else {
-            return std::nullopt;
-        }
-    }
+    static std::optional<ToolTag> for_tool_ephemeral(VirtualToolIndex tool);
 
     /// @returns tag that is assigned to the specified tool
     /// This is a long-term assignment that happens during filament load, and is unassigned on unload
@@ -68,6 +60,8 @@ public:
     ToolTag &operator=(const ToolTag &) = default;
 
 private:
+    friend class Manager;
+
     /// Hash of the tag UID (to reduce size)
     /// This ensures that we don't accidentally read/write something from a different tag (if tag for a tool changes suddenly)
     UIDHash uid_hash_;

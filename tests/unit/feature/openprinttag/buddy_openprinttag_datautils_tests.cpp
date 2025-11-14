@@ -7,7 +7,6 @@
 using namespace buddy::openprinttag;
 
 void Request::issue() {
-    issued_ = true;
 }
 
 const ToolTag tool_tag { VirtualToolIndex::from_raw(0), 10 };
@@ -15,6 +14,34 @@ const ToolTag tool_tag { VirtualToolIndex::from_raw(0), 10 };
 template <CField auto field>
 auto stub_field(typename ReadFieldRequest<field>::Value val) {
     return std::pair { tool_tag.field(field), val };
+}
+
+Request::~Request() {}
+
+void Request::set_finished(std::expected<std::monostate, Error> result) {
+    assert(!finished_);
+    finished_ = true;
+    error_ = result.error_or(Error::_cnt);
+}
+
+void ReadEnumArrayRequestBase::complete(std::span<const std::byte> event_data) {}
+void ReadEnumFieldRequestBase::complete(std::span<const std::byte> event_data) {}
+void ReadFloatFieldRequest::complete(std::span<const std::byte> event_data) {}
+void ReadInt32FieldRequest::complete(std::span<const std::byte> event_data) {}
+void ReadStringRequestBase::complete(std::span<const std::byte> event_data) {}
+
+void ReadEnumArrayRequestBase::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+void ReadEnumFieldRequestBase::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+void ReadFloatFieldRequest::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+void ReadInt32FieldRequest::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+void ReadStringRequestBase::serialize(RequestID, TagID, anfc::modbus::Request &) {}
+
+std::optional<ToolTag> ToolTag::for_tool_ephemeral(VirtualToolIndex tool) {
+    return std::nullopt;
+}
+
+std::optional<ToolTag> ToolTag::for_tool_assigned(VirtualToolIndex tool) {
+    return std::nullopt;
 }
 
 FilamentTypeParameters FilamentType::parameters() const {

@@ -1,6 +1,7 @@
 /// @file
 #pragma once
 
+#include <span>
 #include <string_view>
 
 #include <feature/openprinttag/tool_tag.hpp>
@@ -12,7 +13,7 @@ class WriteFieldRequestBase : public Request {
 
 public:
     explicit WriteFieldRequestBase(ToolTagField tag_field)
-        : Request(tag_field.section)
+        : Request(tag_field.section, tag_field.tag)
         , tag_field_(tag_field) {}
 
 protected:
@@ -40,6 +41,9 @@ class WriteFloatFieldRequest : public WriteFieldRequestT<float> {
 public:
     // Inherit constructor
     using WriteFieldRequestT<float>::WriteFieldRequestT;
+
+    void serialize(RequestID, TagID, anfc::modbus::Request &) final;
+    void complete(std::span<const std::byte> event_data) final;
 };
 
 } // namespace buddy::openprinttag
