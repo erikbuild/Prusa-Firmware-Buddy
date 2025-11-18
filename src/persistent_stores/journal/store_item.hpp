@@ -199,6 +199,17 @@ struct DeprecatedStoreItem {
     using value_type = DataT;
 };
 
+template <StoreItemDataC DataT, auto DefaultVal, journal::BackendC BackendT, uint16_t HashedID, uint8_t max_item_count, uint8_t item_count>
+struct DeprecatedStoreItemArray {
+    static constexpr uint16_t hashed_id { HashedID };
+    static constexpr size_t data_size { sizeof(DataT) * item_count };
+    static constexpr bool is_deleted { true };
+    static constexpr ::std::array<DataT, max_item_count> default_val = { DefaultVal };
+
+    static_assert(data_size < BackendT::MAX_ITEM_SIZE * max_item_count, "Item array is too large");
+    using value_type = ::std::array<DataT, max_item_count>;
+};
+
 } // namespace journal
 
 #pragma GCC pop_options

@@ -43,6 +43,10 @@ struct DeprecatedStoreConfig {
     template <StoreItemDataC DataT, auto DefaultVal, typename BackendT::Id HashedID>
     using StoreItem
         = DeprecatedStoreItem<DataT, DefaultVal, BackendT, HashedID>;
+
+    template <StoreItemDataC DataT, auto DefaultVal, typename BackendT::Id HashedID, uint8_t max_item_count, uint8_t item_count>
+    using StoreItemArray
+        = DeprecatedStoreItemArray<DataT, DefaultVal, BackendT, HashedID, max_item_count, item_count>;
 };
 
 /**
