@@ -62,7 +62,6 @@ target_link_libraries(
           prusa_nfc_task
           st25r39xxb
           raii
-          cobs
           crc
           mbedTLS
   )
