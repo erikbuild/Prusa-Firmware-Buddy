@@ -7,7 +7,7 @@
 #include "window_text.hpp"
 #include "i18n.h"
 #include "img_resources.hpp"
-#include <client_response.hpp>
+#include <fsm/print_preview_phases.hpp>
 #include <tools_mapping.hpp>
 
 const char *label_texts[] = {

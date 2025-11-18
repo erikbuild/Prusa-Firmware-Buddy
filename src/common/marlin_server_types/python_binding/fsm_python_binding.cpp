@@ -18,6 +18,7 @@
     #include "selftest_heaters_type.hpp"
 #endif
 #include "fsm/filament_change_phases.hpp"
+#include <fsm/print_preview_phases.hpp>
 
 namespace nb = nanobind;
 using namespace nb::literals;

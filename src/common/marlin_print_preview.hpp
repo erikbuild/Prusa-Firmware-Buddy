@@ -12,6 +12,7 @@
 #include <option/has_tool_mapping.h>
 #include <async_job/async_job.hpp>
 #include <inplace_function.hpp>
+#include <fsm/print_preview_phases.hpp>
 
 #include <option/has_spool_join.h>
 #if HAS_SPOOL_JOIN()

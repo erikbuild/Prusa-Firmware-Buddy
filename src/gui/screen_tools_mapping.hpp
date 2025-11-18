@@ -4,6 +4,7 @@
 #include <i18n.h>
 #include <window_text.hpp>
 #include <client_response.hpp>
+#include <fsm/print_preview_phases.hpp>
 #include <window_colored_rect.hpp>
 #include <radio_button.hpp>
 #include <i_window_menu_item.hpp>

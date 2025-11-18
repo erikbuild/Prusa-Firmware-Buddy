@@ -7,6 +7,7 @@
 #include <marlin_vars.hpp>
 #include <fsm/safety_timer_phases.hpp>
 #include <fsm/filament_change_phases.hpp>
+#include <fsm/print_preview_phases.hpp>
 #include <option/has_esp.h>
 #include <option/has_chamber_vents.h>
 #include <option/has_gearbox_alignment.h>

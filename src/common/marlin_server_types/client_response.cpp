@@ -1,6 +1,7 @@
 #include "client_response.hpp"
 #include <option/has_manual_belt_tuning.h>
 #include <fsm/safety_timer_phases.hpp>
+#include <fsm/print_preview_phases.hpp>
 
 #if HAS_MANUAL_BELT_TUNING()
     #include <fsm/manual_belt_tuning_phases.hpp>

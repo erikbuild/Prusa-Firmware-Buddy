@@ -7,6 +7,7 @@
 #include "fs_event_autolock.hpp"
 #include "static_alocation_ptr.hpp"
 #include <common/fsm_base_types.hpp>
+#include <fsm/print_preview_phases.hpp>
 #include <guiconfig/guiconfig.h>
 #include <option/has_tool_mapping.h>
 #include <find_error.hpp>
