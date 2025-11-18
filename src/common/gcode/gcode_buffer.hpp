@@ -52,7 +52,7 @@ public:
 
         bool is_empty() const { return begin == end; }
         uint32_t get_uint() { return atol(&*begin); }
-        float get_float() { return atof(&*begin); };
+        float get_float() { return strtof(&*begin, nullptr); };
         String get_string();
 
         bool operator==(const char *str) const { return std::equal(begin, end, str) && str[end - begin] == '\0' /* safe, after the equal passed */; }

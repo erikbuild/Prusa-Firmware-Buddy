@@ -357,7 +357,7 @@ MI_SOUND_VOLUME::MI_SOUND_VOLUME()
     : WiSpin(static_cast<uint8_t>(sound::get_volume()), sound_volume_spin_config, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 
 void MI_SOUND_VOLUME::OnClick() {
-    sound::set_volume(GetVal());
+    sound::set_volume(static_cast<int>(GetVal()));
 }
 
 /*****************************************************************************/
@@ -390,7 +390,7 @@ static constexpr NumericInputConfig timezone_spin_config = {
 MI_TIMEZONE::MI_TIMEZONE()
     : WiSpin(config_store().timezone.get(), timezone_spin_config, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 void MI_TIMEZONE::OnClick() {
-    int8_t timezone = GetVal();
+    int8_t timezone = static_cast<int8_t>(GetVal());
     config_store().timezone.set(timezone);
 }
 
@@ -468,14 +468,6 @@ MI_INFO_MMU::MI_INFO_MMU()
     : WI_INFO_t(_(label), nullptr, is_enabled_t::yes, is_hidden_t::yes) {
 }
 
-MI_INFO_BOARD::MI_INFO_BOARD()
-    : WI_INFO_t(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
-}
-
-MI_INFO_SERIAL_NUM::MI_INFO_SERIAL_NUM()
-    : WiInfo<28>(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
-}
-
 /*****************************************************************************/
 // MI_FS_AUTOLOAD
 static is_hidden_t get_autoload_hide_state() {
@@ -508,7 +500,7 @@ MI_PRINT_PROGRESS_TIME::MI_PRINT_PROGRESS_TIME()
         config, _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
 }
 void MI_PRINT_PROGRESS_TIME::OnClick() {
-    config_store().print_progress_time.set(GetVal());
+    config_store().print_progress_time.set(static_cast<uint16_t>(GetVal()));
 }
 
 /*****************************************************************************/

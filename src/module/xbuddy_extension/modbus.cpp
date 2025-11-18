@@ -20,3 +20,16 @@ static_assert(6 /*header*/ + sizeof(xbuddy_extension::modbus::Chunk) + 1 /*unuse
 // TODO invent some better trait for this
 static_assert(6 /*header*/ + sizeof(xbuddy_extension::modbus::Digest) < 253 /*pdu*/);
 static_assert(6 /*header*/ + sizeof(xbuddy_extension::modbus::LogMessage) < 253 /*pdu*/);
+
+xbuddy_extension::FileId xbuddy_extension::modbus::parse_file_id(uint16_t file_id) {
+    switch (const auto value = static_cast<FileId>(file_id)) {
+    case FileId::none:
+    case FileId::firmware_ac_controller:
+        return value;
+    }
+    return FileId::none;
+}
+
+uint16_t xbuddy_extension::modbus::serialize_file_id(xbuddy_extension::FileId file_id) {
+    return static_cast<uint16_t>(file_id);
+}

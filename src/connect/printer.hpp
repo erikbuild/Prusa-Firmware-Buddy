@@ -118,7 +118,7 @@ public:
 #endif
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
         ChamberInfo chamber_info;
-        bool addon_power;
+        bool addon_power = false;
 #endif
 #if HAS_MMU2()
         MMU2::Version mmu_version = { 0, 0, 0 };
@@ -141,8 +141,8 @@ public:
         float temp_psu = 0;
         float temp_ambient = 0;
 #endif
-        float target_nozzle = 0;
-        float target_bed = 0;
+        int16_t target_nozzle = 0;
+        int16_t target_bed = 0;
         float pos[4] = { 0, 0, 0, 0 };
         float filament_used = 0;
         // Note: These strings live in a shared buffer in the real implementation. As a result:

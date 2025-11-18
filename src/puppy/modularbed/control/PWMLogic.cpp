@@ -46,7 +46,7 @@ static void ApplySinglePWMPulse(HeatbedletInfo *pHBInfo, uint32_t *pNextFreePuls
 static void StoreValuesToModbusRegisters();
 
 static int compareHBInfo(const void *a, const void *b) {
-    return ((*(HeatbedletInfo **)b)->m_PWMValue - (*(HeatbedletInfo **)a)->m_PWMValue);
+    return static_cast<int>((*(HeatbedletInfo **)b)->m_PWMValue - (*(HeatbedletInfo **)a)->m_PWMValue);
 }
 
 void Init() {

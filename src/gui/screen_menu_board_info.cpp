@@ -1,0 +1,87 @@
+/// @file
+#include "screen_menu_board_info.hpp"
+
+#include <common/data_exchange.hpp>
+#include <common/otp.hpp>
+#include <device/board.h>
+#include <gui/img_resources.hpp>
+#include <option/has_love_board.h>
+#include <option/has_xlcd.h>
+#include <utils/string_builder.hpp>
+
+WindowMenuInfoOtpBase::WindowMenuInfoOtpBase(const OTP_v2 &otp) {
+    StringBuilder { buffer }
+        .append_printf("%.*s/%u", sizeof(otp.datamatrix), otp.datamatrix, otp.bomID)
+        .check();
+}
+
+string_view_utf8 WindowMenuInfoOtpBase::get() const {
+    return string_view_utf8::MakeRAM(buffer.data());
+}
+
+WindowMenuInfoOtp::WindowMenuInfoOtp()
+    : WindowMenuInfoOtpBase { OTP_v2 {} }
+    , IWiInfo {
+        {},
+        string_view_utf8::MakeNULLSTR(),
+        nullptr,
+        is_enabled_t::no,
+        is_hidden_t::yes,
+    } {
+}
+
+WindowMenuInfoOtp::WindowMenuInfoOtp(const char *label, const OTP_v2 &otp)
+    : WindowMenuInfoOtpBase { otp }
+    , IWiInfo {
+        WindowMenuInfoOtpBase::get(),
+        string_view_utf8::MakeCPUFLASH(label),
+    } {
+}
+
+static constexpr const char *motherboard_label =
+#if BOARD_IS_XBUDDY()
+    "xBuddy"
+#elif BOARD_IS_XLBUDDY()
+    "XLBuddy"
+#else
+    #error
+#endif
+    ;
+
+MI_OTP_MOTHERBOARD::MI_OTP_MOTHERBOARD()
+    : WiInfo<28> { string_view_utf8::MakeCPUFLASH(motherboard_label) } {
+    serial_nr_t serial_nr;
+    otp_get_serial_nr(serial_nr);
+    uint8_t bom_id = otp_get_bom_id().value_or(0);
+
+    // len of serial number plus '/' and max 3-digit number and null
+    ArrayStringBuilder<serial_nr.size() + 1 + 3 + 1> sb;
+    sb.append_printf("%s/%u", serial_nr.data(), bom_id);
+    ChangeInformation(sb.str());
+}
+
+MI_OTP_LOVEBOARD::MI_OTP_LOVEBOARD()
+    : WindowMenuInfoOtp {
+#if HAS_LOVE_BOARD()
+    "LoveBoard", data_exchange::get_loveboard_eeprom()
+#endif
+}
+{
+}
+
+MI_OTP_XLCD::MI_OTP_XLCD()
+    : WindowMenuInfoOtp {
+#if HAS_XLCD()
+    "xLCD", data_exchange::get_xlcd_eeprom()
+#endif
+}
+{
+}
+
+ScreenMenuBoardInfo::ScreenMenuBoardInfo()
+    : ScreenMenuBoardInfo__ {
+        _("BOARD INFO"),
+    } {
+    header.SetIcon(&img::info_16x16);
+    EnableLongHoldScreenAction();
+}

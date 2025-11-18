@@ -900,7 +900,7 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
     // Segment the move enough for MBL
     #if ENABLED(AUTO_BED_LEVELING_UBL)
     if(hints.apply_modifiers && planner.leveling_active && planner.leveling_active_at_z(target.z)) {
-      segment_count = std::max<SegmentCount>(segment_count, std::round(xy_distance / LEVELED_SEGMENT_LENGTH));
+      segment_count = std::max(segment_count, static_cast<SegmentCount>(std::round(xy_distance / LEVELED_SEGMENT_LENGTH)));
     }
     #endif
 
@@ -910,8 +910,8 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
       // Using xy_distance here is quite approximate, but good enough for our purposes here
       const float duration = (xy_distance / fr_mm_s);
 
-      segment_count = std::max<SegmentCount>(segment_count, abs(full_diff.z) / buddy::EmergencyStop::max_segment_z_mm);
-      segment_count = std::max<SegmentCount>(segment_count, duration / buddy::EmergencyStop::max_segment_time_s);
+      segment_count = std::max(segment_count, static_cast<SegmentCount>(std::abs(full_diff.z) / buddy::EmergencyStop::max_segment_z_mm));
+      segment_count = std::max(segment_count, static_cast<SegmentCount>(duration / buddy::EmergencyStop::max_segment_time_s));
     }
     #endif
   }

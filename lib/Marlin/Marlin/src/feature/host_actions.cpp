@@ -25,10 +25,11 @@
 #if ENABLED(HOST_ACTION_COMMANDS)
 
 #include "host_actions.h"
+#include <option/has_pause.h>
 
 //#define DEBUG_HOST_ACTIONS
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#if HAS_PAUSE()
   #include "pause.h"
   #include "../gcode/queue.h"
 #endif
@@ -111,7 +112,7 @@ void host_action(const char * const pstr, const bool eol) {
       case PROMPT_FILAMENT_RUNOUT:
         msg = PSTR("FILAMENT_RUNOUT");
         if (response == 0) {
-          #if ENABLED(ADVANCED_PAUSE_FEATURE)
+          #if HAS_PAUSE()
             pause_menu_response = PAUSE_RESPONSE_EXTRUDE_MORE;
           #endif
           host_action_prompt_end();   // Close current prompt
@@ -122,7 +123,7 @@ void host_action(const char * const pstr, const bool eol) {
           host_action_prompt_show();
         }
         else if (response == 1) {
-          #if ENABLED(ADVANCED_PAUSE_FEATURE)
+          #if HAS_PAUSE()
             pause_menu_response = PAUSE_RESPONSE_RESUME_PRINT;
           #endif
         }
@@ -135,7 +136,7 @@ void host_action(const char * const pstr, const bool eol) {
         break;
       case PROMPT_PAUSE_RESUME:
         msg = PSTR("LCD_PAUSE_RESUME");
-        #if ENABLED(ADVANCED_PAUSE_FEATURE)
+        #if HAS_PAUSE()
           queue.inject_P(PSTR("M24"));
         #endif
         break;

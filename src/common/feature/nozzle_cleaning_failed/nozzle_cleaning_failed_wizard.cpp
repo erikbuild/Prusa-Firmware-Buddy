@@ -62,8 +62,8 @@ public:
 #if HAS_NOZZLE_CLEANING_FAILED_PURGING()
         // Recommend to do the purge sequence
         if (recommend_purge()) {
-            const float temp_before = Temperature::degTargetHotend(active_extruder);
-            const float target_temp = config_store().get_filament_type(active_extruder).parameters().nozzle_temperature;
+            const int16_t temp_before = Temperature::degTargetHotend(active_extruder);
+            const int16_t target_temp = config_store().get_filament_type(active_extruder).parameters().nozzle_temperature;
 
             // Heat up the nozzle
             if (!wait_temp(target_temp)) {
@@ -155,13 +155,13 @@ public:
         }
     }
 
-    [[nodiscard]] bool wait_temp(float target_temp) {
+    [[nodiscard]] bool wait_temp(int16_t target_temp) {
         fsm_change(Phase::wait_temp);
         float start_temp = Temperature::degHotend(active_extruder);
 
         struct {
             float start_temp;
-            float target_temp;
+            int16_t target_temp;
         } temps {
             start_temp,
             target_temp
@@ -197,8 +197,8 @@ public:
         fsm_change(Phase::purge);
         constexpr int16_t purge_length = 20;
 
-        const int16_t total_length = buddy::auto_retract().retracted_distance().value_or(0) + purge_length; // We need to ensure we purge even if the value is invalid (nullopt)
-        int16_t reference_e_pos = marlin_vars().native_pos[MARLIN_VAR_INDEX_E];
+        const int16_t total_length = static_cast<int16_t>(buddy::auto_retract().retracted_distance().value_or(0)) + purge_length; // We need to ensure we purge even if the value is invalid (nullopt)
+        int16_t reference_e_pos = static_cast<int16_t>(marlin_vars().native_pos[MARLIN_VAR_INDEX_E]);
 
         Subscriber subscriber(marlin_server::idle_publisher, [reference_e_pos, total_length, this] {
             if (marlin_server::get_response_from_phase(Phase::purge) == Response::Abort) {

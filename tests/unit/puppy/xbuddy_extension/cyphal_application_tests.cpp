@@ -399,7 +399,7 @@ SCENARIO("happy case") {
                 app.receive_file_read_request(node_id, now, id, 0);
                 run(app, mock, make_timepoint(4001));
                 auto modbus_request = app.request();
-                CHECK(modbus_request.flash_request == cyphal::FirmwareFile::cz_prusa3d_honeybee_ac_controller);
+                CHECK(modbus_request.flash_request == cyphal::FirmwareFile::firmware_ac_controller);
                 CHECK(modbus_request.offset == 0);
 
                 std::optional<size_t> last_sent = std::nullopt;
@@ -532,11 +532,11 @@ SCENARIO("happy case") {
                         THEN("application requests file hash from parent system") {
                             CHECK(mock == mock_before);
                             const auto modbus_request = app.request();
-                            CHECK(modbus_request.hash_request == cyphal::FirmwareFile::cz_prusa3d_honeybee_ac_controller);
+                            CHECK(modbus_request.hash_request == cyphal::FirmwareFile::firmware_ac_controller);
 
                             AND_WHEN("parent system sends file hash to application") {
                                 std::byte digest[32] = {};
-                                (void)app.receive_digest(cyphal::FirmwareFile::cz_prusa3d_honeybee_ac_controller, 0, digest);
+                                (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, digest);
                                 app.receive_node_heartbeat(node_id, make_timepoint(1000), healthy_firmware);
                                 app.receive_node_heartbeat(node_id, make_timepoint(2000), healthy_firmware);
                                 const auto mock_before = run(app, mock, make_timepoint(2500));
@@ -618,11 +618,11 @@ SCENARIO("happy case") {
                         REQUIRE(mock.node_execute_command_request.size() == mock_before.node_execute_command_request.size() + 1);
                         CHECK(mock.node_execute_command_request.back() == get_app_salted_hash);
                         const auto modbus_request = app.request();
-                        CHECK(modbus_request.hash_request == cyphal::FirmwareFile::cz_prusa3d_honeybee_ac_controller);
+                        CHECK(modbus_request.hash_request == cyphal::FirmwareFile::firmware_ac_controller);
 
                         AND_WHEN("they respond with matching hash") {
                             const auto digest = generate_random_digest();
-                            (void)app.receive_digest(cyphal::FirmwareFile::cz_prusa3d_honeybee_ac_controller, 0, digest);
+                            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, digest);
                             app.receive_node_execute_command_response(node_id, 0, digest);
                             const auto mock_before = run(app, mock, make_timepoint(3));
 
@@ -634,7 +634,7 @@ SCENARIO("happy case") {
                         AND_WHEN("they respond with mismatching hash") {
                             const auto digest1 = generate_random_digest();
                             const auto digest2 = generate_random_digest();
-                            (void)app.receive_digest(cyphal::FirmwareFile::cz_prusa3d_honeybee_ac_controller, 0, digest1);
+                            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, digest1);
                             app.receive_node_execute_command_response(node_id, 0, digest2);
                             const auto mock_before = run(app, mock, make_timepoint(3));
 

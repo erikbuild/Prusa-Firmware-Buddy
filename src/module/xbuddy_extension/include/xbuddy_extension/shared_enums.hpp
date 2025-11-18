@@ -28,4 +28,10 @@ enum class NodeState {
     ready,
 };
 
+/// File id used in modbus structures.
+enum class FileId {
+    none = 0,
+    firmware_ac_controller,
+};
+
 } // namespace xbuddy_extension

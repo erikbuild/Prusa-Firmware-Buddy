@@ -43,13 +43,13 @@ public:
     Name name { '\0' };
 
     /// Nozzle temperature for the filament, in degrees Celsius
-    uint16_t nozzle_temperature = 215;
+    int16_t nozzle_temperature = 215;
 
     /// Nozzle preheat temperature for the filament, in degrees Celsius
-    uint16_t nozzle_preheat_temperature = 170;
+    int16_t nozzle_preheat_temperature = 170;
 
     /// Bed temperature for the filament, in degrees Celsius
-    uint16_t heatbed_temperature = 60;
+    int16_t heatbed_temperature = 60;
 
 #if HAS_FILAMENT_HEATBREAK_PARAM()
     /// Target heatbreak temperature for the filament

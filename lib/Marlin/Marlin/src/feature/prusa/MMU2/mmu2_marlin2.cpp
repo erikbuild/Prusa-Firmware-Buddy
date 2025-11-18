@@ -77,14 +77,12 @@ void UnloadDistanceDetector::operator()() {
 }
 
 void planner_synchronize_hook(UnloadDistanceDetector &udd) {
-    bool emptying_buffer_orig = planner.emptying();
-    planner.set_emptying_buffer(true);
-    while (planner.busy()) {
-        idle(true);
-        udd();
-    }
-    planner.set_emptying_buffer(emptying_buffer_orig);
-}
+    Subscriber idle_sub {
+        marlin_server::idle_publisher,
+        [&] { udd(); },
+    };
+    planner.synchronize();
+};
 
 bool planner_any_moves() {
     return planner.processing();
@@ -179,7 +177,7 @@ int16_t thermal_degTargetHotend() {
     return thermalManager.degTargetHotend(active_extruder);
 }
 
-int16_t thermal_degHotend() {
+float thermal_degHotend() {
     return thermalManager.degHotend(active_extruder);
 }
 

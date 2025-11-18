@@ -22,16 +22,17 @@
 
 #include "config_features.h"
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include <option/has_pause.h>
+static_assert(HAS_PAUSE());
 
-    #include "../../../lib/Marlin/Marlin/src/gcode/gcode.h"
-    #include "../../../lib/Marlin/Marlin/src/feature/pause.h"
-    #include "../../../lib/Marlin/Marlin/src/module/motion.h"
-    #include "../../../lib/Marlin/Marlin/src/module/printcounter.h"
+#include "../../../lib/Marlin/Marlin/src/gcode/gcode.h"
+#include "../../../lib/Marlin/Marlin/src/feature/pause.h"
+#include "../../../lib/Marlin/Marlin/src/module/motion.h"
+#include "../../../lib/Marlin/Marlin/src/module/printcounter.h"
 
-    #if EXTRUDERS > 1
-        #include "../../../lib/Marlin/Marlin/src/module/tool_change.h"
-    #endif
+#if EXTRUDERS > 1
+    #include "../../../lib/Marlin/Marlin/src/module/tool_change.h"
+#endif
 
 /** \addtogroup G-Codes
  * @{
@@ -60,20 +61,18 @@ void GcodeSuite::M603() {
     // Unload length
     if (parser.seen('U')) {
         fc_settings[target_extruder].unload_length = ABS(parser.value_axis_units(E_AXIS));
-    #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
+#if ENABLED(PREVENT_LENGTHY_EXTRUDE)
         NOMORE(fc_settings[target_extruder].unload_length, EXTRUDE_MAXLENGTH);
-    #endif
+#endif
     }
 
     // Load length
     if (parser.seen('L')) {
         fc_settings[target_extruder].load_length = ABS(parser.value_axis_units(E_AXIS));
-    #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
+#if ENABLED(PREVENT_LENGTHY_EXTRUDE)
         NOMORE(fc_settings[target_extruder].load_length, EXTRUDE_MAXLENGTH);
-    #endif
+#endif
     }
 }
 
 /** @}*/
-
-#endif // ADVANCED_PAUSE_FEATURE

@@ -30,7 +30,7 @@ public:
     static constexpr float XY_PROBE_HYSTERESIS { 20 };
 
     static constexpr unsigned int ANALYSIS_WINDOW_SIZE = 430; // Effective window size
-    static constexpr unsigned int MIN_ANALYSIS_WINDOW_SIZE = buddy::ProbeAnalysisBase::initialFrequency
+    static constexpr float MIN_ANALYSIS_WINDOW_SIZE = buddy::ProbeAnalysisBase::initialFrequency
         * (TOUCHDOWN_DELAY_MS / 1000.f + buddy::ProbeAnalysisBase::analysisLookback + buddy::ProbeAnalysisBase::analysisLookahead);
     static_assert(ANALYSIS_WINDOW_SIZE >= MIN_ANALYSIS_WINDOW_SIZE);
 
@@ -149,22 +149,22 @@ private:
 #if PRINTER_IS_PRUSA_XL()
     // Tweaked butter(2, [0.07 0.11])
     struct ZFilterParams {
-        static constexpr float gain = 276.1148366795870;
-        static constexpr std::array<const float, 5> a = { { 1, -3.678167822936356, 5.211060348827695, -3.364842682922483, 0.837181651256023 } };
+        static constexpr float gain = 276.1148366795870f;
+        static constexpr std::array<const float, 5> a = { { 1, -3.678167822936356f, 5.211060348827695f, -3.364842682922483f, 0.837181651256023f } };
     };
 #else /*PRINTER*/
     // Original
     struct ZFilterParams {
         static constexpr float gain = 5.724846511e+01f;
-        static constexpr std::array<const float, 5> a = { { 1, -3.6132919084, 4.9481816585, -3.0510427201, 0.7164075250 } };
+        static constexpr std::array<const float, 5> a = { { 1.0f, -3.6132919084f, 4.9481816585f, -3.0510427201f, 0.7164075250f } };
     };
 #endif /*PRINTER*/
 
     // Tweaked butter(2, [0.005 0.08])
     // Consider increasing the low threshold in case the offset takes to long to remove
     struct XYFilterParam {
-        static constexpr float gain = 1 / 1.185768264324116e-02;
-        static constexpr std::array<const float, 5> a = { { 1, -3.661929127367906, 5.041628953899732, -3.096320393316955, 0.716633873504158 } };
+        static constexpr float gain = 1 / 1.185768264324116e-02f;
+        static constexpr std::array<const float, 5> a = { { 1.0f, -3.661929127367906f, 5.041628953899732f, -3.096320393316955f, 0.716633873504158f } };
     };
 
     /// Implements IIR bandpass filter

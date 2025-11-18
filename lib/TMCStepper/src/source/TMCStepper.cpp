@@ -21,15 +21,15 @@ void __attribute__((weak)) tmc_register_write_hook(uint8_t slave_addr, uint8_t r
 void __attribute__((weak)) tmc_register_read_hook(uint8_t slave_addr, uint8_t reg_addr, uint32_t val) {}
 
 uint16_t TMCStepper::cs2rms(uint8_t CS) {
-  return ((float)(CS+1)/32.0 * (vsense() ? 0.180 : 0.325)/(Rsense+0.02) / 1.41421 * 1000) + 0.5;
+  return static_cast<uint16_t>((static_cast<float>(CS+1)/32 * (vsense() ? 0.18f : 0.325f)/(Rsense+0.02f) / 1.41421f * 1000) + 0.5f);
 }
 
 void TMCStepper::rms_current(uint16_t mA) {
-  uint8_t CS = (32.0*1.41421*mA/1000.0*(Rsense+0.02)/0.325 - 1) + 0.5;
+  uint8_t CS = static_cast<uint8_t>((32*1.41421f*mA/1000*(Rsense+0.02f)/0.325f - 1) + 0.5f);
   // If Current Scale is too low, turn on high sensitivity R_sense and calculate again
   if (CS < 16) {
     vsense(true);
-    CS = (32.0*1.41421*mA/1000.0*(Rsense+0.02)/0.180 - 1) + 0.5;
+    CS = static_cast<uint8_t>((32*1.41421*mA/1000*(Rsense+0.02f)/0.18f - 1) + 0.5f);
   } else { // If CS >= 16, turn off high_sense_r
     vsense(false);
   }
@@ -38,7 +38,7 @@ void TMCStepper::rms_current(uint16_t mA) {
     CS = 31;
 
   irun(CS);
-  ihold(CS*holdMultiplier);
+  ihold(static_cast<uint8_t>(CS*holdMultiplier));
   //val_mA = mA;
 }
 void TMCStepper::rms_current(uint16_t mA, float mult) {

@@ -253,7 +253,7 @@ void Rect16::VerticalSplit(Rect16 splits[], Rect16 spaces[], const size_t count,
     }
     for (index = 0; index < count; index++) {
         if (ratio != nullptr) {
-            height = usable_height * ((float)ratio[index] / (float)ratio_sum) + .5F;
+            height = usable_height * static_cast<uint16_t>((static_cast<float>(ratio[index]) / static_cast<float>(ratio_sum)) + .5F);
         }
         int16_t top = index == 0 ? (int16_t)Top() : splits[index - 1].BottomRight().y + spacing;
         /// rect split

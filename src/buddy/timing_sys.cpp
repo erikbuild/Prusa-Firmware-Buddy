@@ -96,14 +96,15 @@ extern "C" uint32_t get_sys_timestamp_ns(const sys_timestamp_t *ts) {
 }
 
 extern "C" int32_t sys_timestamp_ns_diff(const sys_timestamp_t *a, const sys_timestamp_t *b) {
+    constexpr int32_t ns_in_sec = 1'000'000'000;
     int32_t s = a->sec - b->sec;
     if (s > 1) {
-        return 1e9;
+        return ns_in_sec;
     } else if (s < -1) {
-        return -1e9;
+        return -ns_in_sec;
     }
 
-    int32_t ns_a = get_sys_timestamp_ns(a) + s * 1e9;
+    int32_t ns_a = get_sys_timestamp_ns(a) + s * ns_in_sec;
     int32_t ns_b = get_sys_timestamp_ns(b);
     return ns_a - ns_b;
 }

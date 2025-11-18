@@ -8,7 +8,7 @@
 #include <fsm/safety_timer_phases.hpp>
 #include <fsm/filament_change_phases.hpp>
 #include <option/has_esp.h>
-#include <option/has_manual_chamber_vents.h>
+#include <option/has_chamber_vents.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_mmu2.h>
 #include <option/has_tool_mapping.h>
@@ -24,9 +24,9 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/xbuddy_extension_variant.h>
 #include <option/has_side_fsensor.h>
-#include <option/has_belt_tuning.h>
 #include <option/has_bed_fan.h>
 #include <option/has_psu_fan.h>
+#include <option/has_human_interactions.h>
 
 #if HAS_LOADCELL()
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
@@ -267,9 +267,6 @@ DeviceState get_state(bool ready) {
 #if HAS_INPUT_SHAPER_CALIBRATION()
     case ClientFSM::InputShaperCalibration:
 #endif
-#if HAS_BELT_TUNING()
-    case ClientFSM::BeltTuning:
-#endif
 #if HAS_GEARBOX_ALIGNMENT()
     case ClientFSM::GearboxAlignment:
 #endif
@@ -486,9 +483,6 @@ StateWithDialog get_state_with_dialog(bool ready) {
 #if HAS_INPUT_SHAPER_CALIBRATION()
     case ClientFSM::InputShaperCalibration:
 #endif
-#if HAS_BELT_TUNING()
-    case ClientFSM::BeltTuning:
-#endif
 #if HAS_GEARBOX_ALIGNMENT()
     case ClientFSM::GearboxAlignment:
 #endif
@@ -606,7 +600,7 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::CONNECT_NOT_DOWNLOADED;
     case WarningType::BuddyMCUMaxTemp:
         return ErrCode::CONNECT_BUDDY_MCU_MAX_TEMP;
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     case WarningType::DisplayProblemDetected:
         return ErrCode::ERR_ELECTRO_DISPLAY_PROBLEM_DETECTED;
 #endif
@@ -695,7 +689,7 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::CONNECT_CHAMBER_COOLING_FAN_ERROR;
 #endif
 
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case WarningType::OpenChamberVents:
         return ErrCode::CONNECT_OPEN_CHAMBER_VENTS;
     case WarningType::CloseChamberVents:

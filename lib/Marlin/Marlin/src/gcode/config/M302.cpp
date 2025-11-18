@@ -57,7 +57,7 @@
 void GcodeSuite::M302() {
   const bool seen_S = parser.seen('S');
   if (seen_S) {
-    thermalManager.extrude_min_temp = parser.value_celsius();
+    thermalManager.extrude_min_temp = static_cast<int16_t>(parser.value_celsius());
     thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
   }
 

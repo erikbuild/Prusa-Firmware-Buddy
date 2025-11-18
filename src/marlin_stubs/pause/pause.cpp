@@ -17,6 +17,9 @@
 #include "Marlin/src/module/printcounter.h"
 #include "Marlin/src/module/temperature.h"
 
+#include <option/has_pause.h>
+static_assert(HAS_PAUSE());
+
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
     #include "Marlin/src/feature/prusa/MMU2/mmu2_mk4.h"
@@ -93,8 +96,7 @@ static void nozzle_cleaner_load_or_runout_load_gcode(Pause::LoadType load_type) 
 // check unsupported features
 // filament sensor is no longer part of marlin thus it must be disabled
 // clang-format off
-#if (!ENABLED(EXTENSIBLE_UI)) || \
-    (!ENABLED(ADVANCED_PAUSE_FEATURE))
+#if (!ENABLED(EXTENSIBLE_UI))
 #error unsupported
 #endif
 // clang-format on
@@ -168,7 +170,7 @@ PauseMenuResponse pause_menu_response;
 // cannot be class member (externed in marlin)
 uint8_t did_pause_print = 0;
 
-// cannot be class member (externed in marlin and used by M240 and tool_change)
+// cannot be class member (externed in marlin and used by tool_change)
 void do_pause_e_move(const float &length, const feedRate_t &fr_mm_s) {
     mapi::extruder_move(length, fr_mm_s);
     planner.synchronize();
@@ -1248,7 +1250,7 @@ uint32_t Pause::parkMoveZPercent(float z_move_len, float xy_move_len) const {
         return 50; // due abs should not happen except both == 0
     }
 
-    return 100.f * (Z_time_ratio / (Z_time_ratio + XY_time_ratio));
+    return static_cast<uint32_t>(100.f * (Z_time_ratio / (Z_time_ratio + XY_time_ratio)));
 }
 
 uint32_t Pause::parkMoveXYPercent(float z_move_len, float xy_move_len) const {
@@ -1439,7 +1441,7 @@ void Pause::unpark_nozzle_and_notify() {
     }
 
     // Unretract
-    if (settings.retract) {
+    if (std::abs(settings.retract) < 1e-6f) {
         plan_e_move(-settings.retract, PAUSE_PARK_RETRACT_FEEDRATE);
     }
 }

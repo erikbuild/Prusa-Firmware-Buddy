@@ -44,7 +44,7 @@ void WindowScale::SetMark(float relative) {
     if (!mark_old_y) {
         mark_old_y = mark_new_y;
     }
-    mark_new_y = Height() * std::clamp(relative, 0.f, 1.f);
+    mark_new_y = static_cast<uint16_t>(Height() * std::clamp(relative, 0.f, 1.f));
     if (mark_old_y != mark_new_y) {
         Invalidate();
     } else {

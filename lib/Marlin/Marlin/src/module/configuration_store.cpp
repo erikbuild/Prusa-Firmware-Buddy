@@ -42,6 +42,7 @@
 
 #include "configuration_store.h"
 
+#include <option/has_pause.h>
 #include <option/has_planner.h>
 #if HAS_PLANNER()
   #include "endstops.h"
@@ -52,7 +53,6 @@
 #include "temperature.h"
 #include "../lcd/ultralcd.h"
 #include "../core/language.h"
-#include "../libs/vector_3.h"   // for matrix_3x3
 #include "../gcode/gcode.h"
 #include "../Marlin.h"
 #include <feature/motordriver_util.h>
@@ -445,7 +445,7 @@ void MarlinSettings::reset() {
   // Advanced Pause filament load & unload lengths
   //
 
-  #if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #if HAS_PAUSE()
     for (uint8_t e = 0; e < EXTRUDERS; e++) {
       fc_settings[e].unload_length = FILAMENT_CHANGE_UNLOAD_LENGTH;
       fc_settings[e].load_length = FILAMENT_CHANGE_FAST_LOAD_LENGTH;
@@ -489,7 +489,7 @@ void MarlinSettings::reset() {
     #endif
   #endif
 
-  #if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #if HAS_PAUSE()
     inline void say_M603(const bool forReplay) { CONFIG_ECHO_START(); SERIAL_ECHOPGM("  M603 "); }
   #endif
 
@@ -1067,7 +1067,7 @@ void MarlinSettings::reset() {
     /**
      * Advanced Pause filament load & unload lengths
      */
-    #if ENABLED(ADVANCED_PAUSE_FEATURE)
+    #if HAS_PAUSE()
       CONFIG_ECHO_HEADING("Filament load/unload lengths:");
       #if EXTRUDERS == 1
         say_M603(forReplay);
@@ -1089,7 +1089,7 @@ void MarlinSettings::reset() {
           #endif // EXTRUDERS > 3
         #endif // EXTRUDERS > 2
       #endif // EXTRUDERS == 1
-    #endif // ADVANCED_PAUSE_FEATURE
+    #endif
 
     #if EXTRUDERS > 1
       CONFIG_ECHO_HEADING("Tool-changing:");

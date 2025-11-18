@@ -11,6 +11,8 @@
 #include <marlin_server.hpp>
 #include <feature/prusa/e-stall_detector.h>
 #include <mapi/motion.hpp>
+#include <mapi/parking.hpp>
+#include <gcode/temperature/M104_M109.hpp>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -83,14 +85,19 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
         return;
     }
 
+    PrintStatusMessageGuard psm_guard;
+    psm_guard.update<PrintStatusMessage::Type::auto_retracting>({});
+
+#if HAS_NOZZLE_CLEANER()
+    // If we have nozzle cleaner, make sure we are parked over the bin to avoid pooping on the bed
+    mapi::park(mapi::ZAction::absolute_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_WASTEBIN_POINT } }));
+#endif
+
     // Finish all pending movements so that the progress reporting is nice
     planner.synchronize();
 
     // We might be retracted a bit, deretract to make sure the ramming sequence runs proper
     maybe_deretract_to_nozzle();
-
-    PrintStatusMessageGuard psm_guard;
-    psm_guard.update<PrintStatusMessage::Type::auto_retracting>({});
 
     const auto &sequence = standard_ramming_sequence(StandardRammingSequence::auto_retract, hotend);
     {
@@ -163,6 +170,48 @@ void AutoRetract::maybe_deretract_to_nozzle() {
     current_position.e = orig_current_e_position;
 
     set_retracted_distance(hotend, 0.0f);
+}
+
+void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
+    assert(purge_length >= 0.0f); // no sense having negative purge length
+    if (this->retracted_distance() >= minimum_auto_retract_distance) {
+        return; // should not do anything when already retracted more than standard distance
+    }
+    // Wait for temperature to extrude
+    const auto hotend = marlin_vars().active_hotend_id();
+    planner.synchronize();
+    const auto temp_before = thermalManager.degTargetHotend(hotend);
+    const M109Flags flags_pre = {
+        .target_temp = config_store().get_filament_type(hotend).parameters().nozzle_temperature,
+    };
+    M109_no_parser(hotend, flags_pre);
+
+    {
+        BlockEStallDetection estall_blocker;
+        // Purge a little
+        if (purge_length > 0.f) {
+            mapi::extruder_move(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE);
+            planner.synchronize();
+        }
+        // Retract
+        const float retracted_distance = this->retracted_distance().value_or(0.f);
+        // There's a generic trap on the extruder moves, which prevents any extruder retraction once we are already auto-retracted.
+        // Because of that, we need to set the auto-retracted distance to nullopt, to make the generic trap allow us to retract
+        // where we want (and we then set the new total auto-retracted distance after doing this).
+        set_retracted_distance(hotend, std::nullopt);
+        const float retract_amount = minimum_auto_retract_distance - retracted_distance;
+        mapi::extruder_move(-retract_amount, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+        planner.synchronize();
+        set_retracted_distance(hotend, minimum_auto_retract_distance);
+    }
+
+    // Reach back to original temp
+    const M109Flags flags_post = {
+        .target_temp = temp_before,
+        .wait_heat_or_cool = true,
+        .autotemp = true, // Use fans to cool
+    };
+    M109_no_parser(hotend, flags_post);
 }
 
 bool AutoRetract::ready_to_extrude() const {

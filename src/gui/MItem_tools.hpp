@@ -18,7 +18,6 @@
 #include <option/has_leds.h>
 #include <option/has_side_leds.h>
 #include <option/buddy_enable_connect.h>
-#include <option/has_belt_tuning.h>
 #include <option/has_auto_retract.h>
 #include <option/has_toolchanger.h>
 #include <meta_utils.hpp>
@@ -243,20 +242,6 @@ class MI_INFO_MMU : public WI_INFO_t {
 
 public:
     MI_INFO_MMU();
-};
-
-class MI_INFO_BOARD : public WI_INFO_t {
-    static constexpr const char *const label = N_("Buddy Board");
-
-public:
-    MI_INFO_BOARD();
-};
-
-class MI_INFO_SERIAL_NUM : public WiInfo<28> {
-    static constexpr const char *const label = N_("Serial Number");
-
-public:
-    MI_INFO_SERIAL_NUM();
 };
 
 class MI_FS_AUTOLOAD : public WI_ICON_SWITCH_OFF_ON_t {
@@ -605,10 +590,6 @@ public:
 protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
-#endif
-
-#if HAS_BELT_TUNING()
-using MI_BELT_TUNING = WithConstructorArgs<MenuItemGcodeAction, N_("Belt Tuning"), "M960 W"_tstr>;
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()

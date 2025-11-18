@@ -480,7 +480,7 @@ bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
 
     // go to purge location
     const PrusaToolInfo &info = get_tool_info(dwarf, /*check_calibrated=*/true);
-    move(info.dock_x - 9.9, PURGE_Y_POSITION, feedrate_mm_s);
+    move(info.dock_x - 9.9f, PURGE_Y_POSITION, feedrate_mm_s);
 
     planner.synchronize();
 

@@ -231,7 +231,7 @@ inline void report_hotend_offsets() {
 }
 
 xy_pos_t closest_point_on_circle(const xy_pos_t point, const xy_pos_t center, const float radius) {
-    const float distance_factor = sqrt(pow(point.x - center.x, 2) + pow(point.y - center.y, 2));
+    const float distance_factor = std::hypot(point.x - center.x, point.y - center.y);
 
     if (distance_factor == 0) {
         return { { { .x = center.x + radius,
@@ -517,7 +517,7 @@ const std::optional<xyz_pos_t> get_single_xyz_center(const xyz_pos_t initial, co
     std::array<xy_pos_t, MAX_HITS> max_hits;
     std::span<xy_pos_t> hits(max_hits.begin(), PHASE_XY_HITS[std::to_underlying(phase)]);
     for (uint hit_no = 0; xy_pos_t & hit : hits) {
-        hit = probe_xy_verify(start, 2 * PI / hits.size() * hit_no++, PROBE_XY_UNCERTAIN_DIST_MM, tool, phase);
+        hit = probe_xy_verify(start, 2 * std::numbers::pi_v<float> / hits.size() * hit_no++, PROBE_XY_UNCERTAIN_DIST_MM, tool, phase);
     }
     xyz_pos_t center = approximate_center(hits);
     center.z = start.z;

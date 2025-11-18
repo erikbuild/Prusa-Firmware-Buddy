@@ -123,6 +123,7 @@
 
 #include <marlin_vars.hpp>
 #include "configuration_store.h"
+#include <raii/auto_restore.hpp>
 #include "bsod.h"
 
 constexpr const int32_t MIN_MSTEPS_PER_SEGMENT = MIN_STEPS_PER_SEGMENT * PLANNER_STEPS_MULTIPLIER;
@@ -144,6 +145,7 @@ volatile uint8_t Planner::block_buffer_head,    // Index of the next block to be
                  Planner::block_buffer_planned, // Index of the optimally planned block
                  Planner::block_buffer_tail;    // Index of the busy block, if any
 uint32_t Planner::delay_before_delivering;      // Initial milliseconds of delay for planner optimization
+std::atomic<bool> Planner::recalculating = false;
 
 // A flag to drop queuing of blocks and abort any pending move
 bool Planner::draining_buffer;
@@ -771,35 +773,18 @@ void Planner::recalculate_trapezoids(TERN_(HINTS_SAFE_EXIT_SPEED, const float sa
 }
 
 void Planner::recalculate(TERN_(HINTS_SAFE_EXIT_SPEED, const float safe_exit_speed_sqr)) {
-  {
-    // During our recalculation, we block at least some of the blocks from the
-    // move ISR. That way it can't consume it all the way to standstill, which is
-    // risky.
-    //
-    // Make sure we don't get pushed aside by something while we are at it to
-    // unblock the whole movement system. All the network stuff, puppies, etc,
-    // can wait (hopefully, this is fast and it is just computation, no talk to
-    // perpipherals or other tasks).
-    //
-    // Note that we do _not_ block the actual stepping/phase stepping - these are
-    // interrupts with higher than max priority and freeRTOS doesn't disable
-    // these.
-    freertos::CriticalSection section;
-    // Check that the move interrupt has lower priority (denoted by higher
-    // _number_, yes, 0 is the highest priority) than what freertos is able to
-    // disable - that is, that we disable move interrupt by the above critical
-    // section.
-    static_assert(ISR_PRIORITY_MOVE_TIMER > configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
-
-    // Initialize block index to the last block in the planner buffer.
-    const uint8_t block_index = prev_block_index(block_buffer_head);
-    // If there is just one block, no planning can be done. Avoid it!
-    if (block_index != block_buffer_planned) {
-      reverse_pass(TERN_(HINTS_SAFE_EXIT_SPEED, safe_exit_speed_sqr));
-      forward_pass();
-    }
-    recalculate_trapezoids(TERN_(HINTS_SAFE_EXIT_SPEED, safe_exit_speed_sqr));
+  // We need an operation that contains read for acquire to work properly
+  // (and the acquire-release pair works kind of like a lock, so other operations stay within)
+  recalculating.exchange(true, std::memory_order_acquire);
+  // Initialize block index to the last block in the planner buffer.
+  const uint8_t block_index = prev_block_index(block_buffer_head);
+  // If there is just one block, no planning can be done. Avoid it!
+  if (block_index != block_buffer_planned) {
+    reverse_pass(TERN_(HINTS_SAFE_EXIT_SPEED, safe_exit_speed_sqr));
+    forward_pass();
   }
+  recalculate_trapezoids(TERN_(HINTS_SAFE_EXIT_SPEED, safe_exit_speed_sqr));
+  recalculating.store(false, std::memory_order_release);
 
   // Inform the move ISR that there is a new block added to the queue. If it
   // wants one, now is a good time to pick it up when it's fresh instead of
@@ -959,7 +944,7 @@ void Planner::check_axes_activity() {
 
       raw.z += (
         #if ENABLED(AUTO_BED_LEVELING_UBL)
-          fade_scaling_factor ? fade_scaling_factor * ubl.get_z_correction(raw) : 0.0
+          fade_scaling_factor ? fade_scaling_factor * ubl.get_z_correction(raw) : 0.0f
         #endif
       );
 
@@ -980,7 +965,7 @@ void Planner::check_axes_activity() {
 
         raw.z -= (
           #if ENABLED(AUTO_BED_LEVELING_UBL)
-            fade_scaling_factor ? fade_scaling_factor * ubl.get_z_correction(raw) : 0.0
+            fade_scaling_factor ? fade_scaling_factor * ubl.get_z_correction(raw) : 0.0f
           #endif
         );
 
@@ -1058,7 +1043,7 @@ float Planner::triggered_position_mm(const AxisEnum axis) {
 
 void Planner::finish_and_disable() {
   synchronize();
-  if (!draining_buffer) disable_all_steppers();
+  if (!draining()) disable_all_steppers();
 }
 
 
@@ -1116,8 +1101,8 @@ static void get_multi_axis_position_mm(float* pos, const uint8_t cnt) {
     #if CORE_IS_XY
       int32_t a = axis_steps[A_AXIS];
       int32_t b = axis_steps[B_AXIS];
-      axis_steps[X_AXIS] = (a + b) * 0.5f;
-      axis_steps[Y_AXIS] = CORESIGN(a - b) * 0.5f;
+      axis_steps[X_AXIS] = (a + b) / 2;
+      axis_steps[Y_AXIS] = CORESIGN(a - b) / 2;
     #else
       #error "unsupported core type"
     #endif
@@ -1166,18 +1151,16 @@ float Planner::get_axis_position_mm(const AxisEnum axis) {
 
 
 bool Planner::busy() {
-  return !draining_buffer && processing();
+  return !draining() && processing();
 }
 
 /**
  * Block until all buffered steps are executed / cleaned
  */
 void Planner::synchronize() {
-  bool emptying_buffer_orig = emptying();
-  emptying_buffer = true;
+  AutoRestore eb(emptying_buffer, true);
   start_moving();
   while (busy()) idle(true);
-  emptying_buffer = emptying_buffer_orig;
 #if HAS_PHASE_STEPPING()
   phase_stepping::check_state();
 #endif // HAS_PHASE_STEPPING()
@@ -1301,7 +1284,7 @@ bool Planner::_populate_block(block_t * const block,
 
   #if EXTRUDERS
     const float e_msteps_float = de * e_factor[extruder];
-    const uint32_t e_msteps = ABS(e_msteps_float) + 0.5f;
+    const uint32_t e_msteps = static_cast<uint32_t>(std::abs(e_msteps_float) + 0.5f);
   #else
     constexpr uint32_t e_msteps = 0;
   #endif
@@ -1597,8 +1580,8 @@ bool Planner::_populate_block(block_t * const block,
       const uint8_t total_blocks_queued = movesplanned();
 
       // Do not slowdown when implicitly stopping and/or when the queue still contains at least one command
-      if (!emptying() && queue.length <= 3 && WITHIN(total_blocks_queued, 2, (BLOCK_BUFFER_SIZE) / (SLOWDOWN_DIVISOR) - 1)) {
-        const int32_t time_diff = settings.min_segment_time_us - segment_time_us;
+      if (!draining() && !emptying_buffer && queue.length <= 3 && WITHIN(total_blocks_queued, 2, (BLOCK_BUFFER_SIZE) / (SLOWDOWN_DIVISOR) - 1)) {
+        const int32_t time_diff = static_cast<int32_t>(settings.min_segment_time_us) - segment_time_us;
         if (time_diff > 0) {
           // Buffer is draining so add extra time. The amount of time added increases if the buffer is still emptied more.
           const uint32_t nst = segment_time_us + LROUND(2 * time_diff / total_blocks_queued);
@@ -1694,7 +1677,7 @@ bool Planner::_populate_block(block_t * const block,
 
     // Compute and limit the acceleration rate for the trapezoid generator.
     const float msteps_per_mm = block->mstep_event_count * inverse_millimeters;
-    uint32_t accel;
+    float accel;
     if (!block->msteps.a && !block->msteps.b && !block->msteps.c) {
       // convert to: acceleration steps/sec^2
       accel = CEIL(settings.retract_acceleration * msteps_per_mm);
@@ -1702,7 +1685,7 @@ bool Planner::_populate_block(block_t * const block,
     else {
       #define LIMIT_ACCEL_LONG(AXIS,INDX) do{ \
         if (block->msteps[AXIS] && max_acceleration_msteps_per_s2[AXIS+INDX] < accel) { \
-          const uint32_t comp = max_acceleration_msteps_per_s2[AXIS+INDX] * block->mstep_event_count; \
+          const uint32_t comp = static_cast<uint32_t>(max_acceleration_msteps_per_s2[AXIS+INDX] * block->mstep_event_count); \
           if (accel * block->msteps[AXIS] > comp) accel = comp / block->msteps[AXIS]; \
         } \
       }while(0)
@@ -2413,14 +2396,14 @@ bool Planner::buffer_segment(const abce_pos_t &abce
 #if HAS_CEILING_CLEARANCE()
   // BFW-7734 only check when a negative Z-move is planned - it's a workaround for ceiling check sometimes reporting false positives yet for unknown reasons
   if(target.z < position.z){
-    // ! Important: call before checking for draining_buffer
+    // ! Important: call before checking for draining()
     // Note: I don't remember why I thought it was important and now I think it should probably be under the check
     buddy::check_ceiling_clearance(abce);
   }
 #endif
 
   // If we are aborting, do not accept queuing of movements
-  if (draining_buffer || PreciseStepping::stopping()) return false;
+  if (draining() || PreciseStepping::stopping()) return false;
 
   // Make sure we are at the correct temperatures before doing any move whatsoever
   // Also doing any printer movement resets the timer
@@ -2433,7 +2416,7 @@ bool Planner::buffer_segment(const abce_pos_t &abce
     buddy::emergency_stop().assert_can_plan_movement();
 
     // Check once more (this could have changed during the maybe_block)
-    if (draining_buffer || PreciseStepping::stopping()) return false;
+    if (draining() || PreciseStepping::stopping()) return false;
   }
 #endif
 
@@ -2552,7 +2535,7 @@ bool Planner::buffer_segment(const abce_pos_t &abce
 
 bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
     // If we are aborting, do not accept queuing of movements
-    if (draining_buffer || PreciseStepping::stopping()) {
+    if (draining() || PreciseStepping::stopping()) {
         return false;
     }
 
@@ -2727,10 +2710,10 @@ void Planner::refresh_acceleration_rates() {
   #endif
   uint32_t highest_rate = 1;
   LOOP_XYZE_N(i) {
-    max_acceleration_msteps_per_s2[i] = settings.max_acceleration_mm_per_s2[i] * settings.axis_msteps_per_mm[i];
-    if (AXIS_CONDITION) NOLESS(highest_rate, max_acceleration_msteps_per_s2[i]);
+    max_acceleration_msteps_per_s2[i] = static_cast<uint32_t>(settings.max_acceleration_mm_per_s2[i] * settings.axis_msteps_per_mm[i]);
+    if (AXIS_CONDITION) NOLESS(highest_rate, static_cast<uint32_t>(max_acceleration_msteps_per_s2[i]));
   }
-  cutoff_long = 4294967295UL / highest_rate; // 0xFFFFFFFFUL
+  cutoff_long = std::numeric_limits<uint32_t>::max() / highest_rate;
   #if HAS_LINEAR_E_JERK
     recalculate_max_e_jerk();
   #endif
@@ -2785,7 +2768,7 @@ void Planner::set_max_acceleration(const uint8_t axis, float targetValue) {
   #endif
 
   auto new_settings = user_settings;
-  new_settings.max_acceleration_mm_per_s2[axis] = targetValue;
+  new_settings.max_acceleration_mm_per_s2[axis] = static_cast<uint32_t>(targetValue);
   apply_settings(new_settings);
 }
 

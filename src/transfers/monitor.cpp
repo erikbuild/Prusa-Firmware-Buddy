@@ -247,9 +247,9 @@ const char *to_str(Monitor::Type type) {
     }
 }
 
-double Monitor::Status::progress_estimate() const {
+float Monitor::Status::progress_estimate() const {
     if (expected > 0) {
-        return static_cast<double>(download_progress.get_valid_size()) / static_cast<double>(expected);
+        return static_cast<float>(download_progress.get_valid_size()) / expected;
     } else {
         return 0;
     }
@@ -257,10 +257,10 @@ double Monitor::Status::progress_estimate() const {
 
 uint32_t Monitor::Status::time_remaining_estimate() const {
     uint32_t elapsed = ticks_s() - start;
-    double progress = progress_estimate();
-    if (progress > 0.0) {
-        double total_expected = elapsed / progress;
-        return total_expected - elapsed;
+    float progress = progress_estimate();
+    if (progress > 0.f) {
+        float total_expected = elapsed / progress;
+        return static_cast<uint32_t>(total_expected) - elapsed;
     } else {
         // No estimate yet, just give them a 0
         return 0;

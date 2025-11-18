@@ -129,7 +129,7 @@ inline bool all_axes_known(AxisHomeLevel required_level = AxisHomeLevel::impreci
 inline void set_all_unhomed() { axes_home_level = AxesHomeLevel::no_axes_homed; }
 
 // Error margin to work around float imprecision
-constexpr float slop = 0.0001;
+constexpr float slop = 0.0001f;
 
 extern bool relative_mode;
 

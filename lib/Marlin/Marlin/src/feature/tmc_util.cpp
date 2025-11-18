@@ -79,11 +79,11 @@ static inline uint32_t get_tmc_freq(AxisEnum axis_id) {
 
 // The conversion between period and feedrate is symmetric, use a shared
 // implementation and just do a cast from float to uint32_t when needed.
-static float period_feedrate_conversion(AxisEnum axis_id, uint16_t msteps, const float value, const uint32_t steps_per_mm) {
-  if (value == 0) {
+static float period_feedrate_conversion(AxisEnum axis_id, uint16_t msteps, const float value, const float steps_per_mm) {
+  if (std::abs(value) < 1e-6f) {
       return std::numeric_limits<float>::infinity();
   }
-  if (steps_per_mm == 0) {
+  if (std::abs(steps_per_mm) < 1e-6f) {
       bsod("0 steps per mm.");
   }
   msteps = std::max<uint16_t>(1, msteps); // 0 msteps is infact 1
@@ -91,11 +91,11 @@ static float period_feedrate_conversion(AxisEnum axis_id, uint16_t msteps, const
   return get_tmc_freq(axis_id) * msteps / (256.f * value * steps_per_mm);
 }
 
-float tmc_period_to_feedrate(AxisEnum axis_id, uint16_t msteps, const uint32_t period, const uint32_t steps_per_mm) {
+float tmc_period_to_feedrate(AxisEnum axis_id, uint16_t msteps, const uint32_t period, const float steps_per_mm) {
   return period_feedrate_conversion(axis_id, msteps, period, steps_per_mm);
 }
 
-uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float feedrate, const uint32_t steps_per_mm) {
+uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float feedrate, const float steps_per_mm) {
   return static_cast<uint32_t>(period_feedrate_conversion(axis_id, msteps, feedrate, steps_per_mm));
 }
 
@@ -1036,7 +1036,7 @@ uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float f
   #ifdef STALL_THRESHOLD_TMC2130
           return STALL_THRESHOLD_TMC2130;
   #else
-          return tmc_period_to_feedrate(X_AXIS, get_microsteps_x(), HOMING_FEEDRATE_XY / 60 * 0.8, get_steps_per_unit_x());
+          return static_cast<uint32_t>(tmc_period_to_feedrate(X_AXIS, get_microsteps_x(), static_cast<uint32_t>(HOMING_FEEDRATE_XY / 60 * 0.8f), get_steps_per_unit_x()));
   #endif
       case Z_AXIS:
           return 400;

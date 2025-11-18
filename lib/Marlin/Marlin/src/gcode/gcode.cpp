@@ -66,6 +66,7 @@ GcodeSuite gcode;
 #include <option/has_modular_bed.h>
 #include <option/has_remote_accelerometer.h>
 #include <option/has_gcode_compatibility.h>
+#include <option/has_pause.h>
 #include <option/has_phase_stepping.h>
 #include <option/has_phase_stepping_calibration.h>
 #include <marlin_vars.hpp>
@@ -496,10 +497,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 304: M304(); break;                                  // M304: Set bed PID parameters
       #endif
 
-      #if ENABLED(PHOTO_GCODE)
-        case 240: M240(); break;                                  // M240: Trigger a camera
-      #endif
-
       #if HAS_I2C_EXPANDER()
         case 260: M260(); break;                                  // M260: Send data to an i2c slave
         case 261: M261(); break;                                  // M261: Request data from an i2c slave
@@ -579,13 +576,13 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 852: M852(); break;                                  // M852: Set Skew factors
       #endif
 
-      #if ENABLED(ADVANCED_PAUSE_FEATURE)
+      #if HAS_PAUSE()
         case 600: M600(); break;                                  // M600: Pause for Filament Change
         case 601: M601(); break;                                  // M601: Pause & park
         case 602: M602(); break;                                  // M602: Unpark & UnPause print
         case 603: M603(); break;                                  // M603: Configure Filament Change
       #endif
-      
+
       case 604: M604(); break;                                    // M604: Abort (serial) print
 
       #if HAS_DUPLICATION_MODE

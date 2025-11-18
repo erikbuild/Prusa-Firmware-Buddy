@@ -110,7 +110,7 @@ public:
     };
 
     /// Appends a float value
-    StringBuilder &append_float(double val, const AppendFloatConfig &config);
+    StringBuilder &append_float(float val, const AppendFloatConfig &config);
 
 public:
     /// Allocates $cnt chars at the end of the string and returns the pointer to them.

@@ -42,6 +42,7 @@ static_assert(sizeof(DataExchange) == 100);
 
 #if !BOOTLOADER()
 
+    #if HAS_XLCD() || HAS_LOVE_BOARD() || PRINTER_IS_PRUSA_MK3_5()
 /**
  * @brief reads OTP data from external onewire AT21CSxx eeprom
  * currently supports only OTP_v2 (and OTP_v5 since it is the same)
@@ -74,6 +75,7 @@ static void load_otp_from_eeprom(AT21CSxx &eeprom, OTP_v2 &calib_data, OtpStatus
     status.repeated_read_error_counter = eeprom.get_repeated_read_error();
     status.cyclic_read_error_counter = eeprom.get_cyclic_read_error();
 }
+    #endif
 
     #if HAS_XLCD()
 static void read_xlcd(XlcdEeprom &data, OtpStatus &status) {

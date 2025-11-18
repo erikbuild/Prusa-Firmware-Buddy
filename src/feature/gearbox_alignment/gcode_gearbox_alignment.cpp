@@ -72,7 +72,7 @@ private:
     void move_gear() {
         mapi::ColdExtrudeGuard cold_extrude_guard;
         constexpr const float feedrate = 8;
-        mapi::extruder_schedule_turning(feedrate, -0.6);
+        mapi::extruder_schedule_turning(feedrate, -0.6f);
     }
 
     void filament_check() {

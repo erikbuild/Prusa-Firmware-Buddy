@@ -134,7 +134,7 @@
 #define EXTRUDERS 1
 
 // Generally expected filament diameter (1.75, 2.85, 3.0, ...). Used for Volumetric, Filament Width Sensor, etc.
-#define DEFAULT_NOMINAL_FILAMENT_DIA 1.75
+#define DEFAULT_NOMINAL_FILAMENT_DIA 1.75f
 
 // For Cyclops or any "multi-extruder" that shares a single nozzle.
 //#define SINGLENOZZLE
@@ -230,9 +230,9 @@
     #define DEFAULT_Kd 45.00
 
     #define STEADY_STATE_HOTEND // Enable support for STEADY_STATE_HOTEND (feed-forward thermal management)
-    #define STEADY_STATE_HOTEND_LINEAR_COOLING_TERM 0.422
-    #define STEADY_STATE_HOTEND_QUADRATIC_COOLING_TERM 0.00027
-    #define STEADY_STATE_HOTEND_FAN_COOLING_TERM 4.0
+    #define STEADY_STATE_HOTEND_LINEAR_COOLING_TERM 0.422f
+    #define STEADY_STATE_HOTEND_QUADRATIC_COOLING_TERM 0.00027f
+    #define STEADY_STATE_HOTEND_FAN_COOLING_TERM 4.0f
     /**
      * this adds an experimental additional term to the heating power, regulation constants are hard coded for PRUSA MINI printer
      * there is no sense to enable it for any else printer
@@ -686,7 +686,7 @@
 #define Z_CLEARANCE_BEFORE_PROBING 5 // Z Clearance before first MBL probe
 #define Z_CLEARANCE_DEPLOY_PROBE 0 // Z Clearance for Deploy/Stow
 #define Z_CLEARANCE_BETWEEN_PROBES 1 // Z Clearance between probe points
-#define Z_CLEARANCE_MULTI_PROBE 0.5 // Z Clearance between multiple probes
+#define Z_CLEARANCE_MULTI_PROBE 0.5f // Z Clearance between multiple probes
 #define Z_AFTER_PROBING 2 // Z position after probing is done
 
 #define Z_PROBE_LOW_POINT -2 // Farthest distance below the trigger-point to go before stopping
@@ -946,7 +946,7 @@
 //#define BED_CENTER_AT_0_0
 
 // Manually set the home position. Leave these undefined for automatic settings.
-#define MANUAL_X_HOME_POS 180.4
+#define MANUAL_X_HOME_POS 180.4f
 //#define MANUAL_Y_HOME_POS 0
 //#define MANUAL_Z_HOME_POS 0
 
@@ -962,8 +962,8 @@
 #define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
-    #define Z_SAFE_HOMING_X_POINT (147.4) // X point for Z homing when homing all axes (G28).
-    #define Z_SAFE_HOMING_Y_POINT (21.1) // Y point for Z homing when homing all axes (G28).
+    #define Z_SAFE_HOMING_X_POINT (147.4f) // X point for Z homing when homing all axes (G28).
+    #define Z_SAFE_HOMING_Y_POINT (21.1f) // Y point for Z homing when homing all axes (G28).
 #endif
 
 // Homing speeds (mm/m)

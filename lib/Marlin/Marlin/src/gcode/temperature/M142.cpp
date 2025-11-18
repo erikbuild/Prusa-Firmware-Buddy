@@ -57,7 +57,7 @@ void GcodeSuite::M142() {
   const int8_t target_extruder = get_target_extruder_from_command();
   if (target_extruder < 0) return;
 
-  if (parser.seenval('S')) thermalManager.setTargetHeatbreak(parser.value_celsius(), target_extruder);
+  if (parser.seenval('S')) thermalManager.setTargetHeatbreak(static_cast<int16_t>(parser.value_celsius()), target_extruder);
 }
 
 /** @}*/

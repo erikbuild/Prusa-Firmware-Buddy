@@ -145,7 +145,7 @@ void window_header_t::updateConnect(bool iface_up) {
 
 void window_header_t::updateTransfer() {
     auto status = transfers::Monitor::instance.status();
-    auto transfer_progress = status ? std::optional<uint8_t>(0.5 + status.value().progress_estimate() * 100) : std::nullopt;
+    auto transfer_progress = status ? std::optional<uint8_t>(0.5f + status.value().progress_estimate() * 100) : std::nullopt;
     auto transfer_has_issue = status ? status.value().download_has_issue : false;
     status = std::nullopt; // release internal lock
 

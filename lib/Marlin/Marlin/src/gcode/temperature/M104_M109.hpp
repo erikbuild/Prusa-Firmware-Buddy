@@ -5,7 +5,7 @@
 
 
 struct M109Flags {
-  float target_temp;
+  int16_t target_temp;
   bool wait_heat = true;            // Wait only when heating
   bool wait_heat_or_cool = false;   // Wait for heating or cooling
   bool autotemp = false;            // Use AUTOTEMP with S, B, F parameters

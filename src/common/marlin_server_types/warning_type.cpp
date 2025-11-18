@@ -34,7 +34,7 @@ constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
         return PhasesWarning::EnclosureFilterExpiration;
 #endif
 
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case WarningType::OpenChamberVents:
         return PhasesWarning::ChamberVents;
     case WarningType::CloseChamberVents:
@@ -72,7 +72,7 @@ constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
         return PhasesWarning::HomingCalibrationFromMenuNeeded;
 #endif
 
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     case WarningType::DisplayProblemDetected:
         return PhasesWarning::DisplayProblemDetected;
 #endif
@@ -87,7 +87,7 @@ PhasesWarning warning_type_phase(WarningType warning) {
 
 constexpr uint32_t warning_lifespan_sec_constexpr(WarningType type) {
     switch (type) {
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case WarningType::OpenChamberVents:
     case WarningType::CloseChamberVents:
         return 60;
@@ -113,7 +113,7 @@ static_assert([] {
         const auto phi = std::to_underlying(ph);
 
         bool phase_warning_exception = ph == PhasesWarning::Warning;
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
         phase_warning_exception |= ph == PhasesWarning::ChamberVents;
 #endif
 
@@ -134,7 +134,7 @@ static_assert([] {
     return true;
 }());
 
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
 // This one should be very low on the list (= priority).
 // When it's popped up, it doesn't propagate to connect, so it might hide some important warnings
 static_assert(std::to_underlying(WarningType::DisplayProblemDetected) == std::to_underlying(WarningType::_cnt) - 1);

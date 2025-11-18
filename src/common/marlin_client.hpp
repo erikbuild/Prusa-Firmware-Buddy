@@ -76,9 +76,9 @@ uint8_t get_gqueue();
 uint8_t get_pqueue();
 
 // variable setters
-void set_target_nozzle(float val, uint8_t hotend = marlin_server::CURRENT_TOOL);
+void set_target_nozzle(int16_t val, uint8_t hotend = marlin_server::CURRENT_TOOL);
 void set_display_nozzle(float val, uint8_t hotend = marlin_server::CURRENT_TOOL);
-void set_target_bed(float val);
+void set_target_bed(int16_t val);
 void set_fan_speed(uint8_t val);
 void set_print_speed(uint16_t val);
 void set_flow_factor(uint16_t val, uint8_t hotend = marlin_server::CURRENT_TOOL);

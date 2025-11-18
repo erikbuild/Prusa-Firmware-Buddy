@@ -1,5 +1,6 @@
 #include <puppies/xbuddy_extension.hpp>
 
+#include <bsod/bsod.h>
 #include "buddy/digest.hpp"
 #include "timing.h"
 #include <algorithm>
@@ -10,24 +11,27 @@
 #include <puppies/PuppyBootstrap.hpp>
 #include <sys/fcntl.h>
 #include <sys/unistd.h>
+#include <xbuddy_extension/shared_enums.hpp>
 
 LOG_COMPONENT_REF(MMU2);
 LOG_COMPONENT_REF(Buddy);
 
 using Lock = std::unique_lock<freertos::Mutex>;
 
-static int open_file_id(uint16_t file_id) {
-    const char *path = nullptr;
-    switch (file_id) {
-    case 0:
-        return -1;
-    case 1:
-        path = "/internal/res/puppies/fw-ac_controller.bin";
-        break;
-    default:
-        return -1;
-    }
+using FileId = xbuddy_extension::FileId;
 
+static const char *get_file_path(FileId file_id) {
+    switch (file_id) {
+    case FileId::none:
+        break;
+    case FileId::firmware_ac_controller:
+        return "/internal/res/puppies/fw-ac_controller.bin";
+    }
+    bsod_unreachable();
+}
+
+static int open(FileId file_id) {
+    const char *path = get_file_path(file_id);
     const int fd = open(path, O_RDONLY);
     if (fd == -1) {
         log_error(Buddy, "open(%s) failed %d", path, errno);
@@ -273,7 +277,8 @@ CommunicationStatus XBuddyExtension::write_chunk() {
         close_flash_file();
     }
 
-    if (current_request.file_id == 0) {
+    const FileId file_id = xbuddy_extension::modbus::parse_file_id(current_request.file_id);
+    if (file_id == FileId::none) {
         // No request -> we are done.
         return CommunicationStatus::OK;
     }
@@ -284,7 +289,7 @@ CommunicationStatus XBuddyExtension::write_chunk() {
             return CommunicationStatus::SKIPPED;
         }
     } else {
-        flash_fd = open_file_id(current_request.file_id);
+        flash_fd = open(file_id);
         if (flash_fd == -1) {
             return CommunicationStatus::SKIPPED;
         }
@@ -345,7 +350,12 @@ CommunicationStatus XBuddyExtension::write_chunk() {
 CommunicationStatus XBuddyExtension::write_digest() {
     const xbuddy_extension::modbus::DigestRequest &current_request = status.value.digest_request;
 
-    const ClosingFileDescriptor fd { open_file_id(current_request.file_id) };
+    const FileId file_id = xbuddy_extension::modbus::parse_file_id(current_request.file_id);
+    if (file_id == FileId::none) {
+        return CommunicationStatus::OK;
+    }
+
+    const ClosingFileDescriptor fd { open(file_id) };
     if (fd.fd == -1) {
         return CommunicationStatus::SKIPPED;
     }

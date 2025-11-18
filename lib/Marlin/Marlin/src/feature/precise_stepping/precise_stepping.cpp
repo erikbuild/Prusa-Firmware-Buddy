@@ -51,6 +51,7 @@ uint32_t PreciseStepping::waiting_before_delivering_start_time = 0;
 bool PreciseStepping::initialized_ = false;
 std::atomic<bool> PreciseStepping::stop_pending = false;
 std::atomic<bool> PreciseStepping::busy = false;
+std::atomic<bool> PreciseStepping::wakeup_requested = false;
 volatile uint8_t PreciseStepping::step_dl_miss = 0;
 volatile uint8_t PreciseStepping::step_ev_miss = 0;
 volatile uint32_t PreciseStepping::time_last_block_us;
@@ -615,11 +616,11 @@ void PreciseStepping::reset_from_halt(bool preserve_step_fraction) {
 
 #if HAS_PHASE_STEPPING()
     #ifdef COREXY
-    phase_stepping::set_phase_origin(X_AXIS, total_start_pos[X_AXIS] + total_start_pos[Y_AXIS]);
-    phase_stepping::set_phase_origin(Y_AXIS, total_start_pos[X_AXIS] - total_start_pos[Y_AXIS]);
+    phase_stepping::set_phase_origin(X_AXIS, static_cast<float>(total_start_pos[X_AXIS] + total_start_pos[Y_AXIS]));
+    phase_stepping::set_phase_origin(Y_AXIS, static_cast<float>(total_start_pos[X_AXIS] - total_start_pos[Y_AXIS]));
     #else
-    phase_stepping::set_phase_origin(X_AXIS, total_start_pos[X_AXIS]);
-    phase_stepping::set_phase_origin(Y_AXIS, total_start_pos[Y_AXIS]);
+    phase_stepping::set_phase_origin(X_AXIS, static_cast<float>(total_start_pos[X_AXIS]));
+    phase_stepping::set_phase_origin(Y_AXIS, static_cast<float>(total_start_pos[Y_AXIS]));
     #endif
 #endif
 
@@ -735,6 +736,11 @@ uint16_t PreciseStepping::process_one_step_event_from_queue() {
     } else {
         // The step event queue drained or ended
         Stepper::axis_did_move = 0;
+
+        // Wake up the move ISR in emergency, we want more step events
+        // generated _right now_ (hopefully, we'll have time to refill before
+        // the next step would be due).
+        wake_up();
     }
 
     return ticks_to_next_isr;
@@ -966,15 +972,32 @@ bool PreciseStepping::is_waiting_before_delivering() {
 }
 
 void PreciseStepping::wake_up() {
-    if (Planner::nonbusy_movesplanned()) {
-        MoveIsrDisabler move_guard;
-        __HAL_TIM_SET_COUNTER(&TimerHandle[MOVE_TIMER_NUM].handle, 0);
+    // In theory, both the MoveIsrDisabler and __HAL_TIM_SET_COUNTER should be
+    // cheap and handle the situation of being set multiple times in a row
+    // without the interrupt being invoked. But, for some weird reason, if we
+    // remove this wakeup_requested guard, it _doesn't_ work properly and we
+    // don't know why.
+    if (!wakeup_requested.exchange(true, std::memory_order_relaxed)) { // No wakeup scheduled yet
+        if (Planner::nonbusy_movesplanned()) {
+            MoveIsrDisabler move_guard;
+            __HAL_TIM_SET_COUNTER(&TimerHandle[MOVE_TIMER_NUM].handle, 0);
+        }
     }
 }
 
-void PreciseStepping::process_queue_of_blocks() {
+bool PreciseStepping::process_queue_of_blocks() {
+    if (Planner::is_recalculating()) {
+        // We do not want to observe the planner while it's recalculating
+        // because then we are not guaranteed to have the stopping segment
+        // available.
+        //
+        // We'll get called again once the planner finishes recalculation, it
+        // contains a wakeup.
+        return false;
+    }
+
     if (is_waiting_before_delivering()) {
-        return;
+        return false;
     }
 
     // When the ending move segment is on the bottom of the queue (then Planner::total_print_time
@@ -982,12 +1005,14 @@ void PreciseStepping::process_queue_of_blocks() {
     if (PreciseStepping::total_print_time >= MAX_PRINT_TIME) {
         // ensure all motion has stopped
         if (has_blocks_queued() || phase_stepping::processing()) {
-            return;
+            return false;
         }
 
         // we can now reset to a halt
         reset_from_halt();
     }
+
+    bool processed = false;
 
     // fetch next block
     block_t *current_block;
@@ -1011,8 +1036,10 @@ void PreciseStepping::process_queue_of_blocks() {
         assert(PreciseStepping::total_print_time != 0.);
 
         if (!append_block_discarding_move()) {
-            return;
+            return processed;
         }
+
+        processed = true;
 
         // To avoid accumulating E-axis into very big numbers that are causing numerical issues, we reset
         // the E-axis position with every SYNC block.
@@ -1035,25 +1062,31 @@ void PreciseStepping::process_queue_of_blocks() {
 #if !BOARD_IS_DWARF()
             stall_count++;
 #endif
+            // We do not consider the ending empty move as a processed block
+            // for the "made some progress" purposes, so not setting processed
+            // = true.
         } else if (PreciseStepping::total_print_time == 0. && busy) {
             // motion reset has completed and there is no pending block to process, we're now free
             assert(!has_blocks_queued() && !phase_stepping::processing());
             busy = false;
         }
-        return;
+        return processed;
     }
 
     if (PreciseStepping::total_print_time == 0.) {
         // we're restarting from zero, prepend a beginning move
         if (!append_beginning_empty_move()) {
-            return;
+            return processed;
         }
         busy = true;
     }
 
     if (append_move_segments_to_queue(*current_block)) {
         Planner::discard_current_unprocessed_block();
+        processed = true;
     }
+
+    return processed;
 }
 
 void PreciseStepping::loop() {
@@ -1081,44 +1114,39 @@ void PreciseStepping::loop() {
 }
 
 void PreciseStepping::move_isr() {
-    if (stop_pending) {
-        return;
-    }
+    wakeup_requested.store(false, std::memory_order_relaxed);
 
-    StepGeneratorStatus status = process_one_move_segment_from_queue();
-    if (status != STEP_GENERATOR_STATUS_NO_STEP_EVENT_PRODUCED) {
-        // if the move queue is not full yet, spare some extra time to process a new optimized block
-        // if we have at least three available: one possible sync block, followed by one for use and
-        // another to ensure the final exit speed can be still changed.
-        if (!is_move_segment_queue_full() && planner.optimized_movesplanned() > 2) {
+    bool produced_some_steps = false;
+    bool made_progress = true;
+
+    /*
+     * We want to process as much as possible to keep our output buffers full (step events, pending targets for phase stepping).
+     *
+     * We stop when:
+     * * stop_pending (requested by some quick_stop or such, we are throwing everything out anyway).
+     * * We no longer make any progress.
+     * * Reach safety upper limit of attempts (this shouldn't be reached in
+     *   practice, that's just for unexpected situations).
+     */
+    for (uint16_t i = 0; !stop_pending && made_progress && (i <= Planner::movesplanned()); ++i) {
+        made_progress = false;
+        if (has_unprocessed_move_segments_queued()) {
+            StepGeneratorStatus status = process_one_move_segment_from_queue();
+
+            if (status != STEP_GENERATOR_STATUS_NO_STEP_EVENT_PRODUCED) {
+                made_progress = true;
+                produced_some_steps = true;
+            }
+        }
+
+        /*
+         * We try to consume a segment from the planner if:
+         * * We haven't created any step events because we've run out of input.
+         * * We have space and there are enough blocks in the buffer (one extra for the slowdown that can still change its speed; that's heuristic).
+         */
+        if ((!is_move_segment_queue_full() && planner.optimized_movesplanned() > 2) || !produced_some_steps) {
             assert(planner.optimized_movesplanned() <= planner.nonbusy_movesplanned());
-            process_queue_of_blocks();
-        }
-        return;
-    }
-
-    // we produced no steps and/or one of the generators reached the end of the move queue:
-    // at this point we need to keep trying advancing the block queue in order to allow
-    // generators to continue producing steps or we risk that a slew of short segments
-    // causes too few steps to be produced per iteration, eventually running it dry
-    assert(status == STEP_GENERATOR_STATUS_NO_STEP_EVENT_PRODUCED);
-
-    // Until we break from this loop, no new blocks are appended into the block queue.
-    // To ensure that we are never stuck in the infinite loop (when some unexpected state happens),
-    // we will limit the number of iterations by the number of all blocks + 1.
-    // +1 is there to make one additional call when all blocks are processed because this additional
-    // call can append the ending empty move segment when all blocks were already processed.
-    for (uint16_t i = 0; i <= Planner::movesplanned(); ++i) {
-        process_queue_of_blocks();
-        if (!has_unprocessed_move_segments_queued()) {
-            // the queue didn't avance: we're stuck
-            break;
-        }
-
-        status = process_one_move_segment_from_queue();
-        if (status != STEP_GENERATOR_STATUS_NO_STEP_EVENT_PRODUCED) {
-            // all generators are finally producing steps
-            break;
+            made_progress = process_queue_of_blocks() || made_progress;
         }
     }
 }
@@ -1243,7 +1271,7 @@ static void check_step_time(const step_event_i32_t &step_event) {
     const double last_move_time_end = last_move->print_time + last_move_time;
     assert(last_move_time_end >= prev_move_time);
 
-    const int32_t max_move_ticks = float(last_move_time_end - prev_move_time) * float(STEPPER_TICKS_PER_SEC);
+    const int32_t max_move_ticks = static_cast<int32_t>((last_move_time_end - prev_move_time) * STEPPER_TICKS_PER_SEC);
     assert(step_event.time_ticks <= max_move_ticks);
 }
 #endif

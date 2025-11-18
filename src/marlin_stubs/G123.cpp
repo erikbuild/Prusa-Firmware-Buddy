@@ -91,7 +91,7 @@ void PrusaGcodeSuite::G123() {
             // We're actually not able to drive the axes independently, so we just go with the slowest feedrate
             segment_duration = std::min(segment_duration, std::abs(distance_to_target[i]) * feedrate_inv[i]);
             segment_feedrate = std::min(segment_feedrate, feedrate[i]);
-            segment_dir[i] = std::copysign(1, distance_to_target[i]);
+            segment_dir[i] = std::copysign(1.f, distance_to_target[i]);
         }
 
         if (segment_dir == empty_segment_dir) {

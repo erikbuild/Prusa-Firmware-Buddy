@@ -3587,10 +3587,6 @@
                     "type": "BOOL",
                     "value": "NO"
                 },
-                "HAS_BELT_TUNING": {
-                    "type": "BOOL",
-                    "value": "NO"
-                },
                 "HAS_CANCEL_OBJECT": {
                     "type": "BOOL",
                     "value": "NO"
@@ -3675,10 +3671,6 @@
                     "value": "NO"
                 },
                 "MDNS": {
-                    "type": "BOOL",
-                    "value": "NO"
-                },
-                "HAS_BELT_TUNING": {
                     "type": "BOOL",
                     "value": "NO"
                 },
@@ -3769,10 +3761,6 @@
                     "type": "BOOL",
                     "value": "NO"
                 },
-                "HAS_BELT_TUNING": {
-                    "type": "BOOL",
-                    "value": "NO"
-                },
                 "HAS_CANCEL_OBJECT": {
                     "type": "BOOL",
                     "value": "NO"
@@ -3857,10 +3845,6 @@
                     "value": "NO"
                 },
                 "MDNS": {
-                    "type": "BOOL",
-                    "value": "NO"
-                },
-                "HAS_BELT_TUNING": {
                     "type": "BOOL",
                     "value": "NO"
                 },
@@ -6287,44 +6271,6 @@
             }
         },
         {
-            "name": "png2font_debug",
-            "generator": "Ninja",
-            "binaryDir": "build-vscode-host",
-            "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": {
-                    "type": "FILEPATH",
-                    "value": "${sourceDir}/.dependencies/ninja-1.10.2/ninja"
-                },
-                "PNG2FONT_ENABLE": {
-                    "type": "BOOL",
-                    "value": "YES"
-                },
-                "UNITTESTS_ENABLE": {
-                    "type": "BOOL",
-                    "value": "NO"
-                }
-            }
-        },
-        {
-            "name": "png2font_release",
-            "generator": "Ninja",
-            "binaryDir": "build-vscode-host",
-            "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": {
-                    "type": "FILEPATH",
-                    "value": "${sourceDir}/.dependencies/ninja-1.10.2/ninja"
-                },
-                "PNG2FONT_ENABLE": {
-                    "type": "BOOL",
-                    "value": "YES"
-                },
-                "UNITTESTS_ENABLE": {
-                    "type": "BOOL",
-                    "value": "NO"
-                }
-            }
-        },
-        {
             "name": "unittests_debug",
             "generator": "Ninja",
             "binaryDir": "build-vscode-host",
@@ -6332,10 +6278,6 @@
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
                     "value": "${sourceDir}/.dependencies/ninja-1.10.2/ninja"
-                },
-                "PNG2FONT_ENABLE": {
-                    "type": "BOOL",
-                    "value": "NO"
                 },
                 "UNITTESTS_ENABLE": {
                     "type": "BOOL",
@@ -6351,10 +6293,6 @@
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
                     "value": "${sourceDir}/.dependencies/ninja-1.10.2/ninja"
-                },
-                "PNG2FONT_ENABLE": {
-                    "type": "BOOL",
-                    "value": "NO"
                 },
                 "UNITTESTS_ENABLE": {
                     "type": "BOOL",

@@ -486,12 +486,12 @@ volatile bool Temperature::temp_meas_ready = false;
               bias += (d * (t_high - t_low)) / (t_low + t_high);
               LIMIT(bias, 20, max_pow - 20);
               float delta_bias = bias - last_bias;
-              if(delta_bias > 10) bias = last_bias + 10;
-              if(delta_bias < -10) bias = last_bias - 10;
+              if(delta_bias > 10) bias = static_cast<long>(last_bias + 10);
+              if(delta_bias < -10) bias = static_cast<long>(last_bias - 10);
               d = (bias > max_pow >> 1) ? max_pow - 1 - bias : bias;
               float delta_d = d - last_d;
-              if(delta_d > 10) d = last_d + 10;
-              if(delta_d < -10) d = last_d - 10;
+              if(delta_d > 10) d = static_cast<long>(last_d + 10);
+              if(delta_d < -10) d = static_cast<long>(last_d - 10);
 
               SERIAL_ECHOPAIR(MSG_BIAS, bias, MSG_D, d, MSG_T_MIN, minT, MSG_T_MAX, maxT);
               if (cycles > 2) {
@@ -891,7 +891,7 @@ void Temperature::min_temp_error(const heater_ind_t heater) {
 
       constexpr float epsilon = 0.01f;
       constexpr float transport_delay_seconds = 5.60f;
-      constexpr int transport_delay_cycles = transport_delay_seconds * sample_frequency;
+      constexpr int transport_delay_cycles = static_cast<int>(transport_delay_seconds * sample_frequency);
       constexpr float transport_delay_cycles_inv = 1.0f / transport_delay_cycles;
       constexpr float deg_per_second = 3.58f; //!< temperature rise at full power at zero cooling loses
       constexpr float deg_per_cycle = deg_per_second / sample_frequency;
@@ -1014,7 +1014,7 @@ void Temperature::min_temp_error(const heater_ind_t heater) {
               #endif
               work_pid[ee].Kc = 0;
               if (this_hotend) {
-                constexpr float distance_to_volume = M_PI * pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2);
+                constexpr float distance_to_volume = std::numbers::pi_v<float> * std::pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2.f);
                 constexpr float distance_to_volume_per_second = distance_to_volume * sample_frequency;
                 uint32_t e_position = stepper.position(E_AXIS);
                 const int32_t e_pos_diff = e_position - last_e_position;
@@ -2135,6 +2135,9 @@ void Temperature::init() {
       while (analog_to_celsius_board(maxtemp_raw_BOARD) > BOARD_MAXTEMP) maxtemp_raw_BOARD -= TEMPDIRBOARD * (OVERSAMPLENR);
     #endif
   #endif
+
+  // At the end of init, load the temperatures
+  updateTemperaturesFromRawValues();
 }
 
 #if WATCH_HOTENDS
@@ -2146,7 +2149,7 @@ void Temperature::init() {
   void Temperature::start_watching_hotend(const uint8_t E_NAME) {
     const uint8_t ee = HOTEND_INDEX;
     if (degTargetHotend(ee) && degHotend(ee) < degTargetHotend(ee) - (WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1)) {
-      watch_hotend[ee].target = degHotend(ee) + WATCH_TEMP_INCREASE;
+      watch_hotend[ee].target = static_cast<int16_t>(degHotend(ee)) + WATCH_TEMP_INCREASE;
       watch_hotend[ee].next_ms = millis() + (WATCH_TEMP_PERIOD) * 1000UL;
     }
     else
@@ -2162,7 +2165,7 @@ void Temperature::init() {
    */
   void Temperature::start_watching_bed() {
     if (degTargetBed() && degBed() < degTargetBed() - (WATCH_BED_TEMP_INCREASE + TEMP_BED_HYSTERESIS + 1)) {
-      watch_bed.target = degBed() + WATCH_BED_TEMP_INCREASE;
+      watch_bed.target = static_cast<int16_t>(degBed()) + WATCH_BED_TEMP_INCREASE;
       watch_bed.next_ms = millis() + (WATCH_BED_TEMP_PERIOD) * 1000UL;
     }
     else
@@ -2181,7 +2184,7 @@ void Temperature::init() {
 
     // If the target temperature is set and the heatbreak is above the target + offset, keep watching the cooling
     if (degTargetHeatbreak(ee) > 0 && degHeatbreak(ee) > degTargetHeatbreak(ee) + HEATBREAK_MAXTEMP_OFFSET) {
-      watch_heatbreak[ee].target = degHeatbreak(ee) - WATCH_HEATBREAK_TEMP_DECREASE;
+      watch_heatbreak[ee].target = static_cast<int16_t>(degHeatbreak(ee)) - WATCH_HEATBREAK_TEMP_DECREASE;
       watch_heatbreak[ee].next_ms = millis() + (WATCH_HEATBREAK_TEMP_PERIOD) * 1000UL;
     }
     else {

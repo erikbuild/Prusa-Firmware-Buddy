@@ -73,7 +73,7 @@ void GcodeSuite::M104() {
   #endif
 
   if (parser.seenval('S')) {
-    const int16_t temp = parser.value_celsius();
+    const int16_t temp = static_cast<int16_t>(parser.value_celsius());
     #if ENABLED(SINGLENOZZLE)
       singlenozzle_temp[target_extruder] = temp;
       if (target_extruder != active_extruder) return;
@@ -123,8 +123,10 @@ void GcodeSuite::M109() {
     if (target_extruder < 0) return;
   #endif
   M109Flags flags {
-    .target_temp = parser.seenval('S') ? parser.value_celsius() :
-                   parser.seenval('R') ? parser.value_celsius() : 0,
+    .target_temp = static_cast<int16_t>(
+      parser.seenval('S') ? parser.value_celsius() :
+      parser.seenval('R') ? parser.value_celsius() : 0
+    ),
     .wait_heat = parser.seenval('S'),
     .wait_heat_or_cool = parser.seenval('R'),
     .autotemp = parser.boolval('F'),

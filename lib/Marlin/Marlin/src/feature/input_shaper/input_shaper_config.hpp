@@ -103,10 +103,10 @@ inline constexpr AxisConfig axis_x_default {
 
 #if PRINTER_IS_PRUSA_MINI()
     .type = Type::mzv,
-    .frequency = 118.2,
+    .frequency = 118.2f,
 #elif PRINTER_IS_PRUSA_XL()
     .type = Type::mzv,
-    .frequency = 35.8,
+    .frequency = 35.8f,
 #elif PRINTER_IS_PRUSA_COREONE()
     .type = Type::ei,
     .frequency = 60.0,
@@ -125,10 +125,10 @@ inline constexpr AxisConfig axis_y_default {
 
 #if PRINTER_IS_PRUSA_MINI()
     .type = Type::mzv,
-    .frequency = 32.8,
+    .frequency = 32.8f,
 #elif PRINTER_IS_PRUSA_XL()
     .type = Type::mzv,
-    .frequency = 35.4,
+    .frequency = 35.4f,
 #elif PRINTER_IS_PRUSA_COREONE()
     .type = Type::ei,
     .frequency = 50.0,

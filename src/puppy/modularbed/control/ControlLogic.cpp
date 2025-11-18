@@ -99,7 +99,7 @@ void CalcHBControllers() {
                 pHBInfo->m_PID_P_Action = pHBInfo->m_PID_P_Coef * pHBInfo->m_PID_Err;
 
                 // integration component
-                pHBInfo->m_PID_I_ActionDelta = (double)pHBInfo->m_PID_I_Coef * (double)pHBInfo->m_PID_Err / (double)CONTROLLER_FREQUENCY;
+                pHBInfo->m_PID_I_ActionDelta = pHBInfo->m_PID_I_Coef * pHBInfo->m_PID_Err / CONTROLLER_FREQUENCY;
                 pHBInfo->m_PID_I_Action += pHBInfo->m_PID_I_ActionDelta;
 
                 // derivative component
@@ -146,7 +146,7 @@ void CalcHBAntiWindup() {
             pHBInfo->m_PID_I_ActionDelta = 0;
             // back-calculation anti-windup
             float deltaPWM = CalcExpectedLinearPWM(pHBInfo->m_FilteredMeasuredTemperatureDiff);
-            double deltaI = (double)((deltaPWM) / CONTROLLER_FREQUENCY);
+            float deltaI = deltaPWM / CONTROLLER_FREQUENCY;
             pHBInfo->m_PID_I_Action = LimitValue(pHBInfo->m_PID_I_Action + deltaI, 0, 1);
         }
     }

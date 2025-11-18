@@ -1,4 +1,4 @@
-analysis.SetSamplingIntervalMs(3.077868);
+analysis.SetSamplingIntervalMs(3.077868f);
 analysis.StoreSample(0, 1.1205768807541356f, 20.736f);
 analysis.StoreSample(3077, 1.11702536404651f, 24.403202f);
 analysis.StoreSample(6155, 1.1134738473388843f, 27.513601f);

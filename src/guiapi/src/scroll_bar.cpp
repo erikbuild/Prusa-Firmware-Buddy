@@ -46,8 +46,8 @@ void ScrollBar::unconditionalDraw() {
     float bar_size = h_fl * h_fl / float(scroll_height);
     float offset_scaled = float(offset) * (h_fl - bar_size) / float(scroll_height);
 
-    rc = Rect16::Height_t(bar_size);
-    rc += Rect16::Top_t(offset_scaled);
+    rc = Rect16::Height_t(static_cast<uint16_t>(bar_size));
+    rc += Rect16::Top_t(static_cast<int16_t>(offset_scaled));
 
     display::draw_rect(rc, COLOR_SILVER);
 }

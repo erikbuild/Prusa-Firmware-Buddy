@@ -710,7 +710,7 @@ void panic_loop() {
         spool_join.serialize(state_buf.spool_join);
 #endif
 #if HAS_CHAMBER_API()
-        state_buf.chamber_target_temp = buddy::chamber().target_temperature().value_or(chamber_temp_off);
+        state_buf.chamber_target_temp = static_cast<uint16_t>(buddy::chamber().target_temperature().value_or(chamber_temp_off));
 #endif
 #if HAS_TEMP_HEATBREAK_CONTROL
         for (uint8_t e = 0; e < HOTENDS; e++) {

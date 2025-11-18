@@ -22,6 +22,7 @@
 #pragma once
 
 #include <option/has_mmu2.h>
+#include <option/has_pause.h>
 
 /**
  * gcode.h - Temporary container for all gcode handlers
@@ -152,7 +153,6 @@
  * M218 - Set/get a tool offset: "M218 T<index> X<offset> Y<offset>". (Requires 2 or more extruders)
  * M220 - Set Feedrate Percentage: "M220 S<percent>" (i.e., "FR" on the LCD)
  * M221 - Set Flow Percentage: "M221 S<percent>"
- * M240 - Trigger a camera to take a photograph. (Requires PHOTO_GCODE)
  * M260 - i2c Send Data
  * M261 - i2c Request Data
  * M280 - Set servo position absolute: "M280 P<index> S<angle|µs>". (Requires servos)
@@ -187,10 +187,10 @@
  * M569 - Enable stealthChop on an axis. (Requires at least one _DRIVER_TYPE to be TMC2130/2160/2208/2209/5130/5160)
  * M572 - Set parameters for pressure advance.
  * M593 - Set parameters for input shapers.
- * M600 - Pause for filament change: "M600 X<pos> Y<pos> Z<raise> E<first_retract> L<later_retract>". (Requires ADVANCED_PAUSE_FEATURE)
- * M601 - Pause and park print-head in marlin's defined position. (Requires ADVANCED_PAUSE_FEATURE)
- * M602 - Unpark print-head parked with M601 called before and unpause print process. (Requires ADVANCED_PAUSE_FEATURE)
- * M603 - Configure filament change: "M603 T<tool> U<unload_length> L<load_length>". (Requires ADVANCED_PAUSE_FEATURE)
+ * M600 - Pause for filament change: "M600 X<pos> Y<pos> Z<raise> E<first_retract> L<later_retract>".
+ * M601 - Pause and park print-head in marlin's defined position.
+ * M602 - Unpark print-head parked with M601 called before and unpause print process.
+ * M603 - Configure filament change: "M603 T<tool> U<unload_length> L<load_length>".
  * M604 - Abort (serial) print
  * M605 - Set Dual X-Carriage movement mode: "M605 S<mode> [X<x_offset>] [R<temp_offset>]". (Requires MULTI_NOZZLE_DUPLICATION)
  * M666 - Set/get offsets for dual endstops (Requires [XYZ]_DUAL_ENDSTOPS).
@@ -596,10 +596,6 @@ private:
     static void M221();
   #endif
 
-  #if ENABLED(PHOTO_GCODE)
-    static void M240();
-  #endif
-
   #if HAS_I2C_EXPANDER()
     static void M260();
     static void M261();
@@ -700,7 +696,7 @@ private:
 
   static void M593();
 
-  #if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #if HAS_PAUSE()
     static void M600();
     static void M601();
     static void M602();

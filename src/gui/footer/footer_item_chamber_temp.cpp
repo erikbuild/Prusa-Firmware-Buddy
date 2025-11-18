@@ -31,7 +31,7 @@ int FooterItemChamberTemperature::static_readValue() {
         }
     }();
 
-    return StateAndTemps(state, current.value_or(0), target.value_or(0), !current.has_value()).ToInt();
+    return StateAndTemps(state, static_cast<uint16_t>(current.value_or(0)), static_cast<uint16_t>(target.value_or(0)), !current.has_value()).ToInt();
 }
 
 string_view_utf8 FooterItemChamberTemperature::static_makeView(int value) {

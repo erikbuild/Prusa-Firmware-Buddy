@@ -179,9 +179,11 @@ public:
     static void loop();
 
     // Process one planner block into move segments
-    static void process_queue_of_blocks();
+    //
+    // Returns true if any block was processed.
+    static bool process_queue_of_blocks();
 
-    // Trigger immediate processing of the move queue
+    /// Trigger immediate processing of the move queue
     static void wake_up();
 
     // Process the move segment queue
@@ -362,7 +364,7 @@ public:
 
     static double get_first_move_delay();
     static uint32_t get_first_move_delay_us() {
-        return get_first_move_delay() * 1e6;
+        return static_cast<uint32_t>(get_first_move_delay() * 1e6);
     }
 
     // This function must be called after the whole actual move segment is processed or the artificially
@@ -456,6 +458,8 @@ private:
     static std::atomic<bool> stop_pending;
     static void reset_queues();
     static bool is_waiting_before_delivering();
+    // Wake up already requested, don't request more until it actually wakes up.
+    static std::atomic<bool> wakeup_requested;
 };
 
 void classic_step_generator_init(const move_t &move, classic_step_generator_t &step_generator, step_generator_state_t &step_generator_state);

@@ -130,9 +130,10 @@ public:
         new_progress += (ticks_ms() - phase_change_time);
         new_progress /= full_time_estimate;
         new_progress *= 100;
+        uint8_t new_progress_percentage = static_cast<uint8_t>(new_progress);
 
-        if (new_progress != progress_percentage) {
-            progress_percentage = new_progress;
+        if (new_progress_percentage != progress_percentage) {
+            progress_percentage = new_progress_percentage;
             marlin_server::fsm_change(phase, { progress_percentage });
         }
     }

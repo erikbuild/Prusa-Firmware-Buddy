@@ -4,6 +4,7 @@
 #include "screen_messages.hpp"
 #include "translator.hpp"
 #include "screen_menu_fan_info.hpp"
+#include "screen_menu_board_info.hpp"
 #include "screen_menu_temperature.hpp"
 #include "screen_menu_move.hpp"
 #include "screen_menu_sensor_info.hpp"
@@ -158,6 +159,8 @@ template struct MI_SCREEN_CTOR<ScreenMenuSTSCalibrations>;
 #if PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI()
 template struct MI_SCREEN_CTOR<ScreenMenuBedLevelCorrection>;
 #endif
+
+template struct MI_SCREEN_CTOR<ScreenMenuBoardInfo>;
 
 #if HAS_LEDS_MENU()
 template struct MI_SCREEN_CTOR<ScreenMenuLeds>;

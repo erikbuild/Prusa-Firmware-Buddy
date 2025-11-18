@@ -485,7 +485,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 #define DEFAULT_AXIS_STEPS_PER_UNIT \
-    { 100, 100, 800, 380 }
+    { 79.01f, 79.01f, 800, 380 }
 
 /**
  * Default Max Feed Rate (mm/s)
@@ -743,8 +743,8 @@
  */
 #define Z_CLEARANCE_BEFORE_PROBING 5 // Z Clearance before first MBL probe
 #define Z_CLEARANCE_DEPLOY_PROBE 0 // Z Clearance for Deploy/Stow
-#define Z_CLEARANCE_BETWEEN_PROBES 0.2 // Z Clearance between probe points 1
-#define Z_CLEARANCE_MULTI_PROBE 0.2 // Z Clearance between multiple probes
+#define Z_CLEARANCE_BETWEEN_PROBES 0.2f // Z Clearance between probe points 1
+#define Z_CLEARANCE_MULTI_PROBE 0.2f // Z Clearance between multiple probes
 #define Z_AFTER_PROBING 2 // Z position after probing is done 2
 
 #define Z_PROBE_LOW_POINT -5 // Farthest distance below the trigger-point to go before stopping

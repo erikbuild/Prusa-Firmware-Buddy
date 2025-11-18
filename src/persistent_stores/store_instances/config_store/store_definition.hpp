@@ -41,10 +41,10 @@
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_precise_homing.h>
 #include <option/has_chamber_filtration_api.h>
+#include <option/has_esp.h>
 #include <option/has_auto_retract.h>
 #include <option/has_door_sensor_calibration.h>
-#include <option/has_manual_chamber_vents.h>
-#include <option/has_automatic_chamber_vents.h>
+#include <option/has_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_e2ee_support.h>
 #include <option/has_manual_belt_tuning.h>
@@ -69,6 +69,11 @@
 #include <option/has_chamber_filtration_api.h>
 #if HAS_CHAMBER_FILTRATION_API()
     #include <feature/chamber_filtration/chamber_filtration_enums.hpp>
+#endif
+
+#include <option/has_chamber_vents.h>
+#if HAS_CHAMBER_VENTS()
+    #include <feature/chamber/chamber_enums.hpp>
 #endif
 
 #include <option/has_hotend_type_support.h>
@@ -153,13 +158,13 @@ struct CurrentStore
     void perform_config_check();
 
     /// Config store "version", gets incremented each time we need to add a new config migration
-    static constexpr uint8_t newest_config_version = 4;
+    static constexpr uint8_t newest_config_version = 5;
 
     /// Stores newest_migration_version of the previous firmware
     StoreItem<uint8_t, 0, ItemFlag::special, journal::hash("Config Version")> config_version;
 
     /// If false, a ScreenPrinterSetup will appear on printer boot
-    StoreItem<bool, false, ItemFlag::network, journal::hash("Printer network done")> printer_network_setup_done;
+    StoreItem<bool, !HAS_ESP(), ItemFlag::network, journal::hash("Printer network done")> printer_network_setup_done;
     StoreItem<bool, false, ItemFlag::hw_config, journal::hash("Printer hw-config done")> printer_hw_config_done;
 
     /// Global filament sensor enable
@@ -726,8 +731,12 @@ struct CurrentStore
     static_assert(HOTENDS <= 8);
 #endif
 
-#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
-    StoreItem<bool, true, ItemFlag::printer_state, journal::hash("Check chamber ventilation state")> check_chamber_vent_state;
+#if HAS_CHAMBER_VENTS()
+    StoreItem<bool, true, ItemFlag::features, journal::hash("Check chamber ventilation state")> check_chamber_vent_state;
+    StoreItem<bool, true, ItemFlag::hw_config, journal::hash("Auto chamber vent enabled")> auto_chamber_vent_enabled;
+
+    VentControl get_vent_control();
+    void set_vent_control(VentControl state);
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()

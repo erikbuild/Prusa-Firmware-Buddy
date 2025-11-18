@@ -131,11 +131,8 @@ if(BOARD_IS_MASTER_BOARD)
             Marlin/Marlin/src/gcode/units/M82_M83.cpp
             Marlin/Marlin/src/HAL/HAL_STM32_F4_F7/Servo.cpp
             Marlin/Marlin/src/HAL/HAL_STM32_F4_F7/STM32F7/TMC2660.cpp
-            Marlin/Marlin/src/libs/crc16.cpp
             Marlin/Marlin/src/libs/hex_print_routines.cpp
             Marlin/Marlin/src/libs/least_squares_fit.cpp
-            Marlin/Marlin/src/libs/numtostr.cpp
-            Marlin/Marlin/src/libs/vector_3.cpp
             Marlin/Marlin/src/module/planner_bezier.cpp
             Marlin/Marlin/src/module/printcounter.cpp
             Marlin/Marlin/src/module/probe.cpp

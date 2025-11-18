@@ -68,7 +68,7 @@ public:
 
         inline bool used() const {
             /// At least this much filament [g] to be considered used (just purge is about 0.06 g on both XL and MK3)
-            static constexpr float FILAMENT_USED_MIN_G = 0.0003;
+            static constexpr float FILAMENT_USED_MIN_G = 0.0003f;
             return filament_used_g.has_value() && filament_used_g.value() > FILAMENT_USED_MIN_G;
         }
 

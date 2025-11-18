@@ -394,7 +394,7 @@ class TMC2130Stepper : public TMCStepper {
 	#if HAS_DWARF() && HAS_TOOLCHANGER()
 		Connection connection = Connection::Direct;
 	#endif
-		static constexpr float default_RS = 0.11;
+		static constexpr float default_RS = 0.11f;
 
 		int8_t link_index;
 		static int8_t chain_length;
@@ -496,7 +496,7 @@ class TMC2160Stepper : public TMC2130Stepper {
 		INIT_REGISTER(GLOBAL_SCALER){.sr=0};
 		INIT2160_REGISTER(PWMCONF){{.sr=0}};
 
-		static constexpr float default_RS = 0.075;
+		static constexpr float default_RS = 0.075f;
 };
 
 class TMC5130Stepper : public TMC2160Stepper {
@@ -719,7 +719,7 @@ class TMC5130Stepper : public TMC2160Stepper {
 		INIT_REGISTER(MSCURACT){0};
 		*/
 
-		static constexpr float default_RS = 0.15;
+		static constexpr float default_RS = 0.15f;
 
 	protected:
 		using TMC2160Stepper::SHORT_CONF;
@@ -836,7 +836,7 @@ class TMC5160Stepper : public TMC5130Stepper {
 
 		INIT_REGISTER(ENC_DEVIATION){.sr=0};
 
-		static constexpr float default_RS = 0.075;
+		static constexpr float default_RS = 0.075f;
 };
 
 class TMC5161Stepper : public TMC5160Stepper {
@@ -1005,7 +1005,7 @@ class TMC2208Stepper : public TMCStepper {
 		bool isWriteOnly() {return write_only;}
 
 		uint16_t bytesWritten = 0;
-		float Rsense = 0.11;
+		float Rsense = 0.11f;
 		bool CRCerror = false;
 
 		//Need for read/write TMC reg via g-code in public section
@@ -1278,7 +1278,7 @@ class TMC2660Stepper {
 
 		const uint16_t _pinCS;
 		const float Rsense;
-		static constexpr float default_RS = 0.1;
+		static constexpr float default_RS = 0.1f;
 		float holdMultiplier = 0.5;
 		uint32_t spi_speed = 16000000/8; // Default 2MHz
 		uint8_t _savedToff = 0;

@@ -20,7 +20,7 @@ inline Printer::Params params_idle() {
     params.version = { 2, 3, 0 };
     params.slot_mask = 1;
     params.slots[0] = Printer::SlotInfo {
-        .nozzle_diameter = 0.4,
+        .nozzle_diameter = 0.4f,
     };
 
     return params;
@@ -36,7 +36,7 @@ inline Printer::Params params_dialog() {
     params.version = { 2, 3, 0 };
     params.slot_mask = 1;
     params.slots[0] = Printer::SlotInfo {
-        .nozzle_diameter = 0.4,
+        .nozzle_diameter = 0.4f,
     };
 
     return params;

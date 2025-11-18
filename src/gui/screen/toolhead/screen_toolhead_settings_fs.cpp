@@ -22,7 +22,7 @@ float MI_FS_REF_NINS::read_value_impl(ToolheadIndex ix) {
 }
 
 void MI_FS_REF_NINS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_extruder_fs_ref_nins_value(ix, set);
+    config_store().set_extruder_fs_ref_nins_value(ix, static_cast<int32_t>(set));
 }
 
 // * MI_FS_REF_INS
@@ -36,7 +36,7 @@ float MI_FS_REF_INS::read_value_impl(ToolheadIndex ix) {
 }
 
 void MI_FS_REF_INS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_extruder_fs_ref_ins_value(ix, set);
+    config_store().set_extruder_fs_ref_ins_value(ix, static_cast<int32_t>(set));
 }
 
 #if HAS_ADC_SIDE_FSENSOR()
@@ -51,7 +51,7 @@ float MI_SIDE_FS_REF_NINS::read_value_impl(ToolheadIndex ix) {
 }
 
 void MI_SIDE_FS_REF_NINS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_side_fs_ref_nins_value(ix, set);
+    config_store().set_side_fs_ref_nins_value(ix, static_cast<int32_t>(set));
 }
 
 // * MI_SIDE_FS_REF_INS
@@ -65,7 +65,7 @@ float MI_SIDE_FS_REF_INS::read_value_impl(ToolheadIndex ix) {
 }
 
 void MI_SIDE_FS_REF_INS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_side_fs_ref_ins_value(ix, set);
+    config_store().set_side_fs_ref_ins_value(ix, static_cast<int32_t>(set));
 }
 #endif
 

@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include "device/board.h"
-#include <option/has_burst_stepping.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,26 +22,9 @@ extern "C" {
     #if !BOARD_IS_XBUDDY()
         #define ISR_PRIORITY_ENDSTOP 0 // High priority to preempt the STEP_TIMER when possible
     #endif
-    #if HAS_BURST_STEPPING()
-        /*
-         * For burst stepping, it is critical for the phase stepping interrupt to
-         * have higher priority. Otherwise, if the phase stepping gets interrupted
-         * at the wrong time, we don't properly switch direction and are stepping
-         * at the opposite direction.
-         */
-        #define ISR_PRIORITY_PHASE_TIMER 1
-        #define ISR_PRIORITY_STEP_TIMER  2
-    #else
-        /*
-         * In case of ordinary phase stepping, the phase stepping is more resilient
-         * to missed iterations (unlike the precise stepping); considering we
-         * combine phase stepping on XY with precise stepping on E and Z, this
-         * results in better prints (according to real-life observations).
-         */
-        #define ISR_PRIORITY_PHASE_TIMER 2
-        #define ISR_PRIORITY_STEP_TIMER  1
-    #endif
-    #define ISR_PRIORITY_HX717_HARD 3
+    #define ISR_PRIORITY_PHASE_TIMER 1
+    #define ISR_PRIORITY_STEP_TIMER  2
+    #define ISR_PRIORITY_HX717_HARD  3
     #if BOARD_IS_XBUDDY()
         #define ISR_PRIORITY_ENDSTOP ISR_PRIORITY_HX717_HARD // Shared EXTI line: avoid STEP jitter
     #endif

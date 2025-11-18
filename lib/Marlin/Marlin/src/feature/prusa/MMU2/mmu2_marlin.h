@@ -73,7 +73,7 @@ void marlin_finalize_unload();
 bool marlin_is_retracted();
 
 int16_t thermal_degTargetHotend();
-int16_t thermal_degHotend();
+float thermal_degHotend();
 
 void thermal_setTargetHotend(int16_t t);
 

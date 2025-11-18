@@ -543,16 +543,13 @@ set_feature_for_printers(HAS_SHEET_SUPPORT "MINI" "MK3.5")
 set_feature_for_printers(HAS_NFC "MK3.5" "MK4" "COREONE" "COREONEL")
 
 set_feature_for_printers(HAS_NOZZLE_CLEANER "iX")
-# BELT_TUNING requires SELFTEST
-set_feature_for_printers(HAS_BELT_TUNING "iX")
-set_feature_for_printers(HAS_MANUAL_BELT_TUNING "COREONE" "COREONEL")
+set_feature_for_printers(HAS_MANUAL_BELT_TUNING "COREONE" "COREONEL" "iX")
 set_feature_for_printers_master_board(HAS_I2C_EXPANDER "MK3.5" "MK4" "COREONE" "COREONEL")
 set_feature_for_printers(HAS_WASTEBIN "iX")
 set_feature_for_printers_master_board(HAS_PRINT_FAN_TYPE "XL")
 # GEARBOX_ALIGNMENT requires SELFTEST
 set_feature_for_printers_master_board(HAS_GEARBOX_ALIGNMENT "MK4" "COREONE" "COREONEL" "XL")
-set_feature_for_printers_master_board(HAS_MANUAL_CHAMBER_VENTS "COREONE")
-set_feature_for_printers_master_board(HAS_AUTOMATIC_CHAMBER_VENTS "COREONEL")
+set_feature_for_printers_master_board(HAS_CHAMBER_VENTS "COREONE" "COREONEL")
 set_feature_for_printers_master_board(HAS_BED_FAN "COREONEL")
 set_feature_for_printers_master_board(HAS_PSU_FAN "COREONEL")
 set_feature_for_printers(HAS_AC_CONTROLLER "COREONEL")

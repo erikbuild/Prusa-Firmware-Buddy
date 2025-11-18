@@ -305,9 +305,9 @@ float Sound::real_volume(int displayed_volume) {
 
 uint8_t Sound::displayed_volume(float real_volume) {
 #if BOARD_IS_BUDDY()
-    return real_volume > 1.1F ? real_volume : real_volume * 10.F;
+    return static_cast<uint8_t>(real_volume > 1.1F ? real_volume : real_volume * 10.F);
 #else
-    return real_volume == 0 ? 0 : -(real_volume - 1.51F) * 2.F;
+    return static_cast<uint8_t>(real_volume == 0 ? 0 : -(real_volume - 1.51F) * 2.F);
 #endif
 }
 

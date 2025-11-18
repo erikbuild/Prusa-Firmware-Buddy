@@ -23,6 +23,7 @@
 
 #include <option/has_local_bed.h>
 #include <option/has_remote_bed.h>
+#include <option/has_pause.h>
 
 /**
  * Conditionals_post.h
@@ -855,7 +856,6 @@
 #define HAS_HOME        (PIN_EXISTS(HOME))
 #define HAS_KILL        (PIN_EXISTS(KILL))
 #define HAS_SUICIDE     (PIN_EXISTS(SUICIDE))
-#define HAS_PHOTOGRAPH  (PIN_EXISTS(PHOTOGRAPH))
 #define HAS_CASE_LIGHT  (PIN_EXISTS(CASE_LIGHT) && ENABLED(CASE_LIGHT_ENABLE))
 
 // Digital control
@@ -1074,9 +1074,9 @@
 #endif
 
 #define QUIET_PROBING (HAS_BED_PROBE && (ENABLED(PROBING_FANS_OFF) || DELAY_BEFORE_PROBING > 0))
-#define HEATER_IDLE_HANDLER ANY(ADVANCED_PAUSE_FEATURE, WATCH_HOTENDS)
+#define HEATER_IDLE_HANDLER ANY(HAS_PAUSE(), WATCH_HOTENDS)
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE) && !defined(FILAMENT_CHANGE_SLOW_LOAD_LENGTH)
+#if HAS_PAUSE() && !defined(FILAMENT_CHANGE_SLOW_LOAD_LENGTH)
   #define FILAMENT_CHANGE_SLOW_LOAD_LENGTH 0
 #endif
 

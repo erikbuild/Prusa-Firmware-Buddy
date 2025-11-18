@@ -315,7 +315,7 @@ public:
     MarlinVariable<float> max_printed_z;
 
     MarlinVariable<float> temp_bed; // bed temperature [C]
-    MarlinVariable<float> target_bed; // bed target temperature [C]
+    MarlinVariable<int16_t> target_bed; // bed target temperature [C]
     MarlinVariable<float> z_offset; // probe z-offset [mm]
     MarlinVariable<float> travel_acceleration; // travel acceleration from planner
     MarlinVariable<uint32_t> print_duration; // print_job_timer.duration() [ms]
@@ -374,7 +374,7 @@ public:
     struct Hotend {
         // nozzle
         MarlinVariable<float> temp_nozzle; // nozzle temperature [C]
-        MarlinVariable<float> target_nozzle; // nozzle target temperature [C]
+        MarlinVariable<int16_t> target_nozzle; // nozzle target temperature [C]
         MarlinVariable<float> display_nozzle; // nozzle temperature to display [C]
         MarlinVariable<uint8_t> pwm_nozzle; ///< Hotend PWM (0-255 or 0-127, depending on the type of the printer, dunno how to determine nicely, sigh)
 

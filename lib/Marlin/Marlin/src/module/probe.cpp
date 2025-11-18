@@ -96,6 +96,7 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
 #include <gcode/temperature/M104_M109.hpp>
 #include <config_store/store_instance.hpp>
 #include <marlin_vars.hpp>
+#include <numbers>
 
 #if HAS_AUTO_RETRACT()
   #include <feature/auto_retract/auto_retract.hpp>
@@ -487,11 +488,11 @@ static xy_pos_t offset_for_probe_try(int try_idx) {
   int idx_offset = 0;
 
   do {
-    float perimeter = 2 * radius * M_PI;
+    float perimeter = 2 * radius * std::numbers::pi_v<float>;
     int tries_within_perimeter = static_cast<int>(perimeter / distance) + 1;
     if (try_idx < idx_offset + tries_within_perimeter) {
       int try_within_perimeter = try_idx - idx_offset;
-      float goniom_dist = (static_cast<float>(try_within_perimeter) / static_cast<float>(tries_within_perimeter)) * 2 * M_PI;
+      float goniom_dist = (static_cast<float>(try_within_perimeter) / static_cast<float>(tries_within_perimeter)) * 2 * std::numbers::pi_v<float>;
       return {std::cos(goniom_dist) * radius, std::sin(goniom_dist) * radius};
     } else {
       idx_offset += tries_within_perimeter;
@@ -574,7 +575,7 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
 
     // If the nozzle is well over the travel height then
     // move down quickly before doing the slow probe
-    const float z = expected_trigger_z + Z_CLEARANCE_DEPLOY_PROBE + 5.0 + (probe_offset.z < 0 ? -probe_offset.z : 0) - TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.z);
+    const float z = expected_trigger_z + Z_CLEARANCE_DEPLOY_PROBE + 5.0f + (probe_offset.z < 0 ? -probe_offset.z : 0) - TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.z);
     if (current_position.z > z) {
       // Probe down fast. If the probe never triggered, raise for probe clearance
       if (!do_probe_move(z, MMM_TO_MMS(Z_PROBE_SPEED_FAST))) {
@@ -628,7 +629,7 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
 
         // Sync enough samples before moving downwards to ensure the pre-compression line can be fit
         // when the Z move is very short
-        loadcell.WaitBarrier(ticks_us() + loadcell.analysis.analysisLookback * 1e6);
+        loadcell.WaitBarrier(static_cast<uint32_t>(ticks_us() + loadcell.analysis.analysisLookback * 1e6f));
       #endif
 
       // Probe downward slowly to find the bed
@@ -786,40 +787,7 @@ void prepare_for_nozzle_cleaning() {
   // Do not auto retract filaments marked do_not_auto_retract, they might get tangled in the extruder (BFW-6953)
   // Skip if retracted distance is known and filament is out of the nozzle
   if (!do_not_autoretract && retracted_distance < 5.0f) {
-
-    // Save target temperature to put back at the end
-    const auto previous_target_temp = static_cast<float>(thermalManager.degTargetHotend(active_extruder));
-
-    // Ensure safe temperature
-    const M109Flags flags_pre = {
-      // Filament target temperature can be altered through PrusaSlicer
-      // We don't have access to this information here, so we use filament presets
-      // Filament had to be loaded with the preset's temperature anyway, so we should be able to retract with it
-      // TODO: Could be passed to G29 as a parameter
-      .target_temp = static_cast<float>(config_store().get_filament_type(active_extruder).parameters().nozzle_temperature),
-    };
-    M109_no_parser(active_extruder, flags_pre);
-
-    {
-      PrintStatusMessageGuard pmg_retract;
-      pmg_retract.update<PrintStatusMessage::auto_retracting>({});
-
-      // Retract to standard distance 
-      const auto hotend = marlin_vars().active_hotend_id();
-      const auto standard_distance = buddy::AutoRetract::minimum_auto_retract_distance;
-      const auto retract_compensation_distance = (-1) * (standard_distance - retracted_distance);
-      assert(retract_compensation_distance < 0);
-      buddy::auto_retract().set_retracted_distance(hotend, std::nullopt);
-      mapi::extruder_move(retract_compensation_distance, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
-      planner.synchronize();
-      buddy::auto_retract().set_retracted_distance(hotend, standard_distance);
-    }
-
-    const M109Flags flags_post = {
-      .target_temp = previous_target_temp,
-      .wait_heat_or_cool = true,
-    };
-    M109_no_parser(active_extruder, flags_post);
+    buddy::auto_retract().ensure_retracted_no_ramming();
   }
 }
 #endif
@@ -1026,8 +994,8 @@ float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE
   }
 
   {
-      int logical_x = LOGICAL_X_POSITION(pos.x);
-      int logical_y = LOGICAL_Y_POSITION(pos.y);
+      int logical_x = static_cast<int>(LOGICAL_X_POSITION(pos.x));
+      int logical_y = static_cast<int>(LOGICAL_Y_POSITION(pos.y));
       metric_record_custom(&metric_probe_z, " x=%i,y=%i,v=%.3f", logical_x, logical_y, (double)measured_z);
   }
 

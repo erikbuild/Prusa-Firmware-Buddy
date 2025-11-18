@@ -32,7 +32,8 @@ typedef struct {
 
 #include "../inc/MarlinConfigPre.h"
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include <option/has_pause.h>
+#if HAS_PAUSE()
 
 enum PauseMode : char {
   PAUSE_MODE_SAME,
@@ -87,4 +88,4 @@ bool load_filament(const float &slow_load_length=0, const float &fast_load_lengt
 
 bool unload_filament(const float &unload_length, const bool show_lcd=false, const PauseMode mode=PAUSE_MODE_PAUSE_PRINT);
 
-#endif // ADVANCED_PAUSE_FEATURE
+#endif

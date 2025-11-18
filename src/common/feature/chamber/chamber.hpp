@@ -3,8 +3,7 @@
 #include <optional>
 
 #include <option/xl_enclosure_support.h>
-#include <option/has_manual_chamber_vents.h>
-#include <option/has_automatic_chamber_vents.h>
+#include <option/has_chamber_vents.h>
 #include <option/has_xbuddy_extension.h>
 #include <temperature.hpp>
 #include <freertos/mutex.hpp>
@@ -77,10 +76,18 @@ public: // Temperature control
     /// \returns the target temperature the chamber was actually set to - might differe because of capabilities().max_temp
     std::optional<Temperature> set_target_temperature(std::optional<Temperature> target);
 
-#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     /// Check the state of chamber grills (vents). Can be open/closed based on chamber target temperature
     /// !HAS TO BE CALLED FROM DEFAULT THREAD ONLY!
     void manage_ventilation_state();
+
+    enum class VentState {
+        unknown,
+        open,
+        closed,
+    };
+
+    inline void set_vent_state(VentState new_state) { vent_state_ = new_state; }
 #endif
 
 private:
@@ -89,13 +96,7 @@ private:
     std::optional<Temperature> thermistor_temperature_;
     std::optional<Temperature> target_temperature_;
 
-#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
-    enum class VentState {
-        unknown,
-        open,
-        closed,
-    };
-
+#if HAS_CHAMBER_VENTS()
     VentState vent_state_ = VentState::unknown;
 #endif
 

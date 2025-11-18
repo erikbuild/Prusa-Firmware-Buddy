@@ -285,7 +285,7 @@ void CSelftestPart_Heater::actualizeProgress(float current, float progres_start,
     if (progres_start >= progres_end) {
         return; // don't have estimated end set correctly
     }
-    uint8_t current_progress = scale_percent_avoid_overflow(current, progres_start, progres_end);
+    uint8_t current_progress = static_cast<uint8_t>(scale_percent_avoid_overflow(current, progres_start, progres_end));
     rResult.progress = std::max(rResult.progress, current_progress); // heater progress can only rise
 }
 
@@ -321,7 +321,7 @@ void CSelftestPart_Heater::single_check_callback() {
         power_avg = (power_avg * 99 + power) / 100;
         pwm_avg = (pwm_avg * 99 + pwm) / 100;
         power = power_avg;
-        pwm = pwm_avg;
+        pwm = static_cast<uint32_t>(pwm_avg);
     }
 
     LogDebugTimed(

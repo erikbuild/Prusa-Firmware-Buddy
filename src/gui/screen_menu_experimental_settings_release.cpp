@@ -72,7 +72,5 @@ bool ExperimentalSettingsValues::operator!=(const ExperimentalSettingsValues &ot
 }
 
 ExperimentalSettingsValues::ExperimentalSettingsValues(ScreenMenuExperimentalSettings__ &parent)
-    : z_len(parent.Item<MI_Z_AXIS_LEN>().GetVal())
-    , steps_per_unit_e(parent.Item<MI_STEPS_PER_UNIT_E>().GetVal() * ((parent.Item<MI_DIRECTION_E>().get_index() == 1) ? -1 : 1))
-
-{}
+    : z_len(static_cast<int32_t>(parent.Item<MI_Z_AXIS_LEN>().GetVal()))
+    , steps_per_unit_e(static_cast<int32_t>(parent.Item<MI_STEPS_PER_UNIT_E>().GetVal()) * ((parent.Item<MI_DIRECTION_E>().get_index() == 1) ? -1 : 1)) {}

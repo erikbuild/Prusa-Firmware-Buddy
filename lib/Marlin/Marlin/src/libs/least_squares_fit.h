@@ -81,7 +81,7 @@ inline void incremental_LSF(struct linear_fit_data *lsf, const float &x, const f
   lsf->yzbar += y * z;
   lsf->max_absx = _MAX(ABS(x), lsf->max_absx);
   lsf->max_absy = _MAX(ABS(y), lsf->max_absy);
-  lsf->N += 1.0;
+  lsf->N += 1.0f;
 }
 inline void incremental_LSF(struct linear_fit_data *lsf, const xy_pos_t &pos, const float &z) {
   incremental_LSF(lsf, pos.x, pos.y, z);

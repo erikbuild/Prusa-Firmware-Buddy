@@ -240,7 +240,7 @@ typedef struct {
    * The target temperature that should be reached by the next check.
    * @warning: This value is not the same as temp_heatbreak.target
    */
-  uint16_t target;
+  int16_t target;
   /**
    * The time in milliseconds to wait for the temperature to rise.
    * @note: The value 0 means no watch.
@@ -324,7 +324,7 @@ class Temperature {
       static int16_t extrude_min_temp;
       FORCE_INLINE static bool tooCold(const int16_t temp) { return allow_cold_extrude ? false : temp < extrude_min_temp; }
       FORCE_INLINE static bool tooColdToExtrude(const uint8_t E_NAME) {
-        return tooCold(degHotend(HOTEND_INDEX));
+        return tooCold(static_cast<int16_t>(degHotend(HOTEND_INDEX)));
       }
       FORCE_INLINE static bool targetTooColdToExtrude(const uint8_t E_NAME) {
         return tooCold(degTargetHotend(HOTEND_INDEX));
