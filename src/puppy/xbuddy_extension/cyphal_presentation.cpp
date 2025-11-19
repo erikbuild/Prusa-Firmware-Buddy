@@ -315,12 +315,12 @@ private:
         message.health.value = healthy ? uavcan_node_Health_1_0_NOMINAL : uavcan_node_Health_1_0_WARNING;
         message.mode.value = uavcan_node_Mode_1_0_OPERATIONAL;
         message.vendor_specific_status_code = 0;
-        (void)transmit(message, anonymous, transfer_id.node_heartbeat++);
+        (void)serialize_and_transmit(message, anonymous, transfer_id.node_heartbeat++);
     }
 
     void transmit_node_get_info_request(cyphal::NodeId remote_node_id) override {
         uavcan_node_GetInfo_Request_1_0 request;
-        (void)transmit(request, remote_node_id, transfer_id.node_get_info++);
+        (void)serialize_and_transmit(request, remote_node_id, transfer_id.node_get_info++);
     }
 
     void transmit_node_execute_command_request(cyphal::NodeId remote_node_id, cyphal::Command command, std::span<std::byte> parameter) override {
@@ -328,7 +328,7 @@ private:
         request.command = static_cast<uint16_t>(command);
         request.parameter.count = std::min(parameter.size(), sizeof(request.parameter.elements));
         memcpy(request.parameter.elements, parameter.data(), request.parameter.count);
-        (void)transmit(request, remote_node_id, transfer_id.node_execute_command++);
+        (void)serialize_and_transmit(request, remote_node_id, transfer_id.node_execute_command++);
     }
 
     void transmit_diagnostic_record(cyphal::Severity severity, const char *text) override {
@@ -336,7 +336,7 @@ private:
         record.severity.value = static_cast<uint8_t>(severity);
         record.text.count = std::min(strlen(text), sizeof(record.text.elements));
         memcpy(record.text.elements, text, record.text.count);
-        if (!transmit(record, anonymous, transfer_id.diagnostic_record++)) {
+        if (!serialize_and_transmit(record, anonymous, transfer_id.diagnostic_record++)) {
             // Failure to send diagnostic record is not an error.
             // It hurts debugging experience but we can continue as if nothing happened.
         }
@@ -347,7 +347,7 @@ private:
         static_assert(unique_id.size() == sizeof(message.unique_id));
         memcpy(message.unique_id, unique_id.data(), sizeof(message.unique_id));
         message.node_id.value = (uint8_t)node_id;
-        if (!transmit(message, anonymous, transfer_id.pnp++)) {
+        if (!serialize_and_transmit(message, anonymous, transfer_id.pnp++)) {
             // Failure to send allocation response is not an error.
             // Node will retry later and we will hopefully be able to respond then.
         }
@@ -357,7 +357,7 @@ private:
         response._error.value = uavcan_file_Error_1_0_OK;
         response.data.value.count = data.size();
         memcpy(response.data.value.elements, data.data(), response.data.value.count);
-        (void)transmit(response, remote_node_id, transfer_id);
+        (void)serialize_and_transmit(response, remote_node_id, transfer_id);
     }
 
     void transmit_ac_controller_config_request(cyphal::NodeId remote_node_id, const ac_controller::Config &r) override {
@@ -395,7 +395,7 @@ private:
             request.rgb_led_strip._tag_ = 0;
         }
 
-        (void)transmit(request, remote_node_id, transfer_id.ac_controller_config++);
+        (void)serialize_and_transmit(request, remote_node_id, transfer_id.ac_controller_config++);
 #else
         (void)remote_node_id;
         (void)r;
@@ -403,22 +403,27 @@ private:
     }
 
     template <class T>
-    [[nodiscard]] bool transmit(const T &object, cyphal::NodeId remote_node_id, uint8_t transfer_id) {
+    [[nodiscard]] bool serialize_and_transmit(const T &object, cyphal::NodeId remote_node_id, uint8_t transfer_id) {
         std::byte buffer[NunavutTraits<T>::serialization_buffer_size_bytes];
         size_t size = sizeof(buffer);
         if (NunavutTraits<T>::serialize(&object, (uint8_t *)buffer, &size) == 0) {
-            const CanardTransferMetadata metadata = {
-                .priority = CanardPriorityNominal,
-                .transfer_kind = NunavutTraits<T>::transfer_kind,
-                .port_id = NunavutTraits<T>::port_id,
-                .remote_node_id = (uint8_t)remote_node_id,
-                .transfer_id = transfer_id,
-            };
-            const CanardMicrosecond deadline = 0; // unlimited
-            return cyphal::transport().transmit(deadline, metadata, { buffer, size });
+            return transmit<T>({ buffer, size }, remote_node_id, transfer_id);
         } else {
             return false;
         }
+    }
+
+    template <class T>
+    [[nodiscard]] bool transmit(const std::span<const std::byte> &data, cyphal::NodeId remote_node_id, uint8_t transfer_id) {
+        const CanardTransferMetadata metadata = {
+            .priority = CanardPriorityNominal,
+            .transfer_kind = NunavutTraits<T>::transfer_kind,
+            .port_id = NunavutTraits<T>::port_id,
+            .remote_node_id = (uint8_t)remote_node_id,
+            .transfer_id = transfer_id,
+        };
+        const CanardMicrosecond deadline = 0; // unlimited
+        return cyphal::transport().transmit(deadline, metadata, data);
     }
 };
 
