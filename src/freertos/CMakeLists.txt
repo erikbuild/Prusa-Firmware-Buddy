@@ -9,6 +9,7 @@ add_library(
   timing.cpp
   system_tasks.cpp
   wait_condition.cpp
+  task.cpp
   )
 
 target_link_libraries(freertos PRIVATE FreeRTOS::FreeRTOS)

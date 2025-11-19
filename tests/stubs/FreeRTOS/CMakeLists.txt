@@ -28,6 +28,7 @@ add_library(freertos_tests OBJECT
     ${CMAKE_SOURCE_DIR}/src/freertos/mutex.cpp
     ${CMAKE_SOURCE_DIR}/src/freertos/queue.cpp
     ${CMAKE_SOURCE_DIR}/src/freertos/wait_condition.cpp
+    ${CMAKE_SOURCE_DIR}/src/freertos/task.cpp
 )
 
 # FIXME some day, this will be PRIVATE
