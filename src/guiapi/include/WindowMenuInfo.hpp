@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <ranges>
+
 #include "i_window_menu_item.hpp"
 #include <guiconfig/GuiDefaults.hpp>
 
@@ -56,14 +58,17 @@ public:
         , value_span_(value_span) {}
 
 public:
-    void ChangeInformation(const char *str) {
-        // -1 because value_span_ last char is always terminating \0 (would cause mismatch when cropped)
-        if (strncmp(value_span_.data(), str, value_span_.size() - 1) == 0) {
+    void ChangeInformation(std::string_view str) {
+        // Crop to fit the buffer; -1 to ensure space for terminating 0
+        str = str.substr(0, value_span_.size() - 1);
+
+        if (std::string_view(value_span_.data()) == str) {
             return;
         }
 
-        strlcpy(value_span_.data(), str, value_span_.size());
-        value_ = string_view_utf8::MakeRAM(value_span_.data()); // Force update to reset cached string size
+        std::ranges::copy(str, value_span_.begin());
+        value_span_[str.size()] = '\0';
+        value_ = string_view_utf8::MakeRAM(value_span_.data());
         update_extension_width();
         InValidateExtension();
     }
