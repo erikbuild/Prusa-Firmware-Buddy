@@ -2,6 +2,7 @@
 #include "app.hpp"
 
 #include "cyphal_application.hpp"
+#include "extension_variant.h"
 #include "hal.hpp"
 #include "master_activity.hpp"
 #include "mmu.hpp"
@@ -22,13 +23,13 @@ void read_register_file_callback(xbuddy_extension::modbus::Status &status) {
     status.fan_rpm[1] = hal::fan2::get_rpm();
     status.fan_rpm[2] = hal::fan3::get_rpm();
     // Note: Mainboard expects this in decidegree Celsius.
-    status.temperature = 10 * temperature::raw_to_celsius(hal::temperature::get_raw());
+    status.temperature = static_cast<uint16_t>(10 * temperature::raw_to_celsius(hal::temperature::get_raw()));
     status.filament_sensor = hal::filament_sensor::get();
     const auto flash_data = cyphal::application().request();
-    status.chunk_request.file_id = static_cast<uint16_t>(flash_data.flash_request);
+    status.chunk_request.file_id = xbuddy_extension::modbus::serialize_file_id(flash_data.flash_request);
     status.chunk_request.offset_lo = static_cast<uint16_t>(flash_data.offset & 0xFFFF);
     status.chunk_request.offset_hi = static_cast<uint16_t>(flash_data.offset >> 16);
-    status.digest_request.file_id = static_cast<uint16_t>(flash_data.hash_request);
+    status.digest_request.file_id = xbuddy_extension::modbus::serialize_file_id(flash_data.hash_request);
     status.digest_request.salt_lo = static_cast<uint16_t>(flash_data.hash_salt & 0xFFFF);
     status.digest_request.salt_hi = static_cast<uint16_t>(flash_data.hash_salt >> 16);
     const auto log = cyphal::application().get_log();
@@ -85,9 +86,9 @@ void read_register_file_callback(ac_controller::modbus::Status &modbus_status) {
     ac_controller::Status status;
     cyphal::application().request(node_state, status);
 
-    modbus_status.mcu_temp = status.mcu_temp * 10;
-    modbus_status.bed_temp = status.bed_temp * 10;
-    modbus_status.bed_voltage = status.bed_voltage * 10;
+    modbus_status.mcu_temp = static_cast<uint16_t>(status.mcu_temp * 10);
+    modbus_status.bed_temp = static_cast<uint16_t>(status.bed_temp * 10);
+    modbus_status.bed_voltage = static_cast<uint16_t>(status.bed_voltage * 10);
     modbus_status.bed_fan_rpm = status.bed_fan_rpm;
     modbus_status.psu_fan_rpm = status.psu_fan_rpm;
     const auto faults = static_cast<uint32_t>(status.faults);
@@ -232,9 +233,16 @@ void app::run() {
     alignas(uint16_t) std::byte response_buffer[256];
     hal::rs485::start_receiving();
     for (;;) {
+#if EXTENSION_IS_STANDARD()
         const auto request = hal::rs485::receive_timeout(1);
+#else
+        const auto request = hal::rs485::receive();
+#endif
+
         if (request.empty()) {
+#if EXTENSION_IS_STANDARD()
             cyphal::run_for_a_while();
+#endif
         } else {
             const auto response = modbus::handle_transaction(modbus_dispatch, request, response_buffer);
             if (response.size()) {
@@ -244,5 +252,7 @@ void app::run() {
                 hal::rs485::start_receiving();
             }
         }
+
+        hal::rs485::housekeeping();
     }
 }

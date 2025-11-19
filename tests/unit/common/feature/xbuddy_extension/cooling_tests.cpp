@@ -82,9 +82,9 @@ TEST_CASE("Cooling PWM") {
 
         // Use a small error that gets clamped to min_pwm
         // Error of 4°C * ramp_slope(10) = 40 PWM, which equals min_pwm after apply_pwm_overrides
-        REQUIRE(step(false, 4.0 + target_temperature, target_temperature, pwm_auto) == cooling.spin_up_pwm);
+        REQUIRE(step(false, 4.0f + target_temperature, target_temperature, pwm_auto) == cooling.spin_up_pwm);
 
-        REQUIRE(step(true, 4.0 + target_temperature, target_temperature, pwm_auto) == cooling.min_pwm);
+        REQUIRE(step(true, 4.0f + target_temperature, target_temperature, pwm_auto) == cooling.min_pwm);
     }
 
     SECTION("Overheating cooling") {

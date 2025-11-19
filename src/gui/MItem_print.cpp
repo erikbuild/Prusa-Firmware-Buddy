@@ -38,7 +38,7 @@ MI_NOZZLE_ABSTRACT::MI_NOZZLE_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] const c
 }
 
 void MI_NOZZLE_ABSTRACT::OnClick() {
-    marlin_client::set_target_nozzle(value(), tool_nr);
+    marlin_client::set_target_nozzle(static_cast<int16_t>(value()), tool_nr);
     marlin_client::set_display_nozzle(value(), tool_nr);
 }
 
@@ -85,7 +85,7 @@ MI_HEATBED::MI_HEATBED()
     : WiSpin(uint8_t(marlin_vars().target_bed), numeric_input_config::bed_temperature, _(label), &img::heatbed_16x16, is_enabled_t::yes, is_hidden_t::no) {
 }
 void MI_HEATBED::OnClick() {
-    marlin_client::set_target_bed(value());
+    marlin_client::set_target_bed(static_cast<int16_t>(value()));
 }
 
 /*****************************************************************************/
@@ -102,7 +102,7 @@ MI_PRINTFAN::MI_PRINTFAN()
         printfan_spin_config, _(label), &img::fan_16x16, is_enabled_t::yes, is_hidden_t::no) {
 }
 void MI_PRINTFAN::OnClick() {
-    marlin_client::set_fan_speed(val_mapping(true, value(), 100, 255));
+    marlin_client::set_fan_speed(val_mapping(true, static_cast<uint8_t>(value()), 100, 255));
 }
 
 /*****************************************************************************/
@@ -119,7 +119,7 @@ MI_SPEED::MI_SPEED()
 }
 
 void MI_SPEED::OnClick() {
-    marlin_client::set_print_speed(value());
+    marlin_client::set_print_speed(static_cast<uint16_t>(value()));
 }
 
 /*****************************************************************************/
@@ -154,5 +154,5 @@ MI_FLOWFACT_ABSTRACT::MI_FLOWFACT_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] con
 }
 
 void MI_FLOWFACT_ABSTRACT::OnClick() {
-    marlin_client::set_flow_factor(value(), tool_nr);
+    marlin_client::set_flow_factor(static_cast<uint16_t>(value()), tool_nr);
 }

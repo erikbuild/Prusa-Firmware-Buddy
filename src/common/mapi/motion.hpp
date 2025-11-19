@@ -24,7 +24,7 @@ bool extruder_move(float distance, float feed_rate, bool ignore_flow_factor = tr
  * @param feed_rate The feed rate of the move in mm/s.
  * @param step The step in mm to schedule (not related to motor steps).
  */
-float extruder_schedule_turning(float feed_rate, float step = 0.6);
+float extruder_schedule_turning(float feed_rate, float step = 0.6f);
 
 /**
  * Make sure a tool with accelerometer is picked up. If not, pick up such a

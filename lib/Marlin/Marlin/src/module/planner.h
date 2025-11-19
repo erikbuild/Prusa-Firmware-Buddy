@@ -164,8 +164,8 @@ typedef struct PlannerBlock {
 #define BLOCK_MOD(n) ((n)&(BLOCK_BUFFER_SIZE-1))
 
 typedef struct {
-   uint32_t max_acceleration_mm_per_s2[XYZE_N], // (mm/s^2) M201 XYZE
-            min_segment_time_us;                // (µs) M205 B
+   uint32_t max_acceleration_mm_per_s2[XYZE_N]; // (mm/s^2) M201 XYZE
+   uint32_t min_segment_time_us;                // (µs) M205 B
       float axis_steps_per_mm[XYZE_N];          // (steps) M92 XYZE - Steps per millimeter
       float axis_msteps_per_mm[XYZE_N];         // (mini-steps) Steps per millimeter multiplied PLANNER_STEPS_MULTIPLIER to increase the Planner resolution.
  feedRate_t max_feedrate_mm_s[XYZE_N];          // (mm/s) M203 XYZE - Max speeds
@@ -189,8 +189,8 @@ struct user_planner_settings_t : public planner_settings_t {};
 
 // Structure for saving/loading movement parameters
 typedef struct {
-   uint32_t max_acceleration_mm_per_s2[XYZE_N], // (mm/s^2) M201 XYZE
-            min_segment_time_us;                // (µs) M205 B
+   uint32_t max_acceleration_mm_per_s2[XYZE_N]; // (mm/s^2) M201 XYZE
+   uint32_t min_segment_time_us;                // (µs) M205 B
  feedRate_t max_feedrate_mm_s[XYZE_N];          // (mm/s) M203 XYZE - Max speeds
       float acceleration,                       // (mm/s^2) M204 S - Normal acceleration. DEFAULT ACCELERATION for all printing moves.
             retract_acceleration,               // (mm/s^2) M204 R - Retract acceleration. Filament pull-back and push-forward while standing still in the other axes
@@ -273,6 +273,7 @@ class Planner {
                             block_buffer_planned,     // Index of the optimally planned block
                             block_buffer_tail;        // Index of the busy block, if any
     static uint32_t delay_before_delivering;          // Initial milliseconds of delay for planner optimization
+    static std::atomic<bool> recalculating;           // Recalculating blocks.
 
 
     #if ENABLED(DISTINCT_E_FACTORS)
@@ -393,7 +394,7 @@ class Planner {
     // A flag to drop queuing of blocks and abort any pending move
     static bool draining_buffer;
 
-    // A flag to indicate that that buffer is being emptied intentionally
+    // A flag to indicate that that buffer is being emptied intentionally (= we're in the middle of planner.synchronize())
     static bool emptying_buffer;
 
   public:
@@ -600,11 +601,11 @@ class Planner {
     // Check if movement queue is full
     FORCE_INLINE static bool is_full() { return block_buffer_tail == next_block_index(block_buffer_head); }
 
-    // Set emptying buffer
-    FORCE_INLINE static void set_emptying_buffer(bool b) { emptying_buffer = b; }
-
     // Get count of movement slots free
     FORCE_INLINE static uint8_t moves_free() { return BLOCK_BUFFER_SIZE - 1 - movesplanned(); }
+
+    // Is the planner currently recalculating the move blocks?
+    FORCE_INLINE static bool is_recalculating() { return recalculating.load(std::memory_order_acquire); }
 
     /**
      * Planner::get_next_free_block
@@ -616,8 +617,8 @@ class Planner {
     FORCE_INLINE static block_t* get_next_free_block(uint8_t &next_buffer_head, const uint8_t count=1) {
 
       // Wait until there are enough slots free or if aborting
-      while (moves_free() < count && !draining_buffer) { idle(true); }
-      if (draining_buffer || PreciseStepping::stopping())
+      while (moves_free() < count && !draining()) { idle(true); }
+      if (draining() || PreciseStepping::stopping())
         return nullptr;
 
       // Return the first available block
@@ -845,9 +846,6 @@ class Planner {
 
     // Wait for busy(). Does not wait when draining!
     static void synchronize();
-
-    // Indicate whether the buffer is being drained intentionally
-    static bool emptying() { return emptying_buffer || draining_buffer; }
 
     // Wait for busy(), then disable all steppers
     static void finish_and_disable();

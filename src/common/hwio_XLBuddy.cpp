@@ -145,8 +145,8 @@ void hwio_beeper_tone(float frq, uint32_t duration_ms) {
             // Note: The frequency here is still too low for playing some common
             //       tunes with M300. On PD5 pin there is no timer connected
             constexpr const float hwio_beeper_frequency_hz = 1000.0f;
-            hwio_beeper_pulses = duration_ms * frq / hwio_beeper_frequency_hz;
-            hwio_beeper_period = hwio_beeper_frequency_hz / frq;
+            hwio_beeper_pulses = static_cast<uint32_t>(duration_ms * frq / hwio_beeper_frequency_hz);
+            hwio_beeper_period = static_cast<uint32_t>(hwio_beeper_frequency_hz / frq);
         }
     } else {
         hwio_beeper_notone();

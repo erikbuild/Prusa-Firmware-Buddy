@@ -322,7 +322,7 @@ void ModularBed::set_target(const uint8_t column, const uint8_t row, const float
 
 void ModularBed::set_target(const uint8_t idx, const float temp) {
     // Private, not locked
-    bedlet_target_temp.value[idx] = temp * MODBUS_TEMPERATURE_REGISTERS_SCALE;
+    bedlet_target_temp.value[idx] = static_cast<uint16_t>(temp * MODBUS_TEMPERATURE_REGISTERS_SCALE);
     bedlet_target_temp.dirty = true;
 }
 
@@ -463,12 +463,12 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
                         continue;
                     }
 
-                    const float dist = std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2)); // distance between bedlets
+                    const float dist = std::hypot<float, float>(x2 - x1, y2 - y1); // distance between bedlets
                     if (dist > bedlet_gradient_cutoff) {
                         continue; // if bedlet distance is over BEDLET_GRADIENT_CUTOFF, don't do anything, temperature is already zero
                     }
 
-                    const int16_t temp2 = temp1 - temp1 * pow(1 / bedlet_gradient_cutoff * dist, bedlet_gradient_exponent);
+                    const int16_t temp2 = temp1 - static_cast<int16_t>(temp1 * std::pow(1 / bedlet_gradient_cutoff * dist, bedlet_gradient_exponent));
                     bedlet_target_temp.value[idx2] = std::max(temp2, (int16_t)bedlet_target_temp.value[idx2]);
                     bedlet_target_temp.dirty = true;
                 }
@@ -479,7 +479,7 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
 
 float ModularBed::get_heater_current() {
     Lock guard(mutex);
-    return (currents.value.A_measured + currents.value.B_measured) / 1000.0;
+    return (currents.value.A_measured + currents.value.B_measured) / 1000.0f;
 }
 
 uint16_t ModularBed::get_mcu_temperature() {

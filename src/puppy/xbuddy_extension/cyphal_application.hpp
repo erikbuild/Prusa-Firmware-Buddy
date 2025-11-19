@@ -28,9 +28,7 @@ enum class NodeName : uint8_t {
 /// Parse raw node name.
 NodeName parse_node_name(Bytes);
 
-/// For now, there is a one-to-one correspondence; this may be extended with
-/// different hardware revisions of the same logical node in the future.
-using FirmwareFile = NodeName;
+using FirmwareFile = xbuddy_extension::FileId;
 
 /// Represents all the data the cyphal application is requesting from
 /// the modbus subsystem. Since our connection to xBuddy is over half-duplex

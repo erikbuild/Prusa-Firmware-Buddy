@@ -9,10 +9,10 @@ namespace {
 
 void fill_test_data(MotorPhaseCorrection &dest) {
     // Values measured on an actual printer, in 6.2 firmware for the Y-Back.
-    dest[2].mag = 0.03097;
-    dest[2].pha = 3.06143;
-    dest[4].mag = 0.01513;
-    dest[4].pha = 0.78695;
+    dest[2].mag = 0.03097f;
+    dest[2].pha = 3.06143f;
+    dest[4].mag = 0.01513f;
+    dest[4].pha = 0.78695f;
 }
 
 void uncalibrated(MotorPhaseCorrection &) {

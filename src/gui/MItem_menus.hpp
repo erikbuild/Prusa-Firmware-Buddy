@@ -61,6 +61,9 @@ using MI_FILAMENTS_VISIBILITY
 using MI_FAN_INFO
     = MI_SCREEN<N_("Fan Info"), class ScreenMenuFanInfo>;
 
+using MI_BOARD_INFO
+    = MI_SCREEN<N_("Board Info"), class ScreenMenuBoardInfo>;
+
 using MI_VERSION_INFO
     = MI_SCREEN<N_("Version Info"), class ScreenMenuVersionInfo>;
 

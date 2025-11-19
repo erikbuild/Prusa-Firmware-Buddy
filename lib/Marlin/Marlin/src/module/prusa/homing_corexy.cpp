@@ -392,7 +392,7 @@ static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_di
     MeasurementGuard setup_guard(other_axis);
     ++internal::probe_id;
 
-    const int32_t measure_max_dist = (XY_HOMING_ORIGIN_OFFSET * 4) / planner.mm_per_step[axis];
+    const int32_t measure_max_dist = static_cast<int32_t>((XY_HOMING_ORIGIN_OFFSET * 4) / planner.mm_per_step[axis]);
     const int32_t measure_dir = (axis == B_AXIS ? -X_HOME_DIR : -Y_HOME_DIR);
     const xy_long_t origin_steps = { stepper.position(A_AXIS), stepper.position(B_AXIS) };
     constexpr int probe_n = 2;
@@ -718,7 +718,7 @@ static bool measure_calibrate_walk(float &score, AxisEnum measured_axis,
     constexpr AxisEnum walk_axis = X_HOME_DIR == Y_HOME_DIR ? X_AXIS : Y_AXIS;
     constexpr float walk_dist = XY_HOMING_ORIGIN_OFFSET - axis_home_max_diff(walk_axis) * 2;
     static_assert(walk_dist >= 0);
-    const size_t walk_cycles = floor(walk_dist / (phase_cycle_steps(walk_axis) * planner.mm_per_step[walk_axis] * float(M_SQRT2)));
+    const size_t walk_cycles = static_cast<size_t>(std::floor(walk_dist / (phase_cycle_steps(walk_axis) * planner.mm_per_step[walk_axis] * std::numbers::sqrt2_v<float>)));
     const size_t walk_period = walk_cycles * 2;
     const size_t measure_probes = std::max<size_t>(walk_period, XY_HOMING_ORIGIN_BUMP_RETRIES * 2);
     assert(measure_probes >= 3 && measure_probes < 128);
@@ -726,10 +726,10 @@ static bool measure_calibrate_walk(float &score, AxisEnum measured_axis,
     // absolute measure limit distances
     static_assert(XY_HOMING_ORIGIN_OFFSET > axis_home_max_diff(walk_axis) * 2);
     constexpr AxisEnum walk_ortho_axis = walk_axis == X_AXIS ? Y_AXIS : X_AXIS;
-    constexpr int32_t measure_min_dist_mm = (XY_HOMING_ORIGIN_OFFSET - axis_home_max_diff(walk_ortho_axis) * 2) * float(M_SQRT2);
-    constexpr int32_t measure_max_dist_mm = (XY_HOMING_ORIGIN_OFFSET * 4);
-    const int32_t measure_min_dist = measure_min_dist_mm / planner.mm_per_step[measured_axis];
-    const int32_t measure_max_dist = measure_max_dist_mm / planner.mm_per_step[measured_axis];
+    constexpr int32_t measure_min_dist_mm = static_cast<int32_t>((XY_HOMING_ORIGIN_OFFSET - axis_home_max_diff(walk_ortho_axis) * 2) * std::numbers::sqrt2_v<float>);
+    constexpr int32_t measure_max_dist_mm = (static_cast<int32_t>(XY_HOMING_ORIGIN_OFFSET) * 4);
+    const int32_t measure_min_dist = static_cast<int32_t>(measure_min_dist_mm / planner.mm_per_step[measured_axis]);
+    const int32_t measure_max_dist = static_cast<int32_t>(measure_max_dist_mm / planner.mm_per_step[measured_axis]);
     const int32_t measure_dir = (measured_axis == B_AXIS ? -X_HOME_DIR : -Y_HOME_DIR);
 
     score = 0.f;

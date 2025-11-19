@@ -120,7 +120,7 @@ void waitForHotendTargetTemp(uint16_t delay, F f) {
         safe_delay_keep_alive(delay);
 
         if (mmu2.commandInProgressManager.isCommandInProgress()) {
-            ReportProgressHook(ProgressData(mmu2.commandInProgressManager.commandInProgress(), ExtendedProgressCode::WaitingForTemperature, (thermal_degHotend() - startTemp) * 100 / (thermal_degTargetHotend() - startTemp)));
+            ReportProgressHook(ProgressData(mmu2.commandInProgressManager.commandInProgress(), ExtendedProgressCode::WaitingForTemperature, static_cast<uint8_t>((thermal_degHotend() - startTemp) * 100 / (thermal_degTargetHotend() - startTemp))));
         }
     }
 }
@@ -1522,7 +1522,7 @@ void MMU2::OnMMUProgressMsgSame(ProgressCode pc) {
                     // on the MK3.5 due to fsensor filtering delay (compared to MK3S),
                     // we are getting 0.175mm of extra loaded filament per 1mm/s speed increase of slow loading speed.
                     // i.e. for 20mm/s we get roughly 4mm of extra loaded filament
-                    float loadingSpeedCompensation = 0.175 * logic.PulleySlowFeedRate();
+                    float loadingSpeedCompensation = 0.175f * logic.PulleySlowFeedRate();
 #else
                     // no change for MK4 and MK3.9, fsensor is different there
                     static constexpr float loadingSpeedCompensation = 0.F;

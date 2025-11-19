@@ -74,10 +74,10 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
     }
     CalculateLoadMeans(features);
     CalculateLoadAngles(features);
-    features.r2_20ms = CalculateSegmentedR2s(features, 0.020);
-    features.r2_30ms = CalculateSegmentedR2s(features, 0.030);
-    features.r2_50ms = CalculateSegmentedR2s(features, 0.050);
-    features.r2_60ms = CalculateSegmentedR2s(features, 0.060);
+    features.r2_20ms = CalculateSegmentedR2s(features, 0.02f);
+    features.r2_30ms = CalculateSegmentedR2s(features, 0.03f);
+    features.r2_50ms = CalculateSegmentedR2s(features, 0.05f);
+    features.r2_60ms = CalculateSegmentedR2s(features, 0.06f);
 
 #ifdef PROBE_ANALYSIS_WITH_METRICS
     {
@@ -87,7 +87,7 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse() {
         std::array<std::tuple<uint32_t, float>, 6> load_line_points;
 
         auto timestamp_for_time = [this](Time time) -> uint32_t {
-            return TimeOfSample(ClosestSample(time, SearchDirection::Both));
+            return static_cast<uint32_t>(TimeOfSample(ClosestSample(time, SearchDirection::Both)));
         };
 
         // analysis start
@@ -262,7 +262,7 @@ std::tuple<ProbeAnalysisBase::Sample, ProbeAnalysisBase::Line, ProbeAnalysisBase
 
 std::expected<void, ProbeAnalysisBase::AnalysisError> ProbeAnalysisBase::CompensateForSystemDelay() {
     // Shift Z samples right (to the future)
-    int samplesToShift = loadDelay / samplingInterval;
+    int samplesToShift = static_cast<int>(loadDelay / samplingInterval);
 
     if (window.size() <= static_cast<size_t>(samplesToShift) + 2) {
         return std::unexpected(AnalysisError { .description = "small-window", .arg = (float)window.size() });
@@ -322,8 +322,8 @@ void ProbeAnalysisBase::CalculateHaltSpan(Features &features) {
 }
 
 std::expected<void, ProbeAnalysisBase::AnalysisError> ProbeAnalysisBase::CalculateAnalysisRange(Features &features) {
-    int lookbackSamples = analysisLookback / samplingInterval;
-    int lookaheadSamples = analysisLookahead / samplingInterval;
+    int lookbackSamples = static_cast<int>(analysisLookback / samplingInterval);
+    int lookaheadSamples = static_cast<int>(analysisLookahead / samplingInterval);
 
     if (auto sz = features.fallEnd - window.begin(); sz < lookbackSamples) {
         return std::unexpected(AnalysisError { .description = "small-lookback", .arg = (float)sz });
@@ -643,7 +643,7 @@ void ProbeAnalysisBase::log_features_metrics(const Features &features, std::opti
     // compression-, compressed-, decompression- and afterdecompression lines in
     // load.
 
-    uint32_t window_start_ts = lastSampleTimestamp - window.size() * samplingInterval * 1e6f;
+    uint32_t window_start_ts = static_cast<uint32_t>(lastSampleTimestamp - window.size() * samplingInterval * 1e6f);
 
     float analysis_start = samplingInterval * std::distance(window.begin(), features.analysisStart);
     float fall_start = samplingInterval * std::distance(window.begin(), features.fallStart);

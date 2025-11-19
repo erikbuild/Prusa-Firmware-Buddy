@@ -275,9 +275,9 @@
     //#define DEFAULT_bedKd 1675.16
 
     //24V Prusa MK3 bed
-    #define DEFAULT_bedKp 126.13
-    #define DEFAULT_bedKi 4.30
-    #define DEFAULT_bedKd 924.76
+    #define DEFAULT_bedKp 126.13f
+    #define DEFAULT_bedKi 4.30f
+    #define DEFAULT_bedKd 924.76f
 
 // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
 #endif // PIDTEMPBED
@@ -732,7 +732,7 @@
 #define Z_CLEARANCE_BEFORE_PROBING 5 // Z Clearance before first MBL probe
 #define Z_CLEARANCE_DEPLOY_PROBE 0 // Z Clearance for Deploy/Stow
 #define Z_CLEARANCE_BETWEEN_PROBES 1 // Z Clearance between probe points
-#define Z_CLEARANCE_MULTI_PROBE 0.5 // Z Clearance between multiple probes
+#define Z_CLEARANCE_MULTI_PROBE 0.5f // Z Clearance between multiple probes
 #define Z_AFTER_PROBING 2 // Z position after probing is done
 
 #define Z_PROBE_LOW_POINT -2 // Farthest distance below the trigger-point to go before stopping

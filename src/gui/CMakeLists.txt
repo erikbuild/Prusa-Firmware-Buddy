@@ -169,19 +169,13 @@ endif()
 if(BOARD IN_LIST BOARDS_WITH_ST7789V)
   target_sources(firmware PRIVATE display_hw_checks_MINI.cpp version_info_ST7789V.cpp)
 elseif(BOARD IN_LIST BOARDS_WITH_ILI9488)
-  target_sources(firmware PRIVATE display_hw_checks_xlcd.cpp version_info_ILI9488.cpp)
-endif()
-
-if(BOARD STREQUAL "XBUDDY" OR BOARD STREQUAL "XLBUDDY")
-  target_sources(firmware PRIVATE menu_item_xlcd.cpp)
+  target_sources(
+    firmware PRIVATE display_hw_checks_xlcd.cpp screen_menu_board_info.cpp version_info_ILI9488.cpp
+    )
 endif()
 
 if(XL_ENCLOSURE_SUPPORT)
   target_sources(firmware PRIVATE MItem_enclosure.cpp screen_change_filter.cpp)
-endif()
-
-if(HAS_LOVE_BOARD)
-  target_sources(firmware PRIVATE MItem_love_board.cpp)
 endif()
 
 if(HAS_FILAMENT_SENSORS_MENU)

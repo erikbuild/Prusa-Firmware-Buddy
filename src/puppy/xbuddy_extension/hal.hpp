@@ -100,6 +100,11 @@ namespace rs485 {
      */
     void transmit_and_then_start_receiving(std::span<std::byte>);
 
+    /**
+     * Clear bus errors if needed.
+     */
+    void housekeeping();
+
 } // namespace rs485
 
 namespace mmu {

@@ -135,8 +135,8 @@ void CorrectedCurrentLutSimple::_update_phase_shift() {
             const SpectralItem &s = _spectrum[n];
             phase_shift += s.mag * std::sin(n * item_phase + s.pha);
         }
-        _sin.set(i, std::round(CURRENT_AMPLITUDE * std::sin(item_phase + phase_shift)));
-        _cos.set(i, std::round(CURRENT_AMPLITUDE * std::cos(item_phase + phase_shift)));
+        _sin.set(i, static_cast<int>(std::round(CURRENT_AMPLITUDE * std::sin(item_phase + phase_shift))));
+        _cos.set(i, static_cast<int>(std::round(CURRENT_AMPLITUDE * std::cos(item_phase + phase_shift))));
     }
 }
 

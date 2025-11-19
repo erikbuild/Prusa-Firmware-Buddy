@@ -38,7 +38,7 @@ protected:
 public:
     void update(fsm::PhaseData data) {
         if (data[3]) {
-            progress.set_progress_percent(data[2] / 2.55);
+            progress.set_progress_percent(data[2] / 2.55f);
         } else {
             progress.set_progress_percent(100 * float(data[2] - data[0]) / (data[1] - data[0]));
             snprintf(text_below_buffer.data(), text_below_buffer.size(), "%3d Hz", data[2]);
@@ -137,7 +137,7 @@ public:
     }
 
     void update(fsm::PhaseData data) {
-        progress.set_progress_percent(data[0] / 2.55);
+        progress.set_progress_percent(data[0] / 2.55f);
         snprintf(text_below_buffer.data(), text_below_buffer.size(), "Axis %c shaper %3s",
             data[2] == 0 ? 'X' : (data[2] == 1 ? 'Y' : '?'), input_shaper::to_short_string(static_cast<input_shaper::Type>(data[1])));
         text_below.SetText(string_view_utf8::MakeRAM(text_below_buffer.data()));

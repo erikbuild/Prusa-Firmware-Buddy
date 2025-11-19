@@ -95,7 +95,7 @@ TEST_CASE("CircleBuffer Iterators", "[circle_buffer]") {
 
             // Function mixing const and nonconst iterators
             float const_get(CircleBuffer<T, 5>::iterator sample) const {
-                return static_cast<float>(sample - internal.begin()) * 2.5;
+                return static_cast<float>(sample - internal.begin()) * 2.5f;
             }
         };
         Stuff stuff(cb);

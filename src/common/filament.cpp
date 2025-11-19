@@ -309,8 +309,8 @@ FilamentTypeParameters FilamentType::parameters() const {
                                          std::monostate) {
         return FilamentTypeParameters {
             .name = e1.name,
-            .nozzle_temperature = e1.nozzle_temperature,
-            .nozzle_preheat_temperature = e1.nozzle_preheat_temperature,
+            .nozzle_temperature = static_cast<int16_t>(e1.nozzle_temperature),
+            .nozzle_preheat_temperature = static_cast<int16_t>(e1.nozzle_preheat_temperature),
             .heatbed_temperature = e1.heatbed_temperature,
 #if HAS_FILAMENT_HEATBREAK_PARAM()
             .heatbreak_temperature = e3.heatbreak_temperature,
@@ -368,8 +368,8 @@ void FilamentType::set_parameters(const FilamentTypeParameters &set) const {
 
     const FilamentTypeParameters_EEPROM1 e1 {
         .name = set.name,
-        .nozzle_temperature = set.nozzle_temperature,
-        .nozzle_preheat_temperature = set.nozzle_preheat_temperature,
+        .nozzle_temperature = static_cast<uint16_t>(set.nozzle_temperature),
+        .nozzle_preheat_temperature = static_cast<uint16_t>(set.nozzle_preheat_temperature),
         .heatbed_temperature = static_cast<uint8_t>(set.heatbed_temperature),
 #if HAS_CHAMBER_API()
         .requires_filtration = set.requires_filtration,

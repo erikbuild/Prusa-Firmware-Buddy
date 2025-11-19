@@ -239,9 +239,9 @@
     #define STEADY_STATE_HOTEND // Enable support for STEADY_STATE_HOTEND (feed-forward thermal management)
 
     // Values measured and determined for the Dwarf in BFW-7058 (script attached)
-    #define STEADY_STATE_HOTEND_LINEAR_COOLING_TERM 0.1555
-    #define STEADY_STATE_HOTEND_QUADRATIC_COOLING_TERM 0.00027
-    #define STEADY_STATE_HOTEND_FAN_COOLING_TERM 3.0529
+    #define STEADY_STATE_HOTEND_LINEAR_COOLING_TERM 0.1555f
+    #define STEADY_STATE_HOTEND_QUADRATIC_COOLING_TERM 0.00027f
+    #define STEADY_STATE_HOTEND_FAN_COOLING_TERM 3.0529f
 #endif // PIDTEMP
 
 //===========================================================================
@@ -964,8 +964,8 @@
 #define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
-    #define Z_SAFE_HOMING_X_POINT (147.4) // X point for Z homing when homing all axes (G28).
-    #define Z_SAFE_HOMING_Y_POINT (21.1) // Y point for Z homing when homing all axes (G28).
+    #define Z_SAFE_HOMING_X_POINT (147.4f) // X point for Z homing when homing all axes (G28).
+    #define Z_SAFE_HOMING_Y_POINT (21.1f) // Y point for Z homing when homing all axes (G28).
 #endif
 
 // Homing speeds (mm/m)

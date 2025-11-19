@@ -244,9 +244,9 @@
     #define DEFAULT_Kd 100.00
 
     #define STEADY_STATE_HOTEND // Enable support for STEADY_STATE_HOTEND (feed-forward thermal management)
-    #define STEADY_STATE_HOTEND_LINEAR_COOLING_TERM 0.322
-    #define STEADY_STATE_HOTEND_QUADRATIC_COOLING_TERM 0.0002
-    #define STEADY_STATE_HOTEND_FAN_COOLING_TERM 9.24
+    #define STEADY_STATE_HOTEND_LINEAR_COOLING_TERM 0.322f
+    #define STEADY_STATE_HOTEND_QUADRATIC_COOLING_TERM 0.0002f
+    #define STEADY_STATE_HOTEND_FAN_COOLING_TERM 9.24f
 #endif // PIDTEMP
 
 //===========================================================================
@@ -750,8 +750,8 @@
  */
 #define Z_CLEARANCE_BEFORE_PROBING 5 // Z Clearance before first MBL probe
 #define Z_CLEARANCE_DEPLOY_PROBE 0 // Z Clearance for Deploy/Stow
-#define Z_CLEARANCE_BETWEEN_PROBES 0.3 // Z Clearance between probe points 1
-#define Z_CLEARANCE_MULTI_PROBE 0.3 // Z Clearance between multiple probes
+#define Z_CLEARANCE_BETWEEN_PROBES 0.3f // Z Clearance between probe points 1
+#define Z_CLEARANCE_MULTI_PROBE 0.3f // Z Clearance between multiple probes
 #define Z_AFTER_PROBING 2 // Z position after probing is done 2
 
 #define Z_PROBE_LOW_POINT -5 // Farthest distance below the trigger-point to go before stopping
@@ -859,6 +859,7 @@
 #define X_MAX_POS (X_BED_SIZE + 2)
 #define Y_MAX_POS (Y_BED_SIZE + 1)
 #define Y_MAX_PRINT_POS Y_MAX_POS
+#define HOMING_PREEMPTIVE_MOVE_Y 15.f
 #ifdef USE_PRUSA_EEPROM_AS_SOURCE_OF_DEFAULT_VALUES
     #define DEFAULT_Z_MAX_POS Z_SIZE
     #define Z_MIN_LEN_LIMIT 1

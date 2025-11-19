@@ -73,7 +73,7 @@ void PrusaGcodeSuite::M853() {
     }
 
     // Z move without the stallguard to align the motors (on either the pins or the endstop depending on the mode)
-    stepperZ.rms_current(move_current);
+    stepperZ.rms_current(static_cast<uint16_t>(move_current));
     endstops.enable(false);
     do_blocking_move_to_z(z_move_point + calibration_distance, homing_feedrate(Z_AXIS));
 

@@ -27,13 +27,11 @@ enum class Font : uint8_t {
 struct font_t {
     uint8_t w; // char width [pixels]
     uint8_t h; // char height [pixels]
-    uint8_t bpr; // bytes per row
-    const void *pcs; // charset data pointer
-    char asc_min; // min ascii code (first character)
     FontCharacterSet charset; // character set (see README_FONT)
+    const void *pcs; // charset data pointer
 };
 
-font_t *resource_font(Font id);
+const font_t *resource_font(Font id);
 
 /**
  * @brief Font size in pixels.

@@ -112,14 +112,6 @@ struct padding_t {
 using padding_ui8_t = padding_t<uint8_t>;
 using padding_ui16_t = padding_t<uint16_t>;
 
-struct bitmap_t {
-    uint16_t w; // bitmap width [pixels]
-    uint16_t h; // bitmap height [pixels]
-    uint8_t bpp; // bits per pixel
-    uint8_t bpr; // bytes per row
-    void *ppx; // pixel data pointer
-};
-
 inline point_i16_t point_i16(int16_t x, int16_t y) {
     point_i16_t point = { x, y };
     return point;

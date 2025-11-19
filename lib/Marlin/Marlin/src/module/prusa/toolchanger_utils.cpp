@@ -328,12 +328,12 @@ bool PrusaToolChangerUtils::load_tool_info_from_usb() {
         }
 
         // Get x position
-        tool_info[i].dock_x = atof(line_buffer.data());
+        tool_info[i].dock_x = strtof(line_buffer.data(), nullptr);
 
         // Get y position
         char *second = strstr(line_buffer.data(), " ");
         if (second) {
-            tool_info[i].dock_y = atof(second);
+            tool_info[i].dock_y = strtof(second, nullptr);
         }
     }
 
@@ -399,13 +399,13 @@ bool PrusaToolChangerUtils::load_tool_offsets_from_usb() {
             buffer[pos++] = c;
         }
 
-        hotend_offset[e].x = atof(buffer.data());
+        hotend_offset[e].x = strtof(buffer.data(), nullptr);
 
         char *second = strnstr(buffer.data(), " ", pos) + 1;
-        hotend_offset[e].y = atof(second);
+        hotend_offset[e].y = strtof(second, nullptr);
 
         char *third = strnstr(second, " ", pos) + 1;
-        hotend_offset[e].z = atof(third);
+        hotend_offset[e].z = strtof(third, nullptr);
     }
 
     hotend_offset[MARLIN_NO_TOOL_PICKED].reset(); // Discard any offset on no tool

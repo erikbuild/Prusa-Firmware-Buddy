@@ -8,7 +8,6 @@
 #include <option/has_toolchanger.h>
 #include <option/has_tool_mapping.h>
 #include <option/has_side_leds.h>
-#include <option/has_belt_tuning.h>
 #include <option/has_manual_belt_tuning.h>
 #include <option/has_i2c_expander.h>
 #include <option/has_chamber_api.h>
@@ -16,7 +15,7 @@
 #include <option/has_emergency_stop.h>
 #include <option/buddy_enable_connect.h>
 #include <option/has_door_sensor_calibration.h>
-#include <option/has_automatic_chamber_vents.h>
+#include <option/has_chamber_vents.h>
 #include <option/has_spool_join.h>
 
 #include <gcode/gcode_parser.hpp>
@@ -120,16 +119,13 @@ void M864(); //< spool join control
 
 void M865(); //< Set up ad-hoc filament
 
-#if HAS_AUTOMATIC_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
 void M870(); ///< Open or close ventilation intake
 #endif
 
 void M591(); //< configure Filament stuck monitoring
 #if PRINTER_IS_PRUSA_iX()
 void M853(); //< Align z motors over bed pins/end of axis
-#endif
-#if HAS_BELT_TUNING()
-void M960(); //< Belt tuning
 #endif
 #if HAS_MANUAL_BELT_TUNING()
 void M961(); //< Manual Belt tuning

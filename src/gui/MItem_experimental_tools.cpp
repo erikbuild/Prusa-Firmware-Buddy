@@ -162,7 +162,7 @@ MI_CURRENT_X::MI_CURRENT_X()
     : WiSpin(config_store().axis_rms_current_ma_X_.get(), rms_current_spin_config, _("X current (0 default)")) {}
 
 void MI_CURRENT_X::Store() {
-    set_rms_current_ma_x(GetVal());
+    set_rms_current_ma_x(static_cast<uint16_t>(GetVal()));
 }
 
 /*****************************************************************************/
@@ -171,7 +171,7 @@ MI_CURRENT_Y::MI_CURRENT_Y()
     : WiSpin(config_store().axis_rms_current_ma_Y_.get(), rms_current_spin_config, _("Y current (0 default)")) {}
 
 void MI_CURRENT_Y::Store() {
-    set_rms_current_ma_y(GetVal());
+    set_rms_current_ma_y(static_cast<uint16_t>(GetVal()));
 }
 
 /*****************************************************************************/
@@ -180,7 +180,7 @@ MI_CURRENT_Z::MI_CURRENT_Z()
     : WiSpin(get_rms_current_ma_z(), rms_current_spin_config, _("Z current")) {}
 
 void MI_CURRENT_Z::Store() {
-    set_rms_current_ma_z(GetVal());
+    set_rms_current_ma_z(static_cast<uint16_t>(GetVal()));
 }
 
 /*****************************************************************************/
@@ -189,7 +189,7 @@ MI_CURRENT_E::MI_CURRENT_E()
     : WiSpin(get_rms_current_ma_e(), rms_current_spin_config, _("Extruder current")) {}
 
 void MI_CURRENT_E::Store() {
-    set_rms_current_ma_e(GetVal());
+    set_rms_current_ma_e(static_cast<uint16_t>(GetVal()));
 }
 
 /*****************************************************************************/

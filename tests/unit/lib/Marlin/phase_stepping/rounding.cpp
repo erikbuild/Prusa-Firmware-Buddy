@@ -8,8 +8,7 @@ template <class T>
 T round_fixed_floaty(T val, int bits) {
     int offset = 1 << bits;
     long double real_value = static_cast<long double>(val) / static_cast<long double>(offset);
-    T result = roundl(real_value);
-    return static_cast<T>(result);
+    return static_cast<T>(roundl(real_value));
 }
 
 TEST_CASE("Round fixed") {

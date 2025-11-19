@@ -16,7 +16,7 @@ void setup_fan_item(WiSpin &item, buddy::XBuddyExtension::Fan fan) {
 void handle_fan_item_click(WiSpin &item, buddy::XBuddyExtension::Fan fan) {
     buddy::XBuddyExtension::FanPWMOrAuto tgt = pwm_auto;
     if (const auto val = item.value_opt()) {
-        tgt = buddy::XBuddyExtension::FanPWM::from_percent(*val);
+        tgt = buddy::XBuddyExtension::FanPWM::from_percent(static_cast<int8_t>(*val));
     }
     buddy::xbuddy_extension().set_fan_target_pwm(fan, tgt);
 }
@@ -59,7 +59,7 @@ MI_XBUDDY_EXTENSION_COOLING_FANS_CONTROL_MAX::MI_XBUDDY_EXTENSION_COOLING_FANS_C
 
 void MI_XBUDDY_EXTENSION_COOLING_FANS_CONTROL_MAX::OnClick() {
     // need to calculate value in float and round it properly, otherwise set value (in %) and stored value (in PWM duty cycle steps) could differ
-    buddy::xbuddy_extension().set_max_cooling_pwm(buddy::XBuddyExtension::FanPWM::from_percent(value()));
+    buddy::xbuddy_extension().set_max_cooling_pwm(buddy::XBuddyExtension::FanPWM::from_percent(static_cast<int8_t>(value())));
 }
 
 // MI_XBE_FILTRATION_FAN

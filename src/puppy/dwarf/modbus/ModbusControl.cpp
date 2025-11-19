@@ -299,7 +299,7 @@ void SetDwarfSelected(bool selected) {
  * @return clamped temperature [deg C]
  */
 static inline int16_t clamp_to_int16(float temperature) {
-    return std::clamp(temperature, float(INT16_MIN), float(INT16_MAX));
+    return static_cast<int16_t>(std::clamp(temperature, static_cast<float>(INT16_MIN), static_cast<float>(INT16_MAX)));
 }
 
 static void update_fault_status() {
@@ -347,8 +347,8 @@ void UpdateRegisters() {
     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::is_picked_raw, Cheese::get_raw_picked());
     ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::is_parked_raw, Cheese::get_raw_parked());
 
-    ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::system_24V_mV, advancedpower.Get24VVoltage() * 1000);
-    ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::heater_current_mA, advancedpower.GetDwarfNozzleCurrent() * 1000);
+    ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::system_24V_mV, static_cast<uint16_t>(advancedpower.Get24VVoltage() * 1000));
+    ModbusRegisters::SetRegValue(ModbusRegisters::SystemInputRegister::heater_current_mA, static_cast<uint16_t>(advancedpower.GetDwarfNozzleCurrent() * 1000));
 
     if (should_check_fault_status(Cheese::is_parked(), Cheese::is_picked())) {
         update_fault_status();

@@ -22,13 +22,6 @@ cmake_policy(SET CMP0094 NEW)
 cmake_policy(SET CMP0097 NEW)
 
 if(NOT CMAKE_CROSSCOMPILING)
-  #
-  # If we are not crosscompiling, include `utils` with host tools.
-  #
-  add_subdirectory(utils)
-endif()
-
-if(NOT CMAKE_CROSSCOMPILING)
   option(UNITTESTS_ENABLE "Enable building of unittest" ON)
 endif()
 include(ProjectOptions.cmake)
@@ -37,8 +30,7 @@ include(ProjectOptions.cmake)
 if(NOT DEFINED DISABLE_LTO
    AND NOT DEVELOPER_MODE
    AND NOT BOARD STREQUAL DWARF
-   AND CMAKE_CROSSCOMPILING # This will not force LTO for unittests and png2font, because those are
-                            # build natively
+   AND CMAKE_CROSSCOMPILING # This will not force LTO for natively built unittests
    )
   set(COMPILE_WITH_LTO ON)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
@@ -71,7 +63,7 @@ set(unused "${CMAKE_VERBOSE_MAKEFILE} ${CMAKE_RULE_MESSAGES}")
 set(CMAKE_CXX_STANDARD 23)
 
 # enable all warnings (well, not all, but some)
-add_compile_options(-Wall -Wsign-compare)
+add_compile_options(-Wall -Wsign-compare -Wfloat-conversion)
 
 # make all paths stored inside firmware relative
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)

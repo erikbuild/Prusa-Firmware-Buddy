@@ -162,32 +162,32 @@ TEST_CASE("StringBuilder", "[strbuilder]") {
     }
 
     SECTION("append_float") {
-        const auto afl_check = [](double val, const char *expected, const StringBuilder::AppendFloatConfig &cfg = {}) {
+        const auto afl_check = [](float val, const char *expected, const StringBuilder::AppendFloatConfig &cfg = {}) {
             ArrayStringBuilder<16> b;
             b.append_float(val, cfg);
             CHECK_THAT(b.str_nocheck(), Equals(expected));
         };
 
         afl_check(0, "0");
-        afl_check(0.3, "0.3");
-        afl_check(0.29, "0.29");
-        afl_check(-15.01, "-15.01");
+        afl_check(0.3f, "0.3");
+        afl_check(0.29f, "0.29");
+        afl_check(-15.01f, "-15.01");
 
         afl_check(0, "0", { .skip_zero_before_dot = true });
-        afl_check(0.91, ".91", { .skip_zero_before_dot = true });
-        afl_check(-0.313, "-0.313", { .skip_zero_before_dot = true });
-        afl_check(3.13, "3.13", { .skip_zero_before_dot = true });
+        afl_check(0.91f, ".91", { .skip_zero_before_dot = true });
+        afl_check(-0.313f, "-0.313", { .skip_zero_before_dot = true });
+        afl_check(3.13f, "3.13", { .skip_zero_before_dot = true });
 
-        afl_check(-0.1, "-0.100", { .max_decimal_places = 3, .all_decimal_places = true });
-        afl_check(-0.1, "-0.10", { .max_decimal_places = 2, .all_decimal_places = true });
-        afl_check(-0.001, "-0.001", { .max_decimal_places = 3, .all_decimal_places = true });
+        afl_check(-0.1f, "-0.100", { .max_decimal_places = 3, .all_decimal_places = true });
+        afl_check(-0.1f, "-0.10", { .max_decimal_places = 2, .all_decimal_places = true });
+        afl_check(-0.001f, "-0.001", { .max_decimal_places = 3, .all_decimal_places = true });
 
-        afl_check(-0.001, "-0.001", { .max_decimal_places = 3 });
-        afl_check(0.00099, "0.001", { .max_decimal_places = 3 });
-        afl_check(-0.00099, "-0.001", { .max_decimal_places = 3 });
-        afl_check(0.0005, "0.001", { .max_decimal_places = 3 });
-        afl_check(0.00049, "0", { .max_decimal_places = 3 });
-        afl_check(-0.0005, "-0.001", { .max_decimal_places = 3 });
-        afl_check(-0.00049, "0", { .max_decimal_places = 3 });
+        afl_check(-0.001f, "-0.001", { .max_decimal_places = 3 });
+        afl_check(0.00099f, "0.001", { .max_decimal_places = 3 });
+        afl_check(-0.00099f, "-0.001", { .max_decimal_places = 3 });
+        afl_check(0.0005f, "0.001", { .max_decimal_places = 3 });
+        afl_check(0.00049f, "0", { .max_decimal_places = 3 });
+        afl_check(-0.0005f, "-0.001", { .max_decimal_places = 3 });
+        afl_check(-0.00049f, "0", { .max_decimal_places = 3 });
     }
 }

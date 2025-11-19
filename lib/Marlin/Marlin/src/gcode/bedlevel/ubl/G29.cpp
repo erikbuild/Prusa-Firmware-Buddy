@@ -25,9 +25,11 @@
  */
 
 #include "../../../inc/MarlinConfig.h"
-#include "feature/nozzle_cleaning_failed/nozzle_cleaning_failed_wizard.hpp"
+#include <feature/auto_retract/auto_retract.hpp>
+#include <feature/nozzle_cleaning_failed/nozzle_cleaning_failed_wizard.hpp>
 #include <config_store/store_instance.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
+#include <mapi/parking.hpp>
 
 #if ENABLED(AUTO_BED_LEVELING_UBL)
 
@@ -303,7 +305,13 @@ void GcodeSuite::G29() {
             // If we have nozzle cleaner, we try to use it first and retry nozzle cleaning but only a limited number of times
             if (nozzle_cleaning_retries < max_nozzle_cleaning_retries) {
                 nozzle_cleaning_retries++;
-                // Nozzle cleaner code
+                // Park over the bin
+                mapi::park(mapi::ZAction::absolute_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_WASTEBIN_POINT } }));
+
+                // Extrude a bit and retract quickly (skip ramming)
+                const float purge_length = 8.f;
+                buddy::auto_retract().ensure_retracted_no_ramming(purge_length);
+                // Ensure the nozzle cleaner is ready
                 while (true) {
                     if (planner.draining()) return;
                     
@@ -316,6 +324,8 @@ void GcodeSuite::G29() {
                     }
                     break;
                 }
+
+                // Clean the nozzle
                 if(nozzle_cleaner::execute()) {
                     // Nozzle cleaner cleaning succeeded, proceed to retry nozzle cleaning
                     continue;

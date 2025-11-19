@@ -124,8 +124,8 @@ uint32_t CSelftestPart_Axis::estimate(const AxisConfig_t &config) {
 }
 
 uint32_t CSelftestPart_Axis::estimate_move(float len_mm, float fr_mms) {
-    uint32_t move_time = 1000 * len_mm / fr_mms;
-    return move_time;
+    const float move_time = 1000 * len_mm / fr_mms;
+    return static_cast<uint32_t>(move_time);
 }
 
 LoopResult CSelftestPart_Axis::stateHomeXY() {

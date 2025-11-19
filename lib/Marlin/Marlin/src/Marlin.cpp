@@ -110,7 +110,8 @@
   #include "feature/bedlevel/bedlevel.h"
 #endif
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include <option/has_pause.h>
+#if HAS_PAUSE()
   #include "feature/pause.h"
 #endif
 
@@ -135,10 +136,6 @@ bool wait_for_heatup = true;
 
 #if HAS_AUTO_REPORTING || ENABLED(HOST_KEEPALIVE_FEATURE)
   bool suspend_auto_report; // = false
-#endif
-
-#if PIN_EXISTS(CHDK)
-  extern millis_t chdk_timeout;
 #endif
 
 uint16_t job_id = 0;
@@ -248,7 +245,6 @@ bool anyHeatherIsActive() {
 /**
  * Manage several activities:
  *  - Keep the command buffer full
- *  - Check if CHDK_PIN needs to go LOW
  *  - Check for KILL button held down
  *  - Check for HOME button held down
  *  - Check if cooling fan needs to be switched on
@@ -262,17 +258,10 @@ void manage_inactivity() {
   [[maybe_unused]] const millis_t ms = millis();
 
   // Prevent steppers timing-out in the middle of M600
-  #if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #if HAS_PAUSE()
     #define MOVE_AWAY_TEST !did_pause_print
   #else
     #define MOVE_AWAY_TEST true
-  #endif
-
-  #if PIN_EXISTS(CHDK) // Check if pin should be set to LOW (after M240 set it HIGH)
-    if (chdk_timeout && ELAPSED(ms, chdk_timeout)) {
-      chdk_timeout = 0;
-      WRITE(CHDK_PIN, LOW);
-    }
   #endif
 
   #if HAS_KILL
@@ -556,10 +545,6 @@ void setup() {
 
   #if HAS_Z_SERVO_PROBE
     servo_probe_init();
-  #endif
-
-  #if HAS_PHOTOGRAPH
-    OUT_WRITE(PHOTOGRAPH_PIN, LOW);
   #endif
 
   #if HAS_CUTTER

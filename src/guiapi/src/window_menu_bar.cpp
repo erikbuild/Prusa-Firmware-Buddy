@@ -17,7 +17,7 @@ void MenuScrollbar::unconditionalDraw() {
 
     const Rect16 available_rect = GetRect();
     const unsigned bar_height = unsigned(float(state.max_items_on_screen) / float(state.item_count) * float(available_rect.Height()));
-    const unsigned bar_offset = float(state.scroll_offset) / float(state.item_count - state.max_items_on_screen) * float(available_rect.Height() - bar_height);
+    const unsigned bar_offset = unsigned(float(state.scroll_offset) / float(state.item_count - state.max_items_on_screen) * float(available_rect.Height() - bar_height));
 
     const auto back_color = GetBackColor();
 

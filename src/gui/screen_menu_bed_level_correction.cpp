@@ -18,7 +18,7 @@ void I_MI_CORRECT::Reset() {
 }
 
 void I_MI_CORRECT::OnClick() {
-    set_correction_value(index, GetVal());
+    set_correction_value(index, static_cast<int8_t>(GetVal()));
 }
 
 MI_RESET::MI_RESET()

@@ -14,7 +14,7 @@ void WindowProgressBarBase::set_progress_percent(float val) {
     const float min = 0;
     const float max = 100;
     const float value = std::max(min, std::min(val, max));
-    uint16_t px = (value * Width()) / max;
+    uint16_t px = static_cast<uint16_t>((value * Width()) / max);
     if (px != progress_in_pixels) {
         progress_in_pixels = px;
         Invalidate();

@@ -146,7 +146,7 @@ struct vars_body_t : public old_eeprom::v12::vars_body_t {
 constexpr vars_body_t body_defaults = {
     old_eeprom::v12::body_defaults,
     1, // EEVAR_TIME_FORMAT
-    0.0192, // EEVAR_LOADCELL_SCALE
+    0.0192f, // EEVAR_LOADCELL_SCALE
     -125, // EEVAR_LOADCELL_THRS_STATIC
     80, // EEVAR_LOADCELL_HYST
     -40, // EEVAR_LOADCELL_THRS_CONTINOUS

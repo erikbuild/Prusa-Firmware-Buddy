@@ -4,7 +4,7 @@ using namespace screen_toolhead_settings;
 
 static constexpr NumericInputConfig dock_position_config {
     .max_value = 500,
-    .step = 0.1,
+    .step = 0.1f,
     .max_decimal_places = 2,
     .unit = Unit::millimeter,
 };

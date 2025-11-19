@@ -36,7 +36,7 @@ MI_METRICS_PORT::MI_METRICS_PORT()
     : WiSpin(config_store().metrics_port.get(), numeric_input_config::network_port, _("Metrics Port")) {}
 
 void MI_METRICS_PORT::OnClick() {
-    config_store().metrics_port.set(value());
+    config_store().metrics_port.set(static_cast<uint16_t>(value()));
     metrics_reconfigure();
 }
 
@@ -44,7 +44,7 @@ MI_SYSLOG_PORT::MI_SYSLOG_PORT()
     : WiSpin(config_store().syslog_port.get(), numeric_input_config::network_port, _("Syslog Port")) {}
 
 void MI_SYSLOG_PORT::OnClick() {
-    config_store().syslog_port.set(value());
+    config_store().syslog_port.set(static_cast<uint16_t>(value()));
     logging::syslog_reconfigure();
 }
 

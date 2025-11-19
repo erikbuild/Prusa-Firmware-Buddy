@@ -81,13 +81,13 @@ TEST_CASE("Drift compensation") {
     });
 
     // Plain offset is inaccurate as average drift is slightly outdated
-    uint32_t puppy_time_us = ticks_us() * 1.01;
+    uint32_t puppy_time_us = static_cast<uint32_t>(ticks_us() * 1.01f);
     REQUIRE(abs(static_cast<int>(time_sync.buddy_time_us(puppy_time_us)) - static_cast<int>(ticks_us())) < 60);
 
     current_ticks_us += 10000;
 
     // Include drift compensation (time passed while no sync performed)
-    puppy_time_us = ticks_us() * 1.01;
+    puppy_time_us = static_cast<uint32_t>(ticks_us() * 1.01f);
     REQUIRE(abs(static_cast<int>(time_sync.buddy_time_us(puppy_time_us)) - static_cast<int>(ticks_us())) < 60);
 }
 
@@ -123,13 +123,13 @@ TEST_CASE("Both overflow with drift") {
     });
 
     // Plain offset is inaccurate as average drift is slightly outdated
-    uint32_t puppy_time_us = ticks_us() * 1.01;
+    uint32_t puppy_time_us = static_cast<uint32_t>(ticks_us() * 1.01f);
     REQUIRE(abs(static_cast<int>(time_sync.buddy_time_us(puppy_time_us)) - static_cast<int>(ticks_us())) < 60);
 
     current_ticks_us += 10000;
 
     // Include drift compensation (time passed while no sync performed)
-    puppy_time_us = ticks_us() * 1.01;
+    puppy_time_us = static_cast<uint32_t>(ticks_us() * 1.01f);
     REQUIRE(abs(static_cast<int>(time_sync.buddy_time_us(puppy_time_us)) - static_cast<int>(ticks_us())) < 60);
 }
 

@@ -967,7 +967,7 @@
 
     bool found_a_NAN = false, found_a_real = false;
 
-    mesh_index_pair farthest { -1, -1, -99999.99 };
+    mesh_index_pair farthest { -1, -1, -99999.99f };
 
     for (int8_t i = 0; i < GRID_MAX_POINTS_X; i++) {
       for (int8_t j = 0; j < GRID_MAX_POINTS_Y; j++) {
@@ -1149,7 +1149,7 @@
       p0 = 2 * p1 - p2;
     if (isnan(p3))
       p3 = 2 * p2 - p1;
-    return p1 + 0.5 * x * (p2 - p0 + x * (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3 + x * (3.0 * (p1 - p2) + p3 - p0)));
+    return p1 + 0.5f * x * (p2 - p0 + x * (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3 + x * (3.0f * (p1 - p2) + p3 - p0)));
   }
 
   /**

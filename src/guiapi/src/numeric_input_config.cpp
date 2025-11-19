@@ -19,8 +19,8 @@ float NumericInputConfig::clamp(float value, float diff) const {
 
 uint8_t NumericInputConfig::max_value_strlen(MaxValueStrlenArgs args) const {
     uint8_t r = std::max<uint8_t>(
-        num_digits(abs(max_value)), //
-        num_digits(abs(min_value)) + ((args.count_minus_sign && (min_value < 0)) ? 1 : 0) // Extra digit for minus
+        num_digits(static_cast<uint32_t>(std::abs(max_value))), //
+        num_digits(static_cast<uint32_t>(std::abs(min_value))) + ((args.count_minus_sign && (min_value < 0)) ? 1 : 0) // Extra digit for minus
     );
 
     // Decimal point plus decimal places

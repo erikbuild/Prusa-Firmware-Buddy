@@ -147,8 +147,8 @@
     SERIAL_ECHOPGM("\nBed Topography Report");
     if (human) {
       SERIAL_ECHOLNPGM(":\n");
-      serial_echo_xy(4, MESH_MIN_X, MESH_MAX_Y);
-      serial_echo_xy(twixt, MESH_MAX_X, MESH_MAX_Y);
+      serial_echo_xy(4, static_cast<int16_t>(MESH_MIN_X), static_cast<int16_t>(MESH_MAX_Y));
+      serial_echo_xy(twixt, static_cast<int16_t>(MESH_MAX_X), static_cast<int16_t>(MESH_MAX_Y));
       SERIAL_EOL();
       serial_echo_column_labels(eachsp - 2);
     }
@@ -207,8 +207,8 @@
     if (human) {
       serial_echo_column_labels(eachsp - 2);
       SERIAL_EOL();
-      serial_echo_xy(4, MESH_MIN_X, MESH_MIN_Y);
-      serial_echo_xy(twixt, MESH_MAX_X, MESH_MIN_Y);
+      serial_echo_xy(4, static_cast<int16_t>(MESH_MIN_X), static_cast<int16_t>(MESH_MIN_Y));
+      serial_echo_xy(twixt, static_cast<int16_t>(MESH_MAX_X), static_cast<int16_t>(MESH_MIN_Y));
       SERIAL_EOL();
       SERIAL_EOL();
     }

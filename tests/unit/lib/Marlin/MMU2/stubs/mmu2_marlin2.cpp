@@ -109,7 +109,7 @@ int16_t thermal_degTargetHotend() {
     return hotendTargetTemp;
 }
 
-int16_t thermal_degHotend() {
+float thermal_degHotend() {
     return hotendTemp;
 }
 

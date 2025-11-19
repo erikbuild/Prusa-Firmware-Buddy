@@ -156,7 +156,7 @@ static_assert(dumb_pow_10(0) == 1);
 static_assert(dumb_pow_10(1) == 10);
 static_assert(dumb_pow_10(2) == 100);
 
-StringBuilder &StringBuilder::append_float(double val, const AppendFloatConfig &config) {
+StringBuilder &StringBuilder::append_float(float val, const AppendFloatConfig &config) {
     if (std::isnan(val)) {
         append_string("NaN");
         return *this;

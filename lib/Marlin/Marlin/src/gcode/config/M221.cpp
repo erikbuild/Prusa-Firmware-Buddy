@@ -49,10 +49,10 @@ void GcodeSuite::M221() {
   if (target_extruder < 0) return;
 
   if (parser.seenval('S')) {
-    int flow_percentage = parser.value_int();
+    int16_t flow_percentage = parser.value_int();
     #if HAS_GCODE_COMPATIBILITY()
       if (gcode.compatibility.mk3_compatibility_mode) {
-        flow_percentage = (float)flow_percentage / 0.95;
+        flow_percentage = static_cast<int16_t>(flow_percentage / 0.95f);
       }
     #endif
     planner.flow_percentage[target_extruder] = flow_percentage;

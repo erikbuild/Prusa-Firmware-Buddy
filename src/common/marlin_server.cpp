@@ -1,5 +1,6 @@
 #include "marlin_server.hpp"
 
+#include <option/has_pause.h>
 #include <common/directory.hpp>
 #include <freertos/critical_section.hpp>
 #include <marlin_stubs/skippable_gcode.hpp>
@@ -111,7 +112,8 @@
 #include <option/has_emergency_stop.h>
 #include <option/has_uneven_bed_prompt.h>
 #include <option/has_nextruder.h>
-#include <option/has_automatic_chamber_vents.h>
+#include <option/has_human_interactions.h>
+#include <option/has_chamber_vents.h>
 
 #if HAS_DWARF()
     #include <puppies/Dwarf.hpp>
@@ -533,7 +535,7 @@ static void handle_warnings() {
         // The only response is OK, at which point we just consume the response and hide the warning.
         break;
 
-#if HAS_MANUAL_CHAMBER_VENTS()
+#if HAS_CHAMBER_VENTS()
     case PhasesWarning::ChamberVents:
         if (response == Response::Disable) {
             config_store().check_chamber_vent_state.set(false);
@@ -547,7 +549,7 @@ static void handle_warnings() {
         break;
 #endif
 
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     case PhasesWarning::DisplayProblemDetected:
         config_store().reduce_display_baudrate.set(response == Response::Yes);
         break;
@@ -1126,7 +1128,7 @@ static void idle(void) {
 }
 
 void do_babystep_Z(float offs) {
-    babystep.add_steps(Z_AXIS, std::round(offs * planner.settings.axis_steps_per_mm[Z_AXIS]));
+    babystep.add_steps(Z_AXIS, static_cast<int16_t>(std::round(offs * planner.settings.axis_steps_per_mm[Z_AXIS])));
 }
 
 extern void move_axis(float pos, float feedrate, size_t axis) {
@@ -2242,10 +2244,8 @@ static void _server_print_loop(void) {
                 fsm_create(PhasesPrinting::active);
             }
         }
-#if HAS_MANUAL_CHAMBER_VENTS() || HAS_AUTOMATIC_CHAMBER_VENTS()
-        if (config_store().check_chamber_vent_state.get()) {
-            buddy::chamber().manage_ventilation_state();
-        }
+#if HAS_CHAMBER_VENTS()
+        buddy::chamber().manage_ventilation_state();
 #endif
 #if HAS_CHAMBER_FILTRATION_API()
         buddy::chamber_filtration().check_filter_expiration();
@@ -2642,10 +2642,10 @@ static void _server_print_loop(void) {
         // save the current resume position
         server.resume.pos = current_position;
 
-    #if ENABLED(ADVANCED_PAUSE_FEATURE)
+    #if HAS_PAUSE()
         /// retract and save E stepper position
         retract();
-    #endif // ENABLED(ADVANCED_PAUSE_FEATURE)
+    #endif
 
         server.print_state = State::CrashRecovery_Retracting;
         break;
@@ -3014,10 +3014,10 @@ void retract() {
 #endif
 
 // server.motion_param.save_reset();  // TODO: currently disabled (see Crash_s::save_parameters())
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#if HAS_PAUSE()
     float mm = PAUSE_PARK_RETRACT_LENGTH / planner.e_factor[active_extruder];
     plan_move_by(PAUSE_PARK_RETRACT_FEEDRATE, 0, 0, 0, -mm);
-#endif // ENABLED(ADVANCED_PAUSE_FEATURE)
+#endif
 }
 
 void lift_head() {
@@ -3105,10 +3105,10 @@ void unpark_head_ZE(void) {
     destination.z = server.resume.pos.z;
     prepare_internal_move_to_destination(NOZZLE_PARK_Z_FEEDRATE);
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#if HAS_PAUSE()
     // Undo E retract
     plan_move_by(PAUSE_PARK_RETRACT_FEEDRATE, 0, 0, 0, server.resume.pos.e - current_position.e);
-#endif // ENABLED(ADVANCED_PAUSE_FEATURE)
+#endif
 }
 
 bool all_axes_homed(void) {
@@ -3133,7 +3133,7 @@ void set_exclusive_mode(int exclusive) {
     }
 }
 
-void set_target_bed(float value) {
+void set_target_bed(int16_t value) {
     marlin_vars().target_bed = value;
     thermalManager.setTargetBed(value);
 }
@@ -3300,7 +3300,7 @@ static void _server_update_vars() {
         if (progress_data.percent_done.mIsActual(marlin_vars().print_duration)) {
             return static_cast<uint8_t>(progress_data.percent_done.mGetValue());
         } else if (prefetch_metrics.stream_size_estimate > 0) {
-            return std::min<uint8_t>(std::round(100.0f * queue.last_executed_sdpos / prefetch_metrics.stream_size_estimate), 99);
+            return std::min<uint8_t>(static_cast<uint8_t>(std::round(100.0f * queue.last_executed_sdpos / prefetch_metrics.stream_size_estimate)), 99);
         } else {
             return 0;
         }
@@ -3529,7 +3529,7 @@ static void _server_set_var(const Request &request) {
 
     // Set normal (non-extruder) variables
     if (variable_identifier == reinterpret_cast<uintptr_t>(&marlin_vars().target_bed)) {
-        marlin_vars().target_bed = request.set_variable.float_value;
+        marlin_vars().target_bed = static_cast<int16_t>(request.set_variable.float_value);
         thermalManager.setTargetBed(marlin_vars().target_bed);
         return;
     }
@@ -3561,7 +3561,7 @@ static void _server_set_var(const Request &request) {
     for (int8_t e = 0; e < HOTENDS; e++) {
         auto &extruder = marlin_vars().hotend(e);
         if (reinterpret_cast<uintptr_t>(&extruder.target_nozzle) == variable_identifier) {
-            extruder.target_nozzle = request.set_variable.float_value;
+            extruder.target_nozzle = static_cast<int16_t>(request.set_variable.float_value);
             thermalManager.setTargetHotend(extruder.target_nozzle, e);
             return;
         } else if (reinterpret_cast<uintptr_t>(&extruder.flow_factor) == variable_identifier) {

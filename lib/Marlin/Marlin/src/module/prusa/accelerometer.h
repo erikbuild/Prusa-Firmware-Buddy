@@ -8,6 +8,7 @@
 #include <option/has_remote_accelerometer.h>
 #include <Marlin/src/core/types.h>
 #include <utils/enum_array.hpp>
+#include <numbers>
 
 static_assert(HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER());
 
@@ -105,10 +106,10 @@ public:
 #if PRINTER_IS_PRUSA_iX()
         assert(X_AXIS == A_AXIS && Y_AXIS == B_AXIS);
         // Accelerometer is fixed to the head in a way that is parallel to the logical axes and diagonal to the physical ones. Therefore, we need to perform a 45° rotation.
-        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
-        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
-        out.val[A_AXIS] = (-sample.val[1]) * cos45 + sample.val[2] * sin45;
-        out.val[B_AXIS] = (-sample.val[1]) * (-sin45) + sample.val[2] * cos45;
+        constexpr float cos45 = std::numbers::sqrt2_v<float> / 2;
+        constexpr float sin45 = std::numbers::sqrt2_v<float> / 2;
+        out.val[A_AXIS] = static_cast<int16_t>((-sample.val[1]) * cos45 + sample.val[2] * sin45);
+        out.val[B_AXIS] = static_cast<int16_t>((-sample.val[1]) * (-sin45) + sample.val[2] * cos45);
         out.val[Z_AXIS] = sample.val[0];
 #elif PRINTER_IS_PRUSA_COREONE()
         assert(X_AXIS == A_AXIS && Y_AXIS == B_AXIS);
@@ -122,10 +123,10 @@ public:
         out.val[B_AXIS] = -sample.val[0];
         out.val[Z_AXIS] = sample.val[2];
 #elif PRINTER_IS_PRUSA_XL()
-        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
-        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
-        out.val[X_AXIS] = sample.val[2] * cos45 + sample.val[1] * sin45;
-        out.val[Y_AXIS] = sample.val[2] * (-sin45) + sample.val[1] * cos45;
+        constexpr float cos45 = std::numbers::sqrt2_v<float> / 2;
+        constexpr float sin45 = std::numbers::sqrt2_v<float> / 2;
+        out.val[X_AXIS] = static_cast<int16_t>(sample.val[2] * cos45 + sample.val[1] * sin45);
+        out.val[Y_AXIS] = static_cast<int16_t>(sample.val[2] * (-sin45) + sample.val[1] * cos45);
 #elif PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
         // In MK printers the world and motors align
         out = to_printer_coords(sample);
@@ -144,18 +145,18 @@ public:
         out.val[Y_AXIS] = sample.val[2];
         out.val[Z_AXIS] = sample.val[0];
 #elif PRINTER_IS_PRUSA_COREONE()
-        // Due to accelerometer being rotated (approx. 45̀̃° = in the same way as the motors), no rotation is necessary, apart from switching axes.
-        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
-        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
-        out.val[X_AXIS] = sample.val[1] * cos45 - sample.val[0] * sin45;
-        out.val[Y_AXIS] = sample.val[1] * sin45 + sample.val[0] * cos45;
+        // Due to accelerometer being rotated (approx. 45° = in the same way as the motors), no rotation is necessary, apart from switching axes.
+        constexpr float cos45 = std::numbers::sqrt2_v<float> / 2;
+        constexpr float sin45 = std::numbers::sqrt2_v<float> / 2;
+        out.val[X_AXIS] = static_cast<int16_t>(sample.val[1] * cos45 - sample.val[0] * sin45);
+        out.val[Y_AXIS] = static_cast<int16_t>(sample.val[1] * sin45 + sample.val[0] * cos45);
         out.val[Z_AXIS] = sample.val[2];
 #elif PRINTER_IS_PRUSA_COREONEL()
         // Accelerometer is fixed to the head in a way that is diagonal to the logical axes. Therefore, we need to perform a 45° rotation.
-        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
-        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
-        out.val[X_AXIS] = (-sample.val[1]) * cos45 + sample.val[0] * sin45;
-        out.val[Y_AXIS] = (+sample.val[1]) * sin45 + sample.val[0] * cos45;
+        constexpr float cos45 = std::numbers::sqrt2_v<float> / 2;
+        constexpr float sin45 = std::numbers::sqrt2_v<float> / 2;
+        out.val[X_AXIS] = static_cast<int16_t>((-sample.val[1]) * cos45 + sample.val[0] * sin45);
+        out.val[Y_AXIS] = static_cast<int16_t>((+sample.val[1]) * sin45 + sample.val[0] * cos45);
         out.val[Z_AXIS] = sample.val[2];
 #elif PRINTER_IS_PRUSA_XL()
         out.val[X_AXIS] = sample.val[2];
@@ -171,9 +172,9 @@ public:
         out.val[X_AXIS] = sample.val[1];
         out.val[Y_AXIS] = sample.val[1];
         // TODO find out the real angle
-        static constexpr float cos45 = static_cast<float>(M_SQRT1_2);
-        static constexpr float sin45 = static_cast<float>(M_SQRT1_2);
-        out.val[Z_AXIS] = sample.val[1] * cos45 + sample.val[2] * sin45;
+        constexpr float cos45 = std::numbers::sqrt2_v<float> / 2;
+        constexpr float sin45 = std::numbers::sqrt2_v<float> / 2;
+        out.val[Z_AXIS] = static_cast<int16_t>(sample.val[1] * cos45 + sample.val[2] * sin45);
 #else
     #error
 #endif

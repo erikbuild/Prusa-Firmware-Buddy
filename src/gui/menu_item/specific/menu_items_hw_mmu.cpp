@@ -18,5 +18,5 @@ MI_MMU_FRONT_PTFE_LENGTH::MI_MMU_FRONT_PTFE_LENGTH()
 }
 
 void MI_MMU_FRONT_PTFE_LENGTH::OnClick() {
-    MMU2::mmu2.WriteRegister(std::to_underlying(MMU2::Register::Bowden_Length), value());
+    MMU2::mmu2.WriteRegister(std::to_underlying(MMU2::Register::Bowden_Length), static_cast<uint16_t>(value()));
 }

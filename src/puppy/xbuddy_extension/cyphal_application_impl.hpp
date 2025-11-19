@@ -43,6 +43,18 @@ static const std::span<std::byte> dummy_parameter { (std::byte *)dummy_parameter
 
 namespace cyphal {
 
+/// For now, there is a one-to-one correspondence; this may be extended with
+/// different hardware revisions of the same logical node in the future.
+inline FirmwareFile get_firmware_file_for_node_name(NodeName node_name) {
+    switch (node_name) {
+    case NodeName::none:
+        break;
+    case NodeName::cz_prusa3d_honeybee_ac_controller:
+        return FirmwareFile::firmware_ac_controller;
+    }
+    return FirmwareFile::none;
+}
+
 /// Application layer of the cyphal implementation.
 class ApplicationImpl final : public Application {
 private:
@@ -405,7 +417,7 @@ private:
                         const auto salt = get_random_salt();
                         verify.salt = salt;
                         // Request the hash from the parent system
-                        filesystem.hash_request = info.name;
+                        filesystem.hash_request = get_firmware_file_for_node_name(info.name);
                         filesystem.hash_salt = salt;
                         presentation.transmit_diagnostic_record(Severity::notice, "hash requested");
                         // And also request it from the device at the same time.
@@ -422,7 +434,7 @@ private:
 
                 if (!verify.received_from_source) {
                     // We are waiting for the digest from the board.
-                    if (filesystem.hash_response == info.name && filesystem.hash_salt == verify.salt) {
+                    if (filesystem.hash_response == get_firmware_file_for_node_name(info.name) && filesystem.hash_salt == verify.salt) {
                         verify.received_from_source = true;
                         verify.received(filesystem.hash_digest);
                         try_activate(application);
@@ -575,7 +587,7 @@ private:
                             // Give up on this node, try looking into the next one.
                             continue;
                         } else {
-                            filesystem.file = node.info.name;
+                            filesystem.file = get_firmware_file_for_node_name(node.info.name);
                         }
                         filesystem.eof = false;
                         filesystem.delayed_update = true;

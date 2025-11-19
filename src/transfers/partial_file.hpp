@@ -91,7 +91,7 @@ public:
 
         size_t get_percent_valid() const {
             // Needs to be calculated in float because (100 * size) overflows size_t
-            return total_size ? static_cast<float>(get_valid_size()) * 100.0f / total_size : 0;
+            return total_size ? static_cast<size_t>(static_cast<float>(get_valid_size()) * 100.0f / total_size) : 0;
         }
 
         void extend_head(size_t bytes) {

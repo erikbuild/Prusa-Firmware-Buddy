@@ -71,7 +71,7 @@ struct AxisState {
     // will dequeue items from pending_targets and set it as the current_target. When the position
     // is reached the cycle repeats, until no more targets are present and current_target is reset.
     std::optional<MoveTarget> current_target; // Current target to move
-    AtomicCircularQueue<MoveTarget, unsigned, 128> pending_targets; // queue of pre-processed elements
+    AtomicCircularQueue<MoveTarget, unsigned, 32> pending_targets; // queue of pre-processed elements
     /// Synchronization primitive to allow phase stepping to "steal" the next target.
     ///
     /// The scenario is, the next target is "owned" by the stepper interrupt,
@@ -271,16 +271,16 @@ template <typename Pos>
 float extract_physical_position(AxisEnum axis, const Pos &pos) {
     #ifdef COREXY
     if (axis == X_AXIS) {
-        return pos[0] + pos[1];
+        return static_cast<float>(pos[0] + pos[1]);
     } else if (axis == Y_AXIS) {
-        return pos[0] - pos[1];
+        return static_cast<float>(pos[0] - pos[1]);
     } else if (axis == Z_AXIS) {
-        return pos[2];
+        return static_cast<float>(pos[2]);
     } else {
         bsod("Unsupported AXIS");
     }
     #else
-    return pos[axis];
+    return static_cast<float>(pos[axis]);
     #endif
 }
 
