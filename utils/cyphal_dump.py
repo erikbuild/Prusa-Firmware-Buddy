@@ -18,10 +18,15 @@ NODE_ID_MASK = 127
 def port_id_to_name(port_id):
     return {
         21: 'prusa3d.ac_controller.Config.1',
+        100: 'prusa3d.nfc.command.AcceptEvent.1',
+        101: 'prusa3d.nfc.command.Request.1',
+        102: 'prusa3d.nfc.SetConfig.1',
         408: 'uavcan.file.Read.1',
         430: 'uavcan.node.GetInfo.1',
         435: 'uavcan.node.ExecuteCommand.1',
         600: 'prusa3d.ac_controller.Status.1',
+        1000: 'prusa3d.nfc.event.Event.1',
+        1001: 'prusa3d.nfc.Status.1',
         7509: 'uavcan.node.Heartbeat.1',
         7510: 'uavcan.node.port.List.1.0',
         8165: 'uavcan.pnp.NodeIDAllocationData.2',
@@ -297,6 +302,362 @@ def unpack_service_id_list(data):
         return 'services[]', data
 
 
+def unpack_union(data, dispatch):
+    tag, data = unpack_unsigned(data, 1)
+
+    def default(data):
+        return f'UNKNOWN tag={tag} data={data}', data
+
+    return dispatch.get(tag, default)(data)
+
+
+def unpack_nfc_event_id(data):
+    event_id, data = unpack_unsigned(data, 2)
+    return f'E#{event_id}', data
+
+
+def unpack_nfc_request_id(data):
+    request_id, data = unpack_unsigned(data, 2)
+    return f'R#{request_id}', data
+
+
+def unpack_nfc_tag_id(data):
+    tag_id, data = unpack_unsigned(data, 1)
+    return f'T#{tag_id}', data
+
+
+def unpack_nfc_field(data):
+    value, data = unpack_unsigned(data, 2)
+    return f'F#{value}', data
+
+
+def unpack_nfc_section(data):
+    section, data = unpack_unsigned(data, 1)
+    return {
+        0: 'META',
+        1: 'MAIN',
+        2: 'AUXILIARY',
+    }.get(section, section), data
+
+
+def unpack_nfc_board_orientation(data):
+    value, data = unpack_unsigned(data, 1)
+    return {
+        0: 'NORMAL',
+        1: 'LEFT',
+        2: 'RIGHT',
+    }.get(value, value), data
+
+
+def unpack_nfc_command_request_status(data):
+    status, data = unpack_unsigned(data, 1)
+    return {
+        0: 'OK',
+        1: 'REQUEST_QUEUE_FULL',
+    }.get(status, status), data
+
+
+def unpack_nfc_reader_error(data):
+    error, data = unpack_unsigned(data, 1)
+    pretty_error = {
+        0: 'FIELD_NOT_PRESENT',
+        1: 'WRONG_FIELD_TYPE',
+        2: 'WRITE_PROTECTED',
+        3: 'REGION_CORRUPT',
+        4: 'TAG_INVALID',
+        5: 'DATA_TOO_BIG',
+        6: 'OTHER',
+        7: 'NOT_IMPLEMENTED',
+        254: 'RADIO_DISABLED',
+        255: 'NO_ERROR',
+    }.get(error, error)
+    return f'error {pretty_error}', data
+
+
+def unpack_nfc_value_type(data):
+    value, data = unpack_unsigned(data, 1)
+    return {
+        0: 'BOOL_',
+        1: 'INT32_',
+        2: 'INT64_',
+        3: 'FLOAT_',
+        5: 'STRING',
+        6: 'BYTES',
+        7: 'UINT16_ARRAY',
+    }.get(value, value), data
+
+
+def unpack_nfc_tag_field(data):
+    tag_id, data = unpack_nfc_tag_id(data)
+    section, data = unpack_nfc_section(data)
+    field, data = unpack_nfc_field(data)
+    return f'tag_field {tag_id} {section} {field}', data
+
+
+def unpack_nfc_request_data(data):
+
+    def read_field(data):
+        tag_field, data = unpack_nfc_tag_field(data)
+        value_type, data = unpack_nfc_value_type(data)
+        return f'read_field {tag_field} {value_type}', data
+
+    def write_field(data):
+        tag_field, data = unpack_nfc_tag_field(data)
+        value, data = unpack_nfc_value(data)
+        return f'write_field {tag_field} {value}', data
+
+    def reset_state(data):
+        return 'reset_state', data
+
+    def set_params(data):
+        mime_type_size, data = unpack_unsigned(data, 1)
+        mime_type_data, data = unpack_bytes(data, mime_type_size)
+        mime_type = pretty_string(mime_type_data)
+        has_meta_region, data = unpack_unsigned(data, 1)
+        return f'set_params mime={mime_type} has_meta={bool(has_meta_region)}', data
+
+    def forget_tag(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        return f'forget_tag {tag_id}', data
+
+    def enumerate_fields(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        section, data = unpack_nfc_section(data)
+        return f'enumerate_fields {tag_id} {section}', data
+
+    def raw_write(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        offset, data = unpack_unsigned(data, 2)
+        data_size, data = unpack_unsigned(data, 1)
+        raw_data, data = unpack_bytes(data, data_size)
+        return f'raw_write {tag_id} offset={offset} data={raw_data.hex()}', data
+
+    def raw_read(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        offset, data = unpack_unsigned(data, 2)
+        num_bytes, data = unpack_unsigned(data, 2)
+        return f'raw_read {tag_id} offset={offset} num_bytes={num_bytes}', data
+
+    def initialize_tag(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        protect_first_num_bytes, data = unpack_unsigned(data, 2)
+        password, data = unpack_bytes(data, 4)
+        protection_policy, data = unpack_unsigned(data, 1)
+        best_effort, data = unpack_unsigned(data, 1)
+        policy_names = {0: 'NONE', 1: 'LOCK', 2: 'WRITE_PASSWORD'}
+        policy = policy_names.get(protection_policy, protection_policy)
+        return f'initialize_tag {tag_id} protect={protect_first_num_bytes} policy={policy} best_effort={bool(best_effort)}', data
+
+    def unlock_tag(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        password, data = unpack_bytes(data, 4)
+        return f'unlock_tag {tag_id} password={password.hex()}', data
+
+    def enable_radio(data):
+        return 'enable_radio', data
+
+    def disable_radio(data):
+        return 'disable_radio', data
+
+    def set_debug_config(data):
+        enforce_antenna, data = unpack_unsigned(data, 1)
+        auto_forget_tag, data = unpack_unsigned(data, 1)
+        modulation_cnt, data = unpack_unsigned(data, 1)
+        antenna = 'any' if enforce_antenna == 255 else f'A#{enforce_antenna}'
+        return f'set_debug_config antenna={antenna} auto_forget={bool(auto_forget_tag)} modulation_configs={modulation_cnt}', data
+
+    def get_tag_uid(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        return f'get_tag_uid {tag_id}', data
+
+    return unpack_union(
+        data, {
+            0: read_field,
+            1: write_field,
+            2: reset_state,
+            3: set_params,
+            4: forget_tag,
+            5: enumerate_fields,
+            6: raw_write,
+            7: raw_read,
+            8: initialize_tag,
+            9: unlock_tag,
+            10: enable_radio,
+            11: disable_radio,
+            12: set_debug_config,
+            13: get_tag_uid,
+        })
+
+
+def unpack_nfc_request_enumerate_fields_result(data):
+
+    def unpack_nfc_enumerate_fields(data):
+        cnt, data = unpack_unsigned(data, 1)
+        fields = []
+        for _ in range(cnt):
+            value, data = unpack_unsigned(data, 2)
+            fields.append(value)
+        return f'enumerate_fields {fields}', data
+
+    return unpack_union(data, {
+        0: unpack_nfc_enumerate_fields,
+        1: unpack_nfc_reader_error,
+    })
+
+
+def unpack_nfc_value(data):
+
+    def unpack_bool(data):
+        value, data = unpack_unsigned(data, 1)
+        return f'bool={bool(value)}', data
+
+    def unpack_int32(data):
+        value, data = unpack_signed(data, 4)
+        return f'int32={value}', data
+
+    def unpack_int64(data):
+        value, data = unpack_signed(data, 8)
+        return f'int64={value}', data
+
+    def unpack_float(data):
+        value, data = unpack_bytes(data, 4)
+        float_val = struct.unpack('<f', value)[0]
+        return f'float={float_val}', data
+
+    def unpack_nfc_string(data):
+        string_size, data = unpack_unsigned(data, 1)
+        string_data, data = unpack_bytes(data, string_size)
+        string = pretty_string(string_data)
+        return f'string {string}', data
+
+    def unpack_nfc_bytes(data):
+        bytes_size, data = unpack_unsigned(data, 1)
+        bytes_data, data = unpack_bytes(data, bytes_size)
+        return f'bytes={bytes_data.hex()}', data
+
+    def unpack_uint16_array(data):
+        array_size, data = unpack_unsigned(data, 1)
+        values = []
+        for _ in range(array_size):
+            value, data = unpack_unsigned(data, 2)
+            values.append(value)
+        return f'uint16_array={values}', data
+
+    return unpack_union(
+        data, {
+            0: unpack_bool,
+            1: unpack_int32,
+            2: unpack_int64,
+            3: unpack_float,
+            4: unpack_nfc_string,
+            5: unpack_nfc_bytes,
+            6: unpack_uint16_array,
+        })
+
+
+def unpack_nfc_value_or_error(data):
+    return unpack_union(data, {
+        0: unpack_nfc_value,
+        1: unpack_nfc_reader_error,
+    })
+
+
+def unpack_nfc_raw_read_result(data):
+
+    def unpack_raw_data(data):
+        data_size, data = unpack_unsigned(data, 1)
+        raw_data, data = unpack_bytes(data, data_size)
+        return f'data={raw_data.hex()}', data
+
+    return unpack_union(data, {
+        0: unpack_raw_data,
+        1: unpack_nfc_reader_error,
+    })
+
+
+def unpack_nfc_get_tag_uid_result(data):
+
+    def unpack_uid(data):
+        uid_size, data = unpack_unsigned(data, 1)
+        uid_data, data = unpack_bytes(data, uid_size)
+        return f'uid={uid_data.hex()}', data
+
+    return unpack_union(data, {
+        0: unpack_uid,
+        1: unpack_nfc_reader_error,
+    })
+
+
+def unpack_nfc_request_result(data):
+
+    def empty(data):
+        return 'empty', data
+
+    def read_field(data):
+        value_or_error, data = unpack_nfc_value_or_error(data)
+        return f'read_field {value_or_error}', data
+
+    def write_field(data):
+        error, data = unpack_nfc_reader_error(data)
+        return f'write_field {error}', data
+
+    def raw_read(data):
+        result, data = unpack_nfc_raw_read_result(data)
+        return f'raw_read {result}', data
+
+    def raw_write(data):
+        error, data = unpack_nfc_reader_error(data)
+        return f'raw_write {error}', data
+
+    def initialize_tag(data):
+        error, data = unpack_nfc_reader_error(data)
+        return f'initialize_tag {error}', data
+
+    def unlock_tag(data):
+        error, data = unpack_nfc_reader_error(data)
+        return f'unlock_tag {error}', data
+
+    def get_tag_uid(data):
+        result, data = unpack_nfc_get_tag_uid_result(data)
+        return f'get_tag_uid {result}', data
+
+    return unpack_union(
+        data, {
+            0: empty,
+            1: read_field,
+            2: write_field,
+            3: unpack_nfc_request_enumerate_fields_result,
+            4: raw_read,
+            5: raw_write,
+            6: initialize_tag,
+            7: unlock_tag,
+            8: get_tag_uid,
+        })
+
+
+def unpack_nfc_event_data(data):
+
+    def request_done(data):
+        request_id, data = unpack_nfc_request_id(data)
+        request_result, data = unpack_nfc_request_result(data)
+        return f'request_done {request_id} {request_result}', data
+
+    def tag_detected(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        antenna_id, data = unpack_unsigned(data, 1)
+        return f'tag_detected {tag_id} A#{antenna_id}', data
+
+    def tag_lost(data):
+        tag_id, data = unpack_nfc_tag_id(data)
+        return f'tag_lost {tag_id}', data
+
+    return unpack_union(data, {
+        0: request_done,
+        1: tag_detected,
+        2: tag_lost,
+    })
+
+
 def pretty_string(b):
     try:
         s = b.decode('utf-8')
@@ -372,6 +733,46 @@ def pretty(port, what, data):
         psu_power, data = unpack_power_scalar(data)
 
         return f'bed={bed_temp:.1f}°C({bed_target_temp}) bed_pwm={bed_pwm:.2f} bed_pwr={bed_power} chamber_pwm={chamber_pwm:.2f} chamber_pwr={chamber_power} psu={psu_fan_state} psu_temp={psu_temp:.1f}°C psu_pwr={psu_power} triac={triac_fan_state} triac_temp={triac_temp:.1f}°C ext_fan0={external_fan0_state} ext_fan1={external_fan1_state} board_temp={board_temp:.1f}°C mcu_temp={mcu_temp:.1f}°C supply={supply_voltage} rgb={rgb_led_strip} faults={faults} time_sync={bool(time_sync_precise)} ac={ac_voltage}@{ac_frequency}'
+
+    elif port == 'prusa3d.nfc.Status.1':
+        time_sync_precise, data = unpack_unsigned(data, 1)
+        board_orientation, data = unpack_nfc_board_orientation(data)
+        faults, data = unpack_shared_fault(data)
+
+        return f'time_sync_precise={bool(time_sync_precise)} board_orientation={board_orientation} faults={faults}'
+
+    elif port == 'prusa3d.nfc.command.AcceptEvent.1':
+        if what == 'Request':
+            event_id, data = unpack_nfc_event_id(data)
+            return f'{event_id}'
+
+        elif what == 'Response':
+            ok, data = unpack_unsigned(data, 1)
+            return 'ok' if ok else 'nok'
+
+    elif port == 'prusa3d.nfc.command.Request.1':
+        if what == 'Request':
+            request_id, data = unpack_nfc_request_id(data)
+            request_data, data = unpack_nfc_request_data(data)
+            return f'{request_id} {request_data}'
+
+        elif what == 'Response':
+            status, data = unpack_nfc_command_request_status(data)
+            return f'{status}'
+
+    elif port == 'prusa3d.nfc.event.Event.1':
+        event_id, data = unpack_nfc_event_id(data)
+        event_data, data = unpack_nfc_event_data(data)
+        return f'{event_id} {event_data}'
+
+    elif port == 'prusa3d.nfc.SetConfig.1':
+        if what == 'Request':
+            left_led_pwm, data = unpack_unsigned(data, 1)
+            right_led_pwm, data = unpack_unsigned(data, 1)
+            return f'left_led={left_led_pwm} right_led={right_led_pwm}'
+
+        elif what == 'Response':
+            return 'ack'
 
     elif port == 'uavcan.pnp.NodeIDAllocationData.2':
         node_id, data = unpack_unsigned(data, 2)
