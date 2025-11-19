@@ -124,7 +124,7 @@ public:
     }
 };
 
-OPTReader::TagField field(auto f, TagID tag = 0) {
+TagField field(auto f, TagID tag = 0) {
     return { .tag = tag, .section = field_section(f), .field = std::to_underlying(f) };
 };
 

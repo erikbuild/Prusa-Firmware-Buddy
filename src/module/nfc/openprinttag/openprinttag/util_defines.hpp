@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <algorithm>
 
+#include <openprinttag/opt_defines.hpp>
+
 namespace openprinttag {
 
 /// Reader-specific identifier for a tag the reader is managing
@@ -77,6 +79,12 @@ public:
     constexpr bool contains(const TagPayloadSpan &subspan) const {
         return (tag == subspan.tag) && span.contains(subspan.span);
     }
+};
+
+struct TagField {
+    TagID tag;
+    Section section;
+    Field field;
 };
 
 } // namespace openprinttag

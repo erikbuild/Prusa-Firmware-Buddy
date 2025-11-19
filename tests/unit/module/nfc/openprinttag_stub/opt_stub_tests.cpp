@@ -8,7 +8,7 @@
 using namespace openprinttag;
 using namespace std;
 
-OPTReader::TagField field(auto f) {
+TagField field(auto f) {
     return { .tag = 0, .section = field_section(f), .field = std::to_underlying(f) };
 };
 

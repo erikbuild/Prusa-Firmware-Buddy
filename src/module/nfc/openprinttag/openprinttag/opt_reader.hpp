@@ -34,12 +34,6 @@ public:
         bool has_meta_region : 1 = true;
     };
 
-    struct TagField {
-        TagID tag;
-        Section section;
-        Field field;
-    };
-
     // Do not change indexes - reflected in the DSDL
     enum class Error : uint8_t {
         /// The field or region is not present on the tag (but the tag is otherwise OK)

@@ -14,12 +14,12 @@ bool is_valid_section(std::underlying_type_t<Section> section) {
     return section < std::to_underlying(Section::_cnt);
 }
 
-std::optional<OPTReader::TagField> parse_request_field(const prusa3d_nfc_util_TagField_1_0 &field) {
+std::optional<TagField> parse_request_field(const prusa3d_nfc_util_TagField_1_0 &field) {
     if (!is_valid_section(field.section.value)) {
         return std::nullopt;
     }
 
-    return OPTReader::TagField {
+    return TagField {
         .tag = field.tag.value,
         .section = static_cast<Section>(field.section.value),
         .field = field.field.value,
