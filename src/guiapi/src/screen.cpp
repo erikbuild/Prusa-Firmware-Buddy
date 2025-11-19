@@ -5,6 +5,7 @@
  */
 
 #include "screen.hpp"
+#include <ScreenHandler.hpp>
 
 screen_t::screen_t(window_t *parent, win_type_t type, is_closed_on_timeout_t timeout, is_closed_on_printing_t close_on_print)
     : window_frame_t(parent, GuiDefaults::RectScreen, type, timeout, close_on_print) {
@@ -19,6 +20,10 @@ screen_t::~screen_t() {
         ptr->SetNext(nullptr);
         ptr = next;
     }
+}
+
+void screen_t::close_screen() {
+    Screens::Access()->Close();
 }
 
 bool screen_t::registerSubWin(window_t &win) {
