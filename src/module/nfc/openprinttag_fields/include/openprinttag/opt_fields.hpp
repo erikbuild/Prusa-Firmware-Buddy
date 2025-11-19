@@ -2,6 +2,7 @@
 #pragma once
 
 #include <openprinttag/opt_defines.hpp>
+#include <openprinttag/util_defines.hpp>
 
 namespace openprinttag {
 
@@ -15,6 +16,15 @@ constexpr inline Section field_section(MainField) {
 }
 constexpr inline Section field_section(AuxField) {
     return Section::auxiliary;
+}
+
+template <typename FieldEnum>
+constexpr inline TagField tag_field(TagID tag, FieldEnum field) {
+    return TagField {
+        .tag = tag,
+        .section = field_section(field),
+        .field = static_cast<Field>(field)
+    };
 }
 
 } // namespace openprinttag
