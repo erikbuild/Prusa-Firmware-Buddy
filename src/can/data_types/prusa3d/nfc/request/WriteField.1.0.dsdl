@@ -1,0 +1,7 @@
+# What field to write
+prusa3d.nfc.util.TagField.1.0 field
+
+# Value to write
+prusa3d.nfc.util.Value.1.0 value
+
+@sealed

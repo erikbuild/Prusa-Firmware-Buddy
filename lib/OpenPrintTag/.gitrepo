@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:prusa3d/OpenPrintTag.git
+	branch = main
+	commit = aee211fc518cc0abdb0862de2ce349ace6c47dd7
+	parent = 69c3d1a4797ab70a659ded53c48d3060fd737133
+	method = merge
+	cmdver = 0.4.9

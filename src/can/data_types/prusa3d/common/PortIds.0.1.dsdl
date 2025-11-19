@@ -1,0 +1,27 @@
+#
+# @brief This file is misused to provide port IDs for Prusa specific unregulated ports.
+#        The message is empty
+#
+# @note This info is available via "uavcan.pub.PORT_NAME.id" registers where there were resources for it.
+#
+# @note Messages and services have each their own namespace, but separated to be clear.
+#       Services can use ports [0 - 255].
+#       Messages can use ports [0 - 6143].
+#
+# @note Do not change the ids just for the fun. Try to keep them stable.
+#
+
+
+#
+# Services
+#
+
+#
+# Messages
+#
+
+# Common
+uint16 MSG_COMMON_METRICS = 500
+uint16 MSG_COMMON_STATS = 501 # CAN measurements, uses raw data, see CyphalStats
+
+@sealed

@@ -1,0 +1,10 @@
+# What tag to write to
+prusa3d.nfc.util.TagID.1.0 tag
+
+# Position of the first byte to write
+uint16 offset
+
+# Data to write
+uavcan.primitive.array.Natural8.1.0 data
+
+@sealed

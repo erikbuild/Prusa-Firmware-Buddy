@@ -1,0 +1,4 @@
+mime_type: application/vnd.openprinttak
+root: nfcv
+meta_fields: empty.yaml
+main_fields: empty.yaml

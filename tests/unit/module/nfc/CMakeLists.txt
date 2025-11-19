@@ -1,0 +1,5 @@
+add_subdirectory(nfcv)
+add_subdirectory(nfc_st25r39xxb)
+add_subdirectory(openprinttag)
+add_subdirectory(openprinttag_nfcv)
+add_subdirectory(openprinttag_stub)

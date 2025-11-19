@@ -10,4 +10,7 @@ qoi~=0.5
 numpy==1.26.4
 setuptools~=70.1.0
 requests==2.32.3
+ndeflib~=0.3.3
+cbor2~=5.7.1
 nunavut~=2.3
+simple_parsing~=0.1.7

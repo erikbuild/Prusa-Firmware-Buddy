@@ -1,0 +1,11 @@
+@union
+
+bool bool_
+int32 int32_
+int64 int64_
+float32 float_
+uavcan.primitive.String.1.0 string
+uavcan.primitive.array.Natural8.1.0 bytes
+uavcan.primitive.array.Natural16.1.0 uint16_array
+
+@sealed

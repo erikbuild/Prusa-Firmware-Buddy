@@ -118,7 +118,25 @@ extern "C" {
 /// Parameter ranges are inclusive; the lower bound is zero for all. See Cyphal/CAN Specification for background.
 #define CANARD_SUBJECT_ID_MAX 8191U
 #define CANARD_SERVICE_ID_MAX 511U
-#define CANARD_NODE_ID_MAX 127U
+
+/**
+ * @note Originally this was "#define CANARD_NODE_ID_MAX 127U".
+ * It was decreased to save RAM. Each subscription has array of pointers to sessions.
+ * With 128 possible nodes, it takes 512 B out of which only 1 or few are used.
+ * For a node with 20 subscriptions that is 10 kB of unused and wasted RAM.
+ *
+ * This lower count was tested on small network and unit tests were run.
+ * It needs a lot of modifications in the tests to not use node-id over 15.
+ *
+ * If this causes trouble, revert and deal with the RAM usage.
+ *
+ * @warning This value is not compatible with the Cyphal Specification.
+ * The Specification requires that the node-ID range is 0..127.
+ * When using Yakut or Yukon, one must take care to not use IDs higher than 15.
+ * If the PnP algorithm gives ID over 15, the node will not work.
+ */
+#define CANARD_NODE_ID_MAX 15U
+
 #define CANARD_PRIORITY_MAX 7U
 #define CANARD_TRANSFER_ID_BIT_LENGTH 5U
 #define CANARD_TRANSFER_ID_MAX ((1U << CANARD_TRANSFER_ID_BIT_LENGTH) - 1U)

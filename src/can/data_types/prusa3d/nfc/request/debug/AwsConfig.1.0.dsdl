@@ -1,0 +1,8 @@
+uint8 value
+
+uint8 NO_AWS = 0
+uint8 AWS_SLOW_TRANSIENT = 1
+uint8 AWS_MEDIUM_TRANSIENT = 2
+uint8 AWS_FAST_TRANSIENT = 3
+
+@sealed

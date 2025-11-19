@@ -1,0 +1,4 @@
+# Used to identify antennas on a single NFC reader
+uint8 value
+
+@sealed

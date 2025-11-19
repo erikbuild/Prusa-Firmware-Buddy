@@ -1,0 +1,8 @@
+bool time_sync_precise # Time synchronization is precise
+
+# Board orientation - on some platforms determines if the board is "left" or "right" variant - "normal" on other platforms
+prusa3d.nfc.BoardOrientation.1.0 board_orientation
+
+prusa3d.common.SharedFault.1.0 faults # Contains specific FAULT_*XX* above and shared faults
+
+@sealed

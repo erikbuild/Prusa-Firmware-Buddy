@@ -1,0 +1,7 @@
+# What field to read
+prusa3d.nfc.util.TagField.1.0 field
+
+# Value type to read. The operation will always return the expected value type or error.
+prusa3d.nfc.util.ValueType.1.0 value_type
+
+@sealed

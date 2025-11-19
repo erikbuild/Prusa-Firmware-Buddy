@@ -1,0 +1,17 @@
+# This file contains IDs of custom prusa3d commands, its meant to be used with standard fixed service ExecuteCommand (ID 435)
+
+
+uint16 COMMAND_START_APPLICATION = 0
+# Bootloader specific command, will terminate bootloader and start application, if valid.
+
+uint16 COMMAND_GET_APP_SALTED_HASH = 1
+# Calculate salted hash of the node application firmware
+# This has parameter of 4 B as salt
+# This returns 32 B of SHA256 hash, salt is given to the hashing function first
+
+uint16 COMMAND_START_CAN_STAT_TX = 2
+# Start sending CAN statistics messages
+# This has no parameters
+# This will start sending a lot of CAN messages
+
+@sealed

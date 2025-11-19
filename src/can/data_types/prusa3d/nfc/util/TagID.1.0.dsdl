@@ -1,0 +1,4 @@
+# Reader-specific identifier of the tag, for discerning multiple tags tracked by the reader
+uint8 value
+
+@sealed

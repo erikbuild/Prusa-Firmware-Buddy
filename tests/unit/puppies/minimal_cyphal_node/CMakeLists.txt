@@ -1,0 +1,6 @@
+add_executable(
+  minimal_cyphal_node_test ${CYPHAL_NODE_TEST_STUBS_SOURCES} minimal_cyphal_node_test.cpp
+  )
+target_include_directories(minimal_cyphal_node_test PUBLIC . include_stub)
+target_link_libraries(minimal_cyphal_node_test cyphal_node_test_stubs)
+add_catch_test(minimal_cyphal_node_test)

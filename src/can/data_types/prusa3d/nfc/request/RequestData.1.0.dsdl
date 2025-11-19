@@ -1,0 +1,32 @@
+@union
+
+prusa3d.nfc.request.ReadField.1.0 read_field
+prusa3d.nfc.request.WriteField.1.0 write_field
+
+# Completely reset reader state, invalidate all caches and memory.
+# As a result, all nearby tags are expected to emit TagDetected events (again)
+uavcan.primitive.Empty.1.0 reset_state
+
+prusa3d.nfc.request.SetParams.1.0 set_params
+prusa3d.nfc.request.ForgetTag.1.0 forget_tag
+prusa3d.nfc.request.EnumerateFields.1.0 enumerate_fields
+prusa3d.nfc.request.RawWrite.1.0 raw_write
+prusa3d.nfc.request.RawRead.1.0 raw_read
+prusa3d.nfc.request.InitializeTag.1.0 initialize_tag
+prusa3d.nfc.request.UnlockTag.1.0 unlock_tag
+
+# Enable radio communication and start detecting tags
+# The reader is disabled by default, it needs to be enabled
+uavcan.primitive.Empty.1.0 enable_radio
+
+# Stop all radio communication
+# No events will be detected until enable is called
+# All I/O operations will return an error until enabled
+uavcan.primitive.Empty.1.0 disable_radio
+
+# Config tweaks useful for debugging
+prusa3d.nfc.request.SetDebugConfig.1.0 set_debug_config
+
+prusa3d.nfc.request.GetTagUID.1.0 get_tag_uid
+
+@sealed

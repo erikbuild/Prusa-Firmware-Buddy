@@ -1,0 +1,13 @@
+{
+  "name": "ST25R39XXB SPI protocol",
+  "apiVersion": "1.0.0",
+  "author": "Tomas Vybiral",
+  "version": "0.0.1",
+  "description": "High level analyzer for ST5R39XXB SPI protocol",
+  "extensions": {
+    "anfc-st25r39xxb-protocol": {
+      "type": "HighLevelAnalyzer",
+      "entryPoint": "HighLevelAnalyzer.Hla"
+    }
+  }
+}

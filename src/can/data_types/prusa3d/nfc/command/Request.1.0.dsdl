@@ -1,0 +1,21 @@
+# Issue an asynchronous request
+
+# ID of the request. Once the request is processed, an appropriate Done event will be emitted
+prusa3d.nfc.request.RequestID.1.0 request_id
+
+# The request itself
+prusa3d.nfc.request.RequestData.1.0 request
+
+@sealed
+
+---
+
+uint8 status
+
+# The request has been enqueued
+uint8 OK = 0
+
+# The queue is full, the request has been thrown out
+uint8 REQUEST_QUEUE_FULL = 1
+
+@sealed

@@ -1,3 +1,6 @@
+add_subdirectory(cyphal_node_stubs)
+add_subdirectory(minimal_cyphal_node)
+
 add_executable(
   fifo_coder_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/fifo_coder_tests.cpp

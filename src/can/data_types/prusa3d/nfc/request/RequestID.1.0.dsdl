@@ -1,0 +1,7 @@
+# RequestID is used for identifying command requests
+# Most NFC commands are asynchronous and their return their results as Event, using RequestID to refer to the original request
+# No sequentiality is required or guaranteed
+
+uint16 value
+
+@sealed

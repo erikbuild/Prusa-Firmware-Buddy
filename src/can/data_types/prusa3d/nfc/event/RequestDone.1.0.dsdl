@@ -1,0 +1,6 @@
+# Indicates that the request has been processed
+
+prusa3d.nfc.request.RequestID.1.0 request_id
+prusa3d.nfc.request.RequestResult.1.0 result
+
+@sealed

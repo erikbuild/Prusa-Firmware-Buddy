@@ -278,6 +278,43 @@
             }
         },
         {
+            // Ensure OpenOCD does support STM32C092 devices - use specific OpenOCD https://github.com/ivous/OpenOCD/tree/C092"
+            // see /util/debug/README_STM32C0.md
+            "name": "Launch ANFC (C0)",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build-vscode-anfc/firmware",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "armToolchainPath": "${workspaceRoot}/.dependencies/gcc-arm-none-eabi-13.2.1/bin",
+            "postLaunchCommands": [
+                "set $pc = &Reset_Handler"
+            ],
+            "configFiles": [
+                "${workspaceRoot}/utils/debug/anfc.cfg",
+            ],
+            "toolchainPrefix": "arm-none-eabi",
+            "device": "STM32C092RC",
+            "svdFile": "${workspaceRoot}/.dependencies/cmsis-svd-c0-ce4b873ae4a471cf28d7a7c9c69ded252d949672/STM32C092.svd",
+            "rtos": "FreeRTOS",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "searchSize": 16,
+                "searchId": "SEGGER RTT",
+                "clearSearch": true,
+                "polling_interval": 10,
+                "decoders": [
+                    {
+                        "label": "Logging",
+                        "port": 0,
+                        "noprompt": true,
+                        "type": "console"
+                    }
+                ]
+            },
+        },
+        {
             "name": "Launch Simulator Scripted",
             // This is the same as "Launch Simulator", but it also opens TCP port to control hardware
             // Use 'telnet localhost 50001' immediatelly after launching this

@@ -80,6 +80,7 @@ exclude: |
     lib/Middlewares/Third_Party/LwIP/|
     lib/Middlewares/Third_Party/littlefs/|
     lib/Middlewares/Third_Party/mbedtls/|
+    lib/OpenPrintTag/|
     lib/Prusa-Error-Codes/|
     lib/Prusa-Firmware-MMU/|
     lib/QR/|
@@ -94,6 +95,7 @@ exclude: |
     lib/libbgcode/|
     lib/liblightmodbus/|
     lib/libsysbase/|
+    lib/nanocbor/|
     lib/o1heap/|
     lib/printf|
     lib/sfl-library|

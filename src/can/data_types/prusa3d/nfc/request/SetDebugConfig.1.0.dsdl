@@ -1,0 +1,13 @@
+# If set to something else than NO_ANTENNA_ENFORCE, only the specified antenna will ever be used
+uint8 enforce_antenna
+
+# Automatically forget tags on TagLost event
+bool auto_forget_tag
+
+# Modulation settings, if not present don't change anything
+# If present will reset the internal nfc chip and reconfigure it also will reset the reader implementation state to start with a clean sheet
+prusa3d.nfc.request.debug.ModulationConfig.1.0[<=1] modulation_settings
+
+uint8 NO_ANTENNA_ENFORCE = 255
+
+@sealed

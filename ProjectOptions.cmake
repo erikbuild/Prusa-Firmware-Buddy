@@ -17,6 +17,7 @@ set(PRINTER_VALID_OPTS
     "XL"
     "iX"
     "XL_DEV_KIT"
+    "NONE"
     )
 set(BOARD_VALID_OPTS
     "BUDDY"
@@ -26,9 +27,16 @@ set(BOARD_VALID_OPTS
     "MODULARBED"
     "XL_DEV_KIT_XLB"
     "XBUDDY_EXTENSION"
+    "ANFC"
     )
-set(MCU_VALID_OPTS "<default>" "STM32F407VG" "STM32F429VI" "STM32F427ZI" "STM32G070RBT6"
-                   "STM32H503CBU7"
+set(MCU_VALID_OPTS
+    "<default>"
+    "STM32F407VG"
+    "STM32F429VI"
+    "STM32F427ZI"
+    "STM32G070RBT6"
+    "STM32H503CBU7"
+    "STM32C092KCUX"
     )
 set(BOOTLOADER_VALID_OPTS "NO" "EMPTY" "YES")
 set(TRANSLATIONS_ENABLED_VALID_OPTS "<default>" "NO" "YES")
@@ -166,6 +174,8 @@ if(${MCU} STREQUAL "<default>")
     set(MCU "STM32G070RBT6")
   elseif(${BOARD} STREQUAL "XBUDDY_EXTENSION")
     set(MCU "STM32H503CBU7")
+  elseif(${BOARD} STREQUAL "ANFC")
+    set(MCU "STM32C092KCUX")
   else()
     message(FATAL_ERROR "Don't know what MCU to set as default for this board/version")
   endif()
@@ -400,6 +410,8 @@ define_enum_option(
   NAME XBUDDY_EXTENSION_VARIANT VALUE "${XBUDDY_EXTENSION_VARIANT}" ALL_VALUES "NONE;STANDARD;iX"
   )
 
+set_feature_for_printers_master_board(HAS_ANFC "COREONE" "COREONEL")
+
 # MK4 technically doesn't have door sensor but needs to check valid FW-HW
 set_feature_for_printers_master_board(HAS_DOOR_SENSOR "COREONE" "COREONEL" "MK4")
 
@@ -567,6 +579,9 @@ else()
   define_boolean_option(HAS_TOOL_MAPPING no)
   define_boolean_option(HAS_SPOOL_JOIN no)
 endif()
+
+set_feature_for_printers(HAS_CYPHAL_METRICS)
+set_feature_for_printers(HAS_CYPHAL_LOGGING)
 
 # Set printer board
 set(BOARDS_WITH_ADVANCED_POWER "XBUDDY" "XLBUDDY" "DWARF")
@@ -744,6 +759,7 @@ define_boolean_option(HAS_DWARF ${HAS_DWARF})
 if(HAS_DWARF
    OR HAS_PUPPY_MODULARBED
    OR HAS_XBUDDY_EXTENSION
+   OR HAS_ANFC
    )
   set(HAS_PUPPIES YES)
 else()
@@ -830,6 +846,17 @@ if(ENABLE_PUPPY_BOOTLOAD)
     set(XBUDDY_EXTENSION_BINARY_DIR
         "${CMAKE_BINARY_DIR}/xbuddy_extension-build"
         CACHE PATH "Where to have build directory for the enclosure extension firmware."
+        )
+  endif()
+
+  if(NOT ANFC_BINARY_PATH)
+    set(ANFC_SOURCE_DIR
+        "${CMAKE_SOURCE_DIR}"
+        CACHE PATH "From which source directory to build the active NFC reader firmware."
+        )
+    set(ANFC_BINARY_DIR
+        "${CMAKE_BINARY_DIR}/anfc-build"
+        CACHE PATH "Where to have build directory for the active NFC reader firmware."
         )
   endif()
 endif()
@@ -922,11 +949,30 @@ set(DEVELOPER_MODE
     )
 define_boolean_option(DEVELOPER_MODE ${DEVELOPER_MODE})
 
+set(CYPHAL_CAN_STATS
+    "OFF"
+    CACHE BOOL "Enable mechanisms to measure CAN bus performance (needs DEVELOPER_MODE to be ON)"
+    )
+define_boolean_option(CYPHAL_CAN_STATS ${CYPHAL_CAN_STATS})
+
 set(DEBUG_WITH_BEEPS
     "OFF"
     CACHE BOOL "Colleague annoyance: achievement unlocked"
     )
 define_boolean_option(DEBUG_WITH_BEEPS ${DEBUG_WITH_BEEPS})
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(DISABLE_WATCHDOG
+      "ON"
+      CACHE BOOL "Disable watchdog handlers for debugging"
+      )
+else()
+  set(DISABLE_WATCHDOG
+      "OFF"
+      CACHE BOOL "Disable watchdog handlers for debugging"
+      )
+endif()
+define_boolean_option(DISABLE_WATCHDOG ${DISABLE_WATCHDOG})
 
 set(MDNS
     "ON"

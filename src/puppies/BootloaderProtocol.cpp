@@ -1,6 +1,6 @@
 #include "puppies/BootloaderProtocol.hpp"
 #include <algorithm>
-#include "Crc.h"
+#include <crc/crc.hpp>
 #include <cstring>
 #include "buffered_serial.hpp"
 #include "puppies/PuppyBus.hpp"
@@ -19,7 +19,7 @@ BootloaderProtocol::status_t BootloaderProtocol::write_command(commands_t cmd, u
     write_buffer[1] = (uint8_t)cmd;
     // buffer[2] and onwards was prefilled with command data
 
-    uint16_t crc = Crc16Ibm().update(write_buffer, len + 2).get();
+    uint16_t crc = Crc16Modbus().update(write_buffer, len + 2).get();
     write_buffer[len + 2] = (crc & 0xff);
     write_buffer[len + 3] = (crc >> 8);
 
@@ -69,7 +69,7 @@ BootloaderProtocol::status_t BootloaderProtocol::read_status(uint8_t *datain, si
         return status_t::INCOMPLETE_RESPONSE;
     }
 
-    uint16_t expectedCrc = Crc16Ibm().update(buffer, 3).update(datain, len).get();
+    uint16_t expectedCrc = Crc16Modbus().update(buffer, 3).update(datain, len).get();
     if (((crc[1] << 8) | crc[0]) != expectedCrc) {
         return status_t::INVALID_CRC;
     }

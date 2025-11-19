@@ -24,7 +24,7 @@ cmake.version = ">=3.27"
 wheel.py-api="cp312"
 # Compile output for xl_release_boot, but, but override compiler settings.
 # Normally printer would be compiled with ARM compiler, but we need native system compiler for python libraries
-cmake.args = ["--preset=xl_release_boot", "-DCMAKE_TOOLCHAIN_FILE=", "-DUNITTESTS_ENABLE=OFF"]
+cmake.args = ["--preset=xl_release_boot", "-DCMAKE_TOOLCHAIN_FILE=", "-DUNITTESTS_ENABLE=OFF", "-DDSDL_TRANSPILE=OFF"]
 
 # Compile cmake in root of this repository, as we would normally compile printer firmware, just select target that compiles python library
 cmake.source-dir = "../../../../"

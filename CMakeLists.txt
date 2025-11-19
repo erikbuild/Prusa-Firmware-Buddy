@@ -135,6 +135,11 @@ elseif(MCU MATCHES "STM32H5")
     BuddyHeaders BEFORE INTERFACE include/stm32h5_hal include/device/stm32h5
     )
   target_link_libraries(BuddyHeaders INTERFACE STM32H5::HAL STM32H5xx::CMSIS)
+elseif(MCU MATCHES "STM32C0")
+  target_include_directories(
+    BuddyHeaders BEFORE INTERFACE include/stm32c0_hal include/device/stm32c0
+    )
+  target_link_libraries(BuddyHeaders INTERFACE STM32C0::HAL STM32C0xx::CMSIS)
 else()
   message(FATAL_ERROR "Undefined HAL for ${MCU}")
 endif()
@@ -177,6 +182,9 @@ elseif(PRINTER STREQUAL "COREONE")
 elseif(PRINTER STREQUAL "COREONEL")
   set(PRINTER_TYPE "8")
   set(PRINTER_CODE "35")
+elseif(PRINTER STREQUAL "NONE")
+  set(PRINTER_TYPE "0")
+  set(PRINTER_CODE "0")
 else()
   message(FATAL_ERROR "Unknown printer \"${PRINTER}\".")
 endif()
@@ -199,6 +207,8 @@ elseif(MCU MATCHES "STM32G0")
   target_compile_definitions(BuddyHeaders INTERFACE STM32GENERIC STM32G0 STM32G0xx)
 elseif(MCU MATCHES "STM32H5")
   target_compile_definitions(BuddyHeaders INTERFACE STM32GENERIC STM32H5 STM32H5xx)
+elseif(MCU MATCHES "STM32C0")
+  target_compile_definitions(BuddyHeaders INTERFACE STM32GENERIC STM32C0 STM32C0xx)
 else()
   message(FATAL_ERROR "Undefined macros for ${MCU}")
 endif()
@@ -267,6 +277,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if(MCU MATCHES "STM32F40"
      OR MCU MATCHES "STM32G0"
      OR MCU MATCHES "STM32H5"
+     OR MCU MATCHES "STM32C0"
      OR PRINTER STREQUAL "MK4"
      OR PRINTER STREQUAL "MK3.5"
      OR PRINTER STREQUAL "XL"
@@ -289,7 +300,7 @@ if(CMAKE_CROSSCOMPILING)
   set(MCU_FLAGS -mthumb)
   if(MCU MATCHES "STM32F4")
     list(APPEND MCU_FLAGS -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-  elseif(MCU MATCHES "STM32G0")
+  elseif(MCU MATCHES "STM32G0" OR MCU MATCHES "STM32C0")
     list(APPEND MCU_FLAGS -mcpu=cortex-m0plus -mfloat-abi=soft)
   elseif(MCU MATCHES "STM32H5")
     list(APPEND MCU_FLAGS -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16)
@@ -426,6 +437,28 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       BUILD_ALWAYS TRUE
       )
   endif()
+
+  if(NOT ANFC_BINARY_PATH AND HAS_ANFC)
+    get_filename_component(
+      ANFC_BINARY_DIR "${ANFC_BINARY_DIR}" REALPATH BASE_DIR "${CMAKE_SOURCE_DIR}"
+      )
+    get_filename_component(ANFC_BINARY_PATH "firmware.bin" REALPATH BASE_DIR "${ANFC_BINARY_DIR}")
+    ExternalProject_Add(
+      anfc
+      SOURCE_DIR "${ANFC_SOURCE_DIR}"
+      BINARY_DIR "${ANFC_BINARY_DIR}"
+      CMAKE_ARGS
+        --preset ${PRINTER_lower}-anfc_${CMAKE_BUILD_TYPE_lower}_boot -B "${ANFC_BINARY_DIR}"
+        $<$<BOOL:${CUSTOM_COMPILE_OPTIONS}>:-DCUSTOM_COMPILE_OPTIONS=${CUSTOM_COMPILE_OPTIONS}>
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target firmware
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step"
+      BUILD_BYPRODUCTS "${ANFC_BINARY_PATH}" "${ANFC_BINARY_DIR}/firmware"
+      STEP_TARGETS build
+      USES_TERMINAL_BUILD TRUE
+      USES_TERMINAL_INSTALL FALSE
+      BUILD_ALWAYS TRUE
+      )
+  endif()
 endif()
 
 # Unittests
@@ -477,6 +510,7 @@ endif()
 if(BOARD STREQUAL "DWARF"
    OR BOARD STREQUAL "MODULARBED"
    OR BOARD STREQUAL "XBUDDY_EXTENSION"
+   OR BOARD STREQUAL "ANFC"
    )
   add_custom_command(
     TARGET firmware
@@ -631,6 +665,8 @@ elseif(BOARD STREQUAL "MODULARBED")
     )
 elseif(BOARD STREQUAL "XBUDDY_EXTENSION")
   # let us manage the libraries where needed, not globally
+elseif(BOARD STREQUAL "ANFC")
+  # let us manage the libraries where needed, not globally
 elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
   target_link_libraries(
     firmware
@@ -654,4 +690,11 @@ elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
             heatshrink_decoder # todo: remove
             version
     )
+endif()
+
+option(DSDL_TRANSPILE "Enable DSDL transcompilation" ON)
+if(DSDL_TRANSPILE)
+  # Convert dsdl files to headers and include them
+  include(src/can/data_types/TranspileDsdl.cmake)
+  transpile_dsdl()
 endif()

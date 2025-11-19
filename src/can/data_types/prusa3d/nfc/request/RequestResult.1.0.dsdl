@@ -1,0 +1,28 @@
+@union
+
+# Empty result for requests that don't expect a result
+uavcan.primitive.Empty.1.0 empty
+
+# Resulting read value
+prusa3d.nfc.util.ValueOrError.1.0 read_field
+
+# Write field error or NO_ERROR
+prusa3d.nfc.util.ReaderError.1.0 write_field
+
+prusa3d.nfc.request.EnumerateFieldsResult.1.0 enumerate_fields
+
+# Read bytes or reader error
+prusa3d.nfc.request.RawReadResult.1.0 raw_read
+
+# Write error or NO_ERROR
+prusa3d.nfc.util.ReaderError.1.0 raw_write
+
+# IO error or NO_ERROR
+prusa3d.nfc.util.ReaderError.1.0 initialize_tag
+
+# IO error or NO_ERROR
+prusa3d.nfc.util.ReaderError.1.0 unlock_tag
+
+prusa3d.nfc.request.GetTagUIDResult.1.0 get_tag_uid
+
+@sealed

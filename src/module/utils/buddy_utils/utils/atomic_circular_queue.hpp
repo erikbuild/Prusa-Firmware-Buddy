@@ -32,7 +32,9 @@ class BaseAtomicCircularQueue {
     static_assert(N < std::numeric_limits<index_t>::max(), "Buffer size bigger than the index can support");
     static_assert((N & (N - 1)) == 0, "The size of the queue has to be a power of 2");
 
+#ifndef DO_NOT_CHECK_ATOMIC_LOCK_FREE
     static_assert(std::atomic<index_t>::is_always_lock_free, "index_t is not lock-free");
+#endif
 
 private:
     std::atomic<index_t> head = 0;

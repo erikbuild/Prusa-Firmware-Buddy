@@ -1,0 +1,6 @@
+@union
+
+prusa3d.nfc.util.Value.1.0 value
+prusa3d.nfc.util.ReaderError.1.0 error
+
+@sealed

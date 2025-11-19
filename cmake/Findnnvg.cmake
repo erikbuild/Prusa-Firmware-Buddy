@@ -35,6 +35,8 @@ function(
 
   separate_arguments(NNVG_CMD_ARGS UNIX_COMMAND "${NNVG_FLAGS}")
 
+  set(OUTPUT_FOLDER "${ARG_OUTPUT_FOLDER}include_${ARG_TARGET_NAME}")
+
   if(${ARGC} GREATER 8)
     math(EXPR ARG_N_LAST "${ARGC}-1")
     foreach(ARG_N RANGE 8 ${ARG_N_LAST})
@@ -50,7 +52,7 @@ function(
   list(APPEND NNVG_CMD_ARGS "${ARG_LANGUAGE_TEMPLATES}")
 
   list(APPEND NNVG_CMD_ARGS -O)
-  list(APPEND NNVG_CMD_ARGS ${ARG_OUTPUT_FOLDER})
+  list(APPEND NNVG_CMD_ARGS ${OUTPUT_FOLDER})
   list(APPEND NNVG_CMD_ARGS ${ARG_DSDL_ROOT_DIR})
   list(APPEND NNVG_CMD_ARGS "--target-endianness")
   list(APPEND NNVG_CMD_ARGS ${ARG_SER_ENDIANNESS})
@@ -105,7 +107,8 @@ function(
 
   add_dependencies(${ARG_TARGET_NAME} ${ARG_TARGET_NAME}-gen)
 
-  target_include_directories(${ARG_TARGET_NAME} INTERFACE ${ARG_OUTPUT_FOLDER})
+  target_include_directories(${ARG_TARGET_NAME} INTERFACE "${OUTPUT_FOLDER}")
+  target_compile_definitions(${ARG_TARGET_NAME} INTERFACE -DNUNAVUT_ASSERT=assert)
 
   set(${ARG_TARGET_NAME}-OUTPUT
       ${OUTPUT_FILES}

@@ -1,0 +1,12 @@
+@union
+
+# A Request command has been processed
+prusa3d.nfc.event.RequestDone.1.0 request_done
+
+# A new tag has been detected
+prusa3d.nfc.event.TagDetected.1.0 tag_detected
+
+# Connection with a tag has been lost
+prusa3d.nfc.event.TagLost.1.0 tag_lost
+
+@sealed

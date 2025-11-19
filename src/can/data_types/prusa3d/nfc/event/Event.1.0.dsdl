@@ -1,0 +1,4 @@
+prusa3d.nfc.event.EventID.1.0 event_id
+prusa3d.nfc.event.EventData.1.0 data
+
+@sealed

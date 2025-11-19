@@ -1,0 +1,7 @@
+# Get UID of the specified tag
+# Please note that TagID is a temporary identifier of tag within the reader
+# UID is a value hardcoded on the tag itself by the manufacturer
+
+prusa3d.nfc.util.TagID.1.0 tag
+
+@sealed

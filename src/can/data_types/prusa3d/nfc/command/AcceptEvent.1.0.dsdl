@@ -1,0 +1,13 @@
+# Event ID we have accepted. This means that the reader can stop repeating the event.
+
+prusa3d.nfc.event.EventID.1.0 event_id
+
+@sealed
+
+---
+
+# Whether the event was properly accepted
+# Could be false because of internal queues being full or because the event_id does not match
+bool ok
+
+@sealed

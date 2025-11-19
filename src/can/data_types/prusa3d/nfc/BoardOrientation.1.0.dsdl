@@ -1,0 +1,7 @@
+uint2 value
+
+uint2 NORMAL = 0
+uint2 LEFT = 1
+uint2 RIGHT = 2
+
+@sealed

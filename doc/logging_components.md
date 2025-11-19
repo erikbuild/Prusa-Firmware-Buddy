@@ -34,6 +34,7 @@ This file is generated automatically so don't edit it directly
 - ModbusFIFOHandlers: logging::Severity::debug, src/puppy/dwarf/modbus/ModbusFIFOHandlers.cpp
 - ModularBed: logging::Severity::info, src/puppies/modular_bed.cpp
 - Network: logging::Severity::info, lib/WUI/wui.cpp
+- Node: logging::Severity::info, src/puppy/honeybee_shared/cyphal_node.cpp
 - PRUSA_GCODE: logging::Severity::info, src/marlin_stubs/gcode.cpp
 - PRUSA_PACK_READER: logging::Severity::info, src/common/gcode/gcode_reader_binary.cpp
 - PhaseStepping: logging::Severity::debug, lib/Marlin/Marlin/src/feature/phase_stepping/phase_stepping.cpp
@@ -50,6 +51,8 @@ This file is generated automatically so don't edit it directly
 - USBHost: logging::Severity::info, src/buddy/usbh_conf.cpp
 - W25X: logging::Severity::debug, src/common/w25x.cpp
 - WUI: logging::Severity::debug, lib/WUI/wui.cpp
+- Watcher: logging::Severity::info, src/puppy/honeybee_shared/watcher.cpp
+- can: logging::Severity::debug, src/can/cyphal_task.cpp
 - connect: logging::Severity::debug, src/connect/connect.cpp
 - httpc: logging::Severity::debug, src/common/http/httpc.cpp
 - socket: logging::Severity::info, src/common/http/socket.cpp

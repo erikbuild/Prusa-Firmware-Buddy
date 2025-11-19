@@ -1,0 +1,4 @@
+add_executable(iso13239_crc_property_tests iso13239_crc_proptest.cpp)
+
+target_link_libraries(iso13239_crc_property_tests iso13239)
+add_catch_test(iso13239_crc_property_tests)

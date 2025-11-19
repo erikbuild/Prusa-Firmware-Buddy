@@ -1,0 +1,3 @@
+add_executable(openprinttag_stub_tests opt_stub_tests.cpp)
+target_link_libraries(openprinttag_stub_tests openprinttag_stub openprinttag_fields)
+add_catch_test(openprinttag_stub_tests)

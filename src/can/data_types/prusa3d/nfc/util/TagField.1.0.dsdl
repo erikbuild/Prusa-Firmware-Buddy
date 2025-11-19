@@ -1,0 +1,7 @@
+# Identifies a specific field on a specific tag
+
+prusa3d.nfc.util.TagID.1.0 tag
+prusa3d.nfc.util.Section.1.0 section
+prusa3d.nfc.util.Field.1.0 field
+
+@sealed

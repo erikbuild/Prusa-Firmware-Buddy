@@ -1,0 +1,10 @@
+# Set reader parameters
+
+# Mime type the reader should detect/work with
+uavcan.primitive.String.1.0 mime_type
+
+# Whether the tags have a meta region
+# False means the the payload only contains the main section (no aux, no meta)
+bool has_meta_region
+
+@sealed

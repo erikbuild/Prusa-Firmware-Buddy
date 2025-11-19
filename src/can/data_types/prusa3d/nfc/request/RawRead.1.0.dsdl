@@ -1,0 +1,10 @@
+# What tag to read from
+prusa3d.nfc.util.TagID.1.0 tag
+
+# Position of the first byte to read
+uint16 offset
+
+# Number of bytes to read
+uint16 num_bytes
+
+@sealed

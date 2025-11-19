@@ -1,0 +1,6 @@
+# EventID identifies an event
+# The value is not guaranteed to increment, just that it shouldn't repeat for different events in a reasonable time frame
+
+uint16 value
+
+@sealed

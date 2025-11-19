@@ -129,6 +129,12 @@ dependencies = {
             'https://raw.githubusercontent.com/modm-io/cmsis-svd-stm32/c7e833e81e79e3396e1078832d936ae6578a8bc1/stm32h5/STM32H503.svd',
         ],
     },
+    'cmsis-svd-c0': {
+        'version': 'ce4b873ae4a471cf28d7a7c9c69ded252d949672',
+        'files': [
+            'https://raw.githubusercontent.com/modm-io/cmsis-svd-stm32/ce4b873ae4a471cf28d7a7c9c69ded252d949672/stm32c0/STM32C092.svd',
+        ],
+    },
     'CrashDebug': {
         'version': '22acef8c6e248db2f04f65eebf4c2b470f4010c2',
         'url': 'https://github.com/prusa3d/CrashDebug/archive/22acef8c6e248db2f04f65eebf4c2b470f4010c2.zip',

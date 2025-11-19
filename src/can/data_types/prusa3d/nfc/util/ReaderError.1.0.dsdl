@@ -1,0 +1,36 @@
+uint8 error
+
+# The field or region is not present on the tag (but the tag is otherwise OK)
+uint8 FIELD_NOT_PRESENT = 0
+
+# The field type in the CBOR is not readable with the used function (for example trying to read float using read_field_bool)
+uint8 WRONG_FIELD_TYPE = 1
+
+# Cannot write to the region, because it is write protected (can be protected on various levels)
+uint8 WRITE_PROTECTED = 2
+
+# The section we are trying to read from is corrupted.
+# Re-reading the section won't help, but clear_section() could.
+uint8 REGION_CORRUPT = 3
+
+# The tag has been determined to be not a valid OpenPrintTag (wrong mime, corrupted contents, ...)
+# Retrying won't help, the tag needs to be re-formatted.
+uint8 TAG_INVALID = 4
+
+# Data is too big and doesn't fit somewhere (tag itself, internal buffers, ...)
+uint8 DATA_TOO_BIG = 5
+
+# Other, unspecified error (comm error, ...)
+# Retrying the operation might help.
+uint8 OTHER = 6
+
+# The operation is not implemented (possibly because of the prameter combination)
+uint8 NOT_IMPLEMENTED = 7
+
+# The radio is disabled
+uint8 RADIO_DISABLED = 254
+
+# No error, actually
+uint8 NO_ERROR = 255
+
+@sealed

@@ -169,7 +169,11 @@ pipeline {
                             'all,xl,release,yesboot',
                             'main,xl-burst,release,yesboot',
                             'main,xl-minimal,release,yesboot', // Test optional features on the most complex target
-                            'all,ix,release,yesboot'
+                            'all,ix,release,yesboot',
+                            'all,slx-anfc,release,noboot',
+                            'all,anfc,release,noboot',
+                            'all,slx-anfc,release,yesboot',
+                            'all,anfc,release,yesboot'
                     }
                 }
                 stages {
@@ -205,6 +209,14 @@ pipeline {
                                     dev_items = "yes"
                                 }
 
+                                def dfu_arg
+                                if (config.preset.contains("anfc")) {
+                                    // Do not build DFU, the code is broken and we don't need it
+                                    dfu_arg = ""
+                                } else {
+                                    dfu_arg = "--generate-dfu"
+                                }
+
                                 // remove the "boot" suffix from the config.bootloader
                                 if (config.bootloader != "boot" && config.bootloader.endsWith("boot")) {
                                     config.bootloader = config.bootloader.substring(0, config.bootloader.length() - 4)
@@ -223,7 +235,7 @@ pipeline {
                                                 --preset ${config.preset} \
                                                 --build-type ${config.build_type} \
                                                 --bootloader ${config.bootloader} \
-                                                --generate-dfu \
+                                                ${dfu_arg} \
                                                 --no-store-output \
                                                 --skip-bootstrap \
                                                 --version-suffix=${version.suffix_full} \

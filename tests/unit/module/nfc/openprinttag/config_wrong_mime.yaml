@@ -1,0 +1,4 @@
+mime_type: application/vnd.prusa3d.mat.nfc
+root: nfcv
+meta_fields: empty.yaml
+main_fields: empty.yaml
