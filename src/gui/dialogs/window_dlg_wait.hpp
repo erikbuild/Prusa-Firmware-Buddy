@@ -24,14 +24,8 @@ public:
     /// Does this in a somewhat smart way that doesn't obstruct warnings
     static void wait_for_gcodes_to_finish();
 
+    /// Displays a waiting dialog and blocks until @p until_condition returns true
+    static void wait_until(const string_view_utf8 &second_string, const stdext::inplace_function<bool()> &until_f);
+
     virtual void Change(fsm::BaseData) override;
 };
-
-/*!*********************************************************************************************************************
- * \brief GUI dialog for processes that require user to wait calmly.
- *
- * \param [in] progress_callback - function callback that returns current progress
- *
- * It creates inner gui_loop cycle that keeps GUI running while waiting.
- */
-void gui_dlg_wait(stdext::inplace_function<void()> closing_callback, const string_view_utf8 &second_string = string_view_utf8::MakeNULLSTR());

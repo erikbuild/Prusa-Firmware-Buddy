@@ -28,12 +28,10 @@ void MI_ENCLOSURE_ENABLE::OnChange([[maybe_unused]] size_t old_index) {
     xl_enclosure.setEnabled(value());
     if (value()) {
         /* Wait until enclosure is initialized & ready (test takes 3s). If initialization fails, the enclosure gets disabled internally. */
-        gui_dlg_wait([] {
-            if (xl_enclosure.isActive() || !xl_enclosure.isEnabled()) {
-                Screens::Access()->Close();
-            }
-        },
-            _(wait_str));
+        window_dlg_wait_t::wait_until(_(wait_str), [] {
+            return xl_enclosure.isActive() || !xl_enclosure.isEnabled();
+        });
+
         if (!xl_enclosure.isEnabled()) {
             set_value(false);
         }

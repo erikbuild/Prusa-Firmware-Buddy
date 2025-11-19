@@ -33,19 +33,18 @@ void window_dlg_wait_t::wait_for_gcodes_to_finish() {
     }
 
     // Then show a wait dialog
-    window_dlg_wait_t dlg(string_view_utf8 {});
-    Screens::Access()->gui_loop_until_dialog_closed([&] {
-        if (!marlin_vars().is_processing.get()) {
-            Screens::Access()->Close();
-            return;
-        }
-
+    wait_until({}, [] {
         // This one is important - it allows popping up a warning dialog on top of this one
         DialogHandler::Access().Loop();
+        return !marlin_vars().is_processing.get();
     });
 }
 
-void gui_dlg_wait(stdext::inplace_function<void()> closing_callback, const string_view_utf8 &second_string) {
+void window_dlg_wait_t::wait_until(const string_view_utf8 &second_string, const stdext::inplace_function<bool()> &until_f) {
     window_dlg_wait_t dlg(second_string);
-    Screens::Access()->gui_loop_until_dialog_closed(closing_callback);
+    Screens::Access()->gui_loop_until_dialog_closed([&] {
+        if (!until_f()) {
+            Screens::Access()->Close();
+        }
+    });
 }
