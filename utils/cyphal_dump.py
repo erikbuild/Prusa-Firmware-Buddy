@@ -16,27 +16,18 @@ NODE_ID_MASK = 127
 
 
 def port_id_to_name(port_id):
-    if port_id == 8184:
-        return 'uavcan.diagnostic.Record.1'
-    if port_id == 8166:
-        return 'uavcan.pnp.NodeIDAllocationData.1'
-    if port_id == 8165:
-        return 'uavcan.pnp.NodeIDAllocationData.2'
-    if port_id == 7509:
-        return 'uavcan.node.Heartbeat.1'
-    if port_id == 7510:
-        return 'uavcan.node.port.List.1.0'
-    if port_id == 600:
-        return 'prusa3d.ac_controller.Status.1'
-    if port_id == 435:
-        return 'uavcan.node.ExecuteCommand.1'
-    if port_id == 430:
-        return 'uavcan.node.GetInfo.1'
-    if port_id == 408:
-        return 'uavcan.file.Read.1'
-    if port_id == 21:
-        return 'prusa3d.ac_controller.Config.1'
-    return port_id
+    return {
+        21: 'prusa3d.ac_controller.Config.1',
+        408: 'uavcan.file.Read.1',
+        430: 'uavcan.node.GetInfo.1',
+        435: 'uavcan.node.ExecuteCommand.1',
+        600: 'prusa3d.ac_controller.Status.1',
+        7509: 'uavcan.node.Heartbeat.1',
+        7510: 'uavcan.node.port.List.1.0',
+        8165: 'uavcan.pnp.NodeIDAllocationData.2',
+        8166: 'uavcan.pnp.NodeIDAllocationData.1',
+        8184: 'uavcan.diagnostic.Record.1',
+    }.get(port_id, port_id)
 
 
 def parse_frame(frame):
@@ -382,7 +373,7 @@ def pretty(port, what, data):
 
         return f'bed={bed_temp:.1f}°C({bed_target_temp}) bed_pwm={bed_pwm:.2f} bed_pwr={bed_power} chamber_pwm={chamber_pwm:.2f} chamber_pwr={chamber_power} psu={psu_fan_state} psu_temp={psu_temp:.1f}°C psu_pwr={psu_power} triac={triac_fan_state} triac_temp={triac_temp:.1f}°C ext_fan0={external_fan0_state} ext_fan1={external_fan1_state} board_temp={board_temp:.1f}°C mcu_temp={mcu_temp:.1f}°C supply={supply_voltage} rgb={rgb_led_strip} faults={faults} time_sync={bool(time_sync_precise)} ac={ac_voltage}@{ac_frequency}'
 
-    if port == 'uavcan.pnp.NodeIDAllocationData.2':
+    elif port == 'uavcan.pnp.NodeIDAllocationData.2':
         node_id, data = unpack_unsigned(data, 2)
         unique_id_size, data = unpack_unsigned(data, 1)
         unique_id_data, data = unpack_bytes(data, unique_id_size)
