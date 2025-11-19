@@ -41,7 +41,7 @@ bool NetDeviceID::is_connected() const {
 
 #if HAS_ESP()
 MI_WIFI_STATUS_t::MI_WIFI_STATUS_t()
-    : WI_INFO_t(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {
+    : WI_INFO_t(_(label)) {
 }
 
 void MI_WIFI_STATUS_t::Loop() {
@@ -232,7 +232,7 @@ MI_NET_IP_VER_t::MI_NET_IP_VER_t()
 }
 
 IMI_IP4_ADDR::IMI_IP4_ADDR(const char *label, NetDeviceID device_id, AddrType addr)
-    : WiInfo(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no)
+    : WiInfo(_(label))
     , device_id(device_id)
     , addr(addr) {
 }
