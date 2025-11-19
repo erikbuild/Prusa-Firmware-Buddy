@@ -1,9 +1,9 @@
 #pragma once
 
 #include <common/array_extensions.hpp>
-#include <FreeRTOS.h>
 
 #include "concepts.hpp"
+#include <freertos/task.hpp>
 
 #pragma GCC push_options
 #pragma GCC optimize("Os")
@@ -31,7 +31,7 @@ public:
     JournalItemBase &operator=(const JournalItemBase &other) = delete;
 
     DataT get() {
-        if (xPortIsInsideInterrupt()) {
+        if (freertos::is_inside_interrupt()) {
             return data;
         }
 
@@ -45,7 +45,7 @@ public:
     const char *get_c_str()
         requires is_std_array_v<DataT> && std::same_as<char, typename DataT::value_type>
     {
-        if (xPortIsInsideInterrupt()) {
+        if (freertos::is_inside_interrupt()) {
             return data.data();
         }
 

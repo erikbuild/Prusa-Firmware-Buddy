@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FreeRTOS.h>
+#include <freertos/task.hpp>
 #include <utils/algorithm_extensions.hpp>
 
 #include "concepts.hpp"
@@ -134,7 +134,7 @@ public:
             std::terminate();
         }
 
-        if (xPortIsInsideInterrupt()) {
+        if (freertos::is_inside_interrupt()) {
             return data_array[index];
         }
 
@@ -143,7 +143,7 @@ public:
     }
 
     auto get_all() {
-        if (xPortIsInsideInterrupt()) {
+        if (freertos::is_inside_interrupt()) {
             return data_array;
         }
 
