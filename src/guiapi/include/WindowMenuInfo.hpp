@@ -82,6 +82,9 @@ template <size_t INFO_LEN>
 class WiInfo : public WiInfoArray {
 
 public:
+    using Buffer = std::array<char, INFO_LEN>;
+
+public:
     WiInfo(const string_view_utf8 &label)
         : WiInfoArray(value_array_, label) {}
 
@@ -103,7 +106,7 @@ public:
     using WiInfoArray::ChangeInformation;
 
     void ChangeInformation(const string_view_utf8 &str) {
-        decltype(value_array_) buf;
+        Buffer buf;
         str.copyToRAM(buf.data(), buf.size());
         ChangeInformation(buf.data());
     }
@@ -111,7 +114,7 @@ public:
     static constexpr size_t GetInfoLen() { return INFO_LEN; }
 
 protected:
-    std::array<char, INFO_LEN> value_array_ { 0 };
+    Buffer value_array_ { 0 };
 };
 
 using WI_INFO_t = WiInfo<GuiDefaults::infoDefaultLen>;
