@@ -10,6 +10,7 @@
 #include <adc.hpp>
 #include <freertos/timing.hpp>
 #include <main.hpp>
+#include <option/nfc_board_has_filament_sensors.h>
 
 #include <prusa3d/nfc/event/Event_1_0.h>
 #include <prusa3d/common/CustomExecuteCommand_1_0.h>
@@ -63,12 +64,14 @@ void ANFCNode::app_tick_pnp(int64_t now_us) {
     hal::set_status_led((now_us / (128 * 1024)) % 2);
 }
 
-void ANFCNode::write_config(const ConfigTraits::Request::Type &config) {
-    (void)config;
+void ANFCNode::write_config([[maybe_unused]] const ConfigTraits::Request::Type &config) {
+#if NFC_BOARD_HAS_FILAMENT_SENSORS()
+    hal::set_fs_led_l_pwm(config.left_led.pwm);
+    hal::set_fs_led_r_pwm(config.right_led.pwm);
+#endif
 }
 
 void ANFCNode::update_status(StatusTraits::Type &data) {
-
     static_assert(std::to_underlying(hal::BoardOrientation::normal) == prusa3d_nfc_BoardOrientation_1_0_NORMAL);
     static_assert(std::to_underlying(hal::BoardOrientation::left) == prusa3d_nfc_BoardOrientation_1_0_LEFT);
     static_assert(std::to_underlying(hal::BoardOrientation::right) == prusa3d_nfc_BoardOrientation_1_0_RIGHT);

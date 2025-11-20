@@ -1,5 +1,6 @@
+prusa3d.nfc.ConfigureLed.1.0 left_led
+prusa3d.nfc.ConfigureLed.1.0 right_led
+
 @sealed
-
 ---
-
 @sealed
