@@ -1,10 +1,26 @@
 /// @file
 #pragma once
 
+#include <array>
+
 #include <openprinttag/opt_defines.hpp>
 #include <openprinttag/util_defines.hpp>
 
 namespace openprinttag {
+
+enum class FieldType {
+    bytes,
+    enum_,
+    enum_array,
+    int_,
+    number,
+    string,
+    timestamp,
+    uuid,
+};
+
+template <auto field>
+struct FieldMeta;
 
 #include <openprinttag/autogen/fields.hpp.in>
 
