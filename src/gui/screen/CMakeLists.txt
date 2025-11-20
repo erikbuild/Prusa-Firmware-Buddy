@@ -2,8 +2,8 @@ add_subdirectory(filament)
 add_subdirectory(toolhead)
 
 target_sources(
-  firmware PRIVATE dialog_safety_timer.cpp new_screen_print_preview.cpp screen_factory_reset.cpp
-                   screen_m600.cpp screen_preheat.cpp
+  firmware PRIVATE dialog_safety_timer.cpp screen_factory_reset.cpp screen_m600.cpp
+                   screen_preheat.cpp screen_print_preview.cpp
   )
 
 if(HAS_LOADCELL)

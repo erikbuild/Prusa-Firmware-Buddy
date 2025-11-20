@@ -5,7 +5,7 @@
 #include "ScreenHandler.hpp"
 #include "screen_printing.hpp"
 #include "config_features.h"
-#include <screen/new_screen_print_preview.hpp>
+#include <screen/screen_print_preview.hpp>
 #include "window_dlg_quickpause.hpp"
 #include "window_dlg_wait.hpp"
 #include "window_dlg_warning.hpp"
@@ -269,7 +269,7 @@ using FSMDisplayConfig = FSMDisplayConfigDef<
 #endif
     FSMDialogDef<ClientFSM::QuickPause, DialogQuickPause>,
     FSMDialogDef<ClientFSM::Warning, DialogWarning>,
-    FSMScreenDef<ClientFSM::PrintPreview, ScreenPrintPreview2>,
+    FSMScreenDef<ClientFSM::PrintPreview, ScreenPrintPreview>,
 #if HAS_COLDPULL()
     FSMScreenDef<ClientFSM::ColdPull, ScreenColdPull>,
 #endif

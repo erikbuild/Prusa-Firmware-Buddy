@@ -3,11 +3,11 @@
 #include <screen_fsm.hpp>
 #include <marlin_server_types/fsm/print_preview_phases.hpp>
 
-class ScreenPrintPreview2 final : public ScreenFSM {
+class ScreenPrintPreview final : public ScreenFSM {
 
 public:
-    ScreenPrintPreview2();
-    ~ScreenPrintPreview2();
+    ScreenPrintPreview();
+    ~ScreenPrintPreview();
 
 protected:
     inline PhasesPrintPreview get_phase() const {

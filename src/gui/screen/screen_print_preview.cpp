@@ -1,4 +1,4 @@
-#include "new_screen_print_preview.hpp"
+#include "screen_print_preview.hpp"
 #include <standard_frame/frame_wait.hpp>
 #include <standard_frame/frame_prompt.hpp>
 #include <guiconfig/guiconfig.h>
@@ -16,8 +16,10 @@
 
 #if HAS_LARGE_DISPLAY()
     #include <dialogs/resolution_480x320/radio_button_preview.hpp>
-#else
+#elif HAS_MINI_DISPLAY()
     #include <dialogs/resolution_240x320/radio_button_preview.hpp>
+#else
+    #error
 #endif
 
 #include <option/has_mmu2.h>
@@ -169,17 +171,17 @@ using Frames = FrameDefinitionList<ScreenPrintPreview::FrameStorage,
 
 } // namespace
 
-ScreenPrintPreview2::ScreenPrintPreview2()
+ScreenPrintPreview::ScreenPrintPreview()
     : ScreenFSM(text_header_print, GuiDefaults::RectScreenNoHeader) {
     header.SetIcon(&img::print_16x16);
     create_frame();
 }
 
-ScreenPrintPreview2::~ScreenPrintPreview2() {
+ScreenPrintPreview::~ScreenPrintPreview() {
     destroy_frame();
 }
 
-void ScreenPrintPreview2::create_frame() {
+void ScreenPrintPreview::create_frame() {
     Frames::create_frame(frame_storage, get_phase(), &inner_frame);
 #if HAS_TOOL_MAPPING()
     if (get_phase() == Phase::tools_mapping) {
@@ -192,15 +194,15 @@ void ScreenPrintPreview2::create_frame() {
 #endif
 }
 
-void ScreenPrintPreview2::destroy_frame() {
+void ScreenPrintPreview::destroy_frame() {
     Frames::destroy_frame(frame_storage, get_phase());
 }
 
-void ScreenPrintPreview2::update_frame() {
+void ScreenPrintPreview::update_frame() {
     Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
 }
 
-void ScreenPrintPreview2::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, void *param) {
+void ScreenPrintPreview::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, void *param) {
     switch (event) {
 
     // Catch event when USB is removed
