@@ -121,11 +121,9 @@ void window_t::SetFocus() {
 
     if (focused_ptr) {
         focused_ptr->Invalidate();
-        focused_ptr->WindowEvent(focused_ptr, GUI_event_t::FOCUS0, 0); // will not resend event to anyone
     }
     focused_ptr = this;
     Invalidate();
-    WindowEvent(this, GUI_event_t::FOCUS1, 0); // will not resend event to anyone
     gui_invalidate();
 }
 

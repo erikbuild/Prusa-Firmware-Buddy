@@ -357,23 +357,8 @@ void window_header_t::windowEvent(window_t *sender, GUI_event_t event, void *par
     case GUI_event_t::MEDIA:
         updateMedia(MediaState_t(int(param)));
         break;
-    case GUI_event_t::HEADER_COMMAND: {
-        event_conversion_union uni;
-        uni.pvoid = param;
-        switch (uni.header.layout) {
-        case layout_color::black:
-            SetBlackLayout();
-            break;
-        case layout_color::red:
-            SetRedLayout();
-            break;
-        case layout_color::leave_it:
-            break;
-        }
 
-    }
-
-    break;
+        break;
     case GUI_event_t::LOOP:
 #ifdef _DEBUG
     {

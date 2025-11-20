@@ -20,7 +20,7 @@ void ScreenTouchPlayground::windowEvent(window_t *sender, GUI_event_t event, voi
             decltype(text_content) new_text;
             StringBuilder sb(new_text);
 
-            sb.append_printf("Last event: %s (%i %i)\n", GUI_event_prt(last_event.type), last_event.pos_x, last_event.pos_y);
+            sb.append_printf("Last event: %i (%i %i)\n", (int)last_event.type, last_event.pos_x, last_event.pos_y);
             sb.append_printf("Err count: %li\n", (long)touchscreen.total_read_error_count());
 
             if (strcmp(text_content.data(), new_text.data())) {

@@ -69,19 +69,11 @@ struct point_t {
 using point_i16_t = point_t<int16_t>;
 using point_ui16_t = point_t<uint16_t>;
 
-enum class layout_color : uint8_t { leave_it,
-    black,
-    red,
-};
-
 union event_conversion_union {
     void *pvoid;
     point_ui16_t point;
     Response response;
     int i_val;
-    struct header_t {
-        layout_color layout;
-    } header;
 };
 
 static_assert(sizeof(event_conversion_union::point) <= sizeof(event_conversion_union::pvoid), "event_conversion_union is broken");

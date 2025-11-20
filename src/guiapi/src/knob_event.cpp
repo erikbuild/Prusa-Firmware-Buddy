@@ -73,7 +73,6 @@ bool gui::knob::EventEncoder(int diff) {
     }
 
     window_t *capture_ptr = Screens::Access()->Get()->GetCapturedWindow();
-    Screens::Access()->ScreenEvent(nullptr, GUI_event_t::ENC_CHANGE, (void *)(intptr_t)diff);
 
 #if HAS_SIDE_LEDS()
     leds::SideStripHandler::instance().activity_ping();
