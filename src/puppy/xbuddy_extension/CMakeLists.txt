@@ -40,6 +40,8 @@ target_sources(
 target_link_libraries(
   firmware
   PRIVATE printf::printf
+          dsdl_prusa3d
+          dsdl_uavcan
           STM32H5::HAL
           STM32H5_HAL_Config
           freertos
@@ -74,27 +76,3 @@ target_compile_definitions(
   firmware PRIVATE EXTENSION_STANDARD=${EXTENSION_STANDARD} EXTENSION_IX=${EXTENSION_IX}
                    EXTENSION_VARIANT=${EXTENSION_VARIANT}
   )
-
-set(NUNAVUT_STAMP ${CMAKE_CURRENT_BINARY_DIR}/nunavut-stamp)
-add_custom_command(
-  OUTPUT ${NUNAVUT_STAMP}
-  COMMAND
-    "${Python3_EXECUTABLE}" ARGS -m nunavut --outdir ${CMAKE_CURRENT_BINARY_DIR}/nunavut
-    --target-language c --target-endianness little
-    ${CMAKE_SOURCE_DIR}/src/can/data_types/public_regulated_data_types/uavcan/
-  )
-add_custom_target(nunavut DEPENDS ${NUNAVUT_STAMP})
-
-set(NUNAVUT_STAMP2 ${CMAKE_CURRENT_BINARY_DIR}/nunavut-stamp2)
-add_custom_command(
-  OUTPUT ${NUNAVUT_STAMP2}
-  COMMAND
-    "${Python3_EXECUTABLE}" ARGS -m nunavut --outdir ${CMAKE_CURRENT_BINARY_DIR}/nunavut
-    --target-language c --target-endianness little --lookup-dir
-    ${CMAKE_SOURCE_DIR}/src/can/data_types/public_regulated_data_types/uavcan/
-    ${CMAKE_SOURCE_DIR}/src/can/data_types/prusa3d/
-  )
-add_custom_target(nunavut2 DEPENDS ${NUNAVUT_STAMP2})
-
-add_dependencies(firmware nunavut nunavut2)
-target_include_directories(firmware PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/nunavut)
