@@ -18,16 +18,23 @@ enum class DynamicIndexMappingType {
 };
 
 template <class Item_>
-struct DynamicIndexMappingRecord {
+struct DynamicIndexMappingRecord final {
 
 public:
     using Item = Item_;
 
 public:
-    constexpr DynamicIndexMappingRecord(Item item, DynamicIndexMappingType type = DynamicIndexMappingType::static_item, size_t section_size = 1)
+    consteval DynamicIndexMappingRecord(Item item)
+        : item(item)
+        , type(DynamicIndexMappingType::static_item)
+        , section_size(1) {}
+
+    consteval DynamicIndexMappingRecord(Item item, DynamicIndexMappingType type, size_t section_size = 0)
         : item(item)
         , type(type)
-        , section_size(section_size) {}
+        , section_size(section_size) {
+        assert(type != DynamicIndexMappingType::static_item || section_size > 0);
+    }
 
 public:
     /// Enum value corresponding to the item

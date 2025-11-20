@@ -38,7 +38,7 @@ TEST_CASE("dynamic_index_mapping::basic_tests") {
     }
 
     SECTION("Single dynamic item") {
-        static constexpr auto mapping_items = std::to_array<DynamicIndexMappingRecord<Item>>({ item1, item2, { section1, DynamicIndexMappingType::dynamic_section }, item3, item4 });
+        static constexpr auto mapping_items = std::to_array<DynamicIndexMappingRecord<Item>>({ item1, item2, { section1, DynamicIndexMappingType::dynamic_section, 1 }, item3, item4 });
         DynamicIndexMapping<mapping_items> mapping;
 
         {
@@ -79,8 +79,8 @@ TEST_CASE("dynamic_index_mapping::basic_tests") {
     SECTION("Try everything") {
         static constexpr auto mapping_items = std::to_array<DynamicIndexMappingRecord<Item>>({
             item1,
-            { item2, DynamicIndexMappingType::optional_item },
-            { section1, DynamicIndexMappingType::dynamic_section },
+            { item2, DynamicIndexMappingType::optional_item, 1 },
+            { section1, DynamicIndexMappingType::dynamic_section, 1 },
             { item3, DynamicIndexMappingType::static_section, 3 },
             { section2, DynamicIndexMappingType::dynamic_section, 2 },
             item4,
