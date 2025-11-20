@@ -121,7 +121,7 @@ static PhasesPhaseStepping intro_helper() {
     // and parking moves and then tell the user to turn off the printer, just
     // to do all the moves after the reboot again.
     PrusaAccelerometer accelerometer;
-    if (PrusaAccelerometer::Error::none == accelerometer.get_error()) {
+    if (accelerometer::Error::none == accelerometer.get_error()) {
         return PhasesPhaseStepping::home;
     }
     return PhasesPhaseStepping::connect_to_board;

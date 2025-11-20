@@ -12,6 +12,7 @@
 #include <tuple>
 
 METRIC_DEF(accel, "tk_accel", METRIC_VALUE_CUSTOM, 0, METRIC_DISABLED);
+#include <accelerometer/common_structs.hpp>
 
 FourierSeries3d::FourierSeries3d(float frequency)
     : m_sum()
@@ -30,7 +31,7 @@ FourierSeries3d::FourierSeries3d(float frequency)
  * @param sample acceleration measured in three axes
  * @return total number of samples added during object lifetime
  */
-uint32_t FourierSeries3d::add_sample(const float sample_time, const PrusaAccelerometer::Acceleration &sample) {
+uint32_t FourierSeries3d::add_sample(const float sample_time, const accelerometer::Acceleration &sample) {
 
 #if 0 // error: 'sample' is not a constant expression
     // #error dead code found by automatic analyses (see BFW-5461)

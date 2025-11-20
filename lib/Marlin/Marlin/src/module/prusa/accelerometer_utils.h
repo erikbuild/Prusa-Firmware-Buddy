@@ -7,6 +7,7 @@
 #include "accelerometer.h"
 #include <fifo_coder/fifo_coder.hpp>
 #include <accelerometer_record/types.hpp>
+#include <accelerometer/common_structs.hpp>
 #include <stdint.h>
 #include <option/has_remote_accelerometer.h>
 
@@ -45,6 +46,6 @@ public:
         bool buffer_overflow;
         bool sample_overrun;
     };
-    static PrusaAccelerometer::RawAcceleration unpack_sample(SampleStatus &sampleStatus, fifo_coder::AccelerometerXyzSample sample);
+    static accelerometer::RawAcceleration unpack_sample(SampleStatus &sampleStatus, fifo_coder::AccelerometerXyzSample sample);
 #endif
 };

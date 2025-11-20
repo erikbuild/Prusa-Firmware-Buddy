@@ -164,6 +164,7 @@ if(BOARD_IS_MASTER_BOARD)
       )
     target_link_libraries(Marlin PRIVATE fifo_decoder accelerometer_record)
   endif()
+  target_link_libraries(Marlin PRIVATE accelerometer)
 
   if(HAS_POWER_PANIC OR HAS_CRASH_DETECTION)
     # Power panic/crash detection module
@@ -272,6 +273,7 @@ target_link_libraries(
          fanctl
          raii
          otp # burst_stepper
+         accelerometer
   )
 target_link_libraries(Marlin PRIVATE CppStdExtensions logging freertos)
 

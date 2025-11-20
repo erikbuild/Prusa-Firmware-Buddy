@@ -17,6 +17,7 @@
 
 #include <module/prusa/accelerometer.h>
 #include <core/types.h>
+#include <accelerometer/common_structs.hpp>
 
 namespace phase_stepping {
 
@@ -26,7 +27,7 @@ namespace phase_stepping {
 struct SamplesAnnotation {
     float sampling_freq;
     bool movement_ok;
-    PrusaAccelerometer::Error accel_error;
+    accelerometer::Error accel_error;
 
     // Planned times of the features in the recorded samples
     float start_marker;
@@ -35,7 +36,7 @@ struct SamplesAnnotation {
     float signal_end;
 
     bool is_valid() const {
-        return movement_ok && accel_error == PrusaAccelerometer::Error::none && sampling_freq > 0;
+        return movement_ok && accel_error == accelerometer::Error::none && sampling_freq > 0;
     }
 };
 

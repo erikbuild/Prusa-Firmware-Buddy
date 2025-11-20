@@ -21,6 +21,7 @@
 
 using namespace phase_stepping;
 using namespace phase_stepping::opts;
+using namespace accelerometer;
 
 LOG_COMPONENT_REF(PhaseStepping);
 
@@ -42,7 +43,7 @@ static float convert(AccelerometerSample sample) {
     // as long as the samples are floats and have enough precision.
     // This is already utilized in pseudo_project() which doesn't
     // normalize the vector's magnitude. As for the precision concerns,
-    // PrusaAccelerometer::raw_to_accel() adds multiplicative factor of
+    // accelerometer::raw_to_accel() adds multiplicative factor of
     // 5.985687e-04 so we need about 4 orders of magnitude leaway.
     // We are also squaring the samples and then summing a bunch of them,
     // so let's say 12 orders of magnitude, meaning we should be fine.
@@ -1105,27 +1106,27 @@ static float plan_marker_move(AxisEnum physical_axis, int direction) {
 // - sampling frequency,
 // - movement success flag,
 // - accelerometer error.
-static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_samples(AxisEnum axis, int32_t timeout_ms,
+static std::tuple<float, bool, Error> capture_movement_samples(AxisEnum axis, int32_t timeout_ms,
     const YieldSample &yield_sample) {
 
     if (!wait_for_movement_state(phase_stepping::axis_states[axis], 300, [](phase_stepping::AxisState &s) {
             return phase_stepping::processing();
         })) {
         log_error(PhaseStepping, "Movement didn't start within timeout");
-        return { 0, false, PrusaAccelerometer::Error::none };
+        return { 0, false, Error::none };
     }
 
     auto start_ts = ticks_ms();
 
     PrusaAccelerometer accelerometer;
-    if (PrusaAccelerometer::Error error = accelerometer.get_error(); error != PrusaAccelerometer::Error::none) {
+    if (Error error = accelerometer.get_error(); error != Error::none) {
         log_error(PhaseStepping, "Cannot initialize accelerometer %u", static_cast<unsigned>(error));
         return { 0, true, error };
     }
     accelerometer.clear();
 
     while (Planner::busy() && ticks_diff(ticks_ms(), start_ts) < timeout_ms) {
-        PrusaAccelerometer::RawAcceleration sample;
+        RawAcceleration sample;
         using GetSampleResult = PrusaAccelerometer::GetSampleResult;
 
         switch (accelerometer.get_sample_motor_coords(sample)) {
@@ -1138,7 +1139,7 @@ static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_sampl
             break;
 
         case GetSampleResult::error: {
-            const PrusaAccelerometer::Error error = accelerometer.get_error();
+            const Error error = accelerometer.get_error();
             log_error(PhaseStepping, "Accelerometer reading failed %u", static_cast<unsigned>(error));
             return { 0, true, error };
         }
@@ -1147,7 +1148,7 @@ static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_sampl
 
     float sampling_freq = accelerometer.get_sampling_rate();
     assert(sampling_freq != 0);
-    const PrusaAccelerometer::Error error = accelerometer.get_error();
+    const Error error = accelerometer.get_error();
 
     if (ticks_diff(ticks_ms(), start_ts) >= timeout_ms) {
         log_error(PhaseStepping, "Timeout while capturing samples");
@@ -1417,7 +1418,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
             forward_samples.push_back(sample);
         });
 
-    if (!forward_annotation.movement_ok || forward_annotation.accel_error != PrusaAccelerometer::Error::none) {
+    if (!forward_annotation.movement_ok || forward_annotation.accel_error != accelerometer::Error::none) {
         log_error(PhaseStepping, "Speed sweep movement failed: acc_error %u, movement_ok %d",
             static_cast<unsigned>(forward_annotation.accel_error), forward_annotation.movement_ok);
         return std::unexpected(CalibrateAxisError::speed_sweep_movement_failed);
@@ -1436,7 +1437,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
             backward_samples.push_back(sample);
         });
 
-    if (!backward_annotation.movement_ok || backward_annotation.accel_error != PrusaAccelerometer::Error::none) {
+    if (!backward_annotation.movement_ok || backward_annotation.accel_error != accelerometer::Error::none) {
         log_error(PhaseStepping, "Speed sweep movement failed: acc_error %u, movement_ok %d",
             static_cast<unsigned>(backward_annotation.accel_error), backward_annotation.movement_ok);
         return std::unexpected(CalibrateAxisError::speed_sweep_movement_failed);
@@ -1559,7 +1560,7 @@ static std::expected<float, CalibrateAxisError> find_approx_mag(AxisEnum axis,
                 samples.push_back(sample);
             });
 
-        if (!annotation.movement_ok || annotation.accel_error != PrusaAccelerometer::Error::none) {
+        if (!annotation.movement_ok || annotation.accel_error != accelerometer::Error::none) {
             log_error(PhaseStepping, "Param sweep movement failed: acc_error %u, movement_ok %d",
                 static_cast<unsigned>(annotation.accel_error), annotation.movement_ok);
             return std::unexpected(CalibrateAxisError::param_sweep_movement_failed);
@@ -1635,7 +1636,7 @@ collect_param_sweep_response(AxisEnum axis, const AxisCalibrationConfig &calib_c
                     samples.push_back(sample);
                 });
 
-            if (!annotation.movement_ok || annotation.accel_error != PrusaAccelerometer::Error::none) {
+            if (!annotation.movement_ok || annotation.accel_error != accelerometer::Error::none) {
                 log_error(PhaseStepping, "Param sweep movement failed: acc_error %u, movement_ok %d",
                     static_cast<unsigned>(annotation.accel_error), annotation.movement_ok);
                 return std::unexpected(CalibrateAxisError::param_sweep_movement_failed);

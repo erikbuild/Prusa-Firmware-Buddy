@@ -131,7 +131,7 @@ static PhasesInputShaperCalibration info_proceed() {
     // and parking moves and then tell the user to turn off the printer, just
     // to do all the moves after the reboot again.
     PrusaAccelerometer accelerometer;
-    if (PrusaAccelerometer::Error::none == accelerometer.get_error()) {
+    if (accelerometer::Error::none == accelerometer.get_error()) {
         return PhasesInputShaperCalibration::parking;
     }
     return PhasesInputShaperCalibration::connect_to_board;

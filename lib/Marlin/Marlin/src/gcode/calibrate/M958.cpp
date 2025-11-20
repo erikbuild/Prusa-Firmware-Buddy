@@ -29,6 +29,7 @@
 
 #include <config_store/store_instance.hpp>
 #include <logging/log.hpp>
+#include <accelerometer/common_structs.hpp>
 
 #include <option/has_local_accelerometer.h>
 #include <option/has_remote_accelerometer.h>
@@ -120,6 +121,7 @@ private:
     bool m_dir_forward;
 };
 
+using namespace accelerometer;
 class StepDir {
 public:
     static constexpr float m_ticks_per_second = STEPPER_TIMER_RATE;
@@ -259,7 +261,7 @@ float get_accelerometer_sample_period(const SamplePeriodProgressHook &progress_h
     }
 
     for (int i = 0; i < request_samples_num;) {
-        PrusaAccelerometer::RawAcceleration measured_acceleration;
+        RawAcceleration measured_acceleration;
         using GetSampleResult = PrusaAccelerometer::GetSampleResult;
         switch (accelerometer.get_sample_printer_coords(measured_acceleration)) {
 
@@ -529,7 +531,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
                 accelerometer.clear();
                 do_once = false;
             }
-            PrusaAccelerometer::RawAcceleration sample;
+            RawAcceleration sample;
             using GetSampleResult = PrusaAccelerometer::GetSampleResult;
             const GetSampleResult get_sample_result = accelerometer.get_sample_printer_coords(sample);
 
@@ -600,7 +602,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
         uint32_t duration_ms = 0;
 
         while (!enough_samples_collected) {
-            PrusaAccelerometer::RawAcceleration sample;
+            RawAcceleration sample;
             using GetSampleResult = PrusaAccelerometer::GetSampleResult;
             switch (accelerometer.get_sample_printer_coords(sample)) {
 

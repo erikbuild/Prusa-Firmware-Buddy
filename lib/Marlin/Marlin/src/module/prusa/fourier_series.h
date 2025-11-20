@@ -9,6 +9,7 @@
 #include <complex>
 #include <array>
 #include <stdint.h>
+#include <accelerometer/common_structs.hpp>
 
 /**
  * Debug feature. If defined it outputs on USB_CDC
@@ -23,7 +24,7 @@
 class FourierSeries3d {
 public:
     FourierSeries3d(float frequency);
-    uint32_t add_sample(const float sample_time, const PrusaAccelerometer::Acceleration &sample);
+    uint32_t add_sample(const float sample_time, const accelerometer::Acceleration &sample);
     xyz_float_t get_magnitude();
     uint32_t get_samples_num() { return m_samples_num; }
 

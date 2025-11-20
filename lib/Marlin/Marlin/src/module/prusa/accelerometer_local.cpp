@@ -12,6 +12,8 @@ static_assert(HAS_LOCAL_ACCELEROMETER());
 
 static std::optional<LIS2DH12Poller> g_local_accelerometer_poller;
 
+using namespace accelerometer;
+
 PrusaAccelerometer::PrusaAccelerometer()
 #if PRINTER_IS_PRUSA_MK3_5()
     : output_enabler { buddy::hw::fanPrintTach, buddy::hw::Pin::State::high, buddy::hw::OMode::pushPull, buddy::hw::OSpeed::high }
@@ -52,14 +54,14 @@ void PrusaAccelerometer::clear() {
     g_local_accelerometer_poller->clear_overflow();
 }
 
-PrusaAccelerometer::Error PrusaAccelerometer::get_error() const {
+accelerometer::Error PrusaAccelerometer::get_error() const {
     if (!g_local_accelerometer_poller->hw_good()) {
-        return PrusaAccelerometer::Error::communication;
+        return accelerometer::Error::communication;
     }
     if (g_local_accelerometer_poller->overflow_count() > 0) {
-        return PrusaAccelerometer::Error::overflow_sensor;
+        return accelerometer::Error::overflow_sensor;
     }
-    return PrusaAccelerometer::Error::none;
+    return accelerometer::Error::none;
 }
 
 float PrusaAccelerometer::get_sampling_rate() const {
@@ -75,10 +77,7 @@ PrusaAccelerometer::GetSampleResult PrusaAccelerometer::get_sample(RawAccelerati
     if (!sample.has_value()) {
         return GetSampleResult::buffer_empty;
     }
-    auto [x, y, z] = *sample;
-    raw_acceleration.val[0] = x;
-    raw_acceleration.val[1] = y;
-    raw_acceleration.val[2] = z;
+    raw_acceleration = *sample;
 
     return GetSampleResult::ok;
 }

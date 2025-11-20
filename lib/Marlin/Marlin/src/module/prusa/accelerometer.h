@@ -9,6 +9,8 @@
 #include <Marlin/src/core/types.h>
 #include <utils/enum_array.hpp>
 #include <numbers>
+#include <accelerometer/common_structs.hpp>
+#include <bsod/bsod.h>
 
 static_assert(HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER());
 
@@ -28,35 +30,6 @@ static_assert(HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER());
  */
 class PrusaAccelerometer {
 public:
-    struct Acceleration {
-        float val[3];
-    };
-
-    struct RawAcceleration {
-        int16_t val[3];
-
-        Acceleration to_acceleration() const {
-            return Acceleration { { raw_to_accel(val[0]), raw_to_accel(val[1]), raw_to_accel(val[2]) } };
-        }
-    };
-
-    enum class Error {
-        none,
-        communication,
-#if HAS_REMOTE_ACCELEROMETER()
-        no_active_tool,
-        busy,
-#endif
-        overflow_sensor, ///< Data not consistent, sample overrun on accelerometer sensor
-#if HAS_REMOTE_ACCELEROMETER()
-        overflow_buddy, ///< Data not consistent, sample missed on buddy
-        overflow_dwarf, ///< Data not consistent, sample missed on dwarf
-        overflow_possible, ///< Data not consistent, sample possibly lost in transfer
-#endif
-
-        _cnt
-    };
-
     PrusaAccelerometer();
     ~PrusaAccelerometer();
 
@@ -71,19 +44,11 @@ public:
         error,
     };
 
-    /// Convert raw sample to physical acceleration.
-    constexpr static float raw_to_accel(int16_t raw) {
-        constexpr float standard_gravity = 9.80665f;
-        constexpr int16_t max_value = 0b0111'1111'1111'1111;
-        constexpr float factor2g = 2.f * standard_gravity / max_value;
-        return raw * factor2g;
-    }
-
     /// Obtains one sample from the buffer and puts it to \param raw_acceleration (if the results is ok).
-    GetSampleResult get_sample(RawAcceleration &raw_acceleration);
+    GetSampleResult get_sample(accelerometer::RawAcceleration &raw_acceleration);
 
-    GetSampleResult get_sample_printer_coords(RawAcceleration &acceleration) {
-        RawAcceleration sample;
+    GetSampleResult get_sample_printer_coords(accelerometer::RawAcceleration &acceleration) {
+        accelerometer::RawAcceleration sample;
         const GetSampleResult result = get_sample(sample);
         if (result == GetSampleResult::ok) {
             acceleration = to_printer_coords(sample);
@@ -91,8 +56,8 @@ public:
         return result;
     }
 
-    GetSampleResult get_sample_motor_coords(RawAcceleration &acceleration) {
-        RawAcceleration sample;
+    GetSampleResult get_sample_motor_coords(accelerometer::RawAcceleration &acceleration) {
+        accelerometer::RawAcceleration sample;
         const GetSampleResult result = get_sample(sample);
         if (result == GetSampleResult::ok) {
             acceleration = to_motor_coords(sample);
@@ -189,7 +154,7 @@ public:
      * Check after PrusaAccelerometer construction.
      * Check after measurement to see if it was valid.
      */
-    Error get_error() const;
+    accelerometer::Error get_error() const;
 
     /// \returns string describing the error or \p nullptr
     const char *error_str() const;
@@ -222,39 +187,41 @@ private:
     class ErrorImpl {
     public:
         ErrorImpl()
-            : m_error(Error::none) {}
-        void set(Error error) {
-            if (Error::none == m_error) {
+            : m_error(accelerometer::Error::none) {}
+        void set(accelerometer::Error error) {
+            if (accelerometer::Error::none == m_error) {
                 m_error = error;
             }
         }
-        Error get() const {
+        accelerometer::Error get() const {
             return m_error;
         }
         void clear_overflow() {
             switch (m_error) {
-            case Error::none:
-            case Error::communication:
-            case Error::_cnt:
-#if HAS_REMOTE_ACCELEROMETER()
-            case Error::no_active_tool:
-            case Error::busy:
+            case accelerometer::Error::no_active_tool:
+            case accelerometer::Error::busy:
+#if !HAS_REMOTE_ACCELEROMETER()
+                bsod_unreachable();
 #endif
+            case accelerometer::Error::none:
+            case accelerometer::Error::communication:
+            case accelerometer::Error::_cnt:
                 break;
 
-            case Error::overflow_sensor:
-#if HAS_REMOTE_ACCELEROMETER()
-            case Error::overflow_buddy:
-            case Error::overflow_dwarf:
-            case Error::overflow_possible:
+            case accelerometer::Error::overflow_buddy:
+            case accelerometer::Error::overflow_dwarf:
+            case accelerometer::Error::overflow_possible:
+#if !HAS_REMOTE_ACCELEROMETER()
+                bsod_unreachable();
 #endif
-                m_error = Error::none;
+            case accelerometer::Error::overflow_sensor:
+                m_error = accelerometer::Error::none;
                 break;
             }
         }
 
     private:
-        Error m_error;
+        accelerometer::Error m_error;
     };
 
     void set_enabled(bool enable);

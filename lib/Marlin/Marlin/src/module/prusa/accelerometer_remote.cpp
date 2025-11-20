@@ -17,6 +17,8 @@
 
 static_assert(HAS_REMOTE_ACCELEROMETER());
 
+using namespace accelerometer;
+
 freertos::Mutex PrusaAccelerometer::s_buffer_mutex;
 PrusaAccelerometer::SampleBuffer *PrusaAccelerometer::s_sample_buffer = nullptr;
 float PrusaAccelerometer::m_sampling_rate = 0;
@@ -152,7 +154,7 @@ void PrusaAccelerometer::put_sample(fifo_coder::AccelerometerXyzSample sample) {
     }
 }
 
-PrusaAccelerometer::Error PrusaAccelerometer::get_error() const {
+accelerometer::Error PrusaAccelerometer::get_error() const {
     return m_sample_buffer.error.get();
 }
 

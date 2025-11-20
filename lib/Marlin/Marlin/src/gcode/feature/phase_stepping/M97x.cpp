@@ -2,6 +2,7 @@
 #include <gcode/gcode_parser.hpp>
 #include <module/planner.h>
 #include <module/prusa/accelerometer.h>
+#include <accelerometer/common_structs.hpp>
 
 #include <feature/precise_stepping/precise_stepping.hpp>
 #include <feature/phase_stepping/phase_stepping.hpp>
@@ -499,7 +500,7 @@ void GcodeSuite::M973() {
         params,
         [n = 0](phase_stepping::AccelerometerSample raw_sample) mutable {
             char buff[64];
-            const float sample = PrusaAccelerometer::raw_to_accel(raw_sample.value);
+            const float sample = accelerometer::raw_to_accel(raw_sample.value);
             snprintf(buff, sizeof(buff), "%d, %.5f\n", n++, sample);
             int len = strlen(buff);
     #if HAS_USB_DEVICE()
@@ -594,7 +595,7 @@ void GcodeSuite::M974() {
         revs,
         [n = 0](phase_stepping::AccelerometerSample raw_sample) mutable {
             char buff[64];
-            const float sample = PrusaAccelerometer::raw_to_accel(raw_sample.value);
+            const float sample = accelerometer::raw_to_accel(raw_sample.value);
             snprintf(buff, sizeof(buff), "%d, %.5f\n", n++, sample);
             int len = strlen(buff);
             SerialUSB.cdc_write_sync(reinterpret_cast<uint8_t *>(buff), len);
