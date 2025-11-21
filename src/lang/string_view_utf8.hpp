@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <span>
 #include <type_traits>
+#include <string_view>
 
 #define UTF8_IS_NONASCII(ch)    ((ch)&0x80)
 #define UTF8_IS_CONT(ch)        (((ch)&0xC0) == 0x80)
@@ -273,10 +274,25 @@ class FormatBuilder {
 public:
     FormatBuilder(string_view_utf8 str_view, StringViewUtf8ParamBase &params);
 
-    /// vsnprinf append of a single parameter to parameter buffer with a format specifier found in the translated text
-    void add_param(const size_t unused, ...);
+    template <typename T>
+    inline void add_param(const T &val) {
+        if constexpr (std::is_same_v<T, std::string_view>) {
+            // std::string_view is automatically expanded for the "%.*s" format specifier
+            add_param_impl(0, val.size(), val.data());
+
+        } else if constexpr (std::is_arithmetic_v<T> || std::is_same_v<T, char *> || std::is_same_v<T, const char *>) {
+            add_param_impl(0, val);
+
+        } else {
+            static_assert(false);
+        }
+    }
 
     string_view_utf8 finalize();
+
+private:
+    /// vsnprinf append of a single parameter to parameter buffer with a format specifier found in the translated text
+    void add_param_impl(const size_t unused, ...);
 
 private:
     char format_specifier[10] = { 0 };
@@ -287,10 +303,7 @@ private:
 
 template <typename... Args>
 string_view_utf8 string_view_utf8::formatted(StringViewUtf8ParamBase &params, Args... args) const {
-    // Check that we're not accidentally passing invalid types to the printf
-    static_assert(((std::is_arithmetic_v<Args> || std::is_same_v<Args, char *> || std::is_same_v<Args, const char *>)&&...));
-
     FormatBuilder fmt(*this, params);
-    (fmt.add_param(0, args), ...);
+    (fmt.add_param(args), ...);
     return fmt.finalize();
 }

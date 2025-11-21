@@ -63,7 +63,7 @@ size_t string_view_utf8::copyBytesToRAM(char *dst, size_t buffer_size) const {
     return dst - dst_start;
 }
 
-void FormatBuilder::add_param([[maybe_unused]] const size_t unused, ...) {
+void FormatBuilder::add_param_impl([[maybe_unused]] const size_t unused, ...) {
     int result_specifiers = -1;
     while (reader.find_format_specifier() && (result_specifiers = reader.read_format_specifier(format_specifier, sizeof(format_specifier))) == 0)
         ; // Find and extract a format specifier, that is not "%%" (ret == 0)
