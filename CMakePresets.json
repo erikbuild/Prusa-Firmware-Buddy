@@ -5239,6 +5239,10 @@
                     "type": "STRING",
                     "value": "PUB6"
                 },
+                "NFC_BOARD_HAS_LEFT_RIGHT_DETECTION_PIN": {
+                    "type": "STRING",
+                    "value": "YES"
+                },
                 "BOOTLOADER": {
                     "type": "STRING",
                     "value": "YES"
@@ -5289,6 +5293,10 @@
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
                     "value": "PUB6"
+                },
+                "NFC_BOARD_HAS_LEFT_RIGHT_DETECTION_PIN": {
+                    "type": "STRING",
+                    "value": "YES"
                 },
                 "BOOTLOADER": {
                     "type": "STRING",
@@ -5341,6 +5349,10 @@
                     "type": "STRING",
                     "value": "PUB6"
                 },
+                "NFC_BOARD_HAS_LEFT_RIGHT_DETECTION_PIN": {
+                    "type": "STRING",
+                    "value": "YES"
+                },
                 "BOOTLOADER": {
                     "type": "STRING",
                     "value": "YES"
@@ -5391,6 +5403,10 @@
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
                     "value": "PUB6"
+                },
+                "NFC_BOARD_HAS_LEFT_RIGHT_DETECTION_PIN": {
+                    "type": "STRING",
+                    "value": "YES"
                 },
                 "BOOTLOADER": {
                     "type": "STRING",
