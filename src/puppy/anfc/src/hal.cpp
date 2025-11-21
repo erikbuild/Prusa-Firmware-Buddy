@@ -1,6 +1,7 @@
 #include "hal.hpp"
 #include "nfc.hpp"
 #include "adc.hpp"
+#include "bsod.h"
 #include <device/peripherals.h>
 #include <device/hal.h>
 #include <option/can_bus_type.h>
@@ -114,7 +115,7 @@ void hal::init_clock() {
         RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
         RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
         if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 
@@ -129,7 +130,7 @@ void hal::init_clock() {
         RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
 
         if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 
@@ -142,7 +143,7 @@ void hal::init_clock() {
         PeriphClkInit.HSIKerClockDivider = RCC_HSIKER_DIV2;
 
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 }
@@ -154,7 +155,7 @@ void hal::init_can() {
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_FDCAN1;
     PeriphClkInit.Fdcan1ClockSelection = RCC_FDCAN1CLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     /* Peripheral clock enable */
@@ -197,7 +198,7 @@ void hal::init_can() {
     };
 
     if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     /**FDCAN1 GPIO Configuration
@@ -234,7 +235,7 @@ void hal::init_uart() {
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1;
     PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -273,7 +274,7 @@ void hal::init_uart() {
         || (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK) //
         || (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK) //
         || (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)) {
-        hal::panic();
+        bsod_system();
     }
 }
 #else
@@ -291,7 +292,7 @@ void hal::init_spi() {
         PeriphClkInit.I2s1ClockSelection = RCC_I2S1CLKSOURCE_HSIKER;
 
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 
@@ -339,7 +340,7 @@ void hal::init_spi() {
     };
 
     if (HAL_SPI_Init(&hspi1) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     HAL_NVIC_SetPriority(SPI1_IRQn, ISR_PRIORITY_DEFAULT, 0);
@@ -402,7 +403,7 @@ void hal::init_tim3() {
     htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_PWM_Init(&htim3) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     {
@@ -410,7 +411,7 @@ void hal::init_tim3() {
         sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
         sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
         if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 
@@ -426,19 +427,19 @@ void hal::init_tim3() {
         };
 
         if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
 
         if (HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
 
         if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
 
         if (HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 }
@@ -457,14 +458,14 @@ void hal::init_tim2() {
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     HAL_NVIC_SetPriority(TIM2_IRQn, ISR_PRIORITY_DEFAULT, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
 
     if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 }
 
@@ -478,7 +479,7 @@ void hal::init_adc() {
         PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
         PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_SYSCLK;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-            hal::panic();
+            bsod_system();
         }
     }
 
@@ -514,7 +515,7 @@ void hal::init_adc() {
     hdma_adc1.Init.Priority = DMA_PRIORITY_MEDIUM;
 
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     __HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
@@ -546,7 +547,7 @@ void hal::init_adc() {
     hadc1.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
     hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
     if (HAL_ADC_Init(&hadc1) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     ADC_ChannelConfTypeDef sConfig = {};
@@ -555,42 +556,42 @@ void hal::init_adc() {
     sConfig.Channel = ADC_CHANNEL_0;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     // FS_ADC_R - ADC1_IN1 - PA1
     static_assert(std::to_underlying(adc::Channel::fs_1) == 1); // verify chanel number to enum mapping
     sConfig.Channel = ADC_CHANNEL_1;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     // FS_ADC_L - ADC1_IN2 - PA2
     static_assert(std::to_underlying(adc::Channel::fs_2) == 2); // verify chanel number to enum mapping
     sConfig.Channel = ADC_CHANNEL_2;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     // MCU TEMP
     static_assert(std::to_underlying(adc::Channel::mcu_temp) == 3);
     sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     // VRef
     static_assert(std::to_underlying(adc::Channel::vref_int) == 4);
     sConfig.Channel = ADC_CHANNEL_VREFINT;
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 
     // Verify that the buffer is uint32_t aligned as required by the DMA, so we can safely cast it into uint32_t *
     static_assert(alignof(adc::impl::buffer) == std::alignment_of_v<uint32_t>);
     static_assert(adc::impl::buffer.size() == 5);
     if (HAL_ADC_Start_DMA(&hadc1, reinterpret_cast<uint32_t *>(adc::impl::buffer.data()), adc::impl::buffer.size()) != HAL_OK) {
-        hal::panic();
+        bsod_system();
     }
 }
 
@@ -639,27 +640,27 @@ void hal::init_gpio() {
 }
 
 extern "C" void hal_panic() {
-    hal::panic();
+    bsod_system();
 }
 
 extern "C" void NMI_Handler() {
-    hal::panic();
+    bsod_system();
 }
 
 extern "C" void HardFault_Handler() {
-    hal::panic();
+    bsod_system();
 }
 
 extern "C" void MemManage_Handler() {
-    hal::panic();
+    bsod_system();
 }
 
 extern "C" void BusFault_Handler() {
-    hal::panic();
+    bsod_system();
 }
 
 extern "C" void UsageFault_Handler() {
-    hal::panic();
+    bsod_system();
 }
 
 extern "C" void EXTI2_3_IRQHandler() {
