@@ -372,8 +372,8 @@
             "request": "launch",
             "gdbpath": "gdb",
             // Note: replace this with whatever test you want to debug:
-            "target": "${workspaceRoot}/build_tests/tests/unit/DIR/EXECUTABLE",
-            "cwd": "${workspaceRoot}/build_tests/tests/unit/DIR",
+            "target": "${workspaceRoot}/build-tests/tests/unit/connect/connect_tests",
+            "cwd": "${workspaceRoot}/build-tests/tests/unit/connect",
             "debugger_args": ["-d", "${workspaceRoot}"]
         },
     ],
