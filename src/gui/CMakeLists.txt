@@ -7,6 +7,7 @@ target_sources(
           file_sort.cpp
           fonts.cpp
           frame_calibration_common.cpp
+          frame_invalid_printer.cpp
           frame_qr_layout.cpp
           gcode_description.cpp
           gui_media_events.cpp
@@ -77,7 +78,6 @@ target_sources(
           window_file_list.cpp
           window_filebrowser.cpp
           window_header.cpp
-          window_msgbox_wrong_printer.cpp
           window_print_progress.cpp
           window_thumbnail.cpp
           window_wizard_icon.cpp

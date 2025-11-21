@@ -1,11 +1,15 @@
 #pragma once
-#include "gcode_info.hpp"
-#include "window_msgbox.hpp"
-#include <guiconfig/guiconfig.h>
-#include <find_error.hpp>
-#include <option/has_mmu2.h>
+#include <gcode_info.hpp>
+#include <window_text.hpp>
+#include <window_icon.hpp>
+#include <standard_frame/frame_prompt.hpp>
+#include <fsm/print_preview_phases.hpp>
 
-class MsgBoxInvalidPrinter : public MsgBoxTitled {
+class FrameInvalidPrinter : public FramePrompt {
+public:
+    FrameInvalidPrinter(window_frame_t *parent, PhasesPrintPreview phase);
+
+private:
     struct Message {
         Message(window_t *parent, const string_view_utf8 &text, HWCheckSeverity severity, bool valid);
         Message(window_t *parent, const string_view_utf8 &text, const GCodeInfo::ValidPrinterSettings::Feature &feature);
@@ -23,7 +27,4 @@ class MsgBoxInvalidPrinter : public MsgBoxTitled {
 
     Message unsupported_features;
     window_text_t unsupported_features_text;
-
-public:
-    MsgBoxInvalidPrinter(Rect16 rect, const string_view_utf8 &tit, const img::Resource *title_icon_res);
 };

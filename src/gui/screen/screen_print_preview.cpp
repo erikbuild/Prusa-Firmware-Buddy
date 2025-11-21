@@ -10,9 +10,10 @@
 #include <gcode/gcode_info.hpp>
 #include <cassert>
 #include <fsm/print_preview_mapper.hpp>
-#include <window_msgbox_wrong_printer.hpp>
+#include <frame_invalid_printer.hpp>
 #include <sound.hpp>
 #include <meta_utils.hpp>
+#include <frame_invalid_printer.hpp>
 
 #if HAS_LARGE_DISPLAY()
     #include <dialogs/resolution_480x320/radio_button_preview.hpp>
@@ -111,24 +112,6 @@ private:
     MsgBoxMemSpace msg_box_mem_space;
 };
 #endif
-
-class FrameWrongPrinter {
-public:
-    FrameWrongPrinter(window_frame_t *parent, Phase phase) {
-        msg_ptr = make_static_unique_ptr<MsgBoxInvalidPrinter>(msg_box_mem_space.data(), GuiDefaults::RectScreenNoHeader, _(find_error(ErrCode::CONNECT_PRINT_PREVIEW_WRONG_PRINTER).err_title), &img::warning_16x16);
-        parent->CaptureNormalWindow(*msg_ptr);
-        msg_ptr->BindToFSM(phase);
-        msg_ptr->Show();
-        msg_ptr->Invalidate();
-    }
-
-private:
-    using MsgBoxMemSpace = std::array<uint8_t, 1112>;
-    MsgBoxMemSpace msg_box_mem_space;
-
-    using UniquePtr = static_unique_ptr<MsgBoxInvalidPrinter>;
-    UniquePtr msg_ptr;
-};
 
 #if HAS_E2EE_SUPPORT()
 class FrameUntrustedIdentity : FramePrompt {
