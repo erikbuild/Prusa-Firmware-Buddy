@@ -27,6 +27,11 @@ struct Crc {
         return *this;
     }
 
+    Crc &add_str(std::string_view s) {
+        crc = crc32_calc_ex(crc, reinterpret_cast<const uint8_t *>(s.data()), s.size());
+        return *this;
+    }
+
     uint32_t done() const {
         return crc;
     }

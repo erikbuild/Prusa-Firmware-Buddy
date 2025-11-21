@@ -5,6 +5,7 @@
 #include <tuple>
 #include <optional>
 #include <variant>
+#include <string_view>
 
 namespace json {
 
@@ -59,11 +60,10 @@ public:
     // Size-delimited (unlike tho field_str variants).
     //
     // The idea is to support long strings, renderred in multiple chunks.
-    JsonResult output_str_chunk(size_t resume_point, const char *value, size_t size);
+    JsonResult output_str_chunk(size_t resume_point, std::string_view str);
     // TODO: Add others as needed.
     JsonResult output_field_bool(size_t resume_point, const char *name, bool value);
-    JsonResult output_field_str(size_t resume_point, const char *name, const char *value);
-    JsonResult output_field_str_esc(size_t resume_point, const char *name, const char *value);
+    JsonResult output_field_str(size_t resume_point, const char *name, std::string_view value);
     JsonResult output_field_int(size_t resume_point, const char *name, int64_t value);
     // Fixed precision
     JsonResult output_field_float_fixed(size_t resume_point, const char *name, double value, int precision);

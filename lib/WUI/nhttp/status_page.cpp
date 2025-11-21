@@ -58,7 +58,7 @@ void StatusPage::step_impl(std::string_view, bool, uint8_t *output, size_t outpu
         const char *title = text.text;
         JSONIFY_STR(title);
         JSONIFY_STR(extra_content);
-        snprintf(content_buffer, sizeof(content_buffer), "{\"title\": \"%u: %s\",\"message\":\"%s\"}", static_cast<unsigned>(status), title_escaped, extra_content_escaped);
+        snprintf(content_buffer, sizeof(content_buffer), "{\"title\": \"%u: %.*s\",\"message\":\"%.*s\"}", static_cast<unsigned>(status), (int)title_escaped.size(), title_escaped.data(), (int)extra_content_escaped.size(), extra_content_escaped.data());
         ct = ContentType::ApplicationJson;
     } else {
         snprintf(content_buffer, sizeof(content_buffer), "%u: %s\n\n%s\n", static_cast<unsigned>(status), text.text, extra_content);

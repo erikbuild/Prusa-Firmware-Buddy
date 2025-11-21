@@ -37,15 +37,15 @@ JsonResult JsonOutput::output(size_t resume_point, const char *format, ...) {
     }
 }
 
-JsonResult JsonOutput::output_str_chunk(size_t resume_point, const char *str, size_t size) {
-    size_t needed = jsonify_str_buffer_len(str, size) ?: size;
+JsonResult JsonOutput::output_str_chunk(size_t resume_point, std::string_view str) {
+    size_t needed = jsonify_str_buffer(str) ?: str.size();
 
     if (needed <= buffer_size) {
-        if (needed == size) {
+        if (needed == str.size()) {
             // No escaping happening
-            memcpy(buffer, str, size);
+            memcpy(buffer, str.data(), str.size());
         } else {
-            jsonify_str_len(str, size, reinterpret_cast<char *>(buffer));
+            jsonify_str(str, reinterpret_cast<char *>(buffer));
             // The above stores a terminating \0 (and includes it in the needed
             // size), so "erase" that one.
             needed--;
@@ -59,9 +59,9 @@ JsonResult JsonOutput::output_str_chunk(size_t resume_point, const char *str, si
     }
 }
 
-JsonResult JsonOutput::output_field_str(size_t resume_point, const char *name, const char *value) {
+JsonResult JsonOutput::output_field_str(size_t resume_point, const char *name, std::string_view value) {
     JSONIFY_STR(value);
-    return output(resume_point, "\"%s\":\"%s\"", name, value_escaped);
+    return output(resume_point, "\"%s\":\"%.*s\"", name, (int)value_escaped.size(), value_escaped.data());
 }
 
 JsonResult JsonOutput::output_field_str_format(size_t resume_point, const char *name, const char *format, ...) {

@@ -840,7 +840,7 @@ void GcodeMetaRenderer::reset_buffer() {
 }
 
 JsonResult GcodeMetaRenderer::out_str_chunk(JsonOutput &output, const GcodeBuffer::String &str) {
-    auto result = output.output_str_chunk(0, str.begin, str.len());
+    auto result = output.output_str_chunk(0, std::string_view { str.begin, str.len() });
 
     if (result == JsonResult::Complete && gcode_line_buffer.line_complete) {
         result = output.output(0, "\"");

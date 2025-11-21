@@ -23,14 +23,9 @@
  * it no longer fits and leave the rest for later.
  */
 
-#include <stdbool.h>
-#include <stdlib.h>
-
-// TODO: Is the WUI the right place for this?
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <cstdbool>
+#include <cstdlib>
+#include <string_view>
 
 /**
  * \brief de-escapes json string in place
@@ -64,23 +59,12 @@ const char *jsonify_bool(bool value);
  * Examines the input string and returns how large the output will be in case
  * some escaping needs to happen.
  *
- * \param input The input string, null-terminated.
+ * \param input The input string
  * \return
  *   - 0 in case no escaping needs to happen (and the string may be used unmodified).
  *   - Number of bytes in the output buffer of jsonify_str, including space for the final \0.
  */
-size_t jsonify_str_buffer(const char *input);
-
-/**
- * \brief Just like jsonify_str_buffer, but with size instead of null-terminated.
- *
- * The difference here is that the input doesn't have to be null-terminated and
- * is specified by its length. If any null-bytes are included in the range,
- * they are considered part of the string and would be counted for escaping
- * (that is, this returns either 0 or at least len even if there's a null-byte
- * in the string.
- */
-size_t jsonify_str_buffer_len(const char *input, size_t len);
+size_t jsonify_str_buffer(std::string_view input);
 
 /**
  * \brief Escapes a string for JSON.
@@ -94,17 +78,7 @@ size_t jsonify_str_buffer_len(const char *input, size_t len);
  * The output is terminated by null-byte (which is already accounted for in the
  * size of the buffer).
  */
-void jsonify_str(const char *input, char *output);
-
-/**
- * \brief Variant of jsonify_str for length-delimited strings.
- *
- * Acts in the same way as jsonify_str_buffer, except that the string is not
- * null-terminated, but of given length. Any null-bytes encountered in that
- * range are encoded. The output is null-terminated (even if the input doesn't
- * have to be).
- */
-void jsonify_str_len(const char *input, size_t input_len, char *output);
+void jsonify_str(std::string_view, char *output);
 
 /**
  * \brief Macro to put the jsonification of strings together conveniently.
@@ -118,24 +92,21 @@ void jsonify_str_len(const char *input, size_t input_len, char *output);
  * statements (wrapping it into do {} while (0) would also destroy the buffer)
  * and creating several local variables. Be conservative in its use.
  *
- * * Have a `const char *` input variable with a certain name.
+ * * Have a `const char * or std::string_view` input variable with a certain name.
  * * Call the macro with that variable name.
- * * A variable `name_escaped` is created. Eg:
+ * * A variable `std::string_view name_escaped` is created. Eg:
  *
  * ```
  * const char *whatever = "hello\nworld";
  * JSONIFY_STR(whatever);
- * printf("%s", whatever_escaped);
+ * printf("%.*s", (int)whatever_escaped.size(), whatever_escaped.data());
  * ```
  */
-#define JSONIFY_STR(NAME)                                                                               \
-    _Pragma("GCC diagnostic push");                                                                     \
-    _Pragma("GCC diagnostic ignored \"-Wvla\"");                                                        \
-    const size_t NAME##_len = jsonify_str_buffer(NAME);                                                 \
-    char NAME##_buffer[NAME##_len];                                                                     \
-    const char *NAME##_escaped = NAME##_len ? (jsonify_str(NAME, NAME##_buffer), NAME##_buffer) : NAME; \
+#define JSONIFY_STR(NAME)                                                                                                        \
+    _Pragma("GCC diagnostic push");                                                                                              \
+    _Pragma("GCC diagnostic ignored \"-Wvla\"");                                                                                 \
+    const std::string_view NAME##_view { NAME }; /*Prevent double-counting the length in case const char* is provided*/          \
+    const size_t NAME##_len = jsonify_str_buffer(NAME##_view);                                                                   \
+    char NAME##_buffer[NAME##_len];                                                                                              \
+    const std::string_view NAME##_escaped = NAME##_len ? (jsonify_str(NAME##_view, NAME##_buffer), NAME##_buffer) : NAME##_view; \
     _Pragma("GCC diagnostic pop");
-
-#ifdef __cplusplus
-}
-#endif

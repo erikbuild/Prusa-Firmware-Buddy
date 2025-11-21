@@ -42,38 +42,30 @@ static char get_special(char input) {
     return 0;
 }
 
-size_t jsonify_str_buffer(const char *input) {
-    return jsonify_str_buffer_len(input, strlen(input));
-}
-
-size_t jsonify_str_buffer_len(const char *input, size_t len) {
+size_t jsonify_str_buffer(std::string_view input) {
     size_t extra = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (input[i] == '\0') {
+    for (const char ch : input) {
+        if (ch == '\0') {
             extra += 5;
-        } else if (get_special(input[i])) {
+        } else if (get_special(ch)) {
             extra++;
         }
     }
 
-    return extra > 0 ? len + extra + 1 : 0;
+    return extra > 0 ? input.size() + extra + 1 : 0;
 }
 
-void jsonify_str(const char *input, char *output) {
-    return jsonify_str_len(input, strlen(input), output);
-}
-
-void jsonify_str_len(const char *input, size_t len, char *output) {
-    for (size_t i = 0; i < len; i++) {
-        const char sp = get_special(input[i]);
+void jsonify_str(std::string_view input, char *output) {
+    for (const char ch : input) {
+        const char sp = get_special(ch);
         if (sp) {
             *output++ = '\\';
             *output++ = sp;
-        } else if (input[i] == '\0') {
+        } else if (ch == '\0') {
             memcpy(output, "\\u0000", 6);
             output += 6;
         } else {
-            *output++ = input[i];
+            *output++ = ch;
         }
     }
     *output = '\0';
