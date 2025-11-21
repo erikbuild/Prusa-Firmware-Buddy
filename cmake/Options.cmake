@@ -59,6 +59,8 @@ function(define_enum_option)
   string(TOUPPER "${option_name}" option_name_upper)
   set(option_values "${ARG_ALL_VALUES}")
 
+  message(STATUS "Option ${option_name}: ${option_value}")
+
   # assign numbers to values
   set(current_number "1")
   foreach(value ${option_values})
@@ -136,6 +138,8 @@ function(define_int_option)
   set(option_value "${ARG_VALUE}")
   string(TOLOWER "${option_name}" option_name_lower)
   string(TOUPPER "${option_name}" option_name_upper)
+
+  message(STATUS "Option ${option_name}: ${option_value}")
 
   # create file with C header
   set(input_file_prefix "${OPTIONS_INCLUDE_DIR}/option/${option_name_lower}")
