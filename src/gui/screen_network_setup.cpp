@@ -291,37 +291,26 @@ public:
 class FrameTextWithSSID : public FramePrompt {
 public:
     FrameTextWithSSID(window_frame_t *parent, Phase phase, const string_view_utf8 &txt_title, const string_view_utf8 &txt_info)
-        : FramePrompt(parent, phase, txt_title, txt_info)
-        , ssid_text(parent, info.GetRect(), is_multiline::no) {
-        const Rect16 r = ssid_text.GetRect();
-        const auto ssid_text_height = 64;
-
-        info.SetRect(Rect16::fromLTRB(r.Left(), r.Top() + ssid_text_height, r.Right(), r.Bottom()));
-
-        strlcpy(ssid_buffer.data(), config_store().wifi_ap_ssid.get_c_str(), ssid_buffer.size());
-        ssid_text.set_font(info.get_font());
-        ssid_text.SetRect(Rect16::fromLTWH(r.Left(), r.Top(), r.Width(), ssid_text_height));
-        ssid_text.SetText(string_view_utf8::MakeRAM(ssid_buffer.data()));
-        ssid_text.SetAlignment(Align_t::CenterTop());
+        : FramePrompt(parent, phase, txt_title, txt_info) {
+        info.SetText(txt_info.formatted(params, config_store().wifi_ap_ssid.get_c_str()));
     }
 
 protected:
-    window_text_t ssid_text;
-    std::array<char, config_store_ns::wifi_max_ssid_len + 1> ssid_buffer;
+    StringViewUtf8Parameters<config_store_ns::wifi_max_ssid_len + 1> params;
 };
 
 class FrameConnectingFinishable : public FrameTextWithSSID {
 
 public:
     FrameConnectingFinishable(window_frame_t *parent)
-        : FrameTextWithSSID(parent, Phase::connecting_finishable, _("Connecting to:"), _("You can press 'Finish' to continue connecting on the background.")) {}
+        : FrameTextWithSSID(parent, Phase::connecting_finishable, _("Connecting"), _("SSID: %s\n\nYou can press 'Finish' to continue connecting on the background.")) {}
 };
 
 class FrameConnectingNonfinishable : public FrameTextWithSSID {
 
 public:
     FrameConnectingNonfinishable(window_frame_t *parent)
-        : FrameTextWithSSID(parent, Phase::connecting_nonfinishable, _("Connecting to:"), {}) {}
+        : FrameTextWithSSID(parent, Phase::connecting_nonfinishable, _("Connecting"), _("SSID: %s")) {}
 };
 
 class FrameESPError : public FramePrompt {
@@ -344,9 +333,9 @@ class FrameConnected : public FrameTextWithSSID {
 
 public:
     FrameConnected(window_frame_t *parent)
-        : FrameTextWithSSID(parent, Phase::connected, _("Successfully connected to:"), _("You can now fully use all network features of the printer.")) {
+        : FrameTextWithSSID(parent, Phase::connected, _("Successfully connected"), _("SSID: %s\n\nYou can now fully use all network features of the printer.")) {
         if (config_store().active_netdev.get() != NETDEV_ESP_ID) {
-            ssid_text.SetText(_("Ethernet"));
+            info.SetText(info.GetText().formatted(params, "Ethernet"));
         }
     }
 
