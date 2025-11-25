@@ -270,14 +270,15 @@ private:
             if (verify.finalized()) {
                 if (verify.matches) {
                     switch (info.name) {
+                    case NodeName::none:
+                        break;
                     case NodeName::cz_prusa3d_honeybee_ac_controller:
                         return AcControllerAlive {
                             .ac_controller = &application->ac_controller,
                         };
-                    default:
-                        // We passed verification, but don't know what to do about the node, so...
-                        return Inert {};
                     }
+                    // We passed verification, but don't know what to do about the node, so...
+                    return Inert {};
                 } else {
                     // We know the hash doesn't match -> reflash
                     return Flash {};
