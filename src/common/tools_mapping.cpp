@@ -31,7 +31,7 @@ bool is_tool_mapping_possible() {
 
 uint8_t to_physical_tool(uint8_t gcode_tool) {
 #if HAS_TOOL_MAPPING()
-    if (auto physical_tool = tool_mapper.to_physical(gcode_tool); physical_tool == ToolMapper::NO_TOOL_MAPPED) {
+    if (auto physical_tool = tool_mapper.to_virtual(gcode_tool); physical_tool == ToolMapper::NO_TOOL_MAPPED) {
         return no_tool;
     } else {
         return physical_tool;

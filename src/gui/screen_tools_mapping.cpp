@@ -581,7 +581,7 @@ void ToolsMappingBody::go_right() {
     bottom_radio.Change(responses_no_print);
     left_line.SetBackColor(COLOR_GRAY);
     right_line.SetBackColor(COLOR_ORANGE);
-    if (auto real_physical = mapper.to_physical(last_left_real);
+    if (auto real_physical = mapper.to_virtual(last_left_real);
         real_physical == ToolMapper::NO_TOOL_MAPPED) {
         // if left has nothing assigned on the right
         current_idx = 0; // 0 in case all tools are assigned
@@ -618,7 +618,7 @@ uint8_t ToolsMappingBody::get_cnt_current_items() {
 
 bool ToolsMappingBody::are_all_gcode_tools_mapped() const {
     for (int i = 0; i < gcode.UsedExtrudersCount(); ++i) {
-        if (mapper.to_physical(left_gcode_idx_to_real[i]) == ToolMapper::NO_TOOL_MAPPED) {
+        if (mapper.to_virtual(left_gcode_idx_to_real[i]) == ToolMapper::NO_TOOL_MAPPED) {
             return false;
         }
     }
@@ -784,7 +784,7 @@ void ToolsMappingBody::update_dwarf_lights() {
         prusa_toolchanger.getTool(right_phys_idx_to_real[current_idx]).set_cheese_led(0xff, 0xff);
     } else {
         // find all tools assigned to currently selected left and light them up
-        if (auto assigned_tool = mapper.to_physical(left_gcode_idx_to_real[current_idx]); assigned_tool != ToolMapper::NO_TOOL_MAPPED) {
+        if (auto assigned_tool = mapper.to_virtual(left_gcode_idx_to_real[current_idx]); assigned_tool != ToolMapper::NO_TOOL_MAPPED) {
             prusa_toolchanger.getTool(assigned_tool).set_cheese_led(0xff, 0xff);
 
             // light up all tools that have assigned_tool as their earliest spool_1
@@ -898,8 +898,8 @@ void ToolsMappingBody::ensure_nicely_ordered() {
         [&](const auto &lhs_real, const auto &rhs_real) {
             // returns true if lhs should be before rhs
 
-            auto lhs_mapped_to = mapper.to_physical(lhs_real);
-            auto rhs_mapped_to = mapper.to_physical(rhs_real);
+            auto lhs_mapped_to = mapper.to_virtual(lhs_real);
+            auto rhs_mapped_to = mapper.to_virtual(rhs_real);
 
             if ((lhs_mapped_to == ToolMapper::NO_TOOL_MAPPED && rhs_mapped_to == ToolMapper::NO_TOOL_MAPPED)
                 || (lhs_mapped_to != ToolMapper::NO_TOOL_MAPPED && rhs_mapped_to != ToolMapper::NO_TOOL_MAPPED)) {
@@ -917,7 +917,7 @@ void ToolsMappingBody::ensure_nicely_ordered() {
     const int first_unassigned_idx {
         [&]() {
             auto found = std::find_if(std::begin(left_gcode_idx_to_real), std::begin(left_gcode_idx_to_real) + gcode.UsedExtrudersCount(), [&](const auto &real) {
-                return mapper.to_physical(real) == ToolMapper::NO_TOOL_MAPPED;
+                return mapper.to_virtual(real) == ToolMapper::NO_TOOL_MAPPED;
             });
 
             if (found != std::begin(left_gcode_idx_to_real) + gcode.UsedExtrudersCount()) {
@@ -969,7 +969,7 @@ void ToolsMappingBody::ensure_nicely_ordered() {
             continue;
         }
 
-        auto mapped_to = mapper.to_physical(left_gcode_idx_to_real[left_index]);
+        auto mapped_to = mapper.to_virtual(left_gcode_idx_to_real[left_index]);
         assert(mapped_to != ToolMapper::NO_TOOL_MAPPED); // should be handled previously
         if (mapped_to == ToolMapper::NO_TOOL_MAPPED) {
             continue;
@@ -1068,7 +1068,7 @@ void ToolsMappingBody::handle_item_click() {
         break;
     }
     case State::right: {
-        if (auto real_right_mapped_to_last_left = mapper.to_physical(left_gcode_idx_to_real[last_left_idx]);
+        if (auto real_right_mapped_to_last_left = mapper.to_virtual(left_gcode_idx_to_real[last_left_idx]);
             real_right_mapped_to_last_left == ToolMapper::NO_TOOL_MAPPED) { // if this left is unassigned
             handle_right_steal();
             [[maybe_unused]] auto rc = mapper.set_mapping(left_gcode_idx_to_real[last_left_idx], right_phys_idx_to_real[current_idx]);
@@ -1118,7 +1118,7 @@ void ToolsMappingBody::handle_item_click() {
                 // can be replacing a part of chain to be on top, so remove whole chain and start from zero
                 // handle_right_steal() would have removed one link from a chain, even if it was this one
                 // need to make sure that the chain that was mapped to this left is completely removed before assigning to it
-                auto leftover_chain_real_right = mapper.to_physical(left_gcode_idx_to_real[last_left_idx]);
+                auto leftover_chain_real_right = mapper.to_virtual(left_gcode_idx_to_real[last_left_idx]);
                 if (leftover_chain_real_right != ToolMapper::NO_TOOL_MAPPED) {
                     joiner.remove_join_chain_containing(leftover_chain_real_right);
                 }

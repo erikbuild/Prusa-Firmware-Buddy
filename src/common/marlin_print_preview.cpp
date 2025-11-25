@@ -153,7 +153,7 @@ auto PrintPreview::check_tools_mapping_validity(const ToolMapper &mapper, const 
             continue;
         }
 
-        if (mapper.to_physical(gcode_tool) == ToolMapper::NO_TOOL_MAPPED) {
+        if (mapper.to_virtual(gcode_tool) == ToolMapper::NO_TOOL_MAPPED) {
             result.unassigned_gcodes.set(gcode_tool);
         }
     }

@@ -32,47 +32,47 @@ ToolMapper::ToolMapper() {
 ToolMapper &ToolMapper::operator=(const ToolMapper &other) {
     std::scoped_lock lock(mutex, other.mutex);
     this->enabled = other.enabled;
-    for (size_t i = 0; i < std::size(gcode_to_physical); i++) {
-        this->gcode_to_physical[i] = other.gcode_to_physical[i];
+    for (size_t i = 0; i < std::size(gcode_to_virtual); i++) {
+        this->gcode_to_virtual[i] = other.gcode_to_virtual[i];
     }
     return *this;
 }
 
-bool ToolMapper::set_mapping(uint8_t logical, uint8_t physical) {
+bool ToolMapper::set_mapping(uint8_t gcode_tool, uint8_t virtual_tool) {
     std::unique_lock lock(mutex);
-    // physical tool is enabled and valid
-    if (physical >= EXTRUDERS || !is_tool_enabled(physical)) {
+    // virtual tool is enabled and valid
+    if (virtual_tool >= EXTRUDERS || !is_tool_enabled(virtual_tool)) {
         return false;
     }
 
-    // check that logical tool is valid as well
-    if (logical >= EXTRUDERS || logical == get_invalid_tool_number()) {
+    // check that gcode tool is valid as well
+    if (gcode_tool >= EXTRUDERS || gcode_tool == get_invalid_tool_number()) {
         return false;
     }
 
-    // if this physical tool is already mapped to some logical tool, remove this assignment
-    uint8_t previous_logical = to_gcode_unlocked(physical);
-    if (previous_logical != NO_TOOL_MAPPED) {
-        gcode_to_physical[previous_logical] = NO_TOOL_MAPPED;
+    // if this virtual tool is already mapped to some gcode tool, remove this assignment
+    uint8_t previous_gcode = to_gcode_unlocked(virtual_tool);
+    if (previous_gcode != NO_TOOL_MAPPED) {
+        gcode_to_virtual[previous_gcode] = NO_TOOL_MAPPED;
     }
 
     // do the mapping
-    gcode_to_physical[logical] = physical;
+    gcode_to_virtual[gcode_tool] = virtual_tool;
     return true;
 }
 
-bool ToolMapper::set_unassigned(uint8_t logical) {
+bool ToolMapper::set_unassigned(uint8_t gcode_tool) {
     std::unique_lock lock(mutex);
-    return set_unassigned_unlocked(logical);
+    return set_unassigned_unlocked(gcode_tool);
 }
 
-bool ToolMapper::set_unassigned_unlocked(uint8_t logical) {
-    // check that logical tool is valid
-    if (logical >= EXTRUDERS || logical == get_invalid_tool_number()) {
+bool ToolMapper::set_unassigned_unlocked(uint8_t gcode_tool) {
+    // check that gcode tool is valid
+    if (gcode_tool >= EXTRUDERS || gcode_tool == get_invalid_tool_number()) {
         return false;
     }
 
-    gcode_to_physical[logical] = NO_TOOL_MAPPED;
+    gcode_to_virtual[gcode_tool] = NO_TOOL_MAPPED;
     return true;
 }
 
@@ -81,22 +81,22 @@ void ToolMapper::set_enable(bool enable) {
     this->enabled = enable;
 }
 
-uint8_t ToolMapper::to_physical(uint8_t logical, bool ignore_enabled) const {
+uint8_t ToolMapper::to_virtual(uint8_t gcode_tool, bool ignore_enabled) const {
     std::unique_lock lock(mutex);
-    if ((ignore_enabled || enabled) && logical < std::size(gcode_to_physical)) {
-        return gcode_to_physical[logical];
+    if ((ignore_enabled || enabled) && gcode_tool < std::size(gcode_to_virtual)) {
+        return gcode_to_virtual[gcode_tool];
     } else {
-        return logical; // no maping
+        return gcode_tool; // no maping
     }
 }
-uint8_t ToolMapper::to_gcode(uint8_t physical) const {
+uint8_t ToolMapper::to_gcode(uint8_t virtual_tool) const {
     std::unique_lock lock(mutex);
-    return to_gcode_unlocked(physical);
+    return to_gcode_unlocked(virtual_tool);
 }
 
-uint8_t ToolMapper::to_gcode_unlocked(uint8_t physical) const {
-    for (size_t i = 0; i < std::size(gcode_to_physical); i++) {
-        if (gcode_to_physical[i] == physical) {
+uint8_t ToolMapper::to_gcode_unlocked(uint8_t virtual_tool) const {
+    for (size_t i = 0; i < std::size(gcode_to_virtual); i++) {
+        if (gcode_to_virtual[i] == virtual_tool) {
             return i;
         }
     }
@@ -105,8 +105,8 @@ uint8_t ToolMapper::to_gcode_unlocked(uint8_t physical) const {
 
 void ToolMapper::reset() {
     std::unique_lock lock(mutex);
-    for (size_t i = 0; i < std::size(gcode_to_physical); i++) {
-        gcode_to_physical[i] = i;
+    for (size_t i = 0; i < std::size(gcode_to_virtual); i++) {
+        gcode_to_virtual[i] = i;
     }
     enabled = false;
 }
@@ -124,7 +124,7 @@ void ToolMapper::serialize(serialized_state_t &to) {
     // we should rethink this, this is called from default task, not ISR, so it might be ok to lock.
     to.enabled = enabled;
     for (int8_t e = 0; e < EXTRUDERS; e++) {
-        to.gcode_to_physical[e] = gcode_to_physical[e];
+        to.gcode_to_virtual[e] = gcode_to_virtual[e];
     }
 }
 
@@ -132,7 +132,7 @@ void ToolMapper::deserialize(serialized_state_t &from) {
     std::unique_lock lock(mutex);
     enabled = from.enabled;
     for (int8_t e = 0; e < EXTRUDERS; e++) {
-        gcode_to_physical[e] = from.gcode_to_physical[e];
+        gcode_to_virtual[e] = from.gcode_to_virtual[e];
     }
 }
 

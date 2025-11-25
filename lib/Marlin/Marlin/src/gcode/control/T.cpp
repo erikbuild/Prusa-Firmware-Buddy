@@ -83,7 +83,7 @@ void GcodeSuite::T(uint8_t tool_index) {
 #if HAS_TOOL_MAPPING()
   const bool map = !parser.seen('M') || parser.boolval('M', true);
   if (map) {
-    tool_index = tool_mapper.to_physical(tool_index);
+    tool_index = tool_mapper.to_virtual(tool_index);
     if (tool_index == tool_mapper.NO_TOOL_MAPPED) {
       raise_redscreen(ErrCode::ERR_UNDEF, "Toolchange to tool that is disabled by tool mapping", "PrusaToolChanger");
     }

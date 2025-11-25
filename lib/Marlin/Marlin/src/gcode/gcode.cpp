@@ -100,8 +100,8 @@ int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> 
 
     if(!is_physical) {
     #if HAS_TOOL_MAPPING()
-      // map logical tool to physical tool if mapping is enabled
-      const uint8_t mapped = tool_mapper.to_physical(e);
+      // map gcode tool to virtual tool if mapping is enabled
+      const uint8_t mapped = tool_mapper.to_virtual(e);
       e = mapped == ToolMapper::NO_TOOL_MAPPED ? -1 : mapped;
     #endif
     }
@@ -144,8 +144,8 @@ int8_t GcodeSuite::get_target_extruder_from_command_p() {
 int8_t GcodeSuite::get_target_e_stepper_from_command() {
   int8_t e = parser.intval('T', -1);
   #if HAS_TOOL_MAPPING()
-    // map logical tool to physical tool if mapping is enabled
-    const uint8_t mapped = tool_mapper.to_physical(e);
+    // map gcode tool to virtual tool if mapping is enabled
+    const uint8_t mapped = tool_mapper.to_virtual(e);
     e = mapped == ToolMapper::NO_TOOL_MAPPED ? -1 : mapped;
   #endif
 
