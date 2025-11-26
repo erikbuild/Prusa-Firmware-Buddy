@@ -77,8 +77,6 @@ public:
 
 private:
     std::span<Callbacks *> devices;
-
-    bool all_distinct();
 };
 
 /**

@@ -22,9 +22,6 @@ namespace modbus {
 
 Dispatch::Dispatch(std::span<Callbacks *> devices)
     : devices { devices } {
-    if (!all_distinct()) {
-        abort();
-    }
 }
 
 modbus::Callbacks *Dispatch::get_device(ServerAddress server_address) {
@@ -35,20 +32,6 @@ modbus::Callbacks *Dispatch::get_device(ServerAddress server_address) {
     }
 
     return nullptr;
-}
-
-bool Dispatch::all_distinct() {
-    for (size_t i = 0; i < devices.size(); i++) {
-        for (size_t j = i + 1; j < devices.size(); j++) {
-            auto device_i = devices[i];
-            auto device_j = devices[j];
-            if (device_i && device_j && device_i->server_address() == device_j->server_address()) {
-                return false;
-            }
-        }
-    }
-
-    return true;
 }
 
 uint16_t compute_crc(std::span<const std::byte> bytes) {
