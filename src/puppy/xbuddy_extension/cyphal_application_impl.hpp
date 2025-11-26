@@ -345,10 +345,9 @@ private:
                 return false;
             }
 
-            return std::visit([&](auto &state) {
+            return match(state, [&](auto &state) {
                 return step(presentation, now, application, node_id, state);
-            },
-                state);
+            });
         }
         // Overloads for the internal substep based on current state.
 
@@ -516,20 +515,19 @@ private:
         }
 
         bool verified() const {
-            return std::visit(
-                Overloaded {
-                    [](const AcControllerAlive &) { return true; },
-                    [](const NfcAlive &) { return true; },
-                    [](const Verify &verify) { return verify.finalized() && verify.matches; },
-                    [](const auto &) { return false; } },
-                state);
+            return match(
+                state,
+                [](const AcControllerAlive &) { return true; },
+                [](const NfcAlive &) { return true; },
+                [](const Verify &verify) { return verify.finalized() && verify.matches; },
+                [](const auto &) { return false; });
         }
 
         bool allocated() const {
-            return std::visit(Overloaded {
-                                  [](const NotAllocated &) { return false; },
-                                  [](const auto &) { return true; } },
-                state);
+            return match(
+                state,
+                [](const NotAllocated &) { return false; },
+                [](const auto &) { return true; });
         }
     };
 
@@ -809,19 +807,17 @@ public:
             if (node.info.name != name) {
                 continue;
             }
-            auto state = std::visit(
-                Overloaded {
-                    [](const ApplicationImpl::Node::NotAllocated &) { return NodeState::unknown; },
-                    [](const ApplicationImpl::Node::InitialInfo &) { return NodeState::unknown; },
-                    [](const ApplicationImpl::Node::Verify &) { return NodeState::verify; },
-                    [](const ApplicationImpl::Node::Flash &) { return NodeState::flash; },
-                    [](const ApplicationImpl::Node::AcControllerAlive &alive) {
-                        return alive.ac_controller->seen_status ? NodeState::ready : NodeState::verify;
-                    },
-                    [](const ApplicationImpl::Node::NfcAlive &) { return NodeState::ready; },
-                    [](const ApplicationImpl::Node::Inert &) { return NodeState::unknown; },
+            auto state = match(
+                node.state,
+                [](const ApplicationImpl::Node::NotAllocated &) { return NodeState::unknown; },
+                [](const ApplicationImpl::Node::InitialInfo &) { return NodeState::unknown; },
+                [](const ApplicationImpl::Node::Verify &) { return NodeState::verify; },
+                [](const ApplicationImpl::Node::Flash &) { return NodeState::flash; },
+                [](const ApplicationImpl::Node::AcControllerAlive &alive) {
+                    return alive.ac_controller->seen_status ? NodeState::ready : NodeState::verify;
                 },
-                node.state);
+                [](const ApplicationImpl::Node::NfcAlive &) { return NodeState::ready; },
+                [](const ApplicationImpl::Node::Inert &) { return NodeState::unknown; });
             if (state != NodeState::unknown) {
                 return state;
             }
