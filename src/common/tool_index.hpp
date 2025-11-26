@@ -8,6 +8,9 @@
 #include <common/array_extensions.hpp>
 #include <bsod.h>
 
+/// Strong type for reprezenting no tool using `std::variant<SomeToolIndex, NoTool>`
+struct NoTool {};
+
 /// Strong base type for indexing tools, providing common functionality between PhysicalToolIndex, VirtualToolIndex and GcodeToolIndex
 template <const int count_, template <typename> typename Extension>
 struct ToolIndex : public Extension<ToolIndex<count_, Extension>> {
