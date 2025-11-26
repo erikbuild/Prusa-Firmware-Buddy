@@ -1,8 +1,6 @@
 /// @file
 #include "modbus.hpp"
 
-#include <xbuddy_extension/mmu_bridge.hpp>
-
 #include <cstdlib>
 #include <cassert>
 
@@ -22,7 +20,7 @@ static constexpr std::byte modbus_byte_hi(uint16_t value) {
 
 namespace modbus {
 
-Dispatch::Dispatch(std::span<Device> devices)
+Dispatch::Dispatch(std::span<Callbacks *> devices)
     : devices { devices } {
     if (!all_distinct()) {
         abort();
@@ -31,8 +29,8 @@ Dispatch::Dispatch(std::span<Device> devices)
 
 modbus::Callbacks *Dispatch::get_device(uint8_t id) {
     for (const auto &device : devices) {
-        if (device.id == id) {
-            return &device.callbacks;
+        if (device && device->server_address() == id) {
+            return device;
         }
     }
 
@@ -42,7 +40,9 @@ modbus::Callbacks *Dispatch::get_device(uint8_t id) {
 bool Dispatch::all_distinct() {
     for (size_t i = 0; i < devices.size(); i++) {
         for (size_t j = i + 1; j < devices.size(); j++) {
-            if (devices[i].id == devices[j].id) {
+            auto device_i = devices[i];
+            auto device_j = devices[j];
+            if (device_i && device_j && device_i->server_address() == device_j->server_address()) {
                 return false;
             }
         }
@@ -66,10 +66,6 @@ uint16_t compute_crc(std::span<const std::byte> bytes) {
     }
     return crc;
 }
-
-// temporary duplicate definition from app.cpp, do properly
-constexpr uint16_t MY_MODBUS_ADDR = 0x1a + 7;
-constexpr uint16_t MMU_MODBUS_ADDR = xbuddy_extension::mmu_bridge::modbusUnitNr;
 
 std::span<std::byte> handle_transaction(
     Dispatch &dispatch,

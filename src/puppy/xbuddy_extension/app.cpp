@@ -13,7 +13,6 @@
 #include <span>
 #include <freertos/timing.hpp>
 #include <option/has_ac_controller.h>
-#include <xbuddy_extension/mmu_bridge.hpp>
 #include <xbuddy_extension/modbus.hpp>
 
 namespace {
@@ -121,10 +120,6 @@ bool write_register_file_callback(const ac_controller::modbus::Config &modbus_co
 
 #endif
 
-// TODO decide how to handle weird indexing schizophrenia caused by PuppyBootstrap::get_modbus_address_for_dock()
-constexpr uint16_t MY_MODBUS_ADDR = 0x1a + 7;
-constexpr uint16_t MMU_MODBUS_ADDR = xbuddy_extension::mmu_bridge::modbusUnitNr;
-
 using Status = modbus::Callbacks::Status;
 
 /// Read a register from a struct mapped to Modbus address space.
@@ -154,10 +149,10 @@ Status write_register_file(uint16_t address, std::span<const uint16_t> in) {
 
 #if HAS_AC_CONTROLLER()
 
-constexpr uint16_t AC_CONTROLLER_MODBUS_ADDR = 0x1a + 8;
-
 class AcController final : public modbus::Callbacks {
 public:
+    uint8_t server_address() const final { return 0x1a + 8; }
+
     Status read_registers(uint16_t address, std::span<uint16_t> out) final {
         return read_register_file<ac_controller::modbus::Status>(address, out);
     }
@@ -170,6 +165,8 @@ public:
 
 class Logic final : public modbus::Callbacks {
 public:
+    uint8_t server_address() const final { return 0x1a + 7; }
+
     Status read_registers(const uint16_t address, std::span<uint16_t> out) final {
         if (const auto status_result = read_register_file<xbuddy_extension::modbus::Status>(address, out);
             status_result != Status::IllegalAddress) {
@@ -221,13 +218,13 @@ void app::run() {
     AcController ac_controller;
 #endif
 
-    std::array devices = {
-        modbus::Dispatch::Device { MY_MODBUS_ADDR, logic },
-        modbus::Dispatch::Device { MMU_MODBUS_ADDR, mmu },
+    auto devices = std::to_array<modbus::Callbacks *>({
+        &logic,
+            &mmu,
 #if HAS_AC_CONTROLLER()
-        modbus::Dispatch::Device { AC_CONTROLLER_MODBUS_ADDR, ac_controller },
+            &ac_controller,
 #endif
-    };
+    });
     modbus::Dispatch modbus_dispatch { devices };
 
     alignas(uint16_t) std::byte response_buffer[256];

@@ -4,6 +4,7 @@
 #include "modbus.hpp"
 #include <cstdint>
 #include <modules/protocol.h>
+#include <xbuddy_extension/mmu_bridge.hpp>
 
 /// A minimal serial interface for the MMU
 class MMU2Serial {
@@ -16,6 +17,7 @@ public:
 
 class MMU final : public modbus::Callbacks {
 public:
+    virtual uint8_t server_address() const override { return xbuddy_extension::mmu_bridge::modbusUnitNr; }
     virtual Status read_registers(uint16_t address, std::span<uint16_t> out) override;
     virtual Status write_registers(uint16_t address, std::span<const uint16_t> in) override;
 

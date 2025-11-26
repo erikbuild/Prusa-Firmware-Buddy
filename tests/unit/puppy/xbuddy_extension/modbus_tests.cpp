@@ -13,6 +13,8 @@ public:
     static constexpr size_t reg_count = 4;
     std::array<uint16_t, reg_count> registers = { 0, 1, 2, 3 };
 
+    virtual uint8_t server_address() const override { return 1; }
+
     virtual Status read_registers(uint16_t address, std::span<uint16_t> out) override {
         REQUIRE(reinterpret_cast<intptr_t>(out.data()) % alignof(uint16_t) == 0);
         if (address + out.size() >= reg_count) {
@@ -73,9 +75,7 @@ std::span<const std::byte> trans_with_crc(Dispatch &dispatch, const char *s, siz
 
 TEST_CASE("Modbus transaction - refused inputs") {
     MockDevice1 md1;
-    std::array devices = {
-        modbus::Dispatch::Device { 1, md1 },
-    };
+    std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
     alignas(uint16_t) std::array<std::byte, 40> out_buffer;
@@ -124,9 +124,7 @@ TEST_CASE("Modbus transaction - refused inputs") {
 
 TEST_CASE("Invalid function") {
     MockDevice1 md1;
-    std::array devices = {
-        modbus::Dispatch::Device { 1, md1 },
-    };
+    std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
     alignas(uint16_t) std::array<std::byte, 40> out_buffer;
@@ -144,9 +142,7 @@ TEST_CASE("Invalid function") {
 
 TEST_CASE("Invalid address") {
     MockDevice1 md1;
-    std::array devices = {
-        modbus::Dispatch::Device { 1, md1 },
-    };
+    std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
     alignas(uint16_t) std::array<std::byte, 40> out_buffer;
@@ -165,9 +161,7 @@ TEST_CASE("Invalid address") {
 
 TEST_CASE("Success write") {
     MockDevice1 md1;
-    std::array devices = {
-        modbus::Dispatch::Device { 1, md1 },
-    };
+    std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
     alignas(uint16_t) std::array<std::byte, 40> out_buffer;
@@ -189,9 +183,7 @@ TEST_CASE("Success write") {
 
 TEST_CASE("Success read") {
     MockDevice1 md1;
-    std::array devices = {
-        modbus::Dispatch::Device { 1, md1 },
-    };
+    std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
     alignas(uint16_t) std::array<std::byte, 40> out_buffer;

@@ -63,23 +63,19 @@ public:
         Ignore = 255,
     };
 
+    virtual uint8_t server_address() const = 0;
     virtual Status read_registers(uint16_t first_address, std::span<uint16_t> out) = 0;
     virtual Status write_registers(uint16_t first_address, std::span<const uint16_t> in) = 0;
 };
 
 class Dispatch {
 public:
-    struct Device {
-        uint8_t id;
-        modbus::Callbacks &callbacks;
-    };
-
-    Dispatch(std::span<Device> devices);
+    Dispatch(std::span<Callbacks *> devices);
 
     modbus::Callbacks *get_device(uint8_t id);
 
 private:
-    std::span<Device> devices;
+    std::span<Callbacks *> devices;
 
     bool all_distinct();
 };
