@@ -408,6 +408,7 @@ static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_di
         if (!measure_axis_distance(axis, origin_steps, measure_max_dist * measure_dir, p_steps[slot1][1], p_dist[slot1][1], fr_mm_s)
             || !measure_axis_distance(axis, origin_steps, measure_max_dist * -measure_dir, p_steps[slot1][0], p_dist[slot1][0], fr_mm_s)) {
             if (!planner.draining()) {
+                SERIAL_ECHOLN("endstop not reached");
                 ui.status_printf_P(0, "Endstop not reached");
             }
             return false;
@@ -432,6 +433,7 @@ static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_di
         }
     }
     if (retry == XY_HOMING_ORIGIN_BUMP_RETRIES) {
+        SERIAL_ECHOLN("axis measurement failed: too many failed probes");
         ui.status_printf_P(0, "Axis measurement failed");
         return false;
     }
