@@ -10,12 +10,12 @@
 
 #define supportedMmuFWVersionMajor    3
 #define supportedMmuFWVersionMinor    0
-#define supportedMmuFWVersionRevision 3
-#define supportedMmuFWVersionBuild    895
+#define supportedMmuFWVersionRevision 4
+#define supportedMmuFWVersionBuild    912
 
 static_assert(MMU2::mmuVersionMajor == 3);
 static_assert(MMU2::mmuVersionMinor == 0);
-static_assert(MMU2::mmuVersionPatch == 3);
+static_assert(MMU2::mmuVersionPatch == 4);
 
 #define xstr(s) Str(s)
 #define Str(s)  #s

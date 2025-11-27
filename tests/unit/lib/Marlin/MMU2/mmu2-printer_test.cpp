@@ -60,11 +60,11 @@ void SimulateCommStart(MMU2::MMU2 &mmu) {
     static_assert(MMU2::mmuVersionMinor == 0);
     mmu2SerialSim.txbuffQ.clear();
     mmu.mmu_loop();
-    mmu2SerialSim.SetRxBuffCRC("S2 A3");
-    static_assert(MMU2::mmuVersionPatch == 3);
+    mmu2SerialSim.SetRxBuffCRC("S2 A4");
+    static_assert(MMU2::mmuVersionPatch == 4);
     mmu2SerialSim.txbuffQ.clear();
     mmu.mmu_loop();
-    mmu2SerialSim.SetRxBuffCRC("S3 A345");
+    mmu2SerialSim.SetRxBuffCRC("S3 A912");
     mmu2SerialSim.txbuffQ.clear();
     mmu.mmu_loop();
     mmu2SerialSim.SetRxBuffCRC("Wb A");
@@ -117,6 +117,10 @@ constexpr_workaround IOSimRec MakeQueryResponseProgress(const char *command, Pro
     return MakeQueryResponseProgressM(command, pc, { FormatReportProgressHook(command[0], pc) }, w);
 }
 
+constexpr_workaround IOSimRec MakeQueryResponseProgressToolChangeOpt(const char *command, ProgressCode pc, IOSimRec::WorkFunc w = nullptr) {
+    return MakeQueryResponseProgressM(command, pc, { FormatReportProgressHook('x', pc) }, w);
+}
+
 constexpr_workaround IOSimRec MakeLogEntry(const char *logEntry) {
     return { .mock = { logEntry } };
 }
@@ -149,8 +153,16 @@ constexpr_workaround IOSimRec MakeQueryResponseFinished(const char *command, IOS
     return { "Q0", { "MakeSound", FormatEndReport(command[0]), "ScreenUpdateEnable" }, {}, std::string(command) + " F0", 1, w };
 }
 
+constexpr_workaround IOSimRec MakeQueryResponseFinishedToolChangeOpt(const char *command, IOSimRec::WorkFunc w = nullptr) {
+    return { "Q0", {}, {}, std::string(command) + " F0", 1, w };
+}
+
 constexpr_workaround IOSimRec MakeQueryResponseToolChangeFinished(const char *command, IOSimRec::WorkFunc w = nullptr) {
     return { "Q0", { "TryLoadUnloadReporter::TryLoadUnloadReporter", "planner_any_moves", "TryLoadUnloadReporter::DumpToSerial", "IncrementMMUChanges", FormatEndReport(command[0]) }, {}, std::string(command) + " F0", 1, w };
+}
+
+constexpr_workaround IOSimRec MakeQueryResponseToolChangePrematureFinished(const char *command, ProgressCode pc, IOSimRec::WorkFunc w = nullptr) {
+    return { "Q0", { "TryLoadUnloadReporter::TryLoadUnloadReporter", "planner_any_moves", "TryLoadUnloadReporter::DumpToSerial", "IncrementMMUChanges", FormatEndReport(command[0]), FormatReportProgressHook('x' /*command[0]*/, pc) }, {}, std::string(command) + " P" + ToHex((uint16_t)pc), 1, w };
 }
 
 constexpr_workaround IOSimRec MakeFSensorAccepted(uint8_t state, IOSimRec::WorkFunc w = nullptr) {
@@ -444,24 +456,34 @@ TEST_CASE("Marlin::MMU2::MMU2 toolchange", "[Marlin][MMU2]") {
         MakeQueryResponseProgress(cmd, ProgressCode::FeedingToBondtech),
         MakeRegistersCommand(0, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
         MakeQueryResponseProgress(cmd, ProgressCode::FeedingToFSensor, []() { MMU2::fs = MMU2::FilamentState::AT_FSENSOR; }),
-        MakeRegistersCommand(0, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
-        MakeQueryResponseProgress(cmd, ProgressCode::FeedingToNozzle),
         MakeRegistersCommand(1, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
-        MakeQueryResponseProgress(cmd, ProgressCode::DisengagingIdler),
+        MakeQueryResponseToolChangePrematureFinished(cmd, ProgressCode::FeedingToNozzle),
+        MakeRegistersCommand(1, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
+        MakeQueryResponseProgressToolChangeOpt(cmd, ProgressCode::DisengagingIdler),
         MakeRegistersCommand(1, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
 
+        // need to hand-craft the terminal stage of toolchange, the sequence of steps is different from other operations
         // several finished records
-        MakeQueryResponseToolChangeFinished(cmd),
+        MakeQueryResponseFinishedToolChangeOpt(cmd),
         MakeRegistersCommand(1, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
-        MakeQueryResponseFinished(cmd),
+        MakeQueryResponseFinishedToolChangeOpt(cmd),
         MakeRegistersCommand(1, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
-        MakeQueryResponseFinished(cmd),
+        MakeQueryResponseFinishedToolChangeOpt(cmd),
         MakeRegistersCommand(1, 1, 0, 0, 0, 0, 360, MMU2::heartBeatPeriod + 1),
     });
+
     MMU2::mmu2.tool_change(0);
+
+    // The toolchange call finishes before the MMU actually accomplished the task
+    // - we need to wait for it here to pick up all the relevant procedure steps
+    // But, it needs to be hidden inside the toolchange command-in-progress guard somehow or workaround the fact in the unit tests
+    // Therefore there are MakeQueryResponseFinished2 which report the progress as if we were out of an active command.
+    // Note: this only applies to unit tests. In reality, while the Idler is being disengaged, the printer is pushing filament into the nozzle
+    CHECK(MMU2::mmu2.manage_response(true, true));
+
     mockLog.DeduplicateExpected();
     mockLog.DeduplicateLog();
-    CHECK(mockLog.MatchesExpected()); // @@TODO tryunload sequence is missing
+    CHECK(mockLog.MatchesExpected());
 }
 
 TEST_CASE("Marlin::MMU2::MMU2 unload with preheat", "[Marlin][MMU2]") {
