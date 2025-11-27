@@ -1164,8 +1164,8 @@
  *    P2  Raise the nozzle by Z-park amount, limited to Z_MAX_POS.
  */
     // Specify a park position as { X, Y, Z }
-    #define X_NOZZLE_PARK_POINT (X_MAX_POS - 10.0f)
-    #define Y_NOZZLE_PARK_POINT (Y_MIN_POS + 10.0f)
+    #define X_NOZZLE_PARK_POINT (X_MAX_POS - 50.0f)
+    #define Y_NOZZLE_PARK_POINT (Y_MIN_POS + 6.0f)
     #define Z_NOZZLE_PARK_POINT (20.0f)
     #define Z_NOZZLE_PARK_POINT_MIN 168.0f // Always raise the nozzle by this amount when parking on print end
     #define Z_NOZZLE_PARK_RISE 50.0f // Relative Z rise
