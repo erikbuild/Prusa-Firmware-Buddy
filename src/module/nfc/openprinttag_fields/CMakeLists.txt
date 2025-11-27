@@ -10,8 +10,8 @@ file(GLOB_RECURSE OPT_DEPS CONFIGURE_DEPENDS "${OPT_DIR}/utils/*" "${OPT_DIR}/da
 add_custom_command(
   OUTPUT "${GEN_DIR}/fields.hpp.in"
   DEPENDS opt_fields_gen.py ${OPT_DEPS}
-  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/opt_fields_gen.py" ${OPT_DIR}
-  WORKING_DIRECTORY "${GEN_DIR}"
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/opt_fields_gen.py" "${OPT_DIR}"
+          "${GEN_DIR}"
   )
 
 # Necessary for triggering recompilation when the generated header updates
