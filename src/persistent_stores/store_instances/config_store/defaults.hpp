@@ -103,22 +103,19 @@ namespace defaults {
     inline constexpr std::array<char, connect_proxy_size + 1> connect_proxy_host { "" };
     inline constexpr uint16_t connect_port { 443 };
 
-    // Defaults for metrics
-#if DEVELOPMENT_ITEMS()
-    // Development build has metrics allowed
-    inline constexpr std::array<char, metrics_host_size + 1> metrics_host {
-    #if PRINTER_IS_PRUSA_iX()
-        "metrics.afs"
-    #else
-        "matrix.prusa.vc"
-    #endif
-    };
+#if PRINTER_IS_PRUSA_iX()
+    // iX has metrics enabled and pointed to the AFS server by default
+    inline constexpr std::array<char, metrics_host_size + 1> metrics_host { "metrics.afs" };
     inline constexpr bool enable_metrics { true };
-#else /*DEVELOPMENT_ITEMS()*/
+#elif DEVELOPMENT_ITEMS()
+    // Development build has metrics allowed
+    inline constexpr std::array<char, metrics_host_size + 1> metrics_host { "matrix.prusa.vc" };
+    inline constexpr bool enable_metrics { true };
+#else
     // Production build need user to intentionally allow them
     inline constexpr std::array<char, metrics_host_size + 1> metrics_host { "" };
     inline constexpr bool enable_metrics { false };
-#endif /*DEVELOPMENT_ITEMS()*/
+#endif
 
     inline constexpr bool crash_enabled {
 #if (PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_XL() || PRINTER_IS_PRUSA_COREONE())
