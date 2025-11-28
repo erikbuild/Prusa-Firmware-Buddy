@@ -14,6 +14,7 @@
 #include <option/has_adc_side_fsensor.h>
 #include <option/has_nextruder.h>
 #include <mapi/cold_extrude.hpp>
+#include <option/has_indx.h>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -33,6 +34,7 @@ using Phase = PhaseSelftestFSensors;
 
 #if SELFTEST_FSENSOR_EXTRUDER_ASSIST()
 
+    #if HAS_NEXTRUDER()
 /// Used when waiting for the user to insert the filament into the extruder and confirm
 constexpr feedRate_t extruder_assist_slow_feedrate = 3;
 
@@ -50,9 +52,31 @@ constexpr float assisted_insertion_extra_load_distance_mm = 10;
 
 /// How much the filament wiggles forward and back during calibration
 constexpr float calibration_wiggle_distance_mm = 10;
+    #elif HAS_INDX()
+
+// INDX_TODO: Implement selftest for side fsensors
+
+/// Used when waiting for the user to insert the filament into the extruder and confirm
+constexpr feedRate_t extruder_assist_slow_feedrate = 0;
+
+/// Used when unloading the filament or doing the extra load
+constexpr feedRate_t extruder_assist_fast_feedrate = 0;
+
+/// Safe distance we can assist with the insertion of the filament by
+/// Basically distance between the filament gear engagement and nozzle
+constexpr float assisted_insertion_safe_distance_mm = 0;
+
+/// After the user confirms that he has inserted the filament (in assist mode), load this extra amount
+/// to ensure that the filament sensor is fully engaged
+/// Extra load should still not exceed assisted_insertion_safe_distance_mm
+constexpr float assisted_insertion_extra_load_distance_mm = 0;
+
+/// How much the filament wiggles forward and back during calibration
+constexpr float calibration_wiggle_distance_mm = 0;
+    #endif
 
 // These values are calibrated for the nextruder. They need to be tweaked for different extruders.
-static_assert(HAS_NEXTRUDER());
+static_assert(HAS_NEXTRUDER() || HAS_INDX());
 
 #endif
 

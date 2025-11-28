@@ -42,6 +42,7 @@
 #include <device/peripherals.h>
 #include <option/has_mmu2.h>
 #include <option/has_human_interactions.h>
+#include <option/has_selftest.h>
 
 #include "screen_menu_settings.hpp"
 #include "screen_menu_filament.hpp"
@@ -53,7 +54,9 @@
 #endif
 
 #include <crash_dump/crash_dump_handlers.hpp>
-#include <selftest_result_evaluation.hpp>
+#if HAS_SELFTEST()
+    #include <selftest_result_evaluation.hpp>
+#endif
 #include <find_error.hpp>
 #include <transfers/transfer_file_check.hpp>
 #include <guiconfig/guiconfig.h>

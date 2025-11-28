@@ -63,8 +63,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             rw_mutex.cpp
             safe_state.cpp
             segmented_json.cpp
-            selftest_result.cpp
-            selftest_result_type.cpp
             sensor_data.cpp
             serial_printing.cpp
             sound.cpp
@@ -190,6 +188,7 @@ endif()
 
 if(BOARD IN_LIST BUDDY_BOARDS)
   if(HAS_SELFTEST)
+    target_sources(firmware PRIVATE selftest_result.cpp selftest_result_type.cpp)
     add_subdirectory(selftest)
   endif()
 endif()

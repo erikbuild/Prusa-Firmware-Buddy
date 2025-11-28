@@ -1,5 +1,7 @@
 target_include_directories(firmware PRIVATE .)
-add_subdirectory(include_${PRINTER})
+if(HAS_SELFTEST)
+  add_subdirectory(include_${PRINTER})
+endif()
 
 target_sources(
   firmware

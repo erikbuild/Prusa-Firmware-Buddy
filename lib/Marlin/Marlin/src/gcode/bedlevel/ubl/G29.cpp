@@ -374,6 +374,7 @@ void GcodeSuite::G29() {
         ) {
             log_warning(Marlin, "Uneven bed detected: %f - %f", (double)ubl.g29_min_max_measured_z->min, (double)ubl.g29_min_max_measured_z->max);
 
+        #if HAS_SELFTEST()
             if (marlin_server::prompt_warning(WarningType::BedUnevenAlignmentPrompt) == Response::Yes) {
                 // calib_Z does not have its own holder - we have to handle that
                 marlin_server::FSM_Holder _fsm(PhasesSelftest::CalibZ);
@@ -381,6 +382,7 @@ void GcodeSuite::G29() {
                 assert(!axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise));
                 continue;
             }
+        #endif
         }
     #elif defined(MBL_Z_DIFF_CALIB_WARNING_THRESHOLD)
         #error "MBL_Z_DIFF_CALIB_WARNING_THRESHOLD defined but HAS_UNEVEN_BED_PROMPT is false"
