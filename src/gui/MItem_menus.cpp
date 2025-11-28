@@ -81,10 +81,13 @@
 
 #include <config_store/store_instance.hpp>
 
+MI_SCREEN_BASE::MI_SCREEN_BASE(ScreenFactory::Creator screen_ctor, const char *label)
+    : MI_SCREEN_BASE(screen_ctor, label, nullptr) {}
+
 MI_SCREEN_BASE::MI_SCREEN_BASE(ScreenFactory::Creator::Func screen_ctor, const char *label)
     : MI_SCREEN_BASE(screen_ctor, label, nullptr) {}
 
-MI_SCREEN_BASE::MI_SCREEN_BASE(ScreenFactory::Creator::Func screen_ctor, const char *label, const img::Resource *icon, is_hidden_t is_hidden)
+MI_SCREEN_BASE::MI_SCREEN_BASE(ScreenFactory::Creator screen_ctor, const char *label, const img::Resource *icon, is_hidden_t is_hidden)
     : IWindowMenuItem(_(label), icon, is_enabled_t::yes, is_hidden, expands_t::yes)
     , screen_ctor_(screen_ctor) {}
 

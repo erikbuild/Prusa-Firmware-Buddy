@@ -20,14 +20,16 @@
 
 class MI_SCREEN_BASE : public IWindowMenuItem {
 protected:
-    // Two constructors for flash saving (so that we don't need to pass that many parameters)
+    MI_SCREEN_BASE(ScreenFactory::Creator screen_ctor, const char *label, const img::Resource *icon, is_hidden_t is_hidden = is_hidden_t::no);
+
+    // This saves flash (so that we don't need to pass that many parameters)
     MI_SCREEN_BASE(ScreenFactory::Creator::Func screen_ctor, const char *label);
-    MI_SCREEN_BASE(ScreenFactory::Creator::Func screen_ctor, const char *label, const img::Resource *icon, is_hidden_t is_hidden = is_hidden_t::no);
+    MI_SCREEN_BASE(ScreenFactory::Creator screen_ctor, const char *label);
 
     void click(IWindowMenu &) final;
 
 private:
-    const ScreenFactory::Creator::Func screen_ctor_;
+    const ScreenFactory::Creator screen_ctor_;
 };
 
 template <typename T>
