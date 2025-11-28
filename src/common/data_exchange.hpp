@@ -4,6 +4,7 @@
 #include <common/otp_types.hpp>
 #include <option/has_xlcd.h>
 #include <option/has_love_board.h>
+#include <option/has_indx.h>
 
 /**
  * Init the data_exchange struct in case of no-bootloader build.
@@ -20,7 +21,7 @@ const XlcdEeprom &get_xlcd_eeprom();
 #endif
 
 // MK3.5 doesn't have a loveboard, but it needs the detection to complain if it's running on an MK4
-#if HAS_LOVE_BOARD() || PRINTER_IS_PRUSA_MK3_5()
+#if HAS_LOVE_BOARD() || PRINTER_IS_PRUSA_MK3_5() || HAS_INDX()
 const OtpStatus &get_loveboard_status();
 
 const LoveBoardEeprom &get_loveboard_eeprom();

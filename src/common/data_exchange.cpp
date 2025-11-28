@@ -8,6 +8,7 @@
 #include <device/hal.h>
 #include <hw/at21csxx.hpp>
 #include <option/bootloader.h>
+#include <option/has_indx.h>
 
 // pin PA13 state
 static constexpr uint8_t APPENDIX_FLAG_MASK = 0x01;
@@ -150,7 +151,7 @@ const XlcdEeprom &get_xlcd_eeprom() {
 }
 #endif
 
-#if HAS_LOVE_BOARD() || PRINTER_IS_PRUSA_MK3_5()
+#if HAS_LOVE_BOARD() || PRINTER_IS_PRUSA_MK3_5() || HAS_INDX()
 const OtpStatus &get_loveboard_status() {
     return ram_data_exchange.loveboard_status;
 }
