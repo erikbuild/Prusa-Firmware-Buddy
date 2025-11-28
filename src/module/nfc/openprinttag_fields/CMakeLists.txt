@@ -1,6 +1,6 @@
 # Library that autogenerates enums based on YAMLS in the openprinttag repository
 
-add_library(openprinttag_fields STATIC)
+add_library(openprinttag_fields STATIC opt_fields.cpp)
 
 set(OPT_DIR "${PROJECT_ROOT_DIR}/lib/OpenPrintTag")
 set(GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/autogen_include/openprinttag/autogen")
@@ -8,7 +8,7 @@ set(GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/autogen_include/openprinttag/autogen")
 file(GLOB_RECURSE OPT_DEPS CONFIGURE_DEPENDS "${OPT_DIR}/utils/*" "${OPT_DIR}/data/*")
 
 add_custom_command(
-  OUTPUT "${GEN_DIR}/fields.hpp.in"
+  OUTPUT "${GEN_DIR}/fields.hpp.in" "${GEN_DIR}/fields.cpp.in"
   DEPENDS opt_fields_gen.py ${OPT_DEPS}
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/opt_fields_gen.py" "${OPT_DIR}"
           "${GEN_DIR}"

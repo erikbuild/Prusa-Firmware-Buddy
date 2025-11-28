@@ -2,6 +2,8 @@
 #pragma once
 
 #include <array>
+#include <string_view>
+#include <utility>
 
 #include <openprinttag/opt_defines.hpp>
 #include <openprinttag/util_defines.hpp>
@@ -22,6 +24,9 @@ enum class FieldType {
 
 template <auto field>
 struct FieldMeta;
+
+template <typename Enum>
+constexpr inline size_t enum_capacity() = delete;
 
 #include <openprinttag/autogen/fields.hpp.in>
 
