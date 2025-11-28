@@ -94,9 +94,10 @@ class StringField(Field):
         return result
 
 
-class EnumField(Field):
+class EnumFieldBase(Field):
     items_by_key: dict[str, int]
     items_by_name: dict[int, str]
+    items_yaml: list[dict]
 
     def __init__(self, config, config_dir):
         super().__init__(config, config_dir)
@@ -104,8 +105,11 @@ class EnumField(Field):
         self.items_by_key = dict()
         self.items_by_name = dict()
 
-        items = yaml.safe_load(open(os.path.join(config_dir, config["items_file"]), "r"))
-        for item in items:
+        self.items_yaml = yaml.safe_load(open(os.path.join(config_dir, config["items_file"]), "r", encoding="utf-8"))
+        for item in self.items_yaml:
+            if item.get("deprecated", False):
+                continue
+
             key = int(item[config.get("index_field", "key")])
             name = str(item[config.get("name_field", "name")])
 
@@ -115,6 +119,11 @@ class EnumField(Field):
             self.items_by_key[key] = name
             self.items_by_name[name] = key
 
+
+class EnumField(EnumFieldBase):
+    def __init__(self, config, config_dir):
+        super().__init__(config, config_dir)
+
     def decode(self, data):
         return self.items_by_key[data]
 
@@ -122,29 +131,12 @@ class EnumField(Field):
         return self.items_by_name[data]
 
 
-class EnumArrayField(Field):
-    items_by_key: dict[str, int]
-    items_by_name: dict[int, str]
+class EnumArrayField(EnumFieldBase):
+    max_len: int
 
     def __init__(self, config, config_dir):
         super().__init__(config, config_dir)
-
-        self.items_by_key = dict()
-        self.items_by_name = dict()
-
-        items = yaml.safe_load(open(os.path.join(config_dir, config["items_file"]), "r"))
-        for item in items:
-            if item.get("deprecated", False):
-                continue
-
-            key = int(item["key"])
-            name = str(item["name"])
-
-            assert key not in self.items_by_key, f"Key '{key}' already exists"
-            assert name not in self.items_by_name, f"Item '{name}' already exists"
-
-            self.items_by_key[key] = name
-            self.items_by_name[name] = key
+        self.max_len = config["max_length"]
 
     def decode(self, data):
         assert type(data) is list
@@ -162,6 +154,7 @@ class EnumArrayField(Field):
         for item in data:
             result.append(self.items_by_name[item])
 
+        assert len(result) <= self.max_len
         return result
 
 
@@ -200,6 +193,15 @@ class BytesField(Field):
         return result
 
 
+class ColorRGBAField(BytesField):
+    def __init__(self, config, config_dir):
+        if "max_length" not in config:
+            # default to RGBA, but
+            # leave the door open for RGB or other formats in the future
+            config["max_length"] = 4
+        super().__init__(config, config_dir)
+
+
 class UUIDField(Field):
     def decode(self, data):
         return str(uuid.UUID(bytes=data))
@@ -217,6 +219,7 @@ field_types = {
     "enum_array": EnumArrayField,
     "timestamp": IntField,
     "bytes": BytesField,
+    "color_rgba": ColorRGBAField,
     "uuid": UUIDField,
 }
 
@@ -250,7 +253,7 @@ class Fields:
 
     def from_file(file: str):
         r = Fields()
-        r.init_from_yaml(yaml.safe_load(open(file, "r")), os.path.dirname(file))
+        r.init_from_yaml(yaml.safe_load(open(file, "r", encoding="utf-8")), os.path.dirname(file))
 
         return r
 

@@ -37,6 +37,25 @@ def utils_test(input_fn: str | None = None, init_args: list[str] = None, update_
 
         return proc.stdout
 
+    def check_util_output(name, data, compare_fn):
+        if compare_fn is None:
+            return
+
+        print(f"  Comparing {name} against '{compare_fn}'")
+        if os.path.isfile(compare_fn):
+            with open(compare_fn, "rb") as f:
+                expected_data = f.read()
+        else:
+            expected_data = b""
+
+        if data != expected_data:
+            print("! Binary data do not match.", file=sys.stderr)
+            if args.update:
+                with open(compare_fn, "wb") as f:
+                    f.write(data)
+            else:
+                raise Exception()
+
     print(f"Testing {all_args}")
 
     try:
@@ -54,41 +73,11 @@ def utils_test(input_fn: str | None = None, init_args: list[str] = None, update_
 
         if update_args is not None:
             binary_output = run_util("rec_update", args=update_args, input=binary_output)
-
-        if expected_data_fn is not None:
-            print(f"  Comparing rec_ibinary datanfo against '{expected_data_fn}'")
-            if os.path.isfile(expected_data_fn):
-                with open(expected_data_fn, "rb") as f:
-                    expected_data = f.read()
-            else:
-                expected_data = b""
-
-            if binary_output != expected_data:
-                print("! Binary data do not match.", file=sys.stderr)
-                if args.update:
-                    with open(expected_data_fn, "wb") as f:
-                        f.write(binary_output)
-                else:
-                    raise Exception()
+            check_util_output("binary data", binary_output, expected_data_fn)
 
         if info_args is not None:
             info_output = run_util("rec_info", args=info_args, input=binary_output)
-
-        if expected_info_fn is not None:
-            print(f"  Comparing rec_info against '{expected_info_fn}'")
-            if os.path.isfile(expected_info_fn):
-                with open(expected_info_fn, "rb") as f:
-                    expected_info = f.read()
-            else:
-                expected_info = b""
-
-            if info_output != expected_info:
-                print("! Info output does not match.", file=sys.stderr)
-                if args.update:
-                    with open(expected_info_fn, "wb") as f:
-                        f.write(info_output)
-                else:
-                    raise Exception()
+            check_util_output("rec_info", info_output, expected_info_fn)
 
         assert expect_success, "Test should have failed"
 
@@ -114,13 +103,25 @@ for file in tests_dir.glob("encode_decode/*_input.yaml"):
     fn_base = str(file).removesuffix("_input.yaml")
     fn_info = f"{fn_base}_info.yaml"
 
-    with open(fn_info, "r") as f:
-        uri = yaml.safe_load(f)["uri"]
+    init_args = ["--size=312", "--aux-region=32"]
+    info_args = ["--validate", "--show-all", "--show-raw-data", "--opt-check"]
+
+    with open(file, "r", encoding="utf-8") as f:
+        yml = yaml.safe_load(f).get("test_config", {})
+
+        if uri := yml.get("uri"):
+            init_args += ["--ndef-uri", uri]
+
+        if val := yml.get("extra_required_fields", "sample_requirements.yaml"):
+            info_args += ["--extra-required-fields", val]
+
+        if val := yml.get("tag_uid"):
+            info_args += ["--tag-uid", val]
 
     utils_test(
-        init_args=["--size=312", "--aux-region=32", "--ndef-uri", uri],
+        init_args=init_args,
         update_args=[str(file)],
-        info_args=["--validate", "--extra-required-fields=sample_requirements.yaml", "--show-all", "--show-raw-data"],
+        info_args=info_args,
         expected_info_fn=fn_info,
         expected_data_fn=f"{fn_base}_data.bin",
     )
