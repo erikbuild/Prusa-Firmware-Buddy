@@ -103,10 +103,6 @@ public:
     void DisableMenuTimeout();
     bool GetMenuTimeout();
 
-    void EnableFanCheck();
-    void DisableFanCheck();
-    bool GetFanChceck();
-
     static void Init(screen_node screen_creator);
 
     static Screens *Access();
