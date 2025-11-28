@@ -96,12 +96,16 @@ TEST_CASE("atomic_circular_reservable_queue", "[atomic_circular_queue]") {
     SECTION("Commit without an allocated item") {
         uint8_t not_allocated = 0;
         queue.allocate();
+#ifndef NDEBUG
         REQUIRE_THROWS(queue.commit(&not_allocated));
+#endif
     }
 
     SECTION("Allocate two times") {
         queue.allocate();
+#ifndef NDEBUG
         REQUIRE_THROWS(queue.allocate());
+#endif
     }
 
     SECTION("Fill up the queue") {
