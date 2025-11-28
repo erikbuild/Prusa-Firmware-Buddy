@@ -55,5 +55,5 @@ public:
 
 private:
     Value value_;
-    Mutex mutex_;
+    mutable Mutex mutex_;
 };
