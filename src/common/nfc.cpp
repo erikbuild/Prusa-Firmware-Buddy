@@ -306,6 +306,7 @@ bool has_nfc_probably() {
     case PrinterModel::coreone:
     case PrinterModel::coreone_indx:
     case PrinterModel::coreonel:
+    case PrinterModel::coreonel_indx:
     case PrinterModel::mk3_5s:
     case PrinterModel::mk3_9s:
     case PrinterModel::mk4s:
