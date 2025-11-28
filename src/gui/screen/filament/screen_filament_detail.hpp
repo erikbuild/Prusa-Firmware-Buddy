@@ -1,6 +1,5 @@
 #pragma once
 
-#include <type_traits>
 #include <filament.hpp>
 
 #include <WindowMenuInfo.hpp>
@@ -8,141 +7,122 @@
 #include <MItem_tools.hpp>
 #include <screen_menu.hpp>
 #include <numeric_input_config.hpp>
+#include <tool_index.hpp>
 
 #include <option/has_chamber_api.h>
 #include <option/has_filament_heatbreak_param.h>
 
 namespace screen_filament_detail {
 
-template <typename T>
-class MI_SPIN : public WiSpin {
-
-public:
-    using Parameter = T FilamentTypeParameters::*;
-
-    MI_SPIN(Parameter param, const NumericInputConfig &config, const char *label)
-        : WiSpin(0, config, _(label))
-        , param_(param) {
-    }
-
-    void set_filament_type(FilamentType set) {
-        filament_type = set;
-        set_value(filament_type.parameters().*param_);
-        set_enabled(filament_type.is_customizable());
-    }
-
-    void OnClick() override {
-        if constexpr (std::is_arithmetic_v<T>) {
-            filament_type.modify_parameters([&](auto &p) { p.*param_ = static_cast<int16_t>(this->value()); });
-        } else {
-            // If T is std::optional, we use utilize the optional support of the spin as well
-            filament_type.modify_parameters([&](auto &p) { p.*param_ = this->value_opt(); });
-        }
-    }
-
-private:
-    Parameter param_;
-    FilamentType filament_type;
-};
-
-class MI_TOGGLE : public WI_ICON_SWITCH_OFF_ON_t {
-
-public:
-    using Parameter = bool FilamentTypeParameters::*;
-
-    MI_TOGGLE(Parameter param, const char *label);
-
-    void set_filament_type(FilamentType set);
-    void OnChange(size_t) override;
-
-protected:
-    /// If true, the displayed toggle value will be inverse of the actual parameter value
-    void set_invert_value(bool set);
-
-private:
-    Parameter param_;
-    FilamentType filament_type;
-    bool invert_value = false;
-};
-
 class MI_FILAMENT_NAME final : public WiInfo<32> {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::name;
+
     MI_FILAMENT_NAME();
+
     void set_filament_type(FilamentType set);
+
+    const auto &value() const {
+        return value_;
+    }
+
+    void set_value(const FilamentTypeParameters::Name &set);
+
     void click(IWindowMenu &) override;
 
+    void update_text();
+
 protected:
-    FilamentType filament_type;
+    FilamentTypeParameters::Name value_;
+    FilamentType filament_type_;
 };
 
-class MI_FILAMENT_NOZZLE_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::nozzle_temperature)> {
+class MI_FILAMENT_NOZZLE_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::nozzle_temperature;
+
     MI_FILAMENT_NOZZLE_TEMPERATURE();
 };
 
-class MI_FILAMENT_NOZZLE_PREHEAT_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::nozzle_preheat_temperature)> {
+class MI_FILAMENT_NOZZLE_PREHEAT_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::nozzle_preheat_temperature;
+
     MI_FILAMENT_NOZZLE_PREHEAT_TEMPERATURE();
 };
 
-class MI_FILAMENT_BED_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::heatbed_temperature)> {
+class MI_FILAMENT_BED_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::heatbed_temperature;
+
     MI_FILAMENT_BED_TEMPERATURE();
 };
 
 #if HAS_FILAMENT_HEATBREAK_PARAM()
-class MI_FILAMENT_HEATBREAK_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::heatbreak_temperature)> {
+class MI_FILAMENT_HEATBREAK_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::heatbreak_temperature;
+
     MI_FILAMENT_HEATBREAK_TEMPERATURE();
 };
 #endif
 
 #if HAS_CHAMBER_API()
-class MI_FILAMENT_MIN_CHAMBER_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::chamber_min_temperature)> {
+class MI_FILAMENT_MIN_CHAMBER_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::chamber_min_temperature;
+    static constexpr bool is_chamber_item = true;
+
     MI_FILAMENT_MIN_CHAMBER_TEMPERATURE();
 };
 #endif
 
 #if HAS_CHAMBER_API()
-class MI_FILAMENT_MAX_CHAMBER_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::chamber_max_temperature)> {
+class MI_FILAMENT_MAX_CHAMBER_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::chamber_max_temperature;
+    static constexpr bool is_chamber_item = true;
+
     MI_FILAMENT_MAX_CHAMBER_TEMPERATURE();
 };
 #endif
 
 #if HAS_CHAMBER_API()
-class MI_FILAMENT_TARGET_CHAMBER_TEMPERATURE final : public MI_SPIN<decltype(FilamentTypeParameters::chamber_target_temperature)> {
+class MI_FILAMENT_TARGET_CHAMBER_TEMPERATURE final : public WiSpin {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::chamber_target_temperature;
+    static constexpr bool is_chamber_item = true;
+
     MI_FILAMENT_TARGET_CHAMBER_TEMPERATURE();
 };
 #endif
 
 #if HAS_CHAMBER_API()
-class MI_FILAMENT_REQUIRES_FILTRATION final : public MI_TOGGLE {
+class MI_FILAMENT_REQUIRES_FILTRATION final : public WI_ICON_SWITCH_OFF_ON_t {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::requires_filtration;
+
     MI_FILAMENT_REQUIRES_FILTRATION();
 };
 #endif
 
-class MI_FILAMENT_IS_ABRASIVE final : public MI_TOGGLE {
+class MI_FILAMENT_IS_ABRASIVE final : public WI_ICON_SWITCH_OFF_ON_t {
 public:
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::is_abrasive;
+
     MI_FILAMENT_IS_ABRASIVE();
 };
 
-class MI_FILAMENT_AUTO_RETRACT final : public MI_TOGGLE {
+class MI_FILAMENT_DO_NOT_AUTO_RETRACT final : public WI_ICON_SWITCH_OFF_ON_t {
 public:
-    MI_FILAMENT_AUTO_RETRACT();
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::do_not_auto_retract;
+
+    MI_FILAMENT_DO_NOT_AUTO_RETRACT();
 };
 
 class MI_FILAMENT_VISIBLE final : public WI_ICON_SWITCH_OFF_ON_t {
 public:
     MI_FILAMENT_VISIBLE();
-    void set_filament_type(FilamentType set);
-    void OnChange(size_t) final;
-
-protected:
-    FilamentType filament_type;
 };
 
 class MI_CONFIRM final : public IWindowMenuItem {
@@ -168,7 +148,7 @@ using ScreenFilamentDetail_ = ScreenMenu<EFooter::Off,
     MI_FILAMENT_MAX_CHAMBER_TEMPERATURE,
 #endif
     MI_FILAMENT_IS_ABRASIVE,
-    MI_FILAMENT_AUTO_RETRACT,
+    MI_FILAMENT_DO_NOT_AUTO_RETRACT,
 #if HAS_CHAMBER_API()
     MI_FILAMENT_REQUIRES_FILTRATION,
 #endif
@@ -176,7 +156,7 @@ using ScreenFilamentDetail_ = ScreenMenu<EFooter::Off,
     >;
 
 /// Management of a specified filament type
-class ScreenFilamentDetail final : public ScreenFilamentDetail_ {
+class ScreenFilamentDetail : public ScreenFilamentDetail_ {
 public:
     /// When the detail screen is opened from within the preheat menu.
     /// Adds a "Confirm" button that sends the filament as a response to the preheat FSM
@@ -191,8 +171,22 @@ public:
     /// The added "Confirm" button sends the response to the Preheat FSM
     ScreenFilamentDetail(PreheatModeParams preheat_mode);
 
-private:
-    ScreenFilamentDetail(FilamentType filament_type, const char *title);
+    ~ScreenFilamentDetail();
+
+public:
+    /// Fills the screen with the provided data
+    void setup(FilamentType filament_type, const FilamentTypeParameters &params);
+    void setup(FilamentType filament_type);
+
+    void save_changes();
+
+protected:
+    ScreenFilamentDetail(const char *title);
+
+    void setup_preheat_mode_confirm(VirtualToolIndex tool);
+
+protected:
+    FilamentType filament_type_;
 };
 
 }; // namespace screen_filament_detail
