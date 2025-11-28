@@ -73,7 +73,7 @@ class ReadInt32Request : public ReadRequest<int32_t> {
 
 public:
     // Inherit constructor
-    using ReadRequest<int32_t>::ReadFieldRequest;
+    using ReadRequest<int32_t>::ReadRequest;
 };
 
 template <typename Enum>
