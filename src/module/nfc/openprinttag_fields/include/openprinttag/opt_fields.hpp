@@ -17,6 +17,7 @@ enum class FieldType {
     string,
     timestamp,
     uuid,
+    color_rgba,
 };
 
 template <auto field>
