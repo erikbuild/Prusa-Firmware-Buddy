@@ -97,5 +97,5 @@ TEST_CASE("printer_model::compatibilities") {
 
     // INDX_TODO: Implement compatibility tests
 
-    static_assert(std::to_underlying(PrinterModel::_cnt) == 15);
+    static_assert(std::to_underlying(PrinterModel::_cnt) == 16);
 }

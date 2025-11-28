@@ -122,6 +122,7 @@ constexpr PrinterGCodeCompatibilityReport gcode_compatibility_report_constexpr(c
     case CompatGroup::ix:
     case CompatGroup::mk3:
     case CompatGroup::coreone_indx: // INDX_TODO: Implement back compatibility
+    case CompatGroup::coreonel_indx: // INDX_TODO: Implement gcode compatibility
         // No backwards compatibility
         break;
 

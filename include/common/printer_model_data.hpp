@@ -126,6 +126,15 @@ inline constexpr std::array printer_model_info {
         .id_str = "COREONE",
     },
     PrinterModelInfo {
+        .model = PrinterModel::coreone_indx,
+        .compatibility_group = PrinterModelCompatibilityGroup::coreone_indx,
+        .version = { 7, 10, 0 },
+        .help_url = "core-one-indx",
+        .usb_pid = 36,
+        .gcode_check_code = 360,
+        .id_str = "COREONEINDX",
+    },
+    PrinterModelInfo {
         .model = PrinterModel::coreonel,
         .compatibility_group = PrinterModelCompatibilityGroup::coreonel,
         .version = { 8, 1, 0 },
@@ -135,13 +144,13 @@ inline constexpr std::array printer_model_info {
         .id_str = "COREONEL",
     },
     PrinterModelInfo {
-        .model = PrinterModel::coreone_indx,
-        .compatibility_group = PrinterModelCompatibilityGroup::coreone_indx,
-        .version = { 7, 10, 0 },
-        .help_url = "core-one-indx",
-        .usb_pid = 36,
-        .gcode_check_code = 360,
-        .id_str = "COREONE-INDX",
+        .model = PrinterModel::coreonel_indx,
+        .compatibility_group = PrinterModelCompatibilityGroup::coreonel_indx,
+        .version = { 8, 10, 0 },
+        .help_url = "core-one-l-indx",
+        .usb_pid = 37,
+        .gcode_check_code = 370,
+        .id_str = "COREONEL-INDX",
     },
 };
 

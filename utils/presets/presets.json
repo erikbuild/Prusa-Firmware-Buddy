@@ -49,6 +49,23 @@
             }
         },
         {
+            "name": "coreonel_indx",
+            "description": "Original Prusa CORE One L",
+            "cacheVariables": {
+                "PRINTER": "COREONEL_INDX",
+                "BOARD": "XBUDDY",
+                "XBUDDY_EXTENSION_VARIANT": "STANDARD",
+                "XBUDDY_EXTENSION_BINARY_DIR": {
+                    "type": "FILEPATH",
+                    "value": "build-vscode-xbuddy-extension"
+                },
+                "ANFC_BINARY_DIR": {
+                    "type": "FILEPATH",
+                    "value": "build-vscode-anfc"
+                }
+            }
+        },
+        {
             "name": "mini",
             "description": "Original Prusa MINI",
             "cacheVariables": {
@@ -288,6 +305,14 @@
             }
         },
         {
+            "name": "coreonel_indx-xbuddy-extension",
+            "description": "Original Prusa CORE One L INDX Extension Board",
+            "cacheVariables": {
+                "PRINTER": "COREONEL_INDX",
+                "BOARD": "XBUDDY_EXTENSION"
+            }
+        },
+        {
             "name": "anfc",
             "description": "Firmware for NFC addon (dev-kit)",
             "cacheVariables": {
@@ -341,6 +366,16 @@
             "description": "Firmware for NFC addon for CoreOneL printer",
             "cacheVariables": {
                 "PRINTER": "COREONE",
+                "BOARD": "ANFC",
+                "CAN_BUS_TYPE": "PUB6",
+                "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
+            }
+        },
+        {
+            "name": "coreonel_indx-anfc",
+            "description": "Firmware for NFC addon for CoreOneL printer with INDX",
+            "cacheVariables": {
+                "PRINTER": "COREONE_INDX",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
