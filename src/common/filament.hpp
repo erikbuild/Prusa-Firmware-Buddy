@@ -199,7 +199,7 @@ public:
     inline bool is_visibility_customizable() const {
         // Revise if filament types are changed/Added
         static_assert(std::is_same_v<FilamentType_, std::variant<NoFilamentType, PresetFilamentType, UserFilamentType, AdHocFilamentType, PendingAdHocFilamentType>>);
-        return std::holds_alternative<AdHocFilamentType>(*this) || std::holds_alternative<PendingAdHocFilamentType>(*this);
+        return !std::holds_alternative<AdHocFilamentType>(*this) && !std::holds_alternative<PendingAdHocFilamentType>(*this);
     }
 
     /// \returns whether the filament name can be changed to \param new_name or a translatable error string.

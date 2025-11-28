@@ -143,7 +143,7 @@ MI_FILAMENT_VISIBLE::MI_FILAMENT_VISIBLE()
 void MI_FILAMENT_VISIBLE::set_filament_type(FilamentType set) {
     filament_type = set;
     set_value(filament_type.is_visible());
-    set_is_hidden(filament_type.is_visibility_customizable());
+    set_is_hidden(!filament_type.is_visibility_customizable());
 }
 
 void MI_FILAMENT_VISIBLE::OnChange(size_t) {
