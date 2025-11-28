@@ -40,7 +40,7 @@ struct FilamentTypeParameters {
 
 public:
     using Name = InplaceString<filament_name_buffer_size>;
-    /// Name of the filament (NOT necessarily zero terminated).
+    /// Name of the filament (zero terminated).
     Name name;
 
     /// Nozzle temperature for the filament, in degrees Celsius
