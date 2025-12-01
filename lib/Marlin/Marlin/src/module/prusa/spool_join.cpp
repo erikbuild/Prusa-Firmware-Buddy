@@ -19,6 +19,7 @@
 #include "mmu2_toolchanger_common.hpp"
 #include <feature/print_status_message/print_status_message_mgr.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
+#include <tool_index.hpp>
 
 SpoolJoin spool_join;
 
@@ -228,7 +229,7 @@ bool SpoolJoin::do_join(uint8_t current_tool) {
 #if DISABLED(SIGNLENOZZLE) && PRINTER_IS_PRUSA_XL()
 
     // Park current tool, to get away from print
-    tool_change(PrusaToolChanger::MARLIN_NO_TOOL_PICKED, tool_return_t::no_return);
+    tool_change(NoTool {}, tool_return_t::no_return);
 
     // transfer target temperature from one tool to another
     auto target_temp = thermalManager.degTargetHotend(current_tool);
@@ -260,7 +261,7 @@ bool SpoolJoin::do_join(uint8_t current_tool) {
 #if HAS_MMU2()
     MMU2::mmu2.tool_change_full(new_tool);
 #else
-    tool_change(new_tool, tool_return_t::purge_and_to_destination /* For MMU unused */);
+    tool_change(VirtualToolIndex::from_raw(new_tool), tool_return_t::purge_and_to_destination /* For MMU unused */);
 #endif
     print_status_message().show_temporary<PrintStatusMessage::spool_joined>({});
     return true;

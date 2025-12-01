@@ -23,6 +23,8 @@
 #include "../gcode.h"
 #include "../../module/tool_change.h"
 #include "bsod.h"
+#include <tool_index.hpp>
+#include <utils/variant_utils.hpp>
 
 #include <option/has_tool_mapping.h>
 #if HAS_TOOL_MAPPING()
@@ -104,6 +106,8 @@ void GcodeSuite::T(uint8_t tool_index) {
 
   #if EXTRUDERS < 2
 
+    #error why is this dead code?
+
     tool_change(tool_index);
 
   #else
@@ -127,7 +131,7 @@ void GcodeSuite::T(uint8_t tool_index) {
     if (z_lift > tool_change_lift_t::_last_item) z_lift = tool_change_lift_t::full_lift; // invalid input, use full_lift
     bool z_down = parser.byteval('D', 1);
 
-    tool_change(tool_index, return_type, z_lift, z_down);
+    tool_change(stdext::to_variant(VirtualToolIndex::from_raw_notool(tool_index)), return_type, z_lift, z_down);
 
   #endif
 

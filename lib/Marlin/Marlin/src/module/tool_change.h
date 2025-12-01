@@ -23,6 +23,7 @@
 
 #include "../inc/MarlinConfigPre.h"
 #include "../core/types.h"
+#include <tool_index.hpp>
 
 #if EXTRUDERS > 1
 
@@ -62,7 +63,7 @@ enum class tool_change_lift_t {
  * Perform a tool-change which may result in moving the previous tool out of the way and the new
  * tool into place. Unless no_move is set, return to destination.
  */
-void tool_change(const uint8_t new_tool,
+void tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool> new_tool,
                  tool_return_t return_type=tool_return_t::to_current,
                  tool_change_lift_t z_lift = tool_change_lift_t::full_lift,
                  bool z_return = true);

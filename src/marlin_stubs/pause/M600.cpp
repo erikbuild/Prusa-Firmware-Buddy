@@ -219,7 +219,7 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
             .original_extruder = marlin_vars().active_extruder,
         };
 
-        tool_change(target_extruder, tool_return_t::no_return, tool_change_lift_t::mbl_only_lift, true);
+        tool_change(VirtualToolIndex::from_raw(target_extruder), tool_return_t::no_return, tool_change_lift_t::mbl_only_lift, true);
 
         resume_point = logical_resume.asNative(); // Convert original resume point to the new native coordinates
         resume_point = prusa_toolchanger.get_tool_dock_position(target_extruder); // Sets only x, y coordinates
@@ -277,7 +277,7 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
         } else {
             destination = prusa_toolchanger.get_tool_dock_position(change_data.original_extruder);
         }
-        tool_change(change_data.original_extruder, tool_return_t::to_destination, tool_change_lift_t::mbl_only_lift, true);
+        tool_change(VirtualToolIndex::from_raw(change_data.original_extruder), tool_return_t::to_destination, tool_change_lift_t::mbl_only_lift, true);
         report_current_position();
     }
 #endif

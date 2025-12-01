@@ -117,7 +117,7 @@ private:
             return;
         case Response::Continue:
 #if HAS_TOOLCHANGER()
-            tool_change(tool);
+            tool_change(VirtualToolIndex::from_raw(tool));
 #endif
             filament_check();
             return;

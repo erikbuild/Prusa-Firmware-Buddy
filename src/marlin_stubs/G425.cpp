@@ -202,7 +202,7 @@ inline void wait_ms(const uint32_t duration_ms) {
 #if HOTENDS > 1
 inline void set_nozzle([[maybe_unused]] measurements_t &m, const uint8_t extruder) {
     if (extruder != active_extruder) {
-        tool_change(extruder);
+        tool_change(PhysicalToolIndex::from_raw(extruder));
     }
 }
 #endif
@@ -665,7 +665,7 @@ inline void calibrate_all() {
     calibrate_backlash(m);
 #endif
 
-    tool_change(prusa_toolchanger.MARLIN_NO_TOOL_PICKED, tool_return_t::no_return);
+    tool_change(NoTool {}, tool_return_t::no_return);
 }
 
 /**
@@ -699,27 +699,27 @@ inline bool calibrate_all_simple() {
     bool failed = false;
     // Measure centers
     std::array<xyz_pos_t, HOTENDS> centers;
-    for (int8_t e = 0; e < HOTENDS; e++) {
+    for (auto tool : PhysicalToolIndex::all()) {
 #if HAS_TOOLCHANGER()
-        if (!prusa_toolchanger.getTool(e).is_enabled()) {
+        if (!prusa_toolchanger.getTool(tool.to_raw()).is_enabled()) {
             continue;
         }
 #endif
-        tool_change(e, tool_return_t::no_return);
-        std::optional<xyz_pos_t> center = get_xyz_center(e);
+        tool_change(tool, tool_return_t::no_return);
+        std::optional<xyz_pos_t> center = get_xyz_center(tool.to_raw());
         if (!center.has_value()) {
-            SERIAL_ECHOLNPAIR("G425: Tool ", e, " center not found.");
+            SERIAL_ECHOLNPAIR("G425: Tool ", tool.to_raw(), " center not found.");
             failed = true;
             break; // Do not continue with the next tool
         }
-        centers[e] = center.value();
+        centers[tool.to_raw()] = center.value();
         metric_record_custom(
             &metric_center,
             ",t=%u x=%.3f,y=%.3f,z=%.3f",
-            e,
-            static_cast<double>(centers[e].x),
-            static_cast<double>(centers[e].y),
-            static_cast<double>(centers[e].z));
+            tool.to_raw(),
+            static_cast<double>(centers[tool.to_raw()].x),
+            static_cast<double>(centers[tool.to_raw()].y),
+            static_cast<double>(centers[tool.to_raw()].z));
     }
 
     if (failed) {
@@ -729,7 +729,7 @@ inline bool calibrate_all_simple() {
     }
 
     // Pick zero offset tool to be sure no offset is applied on toolchange
-    tool_change(prusa_toolchanger.MARLIN_NO_TOOL_PICKED, tool_return_t::no_return);
+    tool_change(NoTool {}, tool_return_t::no_return);
 
     // Apply the offset
     for (int8_t e = 0; e < HOTENDS; e++) {

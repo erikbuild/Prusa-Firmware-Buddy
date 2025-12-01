@@ -23,6 +23,7 @@
 #include "../inc/MarlinConfigPre.h"
 
 #include "tool_change.h"
+#include "utils/overloaded_visitor.hpp"
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -53,19 +54,26 @@
  * Perform a tool-change, which may result in moving the
  * previous tool out of the way and the new tool into place.
  */
-void tool_change(const uint8_t new_tool,
-                 tool_return_t return_type /*= tool_return_t::to_current*/,
-                 tool_change_lift_t z_lift /*= tool_change_lift_t::full_lift*/,
-                 bool z_return /*= true*/){
+void tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool> new_tool,
+                 [[maybe_unused]] tool_return_t return_type /*= tool_return_t::to_current*/,
+                 [[maybe_unused]] tool_change_lift_t z_lift /*= tool_change_lift_t::full_lift*/,
+                 [[maybe_unused]] bool z_return /*= true*/){
 
   #if HAS_MMU2()
-    (void) return_type;
-    (void) z_lift;
-    (void) z_return;
-    MMU2::mmu2.tool_change(new_tool);
+    match(new_tool,
+      [](VirtualToolIndex virtual_tool){ MMU2::mmu2.tool_change(virtual_tool.to_raw()); },
+      [](PhysicalToolIndex physical_tool){ /* do nothing */ static_assert(PhysicalToolIndex::count == 1); },
+      [](NoTool){ MMU2::mmu2.unload(); }
+    );
 
   #elif HAS_TOOLCHANGER()
-    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw_notool(new_tool), return_type, current_position, z_lift, z_return);
+    using MaybePhysical = std::variant<PhysicalToolIndex, NoTool>;
+    auto maybe_physical = match(new_tool,
+      [](VirtualToolIndex virtual_tool) -> MaybePhysical { return virtual_tool.to_physical(); },
+      [](PhysicalToolIndex physical_tool) -> MaybePhysical { return physical_tool; },
+      [](NoTool) -> MaybePhysical { return NoTool{}; }
+    );
+    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(maybe_physical, return_type, current_position, z_lift, z_return);
 
   #else
     #error Not implemented

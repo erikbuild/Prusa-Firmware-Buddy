@@ -127,7 +127,7 @@ namespace {
         if (selected_tool == PrusaToolChanger::MARLIN_NO_TOOL_PICKED && active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
             return PhasesColdPull::introduction;
         }
-        tool_change(selected_tool, tool_return_t::no_return, tool_change_lift_t::full_lift, 1);
+        tool_change(PhysicalToolIndex::from_raw(selected_tool), tool_return_t::no_return, tool_change_lift_t::full_lift, 1);
         if (active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
             return PhasesColdPull::introduction;
         }
