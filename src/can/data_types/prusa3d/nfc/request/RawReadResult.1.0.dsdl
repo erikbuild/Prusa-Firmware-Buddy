@@ -1,6 +1,6 @@
 @union
 
-uint8[<=256] data
+uint8[<=114] data
 prusa3d.nfc.util.ReaderError.1.0 error
 
 @sealed

@@ -2,4 +2,4 @@ prusa3d.nfc.event.EventID.1.0 event_id
 prusa3d.nfc.event.EventData.1.0 data
 
 @sealed
-@assert _offset_.max / 8 == 266
+@assert _offset_.max / 8 <= 63 + 61  # two CANFD frames

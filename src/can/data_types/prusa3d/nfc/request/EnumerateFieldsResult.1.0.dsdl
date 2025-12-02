@@ -1,6 +1,6 @@
 @union
 
-uint16[<=128] fields
+uint16[<=57] fields
 prusa3d.nfc.util.ReaderError.1.0 error
 
 @sealed

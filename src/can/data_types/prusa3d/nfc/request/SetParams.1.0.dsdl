@@ -1,7 +1,7 @@
 # Set reader parameters
 
 # Mime type the reader should detect/work with
-uint8[<=256] mime_type
+uint8[<=114] mime_type
 
 # Whether the tags have a meta region
 # False means the the payload only contains the main section (no aux, no meta)

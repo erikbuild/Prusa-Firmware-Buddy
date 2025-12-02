@@ -4,8 +4,8 @@ bool bool_
 int32 int32_
 int64 int64_
 float32 float_
-uint8[<=256] string
-uint8[<=256] bytes
-uint16[<=128] uint16_array
+uint8[<=114] string
+uint8[<=114] bytes
+uint16[<=57] uint16_array
 
 @sealed
