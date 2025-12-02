@@ -4,6 +4,8 @@
 #include <array>
 
 /**
+ * Please use InplaceAny, StaticStorageUnsafe is prone to UB.
+ *
  * Convenience type for static untyped storage of a given size.
  *
  * Allows you to create, destroy and refer to some type created
@@ -16,7 +18,7 @@
  * knowledge of the types upfront with some convenience functions.
  */
 template <size_t size_, typename Alignment_ = void *>
-class [[deprecated("Please use InplaceAny, StaticStorage is prone to UB")]] StaticStorage {
+class StaticStorageUnsafe {
 
 public:
     using Alignment = Alignment_;

@@ -61,10 +61,7 @@ struct FrameDefinitionList {
 template <typename Parent, size_t FrameStorageSize>
 class WindowFSM : public Parent {
 public:
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    using FrameStorage = StaticStorage<FrameStorageSize>;
-#pragma GCC diagnostic pop
+    using FrameStorage = StaticStorageUnsafe<FrameStorageSize>;
 
     template <typename... Args>
     WindowFSM(Rect16 inner_frame_rect, Args &&...args)

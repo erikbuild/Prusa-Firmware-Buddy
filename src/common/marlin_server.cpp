@@ -3113,9 +3113,13 @@ void set_target_bed(int16_t value) {
     thermalManager.setTargetBed(value);
 }
 
-void set_temp_to_display(float value, uint8_t extruder) {
-    marlin_vars().hotend(extruder).display_nozzle = value;
-}
+namespace call_manually {
+
+    void set_temp_to_display(float value, uint8_t extruder) {
+        marlin_vars().hotend(extruder).display_nozzle = value;
+    }
+
+} // namespace call_manually
 
 bool get_media_inserted(void) {
     return marlin_vars().media_inserted;

@@ -3007,11 +3007,8 @@ void Temperature::isr() {
 
         temp_hotend[ee].target = new_temp;
     #if BOARD_IS_MASTER_BOARD()
-        // This is a legit use - ignore the deprecated warning
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        marlin_server::set_temp_to_display(new_temp, ee);
-        #pragma GCC diagnostic pop
+        // This is a legit use
+        marlin_server::call_manually::set_temp_to_display(new_temp, ee);
     #endif
 
         start_watching_hotend(ee);

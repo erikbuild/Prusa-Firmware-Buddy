@@ -93,11 +93,8 @@ void GcodeSuite::M104() {
 
   if(parser.seenval('D')) {
     // Override display_temp set by setTargetHotend
-    // This is a legit use - ignore the deprecated warning
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    marlin_server::set_temp_to_display( parser.value_celsius(), target_extruder);
-    #pragma GCC diagnostic pop
+    // This is a legit use
+    marlin_server::call_manually::set_temp_to_display( parser.value_celsius(), target_extruder);
   }
 
   #if ENABLED(AUTOTEMP)
@@ -155,11 +152,8 @@ void M109_no_parser(uint8_t target_extruder, const M109Flags& flags) {
     thermalManager.setTargetHotend(temp, target_extruder);
     if(flags.display_temp.has_value()) {
       // Override display_temp set by setTargetHotend
-          // This is a legit use - ignore the deprecated warning
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-      marlin_server::set_temp_to_display(*flags.display_temp, target_extruder);
-#pragma GCC diagnostic pop
+      // This is a legit use
+      marlin_server::call_manually::set_temp_to_display(*flags.display_temp, target_extruder);
     }
 
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
