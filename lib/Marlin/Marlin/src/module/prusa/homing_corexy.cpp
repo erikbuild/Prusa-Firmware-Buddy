@@ -406,7 +406,7 @@ static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_di
 
     // keep sampling *while* cycling on retries (we don't know which probes are good yet)
     uint8_t retries = 0;
-    for (uint8_t idx = 0; retries != XY_HOMING_ORIGIN_BUMP_RETRIES;) {
+    for (uint8_t idx = 0; retries <= XY_HOMING_ORIGIN_BUMP_RETRIES;) {
         const uint8_t slot = idx % probe_n;
 
         // measure distance B-/B+
@@ -445,7 +445,7 @@ static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_di
         }
         ++idx;
     }
-    if (retries == XY_HOMING_ORIGIN_BUMP_RETRIES) {
+    if (retries > XY_HOMING_ORIGIN_BUMP_RETRIES) {
         SERIAL_ECHOLN("axis measurement failed: too many failed probes");
         ui.status_printf_P(0, "Axis measurement failed");
         return false;
