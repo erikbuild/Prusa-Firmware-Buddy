@@ -322,7 +322,7 @@ void NFCTask::handle_read_field_request(const prusa3d_nfc_request_ReadField_1_0 
     case prusa3d_nfc_util_ValueType_1_0_UINT16_ARRAY: {
         prusa3d_nfc_util_Value_1_0_select_uint16_array_(&value);
         if (auto r = reader_.read_field_uint16_array(field, value.uint16_array.value.elements)) {
-            value.bytes.value.count = r->size();
+            value.uint16_array.value.count = r->size();
 
         } else {
             set_error_result(r.error());
