@@ -8,3 +8,5 @@ CompileFlags:
     - "-D__GNUC_MINOR__=3"
     - "-D__GNUC__PATCHLEVEL__=1"
     - "-std=c++23"
+  Remove:
+    - "-Wno-deprecated-declarations"
