@@ -9,10 +9,12 @@
 #include <modbus/modbus.hpp>
 #include "temperature.hpp"
 #include <ac_controller/modbus.hpp>
+#include <anfc/modbus.hpp>
 #include <cstdlib>
 #include <span>
 #include <freertos/timing.hpp>
 #include <option/has_ac_controller.h>
+#include <option/has_anfc.h>
 #include <xbuddy_extension/modbus.hpp>
 
 namespace {
@@ -120,6 +122,22 @@ bool write_register_file_callback(const ac_controller::modbus::Config &modbus_co
 
 #endif
 
+#if HAS_ANFC()
+
+void read_register_file_callback(anfc::modbus::Event &event, anfc::Device device) {
+    cyphal::application().get_nfc(device).consume(event);
+}
+
+[[nodiscard]] bool write_register_file_callback(const anfc::modbus::AcceptEvent &accept_event, anfc::Device device) {
+    return cyphal::application().get_nfc(device).queue(accept_event);
+}
+
+[[nodiscard]] bool write_register_file_callback(const anfc::modbus::Request &request, anfc::Device device) {
+    return cyphal::application().get_nfc(device).queue(request);
+}
+
+#endif
+
 using Status = modbus::Callbacks::Status;
 
 /// Read a register from a struct mapped to Modbus address space.
@@ -161,6 +179,39 @@ public:
         return write_register_file<ac_controller::modbus::Config>(address, in);
     }
 };
+#endif
+
+#if HAS_ANFC()
+
+class ANfc final : public modbus::Callbacks {
+private:
+    anfc::Device device;
+
+public:
+    explicit ANfc(anfc::Device device)
+        : device { device } {}
+
+    modbus::ServerAddress server_address() const final {
+        return anfc::modbus::server_address(device);
+    }
+
+    Status read_registers(uint16_t address, std::span<uint16_t> out) final {
+        return read_register_file<anfc::modbus::Event>(address, out, device);
+    }
+
+    Status write_registers(uint16_t address, std::span<const uint16_t> in) final {
+        if (const auto status = write_register_file<anfc::modbus::AcceptEvent>(address, in, device);
+            status != Status::IllegalAddress) {
+            return status;
+        }
+        if (const auto status = write_register_file<anfc::modbus::Request>(address, in, device);
+            status != Status::IllegalAddress) {
+            return status;
+        }
+        return Status::IllegalAddress;
+    }
+};
+
 #endif
 
 class Logic final : public modbus::Callbacks {
@@ -217,12 +268,20 @@ void app::run() {
 #if HAS_AC_CONTROLLER()
     AcController ac_controller;
 #endif
+#if HAS_ANFC()
+    ANfc anfc0 { anfc::Device::anfc0 };
+    ANfc anfc1 { anfc::Device::anfc1 };
+#endif
 
     auto devices = std::to_array<modbus::Callbacks *>({
         &logic,
             &mmu,
 #if HAS_AC_CONTROLLER()
             &ac_controller,
+#endif
+#if HAS_ANFC()
+            &anfc0,
+            &anfc1,
 #endif
     });
     modbus::Dispatch modbus_dispatch { devices };
