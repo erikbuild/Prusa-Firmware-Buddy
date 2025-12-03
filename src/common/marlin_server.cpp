@@ -436,13 +436,6 @@ namespace {
     constinit ErrorChecker enclosure_fan_checker;
 #endif
 
-#if HAS_BED_FAN()
-    constinit ErrorChecker bed_fan_checker; // Handles both bed_fans
-#endif
-#if HAS_PSU_FAN()
-    constinit ErrorChecker psu_fan_checker;
-#endif
-
 #ifdef HAS_TEMP_HEATBREAK
     constinit std::array<ErrorChecker, HOTENDS> heatBreakThermistorErrorChecker;
 #endif
@@ -2885,20 +2878,6 @@ static void _server_print_loop(void) {
         enclosure_fan_checker.checkTrue(enclosure_fan_ok, WarningType::EnclosureFanError, false, false);
         if (enclosure_fan_ok) {
             enclosure_fan_checker.reset();
-        }
-#endif
-#if HAS_BED_FAN()
-        const bool bed_fans_ok = bed_fan::bed_fan().is_rpm_ok();
-        bed_fan_checker.checkTrue(bed_fans_ok, WarningType::BedFanError, false, false);
-        if (bed_fans_ok) {
-            bed_fan_checker.reset();
-        }
-#endif
-#if HAS_PSU_FAN()
-        const bool psu_fan_ok = psu_fan::psu_fan().is_rpm_ok();
-        psu_fan_checker.checkTrue(psu_fan_ok, WarningType::PsuFanError, false, false);
-        if (psu_fan_ok) {
-            psu_fan_checker.reset();
         }
 #endif
     }

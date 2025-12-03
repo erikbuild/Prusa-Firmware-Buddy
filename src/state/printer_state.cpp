@@ -88,7 +88,7 @@ bool is_warning_attention(const fsm::BaseData &data) {
 #if HAS_SELFTEST()
     case ErrCode::ERR_SYSTEM_ACTION_SELFTEST_REQUIRED:
 #endif
-#if HAS_ILI9488_DISPLAY()
+#if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
         // Local issue, do not report to connect
     case ErrCode::ERR_ELECTRO_DISPLAY_PROBLEM_DETECTED:
 #endif
@@ -687,15 +687,6 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 #if HAS_SELFTEST()
     case WarningType::SelftestNotSuccessfullyCompleted:
         return ErrCode::CONNECT_UNFINISHED_SELFTEST;
-#endif
-
-#if HAS_BED_FAN()
-    case WarningType::BedFanError:
-        return ErrCode::CONNECT_BED_FAN_ERROR;
-#endif
-#if HAS_PSU_FAN()
-    case WarningType::PsuFanError:
-        return ErrCode::CONNECT_PSU_FAN_ERROR;
 #endif
 
     case WarningType::_cnt:

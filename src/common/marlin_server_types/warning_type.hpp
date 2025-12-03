@@ -97,12 +97,6 @@ enum class WarningType : uint32_t {
     HomingCalibrationFromMenuNeeded,
 #endif
     AccelerometerCommunicationFailed,
-#if HAS_BED_FAN()
-    BedFanError,
-#endif
-#if HAS_PSU_FAN()
-    PsuFanError,
-#endif
 #if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     DisplayProblemDetected,
 #endif
