@@ -15,15 +15,6 @@
         #include <module/prusa/toolchanger.h>
     #endif
 
-// This value is important only for XL, for MMU it should just be something bigger than 5 (num of slots)
-uint8_t get_invalid_tool_number() {
-    #if HAS_TOOLCHANGER()
-    return PrusaToolChanger::MARLIN_NO_TOOL_PICKED;
-    #elif HAS_MMU2()
-    return 6; // MMU has 5 slots
-    #endif
-}
-
 /// returns std::array with VirtualToolIndex(i) at i-th index
 constexpr auto get_default_mapping() {
     return stdext::make_iota_array<GcodeToolIndex::count, [](std::size_t i) {
