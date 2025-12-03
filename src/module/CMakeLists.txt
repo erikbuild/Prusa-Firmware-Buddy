@@ -2,6 +2,7 @@
 # `firmware` targets and similar. Keep it civil, please
 
 add_subdirectory(ac_controller)
+add_subdirectory(anfc)
 add_subdirectory(modbus)
 add_subdirectory(utils)
 add_subdirectory(magic_optimizations)
