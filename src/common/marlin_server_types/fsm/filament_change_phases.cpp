@@ -1,6 +1,7 @@
 #include "filament_change_phases.hpp"
 
 #include <option/has_mmu2.h>
+#include <option/has_indx.h>
 
 namespace ClientResponses {
 
@@ -48,7 +49,7 @@ constinit const EnumArray<PhasesLoadUnload, PhaseResponses, CountPhases<PhasesLo
         { PhasesLoadUnload::UnloadNozzleCleaning, {} },
         { PhasesLoadUnload::LoadNozzleCleaning, {} },
 #endif
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
         { PhasesLoadUnload::FilamentStuck, { Response::Unload } },
 #endif
 #if HAS_AUTO_RETRACT()

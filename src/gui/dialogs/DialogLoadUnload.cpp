@@ -15,6 +15,7 @@
 
 #include <option/has_mmu2.h>
 #include <option/has_nozzle_cleaner.h>
+#include <option/has_indx.h>
 
 namespace {
 
@@ -376,7 +377,7 @@ private:
 };
 #endif
 
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
 class FrameFStuckNotice : public FrameNotice {
 public:
     FrameFStuckNotice(window_t *parent, Phase phase)
@@ -458,7 +459,7 @@ using Frames = FrameDefinitionList<DialogLoadUnload::FrameStorage,
     FrameDefinition<Phase::UnloadNozzleCleaning, FrameProgress, txt_nozzle_cleaning>,
     FrameDefinition<Phase::LoadNozzleCleaning, FrameProgress, txt_nozzle_cleaning>,
 #endif
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
     FrameDefinition<Phase::FilamentStuck, FrameFStuckNotice>,
 #endif
 #if HAS_AUTO_RETRACT()

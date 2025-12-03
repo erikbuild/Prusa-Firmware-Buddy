@@ -6,6 +6,7 @@
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_loadcell.h>
 #include <option/has_mmu2.h>
+#include <option/has_indx.h>
 
 // define enum classes for responses here
 // and YES phase can have 0 responses
@@ -54,7 +55,7 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
     UnloadNozzleCleaning,
     LoadNozzleCleaning,
 #endif
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
     FilamentStuck,
 #endif
 

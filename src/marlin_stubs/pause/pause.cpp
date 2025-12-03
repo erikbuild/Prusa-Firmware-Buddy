@@ -61,6 +61,7 @@ static_assert(HAS_PAUSE());
 #include <option/has_wastebin.h>
 #include <option/has_side_fsensor.h>
 #include <option/has_toolchanger.h>
+#include <option/has_indx.h>
 
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
@@ -992,7 +993,7 @@ void Pause::unload_start_process([[maybe_unused]] Response response) {
     switch (load_type) {
 
     case LoadType::filament_stuck:
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
         set(LoadState::filament_stuck_ask);
 #else
         set(LoadState::manual_unload);
@@ -1009,7 +1010,7 @@ void Pause::unload_start_process([[maybe_unused]] Response response) {
     }
 }
 
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
 void Pause::filament_stuck_ask_process(Response response) {
     setPhase(PhasesLoadUnload::FilamentStuck);
 

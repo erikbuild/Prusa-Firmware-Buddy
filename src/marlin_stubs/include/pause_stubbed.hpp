@@ -19,6 +19,7 @@
 #include <option/has_mmu2.h>
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_side_fsensor.h>
+#include <option/has_indx.h>
 
 #include <utils/progress_mapper.hpp>
 
@@ -38,7 +39,7 @@ public:
     enum class LoadState {
         start = 0,
         unload_start,
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
         filament_stuck_ask,
 #endif
 #if HAS_AUTO_RETRACT()
@@ -196,7 +197,7 @@ private:
 
     void start_process(Response response);
     void unload_start_process(Response response);
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
     void filament_stuck_ask_process(Response response);
 #endif
 #if HAS_AUTO_RETRACT()
@@ -245,7 +246,7 @@ private:
     static constexpr EnumArray<LoadState, StateHandler, static_cast<int>(LoadState::_finished)> state_handlers {
         { LoadState::start, &Pause::start_process },
             { LoadState::unload_start, &Pause::unload_start_process },
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
             { LoadState::filament_stuck_ask, &Pause::filament_stuck_ask_process },
 #endif
 #if HAS_AUTO_RETRACT()
