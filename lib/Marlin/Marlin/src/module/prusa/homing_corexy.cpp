@@ -22,6 +22,7 @@
 
 #include <feature/motordriver_util.h>
 #include <lcd/ultralcd.h>
+#include <configuration.hpp> // for axis_home_*_diff
 
 #if ENABLED(CRASH_RECOVERY)
     #include "feature/prusa/crash_recovery.hpp"
@@ -33,7 +34,12 @@
 #include <feature/input_shaper/input_shaper_config.hpp>
 #include <config_store/store_instance.hpp>
 #include <metric.h>
+#include <cmath_ext.h>
 #include <option/has_toolchanger.h>
+
+#include <utility>
+using std::make_pair;
+using std::pair;
 
 #if HAS_TRINAMIC && defined(XY_HOMING_MEASURE_SENS_MIN)
     #include <configuration.hpp>
@@ -219,15 +225,15 @@ struct measure_axis_params {
  * @brief Measure axis distance precisely
  * @param axis Axis to measure
  * @param origin_steps Initial stepper position
- * @param dist Maximum distance/direction to travel to hit an endstop
- * @param m_steps Measured steps
- * @param m_dist Measured distance
+ * @param dist Travel step direction/distance
+ * @param m_steps Measured steps at the end of the travel
+ * @param m_dist Measured distance at the end of the travel
  * @param fr_mm_s Service move feedrate
  * @param params Measured axis/stepper parameters
- * @return True on success
+ * @return Endstop hit state (true when hit)
  */
-static bool measure_axis_distance(AxisEnum axis, xy_long_t origin_steps, int32_t dist, int32_t &m_steps, float &m_dist,
-    const float fr_mm_s, const measure_axis_params &params) {
+static bool measure_axis_distance(const AxisEnum axis, const xy_long_t origin_steps, const int32_t dist,
+    int32_t &m_steps, float &m_dist, const float fr_mm_s, const measure_axis_params &params) {
     // full initial position
     const xyze_long_t initial_steps = { origin_steps.a, origin_steps.b, stepper.position(C_AXIS), stepper.position(E_AXIS) };
     xyze_pos_t initial_mm;
@@ -336,9 +342,11 @@ static measure_axis_params measure_axis_defaults(const AxisEnum axis) {
     return params;
 }
 
-// Call measure_axis_distance() with calibrated parameters
-// (or defaults in printers without measurement calibration)
-static bool measure_axis_distance(AxisEnum axis, xy_long_t origin_steps, int32_t dist,
+/**
+ * @brief Call measure_axis_distance() with calibrated parameters
+ * @see measure_axis_distance() for parameter documentation
+ **/
+static bool measure_axis_distance(const AxisEnum axis, const xy_long_t origin_steps, const int32_t dist,
     int32_t &m_steps, float &m_dist, const float fr_mm_s) {
     measure_axis_params params;
 
@@ -379,25 +387,47 @@ S sum_along(const T *seq, const size_t size, const size_t axis) {
 }
 
 /**
+ * @brief Distance required to reach the target feedrate
+ * @param fr_mm_s Target feedrate
+ * @return Distance to cruising speed from zero velocity
+ * Calculation performed with current planner travel settings
+ */
+static float travel_accel_distance(const float fr_mm_s) {
+    return SQR(fr_mm_s) / (2.f * planner.settings.travel_acceleration);
+}
+
+/**
  * @brief Part of precise homing.
  * @param axis Physical axis to measure
+ * @param ab_off Expected relative AB cycle offset from origin
  * @param c_dist AB cycle distance from the endstop
  * @param m_dist AB distance from the endstop (mm)
  * @param fr_mm_s Service move feedrate
  * @return True on success
  */
-static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_dist, const float fr_mm_s) {
+static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
+    xy_pos_t &c_dist, xy_pos_t &m_dist, const float fr_mm_s) {
     // prepare for repeated measurements
     const AxisEnum other_axis = (axis == B_AXIS ? A_AXIS : B_AXIS);
     MeasurementGuard setup_guard(other_axis);
     ++internal::probe_id;
 
-    // allow half a cycle of tolerance, we'll restrict the tolerance during validation
+    // allow half a cycle of measurement tolerance, validation will further restrict allowance to 1/4
     const float measure_bump_max_err = planner.mm_per_step[axis] * phase_cycle_steps(axis) / 2;
 
-    const int32_t measure_max_dist = (XY_HOMING_ORIGIN_OFFSET * 4) / planner.mm_per_step[axis];
     const int32_t measure_dir = (axis == B_AXIS ? -X_HOME_DIR : -Y_HOME_DIR);
     const xy_long_t origin_steps = { stepper.position(A_AXIS), stepper.position(B_AXIS) };
+
+    // expected exact corner distances given current offset
+    const int32_t exp_d = XY_HOMING_ORIGIN_OFFSET * 2 / planner.mm_per_step[axis] + ab_off[0] * phase_cycle_steps(other_axis) * 2;
+    const int32_t exp_a = ab_off[1] * phase_cycle_steps(axis);
+    const int32_t exp_dist_steps[2] = { exp_d + exp_a * measure_dir, exp_d - exp_a * measure_dir };
+
+    // absolute tolerance for the travel move
+    const float home_max_diff_mm = 2 * max(axis_home_max_diff(A_AXIS) - axis_home_min_diff(A_AXIS), axis_home_max_diff(B_AXIS) - axis_home_min_diff(B_AXIS));
+    const float home_abs_eps_mm = home_max_diff_mm * float(M_SQRT2);
+    const int32_t measure_eps_steps = home_abs_eps_mm / planner.mm_per_step[axis] + phase_cycle_steps(axis) * 2;
+    const int32_t measure_acc_steps = travel_accel_distance(fr_mm_s) * float(M_SQRT2) / planner.mm_per_step[axis];
 
     // keep the average of at least n values having less than max_err of separation between each
     constexpr int probe_n = 2;
@@ -410,18 +440,39 @@ static bool measure_phase_cycles(AxisEnum axis, xy_pos_t &c_dist, xy_pos_t &m_di
         const uint8_t slot = idx % probe_n;
 
         // measure distance B-/B+
-        for (uint8_t dir = 0; dir != 2; ++dir) {
-            if (!measure_axis_distance(axis, origin_steps, measure_max_dist * (dir ? measure_dir : -measure_dir), p_steps[slot][dir], p_dist[slot][dir], fr_mm_s)) {
-                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), " not reached");
+        for (uint8_t dir = 0; dir != 2;) {
+            int32_t dist_steps = (exp_dist_steps[dir] + measure_eps_steps + measure_acc_steps) * (dir ? measure_dir : -measure_dir);
+            if (!measure_axis_distance(axis, origin_steps, dist_steps, p_steps[slot][dir], p_dist[slot][dir], fr_mm_s)) {
+                // we can't possibly reach the endstop by retrying, abort
+                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": not reached");
                 ui.status_printf_P(0, "Endstop not reached");
                 return false;
             }
-        }
 
-        // keep signs positive
-        LOOP_XY(i) {
-            p_steps[slot][i] = abs(p_steps[slot][i]);
-            p_dist[slot][i] = abs(p_dist[slot][i]);
+            // keep signs positive
+            p_steps[slot][dir] = abs(p_steps[slot][dir]);
+            p_dist[slot][dir] = abs(p_dist[slot][dir]);
+
+            if (p_steps[slot][dir] >= (exp_dist_steps[dir] + measure_eps_steps)) {
+                // calculated travel ends within deceleration, wrong position or short travel
+                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": travel too short");
+                ui.status_printf_P(0, "Endstop not reached");
+                return false;
+            }
+
+            if (p_steps[slot][dir] < (exp_dist_steps[dir] - measure_eps_steps)) {
+                // early trigger, retry the probe in the same direction
+                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": early trigger");
+                ui.status_printf_P(0, "Endstop early trigger");
+                if (++retries <= XY_HOMING_ORIGIN_BUMP_RETRIES) {
+                    continue;
+                }
+            }
+
+            ++dir;
+        }
+        if (retries > XY_HOMING_ORIGIN_BUMP_RETRIES) {
+            break;
         }
 
         // check for maximum probe difference in the window
@@ -561,7 +612,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const xy_long_t &origin_ste
                     return false;
                 }
 
-                if (!measure_phase_cycles(axis, data.c_dist, data.m_dist, fr_mm_s)) {
+                if (!measure_phase_cycles(axis, seq, data.c_dist, data.m_dist, fr_mm_s)) {
                     return false;
                 }
             }
@@ -811,7 +862,7 @@ static bool measure_calibrate_sens(CoreXYHomeTMCSens &calibrated_sens,
     static_assert(XY_HOMING_MEASURE_SENS_MAX > XY_HOMING_MEASURE_SENS_MIN);
     constexpr size_t slots = (XY_HOMING_MEASURE_SENS_MAX - XY_HOMING_MEASURE_SENS_MIN) + 1;
     static_assert(slots > 1 && slots < 16);
-    std::pair<int8_t, float> scores[slots];
+    pair<int8_t, float> scores[slots];
     size_t score_cnt = 0;
 
     for (int8_t sens = XY_HOMING_MEASURE_SENS_MIN; sens <= XY_HOMING_MEASURE_SENS_MAX; ++sens) {
@@ -968,7 +1019,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
 
     // measure from current origin
     xy_pos_t c_dist, _;
-    if (!measure_phase_cycles(measured_axis, c_dist, _, fr_mm_s)) {
+    if (!measure_phase_cycles(measured_axis, { 0, 0 }, c_dist, _, fr_mm_s)) {
         return false;
     }
 
@@ -989,7 +1040,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
         return false;
     }
     xy_pos_t v_c_dist;
-    if (!measure_phase_cycles(measured_axis, v_c_dist, _, fr_mm_s)) {
+    if (!measure_phase_cycles(measured_axis, v_ab_off, v_c_dist, _, fr_mm_s)) {
         return false;
     }
 
