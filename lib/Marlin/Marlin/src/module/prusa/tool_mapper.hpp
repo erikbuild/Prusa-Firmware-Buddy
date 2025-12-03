@@ -57,7 +57,8 @@ public:
 
     void set_unassigned(GcodeToolIndex gcode_tool);
 
-    // This is special tool identifier, that says that this tool is not mapped to any tool, and is threfore disabled by tool mapping
+    /// This is special tool identifier, that says that this tool is not mapped to any tool, and is threfore disabled by tool mapping
+    /// @deprecated use NoTool from tool_index.hpp instead
     static constexpr auto NO_TOOL_MAPPED = std::numeric_limits<uint8_t>::max();
 
     // Container with serialized state of tool mapping
