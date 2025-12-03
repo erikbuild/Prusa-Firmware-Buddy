@@ -64,7 +64,7 @@ public:
 
 private:
     [[nodiscard]] std::variant<GcodeToolIndex, NoTool> to_gcode_unlocked(VirtualToolIndex virtual_tool) const;
-    bool set_unassigned_unlocked(uint8_t gcode_tool);
+    void set_unassigned_unlocked(GcodeToolIndex gcode_tool);
 
     mutable freertos::Mutex mutex;
     bool enabled;

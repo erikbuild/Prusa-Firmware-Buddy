@@ -72,18 +72,16 @@ bool ToolMapper::set_mapping(uint8_t gcode_tool, uint8_t virtual_tool) {
 }
 
 bool ToolMapper::set_unassigned(uint8_t gcode_tool) {
-    std::unique_lock lock(mutex);
-    return set_unassigned_unlocked(gcode_tool);
-}
-
-bool ToolMapper::set_unassigned_unlocked(uint8_t gcode_tool) {
-    // check that gcode tool is valid
-    if (gcode_tool >= EXTRUDERS || gcode_tool == get_invalid_tool_number()) {
+    if (gcode_tool >= GcodeToolIndex::count) {
         return false;
     }
-
-    gcode_to_virtual[gcode_tool] = NoTool {};
+    std::unique_lock lock(mutex);
+    set_unassigned_unlocked(GcodeToolIndex::from_raw(gcode_tool));
     return true;
+}
+
+void ToolMapper::set_unassigned_unlocked(GcodeToolIndex gcode_tool) {
+    gcode_to_virtual[gcode_tool.to_raw()] = NoTool {};
 }
 
 void ToolMapper::set_enable(bool enable) {
@@ -131,8 +129,8 @@ void ToolMapper::reset() {
 
 void ToolMapper::set_all_unassigned() {
     std::unique_lock lock(mutex);
-    for (int8_t e = 0; e < EXTRUDERS; e++) {
-        set_unassigned_unlocked(e);
+    for (auto gcode_tool : GcodeToolIndex::all()) {
+        set_unassigned_unlocked(gcode_tool);
     }
 }
 
