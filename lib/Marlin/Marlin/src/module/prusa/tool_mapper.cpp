@@ -1,15 +1,11 @@
-#include "inc/MarlinConfig.h"
+#include "module/prusa/tool_mapper.hpp"
 #include <common/array_extensions.hpp>
 #include <cstddef>
-#include <iterator>
-#include <mutex>
 #include <option/has_mmu2.h>
-#include <option/has_tool_mapping.h>
 #include <option/has_toolchanger.h>
 
 #if HAS_TOOL_MAPPING()
 
-    #include "module/prusa/tool_mapper.hpp"
     #include "mmu2_toolchanger_common.hpp"
     #if HAS_TOOLCHANGER()
         #include <module/prusa/toolchanger.h>
@@ -31,9 +27,7 @@ ToolMapper::ToolMapper()
 ToolMapper &ToolMapper::operator=(const ToolMapper &other) {
     std::scoped_lock lock(mutex, other.mutex);
     this->enabled = other.enabled;
-    for (size_t i = 0; i < std::size(gcode_to_virtual); i++) {
-        this->gcode_to_virtual[i] = other.gcode_to_virtual[i];
-    }
+    this->gcode_to_virtual = other.gcode_to_virtual;
     return *this;
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <freertos/mutex.hpp>
-#include "inc/MarlinConfig.h"
 #include <utils/overloaded_visitor.hpp>
 #include <limits>
 #include <mutex>
@@ -97,16 +96,16 @@ public:
     /// @deprecated use NoTool from tool_index.hpp instead
     static constexpr auto NO_TOOL_MAPPED = std::numeric_limits<uint8_t>::max();
 
-    // Container with serialized state of tool mapping
+    /// Container with serialized state of tool mapping
     struct __attribute__((packed)) serialized_state_t {
         bool enabled;
         uint8_t gcode_to_virtual[EXTRUDERS];
     };
 
-    // serialize state into packed structure (for power panic)
+    /// serialize state into packed structure (for power panic)
     void serialize(serialized_state_t &to);
 
-    // deserialize state into packed structure (after power panic)
+    /// deserialize state into packed structure (after power panic)
     void deserialize(serialized_state_t &from);
 
 private:
