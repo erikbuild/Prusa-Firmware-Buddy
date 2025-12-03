@@ -1,5 +1,4 @@
 #include "inc/MarlinConfig.h"
-#include <utils/overloaded_visitor.hpp>
 #include <common/array_extensions.hpp>
 #include <cstddef>
 #include <iterator>
@@ -96,16 +95,9 @@ uint8_t ToolMapper::to_virtual(uint8_t gcode_tool, bool ignore_enabled) const {
         return gcode_tool; // no maping
     }
 }
-uint8_t ToolMapper::to_gcode(uint8_t virtual_tool) const {
+std::variant<GcodeToolIndex, NoTool> ToolMapper::to_gcode(VirtualToolIndex virtual_tool) const {
     std::unique_lock lock(mutex);
-    if (virtual_tool >= VirtualToolIndex::count) {
-        return NO_TOOL_MAPPED;
-    }
-    auto maybe_gcode = to_gcode_unlocked(VirtualToolIndex::from_raw(virtual_tool));
-    return match(
-        maybe_gcode,
-        [](GcodeToolIndex gcode_tool) { return gcode_tool.to_raw(); },
-        [](NoTool) { return NO_TOOL_MAPPED; });
+    return to_gcode_unlocked(virtual_tool);
 }
 
 std::variant<GcodeToolIndex, NoTool> ToolMapper::to_gcode_unlocked(VirtualToolIndex virtual_tool) const {
