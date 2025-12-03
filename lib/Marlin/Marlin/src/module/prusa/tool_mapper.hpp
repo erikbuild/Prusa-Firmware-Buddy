@@ -37,7 +37,20 @@ public:
 
     /// Convert gcode tool to virtual
     /// note: might return NO_TOOL_MAPPED, so check for this value
-    [[nodiscard]] uint8_t to_virtual(uint8_t gcode_tool, bool ignore_enabled = false) const;
+    /// @deprecated use the ToolIndex overload
+    [[nodiscard]] inline uint8_t to_virtual(uint8_t gcode_tool, bool ignore_enabled = false) const {
+        if (gcode_tool >= GcodeToolIndex::count) {
+            return NO_TOOL_MAPPED;
+        }
+        auto maybe_virtual = to_virtual(GcodeToolIndex::from_raw(gcode_tool), ignore_enabled);
+        return match(
+            maybe_virtual,
+            [](VirtualToolIndex virtual_tool) { return virtual_tool.to_raw(); },
+            [](NoTool) { return NO_TOOL_MAPPED; });
+    }
+
+    /// Convert gcode tool to virtual
+    [[nodiscard]] std::variant<VirtualToolIndex, NoTool> to_virtual(GcodeToolIndex gcode_tool, bool ignore_enabled = false) const;
 
     /// Convert virtual tool to gcode
     /// @deprecated use the ToolIndex overload

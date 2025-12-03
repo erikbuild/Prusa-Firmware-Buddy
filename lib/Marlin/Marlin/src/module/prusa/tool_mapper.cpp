@@ -84,15 +84,12 @@ void ToolMapper::set_enable(bool enable) {
     this->enabled = enable;
 }
 
-uint8_t ToolMapper::to_virtual(uint8_t gcode_tool, bool ignore_enabled) const {
+std::variant<VirtualToolIndex, NoTool> ToolMapper::to_virtual(GcodeToolIndex gcode_tool, bool ignore_enabled) const {
     std::unique_lock lock(mutex);
-    if ((ignore_enabled || enabled) && gcode_tool < GcodeToolIndex::count) {
-        return match(
-            gcode_to_virtual[gcode_tool],
-            [](VirtualToolIndex virtual_tool) { return virtual_tool.to_raw(); },
-            [](NoTool) { return NO_TOOL_MAPPED; });
+    if (ignore_enabled || enabled) {
+        return gcode_to_virtual[gcode_tool.to_raw()];
     } else {
-        return gcode_tool; // no maping
+        return VirtualToolIndex::from_raw(gcode_tool.to_raw()); // no mapping
     }
 }
 std::variant<GcodeToolIndex, NoTool> ToolMapper::to_gcode(VirtualToolIndex virtual_tool) const {
