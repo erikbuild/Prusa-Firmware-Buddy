@@ -18,8 +18,6 @@
  */
 class ToolMapper {
 public:
-    ToolMapper();
-
     ToolMapper &operator=(const ToolMapper &other);
 
     /// Create new mapping of tool
@@ -35,7 +33,10 @@ public:
     bool set_mapping(GcodeToolIndex gcode_tool, VirtualToolIndex virtual_tool);
 
     /// Enable or disable all tool mappings
-    void set_enable(bool enable);
+    inline void set_enable(bool enable) {
+        std::unique_lock lock(mutex);
+        this->enabled = enable;
+    }
 
     /// true when mapping is enabled
     inline bool is_enabled() {
@@ -74,12 +75,24 @@ public:
     }
 
     /// Convert virtual tool to gcode
-    [[nodiscard]] std::variant<GcodeToolIndex, NoTool> to_gcode(VirtualToolIndex virtual_tool) const;
+    [[nodiscard]] inline std::variant<GcodeToolIndex, NoTool> to_gcode(VirtualToolIndex virtual_tool) const {
+        std::unique_lock lock(mutex);
+        return to_gcode_unlocked(virtual_tool);
+    }
 
     /// Reset all tool mapping
-    void reset();
+    inline void reset() {
+        std::unique_lock lock(mutex);
+        gcode_to_virtual = default_mapping;
+        enabled = false;
+    }
 
-    void set_all_unassigned();
+    inline void set_all_unassigned() {
+        std::unique_lock lock(mutex);
+        for (auto gcode_tool : GcodeToolIndex::all()) {
+            set_unassigned_unlocked(gcode_tool);
+        }
+    }
 
     /// @deprecated use the ToolIndex overload
     inline bool set_unassigned(uint8_t gcode_tool) {
@@ -90,7 +103,10 @@ public:
         return true;
     }
 
-    void set_unassigned(GcodeToolIndex gcode_tool);
+    inline void set_unassigned(GcodeToolIndex gcode_tool) {
+        std::unique_lock lock(mutex);
+        set_unassigned_unlocked(gcode_tool);
+    }
 
     /// This is special tool identifier, that says that this tool is not mapped to any tool, and is threfore disabled by tool mapping
     /// @deprecated use NoTool from tool_index.hpp instead
@@ -109,12 +125,20 @@ public:
     void deserialize(serialized_state_t &from);
 
 private:
+    /// std::array with VirtualToolIndex(i) at i-th index
+    static constexpr auto default_mapping = stdext::make_iota_array<GcodeToolIndex::count, [](std::size_t i) {
+        return std::variant<VirtualToolIndex, NoTool>(VirtualToolIndex::from_raw(i));
+    }>();
+
     [[nodiscard]] std::variant<GcodeToolIndex, NoTool> to_gcode_unlocked(VirtualToolIndex virtual_tool) const;
-    void set_unassigned_unlocked(GcodeToolIndex gcode_tool);
+
+    inline void set_unassigned_unlocked(GcodeToolIndex gcode_tool) {
+        gcode_to_virtual[gcode_tool.to_raw()] = NoTool {};
+    }
 
     mutable freertos::Mutex mutex;
-    bool enabled;
-    std::array<std::variant<VirtualToolIndex, NoTool>, GcodeToolIndex::count> gcode_to_virtual;
+    bool enabled = false;
+    std::array<std::variant<VirtualToolIndex, NoTool>, GcodeToolIndex::count> gcode_to_virtual = default_mapping;
 };
 
 extern ToolMapper tool_mapper;
