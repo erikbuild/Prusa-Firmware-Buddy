@@ -46,27 +46,21 @@ ToolMapper &ToolMapper::operator=(const ToolMapper &other) {
     return *this;
 }
 
-bool ToolMapper::set_mapping(uint8_t gcode_tool, uint8_t virtual_tool) {
+bool ToolMapper::set_mapping(GcodeToolIndex gcode_tool, VirtualToolIndex virtual_tool) {
     std::unique_lock lock(mutex);
-    // virtual tool is enabled and valid
-    if (virtual_tool >= EXTRUDERS || !is_tool_enabled(virtual_tool)) {
-        return false;
-    }
-
-    // check that gcode tool is valid as well
-    if (gcode_tool >= EXTRUDERS || gcode_tool == get_invalid_tool_number()) {
+    if (!is_tool_enabled(virtual_tool.to_raw())) {
         return false;
     }
 
     // if this virtual tool is already mapped to some gcode tool, remove this assignment
-    auto maybe_gcode = to_gcode_unlocked(VirtualToolIndex::from_raw(virtual_tool));
-    match(
-        maybe_gcode,
-        [&](GcodeToolIndex previous_gcode) { gcode_to_virtual[previous_gcode.to_raw()] = NoTool {}; },
-        [](NoTool) {});
+    auto maybe_gcode = to_gcode_unlocked(virtual_tool);
+    auto *previous_gcode = std::get_if<GcodeToolIndex>(&maybe_gcode);
+    if (previous_gcode) {
+        gcode_to_virtual[previous_gcode->to_raw()] = NoTool {};
+    }
 
     // do the mapping
-    gcode_to_virtual[gcode_tool] = VirtualToolIndex::from_raw(virtual_tool);
+    gcode_to_virtual[gcode_tool.to_raw()] = virtual_tool;
     return true;
 }
 

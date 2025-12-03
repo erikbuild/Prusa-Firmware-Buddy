@@ -24,7 +24,16 @@ public:
     ToolMapper &operator=(const ToolMapper &other);
 
     /// Create new mapping of tool
-    bool set_mapping(uint8_t gcode_tool, uint8_t virtual_tool);
+    /// @deprecated use the ToolIndex overload
+    inline bool set_mapping(uint8_t gcode_tool, uint8_t virtual_tool) {
+        if (gcode_tool >= GcodeToolIndex::count || virtual_tool >= VirtualToolIndex::count) {
+            return false;
+        }
+        return set_mapping(GcodeToolIndex::from_raw(gcode_tool), VirtualToolIndex::from_raw(virtual_tool));
+    }
+
+    /// Create new mapping of tool
+    bool set_mapping(GcodeToolIndex gcode_tool, VirtualToolIndex virtual_tool);
 
     /// Enable or disable all tool mappings
     void set_enable(bool enable);
