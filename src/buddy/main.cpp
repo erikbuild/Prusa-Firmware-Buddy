@@ -69,6 +69,9 @@
 #include <freertos/timing.hpp>
 #include <heap.h>
 #include <heap.hpp>
+#include <fanctl.hpp>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
+#include <sensor_data.hpp>
 
 #if BUDDY_ENABLE_CONNECT()
     #include "connect/run.hpp"
@@ -192,14 +195,20 @@ static void resources_update() {
     TaskDeps::provide(TaskDeps::Dependency::resources_ready);
 }
 
+// Initializes static variables of singletons which are accessed from ISRs (requires locking a mutex)
+static void init_isr_statics() {
+    Fans::print(0);
+    Fans::heat_break(0);
+    sensor_data();
+    GetExtruderFSensor(0);
+    GetSideFSensor(0);
+    Sound::getInstance();
+}
+
 extern "C" void main_cpp(void) {
     // save and clear reset flags
     HAL_RCC_CSR = RCC->CSR;
     __HAL_RCC_CLEAR_RESET_FLAGS();
-
-    // Initialize sound instance now with its default settings
-    // to be able to service sound related calls from interrupts.
-    Sound::getInstance();
 
     hw_gpio_init();
     hw_dma_init();
@@ -713,6 +722,8 @@ extern "C" void startup_task(void const *) {
 
     // init global variables and call constructors
     __libc_init_array();
+
+    init_isr_statics();
 
     // call the main main() function
     main_cpp();
