@@ -45,7 +45,17 @@ public:
     void reset();
 
     void set_all_unassigned();
-    bool set_unassigned(uint8_t gcode_tool);
+
+    /// @deprecated use the ToolIndex overload
+    inline bool set_unassigned(uint8_t gcode_tool) {
+        if (gcode_tool >= GcodeToolIndex::count) {
+            return false;
+        }
+        set_unassigned(GcodeToolIndex::from_raw(gcode_tool));
+        return true;
+    }
+
+    void set_unassigned(GcodeToolIndex gcode_tool);
 
     // This is special tool identifier, that says that this tool is not mapped to any tool, and is threfore disabled by tool mapping
     static constexpr auto NO_TOOL_MAPPED = std::numeric_limits<uint8_t>::max();

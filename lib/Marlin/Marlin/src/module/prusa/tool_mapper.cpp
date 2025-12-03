@@ -71,13 +71,9 @@ bool ToolMapper::set_mapping(uint8_t gcode_tool, uint8_t virtual_tool) {
     return true;
 }
 
-bool ToolMapper::set_unassigned(uint8_t gcode_tool) {
-    if (gcode_tool >= GcodeToolIndex::count) {
-        return false;
-    }
+void ToolMapper::set_unassigned(GcodeToolIndex gcode_tool) {
     std::unique_lock lock(mutex);
-    set_unassigned_unlocked(GcodeToolIndex::from_raw(gcode_tool));
-    return true;
+    set_unassigned_unlocked(gcode_tool);
 }
 
 void ToolMapper::set_unassigned_unlocked(GcodeToolIndex gcode_tool) {
