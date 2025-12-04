@@ -1,6 +1,8 @@
 /// @file
 #include <modbus/traits.hpp>
 
+#include <array>
+
 namespace {
 
 struct ValidBasic {
@@ -70,5 +72,33 @@ struct InvalidEmpty {
     static constexpr uint16_t address = 0x9000;
 };
 static_assert(!modbus::RegisterFile<InvalidEmpty>);
+
+// RegisterFileWithPayload tests
+
+struct ValidPayload {
+    static constexpr uint16_t address = 0xA000;
+    uint16_t size;
+    std::array<uint16_t, 10> data;
+};
+static_assert(modbus::RegisterFileWithPayload<ValidPayload>);
+
+struct PayloadMissingSize {
+    static constexpr uint16_t address = 0xA100;
+    std::array<uint16_t, 10> data;
+};
+static_assert(!modbus::RegisterFileWithPayload<PayloadMissingSize>);
+
+struct PayloadMissingData {
+    static constexpr uint16_t address = 0xA200;
+    uint16_t size;
+};
+static_assert(!modbus::RegisterFileWithPayload<PayloadMissingData>);
+
+struct PayloadNonSpannableData {
+    static constexpr uint16_t address = 0xA300;
+    uint16_t size;
+    uint16_t data; // not an array
+};
+static_assert(!modbus::RegisterFileWithPayload<PayloadNonSpannableData>);
 
 } // namespace
