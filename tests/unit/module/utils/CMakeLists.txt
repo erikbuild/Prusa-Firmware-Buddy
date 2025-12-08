@@ -45,8 +45,14 @@ add_executable(timer_tests ${CMAKE_CURRENT_SOURCE_DIR}/timer_tests.cpp)
 target_include_directories(timer_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils)
 add_catch_test(timer_tests)
 
+# leaky_bucket_tests
 add_executable(leaky_bucket_tests leaky_bucket.cpp)
 target_include_directories(
   leaky_bucket_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
   )
 add_catch_test(leaky_bucket_tests)
+
+# value_pack_tests
+add_executable(value_pack_tests value_pack_tests.cpp)
+target_link_libraries(value_pack_tests buddy_utils)
+add_catch_test(value_pack_tests)
