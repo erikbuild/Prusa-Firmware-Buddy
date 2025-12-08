@@ -8,7 +8,7 @@
 
 using GCodeCheckPrinterModelCode = uint16_t;
 
-/// Printer model enum. Should not be stored anywhere, the order of the items can change.
+/// Printer model enum is stored in EEPROM as last booted FW model. Order is important and should not change.
 enum class PrinterModel : uint8_t {
     mk3,
     mk3s,
@@ -23,8 +23,8 @@ enum class PrinterModel : uint8_t {
     xl_dev_kit,
     ix,
     coreone,
-    coreone_indx,
     coreonel,
+    coreone_indx,
     coreonel_indx,
 
     _cnt
@@ -39,8 +39,8 @@ enum class PrinterModelCompatibilityGroup : uint8_t {
     ix,
     mini,
     coreone,
-    coreone_indx,
     coreonel,
+    coreone_indx,
     coreonel_indx,
 };
 
