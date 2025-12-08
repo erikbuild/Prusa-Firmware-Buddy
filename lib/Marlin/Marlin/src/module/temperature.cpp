@@ -110,12 +110,18 @@
 #include <option/has_local_bed.h>
 #include <option/has_remote_bed.h>
 #include <option/has_modular_bed.h>
+#include <option/has_toolchanger.h>
 #include <utils/serial_logging_disabler.hpp>
 #include <raii/scope_guard.hpp>
 #include <tool/hotend/hotend.hpp>
 
 #if HAS_AC_CONTROLLER()
     #include <puppies/ac_controller.hpp>
+#endif
+
+#include <option/has_indx.h>
+#if HAS_INDX()
+    #include <puppies/INDX.hpp>
 #endif
 
 LOG_COMPONENT_REF(MarlinServer);

@@ -22,6 +22,7 @@
 
 #include "../../inc/MarlinConfig.h"
 
+#include <option/has_dwarf.h>
 #include <option/has_toolchanger.h>
 #include <option/has_bed_fan.h>
 #if HAS_BED_FAN()
@@ -73,6 +74,7 @@ static bool set_special_fan_speed(uint8_t fan, std::optional<PhysicalToolIndex> 
     switch (fan) {
     #if HAS_TOOLCHANGER()
     case 1:
+        #if HAS_DWARF()
         // Heatbreak fan
         if (tool.has_value()) {
             if (buddy::puppies::dwarfs[*tool].is_enabled()) {
@@ -83,6 +85,7 @@ static bool set_special_fan_speed(uint8_t fan, std::optional<PhysicalToolIndex> 
                 }
             }
         }
+        #endif
         return true; // Eat this G-code, heatbreak fan is not controlled by Marlin
     #endif
 

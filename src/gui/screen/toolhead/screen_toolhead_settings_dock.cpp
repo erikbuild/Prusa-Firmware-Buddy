@@ -20,10 +20,10 @@ float MI_DOCK_X::read_value_impl(PhysicalToolIndex ix) {
 }
 
 void MI_DOCK_X::store_value_impl(PhysicalToolIndex ix, float set) {
-    const buddy::puppies::Dwarf &dwarf = prusa_toolchanger.getTool(ix);
-    PrusaToolInfo info = prusa_toolchanger.get_tool_info(dwarf);
+    const auto &tool = prusa_toolchanger.getTool(ix);
+    PrusaToolInfo info = prusa_toolchanger.get_tool_info(tool);
     info.dock_x = set;
-    prusa_toolchanger.set_tool_info(dwarf, info);
+    prusa_toolchanger.set_tool_info(tool, info);
     prusa_toolchanger.save_tool_info();
 }
 
@@ -38,10 +38,10 @@ float MI_DOCK_Y::read_value_impl(PhysicalToolIndex ix) {
 }
 
 void MI_DOCK_Y::store_value_impl(PhysicalToolIndex ix, float set) {
-    const buddy::puppies::Dwarf &dwarf = prusa_toolchanger.getTool(ix);
-    PrusaToolInfo info = prusa_toolchanger.get_tool_info(dwarf);
+    const auto &tool = prusa_toolchanger.getTool(ix);
+    PrusaToolInfo info = prusa_toolchanger.get_tool_info(tool);
     info.dock_y = set;
-    prusa_toolchanger.set_tool_info(dwarf, info);
+    prusa_toolchanger.set_tool_info(tool, info);
     prusa_toolchanger.save_tool_info();
 }
 

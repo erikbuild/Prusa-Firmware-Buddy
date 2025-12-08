@@ -2,6 +2,7 @@
 #include <printers.h>
 
 #include <option/has_switched_fan_test.h>
+#include <option/has_dwarf.h>
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
     #include <Marlin/src/module/prusa/toolchanger.h>
@@ -13,7 +14,7 @@ LOG_COMPONENT_REF(Selftest);
 
 void SelftestResult_Log(const SelftestResult &results) {
     for (auto tool : PhysicalToolIndex::all()) {
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && HAS_DWARF()
         if (buddy::puppies::dwarfs[tool].is_enabled() == false) {
             continue;
         }

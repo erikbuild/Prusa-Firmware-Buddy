@@ -80,6 +80,7 @@
   #include "../../feature/spindle_laser.h"
 #endif
 
+#include <option/has_dwarf.h>
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
   #include <module/prusa/toolchanger.h>
@@ -707,7 +708,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   void (*reenable_wt_Y)(AxisEnum) = NULL;
 #endif
 
-  #if HAS_TOOLCHANGER()
+  #if HAS_TOOLCHANGER()  && HAS_DWARF()
   if (!failed && should_home_to_level(X_AXIS, AxisHomeLevel::imprecise) && should_home_to_level(Y_AXIS, AxisHomeLevel::imprecise)) {
     // Bump right edge to align toolchanger locking plates
     // We need to align them before the actual homing, because the align locks homing move could throw off the precise position
