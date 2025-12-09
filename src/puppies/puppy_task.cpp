@@ -6,7 +6,6 @@
 #include "cmsis_os.h"
 #include <logging/log.hpp>
 #include <buddy/main.h>
-#include <puppies/Dwarf.hpp>
 #include <option/has_xbuddy_extension.h>
 #include "puppies/PuppyBootstrap.hpp"
 #include "timing.h"
@@ -14,12 +13,21 @@
 #include "Marlin/src/module/prusa/toolchanger.h"
 #include <tasks.hpp>
 #include <option/has_ac_controller.h>
-#include <option/has_dwarf.h>
 #include <option/has_puppy_modularbed.h>
 #include <option/has_toolchanger.h>
 #include <buddy/ccm_thread.hpp>
 #include <buddy/bootstrap_state.hpp>
 #include "bsod.h"
+
+#include <option/has_dwarf.h>
+#if HAS_DWARF()
+    #include <puppies/Dwarf.hpp>
+#endif
+
+#include <option/has_indx_head.h>
+#if HAS_INDX_HEAD()
+// #include <puppies/INDX.hpp>
+#endif
 
 #if HAS_AC_CONTROLLER()
     #include <puppies/ac_controller.hpp>
@@ -76,6 +84,10 @@ static void verify_puppies_running() {
             }
         }
 #endif
+#if HAS_INDX_HEAD()
+        // INDX_TODO: Check if buddy::puppies::indx is running
+        num_dwarfs_ok++;
+#endif
 
 #if HAS_XBUDDY_EXTENSION()
         const bool xbuddy_extension_ok = xbuddy_extension.ping() != CommunicationStatus::ERROR;
@@ -104,7 +116,7 @@ static void verify_puppies_running() {
 }
 
 static void puppy_task_loop() {
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && HAS_DWARF()
     size_t slow_stage = 0; ///< Switch slow action
 #endif
 
@@ -117,14 +129,19 @@ static void puppy_task_loop() {
         [[maybe_unused]] uint32_t cycle_ticks = ticks_ms(); ///< Only one tick read per cycle, value will be reused by last_ticks_ms()
         // One slow action
         bool worked = false;
-#if HAS_TOOLCHANGER()
+
+        // INDX_TODO: INDX_HEAD check
+
+#if HAS_TOOLCHANGER() && HAS_DWARF()
         if (!prusa_toolchanger.update()) {
             return;
         }
 
+        // INDX_TODO: There is an inconsistency here. INDX has only 1 INDX_HEAD and that needs to be checked but prusa_toolchanger works with TOOLS (nozzles)
+
         // Get dwarf that is selected
         // The source variable is set in this thread in prusa_toolchanger.update() called above, so no race
-        Dwarf &active = prusa_toolchanger.getActiveToolOrFirst(); ///< Currently selected dwarf
+        auto &active = prusa_toolchanger.getActiveToolOrFirst(); ///< Currently selected dwarf
 
         // Fast fifo pull from selected dwarf
         if (active.is_selected()) {
@@ -147,7 +164,7 @@ static void puppy_task_loop() {
             }
 
             if (slow_stage / 2 < std::size(dwarfs)) { // Two actions per dwarf
-                Dwarf &dwarf = dwarfs[slow_stage / 2];
+                auto &dwarf = dwarfs[slow_stage / 2];
                 if (!dwarf.is_enabled()) {
                     continue; // skip if this dwarf is not enabled
                 }
@@ -207,7 +224,7 @@ static void puppy_task_loop() {
                 worked |= status == CommunicationStatus::OK;
             }
 #endif
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && HAS_DWARF()
         } while (!worked && slow_stage != orig_stage); // End if we did some work or if no stage has anything to do
 #endif
         osDelay(worked ? 1 : 2); // Longer delay if we did no work

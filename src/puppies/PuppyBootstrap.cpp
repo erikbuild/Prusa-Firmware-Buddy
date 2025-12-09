@@ -18,6 +18,7 @@
 #include <option/has_dwarf.h>
 #include <option/has_puppy_modularbed.h>
 #include <puppies/puppy_crash_dump.hpp>
+#include <option/has_indx_head.h>
 #include <cstring>
 #include <random.h>
 #include "bsod.h"
@@ -50,6 +51,12 @@ static BootstrapStage flashing_stage(PuppyType puppy_type) {
 #else
         break;
 #endif
+    case INDX_HEAD:
+#if HAS_INDX_HEAD()
+        return BootstrapStage::flashing_indx_head;
+#else
+        break;
+#endif
     }
     BUDDY_UNREACHABLE();
 }
@@ -71,6 +78,12 @@ static BootstrapStage check_fingerprint_stage(PuppyType puppy_type) {
     case XBUDDY_EXTENSION:
 #if HAS_XBUDDY_EXTENSION()
         return BootstrapStage::verifying_xbuddy_extension;
+#else
+        break;
+#endif
+    case INDX_HEAD:
+#if HAS_INDX_HEAD()
+        return BootstrapStage::verifying_indx_head;
 #else
         break;
 #endif
@@ -346,6 +359,11 @@ inline void write_dock_reset_pin(Dock dock, buddy::hw::Pin::State state) {
             buddy::hw::Configuration::Instance().activate_ext_reset();
         }
     } break;
+#endif
+#if HAS_INDX_HEAD()
+    case Dock::INDX_HEAD:
+        // INDX_TODO
+        break;
 #endif
     default:
         std::abort();

@@ -27,6 +27,7 @@
 #include <gui/screen_printer_setup.hpp>
 #include <option/has_emergency_stop.h>
 #include <option/has_heatbed_screws_during_transport.h>
+#include <option/has_indx_head.h>
 
 #include <option/has_selftest.h>
 #if HAS_SELFTEST()
@@ -290,6 +291,10 @@ ScreenSplash::ScreenSplash()
                 { BootstrapStage::ac_controller_flash, 10 },
                 { BootstrapStage::ac_controller_ready, 1 },
     #endif
+    #if HAS_INDX_HEAD()
+                { BootstrapStage::flashing_indx_head, 10 },
+                { BootstrapStage::verifying_indx_head, 1 },
+    #endif
 #endif
         }) };
 
@@ -355,6 +360,12 @@ static const char *message(BootstrapStage stage) {
         return "AC controller: flashing";
     case BootstrapStage::ac_controller_ready:
         return "AC controller: ready";
+    #endif
+    #if HAS_INDX_HEAD()
+    case BootstrapStage::flashing_indx_head:
+        return "Flashing INDX head"; // INDX_TODO: Verify text with product
+    case BootstrapStage::verifying_indx_head:
+        return "Verifying INDX head"; // INDX_TODO: Verify text with product
     #endif
 #endif
     }

@@ -8,6 +8,7 @@
 #include <option/has_puppy_modularbed.h>
 #include <option/has_xbuddy_extension.h>
 #include <option/has_puppies.h>
+#include <option/has_indx_head.h>
 
 namespace buddy::puppies {
 
@@ -20,6 +21,7 @@ enum PuppyType : size_t {
     DWARF,
     MODULARBED,
     XBUDDY_EXTENSION,
+    INDX_HEAD,
 };
 
 /// Dock is a location where a Puppy can live
@@ -32,7 +34,10 @@ enum class Dock : uint8_t {
     DWARF_5,
     DWARF_6,
     XBUDDY_EXTENSION,
+    INDX_HEAD,
 };
+
+// INDX_TODO: Check if all is set/done
 
 static_assert(std::to_underlying(Dock::XBUDDY_EXTENSION) == 7, "Must stay 8th puppy, because we are unable to do dynamic address assignemnt on startup on xBuddy");
 
@@ -50,6 +55,9 @@ constexpr auto DOCKS = std::to_array({
 #endif
 #if HAS_XBUDDY_EXTENSION()
         Dock::XBUDDY_EXTENSION,
+#endif
+#if HAS_INDX_HEAD()
+        Dock::INDX_HEAD,
 #endif
 });
 
@@ -79,6 +87,10 @@ constexpr const char *to_string(Dock k) {
     case Dock::XBUDDY_EXTENSION:
         return "XBUDDY_EXTENSION";
 #endif
+#if HAS_INDX_HEAD()
+    case Dock::INDX_HEAD:
+        return "INDX_HEAD";
+#endif
     default:
         std::abort();
     }
@@ -104,6 +116,10 @@ constexpr PuppyType to_puppy_type(Dock dock) {
     case Dock::XBUDDY_EXTENSION:
         return XBUDDY_EXTENSION;
 #endif
+#if HAS_INDX_HEAD()
+    case Dock::INDX_HEAD:
+        return INDX_HEAD;
+#endif
     default:
         std::abort();
     }
@@ -123,6 +139,10 @@ constexpr bool is_dynamicly_addressable(PuppyType puppy) {
 #if HAS_XBUDDY_EXTENSION()
     case XBUDDY_EXTENSION:
         return false;
+#endif
+#if HAS_INDX_HEAD()
+    case INDX_HEAD:
+        return false; // INDX_TODO: Check if correct
 #endif
     default:
         std::abort();
@@ -182,6 +202,14 @@ inline constexpr PuppyInfo get_puppy_info(PuppyType puppy) {
             44,
         };
 #endif
+#if HAS_INDX_HEAD()
+    case INDX_HEAD:
+        return {
+            "dwarf",
+            "/internal/res/puppies/fw-dwarf.bin", // INDX_TODO: Replace with indx head FW
+            45,
+        };
+#endif
     default:
         std::abort();
     }
@@ -234,6 +262,12 @@ inline constexpr DockInfo get_dock_info(Dock dock) {
     case Dock::XBUDDY_EXTENSION:
         return {
             "/internal/dump_xbuddy_extension.dmp",
+        };
+#endif
+#if HAS_INDX_HEAD()
+    case Dock::INDX_HEAD:
+        return {
+            "/internal/dump_indx.dmp",
         };
 #endif
     default:

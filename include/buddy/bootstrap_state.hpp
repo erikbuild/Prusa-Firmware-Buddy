@@ -9,6 +9,7 @@
 #include <option/has_puppies.h>
 #include <option/has_puppy_modularbed.h>
 #include <option/has_xbuddy_extension.h>
+#include <option/has_indx_head.h>
 #include <option/resources.h>
 
 namespace buddy {
@@ -51,6 +52,10 @@ enum class BootstrapStage : uint8_t {
     ac_controller_verify,
     ac_controller_flash,
     ac_controller_ready,
+    #endif
+    #if HAS_INDX_HEAD()
+    flashing_indx_head,
+    verifying_indx_head,
     #endif
 #endif
 };

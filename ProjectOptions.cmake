@@ -729,6 +729,7 @@ set_feature_for_printers(
   )
 
 set_feature_for_printers(HAS_INDX "COREONE_INDX" "COREONEL_INDX")
+set_feature_for_printers(HAS_INDX_HEAD "COREONE_INDX" "COREONEL_INDX")
 
 if(HAS_TOOLCHANGER OR HAS_MMU2)
   define_boolean_option(HAS_TOOL_MAPPING yes)
@@ -915,6 +916,7 @@ endif()
 define_boolean_option(HAS_DWARF ${HAS_DWARF})
 
 if(HAS_DWARF
+   OR HAS_INDX_HEAD
    OR HAS_PUPPY_MODULARBED
    OR HAS_XBUDDY_EXTENSION
    OR HAS_ANFC
@@ -970,6 +972,23 @@ if(ENABLE_PUPPY_BOOTLOAD)
     set(DWARF_BINARY_DIR
         "${CMAKE_BINARY_DIR}/dwarf-build"
         CACHE PATH "Where to have build directory for the dwarf firmware."
+        )
+  endif()
+
+  set(INDX_HEAD_BINARY_PATH
+      ""
+      CACHE
+        PATH
+        "Where to get the INDX head's binary from. If set, the project won't try to build anything."
+      )
+  if(NOT INDX_HEAD_BINARY_PATH)
+    set(INDX_HEAD_SOURCE_DIR
+        "${CMAKE_SOURCE_DIR}"
+        CACHE PATH "From which source directory to build the INDX head firmware."
+        )
+    set(INDX_HEAD_BINARY_DIR
+        "${CMAKE_BINARY_DIR}/indx_head-build"
+        CACHE PATH "Where to have build directory for the INDX head firmware."
         )
   endif()
 
