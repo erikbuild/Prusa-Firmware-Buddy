@@ -1,0 +1,70 @@
+#include <vector>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <feature/openprinttag/requests_read_multi.hpp>
+
+using namespace buddy::openprinttag;
+
+thread_local std::vector<const Request *> request_log;
+
+void Request::issue() {
+    issued_ = true;
+    request_log.push_back(this);
+}
+
+TEST_CASE("buddy::openprinttag::MultiRequest") {
+    using Request = MultiReadFieldRequest<
+        MainField::material_name,
+        MainField::nominal_netto_full_weight,
+        MainField::nominal_netto_full_weight,
+        ValuePack<
+            AuxField::consumed_weight,
+            MainField::nominal_netto_full_weight> {}>;
+
+    request_log.clear();
+    Request r { *ToolTag::for_tool(0) };
+
+    // Requests should be issued only once issue() is called
+    CHECK(request_log.empty());
+
+    const auto test_issue = [&] {
+        r.issue();
+
+        // MultiReadRequest is supposed to deduplicate fields and issue them all in order
+        REQUIRE(request_log.size() == 4);
+        CHECK(request_log[0] == &r.request<MainField::material_name>());
+        CHECK(request_log[1] == &r.request<MainField::nominal_netto_full_weight>());
+        CHECK(request_log[2] == &r.request<AuxField::consumed_weight>());
+        CHECK(request_log[3] == &r.sync_request());
+    };
+
+    {
+        INFO("First issue");
+        test_issue();
+    }
+
+    {
+        // Test that repeating the issue() command does everything the same
+        INFO("Second issue");
+        request_log.clear();
+        test_issue();
+    }
+}
+
+TEST_CASE("buddy::openprinttag::MultiRequestRef") {
+    using Request = MultiReadFieldRequest<
+        MainField::material_name,
+        MainField::nominal_netto_full_weight,
+        MainField::nominal_netto_full_weight,
+        AuxField::consumed_weight>;
+
+    request_log.clear();
+    Request r { *ToolTag::for_tool(0) };
+
+    using Ref = buddy::openprinttag::MultiReadFieldRequestRef<MainField::nominal_netto_full_weight, AuxField::consumed_weight>;
+    Ref ref { r };
+    CHECK(sizeof(ref) == sizeof(void *) * 2);
+    CHECK(&ref.request<MainField::nominal_netto_full_weight>() == &r.request<MainField::nominal_netto_full_weight>());
+    CHECK(&ref.request<AuxField::consumed_weight>() == &r.request<AuxField::consumed_weight>());
+}
