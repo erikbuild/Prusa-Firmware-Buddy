@@ -90,6 +90,7 @@ protected:
 template <typename T>
 CompactRAMPointer<T>::CompactRAMPointer(T *ptr) {
     static_assert(sizeof(CompactRAMPointer) == 2);
+    static_assert(alignof(T) >= 4);
 
     const auto ptr_val = reinterpret_cast<uintptr_t>(ptr);
     assert(ptr_val % 4 == 0); // Check that the pointer is aligned to 4 bytes
