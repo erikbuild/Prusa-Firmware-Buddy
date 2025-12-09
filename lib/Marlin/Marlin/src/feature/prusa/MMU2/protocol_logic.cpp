@@ -242,7 +242,7 @@ StepStatus ProtocolLogic::ExpectingMessage() {
     if (bytesConsumed != 0) {
         RecordUARTActivity(); // something has happened on the UART, update the timeout record
         return Processing; // consumed some bytes, but message still not ready
-    } else if (Elapsed(linkLayerTimeout) && currentScope != Scope::Stopped) {
+    } else if (Elapsed(linkLayerTimeout_ms) && currentScope != Scope::Stopped) {
         return CommunicationTimeout;
     }
     return Processing;
@@ -323,7 +323,7 @@ StepStatus ProtocolLogic::ExpectingMessage() {
 
         return rv;
     }
-    if (Elapsed(linkLayerTimeout) && currentScope != Scope::Stopped) {
+    if (Elapsed(linkLayerTimeout_ms) && currentScope != Scope::Stopped) {
         return CommunicationTimeout;
     } else {
         return Processing;
@@ -478,7 +478,7 @@ StepStatus ProtocolLogic::StartSeqStep() {
 }
 
 StepStatus ProtocolLogic::DelayedRestartWait() {
-    if (Elapsed(heartBeatPeriod)) { // this basically means, that we are waiting until there is some traffic on
+    if (Elapsed(heartBeatPeriod_ms)) { // this basically means, that we are waiting until there is some traffic on
 #if HAS_MMU2_OVER_UART()
         while (uart->read() != -1)
             ; // clear the input buffer
@@ -492,7 +492,7 @@ StepStatus ProtocolLogic::DelayedRestartWait() {
 }
 
 StepStatus ProtocolLogic::CommandWait() {
-    if (Elapsed(heartBeatPeriod)) {
+    if (Elapsed(heartBeatPeriod_ms)) {
         SendQuery();
     } else {
         // even when waiting for a query period, we need to report a change in filament sensor's state
@@ -585,7 +585,7 @@ StepStatus ProtocolLogic::CommandStep() {
 
 StepStatus ProtocolLogic::IdleWait() {
     if (scopeState == ScopeState::Ready) { // check timeout
-        if (Elapsed(heartBeatPeriod)) {
+        if (Elapsed(heartBeatPeriod_ms)) {
             SendQuery();
             return Processing;
         }
