@@ -92,7 +92,7 @@ def gen_fields_data(field_enum, file):
 
     for row in item_iterator(file):
         f.write("template<>\n")
-        f.write(f"struct FieldMeta<{field_enum}::{row['name']}> {{\n")
+        f.write(f"struct FieldTraits<{field_enum}::{row['name']}> {{\n")
 
         type = row["type"]
         type_str = type

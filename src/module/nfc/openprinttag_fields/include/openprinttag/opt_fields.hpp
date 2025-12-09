@@ -22,8 +22,15 @@ enum class FieldType {
     color_rgba,
 };
 
-template <auto field>
-struct FieldMeta;
+// MetaField defined in opt_defines
+enum class MainField : Field;
+enum class AuxField : Field;
+
+template <typename T>
+concept CField = std::is_same_v<T, MetaField> || std::is_same_v<T, MainField> || std::is_same_v<T, AuxField>;
+
+template <CField auto field>
+struct FieldTraits;
 
 template <typename Enum>
 constexpr inline size_t enum_capacity() = delete;
