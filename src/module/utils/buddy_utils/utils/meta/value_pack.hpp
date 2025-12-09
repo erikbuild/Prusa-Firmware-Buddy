@@ -70,7 +70,9 @@ public: //* Static functions
                 return a.template append<b>();
             }
         };
-        return accumulate_arguments(f, ValuePack<values_> {}...);
+
+        // We need to start with an empta ValuePack<>{}, otherwise the first value would not get accumulated and thus flattened
+        return accumulate_arguments(f, ValuePack<> {}, ValuePack<values_> {}...);
     };
 
     /// @returns value pack with duplicates remove

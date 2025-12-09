@@ -11,4 +11,6 @@ TEST_CASE("ValuePack", "[buddy_utils]") {
     CHECK((ValuePack<1, 2, ValuePack<1, 2, ValuePack<5, 6> {}> {}, 3, 4> {}.flatten() == ValuePack<1, 2, 1, 2, 5, 6, 3, 4> {}));
 
     CHECK((ValuePack<1, 2, 1, 2, 5, 6, ValuePack<1, 2> {}, 3, 4, ValuePack<1, 2> {}> {}.unique() == ValuePack<1, 2, 5, 6, ValuePack<1, 2> {}, 3, 4> {}));
+
+    CHECK((ValuePack<ValuePack<1> {}> {}.flatten() == ValuePack<1> {}));
 }
