@@ -50,6 +50,9 @@ METRIC_DEF(metric_unloadDistanceFSOff, "mmu_unl_fs_trg_dist", METRIC_VALUE_FLOAT
 #endif
 
 namespace {
+
+static constexpr float maximumAllowedExtruderMove = 189.9f; // we cannot plan anything longer than 190mm, stay on the safe side
+
 template <class T>
 class Timer {
 public:
@@ -1518,7 +1521,7 @@ bool MMU2::OnMMUProgressMsgChanged(ProgressCode pc) {
         // make sure we start at the same position every time - better for debugging.
         // GCode is not affected, it does it's own G92 E0 after the MMU toolchange
         marlin_resetE();
-        extruder_move(189.9f, logic.PulleySlowFeedRate()); // start the extuder - why wasn't it here?
+        extruder_move(maximumAllowedExtruderMove, logic.PulleySlowFeedRate()); // start the extuder
         loadFilamentStarted = true;
         break;
     case ProgressCode::DisengagingIdler: // only happens after the fsensor triggered correctly -> safe to kill the E-moves
@@ -1580,7 +1583,7 @@ bool MMU2::OnMMUProgressMsgSame(ProgressCode pc) {
             case FilamentState::NOT_PRESENT:
                 // fsensor not triggered, continue moving extruder
                 if (!planner_any_moves()) { // Only plan a move if there is no move ongoing
-                    extruder_move(189.9f, logic.PulleySlowFeedRate()); // we cannot plan anything longer than 200mm, but that's probably good enough
+                    extruder_move(maximumAllowedExtruderMove, logic.PulleySlowFeedRate()); // start the extruder
                 }
                 break;
             case FilamentState::UNAVAILABLE:
