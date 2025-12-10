@@ -213,6 +213,8 @@ extern "C" void main_cpp(void) {
     hw_gpio_init();
     hw_dma_init();
 
+    w25x_init();
+
     // ADC/DMA
     hw_adc1_init();
     adcDma1.init();
@@ -248,8 +250,6 @@ extern "C" void main_cpp(void) {
 #endif
 
     hw_tim14_init();
-
-    w25x_init();
 
     const bool want_error_screen = (dump_is_valid() && !dump_is_displayed()) || (message_is_valid() && message_get_type() != MsgType::EMPTY && !message_is_displayed());
 
