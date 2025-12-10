@@ -1,5 +1,6 @@
 #include "ili9488.hpp"
 
+#include <common/sys.hpp>
 #include <device/board.h>
 #include <device/hal.h>
 #include <span>
@@ -169,12 +170,8 @@ static void ili9488_fill_ui24(uint8_t *p, uint32_t v, int c) {
     }
 }
 
-static inline int is_interrupt(void) {
-    return (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
-}
-
 void ili9488_delay_ms(uint32_t ms) {
-    if (is_interrupt() || (ili9488_flg & ILI9488_FLG_SAFE)) {
+    if (sys_is_interrupt() || (ili9488_flg & ILI9488_FLG_SAFE)) {
         volatile uint32_t temp;
         while (ms--) {
             do {
