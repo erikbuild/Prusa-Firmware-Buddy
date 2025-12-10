@@ -5,7 +5,6 @@
 #include "extension_variant.h"
 #include "hal.hpp"
 #include "master_activity.hpp"
-#include "mmu.hpp"
 #include <modbus/modbus.hpp>
 #include "temperature.hpp"
 #include <ac_controller/modbus.hpp>
@@ -16,7 +15,12 @@
 #include <modbus/traits.hpp>
 #include <option/has_ac_controller.h>
 #include <option/has_anfc.h>
+#include <option/has_mmu2.h>
 #include <xbuddy_extension/modbus.hpp>
+
+#if HAS_MMU2()
+    #include "mmu.hpp"
+#endif
 
 namespace {
 
@@ -295,7 +299,6 @@ void ensure_silent_interval() {
 
 void app::run() {
     Logic logic;
-    MMU mmu;
 #if HAS_AC_CONTROLLER()
     AcController ac_controller;
 #endif
@@ -303,16 +306,21 @@ void app::run() {
     ANfc anfc0 { anfc::Device::anfc0 };
     ANfc anfc1 { anfc::Device::anfc1 };
 #endif
+#if HAS_MMU2()
+    MMU mmu;
+#endif
 
     auto devices = std::to_array<modbus::Callbacks *>({
         &logic,
-            &mmu,
 #if HAS_AC_CONTROLLER()
             &ac_controller,
 #endif
 #if HAS_ANFC()
             &anfc0,
             &anfc1,
+#endif
+#if HAS_MMU2()
+            &mmu,
 #endif
     });
     modbus::Dispatch modbus_dispatch { devices };
