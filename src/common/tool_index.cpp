@@ -13,6 +13,11 @@
     #include <module/prusa/toolchanger.h>
 #endif
 
+#include <option/has_mmu2.h>
+#if HAS_MMU2()
+    #include <feature/prusa/MMU2/mmu2_mk4.h>
+#endif
+
 using VirtualExtension = VirtualToolIndexExtension<VirtualToolIndex>;
 using PhysicalExtension = PhysicalToolIndexExtension<PhysicalToolIndex>;
 using GcodeExtension = GcodeToolIndexExtension<GcodeToolIndex>;
@@ -48,6 +53,56 @@ std::variant<PhysicalToolIndex, NoTool> GcodeExtension::to_physical() const {
         to_virtual(), //
         [](VirtualToolIndex t) -> Result { return t.to_physical(); }, //
         [](NoTool) -> Result { return NoTool {}; });
+}
+
+template <>
+bool PhysicalExtension::is_enabled() const {
+    [[maybe_unused]] const auto &self = static_cast<const PhysicalToolIndex &>(*this);
+
+#if HAS_TOOLCHANGER()
+    return prusa_toolchanger.is_tool_enabled(to_raw());
+#else
+    static_assert(PhysicalToolIndex::count == 1);
+    return true;
+#endif
+}
+
+template <>
+bool VirtualExtension::is_enabled() const {
+    [[maybe_unused]] const auto &self = static_cast<const VirtualToolIndex &>(*this);
+
+#if HAS_TOOLCHANGER()
+    return self.to_physical().is_enabled();
+
+#elif HAS_MMU2()
+    static_assert(PhysicalToolIndex::count == 1);
+    if (MMU2::mmu2.Enabled()) {
+        // MMU has five slots, the virtual tool count should match
+        static_assert(VirtualToolIndex::count == 5);
+
+        // MMU is enabled - we have access to all virtual tools and can toolchange between them
+        return true;
+
+    } else {
+        // Without the MMU, we only have one virtual tool available (there's nothing that would do the toolchange)
+        return self.to_raw() == 0;
+    }
+#else
+    // Single nozzle, single slot - nothing to get disabled
+    static_assert(PhysicalToolIndex::count == 1);
+    static_assert(VirtualToolIndex::count == 1);
+    return true;
+#endif
+}
+
+template <>
+bool GcodeExtension::is_enabled() const {
+    const auto &self = static_cast<const GcodeToolIndex &>(*this);
+
+    return match(
+        self.to_virtual(), //
+        [](VirtualToolIndex t) { return t.is_enabled(); }, //
+        [](NoTool) { return false; });
 }
 
 template <>

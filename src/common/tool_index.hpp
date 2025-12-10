@@ -66,6 +66,10 @@ private:
 
 template <typename Derived>
 struct PhysicalToolIndexExtension {
+    /// @returns whether the specified tool is enabled
+    /// Disabled tools cannot be selected and used for printing
+    bool is_enabled() const;
+
     /// Checks for legacy values representing no tool
     /// Use `from_raw` instead, if you are sure that raw index represent only valid tool
     /// @param index
@@ -92,6 +96,10 @@ using PhysicalToolIndex = ToolIndex<HOTENDS, PhysicalToolIndexExtension>;
 
 template <typename Derived>
 struct VirtualToolIndexExtension {
+    /// @returns whether the specified tool is enabled
+    /// Disabled tools cannot be selected and used for printing
+    bool is_enabled() const;
+
     PhysicalToolIndex to_physical() const;
 
     /// Checks for legacy values representing no tool
@@ -118,6 +126,10 @@ using VirtualToolIndex = ToolIndex<EXTRUDERS, VirtualToolIndexExtension>;
 
 template <typename Derived>
 struct GcodeToolIndexExtension {
+    /// @returns whether the specified tool is enabled
+    /// Disabled tools cannot be selected and used for printing
+    bool is_enabled() const;
+
     /// @returns VirtualToolIndex corresponding to the GCodeToolIndex, if there is any
     /// Will return NoTool if no tool is mapped
     std::variant<VirtualToolIndex, NoTool> to_virtual() const;
