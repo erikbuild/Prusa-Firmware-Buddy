@@ -154,3 +154,24 @@ struct GcodeToolIndexExtension {
 /// There is a bijection relation between the active virtual tools and gcode tools,
 /// (spool join kind of extends this to surjection, but at any single moment, a GCodeTool is always mapped to a single VirtualTool)
 using GcodeToolIndex = ToolIndex<VirtualToolIndex::count, GcodeToolIndexExtension>;
+
+/// @returns a variant where all the types are mapped to PhysicalToolIndex alternatives
+/// NoTool and AllTools are unchanged
+/// VirtualToolIndex and GCodeToolIndex are mapped using to_physical()
+/// @example to_physical_tool_index<NoTool>(std::variant<VirtualToolIndex, NoTool>(VirtualToolIndex::from_raw(0))) -> std::variant<PhysicalToolIndex, NoTool>
+template <typename... Variants, typename... T>
+auto to_physical_tool_index(const std::variant<T...> &variant) {
+    // Note: cannot use match() here because not all overloads would necessarily be in the variant
+    static constexpr auto f = []<typename V>(V val) -> std::variant<PhysicalToolIndex, Variants...> {
+        if constexpr (std::is_same_v<V, GcodeToolIndex> || std::is_same_v<V, VirtualToolIndex>) {
+            return val.to_physical();
+
+        } else if constexpr (std::is_same_v<V, NoTool> || std::is_same_v<V, AllTools>) {
+            return val;
+
+        } else {
+            static_assert(false);
+        }
+    };
+    return std::visit(f, variant);
+}
