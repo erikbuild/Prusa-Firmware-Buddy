@@ -37,9 +37,8 @@ enum class Dock : uint8_t {
     INDX_HEAD,
 };
 
-// INDX_TODO: Check if all is set/done
-
 static_assert(std::to_underlying(Dock::XBUDDY_EXTENSION) == 7, "Must stay 8th puppy, because we are unable to do dynamic address assignemnt on startup on xBuddy");
+static_assert(std::to_underlying(Dock::INDX_HEAD) == 8, "Must stay 9th puppy, because we are unable to do dynamic address assignemnt on startup on xBuddy");
 
 constexpr auto DOCKS = std::to_array({
 #if HAS_PUPPY_MODULARBED()
