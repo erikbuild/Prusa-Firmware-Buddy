@@ -117,7 +117,15 @@ using VirtualToolIndex = ToolIndex<EXTRUDERS, VirtualToolIndexExtension>;
 #endif
 
 template <typename Derived>
-struct GcodeToolIndexExtension {};
+struct GcodeToolIndexExtension {
+    /// @returns VirtualToolIndex corresponding to the GCodeToolIndex, if there is any
+    /// Will return NoTool if no tool is mapped
+    std::variant<VirtualToolIndex, NoTool> to_virtual() const;
+
+    /// @returns PhysicalToolIndex corresponding to the GCodeToolIndex, if there is any
+    /// Will return NoTool if no tool is mapped
+    std::variant<PhysicalToolIndex, NoTool> to_physical() const;
+};
 
 /// Strong type for indexing virtual tools before toolmapping.
 /// This type corresponds to the tool indexes as they are used in the gcode.

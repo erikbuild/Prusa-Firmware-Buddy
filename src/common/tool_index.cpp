@@ -1,23 +1,57 @@
 #include "tool_index.hpp"
 #include <printers.h>
 #include <module/prusa/toolchanger.h>
+#include <utils/overloaded_visitor.hpp>
+
 #include <option/has_tool_mapping.h>
-#include <module/prusa/tool_mapper.hpp>
+#if HAS_TOOL_MAPPING()
+    #include <module/prusa/tool_mapper.hpp>
+#endif
+
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <module/prusa/toolchanger.h>
+#endif
+
+using VirtualExtension = VirtualToolIndexExtension<VirtualToolIndex>;
+using PhysicalExtension = PhysicalToolIndexExtension<PhysicalToolIndex>;
+using GcodeExtension = GcodeToolIndexExtension<GcodeToolIndex>;
 
 template <>
-PhysicalToolIndex VirtualToolIndexExtension<VirtualToolIndex>::to_physical() const {
-    const auto &self = static_cast<const VirtualToolIndex &>(*this);
-    if constexpr (HAS_TOOLCHANGER()) {
-        static_assert(!HAS_TOOLCHANGER() || PhysicalToolIndex::count == VirtualToolIndex::count);
-        return PhysicalToolIndex::from_raw(self.to_raw());
-    } else {
-        static_assert(HAS_TOOLCHANGER() || PhysicalToolIndex::count == 1);
-        return PhysicalToolIndex::from_raw(0);
-    }
+PhysicalToolIndex VirtualExtension::to_physical() const {
+    [[maybe_unused]] const auto &self = static_cast<const VirtualToolIndex &>(*this);
+
+#if HAS_TOOLCHANGER()
+    static_assert(PhysicalToolIndex::count == VirtualToolIndex::count);
+    return PhysicalToolIndex::from_raw(self.to_raw());
+#else
+    static_assert(PhysicalToolIndex::count == 1);
+    return PhysicalToolIndex::from_raw(0);
+#endif
 }
 
 template <>
-std::variant<PhysicalToolIndex, NoTool> PhysicalToolIndexExtension<PhysicalToolIndex>::from_raw_notool(uint8_t index) {
+std::variant<VirtualToolIndex, NoTool> GcodeExtension::to_virtual() const {
+    [[maybe_unused]] const auto &self = static_cast<const GcodeToolIndex &>(*this);
+
+#if HAS_TOOL_MAPPING()
+    return tool_mapper.to_virtual(self);
+#else
+    return VirtualToolIndex::from_raw(self.to_raw());
+#endif
+}
+
+template <>
+std::variant<PhysicalToolIndex, NoTool> GcodeExtension::to_physical() const {
+    using Result = std::variant<PhysicalToolIndex, NoTool>;
+    return match(
+        to_virtual(), //
+        [](VirtualToolIndex t) -> Result { return t.to_physical(); }, //
+        [](NoTool) -> Result { return NoTool {}; });
+}
+
+template <>
+std::variant<PhysicalToolIndex, NoTool> PhysicalExtension::from_raw_notool(uint8_t index) {
 #if PRINTER_IS_PRUSA_XL()
     // count on XL is set to EXTRUDERS - 1 / HOTENDS - 1,
     // because of legacy definition of EXTRUDERS / HOTENDS to 6 instead of 5.
@@ -33,7 +67,7 @@ std::variant<PhysicalToolIndex, NoTool> PhysicalToolIndexExtension<PhysicalToolI
 }
 
 template <>
-std::variant<VirtualToolIndex, NoTool> VirtualToolIndexExtension<VirtualToolIndex>::from_raw_notool(uint8_t index) {
+std::variant<VirtualToolIndex, NoTool> VirtualExtension::from_raw_notool(uint8_t index) {
 #if HAS_TOOL_MAPPING()
     // There is 255 (NO_TOOL_MAPPED) used as no tool at some places.
     if (index == ToolMapper::NO_TOOL_MAPPED) {
