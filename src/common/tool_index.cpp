@@ -1,6 +1,7 @@
 #include "tool_index.hpp"
 #include <printers.h>
 #include <module/prusa/toolchanger.h>
+#include <module/motion.h>
 #include <utils/overloaded_visitor.hpp>
 
 #include <option/has_tool_mapping.h>
@@ -60,7 +61,7 @@ bool PhysicalExtension::is_enabled() const {
     [[maybe_unused]] const auto &self = static_cast<const PhysicalToolIndex &>(*this);
 
 #if HAS_TOOLCHANGER()
-    return prusa_toolchanger.is_tool_enabled(to_raw());
+    return prusa_toolchanger.is_tool_enabled(self.to_raw());
 #else
     static_assert(PhysicalToolIndex::count == 1);
     return true;
@@ -103,6 +104,55 @@ bool GcodeExtension::is_enabled() const {
         self.to_virtual(), //
         [](VirtualToolIndex t) { return t.is_enabled(); }, //
         [](NoTool) { return false; });
+}
+
+template <>
+std::variant<PhysicalToolIndex, NoTool> PhysicalExtension::currently_selected() {
+#if HAS_TOOLCHANGER()
+    static_assert(!HAS_MMU2());
+    static_assert(PhysicalToolIndex::count == PrusaToolChanger::MARLIN_NO_TOOL_PICKED);
+    if (active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+        return NoTool {};
+    } else {
+        // Toolchanger uses active_extruder for determining tools
+        static_assert(PhysicalToolIndex::count == VirtualToolIndex::count);
+        return PhysicalToolIndex::from_raw(active_extruder);
+    }
+#else
+    // Single tool, no toolchanber, cannot unpick it
+    static_assert(PhysicalToolIndex::count == 1);
+    return PhysicalToolIndex::from_raw(0);
+#endif
+}
+
+template <>
+std::variant<VirtualToolIndex, NoTool> VirtualExtension::currently_selected() {
+#if HAS_TOOLCHANGER()
+    static_assert(!HAS_MMU2());
+    static_assert(PhysicalToolIndex::count == PrusaToolChanger::MARLIN_NO_TOOL_PICKED);
+    if (active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+        return NoTool {};
+    } else {
+        return VirtualToolIndex::from_raw(active_extruder);
+    }
+
+#elif HAS_MMU2()
+    static_assert(PhysicalToolIndex::count == 1);
+    if (MMU2::mmu2.Enabled()) {
+        const auto e = MMU2::mmu2.get_current_tool();
+        if (e == MMU2::FILAMENT_UNKNOWN) {
+            return NoTool {};
+        } else {
+            return VirtualToolIndex::from_raw(e);
+        }
+    } else {
+        return VirtualToolIndex::from_raw(0);
+    }
+
+#else
+    static_assert(VirtualToolIndex::count == 1);
+    return VirtualToolIndex::from_raw(0);
+#endif
 }
 
 template <>

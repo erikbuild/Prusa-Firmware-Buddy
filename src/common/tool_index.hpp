@@ -75,6 +75,11 @@ struct PhysicalToolIndexExtension {
     /// @param index
     /// @deprecated This function should be removed after removing all special (notool) values in raw indices
     static std::variant<Derived, NoTool> from_raw_notool(uint8_t index);
+
+    /// @returns currently picked physical tool
+    /// @note There can be a currrently_active() physical tool without having any currently_active() virtual one.
+    /// @note That would for example mean that a tool is picked but a MMU for that tool does not have any slot loaded in.
+    static std::variant<Derived, NoTool> currently_selected();
 };
 
 /// Strong type for indexing physical tools.
@@ -107,6 +112,10 @@ struct VirtualToolIndexExtension {
     /// @param index
     /// @deprecated This function should be removed after removing all special (notool) values in raw indices
     static std::variant<Derived, NoTool> from_raw_notool(uint8_t index);
+
+    /// @returns currently active virtual tool
+    /// Active = the corresponding physical tool is active and has the resulting virtual tool selected
+    static std::variant<Derived, NoTool> currently_selected();
 };
 
 /// Strong type for indexing "virtual" tools.
