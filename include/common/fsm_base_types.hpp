@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <cstddef> //size_t
 #include <cstring>
+#include <type_traits>
 
 namespace fsm {
 #pragma pack(push, 1)
@@ -34,11 +35,12 @@ PhaseData serialize_data(const T &t) {
 template <typename T>
 T deserialize_data(PhaseData data) {
     static_assert(std::is_trivially_copyable_v<T>);
+    static_assert(std::is_trivially_destructible_v<T>);
     static_assert(sizeof(T) <= sizeof(PhaseData));
 
-    T result;
+    alignas(T) std::array<std::byte, sizeof(T)> result;
     memcpy(&result, data.data(), sizeof(T));
-    return result;
+    return std::bit_cast<T>(result);
 }
 
 class BaseData {
