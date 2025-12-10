@@ -70,7 +70,7 @@ public:
     virtual void receive_ac_controller_status(const ac_controller::Config &, const ac_controller::Status &) = 0;
     virtual void receive_diagnostic_record(NodeId remote_node_id, const Bytes &text) = 0;
     virtual void receive_nfc_event(cyphal::NodeId remote_node_id, std::span<const std::byte>) = 0;
-    virtual void log_from_app(std::string_view s);
+    virtual void log_from_app(std::string_view s) = 0;
 
     // Called by modbus handlers.
 
