@@ -19,7 +19,7 @@ add_executable(
 
 # define required search paths
 target_include_directories(
-  probe_position_lookback PUBLIC . ${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/include
+  probe_position_lookback PUBLIC . stub ${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/include
   )
 
 target_link_libraries(probe_position_lookback SG14 raii bsod)
