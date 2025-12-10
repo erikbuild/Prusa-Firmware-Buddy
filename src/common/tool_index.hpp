@@ -7,6 +7,7 @@
 
 #include <inc/MarlinConfig.h>
 #include <common/array_extensions.hpp>
+#include <utils/storage/strong_index_array.hpp>
 #include <bsod.h>
 #include <option/board_is_master_board.h>
 
@@ -39,6 +40,12 @@ public:
     /// @returns raw index as uint8_t
     /// @deprecated Replace raw index with ToolIndex for better safety
     inline constexpr uint8_t to_raw() const { return this->value; }
+
+    /// Allow simpler conversion to integer when using StrongIndexArray
+    /// @note pass-by-reference is needed to avoid circular dependencies
+    static inline constexpr std::size_t to_raw_static(const ToolIndex &tool_index) {
+        return tool_index.to_raw();
+    }
 
     /// Maximum number of tools the firmware supports
     static constexpr uint8_t count = count_;
