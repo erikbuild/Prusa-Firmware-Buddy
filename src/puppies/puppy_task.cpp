@@ -41,6 +41,11 @@
     #include <puppies/xbuddy_extension.hpp>
 #endif
 
+#include <option/has_mmu2.h>
+#if HAS_MMU2()
+    #include <puppies/mmu.hpp>
+#endif
+
 #define PUPPY_TASK_DEBUG() false
 
 LOG_COMPONENT_DEF(Puppies, logging::Severity::debug);
@@ -224,6 +229,20 @@ static void puppy_task_loop() {
                 worked |= status == CommunicationStatus::OK;
             }
 #endif
+#if HAS_MMU2()
+            {
+                CommunicationStatus status = mmu.refresh();
+                if (status == CommunicationStatus::ERROR) {
+                    // Actually, failed MMU communication is not an issue on this level.
+                    // Timeout and retries are being handled on the protocol_logic level
+                    // while MODBUS purely serves as a pass-through transport media
+                    // -> no need to panic when MMU doesn't communicate now
+                }
+
+                worked |= status == CommunicationStatus::OK;
+            }
+#endif
+
 #if HAS_TOOLCHANGER() && HAS_DWARF()
         } while (!worked && slow_stage != orig_stage); // End if we did some work or if no stage has anything to do
 #endif

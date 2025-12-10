@@ -62,7 +62,7 @@ void ProtocolLogic::SendQuery() {
 #if HAS_MMU2_OVER_UART()
     SendMsg(RequestMsg(RequestMsgCodes::Query, 0));
 #else
-    ext->post_query_mmu();
+    mmu->post_query_mmu();
     LogRequestMsgModbus(RequestMsg(RequestMsgCodes::Query, 0));
     RecordUARTActivity();
 #endif
@@ -139,7 +139,7 @@ void ProtocolLogic::SendButton(uint8_t btn) {
 #if HAS_MMU2_OVER_UART()
     SendMsg(RequestMsg(RequestMsgCodes::Button, btn));
 #else
-    ext->post_write_mmu_register(xbuddy_extension::mmu_bridge::buttonRegisterAddress, btn);
+    mmu->post_write_mmu_register(xbuddy_extension::mmu_bridge::buttonRegisterAddress, btn);
     LogRequestMsgModbus(RequestMsg(RequestMsgCodes::Button, btn));
     RecordUARTActivity();
 #endif
@@ -150,7 +150,7 @@ void ProtocolLogic::SendVersion(uint8_t stage) {
 #if HAS_MMU2_OVER_UART()
     SendMsg(RequestMsg(RequestMsgCodes::Version, stage));
 #else
-    ext->post_read_mmu_register(stage);
+    mmu->post_read_mmu_register(stage);
     LogRequestMsgModbus(RequestMsg(RequestMsgCodes::Version, stage));
     RecordUARTActivity();
 #endif
@@ -161,7 +161,7 @@ void ProtocolLogic::SendReadRegister(uint8_t index, ScopeState nextState) {
 #if HAS_MMU2_OVER_UART()
     SendMsg(RequestMsg(RequestMsgCodes::Read, index));
 #else
-    ext->post_read_mmu_register(index);
+    mmu->post_read_mmu_register(index);
     LogRequestMsgModbus(RequestMsg(RequestMsgCodes::Read, index));
     RecordUARTActivity();
 #endif
@@ -172,7 +172,7 @@ void ProtocolLogic::SendWriteRegister(uint8_t index, uint16_t value, ScopeState 
 #if HAS_MMU2_OVER_UART()
     SendWriteMsg(RequestMsg(RequestMsgCodes::Write, index, value));
 #else
-    ext->post_write_mmu_register(index, value);
+    mmu->post_write_mmu_register(index, value);
     LogRequestMsgModbus(RequestMsg(RequestMsgCodes::Write, index, value));
     RecordUARTActivity();
 #endif
@@ -249,15 +249,15 @@ StepStatus ProtocolLogic::ExpectingMessage() {
 }
 #else
 
-StepStatus ProtocolLogic::ExpectingMessage2(const buddy::puppies::XBuddyExtension::MMUModbusRequest &mmr,
-    const buddy::puppies::XBuddyExtension::MMUQueryRegisters &mqr, ResponseMsg &rsp, const RequestMsg &rq, uint8_t *rawMsg, uint8_t &rawMsgLen) {
+StepStatus ProtocolLogic::ExpectingMessage2(const buddy::puppies::MMU::MMUModbusRequest &mmr,
+    const buddy::puppies::MMU::MMUQueryRegisters &mqr, ResponseMsg &rsp, const RequestMsg &rq, uint8_t *rawMsg, uint8_t &rawMsgLen) {
     using namespace buddy::puppies;
 
     // Based on the request compose the response message.
     // Note: no synchronized access to mmr is required here, because the MODBUS task already accomplished the request-response handshake
     // and until this protocol_logic issues another one, nothing is touching mmr in any way.
     switch (mmr.rw) {
-    case XBuddyExtension::MMUModbusRequest::RW::read_inactive: {
+    case MMU::MMUModbusRequest::RW::read_inactive: {
         RequestMsgCodes rmc = (mmr.u.read.address <= 3) ? RequestMsgCodes::Version : RequestMsgCodes::Read;
         ResponseMsgParamCodes rmpc = (mmr.u.read.accepted) ? ResponseMsgParamCodes::Accepted : ResponseMsgParamCodes::Rejected;
         rsp = ResponseMsg(RequestMsg(rmc, mmr.u.read.address), rmpc, mmr.u.read.value);
@@ -266,7 +266,7 @@ StepStatus ProtocolLogic::ExpectingMessage2(const buddy::puppies::XBuddyExtensio
         break;
     }
 
-    case XBuddyExtension::MMUModbusRequest::RW::write_inactive: {
+    case MMU::MMUModbusRequest::RW::write_inactive: {
         ResponseMsgParamCodes rmpc = (mmr.u.write.accepted) ? ResponseMsgParamCodes::Accepted : ResponseMsgParamCodes::Rejected;
         rsp = ResponseMsg(RequestMsg(RequestMsgCodes::Write, mmr.u.write.address), rmpc, mmr.u.write.value);
 
@@ -274,7 +274,7 @@ StepStatus ProtocolLogic::ExpectingMessage2(const buddy::puppies::XBuddyExtensio
         break;
     }
 
-    case XBuddyExtension::MMUModbusRequest::RW::query_inactive: {
+    case MMU::MMUModbusRequest::RW::query_inactive: {
         const auto [command, param] = xbuddy_extension::mmu_bridge::unpack_command(mqr.value.cip);
         rsp = ResponseMsg(
             RequestMsg((RequestMsgCodes)command, param),
@@ -284,7 +284,7 @@ StepStatus ProtocolLogic::ExpectingMessage2(const buddy::puppies::XBuddyExtensio
         break;
     }
 
-    case XBuddyExtension::MMUModbusRequest::RW::command_inactive: {
+    case MMU::MMUModbusRequest::RW::command_inactive: {
         const auto [command, param] = xbuddy_extension::mmu_bridge::unpack_command(mqr.value.cip);
         rsp = ResponseMsg(
             RequestMsg((RequestMsgCodes)command, param),
@@ -309,13 +309,13 @@ StepStatus ProtocolLogic::ExpectingMessage2(const buddy::puppies::XBuddyExtensio
 }
 
 StepStatus ProtocolLogic::ExpectingMessage() {
-    if (ext->mmu_response_received(lastUARTActivityMs)) {
+    if (mmu->mmu_response_received(lastUARTActivityMs)) {
         // Emulate logging of MMU protocol's ResponseMsg by reconstructing its bytes
         // Unfortunately, there is not a single function for encoding - needs to be distinguished by ResponseMsg type
         uint8_t rawMsg[Protocol::MaxResponseSize()];
         uint8_t rawMsgLen = 0;
 
-        auto rv = ExpectingMessage2(ext->mmu_modbus_rq(), ext->mmu_query_registers(), rsp, rq, rawMsg, rawMsgLen);
+        auto rv = ExpectingMessage2(mmu->mmu_modbus_rq(), mmu->mmu_query_registers(), rsp, rq, rawMsg, rawMsgLen);
 
         char logMsg[Protocol::MaxResponseSize() + 2]; // +2 = '<' and the null terminator
         FormatLastResponseMsg(logMsg, rawMsg, rawMsgLen);
@@ -370,7 +370,7 @@ void ProtocolLogic::SendCommand() {
 #if HAS_MMU2_OVER_UART()
     SendMsg(rq);
 #else
-    ext->post_command_mmu(std::to_underlying(rq.code), rq.value);
+    mmu->post_command_mmu(std::to_underlying(rq.code), rq.value);
     LogRequestMsgModbus(rq);
     RecordUARTActivity();
 #endif
@@ -690,7 +690,7 @@ ProtocolLogic::ProtocolLogic(
 #if HAS_MMU2_OVER_UART()
     MMU2Serial *uart,
 #else
-    buddy::puppies::XBuddyExtension *ext,
+    buddy::puppies::MMU *mmu,
 #endif
     uint8_t extraLoadDistance, uint8_t pulleySlowFeedrate)
     : explicitPrinterError(ErrorCode::OK)
@@ -705,7 +705,7 @@ ProtocolLogic::ProtocolLogic(
     , lrb(0)
     , uart(uart)
 #else
-    , ext(ext)
+    , mmu(mmu)
 #endif
     , errorCode(ErrorCode::OK)
     , progressCode(ProgressCode::OK)

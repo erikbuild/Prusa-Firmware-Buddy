@@ -52,29 +52,29 @@ using namespace modules::protocol;
 
 void CheckReadRegister(uint8_t address, uint16_t expectedRead) {
     RequestMsg rq(RequestMsgCodes::Read, address);
-    auto &xbuddy_extension = buddy::puppies::xbuddy_extension;
-    xbuddy_extension.post_read_mmu_register(address);
+    auto &mmu = buddy::puppies::mmu;
+    mmu.post_read_mmu_register(address);
 
     // check the control structures
-    CHECK(xbuddy_extension.mmuModbusRq.rw == buddy::puppies::XBuddyExtension::MMUModbusRequest::RW::read);
-    CHECK(xbuddy_extension.mmuModbusRq.u.read.address == address);
+    CHECK(mmu.mmuModbusRq.rw == buddy::puppies::MMU::MMUModbusRequest::RW::read);
+    CHECK(mmu.mmuModbusRq.u.read.address == address);
 
     // prepare simulated modbus comm
     buddy::puppies::returnedRead = expectedRead;
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::OK;
 
     // process the message
-    CHECK(xbuddy_extension.refresh_mmu() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
 
     // check control structures
-    CHECK(xbuddy_extension.mmuModbusRq.u.read.value == buddy::puppies::returnedRead);
-    CHECK(xbuddy_extension.mmuModbusRq.u.read.accepted == true);
+    CHECK(mmu.mmuModbusRq.u.read.value == buddy::puppies::returnedRead);
+    CHECK(mmu.mmuModbusRq.u.read.accepted == true);
 
     // now run ExpectingMessage a couple of times to make sure a valid response got recoded into MMU protocol messages
     ResponseMsg rsp(RequestMsg(RequestMsgCodes::unknown, 0), ResponseMsgParamCodes::unknown, 0);
     uint8_t rawMsg[Protocol::MaxResponseSize()];
     uint8_t rawMsgLen = 0;
-    MMU2::ProtocolLogic::ExpectingMessage2(xbuddy_extension.mmuModbusRq, xbuddy_extension.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
+    MMU2::ProtocolLogic::ExpectingMessage2(mmu.mmuModbusRq, mmu.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
 
     if (address < 4) {
         CHECK(rsp.request.code == RequestMsgCodes::Version);
@@ -95,28 +95,28 @@ TEST_CASE("MMU2-MODBUS read register") {
 
 void CheckWriteRegister(uint8_t address, uint16_t value) {
     RequestMsg rq(RequestMsgCodes::Write, address, value);
-    auto &xbuddy_extension = buddy::puppies::xbuddy_extension;
-    xbuddy_extension.post_write_mmu_register(address, value);
+    auto &mmu = buddy::puppies::mmu;
+    mmu.post_write_mmu_register(address, value);
 
     // check the control structures
-    CHECK(xbuddy_extension.mmuModbusRq.rw == buddy::puppies::XBuddyExtension::MMUModbusRequest::RW::write);
-    CHECK(xbuddy_extension.mmuModbusRq.u.write.address == address);
-    CHECK(xbuddy_extension.mmuModbusRq.u.write.value == value);
+    CHECK(mmu.mmuModbusRq.rw == buddy::puppies::MMU::MMUModbusRequest::RW::write);
+    CHECK(mmu.mmuModbusRq.u.write.address == address);
+    CHECK(mmu.mmuModbusRq.u.write.value == value);
 
     // prepare simulated modbus comm
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::OK;
 
     // process the message
-    CHECK(xbuddy_extension.refresh_mmu() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
 
     // check control structures
-    CHECK(xbuddy_extension.mmuModbusRq.u.write.accepted == true);
+    CHECK(mmu.mmuModbusRq.u.write.accepted == true);
 
     // now run ExpectingMessage a couple of times to make sure a valid response got recoded into MMU protocol messages
     ResponseMsg rsp(RequestMsg(RequestMsgCodes::unknown, 0), ResponseMsgParamCodes::unknown, 0);
     uint8_t rawMsg[Protocol::MaxResponseSize()];
     uint8_t rawMsgLen = 0;
-    MMU2::ProtocolLogic::ExpectingMessage2(xbuddy_extension.mmuModbusRq, xbuddy_extension.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
+    MMU2::ProtocolLogic::ExpectingMessage2(mmu.mmuModbusRq, mmu.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
 
     CHECK(rsp.request.code == RequestMsgCodes::Write);
     CHECK(rsp.request.value == address);
@@ -150,10 +150,10 @@ TEST_CASE("MMU2-MODBUS pack-unpack-command") {
 
 void CheckQuery(uint8_t command, uint8_t param, uint16_t commandStatus, uint16_t pec) {
     RequestMsg rq(RequestMsgCodes::Query, 0);
-    auto &xbuddy_extension = buddy::puppies::xbuddy_extension;
-    xbuddy_extension.post_query_mmu();
+    auto &mmu = buddy::puppies::mmu;
+    mmu.post_query_mmu();
 
-    CHECK(xbuddy_extension.mmuModbusRq.rw == buddy::puppies::XBuddyExtension::MMUModbusRequest::RW::query);
+    CHECK(mmu.mmuModbusRq.rw == buddy::puppies::MMU::MMUModbusRequest::RW::query);
 
     // prepare simulated modbus comm
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::OK;
@@ -162,20 +162,20 @@ void CheckQuery(uint8_t command, uint8_t param, uint16_t commandStatus, uint16_t
     buddy::puppies::returnedQuery[2] = pec;
 
     // process the message
-    CHECK(xbuddy_extension.refresh_mmu() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
 
     // check control structures - response registers are located aside from this structure
-    const auto [rvCommand, rvParam] = xbuddy_extension::mmu_bridge::unpack_command(xbuddy_extension.mmuQuery.value.cip);
+    const auto [rvCommand, rvParam] = xbuddy_extension::mmu_bridge::unpack_command(mmu.mmuQuery.value.cip);
     CHECK(rvCommand == command);
     CHECK(rvParam == param);
-    CHECK(xbuddy_extension.mmuQuery.value.commandStatus == commandStatus);
-    CHECK(xbuddy_extension.mmuQuery.value.pec == pec);
+    CHECK(mmu.mmuQuery.value.commandStatus == commandStatus);
+    CHECK(mmu.mmuQuery.value.pec == pec);
 
     // now run ExpectingMessage a couple of times to make sure a valid response got recoded into MMU protocol messages
     ResponseMsg rsp(RequestMsg(RequestMsgCodes::unknown, 0), ResponseMsgParamCodes::unknown, 0);
     uint8_t rawMsg[Protocol::MaxResponseSize()];
     uint8_t rawMsgLen = 0;
-    MMU2::ProtocolLogic::ExpectingMessage2(xbuddy_extension.mmuModbusRq, xbuddy_extension.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
+    MMU2::ProtocolLogic::ExpectingMessage2(mmu.mmuModbusRq, mmu.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
 
     CHECK(rsp.request.code == (RequestMsgCodes)command);
     CHECK(rsp.request.value == param);
@@ -190,29 +190,29 @@ TEST_CASE("MMU2-MODBUS query") {
 
 void CheckFailedWriteRegister(uint8_t address, uint16_t value) {
     RequestMsg rq(RequestMsgCodes::Write, address, value);
-    auto &xbuddy_extension = buddy::puppies::xbuddy_extension;
-    xbuddy_extension.post_read_mmu_register(address);
+    auto &mmu = buddy::puppies::mmu;
+    mmu.post_read_mmu_register(address);
 
     // check the control structures
-    CHECK(xbuddy_extension.mmuModbusRq.rw == buddy::puppies::XBuddyExtension::MMUModbusRequest::RW::write);
-    CHECK(xbuddy_extension.mmuModbusRq.u.write.address == address);
-    CHECK(xbuddy_extension.mmuModbusRq.u.write.value == value);
+    CHECK(mmu.mmuModbusRq.rw == buddy::puppies::MMU::MMUModbusRequest::RW::write);
+    CHECK(mmu.mmuModbusRq.u.write.address == address);
+    CHECK(mmu.mmuModbusRq.u.write.value == value);
 
     // prepare simulated modbus comm
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::ERROR;
 
     // process the message
-    CHECK(xbuddy_extension.refresh_mmu() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
 
     // check control structures
-    CHECK(xbuddy_extension.mmuModbusRq.u.write.accepted == false);
+    CHECK(mmu.mmuModbusRq.u.write.accepted == false);
 
     // now run ExpectingMessage a couple of times to make sure a valid response got recoded into MMU protocol messages
     // this should end up into either rejected or timeout - and that needs to be distinguished properly
     ResponseMsg rsp(RequestMsg(RequestMsgCodes::unknown, 0), ResponseMsgParamCodes::unknown, 0);
     uint8_t rawMsg[Protocol::MaxResponseSize()];
     uint8_t rawMsgLen = 0;
-    MMU2::ProtocolLogic::ExpectingMessage2(xbuddy_extension.mmuModbusRq, xbuddy_extension.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
+    MMU2::ProtocolLogic::ExpectingMessage2(mmu.mmuModbusRq, mmu.mmuQuery, rsp, rq, rawMsg, rawMsgLen);
 
     CHECK(rsp.request.code == RequestMsgCodes::Write);
     CHECK(rsp.request.value == address);

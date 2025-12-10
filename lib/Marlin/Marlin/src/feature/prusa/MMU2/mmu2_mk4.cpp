@@ -22,7 +22,7 @@
 #include <printers.h>
 #include <option/has_mmu2_over_uart.h>
 #if not HAS_MMU2_OVER_UART()
-    #include <puppies/xbuddy_extension.hpp>
+    #include <puppies/mmu.hpp>
 #endif
 
 #ifndef UNITTEST
@@ -143,7 +143,7 @@ MMU2::MMU2()
     #if HAS_MMU2_OVER_UART()
         &mmu2Serial
     #else
-        &buddy::puppies::xbuddy_extension
+        &buddy::puppies::mmu
     #endif
 #else
         nullptr

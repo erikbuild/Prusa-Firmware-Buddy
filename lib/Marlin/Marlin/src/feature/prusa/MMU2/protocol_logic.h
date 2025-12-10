@@ -37,15 +37,12 @@ public:
     #include "buttons.h"
     #include "registers.h"
     #include <option/has_mmu2_over_uart.h>
-    #include <option/has_xbuddy_extension.h>
 #endif
 
 #if HAS_MMU2_OVER_UART()
     #include "mmu2_serial.h"
-#elif HAS_XBUDDY_EXTENSION()
-    #include <puppies/xbuddy_extension.hpp>
 #else
-    #error
+    #include <puppies/mmu.hpp>
 #endif
 
 /// New MMU2 protocol logic
@@ -119,7 +116,7 @@ public:
 #if HAS_MMU2_OVER_UART()
         MMU2Serial *uart,
 #else
-        buddy::puppies::XBuddyExtension *ext,
+        buddy::puppies::MMU *mmu,
 #endif
         uint8_t extraLoadDistance, uint8_t pulleySlowFeedrate);
 
@@ -249,8 +246,8 @@ private:
     void SendMsg(RequestMsg rq);
     void SendWriteMsg(RequestMsg rq);
 #else
-    static StepStatus ExpectingMessage2(const buddy::puppies::XBuddyExtension::MMUModbusRequest &mmr,
-        const buddy::puppies::XBuddyExtension::MMUQueryRegisters &mqr, ResponseMsg &rsp,
+    static StepStatus ExpectingMessage2(const buddy::puppies::MMU::MMUModbusRequest &mmr,
+        const buddy::puppies::MMU::MMUQueryRegisters &mqr, ResponseMsg &rsp,
         const RequestMsg &rq, uint8_t *rawMsg, uint8_t &rawMsgLen);
 #endif
     void SwitchToIdle();
@@ -406,7 +403,7 @@ private:
         void ResetResponseDecoder() {}
     };
     ProtocolModbus protocol;
-    buddy::puppies::XBuddyExtension *ext;
+    buddy::puppies::MMU *mmu;
     void LogRequestMsgModbus(const RequestMsg rq);
 #endif
     ErrorCode errorCode; ///< last received error code from the MMU
