@@ -10,6 +10,7 @@
 #include <optional>
 
 #include <utils/string/inplace_string.hpp>
+#include <utils/enum_array.hpp>
 
 #include <option/has_chamber_api.h>
 #include <option/has_filament_heatbreak_param.h>
@@ -99,6 +100,8 @@ enum class PresetFilamentType : uint8_t {
 };
 
 static constexpr size_t preset_filament_type_count = static_cast<size_t>(PresetFilamentType::_count);
+
+extern constinit const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFilamentType::_count> preset_filament_parameters;
 
 /// User-configurable "presets" for filaments
 struct UserFilamentType {

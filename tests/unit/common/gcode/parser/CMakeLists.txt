@@ -37,6 +37,8 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/common/str_utils.cpp
   ${CMAKE_SOURCE_DIR}/src/common/filament.cpp
   ${CMAKE_SOURCE_DIR}/src/common/filament_list.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/filament_common.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/filament_presets.cpp
   ${CMAKE_SOURCE_DIR}/src/common/utils/color.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/gcode_parser_custom_types_tests.cpp
   )

@@ -19,7 +19,9 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             error_code_mangle.cpp
             ExtInterruptHandler.cpp
             filament.cpp
+            filament_common.cpp
             filament_list.cpp
+            filament_presets.cpp
             filament_to_load.cpp
             filename_type.cpp
             filepath_operation.cpp
