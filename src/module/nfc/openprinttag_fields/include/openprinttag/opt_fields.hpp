@@ -47,7 +47,7 @@ constexpr inline Section field_section(AuxField) {
     return Section::auxiliary;
 }
 
-template <typename FieldEnum>
+template <CField FieldEnum>
 constexpr inline TagField tag_field(TagID tag, FieldEnum field) {
     return TagField {
         .tag = tag,
