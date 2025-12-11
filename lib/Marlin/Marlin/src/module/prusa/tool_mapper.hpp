@@ -6,6 +6,7 @@
 #include <mutex>
 #include <option/has_tool_mapping.h>
 #include <tool_index.hpp>
+#include <common/array_extensions.hpp>
 
 #if HAS_TOOL_MAPPING()
 
