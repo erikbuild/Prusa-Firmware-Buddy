@@ -62,6 +62,13 @@ public:
     inline bool operator==(const CompactRAMPointer &) const = default;
     inline bool operator!=(const CompactRAMPointer &) const = default;
 
+    inline bool operator==(std::nullptr_t) const {
+        return ptr() == nullptr;
+    }
+    inline bool operator!=(std::nullptr_t) const {
+        return ptr() != nullptr;
+    }
+
     inline bool operator==(std::remove_const_t<T> *o) const {
         return ptr() == o;
     }
