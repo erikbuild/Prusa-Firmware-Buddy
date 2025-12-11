@@ -134,6 +134,34 @@ pipeline {
                         }
                     }
                 }
+                stage('Check Fixup Commits (Early Warning)') {
+                    agent any
+                    when {
+                        expression { env.CHANGE_TARGET }
+                    }
+                    steps {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                            script {
+                                def fixupCommits = sh(
+                                    script: "git log --pretty=format:'%s' remotes/origin/${env.CHANGE_TARGET}..HEAD --grep='^fixup!'",
+                                    returnStdout: true
+                                ).trim()
+
+                                if (fixupCommits) {
+                                    echo "WARNING: Found fixup! commits in the PR branch:\n${fixupCommits}"
+                                    error("Fixup commits detected - this will fail at the end of the build")
+                                } else {
+                                    echo "No fixup! commits found."
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        cleanup {
+                            deleteDir()
+                        }
+                    }
+                }
             }
         }
 
@@ -397,7 +425,7 @@ pipeline {
                     }
                 }
 
-                stage('Check Fixup Commits') {
+                stage('Check Fixup Commits (Final)') {
                     agent any
                     when {
                         expression { env.CHANGE_TARGET }
