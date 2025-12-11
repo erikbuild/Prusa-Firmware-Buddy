@@ -699,12 +699,7 @@ inline bool calibrate_all_simple() {
     bool failed = false;
     // Measure centers
     std::array<xyz_pos_t, HOTENDS> centers;
-    for (auto tool : PhysicalToolIndex::all()) {
-#if HAS_TOOLCHANGER()
-        if (!prusa_toolchanger.getTool(tool.to_raw()).is_enabled()) {
-            continue;
-        }
-#endif
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
         tool_change(tool, tool_return_t::no_return);
         std::optional<xyz_pos_t> center = get_xyz_center(tool.to_raw());
         if (!center.has_value()) {
