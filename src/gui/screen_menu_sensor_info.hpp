@@ -113,7 +113,7 @@ struct ScreenMenuSensorInfo__<std::index_sequence<hotend...>> {
         >;
 };
 
-using ScreenMenuSensorInfo_ = ScreenMenuSensorInfo__<std::make_index_sequence<HOTENDS>>::T;
+using ScreenMenuSensorInfo_ = ScreenMenuSensorInfo__<std::make_index_sequence<PhysicalToolIndex::count>>::T;
 
 class ScreenMenuSensorInfo : public ScreenMenuSensorInfo_ {
     FS_AutoloadAutolock lock;
