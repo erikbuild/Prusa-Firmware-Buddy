@@ -39,6 +39,9 @@ public:
     template <typename F>
     inline ToolTagField field(F field) const;
 
+    constexpr inline bool operator==(const ToolTag &) const = default;
+    constexpr inline bool operator!=(const ToolTag &) const = default;
+
 private:
     explicit inline ToolTag(VirtualToolIndex tool, AssignSeq seq)
         : tool_(tool)
@@ -57,6 +60,9 @@ struct ToolTagField {
     ToolTag tag;
     Section section;
     Field field;
+
+    constexpr inline bool operator==(const ToolTagField &) const = default;
+    constexpr inline bool operator!=(const ToolTagField &) const = default;
 };
 
 template <typename F>
