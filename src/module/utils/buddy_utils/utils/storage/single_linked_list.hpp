@@ -6,22 +6,22 @@
 /// Class representing an intrusive linked list
 /// @param Item item type. The linked list doesn't own or copy the items
 /// @param next_ref_f Function that returns pointer to the next item for a given item
-template <typename Item, auto next_ref_f>
+template <typename Item, auto next_ref_f, typename ItemPointer = Item *>
 class SingleLinkedList {
-    static_assert(std::is_invocable_r_v<Item **, decltype(next_ref_f), Item *>);
+    static_assert(std::is_invocable_r_v<ItemPointer *, decltype(next_ref_f), ItemPointer>);
 
 public:
     inline bool empty() const {
         return front_ == nullptr;
     }
 
-    inline Item *front() {
+    inline ItemPointer front() {
         return front_;
     }
 
     /// Adds the item to the front of the linked list
     /// !!! Item is not copied, the referenced instance itself is linked in to the list
-    void push_front(Item *item) {
+    void push_front(ItemPointer item) {
         assert(item);
         *next_ref_f(item) = front_;
         front_ = item;
@@ -32,9 +32,9 @@ public:
         front_ = *next_ref_f(front_);
     }
 
-    bool remove(Item *item) {
-        Item **ii = &front_;
-        while (Item *i = *ii) {
+    bool remove(ItemPointer item) {
+        ItemPointer *ii = &front_;
+        while (ItemPointer i = *ii) {
             if (i == item) {
                 *ii = *next_ref_f(i);
                 return true;
@@ -52,7 +52,7 @@ public:
 
     public:
         using difference_type = std::ptrdiff_t;
-        using value_type = Item *;
+        using value_type = ItemPointer;
 
     public:
         iterator() = default;
@@ -66,7 +66,7 @@ public:
             return operator++();
         }
 
-        inline Item *operator*() const {
+        inline ItemPointer operator*() const {
             return i_;
         }
 
@@ -75,10 +75,10 @@ public:
         iterator &operator=(const iterator &) = default;
 
     private:
-        explicit iterator(Item *i)
+        explicit iterator(ItemPointer i)
             : i_(i) {}
 
-        Item *i_ = nullptr;
+        ItemPointer i_ = nullptr;
     };
 
     iterator begin() {
@@ -90,5 +90,5 @@ public:
     }
 
 private:
-    Item *front_ = nullptr;
+    ItemPointer front_ = nullptr;
 };
