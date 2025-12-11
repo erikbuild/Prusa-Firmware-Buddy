@@ -32,6 +32,16 @@ public:
         front_ = *next_ref_f(front_);
     }
 
+    /// complexity O(size)
+    [[nodiscard]] ItemPointer back() {
+        assert(front_);
+        ItemPointer curr = front_;
+        while (ItemPointer next = *next_ref_f(curr)) {
+            curr = next;
+        }
+        return curr;
+    }
+
     bool remove(ItemPointer item) {
         ItemPointer *ii = &front_;
         while (ItemPointer i = *ii) {
