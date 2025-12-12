@@ -304,6 +304,42 @@ public:
      * Specific init is handled in app_init() method.
      */
     void init() {
+        // Handle driver errors
+        cyphal_task.set_error_callback(
+            [](can::Driver::Notification notification) {
+                switch (notification) {
+                case can::Driver::Notification::ErrorBusOff:
+                    log_error(Node, "CAN bus off");
+                    puppy::fault::trigger_fault(puppy::fault::SharedFault::can);
+                    break;
+                case can::Driver::Notification::ErrorPassive:
+                    log_error(Node, "CAN bus error passive");
+                    puppy::fault::trigger_fault(puppy::fault::SharedFault::can);
+                    break;
+                case can::Driver::Notification::ErrorWarning:
+                    log_error(Node, "CAN error warning (either counter >96)");
+                    break;
+                case can::Driver::Notification::RxLost:
+#if SYSDEBUG()
+                    log_warning(Node, "CAN Rx frame lost (would fault if not sysdebug)");
+#else /* SYSDEBUG() */
+                    log_error(Node, "CAN Rx frame lost");
+                    puppy::fault::trigger_fault(puppy::fault::SharedFault::can);
+#endif /* SYSDEBUG() */
+                    break;
+                case can::Driver::Notification::TxLost:
+#if SYSDEBUG()
+                    log_warning(Node, "CAN Tx frame lost (would fault if not sysdebug)");
+#else /* SYSDEBUG() */
+                    // Details were logged from can::cyphal::Task
+                    puppy::fault::trigger_fault(puppy::fault::SharedFault::can);
+#endif /* SYSDEBUG() */
+                    break;
+                default:
+                    break;
+                }
+            });
+
         // Add registers
         detail::ProtoNode::add_otp_registers(registers);
 

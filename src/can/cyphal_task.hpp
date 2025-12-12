@@ -96,11 +96,24 @@ private:
         case Driver::Notification::RxLost:
             ++lost_rx_frames_isr;
             notify(Notify::RxLost);
+            if (error_callback) {
+                error_callback(Driver::Notification::RxLost);
+            }
+            break;
+        case Driver::Notification::ErrorBusOff:
+        case Driver::Notification::ErrorPassive:
+        case Driver::Notification::ErrorWarning:
+            if (error_callback) {
+                error_callback(notification);
+            }
             break;
         default:
             break;
         }
     }
+
+    /// Notify the application about driver errors. Called from ISR or task.
+    Driver::NotifyCallback error_callback = nullptr;
 
     std::atomic<uint32_t> lost_rx_frames_isr = 0; ///< Number of lost Rx frames (copy to prevent race)
     uint32_t lost_rx_frames = 0; ///< Number of lost Rx frames
@@ -225,6 +238,32 @@ public:
             }
         }
     };
+
+    /**
+     * @brief Check if CAN extended ID is service or message.
+     * @param can_id CAN extended ID
+     * @return true if service, false if message
+     */
+    static bool service_from_can_id(uint32_t can_id) {
+        static constexpr size_t FLAG_SERVICE_NOT_MESSAGE = (UINT32_C(1) << 25U);
+        return can_id & FLAG_SERVICE_NOT_MESSAGE;
+    }
+
+    /**
+     * @brief Parse port ID, either message subject ID or service ID from CAN extended ID.
+     * @note This needs to be used in tandem with service_from_can_id(), the same port can be used for both.
+     * @param can_id CAN extended ID
+     * @return port ID
+     */
+    static CanardPortID port_from_can_id(uint32_t can_id) {
+        static constexpr size_t OFFSET_SUBJECT_ID = 8U;
+        static constexpr size_t OFFSET_SERVICE_ID = 14U;
+        if (service_from_can_id(can_id)) {
+            return (can_id >> OFFSET_SERVICE_ID) & CANARD_SERVICE_ID_MAX;
+        } else {
+            return (can_id >> OFFSET_SUBJECT_ID) & CANARD_SUBJECT_ID_MAX;
+        }
+    }
 
     /**
      * @brief Configure this node ID.
@@ -390,6 +429,15 @@ public:
      * @return error statistics
      */
     Driver::ErrorStats get_error_stats() { return driver.get_error_stats(); }
+
+    /**
+     * @brief Set callback for driver and Cyphal error notifications.
+     * Intended to be set from the app.
+     * @param callback callback to be called from ISR or task
+     */
+    inline void set_error_callback(Driver::NotifyCallback callback) {
+        error_callback = callback;
+    }
 };
 
 // Cyphal task singleton

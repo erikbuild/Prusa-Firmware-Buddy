@@ -50,7 +50,10 @@ void FdcanDriver::start(bool automatic_retransmission_enable) {
                 | FDCAN_IT_TX_COMPLETE
                 | FDCAN_IT_RX_HIGH_PRIORITY_MSG
                 | FDCAN_IT_RX_FIFO0_MESSAGE_LOST
-                | FDCAN_IT_RX_FIFO1_MESSAGE_LOST,
+                | FDCAN_IT_RX_FIFO1_MESSAGE_LOST
+                | FDCAN_IT_BUS_OFF
+                | FDCAN_IT_ERROR_PASSIVE
+                | FDCAN_IT_ERROR_WARNING,
             full_tx_location_mask())
         != HAL_OK) {
         assert(false);
@@ -330,10 +333,10 @@ void FdcanDriver::set_filter(uint32_t index, const CanardFilter &filter, bool ti
         .FilterConfig = config,
         .FilterID1 = filter.extended_can_id,
         .FilterID2 = filter.extended_mask,
-#if STM32MP15x
+#if STM32MP15x || STM32MP25x
         .RxBufferIndex = 0,
         .IsCalibrationMsg = 0,
-#endif /* STM32MP15x */
+#endif /* STM32MP15x || STM32MP25x */
     };
 
     if (auto ret = HAL_FDCAN_ConfigFilter(&hfdcan, &hal_filter); ret != HAL_OK) {
@@ -352,6 +355,22 @@ Driver::ErrorStats FdcanDriver::get_error_stats() {
         .rec = static_cast<uint8_t>((error_counters.RxErrorPassive != 0 ? 0x80 : 0x00) | error_counters.RxErrorCnt),
         .err_log = error_counters.ErrorLogging,
     };
+}
+
+extern "C" void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorStatusITs) {
+    auto &driver = FdcanDriver::get_driver(hfdcan); // Get driver instance
+    if (ErrorStatusITs & FDCAN_FLAG_BUS_OFF) {
+        // BUS OFF is active. This also sets INIT bit and that disables all operations.
+        // Reset back to normal operation. The error counter should remain untouched, so the recovery will follow as per CAN spec.
+        CLEAR_BIT(hfdcan->Instance->CCCR, FDCAN_CCCR_INIT);
+        driver.isr_notify(Driver::Notification::ErrorBusOff);
+    }
+    if (ErrorStatusITs & FDCAN_FLAG_ERROR_PASSIVE) {
+        driver.isr_notify(Driver::Notification::ErrorPassive);
+    }
+    if (ErrorStatusITs & FDCAN_FLAG_ERROR_WARNING) {
+        driver.isr_notify(Driver::Notification::ErrorWarning);
+    }
 }
 
 } // namespace can

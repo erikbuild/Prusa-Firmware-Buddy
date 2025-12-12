@@ -18,6 +18,10 @@ public:
         RxDone, ///< Frame Rx, pick up the frame by receive()
         RxHighPrio, ///< High priority frame Rx, as configured by set_filter(), pick up the frame by receive()
         RxLost, ///< Didn't call receive() often enough, frame was lost
+        TxLost, ///< Not expected from the CAN driver, it is for completeness and for reuse in upper layers
+        ErrorBusOff, ///< CAN bus off state entered
+        ErrorPassive, ///< CAN error passive state entered
+        ErrorWarning, ///< CAN error warning (at least one error counter has reached 96)
     };
 
     /**

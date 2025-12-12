@@ -13,6 +13,7 @@ enum SharedFault {
     data_timeout = prusa3d_common_SharedFault_1_0_FAULT_DATA_TIMEOUT,
     pcb_overheat = prusa3d_common_SharedFault_1_0_FAULT_PCB_OVERHEAT,
     mcu_overheat = prusa3d_common_SharedFault_1_0_FAULT_MCU_OVERHEAT,
+    can = prusa3d_common_SharedFault_1_0_FAULT_CAN,
 
     /// This is a barrier for puppy specific faults
     _shared_first = prusa3d_common_SharedFault_1_0_FAULT_SHARED_FIRST,
@@ -22,6 +23,7 @@ template <typename E>
 concept SpecificFaultType = std::is_enum_v<E> && requires(E e) {
     E::_specific_last;
 
+    E::can;
     E::pcb_overheat;
     E::mcu_overheat;
     E::data_timeout;
@@ -49,6 +51,9 @@ static constexpr E from_shared(SharedFault fault) {
     case SharedFault::data_timeout:
         static_assert(std::to_underlying(SharedFault::data_timeout) == std::to_underlying(E::data_timeout));
         return E::data_timeout;
+    case SharedFault::can:
+        static_assert(std::to_underlying(SharedFault::can) == std::to_underlying(E::can));
+        return E::can;
     case SharedFault::_shared_first: // Remove if this code is covered by some real value
         break;
     }

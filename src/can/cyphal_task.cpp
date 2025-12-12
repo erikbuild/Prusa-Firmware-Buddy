@@ -270,10 +270,17 @@ void Task::tx_loop() {
     const CanardTxQueueItem *tqi = canardTxPeek(&canard_tx_queue); // Find the highest-priority frame
     while (tqi != nullptr) {
         // Attempt transmission only if the frame is not yet timed out while waiting in the TX queue.
-        // Otherwise just drop it and move on to the next one.
         if ((tqi->tx_deadline_usec == 0) || (tqi->tx_deadline_usec > static_cast<CanardMicrosecond>(get_timestamp_us()))) {
             if (driver.send(tqi->frame) == false) {
                 break; // Wait and try next time
+            }
+        } else {
+            // Otherwise just drop it and move on to the next one.
+            log_warning(can, "Cyphal Tx frame time out, %s port %u",
+                service_from_can_id(tqi->frame.extended_can_id) ? "service" : "message",
+                port_from_can_id(tqi->frame.extended_can_id));
+            if (error_callback) {
+                error_callback(Driver::Notification::TxLost);
             }
         }
 
