@@ -227,7 +227,7 @@ void screen_filament_detail::ScreenFilamentDetail::setup_preheat_mode_confirm(Pr
         // handle_filament_selection is reading from the filament parameters for checking, so we need to update them
         save_changes();
 
-        if (preheat_menu::WindowMenuPreheat::handle_filament_selection(PendingAdHocFilamentType {}, tool)) {
+        if (ScreenPreheat::handle_filament_selection(PendingAdHocFilamentType {}, tool)) {
             Screens::Access()->Close();
         }
     };

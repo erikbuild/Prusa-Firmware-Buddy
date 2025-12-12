@@ -15,7 +15,93 @@
     #include <screen/openprinttag/screen_opt_filament_detail.hpp>
 #endif
 
-using namespace preheat_menu;
+namespace {
+
+using PreheatToolIndex = PreheatData::ToolIndex;
+
+class WindowMenuPreheat;
+
+// extra space at the end is intended
+class MI_FILAMENT : public WiInfo<sizeof("999/999 ")> {
+public:
+    MI_FILAMENT(FilamentType filament_type, PreheatToolIndex target_extruder);
+    void click(IWindowMenu &) final;
+
+    const FilamentType filament_type;
+    const PreheatToolIndex tool;
+    FilamentTypeParameters::Name filament_name;
+};
+
+#if HAS_ANFC()
+class MI_FROM_OPENPRINTTAG : public IWindowMenuItem {
+public:
+    MI_FROM_OPENPRINTTAG(VirtualToolIndex tool);
+
+    void click(IWindowMenu &) final;
+    void Loop() final;
+
+    const VirtualToolIndex tool_;
+};
+
+#endif
+
+using WindowMenuPreheatBase = WindowMenuVirtual<
+    WindowMenuCallbackItem,
+#if HAS_ANFC()
+    MI_FROM_OPENPRINTTAG,
+#endif
+    MI_FILAMENT>;
+
+class WindowMenuPreheat : public WindowMenuPreheatBase {
+
+public:
+    WindowMenuPreheat(window_t *parent, const Rect16 &rect);
+
+    void set_data(const PreheatData &data);
+    void set_show_all_filaments(bool set);
+
+    int item_count() const final {
+        return index_mapping.total_item_count();
+    }
+
+protected:
+    void update_list();
+    void setup_item(ItemVariant &variant, int index) final;
+
+protected:
+    void screenEvent(window_t *sender, GUI_event_t event, void *param) override;
+
+private:
+    enum class Item {
+        return_,
+#if HAS_ANFC()
+        from_openprinttag,
+#endif
+        filament_section,
+        show_all,
+        cooldown,
+        adhoc_filament,
+    };
+
+    static constexpr auto items = std::to_array<DynamicIndexMappingRecord<Item>>({
+        { Item::return_, DynamicIndexMappingType::optional_item },
+#if HAS_ANFC()
+            { Item::from_openprinttag, DynamicIndexMappingType::optional_item },
+#endif
+            { Item::filament_section, DynamicIndexMappingType::dynamic_section },
+            { Item::adhoc_filament },
+            { Item::show_all, DynamicIndexMappingType::optional_item },
+            { Item::cooldown, DynamicIndexMappingType::optional_item },
+    });
+
+private:
+    FilamentList filament_list;
+    DynamicIndexMapping<items> index_mapping;
+    bool show_all_filaments_ = false;
+
+    /// Extruder we're doing the load/preheat for
+    PreheatToolIndex tool = AllTools {};
+};
 
 // * MI_FILAMENT
 MI_FILAMENT::MI_FILAMENT(FilamentType filament_type, PreheatToolIndex tool)
@@ -34,7 +120,7 @@ MI_FILAMENT::MI_FILAMENT(FilamentType filament_type, PreheatToolIndex tool)
 }
 
 void MI_FILAMENT::click(IWindowMenu &) {
-    WindowMenuPreheat::handle_filament_selection(filament_type, tool);
+    ScreenPreheat::handle_filament_selection(filament_type, tool);
 }
 
 #if HAS_ANFC()
@@ -89,20 +175,6 @@ void WindowMenuPreheat::set_show_all_filaments(bool set) {
     show_all_filaments_ = set;
     update_list();
     move_focus_to_index(prev_focused_index);
-}
-
-bool WindowMenuPreheat::handle_filament_selection(FilamentType filament_type, PreheatData::ToolIndex tool) {
-    const auto filament = filament_type.parameters();
-
-    if (filament.is_abrasive && std::holds_alternative<VirtualToolIndex>(tool) && !config_store().nozzle_is_hardened.get().test(std::get<VirtualToolIndex>(tool).to_raw())) {
-        StringViewUtf8Parameters<filament_name_buffer_size + 1> params;
-        if (MsgBoxWarning(_("Filament '%s' is abrasive, but you don't have a hardened nozzle installed. Do you really want to continue?").formatted(params, filament.name.data()), Responses_YesNo) != Response::Yes) {
-            return false;
-        }
-    }
-
-    marlin_client::FSM_response_variant(PhasesPreheat::UserTempSelection, FSMResponseVariant::make<FilamentType>(filament_type));
-    return true;
 }
 
 void WindowMenuPreheat::update_list() {
@@ -214,6 +286,8 @@ static_assert(common_frames::is_update_callable<FrameFilamentSelection>);
 using Frames = FrameDefinitionList<ScreenPreheat::FrameStorage,
     FrameDefinition<Phase::UserTempSelection, FrameFilamentSelection>>;
 
+} // namespace
+
 // * ScreenPreheat
 ScreenPreheat::ScreenPreheat()
     : ScreenFSM(nullptr, GuiDefaults::RectScreenNoHeader) {
@@ -224,15 +298,29 @@ ScreenPreheat::~ScreenPreheat() {
     destroy_frame();
 }
 
-void preheat_menu::ScreenPreheat::create_frame() {
+bool ScreenPreheat::handle_filament_selection(FilamentType filament_type, PreheatData::ToolIndex tool) {
+    const auto filament = filament_type.parameters();
+
+    if (filament.is_abrasive && std::holds_alternative<VirtualToolIndex>(tool) && !config_store().nozzle_is_hardened.get().test(std::get<VirtualToolIndex>(tool).to_raw())) {
+        StringViewUtf8Parameters<filament_name_buffer_size + 1> params;
+        if (MsgBoxWarning(_("Filament '%s' is abrasive, but you don't have a hardened nozzle installed. Do you really want to continue?").formatted(params, filament.name.data()), Responses_YesNo) != Response::Yes) {
+            return false;
+        }
+    }
+
+    marlin_client::FSM_response_variant(PhasesPreheat::UserTempSelection, FSMResponseVariant::make<FilamentType>(filament_type));
+    return true;
+}
+
+void ScreenPreheat::create_frame() {
     Frames::create_frame(frame_storage, get_phase(), &inner_frame);
 }
 
-void preheat_menu::ScreenPreheat::destroy_frame() {
+void ScreenPreheat::destroy_frame() {
     Frames::destroy_frame(frame_storage, get_phase());
 }
 
-void preheat_menu::ScreenPreheat::update_frame() {
+void ScreenPreheat::update_frame() {
     const PreheatData data = PreheatData::deserialize(fsm_base_data.GetData());
 
     Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
