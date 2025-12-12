@@ -32,6 +32,7 @@ inline __attribute__((always_inline)) T atomic_op(volatile void *memv, T val, [[
 constexpr auto op_add = [](auto &mem, auto val) { mem += val; };
 constexpr auto op_sub = [](auto &mem, auto val) { mem -= val; };
 constexpr auto op_xchg = [](auto &mem, auto val) { mem = val; };
+constexpr auto op_or = [](auto &mem, auto val) { mem |= val; };
 
 } // namespace
 
@@ -49,6 +50,10 @@ extern "C" __attribute__((__used__)) unsigned __atomic_fetch_add_4(volatile void
 
 extern "C" __attribute__((__used__)) unsigned __atomic_fetch_sub_4(volatile void *memv, unsigned val, [[maybe_unused]] int model) {
     return atomic_op<op_sub>(memv, val, model);
+}
+
+extern "C" __attribute__((__used__)) unsigned __atomic_fetch_or_4(volatile void *memv, unsigned val, [[maybe_unused]] int model) {
+    return atomic_op<op_or>(memv, val, model);
 }
 
 extern "C" __attribute__((__used__)) uint8_t __atomic_exchange_1(volatile void *memv, uint8_t val, [[maybe_unused]] int model) {
