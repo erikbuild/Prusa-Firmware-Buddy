@@ -194,24 +194,49 @@ void WindowMenuPreheat::screenEvent(window_t *sender, GUI_event_t event, void *p
     WindowMenuVirtual::screenEvent(sender, event, param);
 }
 
+// * Frames
+using Phase = PhasesPreheat;
+
+struct FrameFilamentSelection {
+    WindowExtendedMenu<WindowMenuPreheat> menu;
+
+    FrameFilamentSelection(window_frame_t *parent)
+        : menu(parent, parent->GetRect()) {
+        parent->CaptureNormalWindow(menu);
+    }
+
+    void update(const fsm::PhaseData &data) {
+        menu.menu.set_data(PreheatData::deserialize(data));
+    }
+};
+static_assert(common_frames::is_update_callable<FrameFilamentSelection>);
+
+using Frames = FrameDefinitionList<ScreenPreheat::FrameStorage,
+    FrameDefinition<Phase::UserTempSelection, FrameFilamentSelection>>;
+
 // * ScreenPreheat
 ScreenPreheat::ScreenPreheat()
-    : ScreenFSM(nullptr, {})
-    , menu(this, GuiDefaults::RectScreenNoHeader) //
-{
-    CaptureNormalWindow(menu);
+    : ScreenFSM(nullptr, GuiDefaults::RectScreenNoHeader) {
+    create_frame();
+}
+
+ScreenPreheat::~ScreenPreheat() {
+    destroy_frame();
 }
 
 void preheat_menu::ScreenPreheat::create_frame() {
-    // The FSM has a single screen, no need to do anything
+    Frames::create_frame(frame_storage, get_phase(), &inner_frame);
 }
 
 void preheat_menu::ScreenPreheat::destroy_frame() {
-    // The FSM has a single screen, no need to do anything
+    Frames::destroy_frame(frame_storage, get_phase());
 }
 
 void preheat_menu::ScreenPreheat::update_frame() {
     const PreheatData data = PreheatData::deserialize(fsm_base_data.GetData());
+
+    Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
+
     const auto title = [&] -> const char * {
         switch (data.mode) {
         case PreheatMode::preheat:
@@ -232,5 +257,4 @@ void preheat_menu::ScreenPreheat::update_frame() {
     }();
 
     header.SetText(_(title));
-    menu.menu.set_data(data);
 }

@@ -105,10 +105,15 @@ private:
 };
 
 class ScreenPreheat : public ScreenFSM {
-    WindowExtendedMenu<WindowMenuPreheat> menu;
 
 public:
     ScreenPreheat();
+    ~ScreenPreheat();
+
+protected:
+    inline PhasesPreheat get_phase() const {
+        return GetEnumFromPhaseIndex<PhasesPreheat>(fsm_base_data.GetPhase());
+    }
 
 protected:
     void create_frame();
