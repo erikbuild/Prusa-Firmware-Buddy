@@ -152,8 +152,8 @@ Temperature thermalManager;
   bool Temperature::adaptive_fan_slowing = true;
 #endif
 
-hotend_info_t Temperature::temp_hotend[HOTEND_TEMPS]; // = { 0 }
-uint32_t Temperature::temp_hotend_residency_start_ms[HOTEND_TEMPS];
+hotend_info_t Temperature::temp_hotend[HOTENDS]; // = { 0 }
+uint32_t Temperature::temp_hotend_residency_start_ms[HOTENDS];
 
 #if ENABLED(AUTO_POWER_CHAMBER_FAN)
   uint8_t Temperature::chamberfan_speed; // = 0
