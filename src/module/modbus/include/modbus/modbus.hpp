@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <span>
 #include <modbus/server_address.hpp>
+#include <modbus/traits.hpp>
 
 namespace modbus {
 
@@ -98,5 +99,38 @@ std::span<std::byte> handle_transaction(
 ///
 /// Exposed for unit tests, not needed in "real applications"
 uint16_t compute_crc(std::span<const std::byte> bytes);
+
+/// Interface to be used to reduce dependencies when you don't need to directly
+/// depend on specific modbus implementation.
+///
+/// It also encapsulates all the ugly and error prone type-casting, providing
+/// a clean interface for handling modbus::RegisterFile
+class ClientInterface {
+protected:
+    ~ClientInterface() = default;
+    [[nodiscard]] virtual bool read_input_registers_impl(modbus::ServerAddress server_address, uint16_t address, std::span<uint16_t> registers) = 0;
+    [[nodiscard]] virtual bool write_holding_registers_impl(modbus::ServerAddress server_address, uint16_t address, std::span<const uint16_t> registers) = 0;
+
+public:
+    /// Read input register file from modbus server at given address.
+    /// Return true on success, false otherwise.
+    template <RegisterFile RF>
+    [[nodiscard]] bool read_input_registers(modbus::ServerAddress server_address, RF &rf) {
+        return read_input_registers_impl(
+            server_address,
+            RF::address,
+            { reinterpret_cast<uint16_t *>(&rf), sizeof(RF) / sizeof(uint16_t) });
+    }
+
+    /// Write output register file to modbus server at given address.
+    /// Return true on success, false otherwise.
+    template <RegisterFile RF>
+    [[nodiscard]] bool write_holding_registers(modbus::ServerAddress server_address, const RF &rf) {
+        return write_holding_registers_impl(
+            server_address,
+            RF::address,
+            { reinterpret_cast<const uint16_t *>(&rf), sizeof(RF) / sizeof(uint16_t) });
+    }
+};
 
 } // namespace modbus

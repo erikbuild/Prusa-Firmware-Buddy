@@ -233,6 +233,7 @@ target_link_libraries(
          Marlin_Config
          error_codes
          marlin_server_types
+         modbus
          bsod
          SG14
          buddy_utils

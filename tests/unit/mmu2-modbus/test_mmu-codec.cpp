@@ -12,6 +12,14 @@ namespace buddy::puppies {
 PuppyModbus::PuppyModbus() {
 }
 
+bool PuppyModbus::read_input_registers_impl(modbus::ServerAddress, uint16_t, std::span<uint16_t>) {
+    return false;
+}
+
+bool PuppyModbus::write_holding_registers_impl(modbus::ServerAddress, uint16_t, std::span<const uint16_t>) {
+    return false;
+}
+
 uint16_t returnedRead = 0;
 CommunicationStatus returnedStatus = CommunicationStatus::OK;
 

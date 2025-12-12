@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <optional>
 #include <limits>
+#include <modbus/modbus.hpp>
 
 namespace buddy::puppies {
 
@@ -97,7 +98,7 @@ class PuppyModbus;
 
 [[deprecated("Puppy modbus should be accessed exclusively by puppy task, see BFW-8185")]] extern PuppyModbus puppyModbus;
 
-class PuppyModbus {
+class PuppyModbus : public modbus::ClientInterface {
     /**
      * This wraps liblightmodbus master and provides Modbus requests on top of PuppyBus interface.
      *
@@ -217,6 +218,9 @@ public:
 private:
     CommunicationStatus read_input(uint8_t unit, bool *data, uint16_t count, uint16_t address, uint32_t &timestamp_ms, uint32_t max_age_ms);
     CommunicationStatus write_coil(uint8_t unit, bool value, uint16_t address, bool &dirty);
+
+    [[nodiscard]] bool read_input_registers_impl(modbus::ServerAddress server_address, uint16_t address, std::span<uint16_t> registers) final;
+    [[nodiscard]] bool write_holding_registers_impl(modbus::ServerAddress server_address, uint16_t address, std::span<const uint16_t> registers) final;
 };
 
 class ModbusDevice {

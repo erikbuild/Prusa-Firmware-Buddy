@@ -344,4 +344,28 @@ CommunicationStatus PuppyModbus::ReadFIFO(uint8_t unit, uint16_t address, std::a
     return status;
 }
 
+bool PuppyModbus::read_input_registers_impl(modbus::ServerAddress server_address, uint16_t address, std::span<uint16_t> registers) {
+    uint32_t timestamp_ms;
+    const CommunicationStatus status = read_input(
+        std::to_underlying(server_address),
+        registers.data(),
+        registers.size(),
+        address,
+        nullptr,
+        timestamp_ms,
+        0);
+    return status == CommunicationStatus::OK;
+}
+
+bool PuppyModbus::write_holding_registers_impl(modbus::ServerAddress server_address, uint16_t address, std::span<const uint16_t> registers) {
+    bool dirty = true;
+    const CommunicationStatus status = write_holding(
+        std::to_underlying(server_address),
+        registers.data(),
+        registers.size(),
+        address,
+        dirty);
+    return status == CommunicationStatus::OK;
+}
+
 } // namespace buddy::puppies

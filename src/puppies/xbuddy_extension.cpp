@@ -52,14 +52,6 @@ struct ClosingFileDescriptor {
 
 static constexpr uint8_t unit = std::to_underlying(modbus::ServerAddress::xbuddy_extension);
 
-template <typename T>
-static buddy::puppies::CommunicationStatus write_holding(buddy::puppies::PuppyModbus &bus, uint8_t unit, T &data_struct) {
-    bool dirty = true;
-    const auto data = reinterpret_cast<uint16_t *>(&data_struct);
-    const auto count = sizeof(data_struct) / 2;
-    return bus.write_holding(unit, data, count, T::address, dirty);
-}
-
 namespace {
 
 // The xbuddy takes action if not seen an update for 1 second (in particular,
@@ -340,12 +332,12 @@ CommunicationStatus XBuddyExtension::write_chunk(PuppyModbus &bus) {
 
     modbus_chunk.size = cummulative_read;
 
-    CommunicationStatus transfer_status = write_holding(bus, unit, modbus_chunk);
-    if (transfer_status == CommunicationStatus::OK) {
+    if (bus.write_holding_registers(modbus::ServerAddress::xbuddy_extension, modbus_chunk)) {
         log_debug(Buddy, "sent chunk offset %" PRIu32 " size %zu", chunk_offset, cummulative_read);
         last_chunk_request = current_request;
+        return CommunicationStatus::OK;
     }
-    return transfer_status;
+    return CommunicationStatus::ERROR;
 }
 
 CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus) {
@@ -371,7 +363,11 @@ CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus) {
     const auto buddy_digest = std::as_writable_bytes(std::span { modbus_digest.data });
 
     if (buddy::compute_file_digest(fd.fd, salt, buddy_digest)) {
-        return write_holding(bus, unit, modbus_digest);
+        if (bus.write_holding_registers(modbus::ServerAddress::xbuddy_extension, modbus_digest)) {
+            return CommunicationStatus::OK;
+        } else {
+            return CommunicationStatus::ERROR;
+        }
     } else {
         log_error(Buddy, "buddy::compute_file_digest() failed");
         return CommunicationStatus::SKIPPED;
@@ -434,30 +430,27 @@ CommunicationStatus XBuddyExtension::refresh_log_message(PuppyModbus &bus) {
         return CommunicationStatus::OK;
     }
 
-    using xbuddy_extension::modbus::LogMessage;
-    ModbusInputRegisterBlock<LogMessage::address, LogMessage> log_message;
-    uint32_t max_age_ms = 0;
-    const auto result = bus.read(unit, log_message, max_age_ms);
-    if (result != CommunicationStatus::OK) {
+    xbuddy_extension::modbus::LogMessage log_message;
+    if (!bus.read_input_registers(modbus::ServerAddress::xbuddy_extension, log_message)) {
         // Do not update last_log_message_sequence, it will be retried on next cycle
         log_warning(Buddy, "XBE: failed to read log message");
-        return result;
+        return CommunicationStatus::ERROR;
     }
 
     // Check if we missed any messages, work in modular arithmetic
     const uint16_t expected_sequence = static_cast<uint16_t>(last_log_message_sequence + 1);
-    if (log_message.value.sequence != expected_sequence) {
+    if (log_message.sequence != expected_sequence) {
         // If we missed message, we at least log...
         log_info(Buddy, "XBE: missed log message(s)");
         // ...and continue with the newest message.
     }
 
     static_assert(std::endian::native == std::endian::little);
-    const auto text_size = std::min((size_t)log_message.value.text_size, 2 * log_message.value.text_data.size());
-    const auto text_data = (const char *)log_message.value.text_data.data();
+    const auto text_size = std::min((size_t)log_message.text_size, 2 * log_message.text_data.size());
+    const auto text_data = (const char *)log_message.text_data.data();
     log_info(Buddy, "XBE: %.*s", text_size, text_data);
 
-    last_log_message_sequence = log_message.value.sequence;
+    last_log_message_sequence = log_message.sequence;
     return CommunicationStatus::OK;
 }
 
