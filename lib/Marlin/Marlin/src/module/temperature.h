@@ -420,7 +420,12 @@ class Temperature {
      * Static (class) methods
      */
 
+    [[deprecated("Use the ToolIndex overload")]]
     static float analog_to_celsius_hotend(const int raw, const uint8_t e);
+
+    inline static float analog_to_celsius_hotend(const int raw, PhysicalToolIndex tool) {
+      return analog_to_celsius_hotend(raw, tool.to_raw());
+    }
 
     #if HAS_HEATED_BED
       static float analog_to_celsius_bed(const int raw);
@@ -527,8 +532,13 @@ class Temperature {
     //inline so that there is no performance decrease.
     //deg=degreeCelsius
 
+    [[deprecated("Use the ToolIndex overload")]]
     FORCE_INLINE static float degHotend(const uint8_t E_NAME) {
       return temp_hotend[HOTEND_INDEX].celsius;
+    }
+
+    inline static float degHotend(PhysicalToolIndex tool) {
+      return degHotend(tool.to_raw());
     }
 
     [[deprecated("Use the ToolIndex overload")]]
@@ -555,7 +565,13 @@ class Temperature {
       }
 
       /// @returns whether the hotend has stabilized on the target temperature (or if the target temp is 0)
+      [[deprecated("Use the ToolIndex overload")]]
       static bool is_hotend_temperature_reached(uint8_t hotend);
+
+      /// @returns whether the hotend has stabilized on the target temperature (or if the target temp is 0)
+      inline static bool is_hotend_temperature_reached(PhysicalToolIndex tool) {
+        return is_hotend_temperature_reached(tool.to_raw());
+      }
 
       static bool are_hotend_temperatures_reached();
 
@@ -622,9 +638,21 @@ class Temperature {
     #endif // HAS_TEMP_CHAMBER
 
     #if HAS_TEMP_HEATBREAK
+      [[deprecated("Use the ToolIndex overload")]]
       FORCE_INLINE static float degHeatbreak(const uint8_t E_NAME)            { return temp_heatbreak[HOTEND_INDEX].celsius; }
+      
+      inline static float degHeatbreak(PhysicalToolIndex tool) {
+        return degHeatbreak(tool.to_raw());
+      }
+
       #if HAS_TEMP_HEATBREAK_CONTROL
+        [[deprecated("Use the ToolIndex overload")]]
         FORCE_INLINE static int16_t degTargetHeatbreak(const uint8_t E_NAME)  { return temp_heatbreak[HOTEND_INDEX].target; }
+
+        inline static int16_t degTargetHeatbreak(PhysicalToolIndex tool) {
+          return degTargetHeatbreak(tool.to_raw());
+        }
+
         FORCE_INLINE static bool isHeatingHeatbreak(const uint8_t E_NAME)     { return temp_heatbreak[HOTEND_INDEX].target > temp_heatbreak[HOTEND_INDEX].celsius; }
         FORCE_INLINE static bool isCoolingHeatbreak(const uint8_t E_NAME)     { return temp_heatbreak[HOTEND_INDEX].target < temp_heatbreak[HOTEND_INDEX].celsius; }
 
@@ -639,6 +667,7 @@ class Temperature {
     #endif
 
     #if HAS_TEMP_HEATBREAK_CONTROL
+      [[deprecated("Use the ToolIndex overload")]]
       static void setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME) {
         temp_heatbreak[HOTEND_INDEX].target =
           #ifdef HEATBREAK_MAXTEMP
@@ -653,7 +682,7 @@ class Temperature {
         start_watching_heatbreak(HOTEND_INDEX);
       }
 
-      static void setTargetHeatbreak(const int16_t celsius, PhysicalToolIndex tool) {
+      inline static void setTargetHeatbreak(int16_t celsius, PhysicalToolIndex tool) {
         setTargetHeatbreak(celsius, tool.to_raw());
       }
     #endif // HAS_TEMP_HEATBREAK

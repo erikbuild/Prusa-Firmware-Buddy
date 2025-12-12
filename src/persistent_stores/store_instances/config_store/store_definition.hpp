@@ -353,7 +353,13 @@ struct CurrentStore
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 4")> tool_offset_4;
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 5")> tool_offset_5;
 
+    [[deprecated("Use the ToolIndex overload")]]
     ToolOffset get_tool_offset(uint8_t index);
+
+    inline ToolOffset get_tool_offset(PhysicalToolIndex index) {
+        return get_tool_offset(index.to_raw());
+    }
+
     void set_tool_offset(uint8_t index, ToolOffset value);
 #endif
 
@@ -408,7 +414,13 @@ struct CurrentStore
     StoreItemArray<float, defaults::nozzle_diameter, ItemFlag::hw_config, journal::hash("Nozzle Diameter Array"), 16, HOTENDS> nozzle_diameters;
 
     float get_nozzle_diameter(uint8_t index);
+
+    [[deprecated("Use the ToolIndex overload")]]
     void set_nozzle_diameter(uint8_t index, float value);
+
+    inline void set_nozzle_diameter(PhysicalToolIndex tool, float value) {
+        set_nozzle_diameter(tool.to_raw(), value);
+    }
 
     /// Stores whether a nozzle is hardened (resistant to abrasive filament) or not. One bit per each hotend
     StoreItem<std::bitset<16>, defaults::nozzle_is_hardened, ItemFlag::hw_config, journal::hash("Nozzle is Hardened v16")> nozzle_is_hardened;

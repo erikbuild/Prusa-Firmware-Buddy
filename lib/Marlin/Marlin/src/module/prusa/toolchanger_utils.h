@@ -7,6 +7,7 @@
     #include <puppies/Dwarf.hpp>
     #include <puppies/PuppyModbus.hpp>
     #include <module/tool_change.h>
+    #include <tool_index.hpp>
 
     #include <inplace_function.hpp>
 
@@ -91,7 +92,13 @@ public:
      */
     buddy::puppies::Dwarf *get_marlin_picked_tool();
 
+    [[deprecated("Use the ToolIndex overload")]]
     buddy::puppies::Dwarf &getTool(uint8_t tool_index);
+
+    inline buddy::puppies::Dwarf &getTool(PhysicalToolIndex tool) {
+        return getTool(tool.to_raw());
+    }
+
     const PrusaToolInfo &get_tool_info(const buddy::puppies::Dwarf &dwarf, bool check_calibrated = false) const;
     bool is_tool_info_valid(const buddy::puppies::Dwarf &dwarf, const PrusaToolInfo &info) const;
     bool is_tool_info_valid(const buddy::puppies::Dwarf &dwarf) const;
@@ -118,9 +125,15 @@ public:
         return is_tool_enabled(2) || is_tool_enabled(3) || is_tool_enabled(4) || is_tool_enabled(5);
     }
 
+    [[deprecated("Use the ToolIndex overload")]]
     inline bool is_tool_enabled(uint8_t tool) {
         assert(tool < buddy::puppies::dwarfs.size());
         return buddy::puppies::dwarfs[tool].is_enabled();
+    }
+
+    [[deprecated("Use tool.is_enabled()")]]
+    inline bool is_tool_enabled(PhysicalToolIndex tool) {
+        return is_tool_enabled(tool.to_raw());
     }
 
     inline bool has_tool() const {
