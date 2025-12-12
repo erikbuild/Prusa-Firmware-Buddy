@@ -48,8 +48,8 @@ METRIC_DEF(metric_dwarf_parked_raw, "dwarf_parked_raw", METRIC_VALUE_CUSTOM, 100
 METRIC_DEF(metric_dwarf_heater_current, "dwarf_heat_curr", METRIC_VALUE_CUSTOM, 100, METRIC_DISABLED);
 METRIC_DEF(metric_dwarf_heater_pwm, "dwarf_heat_pwm", METRIC_VALUE_CUSTOM, 100, METRIC_DISABLED);
 
-Dwarf::Dwarf(PuppyModbus &bus, const uint8_t dwarf_nr, uint8_t modbus_address)
-    : ModbusDevice(bus, modbus_address)
+Dwarf::Dwarf(const uint8_t dwarf_nr, uint8_t modbus_address)
+    : ModbusDevice(modbus_address)
     , mutex(new freertos::Mutex)
     , dwarf_nr(dwarf_nr)
     , log_component(get_log_component(dwarf_nr))
@@ -73,9 +73,9 @@ Dwarf::Dwarf(PuppyModbus &bus, const uint8_t dwarf_nr, uint8_t modbus_address)
     set_status_led(); // Default status LED mode
 }
 
-CommunicationStatus Dwarf::refresh() {
+CommunicationStatus Dwarf::refresh(PuppyModbus &bus) {
     Lock guard(*mutex);
-    typedef CommunicationStatus (Dwarf::*MethodType)();
+    typedef CommunicationStatus (Dwarf::*MethodType)(PuppyModbus &);
     static constexpr MethodType funcs[] = {
         &Dwarf::read_general_status,
         &Dwarf::read_discrete_general_status,
@@ -86,10 +86,10 @@ CommunicationStatus Dwarf::refresh() {
     if (++refresh_nr >= std::size(funcs)) {
         refresh_nr = 0;
     }
-    return (this->*funcs[refresh_nr])();
+    return (this->*funcs[refresh_nr])(bus);
 }
 
-CommunicationStatus Dwarf::read_discrete_general_status() {
+CommunicationStatus Dwarf::read_discrete_general_status(PuppyModbus &bus) {
     // read general status discrete inputs
     CommunicationStatus status = bus.read(unit, DiscreteGeneralStatus, 250);
     if (status == CommunicationStatus::OK) {
@@ -99,12 +99,12 @@ CommunicationStatus Dwarf::read_discrete_general_status() {
     return status;
 }
 
-CommunicationStatus Dwarf::read_general_status() {
+CommunicationStatus Dwarf::read_general_status(PuppyModbus &bus) {
     // read general status registers
     CommunicationStatus status = bus.read(unit, RegisterGeneralStatus, 250);
     if (status == CommunicationStatus::OK) {
         if (RegisterGeneralStatus.value.FaultStatus != dwarf_shared::errors::FaultStatusMask::NO_FAULT) {
-            handle_dwarf_fault();
+            handle_dwarf_fault(bus);
         }
 
         // Cache for a use in interrupt (where we can't lock).
@@ -118,15 +118,15 @@ CommunicationStatus Dwarf::read_general_status() {
     return status;
 }
 
-CommunicationStatus Dwarf::ping() {
+CommunicationStatus Dwarf::ping(PuppyModbus &bus) {
     Lock guard(*mutex);
     return bus.read(unit, GeneralStatic);
 }
 
-CommunicationStatus Dwarf::initial_scan() {
+CommunicationStatus Dwarf::initial_scan(PuppyModbus &bus) {
     Lock guard(*mutex);
     time_sync.init();
-    run_time_sync();
+    run_time_sync(bus);
 
     // Update static values
     CommunicationStatus status = bus.read(unit, GeneralStatic);
@@ -150,7 +150,7 @@ CommunicationStatus Dwarf::initial_scan() {
     DWARF_LOG(logging::Severity::info, "HwDatamatrix: %s", sn.data());
 
     // read discrete general stats - contains data about picked/parked, and that is needed immediately upon init to pick correct tool
-    status = read_discrete_general_status();
+    status = read_discrete_general_status(bus);
 
     GeneralWrite.dirty = true;
     TmcEnable.dirty = true;
@@ -196,7 +196,7 @@ bool Dwarf::dispatch_log_event() {
     return true;
 }
 
-CommunicationStatus Dwarf::fifo_refresh(uint32_t cycle_ticks_ms) {
+CommunicationStatus Dwarf::fifo_refresh(PuppyModbus &bus, uint32_t cycle_ticks_ms) {
     Lock guard(*mutex);
     // pull fifo every 200 ms
     if (last_pull_ms + DWARF_FIFO_PULL_PERIOD > cycle_ticks_ms) {
@@ -204,14 +204,14 @@ CommunicationStatus Dwarf::fifo_refresh(uint32_t cycle_ticks_ms) {
     }
 
     bool more;
-    CommunicationStatus status = pull_fifo_nolock(more);
+    CommunicationStatus status = pull_fifo_nolock(bus, more);
     if (!more && status == CommunicationStatus::OK) {
         last_pull_ms = cycle_ticks_ms; // Wait before next pull only if all is read
     }
     return status;
 }
 
-CommunicationStatus Dwarf::read_fifo(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo, size_t &read) {
+CommunicationStatus Dwarf::read_fifo(PuppyModbus &bus, std::array<uint16_t, MODBUS_FIFO_LEN> &fifo, size_t &read) {
     CommunicationStatus status = CommunicationStatus::SKIPPED;
     for (uint8_t i = FIFO_RETRIES; status != CommunicationStatus::OK && i != 0; i--) {
         status = bus.ReadFIFO(unit, ENCODED_FIFO_ADDRESS, fifo, read);
@@ -229,16 +229,16 @@ CommunicationStatus Dwarf::read_fifo(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo
     return status;
 }
 
-CommunicationStatus Dwarf::pull_fifo(bool &more) {
+CommunicationStatus Dwarf::pull_fifo(PuppyModbus &bus, bool &more) {
     Lock guard(*mutex);
-    return pull_fifo_nolock(more);
+    return pull_fifo_nolock(bus, more);
 }
 
-CommunicationStatus Dwarf::pull_fifo_nolock(bool &more) {
+CommunicationStatus Dwarf::pull_fifo_nolock(PuppyModbus &bus, bool &more) {
     // Read coded FIFO
     std::array<uint16_t, MODBUS_FIFO_LEN> fifo;
     size_t read = 0;
-    CommunicationStatus status = read_fifo(fifo, read);
+    CommunicationStatus status = read_fifo(bus, fifo, read);
     if (status == CommunicationStatus::ERROR) {
         more = true; // Request failed, most probably there is more data waiting
         return status;
@@ -273,7 +273,7 @@ CommunicationStatus Dwarf::pull_fifo_nolock(bool &more) {
     return status;
 }
 
-CommunicationStatus Dwarf::write_general() {
+CommunicationStatus Dwarf::write_general(PuppyModbus &bus) {
     // Handle delayed writes from possibly an interrupt.
     for (size_t i = 0; i < NUM_FANS; i++) {
         uint16_t pwm_desired = fan_pwm_desired[i].load();
@@ -291,7 +291,7 @@ CommunicationStatus Dwarf::write_general() {
     return status;
 }
 
-CommunicationStatus Dwarf::write_tmc_enable() {
+CommunicationStatus Dwarf::write_tmc_enable(PuppyModbus &bus) {
     CommunicationStatus status = bus.write(unit, TmcEnable);
     if (status == CommunicationStatus::ERROR) {
         return status;
@@ -301,7 +301,7 @@ CommunicationStatus Dwarf::write_tmc_enable() {
     return status;
 }
 
-uint32_t Dwarf::tmc_read(uint8_t addressByte) {
+uint32_t Dwarf::tmc_read(PuppyModbus &bus, uint8_t addressByte) {
     Lock guard(*mutex);
 
     TmcReadRequest.value.address = addressByte;
@@ -321,7 +321,7 @@ uint32_t Dwarf::tmc_read(uint8_t addressByte) {
     return 0;
 }
 
-void Dwarf::tmc_write(uint8_t addressByte, uint32_t config) {
+void Dwarf::tmc_write(PuppyModbus &bus, uint8_t addressByte, uint32_t config) {
     Lock guard(*mutex);
 
     TmcWriteRequest.value.address = addressByte;
@@ -336,7 +336,7 @@ void Dwarf::tmc_write(uint8_t addressByte, uint32_t config) {
     }
 }
 
-void Dwarf::tmc_set_enable(bool state) {
+void Dwarf::tmc_set_enable(PuppyModbus &bus, bool state) {
     Lock guard(*mutex);
 
     uint16_t new_state = state ? 1 : 0;
@@ -346,7 +346,7 @@ void Dwarf::tmc_set_enable(bool state) {
 
     TmcEnable.value = new_state;
     TmcEnable.dirty = true;
-    auto result = write_tmc_enable();
+    auto result = write_tmc_enable(bus);
     if (result != CommunicationStatus::OK) {
         DWARF_LOG(logging::Severity::critical, "Enable pin write error");
     }
@@ -405,7 +405,7 @@ bool Dwarf::is_button_down_pressed() const {
     return DiscreteGeneralStatus.value.is_button_down_pressed;
 }
 
-CommunicationStatus Dwarf::run_time_sync() {
+CommunicationStatus Dwarf::run_time_sync(PuppyModbus &bus) {
     RequestTiming timing;
     CommunicationStatus status = bus.read(unit, TimeSync, 1000, &timing);
     if (status == CommunicationStatus::ERROR) {
@@ -425,7 +425,7 @@ CommunicationStatus Dwarf::run_time_sync() {
     return selected;
 }
 
-CommunicationStatus Dwarf::set_selected(bool selected) {
+CommunicationStatus Dwarf::set_selected(PuppyModbus &bus, bool selected) {
     Lock guard(*mutex);
 
     IsSelectedCoil.dirty = true;
@@ -440,13 +440,13 @@ CommunicationStatus Dwarf::set_selected(bool selected) {
         // Enable loadcell for dwarf being selected in case the accelerometer is not already enabled
         // This condition prevents replacing accelerometer with loadcell when recovering from puppy failure
         if (!AccelerometerEnableCoil.value) {
-            if (!set_loadcell_nolock(true)) {
+            if (!set_loadcell_nolock(bus, true)) {
                 return CommunicationStatus::ERROR;
             }
         }
     } else {
         // Disable accelerometer and loadcell for dwarf being unselected
-        if (!set_loadcell_nolock(false) || !set_accelerometer_nolock(false)) {
+        if (!set_loadcell_nolock(bus, false) || !set_accelerometer_nolock(bus, false)) {
             return CommunicationStatus::ERROR;
         }
     }
@@ -454,45 +454,45 @@ CommunicationStatus Dwarf::set_selected(bool selected) {
     return CommunicationStatus::OK;
 }
 
-bool Dwarf::set_accelerometer(bool active) {
+bool Dwarf::set_accelerometer(PuppyModbus &bus, bool active) {
     Lock guard(*mutex);
 
-    return set_accelerometer_nolock(active);
+    return set_accelerometer_nolock(bus, active);
 }
 
-bool Dwarf::set_accelerometer_nolock(bool active) {
+bool Dwarf::set_accelerometer_nolock(PuppyModbus &bus, bool active) {
     if (active && !this->selected) {
         return false;
     }
 
-    return raw_set_loadcell(!active && this->selected) && raw_set_accelerometer(active);
+    return raw_set_loadcell(bus, !active && this->selected) && raw_set_accelerometer(bus, active);
 }
 
-bool Dwarf::set_loadcell(bool active) {
+bool Dwarf::set_loadcell(PuppyModbus &bus, bool active) {
     Lock guard(*mutex);
 
-    return set_loadcell_nolock(active);
+    return set_loadcell_nolock(bus, active);
 }
 
-bool Dwarf::set_loadcell_nolock(bool active) {
+bool Dwarf::set_loadcell_nolock(PuppyModbus &bus, bool active) {
     if (active && !this->selected) {
         return false;
     }
 
     if (active) {
-        return raw_set_accelerometer(false) && raw_set_loadcell(true);
+        return raw_set_accelerometer(bus, false) && raw_set_loadcell(bus, true);
     }
 
-    return raw_set_loadcell(false);
+    return raw_set_loadcell(bus, false);
 }
 
-bool Dwarf::raw_set_loadcell(bool enable) {
+bool Dwarf::raw_set_loadcell(PuppyModbus &bus, bool enable) {
     LoadcellEnableCoil.dirty = true;
     LoadcellEnableCoil.value = enable;
     return bus.write(unit, LoadcellEnableCoil) == CommunicationStatus::OK;
 }
 
-bool Dwarf::raw_set_accelerometer(bool enable) {
+bool Dwarf::raw_set_accelerometer(PuppyModbus &bus, bool enable) {
     AccelerometerEnableCoil.dirty = true;
     AccelerometerEnableCoil.value = enable;
     return bus.write(unit, AccelerometerEnableCoil) == CommunicationStatus::OK;
@@ -620,7 +620,7 @@ void Dwarf::set_pid(float p, float i, float d) {
     GeneralWrite.dirty = true;
 }
 
-void Dwarf::handle_dwarf_fault() {
+void Dwarf::handle_dwarf_fault(PuppyModbus &bus) {
     // fault is expected when this method is called
     assert(RegisterGeneralStatus.value.FaultStatus != dwarf_shared::errors::FaultStatusMask::NO_FAULT);
 
@@ -755,12 +755,12 @@ uint16_t Dwarf::get_fan_state(uint8_t fan_nr) const {
 }
 
 std::array<Dwarf, DWARF_MAX_COUNT> dwarfs { {
-    { puppyModbus, 1, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_1) },
-    { puppyModbus, 2, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_2) },
-    { puppyModbus, 3, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_3) },
-    { puppyModbus, 4, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_4) },
-    { puppyModbus, 5, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_5) },
-    { puppyModbus, 6, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_6) },
+    { 1, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_1) },
+    { 2, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_2) },
+    { 3, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_3) },
+    { 4, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_4) },
+    { 5, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_5) },
+    { 6, PuppyBootstrap::get_modbus_address_for_dock(Dock::DWARF_6) },
 } };
 
 } // namespace buddy::puppies

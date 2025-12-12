@@ -8,11 +8,6 @@ void LogResponseMsg(const char *) {}
 } // namespace MMU2
 
 namespace buddy::puppies {
-PuppyModbus puppyModbus;
-
-ModbusDevice::ModbusDevice(buddy::puppies::PuppyModbus &bus, unsigned char)
-    : bus(bus) {
-}
 
 PuppyModbus::PuppyModbus() {
 }
@@ -50,6 +45,8 @@ CommunicationStatus PuppyModbus::read_input(uint8_t unit, uint16_t *data, uint16
 
 using namespace modules::protocol;
 
+buddy::puppies::PuppyModbus bus;
+
 void CheckReadRegister(uint8_t address, uint16_t expectedRead) {
     RequestMsg rq(RequestMsgCodes::Read, address);
     auto &mmu = buddy::puppies::mmu;
@@ -64,7 +61,7 @@ void CheckReadRegister(uint8_t address, uint16_t expectedRead) {
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::OK;
 
     // process the message
-    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh(bus) == buddy::puppies::returnedStatus);
 
     // check control structures
     CHECK(mmu.mmuModbusRq.u.read.value == buddy::puppies::returnedRead);
@@ -107,7 +104,7 @@ void CheckWriteRegister(uint8_t address, uint16_t value) {
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::OK;
 
     // process the message
-    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh(bus) == buddy::puppies::returnedStatus);
 
     // check control structures
     CHECK(mmu.mmuModbusRq.u.write.accepted == true);
@@ -162,7 +159,7 @@ void CheckQuery(uint8_t command, uint8_t param, uint16_t commandStatus, uint16_t
     buddy::puppies::returnedQuery[2] = pec;
 
     // process the message
-    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh(bus) == buddy::puppies::returnedStatus);
 
     // check control structures - response registers are located aside from this structure
     const auto [rvCommand, rvParam] = xbuddy_extension::mmu_bridge::unpack_command(mmu.mmuQuery.value.cip);
@@ -202,7 +199,7 @@ void CheckFailedWriteRegister(uint8_t address, uint16_t value) {
     buddy::puppies::returnedStatus = buddy::puppies::CommunicationStatus::ERROR;
 
     // process the message
-    CHECK(mmu.refresh() == buddy::puppies::returnedStatus);
+    CHECK(mmu.refresh(bus) == buddy::puppies::returnedStatus);
 
     // check control structures
     CHECK(mmu.mmuModbusRq.u.write.accepted == false);

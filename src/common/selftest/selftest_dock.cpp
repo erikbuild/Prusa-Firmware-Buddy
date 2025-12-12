@@ -28,7 +28,9 @@ CSelftestPart_Dock::~CSelftestPart_Dock() {
     for (int8_t e = 0; e < HOTENDS; e++) {
         prusa_toolchanger.getTool(e).set_cheese_led(); // Default LED config
     }
-    prusa_toolchanger.init(false); // Ensure picked/active tool matches the reality
+    /// TODO do not access puppyModbus outside of puppy task
+    /// BFW-8185
+    prusa_toolchanger.init(buddy::puppies::puppyModbus, false); // Ensure picked/active tool matches the reality
     toolcheck_reenable();
 }
 
@@ -155,7 +157,9 @@ LoopResult CSelftestPart_Dock::state_ask_user_remove_pin() {
 
     // Select the tool to mark it, unselect all others
     for (uint i = 0; i < HOTENDS; ++i) {
-        prusa_toolchanger.getTool(i).set_selected(i == config.dock_id);
+        /// TODO do not access puppyModbus outside of puppy task
+        /// BFW-8185
+        prusa_toolchanger.getTool(i).set_selected(buddy::puppies::puppyModbus, i == config.dock_id);
         prusa_toolchanger.getTool(i).set_cheese_led(0xff, 0x00); // LED on on the selected tool
     }
 

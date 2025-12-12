@@ -7,10 +7,9 @@
 using Lock = std::unique_lock<freertos::Mutex>;
 using xbuddy_extension::NodeState;
 
-namespace buddy::puppies {
+static constexpr uint8_t unit = std::to_underlying(modbus::ServerAddress::ac_controller);
 
-AcController::AcController(PuppyModbus &bus, uint8_t modbus_address)
-    : ModbusDevice(bus, modbus_address) {}
+namespace buddy::puppies {
 
 std::optional<float> AcController::get_mcu_temp() const {
     Lock lock(mutex);
@@ -177,7 +176,7 @@ void AcController::set_progress_percent(uint8_t percent) {
     }
 }
 
-CommunicationStatus AcController::refresh_input(uint32_t max_age) {
+CommunicationStatus AcController::refresh_input(PuppyModbus &bus, uint32_t max_age) {
     // Already locked by caller.
 
     const auto result = bus.read(unit, status, max_age);
@@ -197,10 +196,10 @@ CommunicationStatus AcController::refresh_input(uint32_t max_age) {
     return result;
 }
 
-CommunicationStatus AcController::refresh() {
+CommunicationStatus AcController::refresh(PuppyModbus &bus) {
     Lock lock(mutex);
 
-    const auto input = refresh_input(250);
+    const auto input = refresh_input(bus, 250);
     const auto holding_config = bus.write(unit, config);
     const auto holding_led_config = bus.write(unit, led_config);
 
@@ -213,10 +212,10 @@ CommunicationStatus AcController::refresh() {
     }
 }
 
-CommunicationStatus AcController::initial_scan() {
+CommunicationStatus AcController::initial_scan(PuppyModbus &bus) {
     Lock lock(mutex);
 
-    const auto input = refresh_input(0);
+    const auto input = refresh_input(bus, 0);
     config.dirty = true;
     return input;
 }
@@ -225,6 +224,6 @@ bool AcController::all_valid() const {
     return valid && static_cast<NodeState>(status.value.node_state) == NodeState::ready;
 }
 
-AcController ac_controller(puppyModbus, std::to_underlying(modbus::ServerAddress::ac_controller));
+AcController ac_controller;
 
 } // namespace buddy::puppies

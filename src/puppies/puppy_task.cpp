@@ -63,7 +63,7 @@ static PuppyBootstrap::BootstrapResult bootstrap_puppies(PuppyBootstrap::Bootstr
     return puppy_bootstrap.run(minimal_config);
 }
 
-static void verify_puppies_running() {
+static void verify_puppies_running(PuppyModbus &bus) {
     // wait for all the puppies to be reacheable
     log_info(Puppies, "Waiting for puppies to boot");
 
@@ -74,14 +74,14 @@ static void verify_puppies_running() {
     do {
         bool modular_bed_ok = true;
 #if HAS_PUPPY_MODULARBED()
-        modular_bed_ok = !modular_bed.is_enabled() || (modular_bed.ping() != CommunicationStatus::ERROR);
+        modular_bed_ok = !modular_bed.is_enabled() || (modular_bed.ping(bus) != CommunicationStatus::ERROR);
 #endif
 
         uint8_t num_dwarfs_ok = 0, num_dwarfs_dead = 0;
 #if HAS_DWARF()
         for (Dwarf &dwarf : dwarfs) {
             if (dwarf.is_enabled()) {
-                if (dwarf.ping() != CommunicationStatus::ERROR) {
+                if (dwarf.ping(bus) != CommunicationStatus::ERROR) {
                     ++num_dwarfs_ok;
                 } else {
                     ++num_dwarfs_dead;
@@ -95,7 +95,7 @@ static void verify_puppies_running() {
 #endif
 
 #if HAS_XBUDDY_EXTENSION()
-        const bool xbuddy_extension_ok = xbuddy_extension.ping() != CommunicationStatus::ERROR;
+        const bool xbuddy_extension_ok = xbuddy_extension.ping(bus) != CommunicationStatus::ERROR;
 #else
         const bool xbuddy_extension_ok = true;
 #endif
@@ -120,7 +120,7 @@ static void verify_puppies_running() {
     } while (true);
 }
 
-static void puppy_task_loop() {
+static void puppy_task_loop(PuppyModbus &bus) {
 #if HAS_TOOLCHANGER() && HAS_DWARF()
     size_t slow_stage = 0; ///< Switch slow action
 #endif
@@ -138,7 +138,7 @@ static void puppy_task_loop() {
         // INDX_TODO: INDX_HEAD check
 
 #if HAS_TOOLCHANGER() && HAS_DWARF()
-        if (!prusa_toolchanger.update()) {
+        if (!prusa_toolchanger.update(bus)) {
             return;
         }
 
@@ -153,7 +153,7 @@ static void puppy_task_loop() {
             bool more = true; ///< Pull while there is something in fifo
             // Pull fifo only this many times
             for (int active_fifo_attempts = 5; more && active_fifo_attempts > 0; active_fifo_attempts--) {
-                if (active.pull_fifo(more) == CommunicationStatus::ERROR) {
+                if (active.pull_fifo(bus, more) == CommunicationStatus::ERROR) {
                     return;
                 }
             }
@@ -180,14 +180,14 @@ static void puppy_task_loop() {
                     }
 
                     // Fast refresh of non-selected dwarf
-                    CommunicationStatus status = dwarf.fifo_refresh(cycle_ticks);
+                    CommunicationStatus status = dwarf.fifo_refresh(bus, cycle_ticks);
                     if (status == CommunicationStatus::ERROR) {
                         return;
                     }
                     worked |= status == CommunicationStatus::OK;
                 } else {
                     // Slow refresh of non-selected dwarf
-                    CommunicationStatus status = dwarf.refresh();
+                    CommunicationStatus status = dwarf.refresh(bus);
                     if (status == CommunicationStatus::ERROR) {
                         return;
                     }
@@ -199,7 +199,7 @@ static void puppy_task_loop() {
 #if HAS_PUPPY_MODULARBED()
             {
                 // Try slow refresh of modular bed
-                if (modular_bed.refresh() == CommunicationStatus::ERROR) {
+                if (modular_bed.refresh(bus) == CommunicationStatus::ERROR) {
                     return;
                 }
             }
@@ -207,7 +207,7 @@ static void puppy_task_loop() {
 #if HAS_XBUDDY_EXTENSION()
             {
                 // TODO: Deal with possibility of extension being optional
-                CommunicationStatus status = xbuddy_extension.refresh();
+                CommunicationStatus status = xbuddy_extension.refresh(bus);
                 if (status == CommunicationStatus::ERROR) {
     #if PUPPY_TASK_DEBUG()
                     log_error(Puppies, "xbuddy_extension.refresh() == CommunicationStatus::ERROR");
@@ -221,7 +221,7 @@ static void puppy_task_loop() {
 #endif
 #if HAS_AC_CONTROLLER()
             {
-                CommunicationStatus status = ac_controller.refresh();
+                CommunicationStatus status = ac_controller.refresh(bus);
                 if (status == CommunicationStatus::ERROR) {
                     return;
                 }
@@ -231,7 +231,7 @@ static void puppy_task_loop() {
 #endif
 #if HAS_MMU2()
             {
-                CommunicationStatus status = mmu.refresh();
+                CommunicationStatus status = mmu.refresh(bus);
                 if (status == CommunicationStatus::ERROR) {
                     // Actually, failed MMU communication is not an issue on this level.
                     // Timeout and retries are being handled on the protocol_logic level
@@ -250,12 +250,12 @@ static void puppy_task_loop() {
     }
 }
 
-static bool puppy_initial_scan() {
+static bool puppy_initial_scan(PuppyModbus &bus) {
     // init each puppy
 #if HAS_DWARF()
     for (Dwarf &dwarf : dwarfs) {
         if (dwarf.is_enabled()) {
-            if (dwarf.initial_scan() == CommunicationStatus::ERROR) {
+            if (dwarf.initial_scan(bus) == CommunicationStatus::ERROR) {
                 return false;
             }
         }
@@ -263,7 +263,7 @@ static bool puppy_initial_scan() {
 #endif
 
 #if HAS_PUPPY_MODULARBED()
-    if (modular_bed.initial_scan() == CommunicationStatus::ERROR) {
+    if (modular_bed.initial_scan(bus) == CommunicationStatus::ERROR) {
         return false;
     }
 #endif
@@ -271,13 +271,13 @@ static bool puppy_initial_scan() {
 #if HAS_XBUDDY_EXTENSION()
     // TODO: Eventually, there'll be printers that have the extension as
     // optional at runtime - we'll have to deal with that somehow.
-    if (xbuddy_extension.initial_scan() == CommunicationStatus::ERROR) {
+    if (xbuddy_extension.initial_scan(bus) == CommunicationStatus::ERROR) {
         return false;
     }
 #endif
 
 #if HAS_AC_CONTROLLER()
-    if (ac_controller.initial_scan() == CommunicationStatus::ERROR) {
+    if (ac_controller.initial_scan(bus) == CommunicationStatus::ERROR) {
         return false;
     }
 #endif
@@ -285,7 +285,7 @@ static bool puppy_initial_scan() {
 }
 
 #if HAS_AC_CONTROLLER()
-[[nodiscard]] bool wait_for_ac_controller() {
+[[nodiscard]] static bool wait_for_ac_controller(PuppyModbus &bus) {
     // AC controller is vital part of the printer, there is no upper limit
     // on how long we are willing to wait for the bootstrap.
     for (;;) {
@@ -295,10 +295,10 @@ static bool puppy_initial_scan() {
         // healthy heartbeats which would in turn put ACC into safe state.
         // We should run this as often as possible to minimize time when
         // XBE is waiting for firmware chunk.
-        if (xbuddy_extension.refresh() == CommunicationStatus::ERROR) {
+        if (xbuddy_extension.refresh(bus) == CommunicationStatus::ERROR) {
             return false;
         }
-        if (ac_controller.refresh() == CommunicationStatus::ERROR) {
+        if (ac_controller.refresh(bus) == CommunicationStatus::ERROR) {
             return false;
         }
         using xbuddy_extension::NodeState;
@@ -323,6 +323,7 @@ static bool puppy_initial_scan() {
 static void puppy_task_body([[maybe_unused]] void const *argument) {
     TaskDeps::wait(TaskDeps::Tasks::puppy_task_start);
 
+    PuppyModbus &bus = buddy::puppies::puppyModbus;
     [[maybe_unused]] bool first_run = true;
 
     // by default, we want one modular bed and one dwarf
@@ -345,24 +346,24 @@ static void puppy_task_body([[maybe_unused]] void const *argument) {
 #endif
 
         // wait for puppies to boot up, ensure they are running
-        verify_puppies_running();
+        verify_puppies_running(bus);
 
         do {
             // do intial scan of puppies to init them
-            if (!puppy_initial_scan()) {
+            if (!puppy_initial_scan(bus)) {
                 break;
             }
 
 #if HAS_TOOLCHANGER()
             // select active tool (previously active tool, or first one when starting)
-            if (!prusa_toolchanger.init(first_run)) {
+            if (!prusa_toolchanger.init(bus, first_run)) {
                 log_error(Puppies, "Unable to select tool, retrying");
                 break;
             }
 #endif
 
 #if HAS_AC_CONTROLLER()
-            if (!wait_for_ac_controller()) {
+            if (!wait_for_ac_controller(bus)) {
                 break; // go to puppy recovery
             }
 #endif
@@ -379,7 +380,7 @@ static void puppy_task_body([[maybe_unused]] void const *argument) {
 #endif
 
             // now run puppy main loop
-            puppy_task_loop();
+            puppy_task_loop(bus);
         } while (false);
 
         if (stop_request) {

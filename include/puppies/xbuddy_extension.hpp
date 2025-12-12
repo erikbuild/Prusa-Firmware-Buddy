@@ -10,12 +10,10 @@
 
 namespace buddy::puppies {
 
-class XBuddyExtension final : public ModbusDevice {
+class XBuddyExtension final {
 public:
     static constexpr size_t FAN_CNT = xbuddy_extension::fan_count;
     using FilamentSensorState = xbuddy_extension::FilamentSensorState;
-
-    XBuddyExtension(PuppyModbus &bus, const uint8_t modbus_address);
 
     // These are called from whatever task that needs them.
     void set_fan_pwm(size_t fan_idx, uint8_t pwm);
@@ -55,9 +53,9 @@ public:
     bool get_usb_power() const;
 
     // These are called from the puppy task.
-    CommunicationStatus refresh();
-    CommunicationStatus initial_scan();
-    CommunicationStatus ping();
+    CommunicationStatus refresh(PuppyModbus &);
+    CommunicationStatus initial_scan(PuppyModbus &);
+    CommunicationStatus ping(PuppyModbus &);
 
     void set_otp(const OTP_v5 &);
     OTP_v5 get_otp() const;
@@ -95,11 +93,11 @@ private:
 
     void close_flash_file();
 
-    CommunicationStatus refresh_holding();
-    CommunicationStatus refresh_input(uint32_t max_age);
-    CommunicationStatus write_chunk();
-    CommunicationStatus write_digest();
-    CommunicationStatus refresh_log_message();
+    CommunicationStatus refresh_holding(PuppyModbus &);
+    CommunicationStatus refresh_input(PuppyModbus &, uint32_t max_age);
+    CommunicationStatus write_chunk(PuppyModbus &);
+    CommunicationStatus write_digest(PuppyModbus &);
+    CommunicationStatus refresh_log_message(PuppyModbus &);
 };
 
 extern XBuddyExtension xbuddy_extension;

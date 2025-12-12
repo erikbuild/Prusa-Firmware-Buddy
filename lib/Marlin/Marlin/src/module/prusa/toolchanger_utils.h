@@ -5,6 +5,7 @@
 #if HAS_TOOLCHANGER()
     #include <inc/MarlinConfig.h>
     #include <puppies/Dwarf.hpp>
+    #include <puppies/PuppyModbus.hpp>
     #include <module/tool_change.h>
 
     #include <inplace_function.hpp>
@@ -55,7 +56,7 @@ public:
      * @param first_run should be true only the first time after boot
      * @return true on success, false on communication error
      */
-    bool init(bool first_run);
+    bool init(buddy::puppies::PuppyModbus &, bool first_run);
 
     /**
      * @brief Request change of active dwarf.
@@ -70,7 +71,7 @@ public:
      * Called from puppy task.
      * @return true on success, false on communication error
      */
-    bool update();
+    bool update(buddy::puppies::PuppyModbus &);
 
     /**
      * @brief Ger marlin tool index of a physically picked tool.
@@ -198,7 +199,7 @@ protected:
      * @brief Get picked and parked states and detect which tool is active.
      * Modifies parked, picked and picked_dwarf.
      */
-    void autodetect_active_tool();
+    void autodetect_active_tool(buddy::puppies::PuppyModbus &);
 
     [[noreturn]] void toolchanger_error(const char *message) const;
 

@@ -211,9 +211,8 @@ CommunicationStatus PuppyModbus::make_request(RequestTiming *const timing, size_
     return CommunicationStatus::ERROR;
 }
 
-ModbusDevice::ModbusDevice(PuppyModbus &bus, uint8_t unit)
-    : bus(bus)
-    , unit(unit) {}
+ModbusDevice::ModbusDevice(uint8_t unit)
+    : unit(unit) {}
 
 CommunicationStatus PuppyModbus::read_input(uint8_t unit, bool *data, uint16_t count, uint16_t address, uint32_t &timestamp_ms, uint32_t max_age_ms) {
     if (max_age_ms && last_ticks_ms() - timestamp_ms < max_age_ms) {

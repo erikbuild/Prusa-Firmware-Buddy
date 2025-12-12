@@ -42,6 +42,7 @@ LOG_COMPONENT_REF(Buddy);
 
 #if HAS_DWARF()
     #include "puppies/Dwarf.hpp"
+    #include "puppies/PuppyModbus.hpp"
 #endif
 
 namespace {
@@ -321,31 +322,41 @@ void digitalWrite(uint32_t marlinPin, uint32_t ulVal) {
     switch (marlinPin) {
     case MARLIN_PIN(E0_ENA): {
         if (buddy::puppies::dwarfs[0].is_enabled()) {
-            buddy::puppies::dwarfs[0].tmc_set_enable(ulVal);
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            buddy::puppies::dwarfs[0].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
         }
         break;
     }
     case MARLIN_PIN(E1_ENA): {
         if (buddy::puppies::dwarfs[1].is_enabled()) {
-            buddy::puppies::dwarfs[1].tmc_set_enable(ulVal);
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            buddy::puppies::dwarfs[1].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
         }
         break;
     }
     case MARLIN_PIN(E2_ENA): {
         if (buddy::puppies::dwarfs[2].is_enabled()) {
-            buddy::puppies::dwarfs[2].tmc_set_enable(ulVal);
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            buddy::puppies::dwarfs[2].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
         }
         break;
     }
     case MARLIN_PIN(E3_ENA): {
         if (buddy::puppies::dwarfs[3].is_enabled()) {
-            buddy::puppies::dwarfs[3].tmc_set_enable(ulVal);
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            buddy::puppies::dwarfs[3].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
         }
         break;
     }
     case MARLIN_PIN(E4_ENA): {
         if (buddy::puppies::dwarfs[4].is_enabled()) {
-            buddy::puppies::dwarfs[4].tmc_set_enable(ulVal);
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            buddy::puppies::dwarfs[4].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
         }
         break;
     }

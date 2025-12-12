@@ -10,6 +10,7 @@
     #include <logging/log.hpp>
     #include "timing.h"
     #include <puppies/Dwarf.hpp>
+    #include <puppies/PuppyModbus.hpp>
 
     #if ENABLED(CRASH_RECOVERY)
         #include "../../feature/prusa/crash_recovery.hpp"
@@ -39,12 +40,12 @@ PrusaToolChangerUtils::PrusaToolChangerUtils() {
     tool_info.fill({ 0, 0 });
 }
 
-bool PrusaToolChangerUtils::init(bool first_run) {
+bool PrusaToolChangerUtils::init(PuppyModbus &bus, bool first_run) {
     if (first_run) {
         toolchanger_enabled = autodetect_toolchanger_enabled();
 
         if (toolchanger_enabled == false) {
-            if (dwarfs[0].set_selected(true) == CommunicationStatus::ERROR) {
+            if (dwarfs[0].set_selected(bus, true) == CommunicationStatus::ERROR) {
                 return false;
             }
         }
@@ -60,7 +61,7 @@ bool PrusaToolChangerUtils::init(bool first_run) {
     }
 
     // Update picked tool and optionally select active dwarf
-    if (update() == false) {
+    if (update(bus) == false) {
         return false;
     }
 
@@ -96,11 +97,11 @@ bool PrusaToolChangerUtils::autodetect_toolchanger_enabled() {
     }
 }
 
-void PrusaToolChangerUtils::autodetect_active_tool() {
+void PrusaToolChangerUtils::autodetect_active_tool(PuppyModbus &bus) {
     if (!is_toolchanger_enabled()) { // Ignore on singletool
         picked_dwarf = &dwarfs[0];
         if (!dwarfs[0].is_selected()) {
-            dwarfs[0].set_selected(true);
+            dwarfs[0].set_selected(bus, true);
         }
         return;
     }
@@ -134,14 +135,14 @@ void PrusaToolChangerUtils::request_active_switch(Dwarf *new_dwarf) {
     }
 }
 
-bool PrusaToolChangerUtils::update() {
+bool PrusaToolChangerUtils::update(PuppyModbus &bus) {
     if (request_toolchange) {
         // Make requested tool active
         Dwarf *old_tool = active_dwarf.load();
         Dwarf *new_tool = request_toolchange_dwarf.load();
         if (old_tool != new_tool) {
             if (old_tool) {
-                if (old_tool->set_selected(false) == CommunicationStatus::ERROR) {
+                if (old_tool->set_selected(bus, false) == CommunicationStatus::ERROR) {
                     return false;
                 }
                 log_info(PrusaToolChanger, "Deactivated Dwarf #%u", old_tool->dwarf_index());
@@ -150,7 +151,7 @@ bool PrusaToolChangerUtils::update() {
                 loadcell.Clear(); // No loadcell is available now, make sure that it is not stuck in active mode
             }
             if (new_tool) {
-                if (new_tool->set_selected(true) == CommunicationStatus::ERROR) {
+                if (new_tool->set_selected(bus, true) == CommunicationStatus::ERROR) {
                     return false;
                 }
                 log_info(PrusaToolChanger, "Activated Dwarf #%u", new_tool->dwarf_index());
@@ -160,13 +161,13 @@ bool PrusaToolChangerUtils::update() {
             }
         }
         // Update physically picked tool before clearing the request
-        autodetect_active_tool();
+        autodetect_active_tool(bus);
         request_toolchange = false;
         return true;
     }
 
     // Update physically picked tool
-    autodetect_active_tool();
+    autodetect_active_tool(bus);
     force_marlin_picked_tool(picked_dwarf);
     return true;
 }

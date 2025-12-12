@@ -94,7 +94,8 @@ enum class CommunicationStatus {
 };
 
 class PuppyModbus;
-extern PuppyModbus puppyModbus;
+
+[[deprecated("Puppy modbus should be accessed exclusively by puppy task, see BFW-8185")]] extern PuppyModbus puppyModbus;
 
 class PuppyModbus {
     /**
@@ -219,15 +220,8 @@ private:
 };
 
 class ModbusDevice {
-    /**
-     * Base class for abstraction of a Modbus device
-     *
-     * This is supposed to serve as a base for implementing custom modbus devices by inheriting from this class and
-     * including ModbusValue instances.
-     */
-
 public:
-    ModbusDevice(PuppyModbus &bus, uint8_t unit);
+    [[deprecated("Do not use this in new code")]] ModbusDevice(uint8_t unit);
 
     inline bool is_enabled() const {
         return enabled;
@@ -238,7 +232,6 @@ public:
     }
 
 protected:
-    PuppyModbus &bus;
     uint8_t unit;
     bool enabled; //< When true, this puppy is connected and enabled
 };

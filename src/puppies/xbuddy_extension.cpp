@@ -50,6 +50,8 @@ struct ClosingFileDescriptor {
     }
 };
 
+static constexpr uint8_t unit = std::to_underlying(modbus::ServerAddress::xbuddy_extension);
+
 template <typename T>
 static buddy::puppies::CommunicationStatus write_holding(buddy::puppies::PuppyModbus &bus, uint8_t unit, T &data_struct) {
     bool dirty = true;
@@ -70,9 +72,6 @@ constexpr int32_t activity_update_every_ms = 300;
 } // namespace
 
 namespace buddy::puppies {
-
-XBuddyExtension::XBuddyExtension(PuppyModbus &bus, uint8_t modbus_address)
-    : ModbusDevice(bus, modbus_address) {}
 
 void XBuddyExtension::set_fan_pwm(size_t fan_idx, uint8_t pwm) {
     Lock lock(mutex);
@@ -224,7 +223,7 @@ std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_filamen
     return static_cast<FilamentSensorState>(status.value.filament_sensor);
 }
 
-CommunicationStatus XBuddyExtension::refresh_input(uint32_t max_age) {
+CommunicationStatus XBuddyExtension::refresh_input(PuppyModbus &bus, uint32_t max_age) {
     // Already locked by caller.
 
     const auto result = bus.read(unit, status, max_age);
@@ -244,7 +243,7 @@ CommunicationStatus XBuddyExtension::refresh_input(uint32_t max_age) {
     return result;
 }
 
-CommunicationStatus XBuddyExtension::refresh_holding() {
+CommunicationStatus XBuddyExtension::refresh_holding(PuppyModbus &bus) {
     // Already locked by caller
 
     uint32_t now = ticks_ms();
@@ -265,7 +264,7 @@ CommunicationStatus XBuddyExtension::refresh_holding() {
     return result;
 }
 
-CommunicationStatus XBuddyExtension::write_chunk() {
+CommunicationStatus XBuddyExtension::write_chunk(PuppyModbus &bus) {
     if (!valid) {
         // We need up to date values of the request. Otherwise, we don't try anything.
         return CommunicationStatus::ERROR;
@@ -349,7 +348,7 @@ CommunicationStatus XBuddyExtension::write_chunk() {
     return transfer_status;
 }
 
-CommunicationStatus XBuddyExtension::write_digest() {
+CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus) {
     const xbuddy_extension::modbus::DigestRequest &current_request = status.value.digest_request;
 
     const FileId file_id = xbuddy_extension::modbus::parse_file_id(current_request.file_id);
@@ -387,17 +386,17 @@ void XBuddyExtension::close_flash_file() {
     }
 }
 
-CommunicationStatus XBuddyExtension::refresh() {
+CommunicationStatus XBuddyExtension::refresh(PuppyModbus &bus) {
     Lock lock(mutex);
 
     const auto status = {
         // Refresh on every exchange in case we are flashing - we want to update
         // the request ASAP, it's changing after each sent chunk.
-        refresh_input(flash_fd != -1 ? 0 : 250),
-        refresh_holding(),
-        refresh_log_message(),
-        write_chunk(),
-        write_digest(),
+        refresh_input(bus, flash_fd != -1 ? 0 : 250),
+        refresh_holding(bus),
+        refresh_log_message(bus),
+        write_chunk(bus),
+        write_digest(bus),
     };
 
     constexpr auto equal_to = [](CommunicationStatus what) {
@@ -413,21 +412,21 @@ CommunicationStatus XBuddyExtension::refresh() {
     return CommunicationStatus::OK;
 }
 
-CommunicationStatus XBuddyExtension::initial_scan() {
+CommunicationStatus XBuddyExtension::initial_scan(PuppyModbus &bus) {
     Lock lock(mutex);
 
-    const auto input = refresh_input(0);
+    const auto input = refresh_input(bus, 0);
     config.dirty = true;
     return input;
 }
 
-CommunicationStatus XBuddyExtension::ping() {
+CommunicationStatus XBuddyExtension::ping(PuppyModbus &bus) {
     Lock lock(mutex);
 
-    return refresh_input(0);
+    return refresh_input(bus, 0);
 }
 
-CommunicationStatus XBuddyExtension::refresh_log_message() {
+CommunicationStatus XBuddyExtension::refresh_log_message(PuppyModbus &bus) {
     // Already locked by caller
 
     // Check if log_message_sequence changed at all
@@ -472,6 +471,6 @@ OTP_v5 XBuddyExtension::get_otp() const {
     return otp;
 }
 
-XBuddyExtension xbuddy_extension(puppyModbus, std::to_underlying(modbus::ServerAddress::xbuddy_extension));
+XBuddyExtension xbuddy_extension;
 
 } // namespace buddy::puppies

@@ -35,15 +35,15 @@ METRIC_DEF(metric_regulators, "bedlet_reg", METRIC_VALUE_CUSTOM, 0, METRIC_DISAB
 METRIC_DEF(metric_bedlet_currents, "bedlet_curr", METRIC_VALUE_CUSTOM, 0, METRIC_DISABLED);
 METRIC_DEF(metric_mcu_temperature, "bed_mcu_temp", METRIC_VALUE_FLOAT, 0, METRIC_DISABLED);
 
-ModularBed::ModularBed(PuppyModbus &bus, uint8_t modbus_address)
-    : ModbusDevice(bus, modbus_address) {}
+ModularBed::ModularBed(uint8_t modbus_address)
+    : ModbusDevice(modbus_address) {}
 
-CommunicationStatus ModularBed::ping() {
+CommunicationStatus ModularBed::ping(PuppyModbus &bus) {
     Lock guard(mutex);
     return bus.read(unit, general_status);
 }
 
-CommunicationStatus ModularBed::initial_scan() {
+CommunicationStatus ModularBed::initial_scan(PuppyModbus &bus) {
     Lock guard(mutex);
     // Update static values
     CommunicationStatus status = bus.read(unit, general_static);
@@ -76,11 +76,11 @@ CommunicationStatus ModularBed::initial_scan() {
     return status;
 }
 
-CommunicationStatus ModularBed::refresh() {
+CommunicationStatus ModularBed::refresh(PuppyModbus &bus) {
     Lock guard(mutex);
     static uint32_t refresh_nr = 0;
 
-    typedef CommunicationStatus (ModularBed::*MethodType)();
+    typedef CommunicationStatus (ModularBed::*MethodType)(PuppyModbus &);
     static constexpr MethodType funcs[] = {
         &ModularBed::write_clear_fault_status,
         &ModularBed::write_reset_overcurrent,
@@ -98,26 +98,26 @@ CommunicationStatus ModularBed::refresh() {
     if (++refresh_nr >= std::size(funcs)) {
         refresh_nr = 0;
     }
-    return (this->*funcs[refresh_nr])();
+    return (this->*funcs[refresh_nr])(bus);
 }
 
-CommunicationStatus ModularBed::write_clear_fault_status() {
+CommunicationStatus ModularBed::write_clear_fault_status(PuppyModbus &bus) {
     return bus.write(unit, clear_fault_status);
 }
 
-CommunicationStatus ModularBed::write_reset_overcurrent() {
+CommunicationStatus ModularBed::write_reset_overcurrent(PuppyModbus &bus) {
     return bus.write(unit, reset_overcurrent);
 }
 
-CommunicationStatus ModularBed::write_test_heating() {
+CommunicationStatus ModularBed::write_test_heating(PuppyModbus &bus) {
     return bus.write(unit, test_heating);
 }
 
-CommunicationStatus ModularBed::write_print_fan_active() {
+CommunicationStatus ModularBed::write_print_fan_active(PuppyModbus &bus) {
     return bus.write(unit, print_fan_active);
 }
 
-CommunicationStatus ModularBed::read_general_status() {
+CommunicationStatus ModularBed::read_general_status(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, general_status, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -138,7 +138,7 @@ CommunicationStatus ModularBed::read_general_status() {
     return status;
 }
 
-CommunicationStatus ModularBed::read_general_ready() {
+CommunicationStatus ModularBed::read_general_ready(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, general_ready, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -148,7 +148,7 @@ CommunicationStatus ModularBed::read_general_ready() {
     return status;
 }
 
-CommunicationStatus ModularBed::read_currents() {
+CommunicationStatus ModularBed::read_currents(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, currents, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -167,7 +167,7 @@ CommunicationStatus ModularBed::read_currents() {
     return status;
 }
 
-CommunicationStatus ModularBed::read_bedlet_data() {
+CommunicationStatus ModularBed::read_bedlet_data(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, bedlet_data, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -231,7 +231,7 @@ CommunicationStatus ModularBed::read_bedlet_data() {
     return status;
 }
 
-CommunicationStatus ModularBed::read_general_fault() {
+CommunicationStatus ModularBed::read_general_fault(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, general_fault, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -249,7 +249,7 @@ CommunicationStatus ModularBed::read_general_fault() {
     return status;
 }
 
-CommunicationStatus ModularBed::write_bedlet_target_temp() {
+CommunicationStatus ModularBed::write_bedlet_target_temp(PuppyModbus &bus) {
     CommunicationStatus status = bus.write(unit, bedlet_target_temp);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -265,7 +265,7 @@ CommunicationStatus ModularBed::write_bedlet_target_temp() {
     return status;
 }
 
-CommunicationStatus ModularBed::read_bedlet_measured_max_current() {
+CommunicationStatus ModularBed::read_bedlet_measured_max_current(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, bedlet_measured_max_current, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -281,7 +281,7 @@ CommunicationStatus ModularBed::read_bedlet_measured_max_current() {
     return status;
 }
 
-CommunicationStatus ModularBed::read_mcu_temperature() {
+CommunicationStatus ModularBed::read_mcu_temperature(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, mcu_temperature, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
@@ -491,7 +491,7 @@ void ModularBed::safe_state() {
     buddy::hw::modular_bed_reset.set();
 }
 
-ModularBed modular_bed(puppyModbus, PuppyBootstrap::get_modbus_address_for_dock(Dock::MODULAR_BED));
+ModularBed modular_bed(PuppyBootstrap::get_modbus_address_for_dock(Dock::MODULAR_BED));
 } // namespace buddy::puppies
 
 AdvancedModularBed *const advanced_modular_bed = &buddy::puppies::modular_bed;

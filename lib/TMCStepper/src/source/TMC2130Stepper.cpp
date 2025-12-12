@@ -7,6 +7,7 @@
 #include <option/has_toolchanger.h>
 #if HAS_DWARF() && HAS_TOOLCHANGER()
   #include "module/prusa/toolchanger.h"
+  #include <puppies/PuppyModbus.hpp>
 #endif
 #include <feature/phase_stepping/phase_stepping.hpp>
 
@@ -140,7 +141,9 @@ uint32_t TMC2130Stepper::read(uint8_t addressByte) {
   }
   #if HAS_DWARF() && HAS_TOOLCHANGER()
   else if (connection == Connection::Remote) {
-     out = prusa_toolchanger.getActiveToolOrFirst().tmc_read(addressByte);
+     /// TODO do not access puppyModbus outside of puppy task
+     /// BFW-8185
+     out = prusa_toolchanger.getActiveToolOrFirst().tmc_read(buddy::puppies::puppyModbus, addressByte);
   }
   #endif
   else {
@@ -219,7 +222,9 @@ void TMC2130Stepper::write(uint8_t addressByte, uint32_t config) {
   }
   #if HAS_DWARF() && HAS_TOOLCHANGER()
   else if (connection == Connection::Remote) {
-    prusa_toolchanger.getActiveToolOrFirst().tmc_write(addressByte, config);
+    /// TODO do not access puppyModbus outside of puppy task
+    /// BFW-8185
+    prusa_toolchanger.getActiveToolOrFirst().tmc_write(buddy::puppies::puppyModbus, addressByte, config);
   }
   #endif
   else {

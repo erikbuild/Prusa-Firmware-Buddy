@@ -8,10 +8,8 @@
 
 namespace buddy::puppies {
 
-class MMU final : public ModbusDevice {
+class MMU final {
 public:
-    MMU(PuppyModbus &bus, const uint8_t modbus_address);
-
     // These post requests into the puppy task - only one request is active at a time - MMU protocol_logic behaves that way.
     // I.e. it is not possible/supported to post multiple requests at once and wait for their result.
     void post_read_mmu_register(const uint8_t modbus_address);
@@ -84,7 +82,7 @@ public:
     const MMUQueryRegisters &mmu_query_registers() const { return mmuQuery; }
 
     // Called from the puppy task.
-    CommunicationStatus refresh();
+    CommunicationStatus refresh(PuppyModbus &);
 
 #ifndef UNITTESTS
 private:

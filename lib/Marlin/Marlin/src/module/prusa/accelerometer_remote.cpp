@@ -38,7 +38,9 @@ PrusaAccelerometer::PrusaAccelerometer() {
         return;
     }
 
-    if (!dwarf->set_accelerometer(true)) {
+    /// TODO do not access puppyModbus outside of puppy task
+    /// BFW-8185
+    if (!dwarf->set_accelerometer(buddy::puppies::puppyModbus, true)) {
         std::lock_guard lock(s_buffer_mutex);
         m_sample_buffer.error.set(Error::communication);
         return;
@@ -72,7 +74,9 @@ PrusaAccelerometer::~PrusaAccelerometer() {
         if (!dwarf) {
             break;
         }
-        if (!dwarf->set_accelerometer(false)) {
+        /// TODO do not access puppyModbus outside of puppy task
+        /// BFW-8185
+        if (!dwarf->set_accelerometer(buddy::puppies::puppyModbus, false)) {
             SERIAL_ERROR_MSG("Failed to disable accelerometer, communication error");
         }
         break;

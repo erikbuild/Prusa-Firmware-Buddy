@@ -17,10 +17,8 @@ namespace buddy::puppies {
 
 /// Represents virtual AC Controller modbus device on the motherboard.
 /// This handles synchronization between tasks and caching the data.
-class AcController final : public ModbusDevice {
+class AcController final {
 public:
-    AcController(PuppyModbus &bus, const uint8_t modbus_address);
-
     // These are called from whatever task that needs them.
     std::optional<float> get_mcu_temp() const;
     std::optional<float> get_bed_temp() const;
@@ -39,8 +37,8 @@ public:
     void set_progress_percent(uint8_t percent);
 
     // These are called from the puppy task.
-    CommunicationStatus refresh();
-    CommunicationStatus initial_scan();
+    CommunicationStatus refresh(PuppyModbus &);
+    CommunicationStatus initial_scan(PuppyModbus &);
 
 private:
     // The registers cached here are accessed from different tasks.
@@ -57,7 +55,7 @@ private:
     ModbusHoldingRegisterBlock<Config::address, Config> config;
     ModbusHoldingRegisterBlock<LedConfig::address, LedConfig> led_config;
 
-    CommunicationStatus refresh_input(uint32_t max_age);
+    CommunicationStatus refresh_input(PuppyModbus &, uint32_t max_age);
 
     bool all_valid() const;
 };

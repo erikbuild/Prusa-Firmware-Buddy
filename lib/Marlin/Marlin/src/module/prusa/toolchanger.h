@@ -6,6 +6,7 @@
 #if HAS_TOOLCHANGER()
     #include "toolchanger_utils.h"
     #include "bsod.h"
+    #include <puppies/PuppyModbus.hpp>
 
     #include <module/motion.h>
 
@@ -112,7 +113,9 @@ public:
     void toolcheck_enable() {
         // Revert selected to active tool
         for (uint8_t i = 0; i < HOTENDS; ++i) {
-            getTool(i).set_selected(is_tool_enabled(i) && i == get_active_tool_nr());
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            getTool(i).set_selected(buddy::puppies::puppyModbus, is_tool_enabled(i) && i == get_active_tool_nr());
         }
 
         if (!block_tool_check.exchange(false)) { // Test if was blocked

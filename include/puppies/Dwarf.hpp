@@ -59,18 +59,18 @@ public:
     static constexpr uint16_t FAN_MODE_AUTO_PWM = std::numeric_limits<uint16_t>::max();
 
 public:
-    Dwarf(PuppyModbus &bus, const uint8_t dwarf_nr, uint8_t modbus_address);
+    Dwarf(const uint8_t dwarf_nr, uint8_t modbus_address);
     Dwarf(const Dwarf &) = delete;
 
-    CommunicationStatus ping();
-    CommunicationStatus initial_scan();
+    CommunicationStatus ping(PuppyModbus &);
+    CommunicationStatus initial_scan(PuppyModbus &);
 
     /**
      * @brief Refreshes all registers from dwarf.
      * @return CommunicationStatus::OK on successful refresh and
      *   CommunicationStatus::SKIPPED on successful skip.
      */
-    CommunicationStatus refresh();
+    CommunicationStatus refresh(PuppyModbus &);
 
     /**
      * @brief Pulls data from dwarf fifo, but is timed for non-selected dwarf.
@@ -79,7 +79,7 @@ public:
      * @return CommunicationStatus::OK on success and
      *   CommunicationStatus::SKIPPED on successful skip.
      */
-    CommunicationStatus fifo_refresh(uint32_t cycle_ticks_ms);
+    CommunicationStatus fifo_refresh(PuppyModbus &, uint32_t cycle_ticks_ms);
 
     /**
      * @brief Pulls data from dwarf fifo.
@@ -87,7 +87,7 @@ public:
      * @param[out] more true if there is more data to pull, false if fifo is empty
      * @return CommunicationStatus::OK on success
      */
-    CommunicationStatus pull_fifo(bool &more);
+    CommunicationStatus pull_fifo(PuppyModbus &, bool &more);
 
     [[nodiscard]] bool is_selected() const;
 
@@ -102,7 +102,7 @@ public:
      * @param selected Selection state bool
      * @return CommunicationStatus::OK on success
      */
-    CommunicationStatus set_selected(bool selected);
+    CommunicationStatus set_selected(PuppyModbus &, bool selected);
 
     /**
      * @brief Set loadcell
@@ -113,7 +113,7 @@ public:
      * @param active Loadcell state bool
      * @return True when successful, false otherwise (either communication error or Dwarf not selected)
      */
-    bool set_loadcell(bool active);
+    bool set_loadcell(PuppyModbus &, bool active);
 
     /**
      * @brief Set accelerometer
@@ -126,12 +126,12 @@ public:
      * @param active Accelerometer state bool
      * @return True when successful, false otherwise (either communication error or Dwarf not selected)
      */
-    bool set_accelerometer(bool active);
+    bool set_accelerometer(PuppyModbus &, bool active);
 
-    uint32_t tmc_read(uint8_t addressByte);
-    void tmc_write(uint8_t addressByte, uint32_t config);
+    uint32_t tmc_read(PuppyModbus &, uint8_t addressByte);
+    void tmc_write(PuppyModbus &, uint8_t addressByte, uint32_t config);
 
-    void tmc_set_enable(bool state);
+    void tmc_set_enable(PuppyModbus &, bool state);
     bool is_tmc_enabled();
 
     CommunicationStatus set_hotend_target_temp(float target);
@@ -435,20 +435,20 @@ private:
         uint32_t last_processed_timestamp; ///< Timestamp of last update of sampling rate
     } loadcell_samplerate;
 
-    CommunicationStatus write_general();
-    CommunicationStatus write_tmc_enable();
-    CommunicationStatus pull_fifo_nolock(bool &more);
+    CommunicationStatus write_general(PuppyModbus &);
+    CommunicationStatus write_tmc_enable(PuppyModbus &);
+    CommunicationStatus pull_fifo_nolock(PuppyModbus &, bool &more);
     bool dispatch_log_event();
-    CommunicationStatus run_time_sync();
+    CommunicationStatus run_time_sync(PuppyModbus &);
     constexpr logging::Component &get_log_component(uint8_t dwarf_nr);
-    CommunicationStatus read_discrete_general_status();
-    CommunicationStatus read_general_status();
-    void handle_dwarf_fault();
-    bool set_loadcell_nolock(bool active);
-    bool set_accelerometer_nolock(bool active);
-    bool raw_set_loadcell(bool active); // Low level loadcell enable/disable, no dependencies
-    bool raw_set_accelerometer(bool active); // Low level accelerometer enable/disable, no dependencies
-    CommunicationStatus read_fifo(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo, size_t &read); // Handle fifo read retries
+    CommunicationStatus read_discrete_general_status(PuppyModbus &);
+    CommunicationStatus read_general_status(PuppyModbus &);
+    void handle_dwarf_fault(PuppyModbus &);
+    bool set_loadcell_nolock(PuppyModbus &, bool active);
+    bool set_accelerometer_nolock(PuppyModbus &, bool active);
+    bool raw_set_loadcell(PuppyModbus &, bool active); // Low level loadcell enable/disable, no dependencies
+    bool raw_set_accelerometer(PuppyModbus &, bool active); // Low level accelerometer enable/disable, no dependencies
+    CommunicationStatus read_fifo(PuppyModbus &, std::array<uint16_t, MODBUS_FIFO_LEN> &fifo, size_t &read); // Handle fifo read retries
 
     // Register refresh control
     uint32_t last_update_ms = 0; ///< Last time we updated registers

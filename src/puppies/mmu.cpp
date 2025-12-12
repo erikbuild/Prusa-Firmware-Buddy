@@ -12,10 +12,9 @@ LOG_COMPONENT_REF(MMU2);
 
 using Lock = std::unique_lock<freertos::Mutex>;
 
-namespace buddy::puppies {
+static constexpr uint8_t unit = std::to_underlying(modbus::ServerAddress::mmu);
 
-MMU::MMU(PuppyModbus &bus, uint8_t modbus_address)
-    : ModbusDevice(bus, modbus_address) {}
+namespace buddy::puppies {
 
 void MMU::post_read_mmu_register(const uint8_t modbus_address) {
     // Post a message to the puppy task and execute the communication handshake there.
@@ -77,7 +76,7 @@ MMU::MMUModbusRequest MMU::MMUModbusRequest::make_command(uint8_t command, uint8
     return request;
 }
 
-CommunicationStatus MMU::refresh() {
+CommunicationStatus MMU::refresh(PuppyModbus &bus) {
     Lock lock(mutex);
 
     // process MMU request
@@ -175,6 +174,6 @@ bool MMU::mmu_response_received(uint32_t rqSentTimestamp_ms) const {
     return mmuValidResponseReceived && td >= 0 && td < PuppyModbus::MODBUS_READ_TIMEOUT_MS;
 }
 
-MMU mmu(puppyModbus, std::to_underlying(modbus::ServerAddress::mmu));
+MMU mmu;
 
 } // namespace buddy::puppies

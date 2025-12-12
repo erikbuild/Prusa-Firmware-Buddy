@@ -52,17 +52,17 @@ public:
     using SystemError = modular_bed_shared::errors::SystemError;
     using HeatbedletError = modular_bed_shared::errors::HeatbedletError;
 
-    ModularBed(PuppyModbus &bus, uint8_t modbus_address);
+    ModularBed(uint8_t modbus_address);
     ModularBed(const ModularBed &) = delete;
 
-    CommunicationStatus ping();
-    CommunicationStatus initial_scan();
+    CommunicationStatus ping(PuppyModbus &);
+    CommunicationStatus initial_scan(PuppyModbus &);
 
     /**
      * @brief Refresh bed state.
      * @return CommunicationStatus::OK on success
      */
-    CommunicationStatus refresh();
+    CommunicationStatus refresh(PuppyModbus &);
 
     void clear_fault();
 
@@ -158,18 +158,18 @@ private:
     float get_temp(const uint16_t idx);
     float get_target(const uint8_t idx);
 
-    CommunicationStatus write_clear_fault_status();
-    CommunicationStatus write_reset_overcurrent();
-    CommunicationStatus write_test_heating();
-    CommunicationStatus write_print_fan_active();
-    CommunicationStatus read_general_status();
-    CommunicationStatus read_general_ready();
-    CommunicationStatus read_currents();
-    CommunicationStatus read_bedlet_data();
-    CommunicationStatus read_general_fault();
-    CommunicationStatus write_bedlet_target_temp();
-    CommunicationStatus read_bedlet_measured_max_current();
-    CommunicationStatus read_mcu_temperature();
+    CommunicationStatus write_clear_fault_status(PuppyModbus &);
+    CommunicationStatus write_reset_overcurrent(PuppyModbus &);
+    CommunicationStatus write_test_heating(PuppyModbus &);
+    CommunicationStatus write_print_fan_active(PuppyModbus &);
+    CommunicationStatus read_general_status(PuppyModbus &);
+    CommunicationStatus read_general_ready(PuppyModbus &);
+    CommunicationStatus read_currents(PuppyModbus &);
+    CommunicationStatus read_bedlet_data(PuppyModbus &);
+    CommunicationStatus read_general_fault(PuppyModbus &);
+    CommunicationStatus write_bedlet_target_temp(PuppyModbus &);
+    CommunicationStatus read_bedlet_measured_max_current(PuppyModbus &);
+    CommunicationStatus read_mcu_temperature(PuppyModbus &);
 };
 
 extern ModularBed modular_bed;
