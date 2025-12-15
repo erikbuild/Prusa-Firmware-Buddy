@@ -18,6 +18,8 @@
     #include <feature/prusa/MMU2/mmu2_mk4.h>
 #endif
 
+#include <option/board_is_master_board.h>
+
 using VirtualExtension = VirtualToolIndexExtension<VirtualToolIndex>;
 using PhysicalExtension = PhysicalToolIndexExtension<PhysicalToolIndex>;
 using GcodeExtension = GcodeToolIndexExtension<GcodeToolIndex>;
@@ -156,7 +158,7 @@ std::variant<VirtualToolIndex, NoTool> VirtualExtension::currently_selected() {
 
 template <>
 std::variant<PhysicalToolIndex, NoTool> PhysicalExtension::from_raw_notool(uint8_t index) {
-#if PRINTER_IS_PRUSA_XL()
+#if PRINTER_IS_PRUSA_XL() && BOARD_IS_MASTER_BOARD()
     // count on XL is set to EXTRUDERS - 1 / HOTENDS - 1,
     // because of legacy definition of EXTRUDERS / HOTENDS to 6 instead of 5.
     // Values 0 to 4 are actual tools, 5 represents no tool (using MARLIN_NO_TOOL_PICKED).
@@ -193,6 +195,8 @@ std::variant<VirtualToolIndex, NoTool> VirtualExtension::from_raw_notool(uint8_t
     return VirtualToolIndex::from_raw(index);
 }
 
+#if BOARD_IS_MASTER_BOARD()
+
 template <>
 string_view_utf8 PhysicalToolIndex::display_name(DisplayNameParams &params) {
     return _("Tool %i").formatted(params, display_index());
@@ -213,3 +217,5 @@ template <>
 string_view_utf8 GcodeToolIndex::display_name(DisplayNameParams &params) {
     return _("GCode Tool %i").formatted(params, display_index());
 }
+
+#endif

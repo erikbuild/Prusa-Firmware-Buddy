@@ -113,6 +113,7 @@ elseif(BOARD STREQUAL "DWARF")
             random_common.cpp
             random_sw.cpp
             safe_state.cpp
+            tool_index.cpp
     )
   target_link_libraries(firmware PRIVATE logging)
 
