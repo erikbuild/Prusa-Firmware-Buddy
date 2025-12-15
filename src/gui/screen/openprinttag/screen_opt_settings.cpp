@@ -1,4 +1,5 @@
 #include "screen_opt_settings.hpp"
+#include "screen_opt_tag_list.hpp"
 
 #include <screen_menu.hpp>
 #include <ScreenHandler.hpp>
@@ -6,9 +7,8 @@
 namespace buddy::openprinttag {
 
 using ScreenOPTSettings_ = ScreenMenu<EFooter::Off,
-    MI_RETURN
-    // TODO some more items
-    >;
+    MI_RETURN,
+    MI_OPT_TAG_LIST>;
 
 class ScreenOPTSettings final : public ScreenOPTSettings_ {
 

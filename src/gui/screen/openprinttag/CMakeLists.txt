@@ -1,1 +1,1 @@
-target_sources(firmware PRIVATE screen_opt_settings.cpp)
+target_sources(firmware PRIVATE screen_opt_settings.cpp screen_opt_tag_list.cpp)
