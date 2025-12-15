@@ -49,6 +49,11 @@ public:
     /// @deprecated Replace raw index with ToolIndex for better safety
     inline constexpr uint8_t to_raw() const { return this->value; }
 
+    /// @returns Index of the tool, starting from 1, for display purposes
+    inline constexpr uint8_t display_index() const {
+        return to_raw() + 1;
+    }
+
     /// Allow simpler conversion to integer when using StrongIndexArray
     /// @note pass-by-reference is needed to avoid circular dependencies
     static inline constexpr std::size_t to_raw_static(const ToolIndex &tool_index) {
