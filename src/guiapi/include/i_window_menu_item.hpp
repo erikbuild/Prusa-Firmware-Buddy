@@ -267,6 +267,12 @@ public:
     void set_icon_position(const IconPosition position);
     IconPosition get_icon_position() const;
 
+    /// If set, shows the ">" arrow at the right side of the menu item
+    /// This only works if printExtension is not overriden
+    inline void set_show_expand_icon() {
+        extension_width = expand_icon_width;
+    }
+
     virtual void Loop() {}; // automatically called by menu
 
     // some friend classes to be able to access / private hide/show methods
