@@ -8,18 +8,21 @@
 #endif
 
 namespace {
-template <typename OldItem>
-auto read_old_item_value(journal::Backend &backend) {
-    typename OldItem::value_type old_value = OldItem::default_val;
 
+void read_old_item_value_impl(journal::Backend &backend, uint16_t item_hash, void *old_value) {
     auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
-        if (header.id == OldItem::hashed_id) {
-            memcpy(&old_value, buffer.data(), header.len);
+        if (header.id == item_hash) {
+            memcpy(old_value, buffer.data(), header.len);
         }
     };
 
     backend.read_items_for_migrations(callback);
+}
 
+template <typename OldItem>
+auto read_old_item_value(journal::Backend &backend) {
+    typename OldItem::value_type old_value = OldItem::default_val;
+    read_old_item_value_impl(backend, OldItem::hashed_id, &old_value);
     return old_value;
 }
 } // namespace
