@@ -92,8 +92,7 @@ void MI_MMU_ISSUE_GCODE::click(IWindowMenu & /*window_menu*/) {
 /**********************************************************************************************/
 // MI_MMU_ITEM_WITH_SLOT
 MI_MMU_ITEM_WITH_SLOT::MI_MMU_ITEM_WITH_SLOT(uint8_t slot_i, const char *label_prefix)
-    : IWindowMenuItem({})
-    , slot_i_(slot_i) {
+    : slot_i_(slot_i) {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation"

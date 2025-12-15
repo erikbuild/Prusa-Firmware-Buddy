@@ -48,8 +48,7 @@ private:
 // DialogItem
 // =============================================================
 DialogItem::DialogItem(MenuItemSelectMenu &menu, int index)
-    : IWindowMenuItem({})
-    , index_(index) //
+    : index_(index) //
 {
     menu.build_item_text(index, label_);
     SetLabel(string_view_utf8::MakeRAM(label_.data()));

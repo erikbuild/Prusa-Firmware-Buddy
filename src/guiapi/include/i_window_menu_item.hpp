@@ -183,7 +183,9 @@ protected:
     ~IWindowMenuItem();
 
 public:
-    IWindowMenuItem(const string_view_utf8 &label, const img::Resource *id_icon = nullptr, is_enabled_t enabled = is_enabled_t::yes, is_hidden_t hidden = is_hidden_t::no, expands_t expands = expands_t::no);
+    IWindowMenuItem();
+    IWindowMenuItem(const string_view_utf8 &label);
+    IWindowMenuItem(const string_view_utf8 &label, const img::Resource *id_icon, is_enabled_t enabled = is_enabled_t::yes, is_hidden_t hidden = is_hidden_t::no, expands_t expands = expands_t::no);
     IWindowMenuItem(const string_view_utf8 &label, Rect16::Width_t extension_width_, const img::Resource *id_icon = nullptr, is_enabled_t enabled = is_enabled_t::yes, is_hidden_t hidden = is_hidden_t::no);
     IWindowMenuItem(const IWindowMenuItem &) = delete;
 

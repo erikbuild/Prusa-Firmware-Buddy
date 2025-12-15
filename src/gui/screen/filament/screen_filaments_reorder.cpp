@@ -35,8 +35,7 @@ static constexpr IWindowMenuItem::ColorScheme moved_filament_color_scheme {
 
 // * MI_FILAMENT
 MI_FILAMENT::MI_FILAMENT(WindowMenuFilamentsReorder &menu, size_t index)
-    : IWindowMenuItem({})
-    , menu(menu)
+    : menu(menu)
     , index(index) //
 {
     update();
