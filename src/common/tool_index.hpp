@@ -11,6 +11,7 @@
 #include <utils/overloaded_visitor.hpp>
 #include <option/board_is_master_board.h>
 #include <printers.h>
+#include <string_view_utf8.hpp>
 
 #include "tool_index_iterator.hpp"
 
@@ -53,6 +54,11 @@ public:
     inline constexpr uint8_t display_index() const {
         return to_raw() + 1;
     }
+
+    using DisplayNameParams = StringViewUtf8Parameters<4>;
+
+    /// @returns display name of the tool - something like "Slot 1" or "Tool 1"
+    string_view_utf8 display_name(DisplayNameParams &params);
 
     /// Allow simpler conversion to integer when using StrongIndexArray
     /// @note pass-by-reference is needed to avoid circular dependencies

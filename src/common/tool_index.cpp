@@ -181,3 +181,24 @@ std::variant<VirtualToolIndex, NoTool> VirtualExtension::from_raw_notool(uint8_t
     // Other non-tool values treat as invalid values -> raise bsod
     return VirtualToolIndex::from_raw(index);
 }
+
+template <>
+string_view_utf8 PhysicalToolIndex::display_name(DisplayNameParams &params) {
+    return _("Tool %i").formatted(params, display_index());
+}
+
+template <>
+string_view_utf8 VirtualToolIndex::display_name(DisplayNameParams &params) {
+    if constexpr (PhysicalToolIndex::count == VirtualToolIndex::count) {
+        // For multi-tool printers with 1:1 mapping between virtual and physica tools, introducing some extra slots/indexing would just confuse the users.
+        // So in that case, refer to the virtual tools same as to the physical ones, because they're are 1:1.
+        return to_physical().display_name(params);
+    } else {
+        return _("Filament Slot %i").formatted(params, display_index());
+    }
+}
+
+template <>
+string_view_utf8 GcodeToolIndex::display_name(DisplayNameParams &params) {
+    return _("GCode Tool %i").formatted(params, display_index());
+}
