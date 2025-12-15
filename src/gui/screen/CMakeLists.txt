@@ -6,6 +6,10 @@ target_sources(
                    screen_preheat.cpp screen_print_preview.cpp
   )
 
+if(HAS_ANFC)
+  add_subdirectory(openprinttag)
+endif()
+
 if(HAS_LOADCELL)
   target_sources(firmware PRIVATE screen_nozzle_cleaning_failed.cpp)
 endif()

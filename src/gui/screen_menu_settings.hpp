@@ -38,6 +38,11 @@
     #include <gui/menu_item/specific/menu_items_auto_retract.hpp>
 #endif
 
+#include <option/has_anfc.h>
+#if HAS_ANFC()
+    #include <screen/openprinttag/screen_opt_settings.hpp>
+#endif
+
 class MI_HELP_FW_UPDATE : public IWindowMenuItem {
     static constexpr const char *const label = N_("FW update");
 
@@ -61,6 +66,9 @@ using ScreenMenuSettings__ = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
 #endif
 #if HAS_AUTO_RETRACT()
     MI_AUTO_RETRACT_ENABLE,
+#endif
+#if HAS_ANFC()
+    buddy::openprinttag::MI_OPT_SETTINGS,
 #endif
 #if HAS_MMU2()
     MI_MMU_ENABLE,
