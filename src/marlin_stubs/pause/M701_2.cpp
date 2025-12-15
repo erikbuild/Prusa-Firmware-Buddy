@@ -230,7 +230,7 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
     };
 
     if constexpr (option::has_bowden) {
-        config_store().set_filament_type(target_extruder, FilamentType::none);
+        config_store().set_filament_type(virtual_tool, FilamentType::none);
         M701_no_parser(FilamentType::none, fast_load_length, z_min_pos, RetAndCool_t::Return, target_extruder, 0, std::nullopt, ResumePrint_t::No);
         return;
     }
@@ -308,9 +308,7 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
 void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, VirtualToolIndex virtual_tool, RetAndCool_t preheat, AskFilament_t ask_filament, std::optional<Color> color_to_be_loaded) {
     InProgress progress;
 
-    uint8_t target_extruder = virtual_tool.to_raw();
-
-    FilamentType filament = config_store().get_filament_type(target_extruder);
+    FilamentType filament = config_store().get_filament_type(virtual_tool);
     if (filament == FilamentType::none && ask_filament == AskFilament_t::Never) {
         PreheatStatus::SetResult(PreheatStatus::Result::DoneNoFilament);
         return;
@@ -341,18 +339,18 @@ void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, Virtua
     PreheatStatus::SetResult(PreheatStatus::Result::DoneHasFilament);
 
 #if HAS_AUTO_RETRACT()
-    if (!buddy::auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(target_extruder))) {
+    if (!buddy::auto_retract().is_safely_retracted_for_unload(virtual_tool.to_physical().to_raw())) {
 #else
     {
 #endif
-        preheat_to(filament, target_extruder, PreheatBehavior::no_force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
+        preheat_to(filament, virtual_tool.to_raw(), PreheatBehavior::no_force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
     }
     xyze_pos_t current_position_tmp = current_position;
 
     pause::Settings settings;
     mapi::ParkingPosition park_position = { X_AXIS_UNLOAD_POS, Y_AXIS_UNLOAD_POS, std::max(current_position.z + Z_NOZZLE_PARK_RISE, (float)Z_AXIS_LOAD_POS) };
     settings.SetParkPoint(park_position);
-    settings.SetExtruder(target_extruder);
+    settings.SetExtruder(virtual_tool.to_raw());
     settings.SetRetractLength(0.f);
 
     // Pick the right tool
@@ -372,7 +370,7 @@ void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, Virtua
     // cannot do normal preheat, since printer is already preheated from unload
     if (filament_to_be_loaded == FilamentType::none) {
         PreheatData data = PreheatData::make(PreheatMode::Load, virtual_tool, preheat);
-        auto preheat_ret = preheat_for_change_load(data, target_extruder);
+        auto preheat_ret = preheat_for_change_load(data, virtual_tool.to_raw());
         if (preheat_ret.first) {
             // canceled
             M70X_process_user_response(*preheat_ret.first, virtual_tool);
@@ -381,7 +379,7 @@ void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, Virtua
 
         filament_to_be_loaded = preheat_ret.second;
     } else {
-        preheat_to(filament_to_be_loaded, target_extruder, PreheatBehavior::no_force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
+        preheat_to(filament_to_be_loaded, virtual_tool.to_raw(), PreheatBehavior::no_force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
     }
     filament::set_type_to_load(filament_to_be_loaded);
     filament::set_color_to_load(color_to_be_loaded);
