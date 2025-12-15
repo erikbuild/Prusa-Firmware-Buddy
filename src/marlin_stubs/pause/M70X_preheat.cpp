@@ -58,12 +58,14 @@ static FSMResponseVariant evaluate_preheat_conditions(PreheatData preheat_data) 
     }
 }
 
-std::pair<std::optional<PreheatStatus::Result>, FilamentType> filament_gcodes::preheat(PreheatData preheat_data, uint8_t target_extruder, PreheatBehavior preheat_arg) {
+std::pair<std::optional<PreheatStatus::Result>, FilamentType> filament_gcodes::preheat(PreheatData preheat_data, PreheatBehavior preheat_arg) {
     const FSMResponseVariant response = evaluate_preheat_conditions(preheat_data);
+
+    const auto physical_tool = to_physical_tool_index<AllTools>(preheat_data.tool);
 
     if (response.holds_alternative<FilamentType>()) {
         const FilamentType filament = response.value<FilamentType>();
-        preheat_to(filament, target_extruder, preheat_arg);
+        preheat_to(filament, physical_tool, preheat_arg);
         return { std::nullopt, filament };
     }
 
@@ -81,16 +83,26 @@ std::pair<std::optional<PreheatStatus::Result>, FilamentType> filament_gcodes::p
     }
 }
 
-void filament_gcodes::preheat_to(FilamentType filament, uint8_t target_extruder, PreheatBehavior preheat_arg) {
+void filament_gcodes::preheat_to(FilamentType filament, std::variant<PhysicalToolIndex, AllTools> tools, PreheatBehavior preheat_arg) {
     const FilamentTypeParameters fil_cnf = filament.parameters();
 
-    // change temp only if it is lower than currently loaded filament
-    if (preheat_arg.force_temp || thermalManager.degTargetHotend(target_extruder) < fil_cnf.nozzle_temperature) {
-        thermalManager.setTargetHotend(fil_cnf.nozzle_temperature, target_extruder);
+    bool hotend_temp_changed = false;
 
-        if (preheat_arg.preheat_bed && (preheat_arg.force_temp || (thermalManager.degTargetBed() < fil_cnf.heatbed_temperature))) {
-            thermalManager.setTargetBed(fil_cnf.heatbed_temperature);
+    // change temp only if it is lower than currently loaded filament
+    // TODO: Why? This is now very problematic with the new heatbreak and chamber params
+    for (const PhysicalToolIndex tool : tool_index_iterator(tools)) {
+        if (preheat_arg.force_temp || thermalManager.degTargetHotend(tool) < fil_cnf.nozzle_temperature) {
+            hotend_temp_changed = true;
+            thermalManager.setTargetHotend(fil_cnf.nozzle_temperature, tool);
         }
+
+#if HAS_FILAMENT_HEATBREAK_PARAM()
+        thermalManager.setTargetHeatbreak(fil_cnf.heatbreak_temperature, tool);
+#endif
+    }
+
+    if (hotend_temp_changed && preheat_arg.preheat_bed && (preheat_arg.force_temp || (thermalManager.degTargetBed() < fil_cnf.heatbed_temperature))) {
+        thermalManager.setTargetBed(fil_cnf.heatbed_temperature);
     }
 
 #if HAS_CHAMBER_API()
@@ -98,19 +110,15 @@ void filament_gcodes::preheat_to(FilamentType filament, uint8_t target_extruder,
         buddy::chamber().set_target_temperature(fil_cnf.chamber_target_temperature);
     }
 #endif
-
-#if HAS_FILAMENT_HEATBREAK_PARAM()
-    thermalManager.setTargetHeatbreak(fil_cnf.heatbreak_temperature, target_extruder);
-#endif
 }
 
-std::pair<std::optional<PreheatStatus::Result>, FilamentType> filament_gcodes::preheat_for_change_load(PreheatData data, uint8_t target_extruder) {
+std::pair<std::optional<PreheatStatus::Result>, FilamentType> filament_gcodes::preheat_for_change_load(PreheatData data) {
     const FSMResponseVariant response = preheatTempUnKnown(data);
 
     if (response.holds_alternative<FilamentType>()) {
         const FilamentType filament = response.value<FilamentType>();
         // change temp every time (unlike normal preheat)
-        preheat_to(filament, target_extruder, PreheatBehavior::force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
+        preheat_to(filament, to_physical_tool_index<AllTools>(data.tool), PreheatBehavior::force_preheat_bed_and_chamber(config_store().filament_change_preheat_all.get()));
         return { std::nullopt, filament };
     }
 

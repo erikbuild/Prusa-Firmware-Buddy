@@ -140,9 +140,9 @@ struct PreheatBehavior {
     }
 };
 
-std::pair<std::optional<PreheatStatus::Result>, FilamentType> preheat(PreheatData preheat_data, uint8_t target_extruder, PreheatBehavior preheat_arg);
-std::pair<std::optional<PreheatStatus::Result>, FilamentType> preheat_for_change_load(PreheatData data, uint8_t target_extruder);
-void preheat_to(FilamentType filament, uint8_t target_extruder, PreheatBehavior preheat_arg);
+std::pair<std::optional<PreheatStatus::Result>, FilamentType> preheat(PreheatData preheat_data, PreheatBehavior preheat_arg);
+std::pair<std::optional<PreheatStatus::Result>, FilamentType> preheat_for_change_load(PreheatData data);
+void preheat_to(FilamentType filament, std::variant<PhysicalToolIndex, AllTools> tools, PreheatBehavior preheat_arg);
 } // namespace filament_gcodes
 
 namespace PreheatStatus {
