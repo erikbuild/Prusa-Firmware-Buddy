@@ -1,1 +1,4 @@
-target_sources(firmware PRIVATE screen_opt_settings.cpp screen_opt_tag_list.cpp)
+target_sources(
+  firmware PRIVATE opt_request_wizard.cpp opt_request_wizard.cpp screen_opt_info.cpp
+                   screen_opt_info.cpp screen_opt_settings.cpp screen_opt_tag_list.cpp
+  )

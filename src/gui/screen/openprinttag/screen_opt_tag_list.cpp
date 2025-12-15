@@ -1,4 +1,5 @@
 #include "screen_opt_tag_list.hpp"
+#include "screen_opt_info.hpp"
 
 #include <inplace_vector.hpp>
 
@@ -33,7 +34,9 @@ namespace {
         }
 
         void click(IWindowMenu &) override {
-            // TODO
+            // Open the screen even if the slot is "disabled"
+            // The screen will show an error and close if there is no tag detected
+            Screens::Access()->Open(screen_opt_info_creator(tool_));
         }
 
         void Loop() override {
