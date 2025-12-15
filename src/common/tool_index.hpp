@@ -35,6 +35,8 @@ struct ToolIndex : public Extension<ToolIndex<count_, Extension>> {
 public:
     using Iterator = ToolIndexIterator<ToolIndex>;
 
+    constexpr inline ToolIndex(const ToolIndex &) = default;
+
     /// Creates ToolIndex from raw uint8_t
     /// Use `from_raw_notool` instead, if you are not sure that raw index represent only valid tool
     /// @param index must be less than ToolIndex::count
