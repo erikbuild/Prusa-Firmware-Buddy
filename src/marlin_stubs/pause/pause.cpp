@@ -1193,7 +1193,7 @@ bool Pause::tool_change([[maybe_unused]] uint8_t target_extruder, [[maybe_unused
         setPhase(PhasesLoadUnload::ChangingTool);
 
         // Change tool, don't lift or return Z as it was done by parking
-        return prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw_notool(target_extruder), tool_return_t::no_return, current_position, tool_change_lift_t::no_lift, false);
+        return prusa_toolchanger.tool_change(to_physical_tool_index<NoTool>(VirtualToolIndex::from_raw_notool(target_extruder)), tool_return_t::no_return, current_position, tool_change_lift_t::no_lift, false);
     }
 #endif
 
