@@ -15,10 +15,17 @@
 #include "can_driver.hpp"
 #include "cyphal_proto_sender.hpp"
 #include "cyphal_proto_suber.hpp"
+#include <utils/atomic_circular_queue.hpp>
 
 #include <uavcan/time/Synchronization_1_0.h>
 
 namespace can::cyphal {
+
+/// Element stored in Rx queue
+struct TaskRxBufferElement {
+    CanardRxTransfer transfer = {}; ///< The Cyphal data
+    CanardRxSubscription *subscription = nullptr; ///< Subscription that received the data
+};
 
 class Task {
     device::MultiWatchdog watchdog; ///< Add one instance of watchdog
@@ -51,6 +58,9 @@ class Task {
     CanardTransferMetadata tx_meta; ///< Metadata for payload in tx_buffer
     CanardMicrosecond tx_timeout = 0; ///< Timestamp when the transmitted messages are discarded if not sent already
     size_t tx_buffer_size = 0; ///< Size of data stored in tx_buffer
+
+    AtomicCircularQueueSizeless<TaskRxBufferElement, size_t> &rx_queue; ///< Buffer for received Cyphal transfers
+    std::atomic<bool> rq_queue_used = false; ///< True if rx_queue is being used by thread and is blocked for interrupt
 
 public:
     struct TimeSync {
@@ -91,6 +101,9 @@ private:
             break;
         case Driver::Notification::RxHighPrio:
         case Driver::Notification::RxDone:
+            if (rx_queue.size() > 1 && rq_queue_used.load() == false) {
+                rx_canard();
+            }
             notify(Notify::Rx);
             break;
         case Driver::Notification::RxLost:
@@ -137,6 +150,9 @@ private:
     /// @brief Transmit CAN frames from the Cyphal Tx queue.
     void tx_loop();
 
+    /// Receive one CAN frame from HAL and put it through libcanard.
+    void rx_canard();
+
     /// @brief Receive CAN frames from HAL and put them to Cyphal.
     void rx_loop();
 
@@ -159,13 +175,21 @@ public:
     static_assert(63.f * default_tx_queue_size > ProtoSender::MAX_SERIALIZED_SIZE_BYTES * 1.5f,
         "Default TX queue size is too small for 1.5 of the largest message.");
 
+    /// Type of rx queue buffer
+    template <size_t N>
+    using RxQueue = AtomicCircularQueue<TaskRxBufferElement, size_t, N>;
+
     /**
      * @brief Create a Cyphal instance.
      * @note Afterwards, create one RTOS task with task(this) function.
      * @param driver_ CAN hardware driver
+     * @param rx_queue buffer for received Cyphal transfers, use RxQueue<N> or RxQueue<1> for no buffer
      * @param tx_queue_size size of the TX queue, see default_tx_queue_size
+     * @param allocator custom allocator for libcanard
+     * @param deallocator custom deallocator for libcanard
      */
-    Task(Driver &driver_, uint32_t tx_queue_size = default_tx_queue_size, Allocator allocator = default_allocator, Deallocator deallocator = default_deallocator);
+    Task(Driver &driver_, AtomicCircularQueueSizeless<TaskRxBufferElement, size_t> &rx_queue,
+        uint32_t tx_queue_size = default_tx_queue_size, Allocator allocator = default_allocator, Deallocator deallocator = default_deallocator);
 
     /**
      * @brief Lock mutex as long as this lives.

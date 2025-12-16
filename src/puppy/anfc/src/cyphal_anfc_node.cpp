@@ -1,3 +1,5 @@
+#define DO_NOT_CHECK_ATOMIC_LOCK_FREE
+
 #include "cyphal_anfc_node.hpp"
 
 #include <option/can_bus_type.h>

@@ -78,7 +78,8 @@ void canard_heap_free(CanardInstance *, void *ptr) {
 
 // Cannot be in private namespace - linked with src/can
 // Also, has to be initialized before can_node
-can::cyphal::Task can::cyphal::cyphal_task(can_driver, 32, &canard_heap_allocate, &canard_heap_free);
+can::cyphal::Task::RxQueue<1> cyphal_task_rx_queue;
+can::cyphal::Task can::cyphal::cyphal_task(can_driver, cyphal_task_rx_queue, 32, &canard_heap_allocate, &canard_heap_free);
 
 anfc::cyphal::ANFCNode can_node(get_uid());
 

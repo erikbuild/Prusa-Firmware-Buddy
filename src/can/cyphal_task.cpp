@@ -29,8 +29,12 @@ void Task::default_deallocator([[maybe_unused]] CanardInstance *const ins, void 
     free(pointer);
 }
 
-Task::Task(Driver &driver_, uint32_t tx_queue_size, Allocator allocator, Deallocator deallocator)
-    : driver(driver_) {
+Task::Task(Driver &driver_, AtomicCircularQueueSizeless<TaskRxBufferElement, size_t> &rx_queue,
+    uint32_t tx_queue_size, Allocator allocator, Deallocator deallocator)
+    : watchdog("cyphal_task")
+    , driver(driver_)
+    , rx_queue(rx_queue) {
+    assert(rx_queue.size() > 0); // We need at least one buffer
 
     // Check all semaphores are valid
     assert(senders_mutex != nullptr);
@@ -290,6 +294,30 @@ void Task::tx_loop() {
     }
 }
 
+void Task::rx_canard() {
+    if (rx_queue.isFull()) {
+        return; // Nothing to do
+    }
+
+    CanardFrame frame;
+    CanardMicrosecond timestamp_us;
+    if (driver.receive(frame, &timestamp_us) == false) {
+        return; // No frame in the queue
+    } else {
+        notify(Notify::Rx); // Check again until we run out of frames
+    }
+
+    TaskRxBufferElement element;
+    const int8_t canard_result = canardRxAccept(&canard_instance, timestamp_us, &frame, 0, &element.transfer, &element.subscription);
+    if (canard_result > 0) {
+        [[maybe_unused]] bool ret = rx_queue.enqueue(element);
+        assert(ret);
+    } else {
+        // The frame did not complete a transfer so there is nothing to do
+        assert(canard_result == 0); // OOM should never occur if the heap is sized correctly, no other error can possibly occur at runtime
+    }
+}
+
 void Task::rx_loop() {
     // Take buffer mutex
     if (xSemaphoreTake(tx_buffer_semaphore, 0) != pdTRUE) {
@@ -297,11 +325,16 @@ void Task::rx_loop() {
         return;
     }
 
-    CanardFrame frame;
-    CanardMicrosecond timestamp_us;
-    if (driver.receive(frame, &timestamp_us) == false) {
+    if (rx_queue.isEmpty()) {
+        // No frame in the queue
         xSemaphoreGive(tx_buffer_semaphore); // Buffer can be used again
-        return; // No frame in the queue
+
+        // Try to clear frames from driver
+        rq_queue_used.store(true);
+        rx_canard();
+        rq_queue_used.store(false);
+
+        return;
     } else {
         notify(Notify::Rx); // Check again until we run out of frames
     }
@@ -312,21 +345,19 @@ void Task::rx_loop() {
     auto subers_lock = RAIIRecursiveLock(subers_mutex);
     assert(subers_lock.is_locked());
 
-    // Put to libcanard
-    CanardRxTransfer transfer = {};
-    CanardRxSubscription *subscription = nullptr;
-    const int8_t canard_result = canardRxAccept(&canard_instance, timestamp_us, &frame, 0, &transfer, &subscription);
-    if (canard_result > 0) {
-        if (!is_anonymous() // Allow only if we are not in anonymous mode
-            || (pnp_suber != nullptr && subscription == &pnp_suber->get_raw())) { // Or PnP subscription
+    auto element = rx_queue.dequeue();
 
-            ProtoSuber::static_callback(subscription, transfer, rx_buffer); // Call subscription callback
-        }
-        canard_instance.memory_free(&canard_instance, (void *)transfer.payload);
-    } else {
-        // The frame did not complete a transfer so there is nothing to do
-        assert(canard_result == 0); // OOM should never occur if the heap is sized correctly, no other error can possibly occur at runtime
+    // Try to clear frames from driver
+    rq_queue_used.store(true);
+    rx_canard();
+    rq_queue_used.store(false);
+
+    if (!is_anonymous() // Allow only if we are not in anonymous mode
+        || (pnp_suber != nullptr && element.subscription == &pnp_suber->get_raw())) { // Or PnP subscription
+
+        ProtoSuber::static_callback(element.subscription, element.transfer, rx_buffer); // Call subscription callback
     }
+    canard_instance.memory_free(&canard_instance, (void *)element.transfer.payload);
 
     if (tx_buffer_reserved.load()) { // Nobody used the reserved buffer
         assert(tx_buffer_used == false); // Buffer should not be used

@@ -59,7 +59,7 @@ public:
     void set_filter(uint32_t, const CanardFilter &, bool, bool) override {
     }
 
-    ErrorStats get_error_stats() override {
-        return {};
+    uint32_t get_error_log() const override {
+        return 0;
     }
 };
