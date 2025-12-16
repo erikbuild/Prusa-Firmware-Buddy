@@ -62,7 +62,7 @@ AtomicCircularQueue<MetricsData, uint8_t, 8> metrics_queue;
 
 // Note - the queue is quite big
 // The only purpose of this assert is this comment
-static_assert(sizeof(metrics_queue) == 228);
+static_assert(sizeof(metrics_queue) == 236);
 
 void report_loadcell_metrics(tmrTimerControl *) {
     MetricsData d;
