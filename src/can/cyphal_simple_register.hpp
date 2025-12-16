@@ -107,15 +107,23 @@ public:
      *
      * @param name register name
      * @param reg value and type of the register to write, RegisterVariantUtils::Empty to read
-     * @param response_timeout timeout to receive response
+     * @param response_timeout timeout to receive response in RTOS ticks, 0 to not wait, nullopt for default of 2 * get_client_timeout()
      * @param remote_node_id node id of remote node
      * @param mutex_timeout timeout to lock mutex to prevent concurrent calls of this function
      * @param tx_timeout timeout to transmit request, discard if it gets stuck in queue for this long
      * @return value of register read, nullopt if response not received
      */
     [[nodiscard]] std::optional<RegisterVariant> call(const char *name, const RegisterVariant &reg,
-        TickType_t response_timeout, CanardNodeID remote_node_id,
+        std::optional<TickType_t> response_timeout, CanardNodeID remote_node_id,
         TickType_t mutex_timeout = portMAX_DELAY, TickType_t tx_timeout = portMAX_DELAY);
+
+    /**
+     * @brief Get response value from last call.
+     * Useful when called with response timeout 0 together with wait_response_ready().
+     */
+    [[nodiscard]] std::optional<RegisterVariant> get_response_value() const {
+        return response_value;
+    }
 
     /**
      * @brief Read a simple register.
@@ -125,14 +133,14 @@ public:
      *   If server uses the same timeouts, it is 2 * get_client_timeout().
      *
      * @param name register name
-     * @param response_timeout timeout to receive response
+     * @param response_timeout timeout to receive response in RTOS ticks, 0 to not wait, nullopt for default of 2 * get_client_timeout()
      * @param remote_node_id node id of remote node
      * @param mutex_timeout timeout to lock mutex to prevent concurrent calls of this function
      * @param tx_timeout timeout to transmit request, discard if it gets stuck in queue for this long
      * @return value and type of register read, nullopt if response not received
      */
     [[nodiscard]] inline std::optional<RegisterVariant> read(const char *name,
-        TickType_t response_timeout, CanardNodeID remote_node_id,
+        std::optional<TickType_t> response_timeout, CanardNodeID remote_node_id,
         TickType_t mutex_timeout = portMAX_DELAY, TickType_t tx_timeout = portMAX_DELAY) {
         return call(name, RegisterVariantUtils::Empty, response_timeout, remote_node_id, mutex_timeout, tx_timeout);
     }
@@ -147,14 +155,14 @@ public:
      * @param name register name
      * @param value value to write
      * @param type type of the register to write
-     * @param response_timeout timeout to receive response
      * @param remote_node_id node id of remote node
+     * @param response_timeout timeout to receive response in RTOS ticks, 0 to not wait, nullopt for default of 2 * get_client_timeout()
      * @param mutex_timeout timeout to lock mutex to prevent concurrent calls of this function
      * @param tx_timeout timeout to transmit request, discard if it gets stuck in queue for this long
      * @return true if written successfully
      */
     [[nodiscard]] inline bool write(const char *name, const RegisterVariant &reg,
-        TickType_t response_timeout, CanardNodeID remote_node_id,
+        std::optional<TickType_t> response_timeout, CanardNodeID remote_node_id,
         TickType_t mutex_timeout = portMAX_DELAY, TickType_t tx_timeout = portMAX_DELAY) {
         auto ret = call(name, reg, response_timeout, remote_node_id, mutex_timeout, tx_timeout);
         return ret.has_value() && ret == reg;
@@ -172,13 +180,14 @@ public:
      * @param attempts try to write this many times
      * @param remote_node_id node id of remote node
      * @param verify Verify that written value matches the request
+     * @param response_timeout timeout to receive response in RTOS ticks, 0 to not wait, nullopt for default of 2 * get_client_timeout()
      * @param mutex_timeout timeout to lock mutex to prevent concurrent calls of this function
      * @param tx_timeout timeout to transmit request, discard if it gets stuck in queue for this long
      * @return true if written successfully
      */
     [[nodiscard]] bool repeat_write(const char *name, const RegisterVariant &reg,
         size_t attempts, CanardNodeID remote_node_id, bool verify = true,
-        TickType_t mutex_timeout = portMAX_DELAY, TickType_t tx_timeout = portMAX_DELAY);
+        std::optional<TickType_t> response_timeout = std::nullopt, TickType_t mutex_timeout = portMAX_DELAY, TickType_t tx_timeout = portMAX_DELAY);
 };
 
 } // namespace can::cyphal

@@ -89,21 +89,22 @@ protected:
      *   If server uses the same timeouts, it is 2 * get_client_timeout().
      *
      * @param request_data send this
-     * @param response_timeout timeout to receive response in RTOS ticks
+     * @param response_timeout timeout to receive response in RTOS ticks, 0 to not wait, nullopt for default of 2 * get_client_timeout()
      * @param remote_node_id set remote node ID if set, otherwise keep previous
      * @param tx_timeout timeout for transmit mutex, discard if the Cyphal thread is busy for this long
      * @return whether the response was received or not
      *
      * @note Don't mix polling and blocking calls.
      */
-    ClientCallResult call_void(const void *const request_data, TickType_t response_timeout, std::optional<CanardNodeID> remote_node_id, TickType_t tx_timeout) {
+    ClientCallResult call_void(const void *const request_data, std::optional<TickType_t> response_timeout, std::optional<CanardNodeID> remote_node_id, TickType_t tx_timeout) {
         xSemaphoreTake(response_semaphore, 0); // Clear semaphore
         transfer_id = request.get_next_transfer_id(); // Remember what transfer ID we are expecting
         if (request.send_data_void(request_data, remote_node_id, tx_timeout) == false) { // Send request
             return ClientCallResult::TxTimeout; // Couldn't send in time
         }
 
-        if (response_timeout > 0 && wait_response_ready(response_timeout)) { // Wait for response
+        TickType_t timeout = response_timeout.value_or(pdMS_TO_TICKS(2 * get_client_timeout() / 1000 + 1));
+        if (timeout > 0 && wait_response_ready(timeout)) { // Wait for response
             return ClientCallResult::Received;
         } else {
             return ClientCallResult::RxTimeout; // No response in time
@@ -236,7 +237,7 @@ public:
      * @param send_timeout timeout to transmit request, discard if it gets stuck in queue for this long
      *    Default is ProtoSender::send_timeout_default. It should be enough for most cases.
      * @param multipart_timeout timeout for response, this applies to multipart messages that arrive far apart
-     *    Deafult is ProtoSuber::multipart_timeout_default to access Python server or ProtoSuber::multipart_timeout_short to access normal server.
+     *    Default is ProtoSuber::multipart_timeout_default to access Python server or ProtoSuber::multipart_timeout_short to access normal server.
      * @note Roundtrip delay limit and suggested call() timeout is sum of send_timeout and multipart_timeout in both client and server.
      *    If same, then it is "2 * (send_timeout + multipart_timeout)" or "2 * get_client_timeout()".
      * @warning The multipart_timeout_default can get you stuck for too long.
@@ -268,14 +269,14 @@ public:
      *   If server uses the same timeouts, it is 2 * get_client_timeout().
      *
      * @param request_data send this
-     * @param response_timeout timeout to receive response in RTOS ticks
+     * @param response_timeout timeout to receive response in RTOS ticks, 0 to not wait, nullopt for default of 2 * get_client_timeout()
      * @param remote_node_id set remote node ID if set, otherwise keep previous
      * @param tx_timeout timeout for transmit mutex, discard if the Cyphal thread is busy for this long
      * @return whether the response was received or not
      *
      * @note Don't mix polling and blocking calls.
      */
-    ClientCallResult call(const T_REQUEST &request_data, TickType_t response_timeout, std::optional<CanardNodeID> remote_node_id = std::nullopt, TickType_t tx_timeout = portMAX_DELAY) {
+    ClientCallResult call(const T_REQUEST &request_data, std::optional<TickType_t> response_timeout = std::nullopt, std::optional<CanardNodeID> remote_node_id = std::nullopt, TickType_t tx_timeout = portMAX_DELAY) {
         return call_void(reinterpret_cast<const void *>(&request_data), response_timeout, remote_node_id, tx_timeout);
     }
 };

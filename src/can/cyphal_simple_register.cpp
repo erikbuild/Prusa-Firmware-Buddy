@@ -160,7 +160,7 @@ SimpleRegisterClient::SimpleRegisterClient(CanardMicrosecond send_timeout, Canar
 }
 
 std::optional<RegisterVariant> SimpleRegisterClient::call(const char *name, const RegisterVariant &reg,
-    TickType_t response_timeout, CanardNodeID remote_node_id, TickType_t mutex_timeout, TickType_t tx_timeout) {
+    std::optional<TickType_t> response_timeout, CanardNodeID remote_node_id, TickType_t mutex_timeout, TickType_t tx_timeout) {
     // Request
     SimpleRegisterRequest request;
     request.name.name.count = strnlen(name, sizeof(request.name.name.elements));
@@ -184,15 +184,12 @@ std::optional<RegisterVariant> SimpleRegisterClient::call(const char *name, cons
 }
 
 bool SimpleRegisterClient::repeat_write(const char *name, const RegisterVariant &reg, size_t attempts,
-    CanardNodeID remote_node_id, bool verify, TickType_t mutex_timeout, TickType_t tx_timeout) {
+    CanardNodeID remote_node_id, bool verify, std::optional<TickType_t> response_timeout, TickType_t mutex_timeout, TickType_t tx_timeout) {
     // Request
     SimpleRegisterRequest request;
     request.name.name.count = strnlen(name, sizeof(request.name.name.elements));
     memcpy(request.name.name.elements, name, request.name.name.count);
     request.reg = reg;
-
-    // Set timeout as a roundtrip delay + 1 ms
-    const TickType_t response_timeout = pdMS_TO_TICKS(2 * get_client_timeout() / 1000 + 1);
 
     // Lock mutex
     Task::RAIILock lock(call_mutex, mutex_timeout);
