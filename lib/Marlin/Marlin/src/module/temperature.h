@@ -654,6 +654,10 @@ class Temperature {
         #endif
         start_watching_heatbreak(HOTEND_INDEX);
       }
+
+      static void setTargetHeatbreak(const int16_t celsius, PhysicalToolIndex tool) {
+        setTargetHeatbreak(celsius, tool.to_raw());
+      }
     #endif // HAS_TEMP_HEATBREAK
 
     #if HAS_TEMP_BOARD
