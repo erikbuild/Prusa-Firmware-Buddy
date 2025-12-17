@@ -68,10 +68,6 @@
   #endif // ENABLED(CRASH_RECOVERY)
 #endif
 
-#if ENABLED(BABYSTEP_DISPLAY_TOTAL)
-  #include "../feature/babystep.h"
-#endif
-
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../core/debug_out.h"
 
@@ -982,10 +978,6 @@ void set_axis_is_at_home(const AxisEnum axis, AxisHomeLevel level, [[maybe_unuse
         if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("*** Z HOMED TO ENDSTOP ***");
       }
     }
-  #endif
-
-  #if ENABLED(BABYSTEP_DISPLAY_TOTAL)
-    babystep.reset_total(axis);
   #endif
 
   if (DEBUGGING(LEVELING)) {
