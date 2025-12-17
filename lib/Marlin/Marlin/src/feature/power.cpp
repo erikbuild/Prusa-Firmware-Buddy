@@ -42,10 +42,6 @@ bool Power::is_power_needed() {
     FANS_LOOP(i) if (thermalManager.fan_speed[i]) return true;
   #endif
 
-  #if ENABLED(AUTO_POWER_E_FANS)
-    for (int8_t e = 0; e < HOTENDS; e++) if (thermalManager.autofan_speed[e]) return true;
-  #endif
-
   #if ENABLED(AUTO_POWER_CHAMBER_FAN)
     if (thermalManager.chamberfan_speed) return true;
   #endif

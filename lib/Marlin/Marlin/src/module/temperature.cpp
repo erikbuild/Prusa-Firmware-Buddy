@@ -155,10 +155,6 @@ Temperature thermalManager;
 hotend_info_t Temperature::temp_hotend[HOTEND_TEMPS]; // = { 0 }
 uint32_t Temperature::temp_hotend_residency_start_ms[HOTEND_TEMPS];
 
-#if ENABLED(AUTO_POWER_E_FANS)
-  uint8_t Temperature::autofan_speed[HOTENDS]; // = { 0 }
-#endif
-
 #if ENABLED(AUTO_POWER_CHAMBER_FAN)
   uint8_t Temperature::chamberfan_speed; // = 0
 #endif
@@ -746,9 +742,6 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
             break;
         #endif
         default:
-          #if ENABLED(AUTO_POWER_E_FANS)
-            autofan_speed[realFan] = fan_on ? EXTRUDER_AUTO_FAN_SPEED : 0;
-          #endif
           break;
       }
 

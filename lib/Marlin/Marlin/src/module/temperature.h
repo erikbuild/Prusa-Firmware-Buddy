@@ -303,10 +303,6 @@ class Temperature {
       static TempInfo temp_ambient;
     #endif
 
-    #if ENABLED(AUTO_POWER_E_FANS)
-      static uint8_t autofan_speed[HOTENDS];
-    #endif
-
     #if ENABLED(AUTO_POWER_CHAMBER_FAN)
       static uint8_t chamberfan_speed;
     #endif
