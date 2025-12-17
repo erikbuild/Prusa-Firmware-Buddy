@@ -709,14 +709,14 @@ inline bool calibrate_all_simple() {
             failed = true;
             break; // Do not continue with the next tool
         }
-        centers[tool.to_raw()] = center.value();
+        centers[tool] = center.value();
         metric_record_custom(
             &metric_center,
             ",t=%u x=%.3f,y=%.3f,z=%.3f",
             tool.to_raw(),
-            static_cast<double>(centers[tool.to_raw()].x),
-            static_cast<double>(centers[tool.to_raw()].y),
-            static_cast<double>(centers[tool.to_raw()].z));
+            static_cast<double>(centers[tool].x),
+            static_cast<double>(centers[tool].y),
+            static_cast<double>(centers[tool].z));
     }
 
     if (failed) {

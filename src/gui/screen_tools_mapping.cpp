@@ -772,7 +772,7 @@ void ToolsMappingBody::update_shown_state_after_scroll(uint8_t previous_idx) {
 void ToolsMappingBody::update_dwarf_lights() {
 #if PRINTER_IS_PRUSA_XL()
     for (auto tool : PhysicalToolIndex::all()) {
-        prusa_toolchanger.getTool(tool.to_raw()).set_cheese_led(0, 0); // disable all
+        prusa_toolchanger.getTool(tool).set_cheese_led(0, 0); // disable all
     }
 
     if (current_idx >= get_cnt_current_items()) {
