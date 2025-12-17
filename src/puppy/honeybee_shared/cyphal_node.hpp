@@ -32,6 +32,8 @@
     #include <cyphal_record.hpp>
 #endif
 
+#include <option/has_cyphal_timesync.h>
+
 #include <prusa3d/common/CustomExecuteCommand_1_0.h>
 #include <watcher.hpp>
 
@@ -41,6 +43,7 @@
 #include <timing.h>
 #include <utility>
 #include <device/cmsis.h>
+#include <magic_enum.hpp>
 
 LOG_COMPONENT_REF(Node);
 
@@ -66,6 +69,11 @@ namespace detail {
     struct ProtoNode {
         /// Add otp registers
         static void add_otp_registers(RegisterMachineIface &registers);
+
+#if HAS_CYPHAL_METRICS()
+        /// Add metrics registers
+        static void add_metrics_registers(RegisterMachineIface &registers);
+#endif /* HAS_CYPHAL_METRICS() */
 
         /**
          * @brief Init getinfo structure.
@@ -185,6 +193,7 @@ protected:
     bool first_time_sync = false; ///< True when we have first time sync
     bool is_time_sync_precise = false;
     int64_t last_heartbeat = 0; ///< Last time we sent heartbeat
+    std::atomic<bool> can_go_operational; ///< True when we can go to operational mode, set by app
 
     ///< Publish list of used ports
     can::cyphal::PortList port_list;
@@ -243,10 +252,12 @@ public:
      * @brief Construct Node.
      * @param uid unique ID of the node, must be 16 bytes long
      * @param name name of the node as in "cz.prusa3d.honeybee.hub"
+     * @param _can_go_operational true to go operational after config and timesync, false to use allow_operational() from app
      */
-    Node(const uint8_t uid[sizeof(uavcan_node_GetInfo_Response_1_0::unique_id)], const char *name)
+    Node(const uint8_t uid[sizeof(uavcan_node_GetInfo_Response_1_0::unique_id)], const char *name, bool _can_go_operational = true)
         : detail::OptionalPnP<node_id>(node_id_request, uid)
         , time_sync(0)
+        , can_go_operational(_can_go_operational)
         , execute_command_server(
               [this](const uavcan_node_ExecuteCommand_Request_1_3 &data, [[maybe_unused]] const ProtoSuber::Meta &meta) {
                   uavcan_node_ExecuteCommand_Response_1_3 resp = { .status = uavcan_node_ExecuteCommand_Response_1_3_STATUS_BAD_COMMAND, .output = {} };
@@ -294,8 +305,21 @@ public:
                   first_config.store(true);
                   config_server.send_response(typename ConfigTraits::Response::Type()); // Dummy response, no data
               },
-              ProtoSender::send_timeout_default, ProtoSuber::multipart_timeout_short) {
+              ProtoSender::send_timeout_default, ProtoSuber::multipart_timeout_short)
+#if HAS_CYPHAL_METRICS()
+        , metrics_sender(CanardTransferKindMessage,
+              CANARD_NODE_ID_UNSET, ProtoSender::send_timeout_default,
+              CanardPrioritySlow)
+#endif /* HAS_CYPHAL_METRICS() */
+    {
         detail::ProtoNode::init_info(get_info_resp, name, uid);
+    }
+
+    /**
+     * @brief Call this from the app when it is ready to go operational.
+     */
+    void allow_operational() {
+        can_go_operational.store(true);
     }
 
     /**
@@ -342,6 +366,10 @@ public:
 
         // Add registers
         detail::ProtoNode::add_otp_registers(registers);
+
+#if HAS_CYPHAL_METRICS()
+        detail::ProtoNode::add_metrics_registers(registers);
+#endif /* HAS_CYPHAL_METRICS() */
 
         registers.add_register(
             "debug_enable",
@@ -409,7 +437,7 @@ public:
     /// Task function (never exits)
     [[noreturn]] void task() {
         notify_task = xTaskGetCurrentTaskHandle(); // Send notification to this task
-        device::MultiWatchdog cyphal_app_watchdog;
+        device::MultiWatchdog cyphal_app_watchdog("cyphal_app");
 
         while (true) {
             int64_t now = get_timestamp_us(); ///< Get time only once per loop
@@ -502,9 +530,15 @@ public:
 #endif
 
             // Send own heartbeat
+#if HAS_CYPHAL_TIMESYNC()
+            bool time_sync_ready = first_time_sync; // Time sync required for HONEYBEE_NEXT
+#else
+            // Time sync is not provided, don't wait for it
+            bool time_sync_ready = true;
+#endif
             if (mode.value == uavcan_node_Mode_1_0_INITIALIZATION
+                && time_sync_ready && first_config.load() && can_go_operational.load()) {
                 // Switch from init to operational mode
-                && first_time_sync && first_config.load()) {
                 mode.value = uavcan_node_Mode_1_0_OPERATIONAL;
                 last_heartbeat = 0; // Send heartbeat immediately
                 notify(Notify::operational); // Notify app that we are operational
@@ -629,7 +663,7 @@ public:
      *       To trigger fault of the system, use device::trigger_fault().
      */
     bool set_fault(SpecificFault fault) {
-        const auto mask = (1 << std::to_underlying(fault));
+        const auto mask = (1 << fault);
         const bool is_already_active = (fault_mask.load() & mask) != 0;
 
         fault_mask |= mask;

@@ -280,11 +280,20 @@ void Task::tx_loop() {
             }
         } else {
             // Otherwise just drop it and move on to the next one.
-            log_warning(can, "Cyphal Tx frame time out, %s port %u",
-                service_from_can_id(tqi->frame.extended_can_id) ? "service" : "message",
-                port_from_can_id(tqi->frame.extended_can_id));
-            if (error_callback) {
-                error_callback(Driver::Notification::TxLost);
+            if (auto priority = priority_from_can_id(tqi->frame.extended_can_id);
+                priority == CanardPriorityOptional) {
+                log_warning(can, "Optional Cyphal Tx frame time out, %s port %u",
+                    service_from_can_id(tqi->frame.extended_can_id) ? "service" : "message",
+                    port_from_can_id(tqi->frame.extended_can_id));
+                /// @note Optional is really optional. This will drop multiframe messages when the bus is busy.
+            } else {
+                log_error(can, "Cyphal Tx frame time out, %s port %u, priority %u",
+                    service_from_can_id(tqi->frame.extended_can_id) ? "service" : "message",
+                    port_from_can_id(tqi->frame.extended_can_id),
+                    priority);
+                if (error_callback) {
+                    error_callback(Driver::Notification::TxLost);
+                }
             }
         }
 

@@ -21,7 +21,7 @@ using puppy::fault::SharedFault;
 
 namespace anfc::cyphal {
 
-enum class Fault {
+enum Fault {
     // no specific faults yet
     _specific_count,
     _specific_last = _specific_count - 1,
@@ -29,6 +29,7 @@ enum class Fault {
     // Shared faults
     _shared_first = SharedFault::_shared_first, ///< This is a barrier for puppy specific faults
 
+    can = SharedFault::can,
     mcu_overheat = SharedFault::mcu_overheat,
     pcb_overheat = SharedFault::pcb_overheat,
     data_timeout = SharedFault::data_timeout,

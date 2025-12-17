@@ -9,7 +9,7 @@ Record *Record::instance = nullptr; ///< Singleton instance
 Record::Record()
     : log_sender(CanardTransferKindMessage,
         CANARD_NODE_ID_UNSET, ProtoSender::send_timeout_default,
-        CanardPriorityOptional) {
+        CanardPrioritySlow) {
     assert(instance == nullptr); // Allow only one instance
     instance = this;
 

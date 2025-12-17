@@ -71,6 +71,8 @@ target_link_libraries(
 # functions that are not wrapped by `freertos`.
 target_link_libraries(firmware PRIVATE FreeRTOS::FreeRTOS)
 
+target_link_libraries(firmware PUBLIC magic_enum)
+
 add_library(FreeRTOS_Config INTERFACE)
 target_link_libraries(FreeRTOS_Config INTERFACE STM32C0xx::CMSIS)
 target_include_directories(FreeRTOS_Config INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/config")

@@ -70,6 +70,8 @@ endif()
 # functions that are not wrapped by `freertos`.
 target_link_libraries(firmware PRIVATE FreeRTOS::FreeRTOS)
 
+target_link_libraries(firmware PUBLIC magic_enum)
+
 add_library(FreeRTOS_Config INTERFACE)
 target_include_directories(FreeRTOS_Config INTERFACE config)
 

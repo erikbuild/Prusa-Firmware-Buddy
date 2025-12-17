@@ -264,6 +264,16 @@ public:
     };
 
     /**
+     * @brief Parse priority from CAN extended ID.
+     * @param can_id CAN extended ID
+     * @return priority
+     */
+    static CanardPriority priority_from_can_id(uint32_t can_id) {
+        static constexpr size_t OFFSET_PRIORITY = 26U;
+        return static_cast<CanardPriority>((can_id >> OFFSET_PRIORITY) & CANARD_PRIORITY_MAX);
+    }
+
+    /**
      * @brief Check if CAN extended ID is service or message.
      * @param can_id CAN extended ID
      * @return true if service, false if message
