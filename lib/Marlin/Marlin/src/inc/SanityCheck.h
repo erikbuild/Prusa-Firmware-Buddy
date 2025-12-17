@@ -454,15 +454,6 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
 #endif
 
 /**
- * Babystepping
- */
-#if ENABLED(BABYSTEPPING)
-  #if BOTH(BABYSTEP_ALWAYS_AVAILABLE, MOVE_Z_WHEN_IDLE)
-    #error "BABYSTEP_ALWAYS_AVAILABLE and MOVE_Z_WHEN_IDLE are incompatible."
-  #endif
-#endif
-
-/**
  * Advanced Pause
  */
 #if HAS_PAUSE()
