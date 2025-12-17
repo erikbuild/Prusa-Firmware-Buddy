@@ -131,103 +131,6 @@
 // Extruder Stepper enable / disable
 //
 
-// define the individual enables/disables
-#if HAS_E0_ENABLE
-  #define  E0_enable E0_ENABLE_WRITE( E_ENABLE_ON)
-  #define E0_disable E0_ENABLE_WRITE(!E_ENABLE_ON)
-#else
-  #define  E0_enable NOOP
-  #define E0_disable NOOP
-#endif
-
-#if (E_STEPPERS > 1 || HAS_TOOLCHANGER()) && HAS_E1_ENABLE
-  #define  E1_enable E1_ENABLE_WRITE( E_ENABLE_ON)
-  #define E1_disable E1_ENABLE_WRITE(!E_ENABLE_ON)
-#else
-  #define  E1_enable NOOP
-  #define E1_disable NOOP
-#endif
-
-#if (E_STEPPERS > 2 || HAS_TOOLCHANGER()) && HAS_E2_ENABLE
-  #define  E2_enable E2_ENABLE_WRITE( E_ENABLE_ON)
-  #define E2_disable E2_ENABLE_WRITE(!E_ENABLE_ON)
-#else
-  #define  E2_enable NOOP
-  #define E2_disable NOOP
-#endif
-
-#if (E_STEPPERS > 3 || HAS_TOOLCHANGER()) && HAS_E3_ENABLE
-  #define  E3_enable E3_ENABLE_WRITE( E_ENABLE_ON)
-  #define E3_disable E3_ENABLE_WRITE(!E_ENABLE_ON)
-#else
-  #define  E3_enable NOOP
-  #define E3_disable NOOP
-#endif
-
-#if (E_STEPPERS > 4 || HAS_TOOLCHANGER()) && HAS_E4_ENABLE
-  #define  E4_enable E4_ENABLE_WRITE( E_ENABLE_ON)
-  #define E4_disable E4_ENABLE_WRITE(!E_ENABLE_ON)
-#else
-  #define  E4_enable NOOP
-  #define E4_disable NOOP
-#endif
-
-#if (E_STEPPERS > 5 || HAS_TOOLCHANGER()) && HAS_E5_ENABLE
-  #define  E5_enable E5_ENABLE_WRITE( E_ENABLE_ON)
-  #define E5_disable E5_ENABLE_WRITE(!E_ENABLE_ON)
-#else
-  #define  E5_enable NOOP
-  #define E5_disable NOOP
-#endif
-
-#if HAS_E0_ENABLE
-  #define  enable_E0() E0_enable
-  #define disable_E0() E0_disable
-#else
-  #define  enable_E0() NOOP
-  #define disable_E0() NOOP
-#endif
-
-#if (E_STEPPERS > 1 || HAS_TOOLCHANGER()) && HAS_E1_ENABLE
-  #define  enable_E1() E1_enable
-  #define disable_E1() E1_disable
-#else
-  #define  enable_E1() NOOP
-  #define disable_E1() NOOP
-#endif
-
-#if (E_STEPPERS > 2 || HAS_TOOLCHANGER()) && HAS_E2_ENABLE
-  #define  enable_E2() E2_enable
-  #define disable_E2() E2_disable
-#else
-  #define  enable_E2() NOOP
-  #define disable_E2() NOOP
-#endif
-
-#if (E_STEPPERS > 3 || HAS_TOOLCHANGER()) && HAS_E3_ENABLE
-  #define  enable_E3() E3_enable
-  #define disable_E3() E3_disable
-#else
-  #define  enable_E3() NOOP
-  #define disable_E3() NOOP
-#endif
-
-#if (E_STEPPERS > 4 || HAS_TOOLCHANGER()) && HAS_E4_ENABLE
-  #define  enable_E4() E4_enable
-  #define disable_E4() E4_disable
-#else
-  #define  enable_E4() NOOP
-  #define disable_E4() NOOP
-#endif
-
-#if (E_STEPPERS > 5 || HAS_TOOLCHANGER()) && HAS_E5_ENABLE
-  #define  enable_E5() E5_enable
-  #define disable_E5() E5_disable
-#else
-  #define  enable_E5() NOOP
-  #define disable_E5() NOOP
-#endif
-
 #if BOARD_IS_DWARF()
     #define X_APPLY_DIR(v) X_DIR_WRITE(v)
     #define Y_APPLY_DIR(v) Y_DIR_WRITE(v)
@@ -561,3 +464,6 @@ static inline void stepper_disable(AxisEnum axis) { stepper_enable(axis, false);
 
 // Return stepper enabled status
 [[nodiscard]] bool stepper_enabled(AxisEnum axis);
+
+void enable_E(uint8_t index);
+void disable_E(uint8_t index);

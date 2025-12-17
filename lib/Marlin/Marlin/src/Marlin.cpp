@@ -183,7 +183,7 @@ void setup_powerhold() {
 #endif /* HAS_PLANNER() */
 
 void enable_e_steppers() {
-  enable_E0(); enable_E1(); enable_E2(); enable_E3(); enable_E4(); enable_E5();
+  enable_E(0); enable_E(1); enable_E(2); enable_E(3); enable_E(4); enable_E(5);
 }
 
 void enable_all_steppers() {
@@ -196,18 +196,11 @@ void enable_all_steppers() {
 }
 
 void disable_e_steppers() {
-  disable_E0(); disable_E1(); disable_E2(); disable_E3(); disable_E4(); disable_E5();
+  disable_E(0); disable_E(1); disable_E(2); disable_E(3); disable_E(4); disable_E(5);
 }
 
 void disable_e_stepper(const uint8_t e) {
-  switch (e) {
-    case 0: disable_E0(); break;
-    case 1: disable_E1(); break;
-    case 2: disable_E2(); break;
-    case 3: disable_E3(); break;
-    case 4: disable_E4(); break;
-    case 5: disable_E5(); break;
-  }
+  disable_E(e);
 }
 
 void disable_all_steppers() {

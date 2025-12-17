@@ -32,6 +32,43 @@
 #include "indirection.h"
 #include <bsod.h>
 
+static void enable_or_disable_E(uint8_t index, bool value) {
+    int pin_value = value ? E_ENABLE_ON : !E_ENABLE_ON;
+    switch (index) {
+#if (E_STEPPERS > 0 || HAS_TOOLCHANGER()) && HAS_E0_ENABLE
+    case 0:
+        E0_ENABLE_WRITE(pin_value);
+        break;
+#endif
+#if (E_STEPPERS > 1 || HAS_TOOLCHANGER()) && HAS_E1_ENABLE
+    case 1:
+        E1_ENABLE_WRITE(pin_value);
+        break;
+#endif
+#if (E_STEPPERS > 2 || HAS_TOOLCHANGER()) && HAS_E2_ENABLE
+    case 2:
+        E2_ENABLE_WRITE(pin_value);
+        break;
+#endif
+#if (E_STEPPERS > 3 || HAS_TOOLCHANGER()) && HAS_E3_ENABLE
+    case 3:
+        E3_ENABLE_WRITE(pin_value);
+        break;
+#endif
+#if (E_STEPPERS > 4 || HAS_TOOLCHANGER()) && HAS_E4_ENABLE
+    case 4:
+        E4_ENABLE_WRITE(pin_value);
+        break;
+#endif
+#if (E_STEPPERS > 5 || HAS_TOOLCHANGER()) && HAS_E5_ENABLE
+    case 5:
+        E5_ENABLE_WRITE(pin_value);
+        break;
+#endif
+    }
+    static_assert(E_STEPPERS < 6);
+}
+
 void stepper_enable(AxisEnum axis, bool enabled) {
     switch (axis) {
 #if ENABLED(XY_LINKED_ENABLE)
@@ -74,57 +111,27 @@ void stepper_enable(AxisEnum axis, bool enabled) {
 #endif
 #if E_STEPPERS > 0
     case E0_AXIS:
-        if (enabled) {
-            enable_E0();
-        } else {
-            disable_E0();
-        }
-        break;
+        return enable_or_disable_E(0, enabled);
 #endif
 #if E_STEPPERS > 1
     case E1_AXIS:
-        if (enabled) {
-            enable_E1();
-        } else {
-            disable_E1();
-        }
-        break;
+        return enable_or_disable_E(1, enabled);
 #endif
 #if E_STEPPERS > 2
     case E2_AXIS:
-        if (enabled) {
-            enable_E2();
-        } else {
-            disable_E2();
-        }
-        break;
+        return enable_or_disable_E(2, enabled);
 #endif
 #if E_STEPPERS > 3
     case E3_AXIS:
-        if (enabled) {
-            enable_E3();
-        } else {
-            disable_E3();
-        }
-        break;
+        return enable_or_disable_E(3, enabled);
 #endif
 #if E_STEPPERS > 4
     case E4_AXIS:
-        if (enabled) {
-            enable_E4();
-        } else {
-            disable_E4();
-        }
-        break;
+        return enable_or_disable_E(4, enabled);
 #endif
 #if E_STEPPERS > 5
     case E5_AXIS:
-        if (enabled) {
-            enable_E5();
-        } else {
-            disable_E5();
-        }
-        break;
+        return enable_or_disable_E(5, enabled);
 #endif
     default:
         bsod("invalid stepper axis");
@@ -178,4 +185,12 @@ bool stepper_enabled(AxisEnum axis) {
     default:
         bsod("invalid stepper axis");
     }
+}
+
+void enable_E(uint8_t index) {
+    enable_or_disable_E(index, true);
+}
+
+void disable_E(uint8_t index) {
+    enable_or_disable_E(index, false);
 }

@@ -1191,6 +1191,25 @@ bool Planner::_buffer_msteps(const xyze_long_t &target, const xyze_pos_t &target
   return true;
 }
 
+void Planner::manage_extruders(uint8_t extruder) {
+  for (uint8_t i = 0; i < EXTRUDERS; i++) {
+    if (i != extruder) {
+      auto &counter = g_uc_extruder_last_move[i];
+      if (counter > 0) {
+        counter--;
+      }
+      if (counter == 0) {
+        disable_E(i);
+      }
+    }
+  }
+  if (uint8_t i = extruder; i < EXTRUDERS) {
+    auto &counter = g_uc_extruder_last_move[i];
+    enable_E(i);
+    counter = (BLOCK_BUFFER_SIZE) * 2;
+  }
+}
+
 /**
  * @brief Populate a block in preparation for insertion
  * @details Populate the fields of a new linear movement block
@@ -1383,107 +1402,7 @@ bool Planner::_populate_block(block_t * const block,
       powerManager.power_on();
     #endif
 
-      #define DISABLE_IDLE_E(N) if (!g_uc_extruder_last_move[N]) disable_E##N();
-
-      for (uint8_t i = 0; i < EXTRUDERS; i++)
-        if (g_uc_extruder_last_move[i] > 0) g_uc_extruder_last_move[i]--;
-
-      switch (extruder) {
-        case 0:
-          #if EXTRUDERS > 1
-            DISABLE_IDLE_E(1);
-            #if EXTRUDERS > 2
-              DISABLE_IDLE_E(2);
-              #if EXTRUDERS > 3
-                DISABLE_IDLE_E(3);
-                #if EXTRUDERS > 4
-                  DISABLE_IDLE_E(4);
-                  #if EXTRUDERS > 5
-                    DISABLE_IDLE_E(5);
-                  #endif // EXTRUDERS > 5
-                #endif // EXTRUDERS > 4
-              #endif // EXTRUDERS > 3
-            #endif // EXTRUDERS > 2
-          #endif // EXTRUDERS > 1
-          enable_E0();
-          g_uc_extruder_last_move[0] = (BLOCK_BUFFER_SIZE) * 2;
-        break;
-        #if EXTRUDERS > 1
-          case 1:
-            DISABLE_IDLE_E(0);
-            #if EXTRUDERS > 2
-              DISABLE_IDLE_E(2);
-              #if EXTRUDERS > 3
-                DISABLE_IDLE_E(3);
-                #if EXTRUDERS > 4
-                  DISABLE_IDLE_E(4);
-                  #if EXTRUDERS > 5
-                    DISABLE_IDLE_E(5);
-                  #endif // EXTRUDERS > 5
-                #endif // EXTRUDERS > 4
-              #endif // EXTRUDERS > 3
-            #endif // EXTRUDERS > 2
-            enable_E1();
-            g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
-          break;
-          #if EXTRUDERS > 2
-            case 2:
-              DISABLE_IDLE_E(0);
-              DISABLE_IDLE_E(1);
-              #if EXTRUDERS > 3
-                DISABLE_IDLE_E(3);
-                #if EXTRUDERS > 4
-                  DISABLE_IDLE_E(4);
-                  #if EXTRUDERS > 5
-                    DISABLE_IDLE_E(5);
-                  #endif
-                #endif
-              #endif
-              enable_E2();
-              g_uc_extruder_last_move[2] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-            #if EXTRUDERS > 3
-              case 3:
-                DISABLE_IDLE_E(0);
-                DISABLE_IDLE_E(1);
-                DISABLE_IDLE_E(2);
-                #if EXTRUDERS > 4
-                  DISABLE_IDLE_E(4);
-                  #if EXTRUDERS > 5
-                    DISABLE_IDLE_E(5);
-                  #endif
-                #endif
-                enable_E3();
-                g_uc_extruder_last_move[3] = (BLOCK_BUFFER_SIZE) * 2;
-              break;
-              #if EXTRUDERS > 4
-                case 4:
-                  DISABLE_IDLE_E(0);
-                  DISABLE_IDLE_E(1);
-                  DISABLE_IDLE_E(2);
-                  DISABLE_IDLE_E(3);
-                  #if EXTRUDERS > 5
-                    DISABLE_IDLE_E(5);
-                  #endif
-                  enable_E4();
-                  g_uc_extruder_last_move[4] = (BLOCK_BUFFER_SIZE) * 2;
-                break;
-                #if EXTRUDERS > 5
-                  case 5:
-                    DISABLE_IDLE_E(0);
-                    DISABLE_IDLE_E(1);
-                    DISABLE_IDLE_E(2);
-                    DISABLE_IDLE_E(3);
-                    DISABLE_IDLE_E(4);
-                    enable_E5();
-                    g_uc_extruder_last_move[5] = (BLOCK_BUFFER_SIZE) * 2;
-                  break;
-                #endif // EXTRUDERS > 5
-              #endif // EXTRUDERS > 4
-            #endif // EXTRUDERS > 3
-          #endif // EXTRUDERS > 2
-        #endif // EXTRUDERS > 1
-      }
+    Planner::manage_extruders(extruder);
 
     // Perform E pre-move hooks
     motor_prepare_move_e();
@@ -2079,107 +1998,7 @@ bool Planner::populate_raw_block(block_t *const block, const abce_long_t &target
         Power::power_on();
     #endif
 
-        #define DISABLE_IDLE_E(N) if (!g_uc_extruder_last_move[N]) disable_E##N();
-
-        for (uint8_t i = 0; i < EXTRUDERS; i++)
-          if (g_uc_extruder_last_move[i] > 0) g_uc_extruder_last_move[i]--;
-
-        switch (extruder) {
-        case 0:
-        #if EXTRUDERS > 1
-            DISABLE_IDLE_E(1);
-            #if EXTRUDERS > 2
-            DISABLE_IDLE_E(2);
-                #if EXTRUDERS > 3
-            DISABLE_IDLE_E(3);
-                    #if EXTRUDERS > 4
-            DISABLE_IDLE_E(4);
-                        #if EXTRUDERS > 5
-            DISABLE_IDLE_E(5);
-                        #endif // EXTRUDERS > 5
-                    #endif // EXTRUDERS > 4
-                #endif // EXTRUDERS > 3
-            #endif // EXTRUDERS > 2
-        #endif // EXTRUDERS > 1
-            enable_E0();
-            g_uc_extruder_last_move[0] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-        #if EXTRUDERS > 1
-        case 1:
-            DISABLE_IDLE_E(0);
-            #if EXTRUDERS > 2
-            DISABLE_IDLE_E(2);
-                #if EXTRUDERS > 3
-            DISABLE_IDLE_E(3);
-                    #if EXTRUDERS > 4
-            DISABLE_IDLE_E(4);
-                        #if EXTRUDERS > 5
-            DISABLE_IDLE_E(5);
-                        #endif // EXTRUDERS > 5
-                    #endif // EXTRUDERS > 4
-                #endif // EXTRUDERS > 3
-            #endif // EXTRUDERS > 2
-            enable_E1();
-            g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-            #if EXTRUDERS > 2
-        case 2:
-            DISABLE_IDLE_E(0);
-            DISABLE_IDLE_E(1);
-                #if EXTRUDERS > 3
-            DISABLE_IDLE_E(3);
-                    #if EXTRUDERS > 4
-            DISABLE_IDLE_E(4);
-                        #if EXTRUDERS > 5
-            DISABLE_IDLE_E(5);
-                        #endif
-                    #endif
-                #endif
-            enable_E2();
-            g_uc_extruder_last_move[2] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-                #if EXTRUDERS > 3
-        case 3:
-            DISABLE_IDLE_E(0);
-            DISABLE_IDLE_E(1);
-            DISABLE_IDLE_E(2);
-                    #if EXTRUDERS > 4
-            DISABLE_IDLE_E(4);
-                        #if EXTRUDERS > 5
-            DISABLE_IDLE_E(5);
-                        #endif
-                    #endif
-            enable_E3();
-            g_uc_extruder_last_move[3] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-                    #if EXTRUDERS > 4
-        case 4:
-            DISABLE_IDLE_E(0);
-            DISABLE_IDLE_E(1);
-            DISABLE_IDLE_E(2);
-            DISABLE_IDLE_E(3);
-                        #if EXTRUDERS > 5
-            DISABLE_IDLE_E(5);
-                        #endif
-            enable_E4();
-            g_uc_extruder_last_move[4] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-                        #if EXTRUDERS > 5
-        case 5:
-            DISABLE_IDLE_E(0);
-            DISABLE_IDLE_E(1);
-            DISABLE_IDLE_E(2);
-            DISABLE_IDLE_E(3);
-            DISABLE_IDLE_E(4);
-            enable_E5();
-            g_uc_extruder_last_move[5] = (BLOCK_BUFFER_SIZE) * 2;
-            break;
-                        #endif // EXTRUDERS > 5
-                    #endif // EXTRUDERS > 4
-                #endif // EXTRUDERS > 3
-            #endif // EXTRUDERS > 2
-        #endif // EXTRUDERS > 1
-        }
+        Planner::manage_extruders(extruder);
     }
 
     block->acceleration = acceleration;

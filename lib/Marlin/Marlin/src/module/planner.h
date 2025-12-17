@@ -373,6 +373,7 @@ class Planner {
      * Counters to manage disabling inactive extruders
      */
     static uint8_t g_uc_extruder_last_move[EXTRUDERS];
+    static void manage_extruders(uint8_t extruder);
 
     #ifdef XY_FREQUENCY_LIMIT
       // Used for the frequency limit

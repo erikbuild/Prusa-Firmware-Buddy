@@ -194,11 +194,11 @@ void safe_delay_keep_alive(uint16_t t) {
 }
 
 void Enable_E0() {
-    enable_E0();
+    enable_E(0);
 }
 
 void Disable_E0() {
-    disable_E0();
+    disable_E(0);
 }
 
 bool all_axes_homed() {
