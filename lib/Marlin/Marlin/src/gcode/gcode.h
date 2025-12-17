@@ -192,7 +192,6 @@
  * M602 - Unpark print-head parked with M601 called before and unpause print process.
  * M603 - Configure filament change: "M603 T<tool> U<unload_length> L<load_length>".
  * M604 - Abort (serial) print
- * M605 - Set Dual X-Carriage movement mode: "M605 S<mode> [X<x_offset>] [R<temp_offset>]". (Requires MULTI_NOZZLE_DUPLICATION)
  * M666 - Set/get offsets for dual endstops (Requires [XYZ]_DUAL_ENDSTOPS).
  * M701 - Load filament
  * M702 - Unload filament
@@ -697,10 +696,6 @@ private:
     static void M603();
   #endif
   static void M604();
-
-  #if HAS_DUPLICATION_MODE
-    static void M605();
-  #endif
 
   #if HAS_EXTRA_ENDSTOPS
     static void M666();

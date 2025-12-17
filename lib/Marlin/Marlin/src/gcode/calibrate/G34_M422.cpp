@@ -138,10 +138,6 @@ void GcodeSuite::G34() {
       tool_change(0, true);
     #endif
 
-    #if HAS_DUPLICATION_MODE
-      extruder_duplication_enabled = false;
-    #endif
-
     #if BOTH(BLTOUCH, BLTOUCH_HS_MODE)
         // In BLTOUCH HS mode, the probe travels in a deployed state.
         // Users of G34 might have a badly misaligned bed, so raise Z by the

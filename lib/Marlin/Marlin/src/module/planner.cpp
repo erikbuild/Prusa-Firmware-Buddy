@@ -1411,12 +1411,6 @@ bool Planner::_populate_block(block_t * const block,
           #endif // EXTRUDERS > 1
           enable_E0();
           g_uc_extruder_last_move[0] = (BLOCK_BUFFER_SIZE) * 2;
-          #if HAS_DUPLICATION_MODE
-            if (extruder_duplication_enabled) {
-              enable_E1();
-              g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
-            }
-          #endif
         break;
         #if EXTRUDERS > 1
           case 1:
@@ -2123,12 +2117,6 @@ bool Planner::populate_raw_block(block_t *const block, const abce_long_t &target
         #endif // EXTRUDERS > 1
             enable_E0();
             g_uc_extruder_last_move[0] = (BLOCK_BUFFER_SIZE) * 2;
-        #if HAS_DUPLICATION_MODE
-            if (extruder_duplication_enabled) {
-                enable_E1();
-                g_uc_extruder_last_move[1] = (BLOCK_BUFFER_SIZE) * 2;
-            }
-        #endif
             break;
         #if EXTRUDERS > 1
         case 1:

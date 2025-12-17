@@ -581,10 +581,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
 
       case 604: M604(); break;                                    // M604: Abort (serial) print
 
-      #if HAS_DUPLICATION_MODE
-        case 605: M605(); break;                                  // M605: Set Dual X Carriage movement mode
-      #endif
-
       case 701: M701(); break;                                    // M701: Load Filament
       case 702: M702(); break;                                    // M702: Unload Filament
 

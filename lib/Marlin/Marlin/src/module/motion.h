@@ -441,29 +441,6 @@ inline bool position_is_reachable(const xy_pos_t &pos) { return position_is_reac
 FORCE_INLINE bool position_is_reachable_by_probe(const xy_int_t &pos) { return position_is_reachable_by_probe(pos.x, pos.y); }
 FORCE_INLINE bool position_is_reachable_by_probe(const xy_pos_t &pos) { return position_is_reachable_by_probe(pos.x, pos.y); }
 
-/**
- * Duplication mode
- */
-#if HAS_DUPLICATION_MODE
-  extern bool extruder_duplication_enabled,       // Used in Dual X mode 2
-              mirrored_duplication_mode;          // Used in Dual X mode 3
-  #if ENABLED(MULTI_NOZZLE_DUPLICATION)
-    extern uint8_t duplication_e_mask;
-  #endif
-#endif
-
-#if ENABLED(MULTI_NOZZLE_DUPLICATION)
-
-  enum DualXMode : char {
-    DXC_DUPLICATION_MODE = 2
-  };
-
-#else
-
-  #define TOOL_X_HOME_DIR(T) X_HOME_DIR
-
-#endif
-
 #if HAS_M206_COMMAND
   void set_home_offset(const AxisEnum axis, const float v);
 #endif

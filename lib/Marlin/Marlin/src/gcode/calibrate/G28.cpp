@@ -123,7 +123,7 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
     current_position.set(0.0, 0.0);
     sync_plan_position();
 
-    const int x_axis_home_dir = TOOL_X_HOME_DIR(active_extruder);
+    const int x_axis_home_dir = X_HOME_DIR;
 
     const float speed_ratio = homing_feedrate(X_AXIS) / homing_feedrate(Y_AXIS);
     const float speed_ratio_inv = homing_feedrate(Y_AXIS) / homing_feedrate(X_AXIS);
@@ -645,9 +645,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
     const uint8_t old_tool_index = active_extruder;
     tool_change(0, tool_return_t::no_return);
   #endif
-
-
-  TERN_(HAS_DUPLICATION_MODE, set_duplication_enabled(false));
 
   // Disable phase stepping/PA just before homing XY. This will synchronize only if needed
   phase_stepping::EnsureSuitableForHoming phstep_disabler;

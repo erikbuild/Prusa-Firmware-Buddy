@@ -284,8 +284,6 @@
   #error "TMC_Z_CALIBRATION has been deprecated in favor of Z_STEPPER_AUTO_ALIGN. Please update your configuration."
 #elif defined(Z_MIN_PROBE_ENDSTOP)
   #error "Z_MIN_PROBE_ENDSTOP is no longer required. Please remove it from Configuration.h."
-#elif defined(DUAL_NOZZLE_DUPLICATION_MODE)
-  #error "DUAL_NOZZLE_DUPLICATION_MODE is now MULTI_NOZZLE_DUPLICATION. Please update your configuration."
 #elif defined(MENU_ITEM_CASE_LIGHT)
   #error "MENU_ITEM_CASE_LIGHT is now CASE_LIGHT_MENU. Please update your configuration."
 #elif defined(ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED)
@@ -877,17 +875,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #error "TEMP_SENSOR_4 shouldn't be set with only 1 HOTEND."
 #elif TEMP_SENSOR_5 != 0
   #error "TEMP_SENSOR_5 shouldn't be set with only 1 HOTEND."
-#endif
-
-/**
- * Basic multi hotend duplication mode
- */
-#if ENABLED(MULTI_NOZZLE_DUPLICATION)
-  #if HOTENDS < 2
-    #error "MULTI_NOZZLE_DUPLICATION requires 2 or more hotends."
-  #elif ENABLED(SINGLENOZZLE)
-    #error "MULTI_NOZZLE_DUPLICATION is incompatible with SINGLENOZZLE."
-  #endif
 #endif
 
   #if E_STEPPERS
