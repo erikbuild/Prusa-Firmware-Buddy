@@ -191,7 +191,7 @@
     #include <feature/auto_retract/auto_retract.hpp>
 #endif
 
-#include <feature/retract_tracker/retract_tracker.hpp>
+#include <feature/filament_tracker/filament_tracker.hpp>
 
 #include <option/buddy_enable_wui.h>
 #if BUDDY_ENABLE_WUI()
@@ -905,11 +905,11 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
 
 #if HAS_AUTO_RETRACT()
     // During multi tool printing, slicer handles retraction/ramming and keeps FW in the dark
-    // RetractTracker keeps track of retracted distances on each hotend
-    // This overwrites retracted distances in persistent storage with temporary ones from RetractTracker
+    // FilamentTracker keeps track of retracted distances on each hotend
+    // This overwrites retracted distances in persistent storage with temporary ones from FilamentTracker
     for (auto tool : PhysicalToolIndex::all()) {
-        const auto dist = buddy::retract_tracker().get_retracted_distance(tool);
-        // Do not save retract_tracker value before it was validated
+        const auto dist = buddy::filament_tracker().get_retracted_distance(tool);
+        // Do not save filament_tracker value before it was validated
         if (dist.has_value()) {
             // update only used hotends
             buddy::auto_retract().set_retracted_distance(tool.to_raw(), dist);
@@ -919,7 +919,7 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
 
 #if HAS_MMU2()
     if (MMU2::mmu2.Enabled()) {
-        // Unloading from nozzle is handled by Slicer, do not use auto_retract (frequent filament changes cause retract_tracker cannot properly hold valid value)
+        // Unloading from nozzle is handled by Slicer, do not use auto_retract (frequent filament changes cause filament_tracker cannot properly hold valid value)
         // When we are running single-filament gcode with MMU, we should unload current filament.
         if (!finished || GCodeInfo::getInstance().is_singletool_gcode()) {
             safely_unload_filament_from_nozzle_to_mmu();

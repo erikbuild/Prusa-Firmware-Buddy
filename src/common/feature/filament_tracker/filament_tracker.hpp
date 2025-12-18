@@ -21,8 +21,8 @@ namespace buddy {
  *  Retracted distances are saved in range < 0 ; 254 > (mm)
  *  Value 255 is reserved as invalid / unknown value
  */
-class RetractTracker : Uncopyable {
-    friend RetractTracker &retract_tracker();
+class FilamentTracker : Uncopyable {
+    friend FilamentTracker &filament_tracker();
 
 public:
 #if HAS_NEXTRUDER()
@@ -38,11 +38,11 @@ public:
     std::optional<float> get_retracted_distance(PhysicalToolIndex physical_tool) const;
 
 private:
-    RetractTracker();
+    FilamentTracker();
     StrongIndexArray<float, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> retracted_distances;
     std::bitset<PhysicalToolIndex::count> distance_valid; ///< The hotend validates  by traveling at least +extruder_to_nozzle_distance
 };
 
-RetractTracker &retract_tracker();
+FilamentTracker &filament_tracker();
 
 } // namespace buddy
