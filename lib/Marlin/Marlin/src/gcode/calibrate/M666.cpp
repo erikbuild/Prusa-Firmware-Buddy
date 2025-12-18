@@ -22,14 +22,14 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if HAS_EXTRA_ENDSTOPS
+#if ENABLED(Z_TRIPLE_ENDSTOPS)
 
 #include "../gcode.h"
 
   #include "../../module/endstops.h"
 
   /**
-   * M666: Set Dual Endstops offsets for X, Y, and/or Z.
+   * M666: Set Triple Endstops offsets for Z.
    *       With no parameters report current offsets.
    *
    * For Triple Z Endstops:
@@ -38,38 +38,17 @@
    *      Set Both: M666 Z<offset>
    */
   void GcodeSuite::M666() {
-    #if ENABLED(X_DUAL_ENDSTOPS)
-      if (parser.seenval('X')) endstops.x2_endstop_adj = parser.value_linear_units();
-    #endif
-    #if ENABLED(Y_DUAL_ENDSTOPS)
-      if (parser.seenval('Y')) endstops.y2_endstop_adj = parser.value_linear_units();
-    #endif
-    #if ENABLED(Z_TRIPLE_ENDSTOPS)
-      if (parser.seenval('Z')) {
-        const float z_adj = parser.value_linear_units();
-        const int ind = parser.intval('S');
-        if (!ind || ind == 2) endstops.z2_endstop_adj = z_adj;
-        if (!ind || ind == 3) endstops.z3_endstop_adj = z_adj;
-      }
-    #elif Z_MULTI_ENDSTOPS
-      if (parser.seen('Z')) endstops.z2_endstop_adj = parser.value_linear_units();
-    #endif
-    if (!parser.seen("XYZ")) {
-      SERIAL_ECHOPGM("Dual Endstop Adjustment (mm): ");
-      #if ENABLED(X_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" X2:", endstops.x2_endstop_adj);
-      #endif
-      #if ENABLED(Y_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" Y2:", endstops.y2_endstop_adj);
-      #endif
-      #if Z_MULTI_ENDSTOPS
-        SERIAL_ECHOPAIR(" Z2:", endstops.z2_endstop_adj);
-      #endif
-      #if ENABLED(Z_TRIPLE_ENDSTOPS)
-        SERIAL_ECHOPAIR(" Z3:", endstops.z3_endstop_adj);
-      #endif
+    if (parser.seenval('Z')) {
+      const float z_adj = parser.value_linear_units();
+      const int ind = parser.intval('S');
+      if (!ind || ind == 2) endstops.z2_endstop_adj = z_adj;
+      if (!ind || ind == 3) endstops.z3_endstop_adj = z_adj;
+    } else {
+      SERIAL_ECHOPGM("Triple Endstop Adjustment (mm): ");
+      SERIAL_ECHOPAIR(" Z2:", endstops.z2_endstop_adj);
+      SERIAL_ECHOPAIR(" Z3:", endstops.z3_endstop_adj);
       SERIAL_EOL();
     }
   }
 
-#endif // HAS_EXTRA_ENDSTOPS
+#endif

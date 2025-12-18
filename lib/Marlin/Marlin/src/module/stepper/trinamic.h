@@ -114,30 +114,6 @@ extern TMC_CLASS(Z, Z) stepperZ;
     #endif
 #endif
 
-// X2 Stepper
-#if HAS_X2_ENABLE && AXIS_IS_TMC(X2)
-extern TMC_CLASS(X2, X) stepperX2;
-    #if AXIS_HAS_SQUARE_WAVE(X2)
-        #define X2_STEP_WRITE(STATE)     \
-            do {                         \
-                if (STATE)               \
-                    TOGGLE(X2_STEP_PIN); \
-            } while (0)
-    #endif
-#endif
-
-// Y2 Stepper
-#if HAS_Y2_ENABLE && AXIS_IS_TMC(Y2)
-extern TMC_CLASS(Y2, Y) stepperY2;
-    #if AXIS_HAS_SQUARE_WAVE(Y2)
-        #define Y2_STEP_WRITE(STATE)     \
-            do {                         \
-                if (STATE)               \
-                    TOGGLE(Y2_STEP_PIN); \
-            } while (0)
-    #endif
-#endif
-
 // Z2 Stepper
 #if HAS_Z2_ENABLE && AXIS_IS_TMC(Z2)
 extern TMC_CLASS(Z2, Z) stepperZ2;

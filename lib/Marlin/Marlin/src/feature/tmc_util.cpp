@@ -398,12 +398,6 @@ uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float f
       #if AXIS_IS_TMC(Z)
         monitor_tmc_driver(stepperZ, need_update_error_counters, need_debug_reporting);
       #endif
-      #if AXIS_IS_TMC(X2)
-        monitor_tmc_driver(stepperX2, need_update_error_counters, need_debug_reporting);
-      #endif
-      #if AXIS_IS_TMC(Y2)
-        monitor_tmc_driver(stepperY2, need_update_error_counters, need_debug_reporting);
-      #endif
       #if AXIS_IS_TMC(Z2)
         monitor_tmc_driver(stepperZ2, need_update_error_counters, need_debug_reporting);
       #endif
@@ -723,17 +717,11 @@ uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float f
       #if AXIS_IS_TMC(X)
         tmc_status(stepperX, i);
       #endif
-      #if AXIS_IS_TMC(X2)
-        tmc_status(stepperX2, i);
-      #endif
     }
 
     if (print_y) {
       #if AXIS_IS_TMC(Y)
         tmc_status(stepperY, i);
-      #endif
-      #if AXIS_IS_TMC(Y2)
-        tmc_status(stepperY2, i);
       #endif
     }
 
@@ -778,17 +766,11 @@ uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float f
       #if AXIS_IS_TMC(X)
         tmc_parse_drv_status(stepperX, i);
       #endif
-      #if AXIS_IS_TMC(X2)
-        tmc_parse_drv_status(stepperX2, i);
-      #endif
     }
 
     if (print_y) {
       #if AXIS_IS_TMC(Y)
         tmc_parse_drv_status(stepperY, i);
-      #endif
-      #if AXIS_IS_TMC(Y2)
-        tmc_parse_drv_status(stepperY2, i);
       #endif
     }
 
@@ -953,17 +935,11 @@ uint32_t tmc_feedrate_to_period(AxisEnum axis_id, uint16_t msteps, const float f
       #if AXIS_IS_TMC(X)
         tmc_get_registers(stepperX, i);
       #endif
-      #if AXIS_IS_TMC(X2)
-        tmc_get_registers(stepperX2, i);
-      #endif
     }
 
     if (print_y) {
       #if AXIS_IS_TMC(Y)
         tmc_get_registers(stepperY, i);
-      #endif
-      #if AXIS_IS_TMC(Y2)
-        tmc_get_registers(stepperY2, i);
       #endif
     }
 
@@ -1116,17 +1092,11 @@ void test_tmc_connection(const bool test_x, const bool test_y, const bool test_z
     #if AXIS_IS_TMC(X)
       axis_connection += test_connection(stepperX);
     #endif
-    #if AXIS_IS_TMC(X2)
-      axis_connection += test_connection(stepperX2);
-    #endif
   }
 
   if (test_y) {
     #if AXIS_IS_TMC(Y)
       axis_connection += test_connection(stepperY);
-    #endif
-    #if AXIS_IS_TMC(Y2)
-      axis_connection += test_connection(stepperY2);
     #endif
   }
 

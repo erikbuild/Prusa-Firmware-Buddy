@@ -84,14 +84,8 @@ enum StealthIndex : uint8_t { STEALTH_AXIS_XY,
 #if AXIS_HAS_SPI(X)
 TMC_SPI_DEFINE(X, X);
 #endif
-#if AXIS_HAS_SPI(X2)
-TMC_SPI_DEFINE(X2, X);
-#endif
 #if AXIS_HAS_SPI(Y)
 TMC_SPI_DEFINE(Y, Y);
-#endif
-#if AXIS_HAS_SPI(Y2)
-TMC_SPI_DEFINE(Y2, Y);
 #endif
 #if AXIS_HAS_SPI(Z)
 TMC_SPI_DEFINE(Z, Z);
@@ -252,25 +246,11 @@ TMC_UART_DEFINE(HW, X, X);
 TMC_UART_DEFINE(SW, X, X);
         #endif
     #endif
-    #if AXIS_HAS_UART(X2)
-        #ifdef X2_HARDWARE_SERIAL
-TMC_UART_DEFINE(HW, X2, X);
-        #else
-TMC_UART_DEFINE(SW, X2, X);
-        #endif
-    #endif
     #if AXIS_HAS_UART(Y)
         #ifdef Y_HARDWARE_SERIAL
 TMC_UART_DEFINE(HW, Y, Y);
         #else
 TMC_UART_DEFINE(SW, Y, Y);
-        #endif
-    #endif
-    #if AXIS_HAS_UART(Y2)
-        #ifdef Y2_HARDWARE_SERIAL
-TMC_UART_DEFINE(HW, Y2, Y);
-        #else
-TMC_UART_DEFINE(SW, Y2, Y);
         #endif
     #endif
     #if AXIS_HAS_UART(Z)
@@ -345,25 +325,11 @@ void tmc_serial_begin() {
     stepperX.beginSerial(115200);
         #endif
     #endif
-    #if AXIS_HAS_UART(X2)
-        #ifdef X2_HARDWARE_SERIAL
-    X2_HARDWARE_SERIAL.begin(115200);
-        #else
-    stepperX2.beginSerial(115200);
-        #endif
-    #endif
     #if AXIS_HAS_UART(Y)
         #ifdef Y_HARDWARE_SERIAL
     Y_HARDWARE_SERIAL.begin(115200);
         #else
     stepperY.beginSerial(115200);
-        #endif
-    #endif
-    #if AXIS_HAS_UART(Y2)
-        #ifdef Y2_HARDWARE_SERIAL
-    Y2_HARDWARE_SERIAL.begin(115200);
-        #else
-    stepperY2.beginSerial(115200);
         #endif
     #endif
     #if AXIS_HAS_UART(Z)
@@ -638,14 +604,8 @@ void restore_trinamic_drivers() {
 #if AXIS_IS_TMC(X)
     stepperX.push();
 #endif
-#if AXIS_IS_TMC(X2)
-    stepperX2.push();
-#endif
 #if AXIS_IS_TMC(Y)
     stepperY.push();
-#endif
-#if AXIS_IS_TMC(Y2)
-    stepperY2.push();
 #endif
 #if AXIS_IS_TMC(Z)
     stepperZ.push();
@@ -713,18 +673,12 @@ void reset_trinamic_drivers() {
     tmc_init(stepperX, get_default_rms_current_ma_x(), get_microsteps_x(), X_HYBRID_THRESHOLD, stealthchop_by_axis[STEALTH_AXIS_XY]);
     #endif
 #endif
-#if AXIS_IS_TMC(X2)
-    _TMC_INIT(X2, STEALTH_AXIS_XY);
-#endif
 #if AXIS_IS_TMC(Y)
     #if DISABLED(USE_PRUSA_EEPROM_AS_SOURCE_OF_DEFAULT_VALUES)
     _TMC_INIT(Y, STEALTH_AXIS_XY);
     #else
     tmc_init(stepperY, get_default_rms_current_ma_y(), get_microsteps_y(), Y_HYBRID_THRESHOLD, stealthchop_by_axis[STEALTH_AXIS_XY]);
     #endif
-#endif
-#if AXIS_IS_TMC(Y2)
-    _TMC_INIT(Y2, STEALTH_AXIS_XY);
 #endif
 #if AXIS_IS_TMC(Z)
     #if DISABLED(USE_PRUSA_EEPROM_AS_SOURCE_OF_DEFAULT_VALUES)
@@ -767,19 +721,10 @@ void reset_trinamic_drivers() {
         #if AXIS_HAS_STALLGUARD(X)
     stepperX.stall_sensitivity(X_STALL_SENSITIVITY);
         #endif
-        #if AXIS_HAS_STALLGUARD(X2) && !X2_SENSORLESS
-    stepperX2.stall_sensitivity(X_STALL_SENSITIVITY);
-        #endif
-    #endif
-    #if X2_SENSORLESS
-    stepperX2.stall_sensitivity(X2_STALL_SENSITIVITY);
     #endif
     #if Y_SENSORLESS
         #if AXIS_HAS_STALLGUARD(Y)
     stepperY.stall_sensitivity(Y_STALL_SENSITIVITY);
-        #endif
-        #if AXIS_HAS_STALLGUARD(Y2)
-    stepperY2.stall_sensitivity(Y_STALL_SENSITIVITY);
         #endif
     #endif
     #if Z_SENSORLESS
@@ -814,17 +759,9 @@ TMCStepperType &stepper_axis(const AxisEnum axis) {
     case X_AXIS:
         return stepperX;
 #endif
-#if AXIS_IS_TMC(X2)
-    case X2_AXIS:
-        return stepperX2;
-#endif
 #if AXIS_IS_TMC(Y)
     case Y_AXIS:
         return stepperY;
-#endif
-#if AXIS_IS_TMC(Y2)
-    case Y2_AXIS:
-        return stepperY2;
 #endif
 #if AXIS_IS_TMC(Z)
     case Z_AXIS:

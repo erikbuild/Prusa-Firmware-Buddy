@@ -43,7 +43,7 @@ void tmc_set_stealthChop(TMC &st, const bool enable) {
 
 static void set_stealth_status(const bool enable, const int8_t target_extruder) {
 
-  #if AXIS_HAS_STEALTHCHOP(X) || AXIS_HAS_STEALTHCHOP(X2) || AXIS_HAS_STEALTHCHOP(Y) || AXIS_HAS_STEALTHCHOP(Y2) || AXIS_HAS_STEALTHCHOP(Z) || AXIS_HAS_STEALTHCHOP(Z2) || AXIS_HAS_STEALTHCHOP(Z3)
+  #if AXIS_HAS_STEALTHCHOP(X) || AXIS_HAS_STEALTHCHOP(Y) || AXIS_HAS_STEALTHCHOP(Z) || AXIS_HAS_STEALTHCHOP(Z2) || AXIS_HAS_STEALTHCHOP(Z3)
     const uint8_t index = parser.byteval('I');
   #endif
   #if defined(DEFAULT_MAX_FEEDRATE_STEALTHCHOP)
@@ -63,16 +63,10 @@ static void set_stealth_status(const bool enable, const int8_t target_extruder) 
         #if AXIS_HAS_STEALTHCHOP(X)
           if (index == 0) TMC_SET_STEALTH(X, i);
         #endif
-        #if AXIS_HAS_STEALTHCHOP(X2)
-          if (index == 1) TMC_SET_STEALTH(X2, i);
-        #endif
         break;
       case Y_AXIS:
         #if AXIS_HAS_STEALTHCHOP(Y)
           if (index == 0) TMC_SET_STEALTH(Y, i);
-        #endif
-        #if AXIS_HAS_STEALTHCHOP(Y2)
-          if (index == 1) TMC_SET_STEALTH(Y2, i);
         #endif
         break;
       case Z_AXIS:
@@ -120,14 +114,8 @@ static void say_stealth_status() {
   #if AXIS_HAS_STEALTHCHOP(X)
     TMC_SAY_STEALTH_STATUS(X);
   #endif
-  #if AXIS_HAS_STEALTHCHOP(X2)
-    TMC_SAY_STEALTH_STATUS(X2);
-  #endif
   #if AXIS_HAS_STEALTHCHOP(Y)
     TMC_SAY_STEALTH_STATUS(Y);
-  #endif
-  #if AXIS_HAS_STEALTHCHOP(Y2)
-    TMC_SAY_STEALTH_STATUS(Y2);
   #endif
   #if AXIS_HAS_STEALTHCHOP(Z)
     TMC_SAY_STEALTH_STATUS(Z);

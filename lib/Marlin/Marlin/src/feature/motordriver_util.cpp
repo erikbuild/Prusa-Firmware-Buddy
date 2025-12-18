@@ -48,12 +48,6 @@ void motor_driver_init() {
     #if AXIS_HAS_SPI(Z)
     SET_CS_PIN(Z);
     #endif
-    #if AXIS_HAS_SPI(X2)
-    SET_CS_PIN(X2);
-    #endif
-    #if AXIS_HAS_SPI(Y2)
-    SET_CS_PIN(Y2);
-    #endif
     #if AXIS_HAS_SPI(Z2)
     SET_CS_PIN(Z2);
     #endif

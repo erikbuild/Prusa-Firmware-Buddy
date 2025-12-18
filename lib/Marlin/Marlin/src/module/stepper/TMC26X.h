@@ -63,22 +63,6 @@ void tmc26x_init_to_defaults();
   #define Z_ENABLE_READ() stepperZ.isEnabled()
 #endif
 
-// X2 Stepper
-#if HAS_X2_ENABLE && AXIS_DRIVER_TYPE_X2(TMC26X)
-  extern TMC26XStepper stepperX2;
-  #define X2_ENABLE_INIT NOOP
-  #define X2_ENABLE_WRITE(STATE) stepperX2.setEnabled(STATE)
-  #define X2_ENABLE_READ() stepperX2.isEnabled()
-#endif
-
-// Y2 Stepper
-#if HAS_Y2_ENABLE && AXIS_DRIVER_TYPE_Y2(TMC26X)
-  extern TMC26XStepper stepperY2;
-  #define Y2_ENABLE_INIT NOOP
-  #define Y2_ENABLE_WRITE(STATE) stepperY2.setEnabled(STATE)
-  #define Y2_ENABLE_READ() stepperY2.isEnabled()
-#endif
-
 // Z2 Stepper
 #if HAS_Z2_ENABLE && AXIS_DRIVER_TYPE_Z2(TMC26X)
   extern TMC26XStepper stepperZ2;

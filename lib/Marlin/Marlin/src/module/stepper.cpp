@@ -82,7 +82,7 @@ Stepper stepper; // Singleton
 
 // public:
 
-#if HAS_EXTRA_ENDSTOPS || ENABLED(Z_STEPPER_AUTO_ALIGN)
+#if ENABLED(Z_TRIPLE_ENDSTOPS) || ENABLED(Z_STEPPER_AUTO_ALIGN)
 bool Stepper::separate_multi_axis = false;
 #endif
 
@@ -180,18 +180,12 @@ void Stepper::init() {
 #if HAS_X_DIR
     X_DIR_INIT;
 #endif
-#if HAS_X2_DIR
-    X2_DIR_INIT;
-#endif
 #if HAS_Y_DIR
     Y_DIR_INIT;
-    #if ENABLED(Y_DUAL_STEPPER_DRIVERS) && HAS_Y2_DIR
-    Y2_DIR_INIT;
-    #endif
 #endif
 #if HAS_Z_DIR
     Z_DIR_INIT;
-    #if Z_MULTI_STEPPER_DRIVERS && HAS_Z2_DIR
+    #if ENABLED(Z_TRIPLE_STEPPER_DRIVERS) && HAS_Z2_DIR
     Z2_DIR_INIT;
     #endif
     #if ENABLED(Z_TRIPLE_STEPPER_DRIVERS) && HAS_Z3_DIR
@@ -223,12 +217,6 @@ void Stepper::init() {
     if (!X_ENABLE_ON) {
         X_ENABLE_WRITE(HIGH);
     }
-    #if ENABLED(X_DUAL_STEPPER_DRIVERS) && HAS_X2_ENABLE
-    X2_ENABLE_INIT;
-    if (!X_ENABLE_ON) {
-        X2_ENABLE_WRITE(HIGH);
-    }
-    #endif
 #endif
 #if DISABLED(XY_LINKED_ENABLE)
     #if HAS_Y_ENABLE
@@ -236,12 +224,6 @@ void Stepper::init() {
     if (!Y_ENABLE_ON) {
         Y_ENABLE_WRITE(HIGH);
     }
-        #if ENABLED(Y_DUAL_STEPPER_DRIVERS) && HAS_Y2_ENABLE
-    Y2_ENABLE_INIT;
-    if (!Y_ENABLE_ON) {
-        Y2_ENABLE_WRITE(HIGH);
-    }
-        #endif
     #endif
 #endif
 #if HAS_Z_ENABLE
@@ -249,7 +231,7 @@ void Stepper::init() {
     if (!Z_ENABLE_ON) {
         Z_ENABLE_WRITE(HIGH);
     }
-    #if Z_MULTI_STEPPER_DRIVERS && HAS_Z2_ENABLE
+    #if ENABLED(Z_TRIPLE_STEPPER_DRIVERS) && HAS_Z2_ENABLE
     Z2_ENABLE_INIT;
     if (!Z_ENABLE_ON) {
         Z2_ENABLE_WRITE(HIGH);
@@ -312,10 +294,6 @@ void Stepper::init() {
 
 // Init Step Pins
 #if HAS_X_STEP
-    #if ENABLED(X_DUAL_STEPPER_DRIVERS)
-    X2_STEP_INIT;
-    X2_STEP_WRITE(INVERT_X_STEP_PIN);
-    #endif
     AXIS_INIT(X, X);
     #if ENABLED(XY_LINKED_ENABLE)
     _DISABLE(XY);
@@ -325,10 +303,6 @@ void Stepper::init() {
 #endif
 
 #if HAS_Y_STEP
-    #if ENABLED(Y_DUAL_STEPPER_DRIVERS)
-    Y2_STEP_INIT;
-    Y2_STEP_WRITE(INVERT_Y_STEP_PIN);
-    #endif
     AXIS_INIT(Y, Y);
     #if ENABLED(XY_LINKED_ENABLE)
     _DISABLE(XY);
@@ -338,7 +312,7 @@ void Stepper::init() {
 #endif
 
 #if HAS_Z_STEP
-    #if Z_MULTI_STEPPER_DRIVERS
+    #if ENABLED(Z_TRIPLE_STEPPER_DRIVERS)
     Z2_STEP_INIT;
     Z2_STEP_WRITE(INVERT_Z_STEP_PIN);
     #endif
@@ -556,16 +530,10 @@ void Stepper::microstep_mode(const uint8_t driver, const uint8_t stepping) {
     #if AXIS_IS_TMC(X)
         stepperX.microsteps(stepping);
     #endif
-    #if AXIS_IS_TMC(X2)
-        stepperX2.microsteps(stepping);
-    #endif
         break;
     case 1:
     #if AXIS_IS_TMC(Y)
         stepperY.microsteps(stepping);
-    #endif
-    #if AXIS_IS_TMC(Y2)
-        stepperY2.microsteps(stepping);
     #endif
         break;
     case 2:
@@ -614,20 +582,9 @@ void Stepper::microstep_readings() {
     snprintf(msg, 7, "%u\n", stepperX.microsteps());
     SERIAL_ECHOPGM(msg);
     #endif
-    #if AXIS_IS_TMC(X2)
-    SERIAL_ECHOPGM("X2:");
-    snprintf(msg, 7, "%u\n", stepperX2.microsteps());
-    stepperX2.microsteps();
-    SERIAL_ECHOPGM(msg);
-    #endif
     #if AXIS_IS_TMC(Y)
     SERIAL_ECHOPGM("Y:");
     snprintf(msg, 7, "%u\n", stepperY.microsteps());
-    SERIAL_ECHOPGM(msg);
-    #endif
-    #if AXIS_IS_TMC(Y2)
-    SERIAL_ECHOPGM("Y2:");
-    snprintf(msg, 7, "%u\n", stepperY2.microsteps());
     SERIAL_ECHOPGM(msg);
     #endif
     #if AXIS_IS_TMC(Z)

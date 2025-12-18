@@ -145,8 +145,8 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
           TERN0(Y_SENSORLESS, enable_crash_detection(Y_AXIS)),
           false, false, false, false
         )
-        , TERN0(X2_SENSORLESS, enable_crash_detection(X2_AXIS))
-        , TERN0(Y2_SENSORLESS, enable_crash_detection(Y2_AXIS))
+        , 0
+        , 0
       };
 
       #if ENABLED(CRASH_RECOVERY)
@@ -169,9 +169,7 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
         UNUSED(stealth_states);
       #else
         TERN_(X_SENSORLESS, disable_crash_detection(X_AXIS, stealth_states.x));
-        TERN_(X2_SENSORLESS, disable_crash_detection(X2_AXIS, stealth_states.x2));
         TERN_(Y_SENSORLESS, disable_crash_detection(Y_AXIS, stealth_states.y));
-        TERN_(Y2_SENSORLESS, disable_crash_detection(Y2_AXIS, stealth_states.y2));
       #endif
     #endif
   }
@@ -526,7 +524,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   TERN_(CNC_WORKSPACE_PLANES, workspace_plane = PLANE_XY);
 
   #define HAS_CURRENT_HOME(N) (defined(N##_CURRENT_HOME) && N##_CURRENT_HOME != N##_CURRENT)
-  #if HAS_CURRENT_HOME(X) || HAS_CURRENT_HOME(X2) || HAS_CURRENT_HOME(Y) || HAS_CURRENT_HOME(Y2) || HAS_CURRENT_HOME(I) || HAS_CURRENT_HOME(J) || HAS_CURRENT_HOME(K) || HAS_CURRENT_HOME(U) || HAS_CURRENT_HOME(V) || HAS_CURRENT_HOME(W)
+  #if HAS_CURRENT_HOME(X) || HAS_CURRENT_HOME(Y) || HAS_CURRENT_HOME(I) || HAS_CURRENT_HOME(J) || HAS_CURRENT_HOME(K) || HAS_CURRENT_HOME(U) || HAS_CURRENT_HOME(V) || HAS_CURRENT_HOME(W)
     #define HAS_HOMING_CURRENT 1
   #endif
 
@@ -541,25 +539,11 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
         if (DEBUGGING(LEVELING)) debug_current(F(STR_X), tmc_save_current_X, X_CURRENT_HOME);
       }
     #endif
-    #if HAS_CURRENT_HOME(X2)
-      const int16_t tmc_save_current_X2 = stepperX2.getMilliamps();
-      if(!no_change) {
-        stepperX2.rms_current(X2_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_X2), tmc_save_current_X2, X2_CURRENT_HOME);
-      }
-    #endif
     #if HAS_CURRENT_HOME(Y)
       const int16_t tmc_save_current_Y = stepperY.getMilliamps();
       if(!flags.no_change) {
         stepperY.rms_current(Y_CURRENT_HOME);
         if (DEBUGGING(LEVELING)) debug_current(F(STR_Y), tmc_save_current_Y, Y_CURRENT_HOME);
-      }
-    #endif
-    #if HAS_CURRENT_HOME(Y2)
-      const int16_t tmc_save_current_Y2 = stepperY2.getMilliamps();
-      if(!no_change) {
-        stepperY2.rms_current(Y2_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_Y2), tmc_save_current_Y2, Y2_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(I)
@@ -765,7 +749,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   // Home Z last if homing towards the bed
   #if HAS_Z_AXIS && DISABLED(HOME_Z_FIRST)
     if (!failed && should_home_at_all(Z_AXIS)) {
-      #if EITHER(Z_MULTI_ENDSTOPS, Z_STEPPER_AUTO_ALIGN)
+      #if EITHER(Z_TRIPLE_ENDSTOPS, Z_STEPPER_AUTO_ALIGN)
         stepper.set_all_z_lock(false);
         stepper.set_separate_multi_axis(false);
       #endif
@@ -891,14 +875,8 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
     #if HAS_CURRENT_HOME(X)
       stepperX.rms_current(tmc_save_current_X);
     #endif
-    #if HAS_CURRENT_HOME(X2)
-      stepperX2.rms_current(tmc_save_current_X2);
-    #endif
     #if HAS_CURRENT_HOME(Y)
       stepperY.rms_current(tmc_save_current_Y);
-    #endif
-    #if HAS_CURRENT_HOME(Y2)
-      stepperY2.rms_current(tmc_save_current_Y2);
     #endif
     #if HAS_CURRENT_HOME(I)
       stepperI.rms_current(tmc_save_current_I);

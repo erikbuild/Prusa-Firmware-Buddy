@@ -143,9 +143,7 @@
   #define HAS_Y_AXIS 1
   #if NUM_AXES >= XYZ
     #define HAS_Z_AXIS 1
-    #ifdef Z4_DRIVER_TYPE
-      #define NUM_Z_STEPPERS 4
-    #elif defined(Z3_DRIVER_TYPE)
+    #if defined(Z3_DRIVER_TYPE)
       #define NUM_Z_STEPPERS 3
     #elif defined(Z2_DRIVER_TYPE)
       #define NUM_Z_STEPPERS 2
@@ -203,7 +201,6 @@
   #undef ENDSTOPPULLUP_YMAX
   #undef Y_MIN_ENDSTOP_INVERTING
   #undef Y_MAX_ENDSTOP_INVERTING
-  #undef Y2_DRIVER_TYPE
   #undef Y_ENABLE_ON
   #undef DISABLE_Y
   #undef INVERT_Y_DIR
@@ -223,7 +220,6 @@
   #undef Z_MAX_ENDSTOP_INVERTING
   #undef Z2_DRIVER_TYPE
   #undef Z3_DRIVER_TYPE
-  #undef Z4_DRIVER_TYPE
   #undef Z_ENABLE_ON
   #undef DISABLE_Z
   #undef INVERT_Z_DIR
@@ -338,18 +334,9 @@
   #undef SAFE_BED_LEVELING_START_W
 #endif
 
-#ifdef X2_DRIVER_TYPE
-  #define HAS_X2_STEPPER 1
-  // Dual X Carriage isn't known yet. TODO: Consider moving it to Configuration.h.
-#endif
-#ifdef Y2_DRIVER_TYPE
-  #define HAS_Y2_STEPPER 1
-  #define HAS_DUAL_Y_STEPPERS 1
-#endif
-
 /**
  * Number of Primary Linear Axes (e.g., XYZ)
- * X, XY, or XYZ axes. Excluding duplicate axes (X2, Y2. Z2. Z3, Z4)
+ * X, XY, or XYZ axes. Excluding duplicate axes (Z2, Z3)
  */
 #if NUM_AXES >= 3
   #define PRIMARY_LINEAR_AXES 3
@@ -387,7 +374,7 @@
 /**
  * Number of Secondary Linear Axes (e.g., UVW)
  * All secondary axes for which AXIS*_ROTATES is not defined.
- * Excluding primary axes and excluding duplicate axes (X2, Y2, Z2, Z3, Z4)
+ * Excluding primary axes and excluding duplicate axes (Z2, Z3)
  */
 #define SECONDARY_LINEAR_AXES (NUM_AXES - PRIMARY_LINEAR_AXES - ROTATIONAL_AXES)
 
@@ -519,12 +506,6 @@
 
 #define HAS_SOFTWARE_ENDSTOPS        EITHER(MIN_SOFTWARE_ENDSTOPS, MAX_SOFTWARE_ENDSTOPS)
 #define HAS_RESUME_CONTINUE          ANY(EXTENSIBLE_UI, EMERGENCY_PARSER)
-
-#define Z_MULTI_STEPPER_DRIVERS EITHER(Z_DUAL_STEPPER_DRIVERS, Z_TRIPLE_STEPPER_DRIVERS)
-#if EITHER(Z_DUAL_ENDSTOPS, Z_TRIPLE_ENDSTOPS)
-  #define Z_MULTI_ENDSTOPS 1
-#endif
-#define HAS_EXTRA_ENDSTOPS     (EITHER(X_DUAL_ENDSTOPS, Y_DUAL_ENDSTOPS) || Z_MULTI_ENDSTOPS)
 
 #if ENABLED(MORGAN_SCARA)
   #define IS_SCARA 1

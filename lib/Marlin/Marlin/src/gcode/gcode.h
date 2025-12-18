@@ -192,7 +192,7 @@
  * M602 - Unpark print-head parked with M601 called before and unpause print process.
  * M603 - Configure filament change: "M603 T<tool> U<unload_length> L<load_length>".
  * M604 - Abort (serial) print
- * M666 - Set/get offsets for dual endstops (Requires [XYZ]_DUAL_ENDSTOPS).
+ * M666 - Set/get offsets for triple endstops (Z_TRIPLE_ENDSTOPS).
  * M701 - Load filament
  * M702 - Unload filament
  * M851 - Set Z probe's XYZ offsets in current units. (Negative values: X=left, Y=front, Z=below)
@@ -697,7 +697,7 @@ private:
   #endif
   static void M604();
 
-  #if HAS_EXTRA_ENDSTOPS
+  #if ENABLED(Z_TRIPLE_ENDSTOPS)
     static void M666();
   #endif
 

@@ -55,12 +55,6 @@ bool Power::is_power_needed() {
     #if HAS_HEATED_BED
       || thermalManager.temp_bed.soft_pwm_amount > 0
     #endif
-      #if HAS_X2_ENABLE
-        || X2_ENABLE_READ() == X_ENABLE_ON
-      #endif
-      #if HAS_Y2_ENABLE
-        || Y2_ENABLE_READ() == Y_ENABLE_ON
-      #endif
       #if HAS_Z2_ENABLE
         || Z2_ENABLE_READ() == Z_ENABLE_ON
       #endif

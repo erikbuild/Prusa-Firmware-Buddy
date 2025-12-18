@@ -366,124 +366,7 @@
   #endif
 #endif
 
-/**
- * X_DUAL_ENDSTOPS endstop reassignment
- */
-#if ENABLED(X_DUAL_ENDSTOPS)
-  #if X_HOME_DIR > 0
-    #if X2_USE_ENDSTOP == _XMIN_
-
-      #define X2_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
-      #define X2_MAX_PIN X_MIN_PIN
-
-    #elif X2_USE_ENDSTOP == _XMAX_
-      #define X2_MAX_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
-      #define X2_MAX_PIN X_MAX_PIN
-    #elif X2_USE_ENDSTOP == _YMIN_
-      #define X2_MAX_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
-      #define X2_MAX_PIN Y_MIN_PIN
-    #elif X2_USE_ENDSTOP == _YMAX_
-      #define X2_MAX_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
-      #define X2_MAX_PIN Y_MAX_PIN
-    #elif X2_USE_ENDSTOP == _ZMIN_
-      #define X2_MAX_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
-      #define X2_MAX_PIN Z_MIN_PIN
-    #elif X2_USE_ENDSTOP == _ZMAX_
-      #define X2_MAX_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
-      #define X2_MAX_PIN Z_MAX_PIN
-    #else
-      #define X2_MAX_ENDSTOP_INVERTING false
-    #endif
-    #define X2_MIN_ENDSTOP_INVERTING false
-  #else
-    #if X2_USE_ENDSTOP == _XMIN_
-      #define X2_MIN_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
-      #define X2_MIN_PIN X_MIN_PIN
-    #elif X2_USE_ENDSTOP == _XMAX_
-      #define X2_MIN_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
-      #define X2_MIN_PIN X_MAX_PIN
-    #elif X2_USE_ENDSTOP == _YMIN_
-      #define X2_MIN_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
-      #define X2_MIN_PIN Y_MIN_PIN
-    #elif X2_USE_ENDSTOP == _YMAX_
-      #define X2_MIN_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
-      #define X2_MIN_PIN Y_MAX_PIN
-    #elif X2_USE_ENDSTOP == _ZMIN_
-      #define X2_MIN_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
-      #define X2_MIN_PIN Z_MIN_PIN
-    #elif X2_USE_ENDSTOP == _ZMAX_
-      #define X2_MIN_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
-      #define X2_MIN_PIN Z_MAX_PIN
-    #else
-      #define X2_MIN_ENDSTOP_INVERTING false
-    #endif
-    #define X2_MAX_ENDSTOP_INVERTING false
-  #endif
-#endif
-
-// Is an endstop plug used for the X2 endstop?
-#define IS_X2_ENDSTOP(A,M) (ENABLED(X_DUAL_ENDSTOPS) && X2_USE_ENDSTOP == _##A##M##_)
-
-/**
- * Y_DUAL_ENDSTOPS endstop reassignment
- */
-#if ENABLED(Y_DUAL_ENDSTOPS)
-  #if Y_HOME_DIR > 0
-    #if Y2_USE_ENDSTOP == _XMIN_
-      #define Y2_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
-      #define Y2_MAX_PIN X_MIN_PIN
-    #elif Y2_USE_ENDSTOP == _XMAX_
-      #define Y2_MAX_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
-      #define Y2_MAX_PIN X_MAX_PIN
-    #elif Y2_USE_ENDSTOP == _YMIN_
-      #define Y2_MAX_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
-      #define Y2_MAX_PIN Y_MIN_PIN
-    #elif Y2_USE_ENDSTOP == _YMAX_
-      #define Y2_MAX_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
-      #define Y2_MAX_PIN Y_MAX_PIN
-    #elif Y2_USE_ENDSTOP == _ZMIN_
-      #define Y2_MAX_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
-      #define Y2_MAX_PIN Z_MIN_PIN
-    #elif Y2_USE_ENDSTOP == _ZMAX_
-      #define Y2_MAX_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
-      #define Y2_MAX_PIN Z_MAX_PIN
-    #else
-      #define Y2_MAX_ENDSTOP_INVERTING false
-    #endif
-    #define Y2_MIN_ENDSTOP_INVERTING false
-  #else
-    #if Y2_USE_ENDSTOP == _XMIN_
-      #define Y2_MIN_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
-      #define Y2_MIN_PIN X_MIN_PIN
-    #elif Y2_USE_ENDSTOP == _XMAX_
-      #define Y2_MIN_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
-      #define Y2_MIN_PIN X_MAX_PIN
-    #elif Y2_USE_ENDSTOP == _YMIN_
-      #define Y2_MIN_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
-      #define Y2_MIN_PIN Y_MIN_PIN
-    #elif Y2_USE_ENDSTOP == _YMAX_
-      #define Y2_MIN_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
-      #define Y2_MIN_PIN Y_MAX_PIN
-    #elif Y2_USE_ENDSTOP == _ZMIN_
-      #define Y2_MIN_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
-      #define Y2_MIN_PIN Z_MIN_PIN
-    #elif Y2_USE_ENDSTOP == _ZMAX_
-      #define Y2_MIN_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
-      #define Y2_MIN_PIN Z_MAX_PIN
-    #else
-      #define Y2_MIN_ENDSTOP_INVERTING false
-    #endif
-    #define Y2_MAX_ENDSTOP_INVERTING false
-  #endif
-#endif
-
-// Is an endstop plug used for the Y2 endstop or the bed probe?
-#define IS_Y2_ENDSTOP(A,M) (ENABLED(Y_DUAL_ENDSTOPS) && Y2_USE_ENDSTOP == _##A##M##_)
-
-/**
- * Z_DUAL_ENDSTOPS endstop reassignment
- */
-#if Z_MULTI_ENDSTOPS
+#if ENABLED(Z_TRIPLE_ENDSTOPS)
   #if Z_HOME_DIR > 0
     #if Z2_USE_ENDSTOP == _XMIN_
       #define Z2_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
@@ -531,9 +414,6 @@
     #endif
     #define Z2_MAX_ENDSTOP_INVERTING false
   #endif
-#endif
-
-#if ENABLED(Z_TRIPLE_ENDSTOPS)
   #if Z_HOME_DIR > 0
     #if Z3_USE_ENDSTOP == _XMIN_
       #define Z3_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
@@ -585,7 +465,7 @@
 
 // Is an endstop plug used for the Z2 endstop or the bed probe?
 #define IS_Z2_OR_PROBE(A,M) ( \
-     (Z_MULTI_ENDSTOPS && Z2_USE_ENDSTOP == _##A##M##_) \
+     (ENABLED(Z_TRIPLE_ENDSTOPS) && Z2_USE_ENDSTOP == _##A##M##_) \
   || (HAS_CUSTOM_PROBE_PIN && Z_MIN_PROBE_PIN == A##_##M##_PIN ) )
 
 // Is an endstop plug used for the Z3 endstop or the bed probe?
@@ -650,17 +530,9 @@
 #define HAS_X_DIR         (PIN_EXISTS(X_DIR))
 #define HAS_X_STEP        (PIN_EXISTS(X_STEP))
 
-#define HAS_X2_ENABLE     (PIN_EXISTS(X2_ENABLE))
-#define HAS_X2_DIR        (PIN_EXISTS(X2_DIR))
-#define HAS_X2_STEP       (PIN_EXISTS(X2_STEP))
-
 #define HAS_Y_ENABLE      (PIN_EXISTS(Y_ENABLE))
 #define HAS_Y_DIR         (PIN_EXISTS(Y_DIR))
 #define HAS_Y_STEP        (PIN_EXISTS(Y_STEP))
-
-#define HAS_Y2_ENABLE     (PIN_EXISTS(Y2_ENABLE))
-#define HAS_Y2_DIR        (PIN_EXISTS(Y2_DIR))
-#define HAS_Y2_STEP       (PIN_EXISTS(Y2_STEP))
 
 #define HAS_Z_ENABLE      (PIN_EXISTS(Z_ENABLE))
 #define HAS_Z_DIR         (PIN_EXISTS(Z_DIR))
@@ -717,14 +589,8 @@
   #if (AXIS_HAS_STALLGUARD(X)  && defined(X_STALL_SENSITIVITY))
     #define X_SENSORLESS 1
   #endif
-  #if (AXIS_HAS_STALLGUARD(X2) && defined(X2_STALL_SENSITIVITY))
-    #define X2_SENSORLESS 1
-  #endif
   #if (AXIS_HAS_STALLGUARD(Y)  && defined(Y_STALL_SENSITIVITY))
     #define Y_SENSORLESS 1
-  #endif
-  #if (AXIS_HAS_STALLGUARD(Y2) && defined(Y2_STALL_SENSITIVITY))
-    #define Y2_SENSORLESS 1
   #endif
   #define Z_SENSORLESS  (AXIS_HAS_STALLGUARD(Z)  && defined(Z_STALL_SENSITIVITY))
   #if (AXIS_HAS_STALLGUARD(Z2) && defined(Z2_STALL_SENSITIVITY))
@@ -741,17 +607,13 @@
 )
 
 // Endstops and bed probe
-#define _HAS_STOP(A,M) (PIN_EXISTS(A##_##M) && !IS_X2_ENDSTOP(A,M) && !IS_Y2_ENDSTOP(A,M) && !IS_Z2_OR_PROBE(A,M))
+#define _HAS_STOP(A,M) (PIN_EXISTS(A##_##M) && !IS_Z2_OR_PROBE(A,M))
 #define HAS_X_MIN _HAS_STOP(X,MIN)
 #define HAS_X_MAX _HAS_STOP(X,MAX)
 #define HAS_Y_MIN _HAS_STOP(Y,MIN)
 #define HAS_Y_MAX _HAS_STOP(Y,MAX)
 #define HAS_Z_MIN _HAS_STOP(Z,MIN)
 #define HAS_Z_MAX _HAS_STOP(Z,MAX)
-#define HAS_X2_MIN (PIN_EXISTS(X2_MIN))
-#define HAS_X2_MAX (PIN_EXISTS(X2_MAX))
-#define HAS_Y2_MIN (PIN_EXISTS(Y2_MIN))
-#define HAS_Y2_MAX (PIN_EXISTS(Y2_MAX))
 #define HAS_Z2_MIN (PIN_EXISTS(Z2_MIN))
 #define HAS_Z2_MAX (PIN_EXISTS(Z2_MAX))
 #define HAS_Z3_MIN (PIN_EXISTS(Z3_MIN))
@@ -1198,8 +1060,6 @@
 
 #if ENABLED(Z_TRIPLE_STEPPER_DRIVERS)
   #define Z_STEPPER_COUNT 3
-#elif ENABLED(Z_DUAL_STEPPER_DRIVERS)
-  #define Z_STEPPER_COUNT 2
 #else
   #define Z_STEPPER_COUNT 1
 #endif

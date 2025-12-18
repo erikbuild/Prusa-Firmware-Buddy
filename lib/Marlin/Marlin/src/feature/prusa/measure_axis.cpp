@@ -76,15 +76,8 @@ void Measure_axis::quick_home_start() {
         enable_crash_detection(X_AXIS),
         enable_crash_detection(Y_AXIS),
         false,
-        false
-            #if AXIS_HAS_STALLGUARD(X2)
-            || enable_crash_detection(X2_AXIS)
-            #endif
-            ,
-        false
-            #if AXIS_HAS_STALLGUARD(Y2)
-            || enable_crash_detection(Y2_AXIS)
-            #endif
+        false,
+        false,
     };
 
     sensorless_enable(X_AXIS);

@@ -116,22 +116,12 @@ public:
     static void microstep_readings();
 #endif
 
-#if HAS_EXTRA_ENDSTOPS || ENABLED(Z_STEPPER_AUTO_ALIGN)
+#if ENABLED(Z_TRIPLE_ENDSTOPS) || ENABLED(Z_STEPPER_AUTO_ALIGN)
     FORCE_INLINE static void set_separate_multi_axis(const bool state) { separate_multi_axis = state; }
 #endif
-#if ENABLED(X_DUAL_ENDSTOPS)
-    FORCE_INLINE static void set_x_lock(const bool state) { locked_X_motor = state; }
-    FORCE_INLINE static void set_x2_lock(const bool state) { locked_X2_motor = state; }
-#endif
-#if ENABLED(Y_DUAL_ENDSTOPS)
-    FORCE_INLINE static void set_y_lock(const bool state) { locked_Y_motor = state; }
-    FORCE_INLINE static void set_y2_lock(const bool state) { locked_Y2_motor = state; }
-#endif
-#if Z_MULTI_ENDSTOPS || (ENABLED(Z_STEPPER_AUTO_ALIGN) && Z_MULTI_STEPPER_DRIVERS)
+#if ENABLED(Z_TRIPLE_ENDSTOPS) || BOTH(Z_STEPPER_AUTO_ALIGN, Z_TRIPLE_STEPPER_DRIVERS)
     FORCE_INLINE static void set_z_lock(const bool state) { locked_Z_motor = state; }
     FORCE_INLINE static void set_z2_lock(const bool state) { locked_Z2_motor = state; }
-#endif
-#if ENABLED(Z_TRIPLE_ENDSTOPS) || BOTH(Z_STEPPER_AUTO_ALIGN, Z_TRIPLE_STEPPER_DRIVERS)
     FORCE_INLINE static void set_z3_lock(const bool state) { locked_Z3_motor = state; }
 #endif
 

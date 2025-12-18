@@ -42,9 +42,6 @@
 #define TMC_X_LABEL 'X', '0'
 #define TMC_Y_LABEL 'Y', '0'
 #define TMC_Z_LABEL 'Z', '0'
-
-#define TMC_X2_LABEL 'X', '2'
-#define TMC_Y2_LABEL 'Y', '2'
 #define TMC_Z2_LABEL 'Z', '2'
 #define TMC_Z3_LABEL 'Z', '3'
 

@@ -48,7 +48,7 @@
  *
  * -` I` - Axis sub-index
  *   - `0` - or Omit for X, Y, Z
- *   - `1` - for X2, Y2, Z2
+ *   - `1` - for Z2
  *   - `2` - for Z3
  * -` T` - Extruder index (Zero-based. Omit for E0 only.)
  *
@@ -60,7 +60,7 @@ void GcodeSuite::M906() {
 
   bool report = true;
 
-  #if AXIS_IS_TMC(X) || AXIS_IS_TMC(X2) || AXIS_IS_TMC(Y) || AXIS_IS_TMC(Y2) || AXIS_IS_TMC(Z) || AXIS_IS_TMC(Z2) || AXIS_IS_TMC(Z3)
+  #if AXIS_IS_TMC(X) || AXIS_IS_TMC(Y) || AXIS_IS_TMC(Z) || AXIS_IS_TMC(Z2) || AXIS_IS_TMC(Z3)
     const uint8_t index = parser.byteval('I');
   #endif
 
@@ -71,16 +71,10 @@ void GcodeSuite::M906() {
         #if AXIS_IS_TMC(X)
           if (index == 0) TMC_SET_CURRENT(X);
         #endif
-        #if AXIS_IS_TMC(X2)
-          if (index == 1) TMC_SET_CURRENT(X2);
-        #endif
         break;
       case Y_AXIS:
         #if AXIS_IS_TMC(Y)
           if (index == 0) TMC_SET_CURRENT(Y);
-        #endif
-        #if AXIS_IS_TMC(Y2)
-          if (index == 1) TMC_SET_CURRENT(Y2);
         #endif
         break;
       case Z_AXIS:
@@ -125,14 +119,8 @@ void GcodeSuite::M906() {
     #if AXIS_IS_TMC(X)
       TMC_SAY_CURRENT(X);
     #endif
-    #if AXIS_IS_TMC(X2)
-      TMC_SAY_CURRENT(X2);
-    #endif
     #if AXIS_IS_TMC(Y)
       TMC_SAY_CURRENT(Y);
-    #endif
-    #if AXIS_IS_TMC(Y2)
-      TMC_SAY_CURRENT(Y2);
     #endif
     #if AXIS_IS_TMC(Z)
       TMC_SAY_CURRENT(Z);

@@ -60,16 +60,8 @@
   #define X_disable NOOP
 #endif
 
-#if HAS_X2_ENABLE
-  #define X2_enable  X2_ENABLE_WRITE( X_ENABLE_ON)
-  #define X2_disable X2_ENABLE_WRITE(!X_ENABLE_ON)
-#else
-  #define X2_enable  NOOP
-  #define X2_disable NOOP
-#endif
-
-#define  enable_X() do{ X_enable; X2_enable; }while(0)
-#define disable_X() do{ X_disable; X2_disable; TERN_(HAS_PLANNER(), axes_home_level[X_AXIS] = AxisHomeLevel::not_homed;) }while(0)
+#define  enable_X() do{ X_enable; }while(0)
+#define disable_X() do{ X_disable; TERN_(HAS_PLANNER(), axes_home_level[X_AXIS] = AxisHomeLevel::not_homed;) }while(0)
 
 #if HAS_Y_ENABLE
   #define Y_enable  Y_ENABLE_WRITE( Y_ENABLE_ON)
@@ -79,17 +71,9 @@
   #define Y_disable NOOP
 #endif
 
-#if HAS_Y2_ENABLE
-  #define Y2_enable  Y2_ENABLE_WRITE( Y_ENABLE_ON)
-  #define Y2_disable Y2_ENABLE_WRITE(!Y_ENABLE_ON)
-#else
-  #define Y2_enable  NOOP
-  #define Y2_disable NOOP
-#endif
-
 #if DISABLED(XY_LINKED_ENABLE)
-#define  enable_Y() do{ Y_enable; Y2_enable; }while(0)
-#define disable_Y() do{ Y_disable; Y2_disable; TERN_(HAS_PLANNER(), axes_home_level[Y_AXIS] = AxisHomeLevel::not_homed;) }while(0)
+#define  enable_Y() do{ Y_enable; }while(0)
+#define disable_Y() do{ Y_disable; TERN_(HAS_PLANNER(), axes_home_level[Y_AXIS] = AxisHomeLevel::not_homed;) }while(0)
 #endif
 
 #if ENABLED(XY_LINKED_ENABLE)
@@ -225,46 +209,6 @@
   #define Z_STEP_WRITE(STATE) WRITE(Z_STEP_PIN,STATE)
 #endif
 #define Z_STEP_READ READ(Z_STEP_PIN)
-
-// X2 Stepper
-#if HAS_X2_ENABLE
-  #ifndef X2_ENABLE_INIT
-    #define X2_ENABLE_INIT SET_OUTPUT(X2_ENABLE_PIN)
-    #define X2_ENABLE_WRITE(STATE) WRITE(X2_ENABLE_PIN,STATE)
-    #define X2_ENABLE_READ() READ(X2_ENABLE_PIN)
-  #endif
-  #ifndef X2_DIR_INIT
-    #define X2_DIR_INIT SET_OUTPUT(X2_DIR_PIN)
-    #define X2_DIR_WRITE(STATE) WRITE(X2_DIR_PIN,STATE)
-    #define X2_DIR_READ() READ(X2_DIR_PIN)
-  #endif
-  #define X2_STEP_INIT SET_OUTPUT(X2_STEP_PIN)
-  #ifndef X2_STEP_WRITE
-    #define X2_STEP_WRITE(STATE) WRITE(X2_STEP_PIN,STATE)
-  #endif
-  #define X2_STEP_READ READ(X2_STEP_PIN)
-#endif
-
-// Y2 Stepper
-#if HAS_Y2_ENABLE
-  #ifndef Y2_ENABLE_INIT
-    #define Y2_ENABLE_INIT SET_OUTPUT(Y2_ENABLE_PIN)
-    #define Y2_ENABLE_WRITE(STATE) WRITE(Y2_ENABLE_PIN,STATE)
-    #define Y2_ENABLE_READ() READ(Y2_ENABLE_PIN)
-  #endif
-  #ifndef Y2_DIR_INIT
-    #define Y2_DIR_INIT SET_OUTPUT(Y2_DIR_PIN)
-    #define Y2_DIR_WRITE(STATE) WRITE(Y2_DIR_PIN,STATE)
-    #define Y2_DIR_READ() READ(Y2_DIR_PIN)
-  #endif
-  #define Y2_STEP_INIT SET_OUTPUT(Y2_STEP_PIN)
-  #ifndef Y2_STEP_WRITE
-    #define Y2_STEP_WRITE(STATE) WRITE(Y2_STEP_PIN,STATE)
-  #endif
-  #define Y2_STEP_READ READ(Y2_STEP_PIN)
-#else
-  #define Y2_DIR_WRITE(STATE) NOOP
-#endif
 
 // Z2 Stepper
 #if HAS_Z2_ENABLE

@@ -315,35 +315,7 @@ void MarlinSettings::reset() {
   // Endstop Adjustments
   //
 
-  #if EITHER(X_DUAL_ENDSTOPS, Y_DUAL_ENDSTOPS) || Z_MULTI_ENDSTOPS
-
-    #if ENABLED(X_DUAL_ENDSTOPS)
-      endstops.x2_endstop_adj = (
-        #ifdef X_DUAL_ENDSTOPS_ADJUSTMENT
-          X_DUAL_ENDSTOPS_ADJUSTMENT
-        #else
-          0
-        #endif
-      );
-    #endif
-    #if ENABLED(Y_DUAL_ENDSTOPS)
-      endstops.y2_endstop_adj = (
-        #ifdef Y_DUAL_ENDSTOPS_ADJUSTMENT
-          Y_DUAL_ENDSTOPS_ADJUSTMENT
-        #else
-          0
-        #endif
-      );
-    #endif
-    #if ENABLED(Z_DUAL_ENDSTOPS)
-      endstops.z2_endstop_adj = (
-        #ifdef Z_DUAL_ENDSTOPS_ADJUSTMENT
-          Z_DUAL_ENDSTOPS_ADJUSTMENT
-        #else
-          0
-        #endif
-      );
-    #elif ENABLED(Z_TRIPLE_ENDSTOPS)
+    #if ENABLED(Z_TRIPLE_ENDSTOPS)
       endstops.z2_endstop_adj = (
         #ifdef Z_TRIPLE_ENDSTOPS_ADJUSTMENT2
           Z_TRIPLE_ENDSTOPS_ADJUSTMENT2
@@ -359,8 +331,6 @@ void MarlinSettings::reset() {
         #endif
       );
     #endif
-
-  #endif
 
   //
   // Hotend PID
@@ -716,27 +686,15 @@ void MarlinSettings::reset() {
 
     #endif // EDITABLE_SERVO_ANGLES
 
-    #if EITHER(X_DUAL_ENDSTOPS, Y_DUAL_ENDSTOPS) || Z_MULTI_ENDSTOPS
+    #if ENABLED(Z_TRIPLE_ENDSTOPS)
 
       CONFIG_ECHO_HEADING("Endstop adjustment:");
       CONFIG_ECHO_START();
-      SERIAL_ECHOPGM("  M666");
-      #if ENABLED(X_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" X", LINEAR_UNIT(endstops.x2_endstop_adj));
-      #endif
-      #if ENABLED(Y_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" Y", LINEAR_UNIT(endstops.y2_endstop_adj));
-      #endif
-      #if ENABLED(Z_TRIPLE_ENDSTOPS)
-        SERIAL_ECHOLNPAIR("S1 Z", LINEAR_UNIT(endstops.z2_endstop_adj));
-        CONFIG_ECHO_START();
-        SERIAL_ECHOPAIR("  M666 S2 Z", LINEAR_UNIT(endstops.z3_endstop_adj));
-      #elif ENABLED(Z_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" Z", LINEAR_UNIT(endstops.z2_endstop_adj));
-      #endif
-      SERIAL_EOL();
+      SERIAL_ECHOLNPAIR("  M666 S1 Z", LINEAR_UNIT(endstops.z2_endstop_adj));
+      CONFIG_ECHO_START();
+      SERIAL_ECHOLNPAIR("  M666 S2 Z", LINEAR_UNIT(endstops.z3_endstop_adj));
 
-    #endif // [XYZ]_DUAL_ENDSTOPS
+    #endif
 
     #if HAS_PID_HEATING
 
@@ -823,16 +781,10 @@ void MarlinSettings::reset() {
         );
       #endif
 
-      #if AXIS_IS_TMC(X2) || AXIS_IS_TMC(Y2) || AXIS_IS_TMC(Z2)
+      #if AXIS_IS_TMC(Z2)
         say_M906(forReplay);
         SERIAL_ECHOPGM(" I1");
         SERIAL_ECHOLNPAIR(
-          #if AXIS_IS_TMC(X2)
-            " X", stepperX2.getMilliamps(),
-          #endif
-          #if AXIS_IS_TMC(Y2)
-            " Y", stepperY2.getMilliamps(),
-          #endif
           #if AXIS_IS_TMC(Z2)
             " Z", stepperZ2.getMilliamps()
           #endif
@@ -891,21 +843,9 @@ void MarlinSettings::reset() {
           SERIAL_EOL();
         #endif
 
-        #if AXIS_HAS_STEALTHCHOP(X2) || AXIS_HAS_STEALTHCHOP(Y2) || AXIS_HAS_STEALTHCHOP(Z2)
-          say_M913(forReplay);
-          SERIAL_ECHOPGM(" I1");
-        #endif
-        #if AXIS_HAS_STEALTHCHOP(X2)
-          SERIAL_ECHOPAIR(" X", stepperX2.get_pwm_thrs());
-        #endif
-        #if AXIS_HAS_STEALTHCHOP(Y2)
-          SERIAL_ECHOPAIR(" Y", stepperY2.get_pwm_thrs());
-        #endif
         #if AXIS_HAS_STEALTHCHOP(Z2)
-          SERIAL_ECHOPAIR(" Z", stepperZ2.get_pwm_thrs());
-        #endif
-        #if AXIS_HAS_STEALTHCHOP(X2) || AXIS_HAS_STEALTHCHOP(Y2) || AXIS_HAS_STEALTHCHOP(Z2)
-          SERIAL_EOL();
+          say_M913(forReplay);
+          SERIAL_ECHOLNPAIR(" I1 Z", stepperZ2.get_pwm_thrs());
         #endif
 
         #if AXIS_HAS_STEALTHCHOP(Z3)
@@ -960,20 +900,10 @@ void MarlinSettings::reset() {
           SERIAL_EOL();
         #endif
 
-        #if X2_SENSORLESS || Y2_SENSORLESS || Z2_SENSORLESS
+        #if Z2_SENSORLESS
           CONFIG_ECHO_START();
           say_M914();
-          SERIAL_ECHOPGM(" I1");
-          #if X2_SENSORLESS
-            SERIAL_ECHOPAIR(" X", stepperX2.stall_sensitivity());
-          #endif
-          #if Y2_SENSORLESS
-            SERIAL_ECHOPAIR(" Y", stepperY2.stall_sensitivity());
-          #endif
-          #if Z2_SENSORLESS
-            SERIAL_ECHOPAIR(" Z", stepperZ2.stall_sensitivity());
-          #endif
-          SERIAL_EOL();
+          SERIAL_ECHOLNPAIR(" I1 Z", stepperZ2.stall_sensitivity());
         #endif
 
         #if Z3_SENSORLESS
@@ -1013,26 +943,14 @@ void MarlinSettings::reset() {
           SERIAL_EOL();
         }
 
-        #if AXIS_HAS_STEALTHCHOP(X2)
-          const bool chop_x2 = stepperX2.get_stealthChop_status();
-        #else
-          constexpr bool chop_x2 = false;
-        #endif
-        #if AXIS_HAS_STEALTHCHOP(Y2)
-          const bool chop_y2 = stepperY2.get_stealthChop_status();
-        #else
-          constexpr bool chop_y2 = false;
-        #endif
         #if AXIS_HAS_STEALTHCHOP(Z2)
           const bool chop_z2 = stepperZ2.get_stealthChop_status();
         #else
           constexpr bool chop_z2 = false;
         #endif
 
-        if (chop_x2 || chop_y2 || chop_z2) {
+        if (chop_z2) {
           say_M569(forReplay, PSTR("I1"));
-          if (chop_x2) SERIAL_ECHOPGM(" X");
-          if (chop_y2) SERIAL_ECHOPGM(" Y");
           if (chop_z2) SERIAL_ECHOPGM(" Z");
           SERIAL_EOL();
         }

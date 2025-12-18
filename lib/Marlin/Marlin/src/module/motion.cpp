@@ -587,7 +587,6 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
             #endif
 
             stealth_states.x = enable_crash_detection(X_AXIS);
-            TERN_(X2_SENSORLESS, stealth_states.x2 = enable_crash_detection(X2_AXIS));
             #if ANY(CORE_IS_XY, MARKFORGED_XY, MARKFORGED_YX) && Y_SENSORLESS
               stealth_states.y = enable_crash_detection(Y_AXIS);
             #elif CORE_IS_XZ && Z_SENSORLESS
@@ -602,7 +601,6 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
             #endif
 
             stealth_states.y = enable_crash_detection(Y_AXIS);
-            TERN_(Y2_SENSORLESS, stealth_states.y2 = enable_crash_detection(Y2_AXIS));
             #if ANY(CORE_IS_XY, MARKFORGED_XY, MARKFORGED_YX) && X_SENSORLESS
               stealth_states.x = enable_crash_detection(X_AXIS);
             #elif CORE_IS_YZ && Z_SENSORLESS
@@ -615,7 +613,6 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
             stealth_states.z = enable_crash_detection(Z_AXIS);
             TERN_(Z2_SENSORLESS, stealth_states.z2 = enable_crash_detection(Z2_AXIS));
             TERN_(Z3_SENSORLESS, stealth_states.z3 = enable_crash_detection(Z3_AXIS));
-            TERN_(Z4_SENSORLESS, stealth_states.z4 = enable_crash_detection(Z4_AXIS));
             #if CORE_IS_XZ && X_SENSORLESS
               stealth_states.x = enable_crash_detection(X_AXIS);
             #elif CORE_IS_YZ && Y_SENSORLESS
@@ -659,7 +656,6 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
               crash_s.end_sensorless_homing_per_axis(axis, enable_stealth.x);
             #else
               disable_crash_detection(X_AXIS, enable_stealth.x);
-              TERN_(X2_SENSORLESS, disable_crash_detection(X2_AXIS, enable_stealth.x2));
               #if ANY(CORE_IS_XY, MARKFORGED_XY, MARKFORGED_YX) && Y_SENSORLESS
                 disable_crash_detection(Y_AXIS, enable_stealth.y);
               #elif CORE_IS_XZ && Z_SENSORLESS
@@ -674,7 +670,6 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
               crash_s.end_sensorless_homing_per_axis(axis, enable_stealth.y);
             #else
               disable_crash_detection(Y_AXIS, enable_stealth.y);
-              TERN_(Y2_SENSORLESS, disable_crash_detection(Y2_AXIS, enable_stealth.y2));
               #if ANY(CORE_IS_XY, MARKFORGED_XY, MARKFORGED_YX) && X_SENSORLESS
                 disable_crash_detection(X_AXIS, enable_stealth.x);
               #elif CORE_IS_YZ && Z_SENSORLESS
@@ -688,7 +683,6 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
             disable_crash_detection(Z_AXIS, enable_stealth.z);
             TERN_(Z2_SENSORLESS, disable_crash_detection(Z2_AXIS, enable_stealth.z2));
             TERN_(Z3_SENSORLESS, disable_crash_detection(Z3_AXIS, enable_stealth.z3));
-            TERN_(Z4_SENSORLESS, disable_crash_detection(Z4_AXIS, enable_stealth.z4));
             #if CORE_IS_XZ && X_SENSORLESS
               disable_crash_detection(X_AXIS, enable_stealth.x);
             #elif CORE_IS_YZ && Y_SENSORLESS
@@ -1202,17 +1196,9 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
   const auto initial_throw_count = gcode_exceptions().throw_count();
 
   // Set flags for X, Y, Z motor locking
-  #if HAS_EXTRA_ENDSTOPS
+  #if ENABLED(Z_TRIPLE_ENDSTOPS)
     switch (axis) {
-      #if ENABLED(X_DUAL_ENDSTOPS)
-        case X_AXIS:
-      #endif
-      #if ENABLED(Y_DUAL_ENDSTOPS)
-        case Y_AXIS:
-      #endif
-      #if Z_MULTI_ENDSTOPS
-        case Z_AXIS:
-      #endif
+      case Z_AXIS:
       stepper.set_separate_multi_axis(true);
       default: break;
     }
@@ -1317,42 +1303,8 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     #endif
   }
 
-  #if HAS_EXTRA_ENDSTOPS
+  #if ENABLED(Z_TRIPLE_ENDSTOPS)
     const bool pos_dir = axis_home_dir > 0;
-    #if ENABLED(X_DUAL_ENDSTOPS)
-      if (axis == X_AXIS) {
-        const float adj = ABS(endstops.x2_endstop_adj);
-        if (adj) {
-          if (pos_dir ? (endstops.x2_endstop_adj > 0) : (endstops.x2_endstop_adj < 0)) stepper.set_x_lock(true); else stepper.set_x2_lock(true);
-          do_homing_move(axis, pos_dir ? -adj : adj, 0, false, homing_z_with_probe);
-          stepper.set_x_lock(false);
-          stepper.set_x2_lock(false);
-        }
-      }
-    #endif
-    #if ENABLED(Y_DUAL_ENDSTOPS)
-      if (axis == Y_AXIS) {
-        const float adj = ABS(endstops.y2_endstop_adj);
-        if (adj) {
-          if (pos_dir ? (endstops.y2_endstop_adj > 0) : (endstops.y2_endstop_adj < 0)) stepper.set_y_lock(true); else stepper.set_y2_lock(true);
-          do_homing_move(axis, pos_dir ? -adj : adj, 0, false, homing_z_with_probe);
-          stepper.set_y_lock(false);
-          stepper.set_y2_lock(false);
-        }
-      }
-    #endif
-    #if ENABLED(Z_DUAL_ENDSTOPS)
-      if (axis == Z_AXIS) {
-        const float adj = ABS(endstops.z2_endstop_adj);
-        if (adj) {
-          if (pos_dir ? (endstops.z2_endstop_adj > 0) : (endstops.z2_endstop_adj < 0)) stepper.set_z_lock(true); else stepper.set_z2_lock(true);
-          do_homing_move(axis, pos_dir ? -adj : adj, 0, false, homing_z_with_probe);
-          stepper.set_z_lock(false);
-          stepper.set_z2_lock(false);
-        }
-      }
-    #endif
-    #if ENABLED(Z_TRIPLE_ENDSTOPS)
       if (axis == Z_AXIS) {
         // we push the function pointers for the stepper lock function into an array
         void (*lock[3]) (bool)= {&stepper.set_z_lock, &stepper.set_z2_lock, &stepper.set_z3_lock};
@@ -1397,19 +1349,10 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
         stepper.set_z2_lock(false);
         stepper.set_z3_lock(false);
       }
-    #endif
 
     // Reset flags for X, Y, Z motor locking
     switch (axis) {
-      #if ENABLED(X_DUAL_ENDSTOPS)
-        case X_AXIS:
-      #endif
-      #if ENABLED(Y_DUAL_ENDSTOPS)
-        case Y_AXIS:
-      #endif
-      #if Z_MULTI_ENDSTOPS
         case Z_AXIS:
-      #endif
       stepper.set_separate_multi_axis(false);
       default: break;
     }

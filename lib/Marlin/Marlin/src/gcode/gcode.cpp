@@ -454,10 +454,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 206: M206(); break;                                  // M206: Set home offsets
       #endif
 
-      #if ANY(X_DUAL_ENDSTOPS, Y_DUAL_ENDSTOPS, Z_DUAL_ENDSTOPS)
-        case 666: M666(); break;                                  // M666: Set dual endstop adjustment
-      #endif
-
       #if HAS_SOFTWARE_ENDSTOPS
         case 211: M211(); break;                                  // M211: Enable, Disable, and/or Report software endstops
       #endif

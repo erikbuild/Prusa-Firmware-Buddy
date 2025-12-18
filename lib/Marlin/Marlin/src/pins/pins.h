@@ -412,88 +412,18 @@
 #endif
 
 /**
- * Auto-Assignment for Dual X, Dual Y, Multi-Z Steppers
+ * Auto-Assignment for Triple-Z Steppers
  *
- * By default X2 is assigned to the next open E plug
- * on the board, then in order, Y2, Z2, Z3. These can be
+ * By default Z2 is assigned to the next open E plug
+ * on the board, then in order, Z3. These can be
  * overridden in Configuration.h or Configuration_adv.h.
  */
 
 #define __EPIN(p,q) E##p##_##q##_PIN
 #define _EPIN(p,q) __EPIN(p,q)
 
-// The X2 axis, if any, should be the next open extruder port
-#if ENABLED(X_DUAL_STEPPER_DRIVERS)
-  #ifndef X2_STEP_PIN
-    #define X2_STEP_PIN   _EPIN(E_STEPPERS, STEP)
-    #define X2_DIR_PIN    _EPIN(E_STEPPERS, DIR)
-    #define X2_ENABLE_PIN _EPIN(E_STEPPERS, ENABLE)
-    #if E_STEPPERS >= MAX_EXTRUDERS || !PIN_EXISTS(X2_STEP)
-      #error "No E stepper plug left for X2!"
-    #endif
-  #endif
-  #ifndef X2_CS_PIN
-    #define X2_CS_PIN     _EPIN(E_STEPPERS, CS)
-  #endif
-  #ifndef X2_MS1_PIN
-    #define X2_MS1_PIN    _EPIN(E_STEPPERS, MS1)
-  #endif
-  #ifndef X2_MS2_PIN
-    #define X2_MS2_PIN    _EPIN(E_STEPPERS, MS2)
-  #endif
-  #ifndef X2_MS3_PIN
-    #define X2_MS3_PIN    _EPIN(E_STEPPERS, MS3)
-  #endif
-  #if AXIS_DRIVER_TYPE_X2(TMC2208) || AXIS_DRIVER_TYPE_X2(TMC2209)
-    #ifndef X2_SERIAL_TX_PIN
-      #define X2_SERIAL_TX_PIN _EPIN(E_STEPPERS, SERIAL_TX)
-    #endif
-    #ifndef X2_SERIAL_RX_PIN
-      #define X2_SERIAL_RX_PIN _EPIN(E_STEPPERS, SERIAL_RX)
-    #endif
-  #endif
-  #define Y2_E_INDEX INCREMENT(E_STEPPERS)
-#else
-  #define Y2_E_INDEX E_STEPPERS
-#endif
-
-// The Y2 axis, if any, should be the next open extruder port
-#if ENABLED(Y_DUAL_STEPPER_DRIVERS)
-  #ifndef Y2_STEP_PIN
-    #define Y2_STEP_PIN   _EPIN(Y2_E_INDEX, STEP)
-    #define Y2_DIR_PIN    _EPIN(Y2_E_INDEX, DIR)
-    #define Y2_ENABLE_PIN _EPIN(Y2_E_INDEX, ENABLE)
-    #if Y2_E_INDEX >= MAX_EXTRUDERS || !PIN_EXISTS(Y2_STEP)
-      #error "No E stepper plug left for Y2!"
-    #endif
-  #endif
-  #ifndef Y2_CS_PIN
-    #define Y2_CS_PIN     _EPIN(Y2_E_INDEX, CS)
-  #endif
-  #ifndef Y2_MS1_PIN
-    #define Y2_MS1_PIN    _EPIN(Y2_E_INDEX, MS1)
-  #endif
-  #ifndef Y2_MS2_PIN
-    #define Y2_MS2_PIN    _EPIN(Y2_E_INDEX, MS2)
-  #endif
-  #ifndef Y2_MS3_PIN
-    #define Y2_MS3_PIN    _EPIN(Y2_E_INDEX, MS3)
-  #endif
-  #if AXIS_DRIVER_TYPE_Y2(TMC2208) || AXIS_DRIVER_TYPE_Y2(TMC2209)
-    #ifndef Y2_SERIAL_TX_PIN
-      #define Y2_SERIAL_TX_PIN _EPIN(Y2_E_INDEX, SERIAL_TX)
-    #endif
-    #ifndef Y2_SERIAL_RX_PIN
-      #define Y2_SERIAL_RX_PIN _EPIN(Y2_E_INDEX, SERIAL_RX)
-    #endif
-  #endif
-  #define Z2_E_INDEX INCREMENT(Y2_E_INDEX)
-#else
-  #define Z2_E_INDEX Y2_E_INDEX
-#endif
-
-// The Z2 axis, if any, should be the next open extruder port
-#if Z_MULTI_STEPPER_DRIVERS
+#if ENABLED(Z_TRIPLE_STEPPER_DRIVERS)
+  #define Z2_E_INDEX E_STEPPERS
   #ifndef Z2_STEP_PIN
     #define Z2_STEP_PIN   _EPIN(Z2_E_INDEX, STEP)
     #define Z2_DIR_PIN    _EPIN(Z2_E_INDEX, DIR)
@@ -523,11 +453,6 @@
     #endif
   #endif
   #define Z3_E_INDEX INCREMENT(Z2_E_INDEX)
-#else
-  #define Z3_E_INDEX Z2_E_INDEX
-#endif
-
-#if ENABLED(Z_TRIPLE_STEPPER_DRIVERS)
   #ifndef Z3_STEP_PIN
     #define Z3_STEP_PIN   _EPIN(Z3_E_INDEX, STEP)
     #define Z3_DIR_PIN    _EPIN(Z3_E_INDEX, DIR)
