@@ -166,9 +166,13 @@ FilamentParametersInfo::FilamentParametersInfo(const RequestRef &req) {
         set.operator()<&Params::do_not_auto_retract>(true);
     }
 
+    const auto unset_missing = [&]<auto Params::*mem_ptr>() {
+        missing_parameters.set(filament_type_parameter_index<mem_ptr>, false);
+    };
+
     const auto unset_missing_if_equals = [&]<auto Params::*mem_ptr>(auto default_val) {
         if (parameters_unsafe.*mem_ptr == default_val) {
-            missing_parameters.set(filament_type_parameter_index<mem_ptr>, false);
+            unset_missing.operator()<mem_ptr>();
         }
     };
 
@@ -180,6 +184,15 @@ FilamentParametersInfo::FilamentParametersInfo(const RequestRef &req) {
     unset_missing_if_equals.operator()<&Params::is_abrasive>(false);
     unset_missing_if_equals.operator()<&Params::do_not_auto_retract>(false);
     unset_missing_if_equals.operator()<&Params::requires_filtration>(false);
+
+    if (is_missing<&FilamentTypeParameters::chamber_min_temperature>() && is_missing<&FilamentTypeParameters::chamber_max_temperature>()) {
+        // Chamber target temperature is not required if neither chamber_min_temperature or chamber_max_temperature are present
+        unset_missing.operator()<&FilamentTypeParameters::chamber_target_temperature>();
+    }
+
+    // Chamber min max parameters are never required
+    unset_missing.operator()<&FilamentTypeParameters::chamber_min_temperature>();
+    unset_missing.operator()<&FilamentTypeParameters::chamber_max_temperature>();
 }
 
 } // namespace buddy::openprinttag
