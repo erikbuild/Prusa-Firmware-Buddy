@@ -249,16 +249,27 @@ void fsm_change_extended(FSMAndPhase fsm_and_phase, DATA_TYPE data) {
 }
 
 class FSM_Holder {
-    ClientFSM type;
+    ClientFSM fsm;
 
 public:
+    FSM_Holder(ClientFSM fsm)
+        : fsm { fsm } {
+    }
+
     FSM_Holder(FSMAndPhase fsm_and_phase, fsm::PhaseData data = fsm::PhaseData())
-        : type { fsm_and_phase.fsm } {
-        fsm_create(fsm_and_phase, data);
+        : FSM_Holder(fsm_and_phase.fsm) {
+        change(fsm_and_phase, data);
+    }
+
+    void change(FSMAndPhase fsm_and_phase, fsm::PhaseData data = fsm::PhaseData()) {
+        assert(fsm_and_phase.fsm == fsm);
+        fsm_change(fsm_and_phase, data);
     }
 
     ~FSM_Holder() {
-        fsm_destroy(type);
+        if (fsm != ClientFSM::_none) {
+            fsm_destroy(fsm);
+        }
     }
 };
 
