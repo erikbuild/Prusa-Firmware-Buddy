@@ -1018,14 +1018,6 @@
     //#define TMC_SW_SCK        -1
 
     /**
-   * Software enable
-   *
-   * Use for drivers that do not use a dedicated enable pin, but rather handle the same
-   * function through a communication line such as SPI or UART.
-   */
-    //#define SOFTWARE_DRIVER_ENABLE
-
-    /**
    * TMC2130, TMC2160, TMC2208, TMC5130 and TMC5160 only
    * Use Trinamic's ultra quiet stepping mode.
    * When disabled, Marlin will use spreadCycle stepping mode.
