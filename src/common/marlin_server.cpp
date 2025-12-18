@@ -3081,9 +3081,7 @@ void park_head() {
     }
 #endif
 
-    xyz_pos_t park = XYZ_NOZZLE_PARK_POINT_ON_PRINT_END;
-    park.z = current_position.z;
-    plan_park_move_to_xyz(park, NOZZLE_PARK_XY_FEEDRATE, NOZZLE_PARK_Z_FEEDRATE, Segmented::yes);
+    mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT_ON_PRINT_END } }));
 }
 
 void unpark_head_XY(void) {
