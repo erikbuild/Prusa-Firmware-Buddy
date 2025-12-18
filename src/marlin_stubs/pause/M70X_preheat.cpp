@@ -10,25 +10,188 @@
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "M70X.hpp"
 #include <option/has_toolchanger.h>
+#include <tool_index.hpp>
+#include <utils/overloaded_visitor.hpp>
+#include <tool_index_iterator.hpp>
+#include <fsm/preheat_phases.hpp>
+#include <utils/variant_utils.hpp>
+#include <feature/gcode_exception/gcode_exception.hpp>
 
 #if HAS_CHAMBER_API()
     #include <feature/chamber/chamber.hpp>
 #endif
 
+#include <option/has_anfc.h>
+#if HAS_ANFC()
+    #include <feature/openprinttag/tool_tag.hpp>
+    #include <feature/openprinttag/data_utils.hpp>
+    #include <feature/openprinttag/requests_read_multi.hpp>
+#endif
+
+#if HAS_ANFC()
+static bool can_use_openprinttag(PreheatMode preheat_mode) {
+    switch (preheat_mode) {
+
+    case PreheatMode::autoload:
+    case PreheatMode::standard_load:
+        // This is when we want to be smart
+        return true;
+
+    case PreheatMode::change_load:
+        // During filament change, it is likely that there will still be the unloaded spool at the reader
+        // Trying to be smart here might actually be dumb.
+        return false;
+
+    case PreheatMode::preheat:
+        // User is currently always prompted for the filament parameters on preheat, don't change this behvavior
+        return false;
+
+    case PreheatMode::unload:
+    case PreheatMode::purge:
+        // At this point, filament parameters should be known.
+        // If the user needs to load them from a tag, they can still do it manually from the menu.
+        return false;
+    }
+
+    bsod_unreachable();
+}
+#endif
+
 static FSMResponseVariant preheatTempUnKnown(PreheatData preheat_data) {
-    marlin_server::FSM_Holder holder { PhasesPreheat::UserTempSelection, preheat_data.serialize() };
+    const auto serialized_data = preheat_data.serialize();
+
+    marlin_server::FSM_Holder fsm { ClientFSM::Preheat };
+
+    const auto check_early_exit = [&] -> std::optional<FSMResponseVariant> {
+        if (preheat_data.mode == PreheatMode::autoload && FSensors_instance().sensor_state(LogicalFilamentSensor::primary_runout) == FilamentSensorState::NoFilament) {
+            return FSMResponseVariant::make(Response::Abort);
+        }
+
+        if (preheat_data.mode == PreheatMode::preheat && FSensors_instance().IsAutoloadInProgress()) {
+            return FSMResponseVariant();
+        }
+
+        if (gcode_exceptions().is_unwinding()) {
+            return FSMResponseVariant::make(Response::Abort);
+        }
+
+        return std::nullopt;
+    };
+
+#if HAS_ANFC()
+    const auto tool = stdext::get_optional<VirtualToolIndex>(preheat_data.tool);
+    const auto tag = tool.and_then(buddy::openprinttag::ToolTag::for_tool);
+
+    // If an OPT is detected for the tool, possibly automatically load data from it
+    if (can_use_openprinttag(preheat_data.mode) && tag.has_value()) {
+        namespace opt = buddy::openprinttag;
+
+        Tristate load_tag = config_store().opt_auto_read_on_load.get();
+
+        if (load_tag == Tristate::other) {
+            // Ask the user if they want to load the data
+            fsm.change(PhasesPreheat::ask_load_openprinttag, serialized_data);
+            while (true) {
+                switch (marlin_server::get_response_from_phase(PhasesPreheat::ask_load_openprinttag)) {
+
+                case Response::Yes:
+                    load_tag = Tristate::yes;
+                    goto break_ask_load_opt_loop;
+
+                case Response::No:
+                    load_tag = Tristate::no;
+                    goto break_ask_load_opt_loop;
+
+                case Response::Always:
+                    load_tag = Tristate::yes;
+                    config_store().opt_auto_read_on_load.set(true);
+                    goto break_ask_load_opt_loop;
+
+                case Response::Never:
+                    load_tag = Tristate::no;
+                    config_store().opt_auto_read_on_load.set(false);
+                    goto break_ask_load_opt_loop;
+
+                case Response::_none:
+                    break;
+
+                default:
+                    bsod_unreachable();
+                }
+
+                if (auto e = check_early_exit()) {
+                    return *e;
+                }
+
+                idle(true);
+            }
+        break_ask_load_opt_loop:
+        }
+
+        if (load_tag == Tristate::yes) {
+            opt::MultiReadFieldRequest<opt::FilamentParametersInfo::Requirements {}> req { *tag };
+            req.issue();
+
+            while (!req.finished()) {
+                if (auto e = check_early_exit()) {
+                    return *e;
+                }
+
+                idle(true);
+            }
+
+            opt::FilamentParametersInfo params { req };
+
+            if (params.missing_parameters.none()) {
+                // Everything derived perfectly from the tag -> apply the parameters and be happy
+                const FilamentType ft = PendingAdHocFilamentType {};
+                ft.set_parameters(params.parameters);
+                return FSMResponseVariant::make(ft);
+
+            } else {
+                // The printer was not able to derive all the necessary fields
+                // -> pop up ScreenOPTFilamentDetail and let the user tweak the settings
+                // unknown fields will be highlighted
+                // (the screen loads the OPT data again on the GUI thread)
+
+                fsm.change(PhasesPreheat::openprinttag_parameters, serialized_data);
+
+                // Wait for the ScreenOPTFilamentDetail to open and then switch to UserTempSelection phase
+                // See hack explanation in PhasesPreheat::openprinttag_parameters doxygen
+                while (true) {
+                    switch (marlin_server::get_response_from_phase(PhasesPreheat::openprinttag_parameters)) {
+
+                    case Response::Ok:
+                        goto break_opt_params_loop;
+
+                    case Response::_none:
+                        break;
+
+                    default:
+                        bsod_unreachable();
+                    }
+
+                    if (auto e = check_early_exit()) {
+                        return *e;
+                    }
+
+                    idle(true);
+                }
+            break_opt_params_loop:
+            }
+        }
+    }
+#endif
+
+    fsm.change(PhasesPreheat::UserTempSelection, serialized_data);
 
     while (true) {
         if (const auto ret = marlin_server::get_response_variant_from_phase(PhasesPreheat::UserTempSelection)) {
             return ret;
         }
-        if (preheat_data.mode == PreheatMode::autoload && FSensors_instance().sensor_state(LogicalFilamentSensor::primary_runout) == FilamentSensorState::NoFilament) {
-            return FSMResponseVariant::make(Response::Abort);
-        }
 
-        // If someone inserts a filament while in the actual "Preheat" menu, abort (so that we can spin up the load FSM)
-        if (preheat_data.mode == PreheatMode::preheat && FSensors_instance().IsAutoloadInProgress()) {
-            return FSMResponseVariant();
+        if (auto e = check_early_exit()) {
+            return *e;
         }
 
         idle(true);

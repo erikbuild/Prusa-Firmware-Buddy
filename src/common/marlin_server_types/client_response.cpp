@@ -16,13 +16,14 @@
 #endif
 
 #include <fsm/filament_change_phases.hpp>
+#include <fsm/preheat_phases.hpp>
 
 namespace ClientResponses {
 
 constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM::_count> fsm_phase_responses {
     { ClientFSM::Serial_printing, {} },
         { ClientFSM::Load_unload, LoadUnloadResponses },
-        { ClientFSM::Preheat, PreheatResponses },
+        { ClientFSM::Preheat, ClientResponses::preheat_responses },
 #if HAS_SELFTEST()
         { ClientFSM::Selftest, SelftestResponses },
         { ClientFSM::FansSelftest, FanSelftestResponses },

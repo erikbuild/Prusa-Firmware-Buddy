@@ -122,12 +122,6 @@ enum class PhaseWait : PhaseUnderlyingType {
 };
 constexpr inline ClientFSM client_fsm_from_phase(PhaseWait) { return ClientFSM::Wait; }
 
-enum class PhasesPreheat : PhaseUnderlyingType {
-    UserTempSelection,
-    _last = UserTempSelection
-};
-constexpr inline ClientFSM client_fsm_from_phase(PhasesPreheat) { return ClientFSM::Preheat; }
-
 #if HAS_SELFTEST()
 // GUI phases of selftest/wizard
 // WARNING: make sure that _first_xx and _last_xx are defined after normal selftest phases. This enum is exported by magic_enum library, and it has
@@ -469,11 +463,6 @@ constexpr inline ClientFSM client_fsm_from_phase(PhaseDoorSensorCalibration) { r
 #endif
 
 namespace ClientResponses {
-
-inline constexpr EnumArray<PhasesPreheat, PhaseResponses, CountPhases<PhasesPreheat>()> PreheatResponses {
-    // Additionally, filament type selection is passed through FSMResponseVariant(FilamentType)
-    { PhasesPreheat::UserTempSelection, { Response::Abort, Response::Cooldown } },
-};
 
 #if HAS_SELFTEST()
 inline constexpr EnumArray<PhasesSelftest, PhaseResponses, CountPhases<PhasesSelftest>()> SelftestResponses {

@@ -9,10 +9,12 @@
 #include <utils/string_builder.hpp>
 #include <gui/screen/filament/screen_filament_detail.hpp>
 #include <ScreenHandler.hpp>
+#include <gui/standard_frame/frame_prompt.hpp>
 
 #if HAS_ANFC()
     #include <feature/openprinttag/tool_tag.hpp>
     #include <screen/openprinttag/screen_opt_filament_detail.hpp>
+    #include <feature/openprinttag/requests_read_multi.hpp>
 #endif
 
 namespace {
@@ -283,8 +285,97 @@ struct FrameFilamentSelection {
 };
 static_assert(common_frames::is_update_callable<FrameFilamentSelection>);
 
-using Frames = FrameDefinitionList<ScreenPreheat::FrameStorage,
-    FrameDefinition<Phase::UserTempSelection, FrameFilamentSelection>>;
+#if HAS_ANFC()
+// Note: we need the window_t so that we can hook to the loop event
+class FrameAskLoadOpenPrintTag : public FramePrompt {
+
+public:
+    FrameAskLoadOpenPrintTag(window_frame_t *parent)
+        : FramePrompt(parent, PhasesPreheat::ask_load_openprinttag, _("Load from OpenPrintTag?"), string_view_utf8 {}) {
+        update_info_text();
+    }
+
+    void update(const fsm::PhaseData &data) {
+        const auto d = PreheatData::deserialize(data);
+
+        const auto tool = stdext::get_optional<VirtualToolIndex>(d.tool);
+        if (!tool) {
+            return;
+        }
+
+        const auto tag = buddy::openprinttag::ToolTag::for_tool(*tool);
+
+        if (!tag) {
+            return;
+        }
+
+        opt_req_.emplace(*tag);
+        opt_req_->issue();
+        info_updated_ = false;
+    }
+
+    void loop() {
+        if (!info_updated_ && opt_req_.has_value() && opt_req_->finished()) {
+            update_info_text();
+            info_updated_ = true;
+        }
+    }
+
+private:
+    void update_info_text() {
+        std::string_view brand = "...";
+        std::string_view material;
+
+        if (opt_req_.has_value() && opt_req_->finished()) {
+            brand = {};
+
+            if (auto r = opt_req_->result<openprinttag::MainField::brand_name>()) {
+                brand = *r;
+            }
+            if (auto r = opt_req_->result<openprinttag::MainField::material_name>()) {
+                material = *r;
+            }
+        }
+
+        info.SetText(_("Load parameters from OpenPrintTag?\n\nMaterial: %.*s %.*s").formatted(text_params_, brand, material));
+
+        // Force invalidation, because the ref is the same
+        info.Invalidate();
+    }
+
+private:
+    std::optional<buddy::openprinttag::MultiReadFieldRequest<openprinttag::MainField::material_name, openprinttag::MainField::brand_name>> opt_req_;
+    StringViewUtf8Parameters<64> text_params_;
+    bool info_updated_ = false;
+};
+static_assert(common_frames::is_update_callable<FrameAskLoadOpenPrintTag>);
+
+struct FrameOPTParameters {
+    FrameOPTParameters(window_frame_t *) {}
+
+    void update(const fsm::PhaseData &data) {
+        const auto d = PreheatData::deserialize(data);
+
+        if (const auto tag = buddy::openprinttag::ToolTag::for_tool(std::get<VirtualToolIndex>(d.tool))) {
+            Screens::Access()->Open(screen_openprinttag_preheat_mode_creator(*tag));
+        }
+
+        // Switch to a different phase to prevent the screen reopening again after it closes
+        // See hack explanation in PhasesPreheat::openprinttag_parameters doxygen
+        marlin_client::FSM_response(PhasesPreheat::openprinttag_parameters, Response::Ok);
+    }
+};
+static_assert(common_frames::is_update_callable<FrameOPTParameters>);
+
+#endif
+
+using Frames
+    = FrameDefinitionList<ScreenPreheat::FrameStorage,
+#if HAS_ANFC()
+        FrameDefinition<Phase::ask_load_openprinttag, FrameAskLoadOpenPrintTag>,
+        FrameDefinition<Phase::openprinttag_parameters, FrameOPTParameters>,
+#endif
+        FrameDefinition<Phase::UserTempSelection, FrameFilamentSelection>>;
 
 } // namespace
 
@@ -310,6 +401,16 @@ bool ScreenPreheat::handle_filament_selection(FilamentType filament_type, Prehea
 
     marlin_client::FSM_response_variant(PhasesPreheat::UserTempSelection, FSMResponseVariant::make<FilamentType>(filament_type));
     return true;
+}
+
+void ScreenPreheat::screenEvent(window_t *sender, GUI_event_t event, void *param) {
+#if HAS_ANFC()
+    if (event == GUI_event_t::LOOP && get_phase() == PhasesPreheat::ask_load_openprinttag) {
+        frame_storage.as<FrameAskLoadOpenPrintTag>()->loop();
+    }
+#endif
+
+    ScreenFSM::screenEvent(sender, event, param);
 }
 
 void ScreenPreheat::create_frame() {

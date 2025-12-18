@@ -19,6 +19,7 @@
 #endif
 #include "fsm/filament_change_phases.hpp"
 #include <fsm/print_preview_phases.hpp>
+#include <fsm/preheat_phases.hpp>
 
 namespace nb = nanobind;
 using namespace nb::literals;

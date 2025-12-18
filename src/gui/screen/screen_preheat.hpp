@@ -13,6 +13,7 @@
 
 #include <MItem_tools.hpp>
 #include <fsm_preheat_type.hpp>
+#include <fsm/preheat_phases.hpp>
 
 class ScreenPreheat : public ScreenFSM {
 
@@ -28,6 +29,8 @@ protected:
     }
 
 protected:
+    void screenEvent(window_t *, GUI_event_t event, void *) override;
+
     void create_frame();
     void destroy_frame();
     void update_frame();

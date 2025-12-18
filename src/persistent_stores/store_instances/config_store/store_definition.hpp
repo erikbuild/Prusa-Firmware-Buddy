@@ -52,6 +52,7 @@
 #include <option/has_bed_fan.h>
 #include <option/has_psu_fan.h>
 #include <option/has_heatbed_screws_during_transport.h>
+#include <option/has_anfc.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -710,6 +711,12 @@ struct CurrentStore
     // Casts float of range < 0.0f ; 254f > to uint8. Value 255 is reserved to unknown value
     void set_filament_retracted_distance(uint8_t tool_idx, std::optional<float> dist);
     std::optional<float> get_filament_retracted_distance(uint8_t tool_idx);
+#endif
+
+#if HAS_ANFC()
+    /// Whether we should automatically read data from the OpenPrintTag during load procedure
+    /// Tristate::other = ask the user
+    StoreItem<Tristate, Tristate::other, ItemFlag::features, journal::hash("OpenPrintTag auto use loadunload")> opt_auto_read_on_load;
 #endif
 
 #if HAS_CHAMBER_VENTS()
