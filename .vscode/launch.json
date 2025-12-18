@@ -22,6 +22,9 @@
             "rtos": "FreeRTOS",
             "breakAfterReset": false,
             "preLaunchTask": "Backup current ELF",
+            "postStartSessionCommands": [
+                "set remotetimeout 60"
+            ],
             "liveWatch": {
                 "enabled": true,
             },
