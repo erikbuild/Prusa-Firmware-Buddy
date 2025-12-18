@@ -170,8 +170,9 @@ void preheat_menu::ScreenPreheat::update_frame() {
         case PreheatMode::Preheat:
             return N_("Preheating");
 
-        case PreheatMode::Load:
-        case PreheatMode::Autoload:
+        case PreheatMode::standard_load:
+        case PreheatMode::change_load:
+        case PreheatMode::autoload:
             return N_("Preheating for load");
 
         case PreheatMode::Unload:
