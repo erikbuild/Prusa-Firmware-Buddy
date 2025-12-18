@@ -107,15 +107,16 @@ bool ScreenOPTInfo::scan() {
     }
 
     if (!type.abbreviation.empty()) {
-        std::string_view abbr = type.abbreviation;
+        const std::string_view abbr = type.abbreviation;
+        const auto default_abbr = req.result<MainField::material_type>().transform([](auto item) { return ::openprinttag::enum_item_name(item); });
 
-        if (const auto default_abbr = req.result<MainField::material_type>().transform([](auto item) { return ::openprinttag::enum_item_name(item); }); default_abbr != type.abbreviation) {
-            StringBuilder sb(abbreviation_buffer_);
-            sb.append_printf("%.*s (%.*s)", abbr.size(), abbr.data(), default_abbr->size(), default_abbr->data());
-            abbr = sb.str();
+        StringBuilder sb(abbreviation_buffer_);
+        sb.append_printf("%.*s", abbr.size(), abbr.data());
+        if (default_abbr.has_value() && default_abbr != type.abbreviation) {
+            sb.append_printf(" (%.*s)", default_abbr->size(), default_abbr->data());
         }
 
-        add_string_item(N_("Abbreviation"), abbr, abbreviation_buffer_);
+        add_string_item(N_("Abbreviation"), sb.str(), abbreviation_buffer_);
     }
 
     if (weights.full_weight_g.has_value() && weights.remaining_weight_g.has_value() && weights.full_weight_g != weights.remaining_weight_g) {
