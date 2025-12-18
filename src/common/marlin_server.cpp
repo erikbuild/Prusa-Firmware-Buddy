@@ -906,12 +906,12 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
     // During multi tool printing, slicer handles retraction/ramming and keeps FW in the dark
     // RetractTracker keeps track of retracted distances on each hotend
     // This overwrites retracted distances in persistent storage with temporary ones from RetractTracker
-    for (uint8_t i = 0; i < HOTENDS; i++) {
-        const auto dist = buddy::retract_tracker().get_retracted_distance(i);
+    for (auto tool : PhysicalToolIndex::all()) {
+        const auto dist = buddy::retract_tracker().get_retracted_distance(tool);
         // Do not save retract_tracker value before it was validated
         if (dist.has_value()) {
             // update only used hotends
-            buddy::auto_retract().set_retracted_distance(i, dist);
+            buddy::auto_retract().set_retracted_distance(tool.to_raw(), dist);
         }
     }
 #endif

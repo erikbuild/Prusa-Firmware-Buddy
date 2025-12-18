@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include <array>
 #include <utils/uncopyable.hpp>
 #include <bitset>
 #include <optional>
 #include <option/has_nextruder.h>
+#include <tool_index.hpp>
+#include <utils/storage/strong_index_array.hpp>
 
 namespace buddy {
 
@@ -31,18 +32,18 @@ public:
 #endif
 
     /// Adds \param extrusion_distance (retraction is negative) to temporary value of active hotend
-    void track_extruder_move(float extrusion_distance);
+    void track_extruder_move(PhysicalToolIndex physical_tool, float extrusion_distance);
 
-    /// Return temporary value (retraction is positive) of \param hotend
-    std::optional<float> get_retracted_distance(uint8_t hotend) const;
+    /// Return temporary value (retraction is positive) of \param physical_tool
+    std::optional<float> get_retracted_distance(PhysicalToolIndex physical_tool) const;
 
     /// Forget all hotends (invalidate and set back to extruder_to_nozzle_distance)
     void reset();
 
 private:
     RetractTracker();
-    std::array<float, HOTENDS> retracted_distances;
-    std::bitset<HOTENDS> distance_valid; ///< The hotend validates  by traveling at least +extruder_to_nozzle_distance
+    StrongIndexArray<float, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> retracted_distances;
+    std::bitset<PhysicalToolIndex::count> distance_valid; ///< The hotend validates  by traveling at least +extruder_to_nozzle_distance
 };
 
 RetractTracker &retract_tracker();

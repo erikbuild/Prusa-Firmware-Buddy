@@ -125,6 +125,7 @@
 #include <marlin_vars.hpp>
 #include "configuration_store.h"
 #include <raii/auto_restore.hpp>
+#include <utils/variant_utils.hpp>
 #include "bsod.h"
 
 constexpr const int32_t MIN_MSTEPS_PER_SEGMENT = MIN_STEPS_PER_SEGMENT * PLANNER_STEPS_MULTIPLIER;
@@ -2135,6 +2136,9 @@ bool Planner::buffer_segment(const abce_pos_t &abce
   #error Z_CEILING_CLEARANCE must be defined only if HAS_CEILING_CLEARANCE()
 #endif
 
+  [[maybe_unused]] const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::from_raw_notool(active_extruder));
+  [[maybe_unused]] const auto physical_tool = virtual_tool.transform(&VirtualToolIndex::to_physical);
+
   // The target position of the tool in absolute mini-steps
   // Calculate target position in absolute mini-steps
   const abce_long_t target = {
@@ -2176,7 +2180,9 @@ bool Planner::buffer_segment(const abce_pos_t &abce
 
 #if HAS_AUTO_RETRACT()
   if (target.e != position.e) {
-    buddy::retract_tracker().track_extruder_move(abce.e - position_float.e);
+    if(physical_tool.has_value()) {
+      buddy::retract_tracker().track_extruder_move(*physical_tool, abce.e - position_float.e);
+    }
   }
 
   if (target.e > position.e) {
@@ -2192,9 +2198,8 @@ bool Planner::buffer_segment(const abce_pos_t &abce
     // Invalidate auto_retract value if we retract E at least some amount (5 mm)
     // maybe_retract_from_nozzle will overwrite the value at the end of it's sequence, other moves invalidate auto_retract value
     // Before retract tracker's value is validated invalidate on any retract E move (10)
-    const auto hotend = marlin_vars().active_hotend_id();
-    if (buddy::retract_tracker().get_retracted_distance(hotend).value_or(10) > 5) {
-      buddy::auto_retract().set_retracted_distance(hotend, std::nullopt);
+    if (physical_tool.has_value() && buddy::retract_tracker().get_retracted_distance(*physical_tool).value_or(10) > 5) {
+      buddy::auto_retract().set_retracted_distance(physical_tool->to_raw(), std::nullopt);
     }
   }
 #endif
