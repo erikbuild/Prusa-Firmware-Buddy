@@ -41,4 +41,15 @@ auto to_variant(auto &&input) {
     return ToVariantResult<decltype(input)> { std::forward<decltype(input)>(input) };
 }
 
+/// @returns Optionally returns a specified item from std::variant, if the variant holds the item.
+template <typename T, typename... V>
+std::optional<T> get_optional(const std::variant<V...> &v) {
+    const T *r = std::get_if<T>(&v);
+    if (r != nullptr) {
+        return *r;
+    } else {
+        return std::nullopt;
+    }
+}
+
 } // namespace stdext
