@@ -2,6 +2,9 @@
 
 #include <gui/ScreenHandler.hpp>
 #include <window_menu_adv.hpp>
+#include <window_menu_virtual.hpp>
+#include <window_header.hpp>
+#include <WindowMenuItems.hpp>
 
 namespace {
 class DialogItem final : public IWindowMenuItem {

@@ -3,11 +3,6 @@
 #include <span>
 
 #include <i_window_menu_item.hpp>
-#include <gui/dialogs/IDialog.hpp>
-#include <window_menu_virtual.hpp>
-#include <window_menu_callback_item.hpp>
-#include <window_header.hpp>
-#include <WindowMenuItems.hpp>
 
 /// Menu item where user selects a value from a list of items presented as a menu dialog
 class MenuItemSelectMenu : public IWindowMenuItem {

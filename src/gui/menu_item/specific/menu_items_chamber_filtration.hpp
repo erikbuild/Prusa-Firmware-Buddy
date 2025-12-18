@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui/menu_item/menu_item_select_menu.hpp>
+#include <WindowMenuItems.hpp>
 
 #include <option/xl_enclosure_support.h>
 #include <feature/chamber_filtration/chamber_filtration.hpp>
