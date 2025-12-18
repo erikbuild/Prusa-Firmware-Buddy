@@ -54,7 +54,7 @@ void PrusaGcodeSuite::M1700() {
 
     filament_gcodes::M1700_no_parser(filament_gcodes::M1700Args {
         .preheat = RetAndCool_t(preheat),
-        .mode = PreheatMode::Preheat,
+        .mode = PreheatMode::preheat,
         .tool = tool,
         .save = parser.boolval('S'),
         .enforce_target_temp = parser.boolval('E'),

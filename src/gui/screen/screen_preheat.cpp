@@ -167,7 +167,7 @@ void preheat_menu::ScreenPreheat::update_frame() {
     const PreheatData data = PreheatData::deserialize(fsm_base_data.GetData());
     const auto title = [&] -> const char * {
         switch (data.mode) {
-        case PreheatMode::Preheat:
+        case PreheatMode::preheat:
             return N_("Preheating");
 
         case PreheatMode::standard_load:
@@ -175,10 +175,10 @@ void preheat_menu::ScreenPreheat::update_frame() {
         case PreheatMode::autoload:
             return N_("Preheating for load");
 
-        case PreheatMode::Unload:
+        case PreheatMode::unload:
             return N_("Preheating for unload");
 
-        case PreheatMode::Purge:
+        case PreheatMode::purge:
             return N_("Preheating for purge");
         }
         bsod_unreachable();

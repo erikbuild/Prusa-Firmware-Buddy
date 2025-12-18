@@ -88,7 +88,7 @@ enum class LoadUnloadMode : uint8_t {
 
 enum class PreheatMode : uint8_t {
     /// Selecting filament just for preheating (from the menu)
-    Preheat,
+    preheat,
 
     /// Explicitly triggered standard load
     standard_load,
@@ -99,9 +99,9 @@ enum class PreheatMode : uint8_t {
     /// Automatically triggered load (typically by inserting the filament to the fsensor)
     autoload,
 
-    Unload,
-    Purge,
-    _last = Purge
+    unload,
+    purge,
+    _last = purge
 };
 
 enum class RetAndCool_t : uint8_t {

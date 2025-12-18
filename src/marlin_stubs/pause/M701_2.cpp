@@ -77,7 +77,7 @@ void filament_gcodes::M701_no_parser(FilamentType filament_to_be_loaded, const s
 
     if (op_preheat) {
         if (filament_to_be_loaded == FilamentType::none) {
-            PreheatData data = PreheatData::make(do_purge_only ? PreheatMode::Purge : PreheatMode::standard_load, virtual_tool, *op_preheat);
+            PreheatData data = PreheatData::make(do_purge_only ? PreheatMode::purge : PreheatMode::standard_load, virtual_tool, *op_preheat);
             auto preheat_ret = preheat(data, PreheatBehavior::for_filament_change());
             if (preheat_ret.first) {
                 // canceled
@@ -141,7 +141,7 @@ void filament_gcodes::M702_no_parser(std::optional<float> unload_length, float z
 #else
     if (op_preheat) {
 #endif
-        PreheatData data = PreheatData::make(PreheatMode::Unload, virtual_tool, *op_preheat);
+        PreheatData data = PreheatData::make(PreheatMode::unload, virtual_tool, *op_preheat);
         // avoid preheating bed in this case
         auto preheat_ret = preheat(data, PreheatBehavior::force_preheat_only_extruder());
         if (preheat_ret.first) {
@@ -316,10 +316,10 @@ void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, Virtua
     }
 
     if (ask_filament == AskFilament_t::Always || (filament == FilamentType::none && ask_filament == AskFilament_t::IfUnknown)) {
-        // need to save filament to check if operation went well, PreheatMode::Unload for user info in header
+        // need to save filament to check if operation went well, PreheatMode::unload for user info in header
         M1700_no_parser(M1700Args {
             .preheat = preheat,
-            .mode = PreheatMode::Unload,
+            .mode = PreheatMode::unload,
             .tool = virtual_tool,
             .save = true,
             .enforce_target_temp = true,

@@ -27,7 +27,7 @@ static FSMResponseVariant preheatTempUnKnown(PreheatData preheat_data) {
         }
 
         // If someone inserts a filament while in the actual "Preheat" menu, abort (so that we can spin up the load FSM)
-        if (preheat_data.mode == PreheatMode::Preheat && FSensors_instance().IsAutoloadInProgress()) {
+        if (preheat_data.mode == PreheatMode::preheat && FSensors_instance().IsAutoloadInProgress()) {
             return FSMResponseVariant();
         }
 
@@ -37,7 +37,7 @@ static FSMResponseVariant preheatTempUnKnown(PreheatData preheat_data) {
 
 static FSMResponseVariant evaluate_preheat_conditions(PreheatData preheat_data) {
     const auto filament_type = [&] {
-        if ((preheat_data.mode != PreheatMode::Unload) && (preheat_data.mode != PreheatMode::Purge)) {
+        if ((preheat_data.mode != PreheatMode::unload) && (preheat_data.mode != PreheatMode::purge)) {
             // We cannot know the temperature, and thus must ask the user
             return FilamentType::none;
         }
