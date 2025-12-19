@@ -172,8 +172,6 @@ protected:
     virtual void printIcon(Rect16 icon_rect, ropfn raster_op, Color color_back) const; // must be virtual, because pictures of flags are drawn differently
     virtual void printExtension(Rect16 extension_rect, Color color_text, Color color_back, ropfn raster_op) const; // things behind rect
     virtual void click([[maybe_unused]] IWindowMenu &window_menu) {};
-    virtual invalidate_t change(int /*dif*/) { return invalidate_t::no; }
-    virtual void event(WindowMenuItemEventContext &);
 
     void setLabelFont(Font);
     Font getLabelFont() const;
@@ -236,11 +234,9 @@ public:
     void printRoundCorners(Rect16 rect, Color front, Color back) const;
     void printOverRoundCorners(Rect16 rect, uint8_t left_width, uint8_t right_width, Color color_back) const;
 
-    inline bool Increment(uint8_t dif) { return Change(dif); }
-    inline bool Decrement(uint8_t dif) { return Change(-int(dif)); }
-    bool Change(int dif); // returns if changed
     void Click(IWindowMenu &window_menu);
     void Touch(IWindowMenu &window_menu, point_ui16_t relative_touch_point);
+    virtual void event(WindowMenuItemEventContext &);
 
     /// Handles text roll on the focused item
     static void handle_roll();

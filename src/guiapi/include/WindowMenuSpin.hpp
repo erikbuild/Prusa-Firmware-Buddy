@@ -66,7 +66,7 @@ protected:
     void click(IWindowMenu &window_menu) override;
     void printExtension(Rect16 extension_rect, Color color_text, Color color_back, ropfn raster_op) const override;
 
-    virtual invalidate_t change(int dif) override;
+    bool change(int dif);
     void update();
     void event(WindowMenuItemEventContext &ctx) final;
 

@@ -29,7 +29,6 @@ public:
     void set_invert_value(bool set);
 
 protected:
-    virtual invalidate_t change(int dif) override;
     virtual void OnChange([[maybe_unused]] size_t old_index) {} // TODO: Remove this ugly legacy parameter
 
     virtual void click(IWindowMenu &window_menu) override;

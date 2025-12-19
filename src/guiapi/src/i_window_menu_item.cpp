@@ -457,14 +457,6 @@ void IWindowMenuItem::reset_roll() {
     focused_menu_item_roll.Deinit();
 }
 
-bool IWindowMenuItem::Change(int dif) {
-    bool changed = change(dif) == invalidate_t::yes;
-    if (changed) {
-        InValidateExtension();
-    }
-    return changed;
-}
-
 void IWindowMenuItem::event(WindowMenuItemEventContext &ctx) {
     // The event has been processed & accepted -> do nothing
     if (ctx.is_accepted()) {

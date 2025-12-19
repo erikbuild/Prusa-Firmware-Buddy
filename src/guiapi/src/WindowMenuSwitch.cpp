@@ -9,12 +9,6 @@ MenuItemSwitch::MenuItemSwitch(const string_view_utf8 &label, const std::span<co
     set_current_item(initial_index);
 }
 
-invalidate_t MenuItemSwitch::change(int /*dif*/) {
-    // I don't dare removing this right now, maybe something depends on it
-    set_current_item((current_item() + 1) % item_count());
-    return invalidate_t::yes;
-}
-
 bool MenuItemSwitch::on_item_selected([[maybe_unused]] int old_index, [[maybe_unused]] int new_index) {
     OnChange(old_index);
     return true;

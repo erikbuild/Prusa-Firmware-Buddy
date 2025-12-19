@@ -7,6 +7,8 @@
 #include "WindowMenuSpin.hpp"
 
 #include <utils/string_builder.hpp>
+#include <gui/event/knob_event.hpp>
+#include <sound.hpp>
 
 #if HAS_TOUCH()
     #include <dialog_numeric_input.hpp>
@@ -25,7 +27,7 @@ void WiSpin::set_value(std::optional<float> val) {
     if (value_ != val) {
         assert(val.has_value() || config_.special_value.has_value());
         value_ = val.value_or(config_.special_value.value_or(0));
-        Change(0);
+        change(0);
     }
 }
 
@@ -54,6 +56,11 @@ void WiSpin::event(WindowMenuItemEventContext &ctx) {
         return;
     }
 #endif
+
+    if (auto e = ctx.event.value_maybe<gui_event::KnobEvent>()) {
+        const bool has_changed = change(e->diff);
+        sound::play(has_changed ? SoundType::encoder_move : SoundType::blind_alert);
+    }
 
     IWindowMenuItem::event(ctx);
 }
@@ -141,16 +148,18 @@ Rect16::Width_t WiSpin::calculateExtensionWidth(const NumericInputConfig &config
     return ret;
 }
 
-invalidate_t WiSpin::change(int dif) {
+bool WiSpin::change(int dif) {
     const auto previous_value = value_;
     value_ = round(value_ / config_.step + dif) * config_.step;
     value_ = config_.clamp(value_, dif);
 
     if (!dif || value_ != previous_value) { // 0 dif forces redraw
         update();
-        return invalidate_t::yes;
+        InValidateExtension();
+        return true;
+
     } else {
-        return invalidate_t::no;
+        return false;
     }
 }
 

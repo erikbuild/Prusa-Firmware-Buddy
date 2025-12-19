@@ -4,6 +4,7 @@
 #include <sound.hpp>
 #include <i_window_menu_item.hpp>
 #include "display.hpp"
+#include <event/knob_event.hpp>
 
 #include <option/has_touch.h>
 #if HAS_TOUCH()
@@ -279,8 +280,6 @@ void IWindowMenu::draw() {
 }
 
 void IWindowMenu::windowEvent(window_t *sender, GUI_event_t event, void *param) {
-    const int encoder_value = int(param);
-
     IWindowMenuItem *focused_item = focused_item_index() ? IWindowMenuItem::focused_item() : nullptr;
 
     // Non-item-specific events
@@ -293,22 +292,21 @@ void IWindowMenu::windowEvent(window_t *sender, GUI_event_t event, void *param) 
         break;
 
     case GUI_event_t::ENC_DN:
+    case GUI_event_t::ENC_UP: {
+        const int diff = std::bit_cast<int>(param) * (event == GUI_event_t::ENC_DN ? -1 : 1);
+
         if (focused_item && focused_item->is_edited()) {
-            sound::play(focused_item->Decrement(std::bit_cast<int>(param)) ? SoundType::encoder_move : SoundType::blind_alert);
+            const gui_event::KnobEvent event {
+                .diff = diff,
+            };
+            WindowMenuItemEventContext ctx(event, this);
+            focused_item->event(ctx);
             break;
         }
 
-        move_focus_by(-encoder_value, YNPlaySound::yes);
+        move_focus_by(diff, YNPlaySound::yes);
         break;
-
-    case GUI_event_t::ENC_UP:
-        if (focused_item && focused_item->is_edited()) {
-            sound::play(focused_item->Increment(std::bit_cast<int>(param)) ? SoundType::encoder_move : SoundType::blind_alert);
-            break;
-        }
-
-        move_focus_by(encoder_value, YNPlaySound::yes);
-        break;
+    }
 
     case GUI_event_t::TOUCH_CLICK: {
         const auto focused_index = move_focus_touch_click(param);

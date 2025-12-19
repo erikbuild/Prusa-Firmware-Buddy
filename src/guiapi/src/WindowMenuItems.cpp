@@ -48,11 +48,6 @@ void WI_ICON_SWITCH_OFF_ON_t::set_invert_value(bool set) {
     }
 }
 
-invalidate_t WI_ICON_SWITCH_OFF_ON_t::change(int) {
-    value_ = !value_;
-    return invalidate_t::yes;
-}
-
 void WI_ICON_SWITCH_OFF_ON_t::click(IWindowMenu &) {
     value_ = !value_;
     OnChange(!value_);

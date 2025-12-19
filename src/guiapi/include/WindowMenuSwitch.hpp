@@ -24,8 +24,6 @@ protected:
     [[deprecated("Use on_item_selected")]]
     virtual void OnChange([[maybe_unused]] size_t old_index) {};
 
-    invalidate_t change(int dif) override;
-
     bool on_item_selected([[maybe_unused]] int old_index, [[maybe_unused]] int new_index) override;
 
     void build_item_text(int index, const std::span<char> &buffer) const final;
