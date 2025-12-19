@@ -2187,10 +2187,13 @@ bool Planner::buffer_segment(const abce_pos_t &abce
     if(!physical_tool.has_value()) {
       bsod("E move without tool");
     }
-    
-  #if HAS_FILAMENT_TRACKER()
-    buddy::filament_tracker().track_extruder_move(*virtual_tool, abce.e - position_float.e);
-  #endif
+
+    #if HAS_FILAMENT_TRACKER()
+      // Note: This is not >>ideal<<, because although the moves get planned, they might get discarded through (gcode_exceptions/quick_stop)
+      // Most notably, this will track some extra filament usage if user intterupts purging
+      // Tying this directly to the immediate motor positions might be better, but one would also need to also handle the origin resets
+      buddy::filament_tracker().track_extruder_move(*virtual_tool, abce.e - position_float.e);
+    #endif
   }
 
 #if HAS_AUTO_RETRACT()
