@@ -191,7 +191,10 @@
     #include <feature/auto_retract/auto_retract.hpp>
 #endif
 
-#include <feature/filament_tracker/filament_tracker.hpp>
+#include <option/has_filament_tracker.h>
+#if HAS_FILAMENT_TRACKER()
+    #include <feature/filament_tracker/filament_tracker.hpp>
+#endif
 
 #include <option/buddy_enable_wui.h>
 #if BUDDY_ENABLE_WUI()

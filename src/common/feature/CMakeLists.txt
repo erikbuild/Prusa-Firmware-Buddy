@@ -58,9 +58,12 @@ if(HAS_ANFC)
   add_subdirectory(openprinttag)
 endif()
 
+if(HAS_FILAMENT_TRACKER)
+  add_subdirectory(filament_tracker)
+endif()
+
 add_subdirectory(ramming)
 add_subdirectory(cork)
 add_subdirectory(safety_timer)
 add_subdirectory(stepper_timeout)
 add_subdirectory(gcode_exception)
-add_subdirectory(filament_tracker)

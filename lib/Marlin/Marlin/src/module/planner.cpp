@@ -116,8 +116,12 @@
 #if HAS_AUTO_RETRACT()
   #include <feature/auto_retract/auto_retract.hpp>
 #endif
-  
-#include <feature/filament_tracker/filament_tracker.hpp>
+
+#include <option/has_filament_tracker.h>
+#if HAS_FILAMENT_TRACKER()
+  #include <feature/filament_tracker/filament_tracker.hpp>
+#endif
+
 #include <feature/safety_timer/safety_timer.hpp>
 #include <freertos/critical_section.hpp>
 #include <feature/gcode_exception/gcode_exception.hpp>
@@ -2178,11 +2182,13 @@ bool Planner::buffer_segment(const abce_pos_t &abce
     gcode_exceptions().report_xyz_move();
   }
 
+#if HAS_FILAMENT_TRACKER()
   if (target.e != position.e) {
     if(physical_tool.has_value()) {
       buddy::filament_tracker().track_extruder_move(*physical_tool, abce.e - position_float.e);
     }
   }
+#endif
 
 #if HAS_AUTO_RETRACT()
   if (target.e > position.e) {

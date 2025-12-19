@@ -581,6 +581,7 @@ set_feature_for_printers(
   "MINI"
   )
 set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "COREONEL" "MK4" "iX" "XL")
+set_feature_for_printers(HAS_FILAMENT_TRACKER "COREONE" "COREONEL" "MK4" "iX" "XL")
 set_feature_for_printers_master_board(
   HAS_E2EE_SUPPORT
   "MK4"
