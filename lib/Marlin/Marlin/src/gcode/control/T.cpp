@@ -23,6 +23,7 @@
 #include "../gcode.h"
 #include "../../module/tool_change.h"
 #include "bsod.h"
+#include <utils/variant_utils.hpp>
 #include <tool_index.hpp>
 
 #include <option/has_tool_mapping.h>
@@ -80,23 +81,42 @@
  * - `Tc` - Load to nozzle after filament was prepared by Tc and nozzle is already heated.
  */
 void GcodeSuite::T() {
-  auto gcode_tool = GcodeToolIndex::from_raw(parser.codenum);
-  VirtualToolIndex virtual_tool = [&](){
+  auto validate_gcode = [](uint8_t raw_gcode_tool) -> std::variant<GcodeToolIndex, NoTool> {
+    if (raw_gcode_tool > GcodeToolIndex::count) {
+      fatal_error("Invalid gcode tool", "GcodeSuite");
+    } else if (raw_gcode_tool == GcodeToolIndex::count) {
+      return NoTool{};
+    } else {
+      return GcodeToolIndex::from_raw(raw_gcode_tool);
+    }
+  };
+
+  auto do_toolmapping = [](GcodeToolIndex gcode_tool) -> std::variant<VirtualToolIndex, NoTool> {
 #if HAS_TOOL_MAPPING()
     const bool map = !parser.seen('M') || parser.boolval('M', true);
     if (map) {
-      uint8_t raw_virtual = tool_mapper.to_virtual(gcode_tool.to_raw());
-      if (raw_virtual == tool_mapper.NO_TOOL_MAPPED) {
-        raise_redscreen(ErrCode::ERR_UNDEF, "Toolchange to tool disabled by tool mapping", "PrusaToolChanger");
-      }
-      return VirtualToolIndex::from_raw(raw_virtual);
+      return match(tool_mapper.to_virtual(gcode_tool),
+        [](VirtualToolIndex virtual_tool){ return virtual_tool; },
+        [](NoTool) -> VirtualToolIndex {
+          fatal_error("Toolchange to tool disabled by tool mapping", "PrusaToolChanger");
+        }
+      );
     }
 #endif
     return VirtualToolIndex::from_raw(gcode_tool.to_raw());
-  }();
+  };
+
+  auto maybe_gcode = validate_gcode(parser.codenum);
+  auto maybe_virtual = match(maybe_gcode,
+    do_toolmapping,
+    [](NoTool) -> std::variant<VirtualToolIndex, NoTool> { return NoTool{}; }
+  );
 
   if (DEBUGGING(LEVELING)) {
-    DEBUG_ECHOLNPAIR(">>> T(", virtual_tool.to_raw(), ")");
+    match(maybe_virtual,
+      [](VirtualToolIndex tool){ DEBUG_ECHOLNPAIR(">>> T(", tool.to_raw(), ")"); },
+      [](NoTool){ DEBUG_ECHOLNPAIR(">>> NoTool"); }
+    );
     DEBUG_POS("BEFORE", current_position);
   }
 
@@ -128,7 +148,7 @@ void GcodeSuite::T() {
   if (z_lift > tool_change_lift_t::_last_item) z_lift = tool_change_lift_t::full_lift; // invalid input, use full_lift
   bool z_down = parser.byteval('D', 1);
 
-  tool_change(virtual_tool, return_type, z_lift, z_down);
+  tool_change(stdext::to_variant(maybe_virtual), return_type, z_lift, z_down);
 
   if (DEBUGGING(LEVELING)) {
     DEBUG_POS("AFTER", current_position);
