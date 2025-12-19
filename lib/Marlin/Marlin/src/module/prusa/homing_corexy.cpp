@@ -419,15 +419,15 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
     const xy_long_t origin_steps = { stepper.position(A_AXIS), stepper.position(B_AXIS) };
 
     // expected exact corner distances given current offset
-    const int32_t exp_d = XY_HOMING_ORIGIN_OFFSET * 2 / planner.mm_per_step[axis] + ab_off[0] * phase_cycle_steps(other_axis) * 2;
+    const int32_t exp_d = static_cast<int32_t>(XY_HOMING_ORIGIN_OFFSET * 2 / planner.mm_per_step[axis] + ab_off[0] * phase_cycle_steps(other_axis) * 2);
     const int32_t exp_a = ab_off[1] * phase_cycle_steps(axis);
     const int32_t exp_dist_steps[2] = { exp_d + exp_a * measure_dir, exp_d - exp_a * measure_dir };
 
     // absolute tolerance for the travel move
     const float home_max_diff_mm = 2 * max(axis_home_max_diff(A_AXIS) - axis_home_min_diff(A_AXIS), axis_home_max_diff(B_AXIS) - axis_home_min_diff(B_AXIS));
-    const float home_abs_eps_mm = home_max_diff_mm * float(M_SQRT2);
-    const int32_t measure_eps_steps = home_abs_eps_mm / planner.mm_per_step[axis] + phase_cycle_steps(axis) * 2;
-    const int32_t measure_acc_steps = travel_accel_distance(fr_mm_s) * float(M_SQRT2) / planner.mm_per_step[axis];
+    const float home_abs_eps_mm = home_max_diff_mm * std::numbers::sqrt2_v<float>;
+    const int32_t measure_eps_steps = static_cast<int32_t>(home_abs_eps_mm / planner.mm_per_step[axis] + phase_cycle_steps(axis) * 2);
+    const int32_t measure_acc_steps = static_cast<int32_t>(travel_accel_distance(fr_mm_s) * std::numbers::sqrt2_v<float> / planner.mm_per_step[axis]);
 
     // keep the average of at least n values having less than max_err of separation between each
     constexpr int probe_n = 2;
