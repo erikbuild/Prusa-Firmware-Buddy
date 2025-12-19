@@ -43,7 +43,9 @@ public:
     /// This value is NOT persistent
     uint32_t get_extruded_distance(VirtualToolIndex virtual_tool) const;
 
+#ifndef UNITTESTS
 private:
+#endif
     FilamentTracker();
 
 private: // * per-PhysicalToolIndex things

@@ -1,5 +1,8 @@
 #include "filament_tracker.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 using namespace buddy;
 
 FilamentTracker::FilamentTracker() {
