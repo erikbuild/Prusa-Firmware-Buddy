@@ -15,7 +15,7 @@ struct ToVariantResult {
     template <typename TargetType>
     operator TargetType() {
         // If the input is a variant (with T being a subset of Result), return an "expanded" variant
-        static constexpr auto f1 = []<typename... T>(std::variant<T...> &&val) {
+        static constexpr auto f1 = []<typename... T>(const std::variant<T...> &val) {
             return std::visit([](auto &&val) { return TargetType { val }; }, val);
         };
 
