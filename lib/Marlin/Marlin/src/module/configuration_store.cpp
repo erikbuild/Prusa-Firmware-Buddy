@@ -106,8 +106,6 @@
   void M970_report(bool eeprom);
 #endif
 
-#include "../core/debug_out.h"
-
 // Limit an index to an array size
 #define ALIM(I,ARR) _MIN(I, COUNT(ARR) - 1)
 
@@ -187,7 +185,7 @@ void MarlinSettings::postprocess() {
 }
 
 bool MarlinSettings::save() {
-  DEBUG_ERROR_MSG("EEPROM disabled");
+  // EEPROM disabled
   return false;
 }
 
@@ -422,9 +420,6 @@ void MarlinSettings::reset() {
   #endif
 
   postprocess();
-
-  DEBUG_ECHO_START();
-  DEBUG_ECHOLNPGM("Hardcoded Default Settings Loaded");
 
   #if ENABLED(EXTENSIBLE_UI)
     ExtUI::onFactoryReset();

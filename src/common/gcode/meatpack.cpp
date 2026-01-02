@@ -40,7 +40,6 @@
 #include "meatpack.h"
 
 #define MeatPack_ProtocolVersion "PV01"
-// #define MP_DEBUG
 
 // The 15 most-common characters used in G-code, ~90-95% of all G-code uses these characters
 // Stored in SRAM for performance.
@@ -50,19 +49,12 @@ uint8_t meatPackLookupTable[16] = {
     '\0' // Unused. 0b1111 indicates a literal character
 };
 
-#if defined(MP_DEBUG)
-uint8_t chars_decoded = 0; // Log the first 64 bytes after each reset
-#endif
-
 void MeatPack::reset_state() {
     active = false;
     no_spaces = false;
     cmd_is_next = false;
     second_char = 0;
     cmd_count = full_char_count = char_out_count = 0;
-#if defined(MP_DEBUG)
-    chars_decoded = 0;
-#endif
 }
 
 /**
@@ -136,13 +128,6 @@ void MeatPack::handle_rx_char_inner(const uint8_t c) {
  */
 void MeatPack::handle_output_char(const uint8_t c) {
     char_out_buf[char_out_count++] = c;
-
-#if defined(MP_DEBUG)
-    if (chars_decoded < 1024) {
-        ++chars_decoded;
-        DEBUG_ECHOLNPGM("RB: ", AS_CHAR(c));
-    }
-#endif
 }
 
 /**

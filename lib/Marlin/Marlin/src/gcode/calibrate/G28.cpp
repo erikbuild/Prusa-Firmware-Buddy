@@ -84,8 +84,6 @@
 #  include "../../feature/prusa/e-stall_detector.h"
 #endif
 
-#include "../../core/debug_out.h"
-
 #include <feature/tmc_util.h> // for disabling Wave Table during homing
 
 #include <feature/phase_stepping/phase_stepping.hpp> // for disabling phase stepping during homing
@@ -178,8 +176,6 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
 #if ENABLED(Z_SAFE_HOMING)
 
   inline bool home_z_safely() {
-    DEBUG_SECTION(log_G28, "home_z_safely", DEBUGGING(LEVELING));
-
     // Disallow Z homing if X or Y homing is needed
     if (homing_needed_error(_BV(X_AXIS) | _BV(Y_AXIS))) return false;
 
@@ -204,9 +200,6 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
     TERN_(HAS_HOTEND_OFFSET, dest_pos -= hotend_currently_applied_offset);
 
     if (position_is_reachable(dest_pos)) {
-
-      if (DEBUGGING(LEVELING)) DEBUG_POS("home_z_safely", dest_pos);
-
 #if HAS_TOOLCHANGER()
       do_blocking_move_to_xy(dest_pos, PrusaToolChanger::limit_stealth_feedrate(XY_PROBE_FEEDRATE_MM_S));
 #elif HAS_NOZZLE_CLEANER()
@@ -238,8 +231,6 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
      * @retval false print sheet not detected or move was interrupted
      */
     static bool detect_print_sheet(const float z_homing_height) {
-      DEBUG_SECTION(log_G28, "detect_print_sheet", DEBUGGING(LEVELING));
-
       // Disallow detection if if X or Y or Z homing is needed
       if (homing_needed_error(_BV(X_AXIS) | _BV(Y_AXIS) | _BV(Z_AXIS))) return false;
 
@@ -266,9 +257,6 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
       TERN_(HOMING_Z_WITH_PROBE, destination -= probe_offset);
 
       if (position_is_reachable(destination)) {
-
-        if (DEBUGGING(LEVELING)) DEBUG_POS("detect_print_sheet", destination);
-
         do_blocking_move_to(destination);
         bool endstop_triggered;
         run_z_probe(0 - (Z_PROBE_LOW_POINT) + DETECT_PRINT_SHEET_Z_POINT, true, &endstop_triggered);
@@ -446,7 +434,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   // Home (O)nly if position is unknown with respect to the required axes
   if (!should_home_at_all(X_AXIS) && !should_home_at_all(Y_AXIS) && !should_home_at_all(Z_AXIS)) {
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("> homing not needed, skip");
     return true;
   }
 
@@ -471,8 +458,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   #if HAS_CEILING_CLEARANCE()
   buddy::CeilingClearanceCheckDisabler ccd;
   #endif
-
-  DEBUG_SECTION(log_G28, "G28", DEBUGGING(LEVELING));
 
   TERN_(BD_SENSOR, bdl.config_state = 0);
 
@@ -527,63 +512,52 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   #endif
 
   #if HAS_HOMING_CURRENT
-    auto debug_current = [](FSTR_P const s, const int16_t a, const int16_t b) {
-      DEBUG_ECHOF(s); DEBUG_ECHOLNPGM(" current: ", a, " -> ", b);
-    };
     #if HAS_CURRENT_HOME(X)
       const int16_t tmc_save_current_X = stepperX.getMilliamps();
       if(!flags.no_change) {
         stepperX.rms_current(X_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_X), tmc_save_current_X, X_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(Y)
       const int16_t tmc_save_current_Y = stepperY.getMilliamps();
       if(!flags.no_change) {
         stepperY.rms_current(Y_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_Y), tmc_save_current_Y, Y_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(I)
       const int16_t tmc_save_current_I = stepperI.getMilliamps();
       if(!no_change) {
         stepperI.rms_current(I_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_I), tmc_save_current_I, I_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(J)
       const int16_t tmc_save_current_J = stepperJ.getMilliamps();
       if(!no_change) {
         stepperJ.rms_current(J_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_J), tmc_save_current_J, J_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(K)
       const int16_t tmc_save_current_K = stepperK.getMilliamps();
       if(!no_change) {
         stepperK.rms_current(K_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_K), tmc_save_current_K, K_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(U)
       const int16_t tmc_save_current_U = stepperU.getMilliamps();
       if(!no_change) {
         stepperU.rms_current(U_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_U), tmc_save_current_U, U_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(V)
       const int16_t tmc_save_current_V = stepperV.getMilliamps();
       if(!no_change) {
         stepperV.rms_current(V_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_V), tmc_save_current_V, V_CURRENT_HOME);
       }
     #endif
     #if HAS_CURRENT_HOME(W)
       const int16_t tmc_save_current_W = stepperW.getMilliamps();
       if(!no_change) {
         stepperW.rms_current(W_CURRENT_HOME);
-        if (DEBUGGING(LEVELING)) debug_current(F(STR_W), tmc_save_current_W, W_CURRENT_HOME);
       }
     #endif
     #if SENSORLESS_STALLGUARD_DELAY
@@ -648,7 +622,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   if (!failed && z_homing_height && (seenR || should_home_at_all(X_AXIS) || should_home_at_all(Y_AXIS) || TERN0(Z_SAFE_HOMING, should_home_at_all(Z_AXIS)))) {
     // Raise Z before homing any other axes and z is not already high enough (never lower z)
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Raise Z (before homing) by ", z_homing_height);
     const auto trigger_states = do_z_clearance(z_homing_height);
 
     // If we have the Z homed and trigger an endstop, that means that we have homed wrong.
@@ -869,7 +842,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   #endif
 
   #if HAS_HOMING_CURRENT
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Restore driver current...");
     #if HAS_CURRENT_HOME(X)
       stepperX.rms_current(tmc_save_current_X);
     #endif

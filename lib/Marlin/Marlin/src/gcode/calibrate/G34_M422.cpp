@@ -42,8 +42,6 @@
    #include "../../libs/least_squares_fit.h"
 #endif
 
-#include "../../core/debug_out.h"
-
 // Sanity-check the count of Z_STEPPER_ALIGN_XY points
 constexpr xy_pos_t sanity_arr_z_align[] = Z_STEPPER_ALIGN_XY;
 #if ENABLED(Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS)
@@ -84,10 +82,6 @@ inline void set_all_z_lock(const bool lock) {
  *   A<amplification>
  */
 void GcodeSuite::G34() {
-  if (DEBUGGING(LEVELING)) {
-    DEBUG_ECHOLNPGM(">>> G34");
-  }
-
   do { // break out on error
 
     const int8_t z_auto_align_iterations = parser.intval('I', Z_STEPPER_ALIGN_ITERATIONS);
@@ -171,8 +165,6 @@ void GcodeSuite::G34() {
     uint8_t iteration;
     bool err_break = false;
     for (iteration = 0; iteration < z_auto_align_iterations; ++iteration) {
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("> probing all positions.");
-
       SERIAL_ECHOLNPAIR("\nITERATION: ", int(iteration + 1));
 
       // Initialize minimum value
@@ -198,8 +190,6 @@ void GcodeSuite::G34() {
         // Add height to each value, to provide a more useful target height for
         // the next iteration of probing. This allows adjustments to be made away from the bed.
         z_measured[iprobe] = z_probed_height + Z_CLEARANCE_BETWEEN_PROBES;
-
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("> Z", int(iprobe + 1), " measured position is ", z_measured[iprobe]);
 
         // Remember the minimum measurement to calculate the correction later on
         z_measured_min = _MIN(z_measured_min, z_measured[iprobe]);
@@ -278,8 +268,6 @@ void GcodeSuite::G34() {
         // Stop early if all measured points achieve accuracy target
         if (z_align_abs > z_auto_align_accuracy) success_break = false;
 
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("> Z", int(zstepper + 1), " corrected by ", z_align_move);
-
         // Lock all steppers except one
         set_all_z_lock(true);
         switch (zstepper) {
@@ -331,8 +319,6 @@ void GcodeSuite::G34() {
     process_subcommands_now_P(PSTR("G28 Z"));
 
   }while(0);
-
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("<<< G34");
 }
 
 /**

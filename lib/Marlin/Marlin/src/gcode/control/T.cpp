@@ -45,8 +45,6 @@
   #include "../../module/prusa/toolchanger.h"
 #endif
 
-#include "../../core/debug_out.h"
-
 /** \addtogroup G-Codes
  * @{
  */
@@ -111,14 +109,6 @@ void GcodeSuite::T() {
     [](NoTool) -> std::variant<VirtualToolIndex, NoTool> { return NoTool{}; }
   );
 
-  if (DEBUGGING(LEVELING)) {
-    match(maybe_virtual,
-      [](VirtualToolIndex tool){ DEBUG_ECHOLNPAIR(">>> T(", tool.to_raw(), ")"); },
-      [](NoTool){ DEBUG_ECHOLNPAIR(">>> NoTool"); }
-    );
-    DEBUG_POS("BEFORE", current_position);
-  }
-
 #if HAS_MMU2()
   if (parser.string_arg) {
     // @@TODO MMU2::mmu2.tool_change(parser.string_arg);   // Special commands T?/Tx/Tc
@@ -148,11 +138,6 @@ void GcodeSuite::T() {
   bool z_down = parser.byteval('D', 1);
 
   tool_change(stdext::to_variant(maybe_virtual), return_type, z_lift, z_down);
-
-  if (DEBUGGING(LEVELING)) {
-    DEBUG_POS("AFTER", current_position);
-    DEBUG_ECHOLNPGM("<<< T()");
-  }
 }
 
 /** @}*/

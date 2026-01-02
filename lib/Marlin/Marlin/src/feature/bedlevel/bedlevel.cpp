@@ -39,8 +39,6 @@
   #include "../../lcd/ultralcd.h"
 #endif
 
-#include "../../core/debug_out.h"
-
 #if ENABLED(EXTENSIBLE_UI)
   #include "../../lcd/extensible_ui/ui_api.h"
 #endif
@@ -114,7 +112,6 @@ TemporaryBedLevelingState::TemporaryBedLevelingState(const bool enable) : saved(
  * Reset calibration results to zero.
  */
 void reset_bed_level() {
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("reset_bed_level");
   #if ENABLED(AUTO_BED_LEVELING_UBL)
     ubl.reset();
   #else

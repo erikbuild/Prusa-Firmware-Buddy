@@ -68,8 +68,6 @@
   #endif // ENABLED(CRASH_RECOVERY)
 #endif
 
-#include "../core/debug_out.h"
-
 #if HAS_PRECISE_HOMING()
   #include "prusa/homing_cart.hpp"
 #endif
@@ -211,14 +209,12 @@ void report_current_position() {
  * no kinematic translation. Used for homing axes and cartesian/core syncing.
  */
 void sync_plan_position() {
-  if (DEBUGGING(LEVELING)) DEBUG_POS("sync_plan_position", current_position);
   if (!planner.draining()) {
     planner.set_position_mm(current_position);
   }
 }
 
 void sync_plan_position_e() {
-  if (DEBUGGING(LEVELING)) DEBUG_POS("sync_plan_position", current_position);
   if (!planner.draining()) {
     planner.set_e_position_mm(current_position.e);
   }
@@ -301,13 +297,10 @@ void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, co
  * Parking (Z-Manhattan): Moves XY and Z independently. Raises Z before or lowers Z after XY motion.
  */
 void do_blocking_move_to(const float rx, const float ry, const float rz, const feedRate_t &fr_mm_s/*=0.0*/, Segmented segmented) {
-  if (DEBUGGING(LEVELING)) DEBUG_XYZ(">>> do_blocking_move_to", rx, ry, rz);
-
   const feedRate_t z_feedrate = fr_mm_s ?: homing_feedrate(Z_AXIS),
                   xy_feedrate = fr_mm_s ?: feedRate_t(XY_PROBE_FEEDRATE_MM_S);
 
   plan_park_move_to(rx, ry, rz, xy_feedrate, z_feedrate, segmented);
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("<<< do_blocking_move_to");
   planner.synchronize();
 }
 
@@ -734,16 +727,6 @@ void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const fe
  * @return endstop trigger state at the end of the move
  */
 uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate_t fr_mm_s, [[maybe_unused]] bool can_move_back_before_homing, [[maybe_unused]] bool homing_z_with_probe) {
-
-  if (DEBUGGING(LEVELING)) {
-    DEBUG_ECHOPAIR(">>> do_homing_move(", axis_codes[axis], ", ", distance, ", ");
-    if (fr_mm_s)
-      DEBUG_ECHO(fr_mm_s);
-    else
-      DEBUG_ECHOPAIR("[", homing_feedrate(axis), "]");
-    DEBUG_ECHOLNPGM(")");
-  }
-
   #if HAS_CEILING_CLEARANCE()
     // The homing move is doing all sorts of voodoo with the positions and was triggering false ceiling clearance events
     buddy::CeilingClearanceCheckDisabler ccd;
@@ -835,7 +818,6 @@ uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate
 	}
       #endif
 
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("<<< do_homing_move(", axis_codes[axis], ")");
   return trigger_state;
 }
 
@@ -939,8 +921,6 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
  * @param homing_z_with_probe false when sensorless homing was used instead of probe
  */
 void set_axis_is_at_home(const AxisEnum axis, AxisHomeLevel level, [[maybe_unused]] bool homing_z_with_probe) {
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> set_axis_is_at_home(", axis_codes[axis], ")");
-
   // ensure we're not within an aborted move: caller needs to check!
   assert(!planner.draining());
 
@@ -963,34 +943,17 @@ void set_axis_is_at_home(const AxisEnum axis, AxisHomeLevel level, [[maybe_unuse
           #if HAS_HOTEND_OFFSET
            current_position.z -= hotend_currently_applied_offset.z;
           #endif
-
-          if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("*** Z HOMED WITH PROBE (Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN) ***\n> probe_offset.z = ", probe_offset.z);
-        } else
+        }
       #endif /*HOMING_Z_WITH_PROBE*/
-      {
-        if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("*** Z HOMED TO ENDSTOP ***");
-      }
     }
   #endif
-
-  if (DEBUGGING(LEVELING)) {
-    #if HAS_HOME_OFFSET
-      DEBUG_ECHOLNPAIR("> home_offset[", axis_codes[axis], "] = ", home_offset[axis]);
-    #endif
-    DEBUG_POS("", current_position);
-    DEBUG_ECHOLNPAIR("<<< set_axis_is_at_home(", axis_codes[axis], ")");
-  }
 }
 
 /**
  * Set an axis' to be unhomed.
  */
 void set_axis_is_not_at_home(const AxisEnum axis) {
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> set_axis_is_not_at_home(", axis_codes[axis], ")");
-
   axes_home_level[axis] = AxisHomeLevel::not_homed;
-
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("<<< set_axis_is_not_at_home(", axis_codes[axis], ")");
 }
 
 // those metrics are intentionally not static, as it is expected that they might be referenced
@@ -1077,8 +1040,6 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
   #define CAN_HOME_Y _CAN_HOME(Y)
   #define CAN_HOME_Z _CAN_HOME(Z)
   if (!CAN_HOME_X && !CAN_HOME_Y && !CAN_HOME_Z) return true;
-
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR(">>> homeaxis(", axis_codes[axis], ")");
 
   const int axis_home_dir = (
       invert_home_dir ? (-home_dir(axis)) : home_dir(axis)
@@ -1204,7 +1165,6 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
   #endif
 
   // Fast move towards endstop until triggered
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Home 1 Fast:");
 
   #if HOMING_Z_WITH_PROBE && ENABLED(BLTOUCH)
     if (axis == Z_AXIS && homing_z_with_probe && bltouch.deploy()) {
@@ -1250,11 +1210,9 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
   for(uint8_t i = 0; i < bump_count; i++) {
 
     // Move away from the endstop by the axis HOME_BUMP_MM
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Move Away:");
     do_homing_move_axis_rel(axis, -bump, real_fr_mm_s);
 
     // Slow move towards endstop until triggered
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Home 2 Slow:");
 
     // Early abort if a quick stop was issued
     if (planner.draining() || gcode_exceptions().throw_count() != initial_throw_count)
@@ -1378,16 +1336,12 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
 
   destination[axis] = current_position[axis];
 
-  if (DEBUGGING(LEVELING)) DEBUG_POS("> AFTER set_axis_is_at_home", current_position);
-
   // Put away the Z probe
   #if HOMING_Z_WITH_PROBE
     if (axis == Z_AXIS && homing_z_with_probe && STOW_PROBE()) {
       return NAN;
     }
   #endif
-
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("<<< homeaxis(", axis_codes[axis], ")");
 
   switch(bump_count) {
 
@@ -1413,7 +1367,6 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
 #if HAS_WORKSPACE_OFFSET
   void update_workspace_offset(const AxisEnum axis) {
     workspace_offset[axis] = home_offset[axis] + position_shift[axis];
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("Axis ", axis_codes[axis], " home_offset = ", home_offset[axis], " position_shift = ", position_shift[axis]);
   }
 #endif
 

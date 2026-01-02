@@ -26,8 +26,6 @@
 #include "../../../module/motion.h"
 #include "../../../feature/print_area.h"
 
-#include "../../../core/debug_out.h"
-
 #define UBL_VERSION "1.01"
 #define UBL_OK false
 #define UBL_ERR true
@@ -198,12 +196,6 @@ class unified_bed_leveling {
     static inline float z_correction_for_x_on_horizontal_mesh_line(const float &rx0, const int x1_i, const int yi) {
       #error this does not use the same constrains on position as the get_z_correction !!!
       if (!WITHIN(x1_i, 0, GRID_MAX_POINTS_X - 1) || !WITHIN(yi, 0, GRID_MAX_POINTS_Y - 1)) {
-
-        if (DEBUGGING(LEVELING)) {
-          if (WITHIN(x1_i, 0, GRID_MAX_POINTS_X - 1)) DEBUG_ECHOPGM("yi"); else DEBUG_ECHOPGM("x1_i");
-          DEBUG_ECHOLNPAIR(" out of bounds in z_correction_for_x_on_horizontal_mesh_line(rx0=", rx0, ",x1_i=", x1_i, ",yi=", yi, ")");
-        }
-
         // The requested location is off the mesh.
         return NAN;
       }
@@ -222,12 +214,6 @@ class unified_bed_leveling {
     static inline float z_correction_for_y_on_vertical_mesh_line(const float &ry0, const int xi, const int y1_i) {
       #error this does not use the same constrains on position as the get_z_correction !!!
       if (!WITHIN(xi, 0, GRID_MAX_POINTS_X - 1) || !WITHIN(y1_i, 0, GRID_MAX_POINTS_Y - 1)) {
-
-        if (DEBUGGING(LEVELING)) {
-          if (WITHIN(xi, 0, GRID_MAX_POINTS_X - 1)) DEBUG_ECHOPGM("y1_i"); else DEBUG_ECHOPGM("xi");
-          DEBUG_ECHOLNPAIR(" out of bounds in z_correction_for_y_on_vertical_mesh_line(ry0=", ry0, ", xi=", xi, ", y1_i=", y1_i, ")");
-        }
-
         // The requested location is off the mesh.
         return NAN;
       }
@@ -266,26 +252,11 @@ class unified_bed_leveling {
                          mesh_index_to_ypos(cy), z1,
                          mesh_index_to_ypos(cy + 1), z2);
 
-      if (DEBUGGING(MESH_ADJUST)) {
-        DEBUG_ECHOPAIR(" raw get_z_correction(", rx0);
-        DEBUG_CHAR(','); DEBUG_ECHO(ry0);
-        DEBUG_ECHOPAIR_F(") = ", z0, 6);
-        DEBUG_ECHOLNPAIR_F(" >>>---> ", z0, 6);
-      }
-
       if (isnan(z0)) { // if part of the Mesh is undefined, it will show up as NAN
         z0 = 0.0;      // in ubl.z_values[][] and propagate through the
                        // calculations. If our correction is NAN, we throw it out
                        // because part of the Mesh is undefined and we don't have the
                        // information we need to complete the height correction.
-
-        if (DEBUGGING(MESH_ADJUST)) {
-          DEBUG_ECHOPAIR("??? Yikes!  NAN in get_z_correction(", irx0);
-          DEBUG_CHAR(',');
-          DEBUG_ECHO(iry0);
-          DEBUG_CHAR(')');
-          DEBUG_EOL();
-        }
       }
       return z0;
     }
@@ -312,6 +283,3 @@ extern unified_bed_leveling ubl;
 #define _GET_MESH_X(I) ubl.mesh_index_to_xpos(I)
 #define _GET_MESH_Y(J) ubl.mesh_index_to_ypos(J)
 #define Z_VALUES_ARR ubl.z_values
-
-// Prevent debugging propagating to other files
-#include "../../../core/debug_out.h"

@@ -54,8 +54,6 @@
     #include "loadcell.hpp"
   #endif
 
-  #include "../../../core/debug_out.h"
-
   #if ENABLED(EXTENSIBLE_UI)
     #include "../../../lcd/extensible_ui/ui_api.h"
   #endif
@@ -623,7 +621,6 @@
     }
 
     #ifdef Z_PROBE_END_SCRIPT
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("Z Probe End Script: ", Z_PROBE_END_SCRIPT);
       if (probe_deployed) {
         planner.synchronize();
         gcode.process_subcommands_now_P(PSTR(Z_PROBE_END_SCRIPT));

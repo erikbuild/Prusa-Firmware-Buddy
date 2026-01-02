@@ -84,8 +84,6 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
   #include "../lcd/extensible_ui/ui_api.h"
 #endif
 
-#include "../core/debug_out.h"
-
 #include "metric.h"
 
 #include <feature/print_status_message/print_status_message_guard.hpp>
@@ -114,8 +112,6 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
    *              If true, move to MAX_X and release the solenoid
    */
   static void dock_sled(bool stow) {
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("dock_sled(", stow, ")");
-
     // Dock sled a bit closer to ensure proper capturing
     do_blocking_move_to_x(X_MAX_POS + SLED_DOCKING_OFFSET - ((stow) ? 1 : 0));
 
@@ -272,8 +268,6 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
  * Raise Z to a minimum height to make room for a probe to move
  */
 inline void do_probe_raise(const float z_raise) {
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("do_probe_raise(", z_raise, ")");
-
   float z_dest = z_raise;
   if (probe_offset.z < 0) z_dest -= probe_offset.z;
   #if HAS_HOTEND_OFFSET
@@ -326,12 +320,6 @@ FORCE_INLINE void probe_specific_action(const bool deploy) {
 
 // returns false for ok and true for failure
 bool set_probe_deployed(const bool deploy) {
-
-  if (DEBUGGING(LEVELING)) {
-    DEBUG_POS("set_probe_deployed", current_position);
-    DEBUG_ECHOLNPAIR("deploy: ", deploy);
-  }
-
   if (endstops.z_probe_enabled == deploy) return false;
 
   // Make room for probe to deploy (or stow)
@@ -402,8 +390,6 @@ bool set_probe_deployed(const bool deploy) {
  */
 
 static bool do_probe_move(const float z, const feedRate_t fr_mm_s) {
-  if (DEBUGGING(LEVELING)) DEBUG_POS(">>> do_probe_move", current_position);
-
   #if ENABLED(BLTOUCH) && DISABLED(BLTOUCH_HS_MODE)
     if (bltouch.deploy()) return true; // DEPLOY in LOW SPEED MODE on every probe action
   #endif
@@ -470,8 +456,6 @@ static bool do_probe_move(const float z, const feedRate_t fr_mm_s) {
   // Tell the planner where we actually are
   sync_plan_position();
 
-  if (DEBUGGING(LEVELING)) DEBUG_POS("<<< do_probe_move", current_position);
-
   return !probe_triggered;
 }
 
@@ -526,8 +510,6 @@ static xy_pos_t offset_for_probe_try(int try_idx) {
  * @return The Z position of the bed at the current XY or NAN on error.
  */
 float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_triggered) {
-  if (DEBUGGING(LEVELING)) DEBUG_POS(">>> run_z_probe", current_position);
-
   // Stop the probe before it goes too low to prevent damage.
   // If Z isn't known then probe to -10mm.
   float z_probe_low_point = expected_trigger_z + Z_PROBE_LOW_POINT;
@@ -553,10 +535,6 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
       if (planner.draining())
         return NAN;
 
-      if (DEBUGGING(LEVELING)) {
-        DEBUG_ECHOLNPGM("FAST Probe fail!");
-        DEBUG_POS("<<< run_z_probe", current_position);
-      }
       #if ENABLED(HALT_ON_PROBING_ERROR)
         kill("PROBING ERROR", "Could not reach the bed, FAST Probe fail!");
       #endif
@@ -564,8 +542,6 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
     }
 
     const float first_probe_z = current_position.z;
-
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("1st Probe Z:", first_probe_z);
 
     // Raise to give the probe clearance
     do_blocking_move_to_z(current_position.z + Z_CLEARANCE_MULTI_PROBE, MMM_TO_MMS(Z_PROBE_SPEED_FAST));
@@ -638,10 +614,6 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
         if (planner.draining())
           return NAN;
 
-        if (DEBUGGING(LEVELING)) {
-          DEBUG_ECHOLNPGM("SLOW Probe fail!");
-          DEBUG_POS("<<< run_z_probe", current_position);
-        }
         #if ENABLED(HALT_ON_PROBING_ERROR)
           kill("PROBING ERROR", "Could not reach the bed, SLOW Probe fail!");
         #endif
@@ -757,8 +729,6 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
 
     const float z2 = current_position.z;
 
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPAIR("2nd Probe Z:", z2, " Discrepancy:", first_probe_z - z2);
-
     // Return a weighted average of the fast and slow probes
     const float measured_z = (z2 * 3.0 + first_probe_z * 2.0) * 0.2;
 
@@ -768,8 +738,6 @@ float run_z_probe(float expected_trigger_z, bool single_only, bool *endstop_trig
     const float measured_z = current_position.z;
 
   #endif
-
-  if (DEBUGGING(LEVELING)) DEBUG_POS("<<< run_z_probe", current_position);
 
   return measured_z;
 }
@@ -912,16 +880,6 @@ float probe_here(float expected_trigger_z)
  * - Return the probed Z position
  */
 float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE_PT_NONE*/, const uint8_t verbose_level/*=0*/, const bool probe_relative/*=true*/) {
-  if (DEBUGGING(LEVELING)) {
-    DEBUG_ECHOLNPAIR(
-      ">>> probe_at_point(", LOGICAL_X_POSITION(rx), ", ", LOGICAL_Y_POSITION(ry),
-      ", ", raise_after == PROBE_PT_RAISE ? "raise" : raise_after == PROBE_PT_STOW ? "stow" : "none",
-      ", ", int(verbose_level),
-      ", ", probe_relative ? "probe" : "nozzle", "_relative)"
-    );
-    DEBUG_POS("", current_position);
-  }
-
   xyz_pos_t npos = pos;
   if (probe_relative) {
     if (!position_is_reachable_by_probe(npos)) {
@@ -1006,8 +964,6 @@ float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE
       kill("PROBING ERROR", "Could not reach the bed, endstop was not triggered!");
     #endif
   }
-
-  if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("<<< probe_at_point");
 
   return measured_z;
 }
