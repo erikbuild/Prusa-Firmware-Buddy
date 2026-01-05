@@ -213,7 +213,9 @@ void ScreenFilamentDetail::save_changes() {
         }
     });
 
-    filament_type_.set_parameters(params);
+    if (filament_type_.is_customizable()) {
+        filament_type_.set_parameters(params);
+    }
 }
 
 void ScreenFilamentDetail::setup(FilamentType filament_type) {
