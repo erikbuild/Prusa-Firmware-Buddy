@@ -4,12 +4,18 @@
 #include <utils/string_builder.hpp>
 #include <print_utils.hpp>
 #include <ScreenHandler.hpp>
+#include <img_resources.hpp>
+
+#include <option/has_anfc.h>
+#if HAS_ANFC()
+    #include <feature/openprinttag/tool_tag.hpp>
+#endif
 
 MI_LOADED_FILAMENT::MI_LOADED_FILAMENT(DisplayFormat display_format, uint8_t tool)
     : IWindowMenuItem({}, nullptr, is_enabled_t::yes, is_hidden_t::no, expands_t::yes)
-    , display_format_(display_format)
-    , tool_(tool) //
-{
+    , tool_(VirtualToolIndex::from_raw(tool))
+    , display_format_(display_format) {
+
     should_open_submenu_ = (display_format == DisplayFormat::auto_submenu) && (get_num_of_enabled_tools() > 1);
 
     if (should_open_submenu_) {
@@ -28,7 +34,7 @@ MI_LOADED_FILAMENT::MI_LOADED_FILAMENT(DisplayFormat display_format, uint8_t too
 #endif
         } else {
             sb.append_string_view(_("Filament"));
-            sb.append_printf(" %d", tool + 1);
+            sb.append_printf(" %d", tool_.display_index());
         }
 
         sb.append_string(": ");
@@ -36,7 +42,7 @@ MI_LOADED_FILAMENT::MI_LOADED_FILAMENT(DisplayFormat display_format, uint8_t too
 
         SetLabel(string_view_utf8::MakeRAM(label_buffer_.data()));
         set_enabled(filament_type_ != FilamentType::none);
-        set_is_hidden(!is_tool_enabled(tool));
+        set_is_hidden(!tool_.is_enabled());
     }
 }
 
@@ -46,6 +52,29 @@ void MI_LOADED_FILAMENT::click(IWindowMenu &) {
     } else {
         Screens::Access()->Open(ScreenFactory::ScreenWithArg<ScreenFilamentDetail>(EncodedFilamentType(filament_type_)));
     }
+}
+
+void MI_LOADED_FILAMENT::Loop() {
+#if HAS_ANFC()
+    if (!should_open_submenu_) {
+        using buddy::openprinttag::ToolTag;
+        const auto ephemeral_tag = ToolTag::for_tool_ephemeral(tool_);
+        const auto assigned_tag = ToolTag::for_tool_assigned(tool_);
+
+        if (filament_type_ != FilamentType::none && ephemeral_tag != assigned_tag) {
+            // Assigned OpenPrintTag is different to what is currently present
+            SetIconId(&img::openprinttag_orange_16x16);
+
+        } else if (ephemeral_tag.has_value()) {
+            // Tool has a tag assigned and it is present
+            SetIconId(&img::openprinttag_white_16x16);
+
+        } else {
+            // No tag present && no tag assigned
+            SetIconId(nullptr);
+        }
+    }
+#endif
 }
 
 ScreenLoadedFilaments::ScreenLoadedFilaments()

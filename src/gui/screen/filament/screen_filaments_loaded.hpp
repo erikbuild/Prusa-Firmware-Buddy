@@ -5,6 +5,7 @@
 #include <i_window_menu_item.hpp>
 #include <WindowMenuItems.hpp>
 #include <screen_menu.hpp>
+#include <tool_index.hpp>
 
 class MI_LOADED_FILAMENT : public IWindowMenuItem {
 
@@ -23,14 +24,14 @@ public:
 
 protected:
     virtual void click(IWindowMenu &) override;
+    virtual void Loop() override;
 
 private:
-    DisplayFormat display_format_;
-    uint8_t tool_;
-    bool should_open_submenu_;
-    FilamentType filament_type_;
-
     std::array<char, 32> label_buffer_;
+    VirtualToolIndex tool_;
+    FilamentType filament_type_;
+    DisplayFormat display_format_ : 2;
+    bool should_open_submenu_ : 1;
 };
 
 template <typename>
