@@ -22,7 +22,7 @@ struct ToolTagField;
 class ToolTag {
 
 public:
-    using AssignSeq = uint16_t;
+    using UIDHash = uint16_t;
 
 public:
     /// @returns tag assigned to the specified tool, if there is any
@@ -49,17 +49,16 @@ public:
     constexpr inline bool operator!=(const ToolTag &) const = default;
 
 private:
-    explicit inline ToolTag(VirtualToolIndex tool, AssignSeq seq)
+    explicit inline ToolTag(VirtualToolIndex tool, UIDHash uid_hash)
         : tool_(tool)
-        , seq_(seq) {}
+        , uid_hash_(uid_hash) {}
 
 private:
     VirtualToolIndex tool_;
 
-    /// Tag assignment ID for the specified tool.
-    /// This value changes every time the tag for the specified tool is changed
-    /// This ensures that when we issue multiple read requests, they are all read from the same NFC tag, or they fail.
-    AssignSeq seq_;
+    /// Hash of the tag UID (to reduce size)
+    /// This ensures that we don't accidentally read/write something from a different tag (if tag for a tool changes suddenly)
+    UIDHash uid_hash_;
 };
 
 struct ToolTagField {
