@@ -50,6 +50,10 @@ public:
         return tool_;
     }
 
+    inline UIDHash uid_hash() const {
+        return uid_hash_;
+    }
+
     /// @returns a struct representing a specific field on the tag
     template <typename F>
     inline ToolTagField field(F field) const;
