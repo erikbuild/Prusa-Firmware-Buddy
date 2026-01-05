@@ -12,9 +12,13 @@ namespace buddy::openprinttag {
 /// Basically a tuple of multiple ReadFieldRequests
 template <CField auto... fields_>
 class MultiReadFieldRequestImpl final : public MultiRequestBase {
+    static constexpr auto fields_unsorted = ValuePack<fields_...> {};
+    static constexpr auto main_fields = fields_unsorted.template filter<[](CField auto field) { return field_section(field) == Section::main; }>();
+    static constexpr auto other_fields = fields_unsorted.template filter<[](CField auto field) { return field_section(field) != Section::main; }>();
 
 public:
-    static constexpr auto fields = ValuePack<fields_...> {};
+    // Group fields together by section to prevent unnecessary read cache misses on the reader
+    static constexpr auto fields = main_fields.concatenate(other_fields);
     static_assert(sizeof...(fields_) > 0);
 
 public:
