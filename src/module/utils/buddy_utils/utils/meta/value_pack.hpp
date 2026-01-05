@@ -103,6 +103,19 @@ public: //* Static functions
         return ValuePack<values_..., other_values...> {};
     }
 
+    /// @returns a reduced ValuePack with only items satisfying @p match_f kept
+    template <auto match_f>
+    static consteval auto filter() {
+        static constexpr auto f = []<auto... av, auto b>(ValuePack<av...> a, ValuePack<b>) {
+            if constexpr (match_f(b)) {
+                return a.template append<b>();
+            } else {
+                return a;
+            }
+        };
+        return accumulate_arguments(f, ValuePack<> {}, ValuePack<values_> {}...);
+    }
+
 public: //* Type-only things
         /// Passes the ValuePack values to the provided @p Template
     /// @returns Template<values...>
@@ -124,4 +137,7 @@ public: //* Type "wrappers" for functions
 
     template <CValuePack T>
     using Concatenate = decltype(concatenate(T {}));
+
+    template <auto match_f>
+    using Filter = decltype(filter<match_f>());
 };
