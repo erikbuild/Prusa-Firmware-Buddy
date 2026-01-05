@@ -24,17 +24,26 @@ class ToolTag {
 public:
     using UIDHash = uint16_t;
 
+    /// Used in config store
+    static constexpr UIDHash no_tag_hash = 0;
+
 public:
-    /// @returns tag assigned to the specified tool, if there is any
-    static std::optional<ToolTag> for_tool(VirtualToolIndex tool) {
+    /// @returns tag that is currently detected at the specified tool spool slot
+    /// This can be a different tag than @p for_tool_assigned in case the user removes the assignes pool
+    /// !!! NOT to be used for anything related to printing, use for_tool_assigned for that
+    static std::optional<ToolTag> for_tool_ephemeral(VirtualToolIndex tool) {
         // Just a stub for testing
         // TODO proper implementation
         if (tool.to_raw() < 2) {
-            return ToolTag { tool, 0 };
+            return ToolTag { tool, 1 };
         } else {
             return std::nullopt;
         }
     }
+
+    /// @returns tag that is assigned to the specified tool
+    /// This is a long-term assignment that happens during filament load, and is unassigned on unload
+    static std::optional<ToolTag> for_tool_assigned(VirtualToolIndex tool);
 
 public:
     inline VirtualToolIndex tool() const {

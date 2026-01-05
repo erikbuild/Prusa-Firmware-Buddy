@@ -740,6 +740,12 @@ struct CurrentStore
     StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("PSU fan selftest result")> psu_fan_selftest_result;
 #endif
 
+#if HAS_ANFC()
+    /// Tags assigned to specific tools. See ToolTag::for_tool_assigned
+    /// Not using ToolTag::UIDHash here to avoid dependency hell. static_asserted inside tool_tag.cpp
+    StoreItemArray<uint16_t, uint16_t(0), ItemFlag::printer_state, journal::hash("OpenPrintTag assigned tool"), 16, VirtualToolIndex::count> opt_tool_assigned_tag;
+#endif
+
 private:
     void perform_config_migrations();
 };

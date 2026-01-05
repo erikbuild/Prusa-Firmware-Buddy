@@ -42,7 +42,7 @@ namespace {
         void Loop() override {
             // Indicate the item as disabled, but do not really disable it
             // This is so that the click() function gets called even if the item is disabled
-            set_color_scheme(ToolTag::for_tool(tool_).has_value() ? &color_scheme_default : &color_scheme_default_disabled);
+            set_color_scheme(ToolTag::for_tool_ephemeral(tool_).has_value() ? &color_scheme_default : &color_scheme_default_disabled);
         }
 
     private:

@@ -68,7 +68,7 @@ void ScreenOPTInfo::screenEvent([[maybe_unused]] window_t *sender, GUI_event_t e
 }
 
 bool ScreenOPTInfo::scan() {
-    tag_ = ToolTag::for_tool(tool_);
+    tag_ = ToolTag::for_tool_ephemeral(tool_);
     if (!tag_) {
         StringViewUtf8Parameters<4> fmt;
         MsgBoxError(_("No OpenPrintTag detected for slot %i").formatted(fmt, tool_.to_raw() + 1), Responses_Ok);

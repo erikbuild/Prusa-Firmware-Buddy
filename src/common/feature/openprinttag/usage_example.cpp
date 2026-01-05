@@ -4,7 +4,7 @@
 namespace buddy::openprinttag {
 
 void opt_usage_example() {
-    const auto tag_opt = ToolTag::for_tool(VirtualToolIndex::from_raw(0));
+    const auto tag_opt = ToolTag::for_tool_assigned(VirtualToolIndex::from_raw(0));
     if (!tag_opt) {
         return;
     }
@@ -27,7 +27,7 @@ void opt_usage_example() {
 }
 
 __attribute__((__used__)) void opt_usage_example_2() {
-    const auto tag_opt = ToolTag::for_tool(VirtualToolIndex::from_raw(0));
+    const auto tag_opt = ToolTag::for_tool_assigned(VirtualToolIndex::from_raw(0));
     if (!tag_opt) {
         return;
     }

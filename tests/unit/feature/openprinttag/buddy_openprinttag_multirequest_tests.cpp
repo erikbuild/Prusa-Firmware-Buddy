@@ -23,7 +23,7 @@ TEST_CASE("buddy::openprinttag::MultiRequest") {
             MainField::nominal_netto_full_weight> {}>;
 
     request_log.clear();
-    Request r { *ToolTag::for_tool(0) };
+    Request r { *ToolTag::for_tool_ephemeral(0) };
 
     // Requests should be issued only once issue() is called
     CHECK(request_log.empty());
@@ -77,7 +77,7 @@ TEST_CASE("buddy::openprinttag::MultiRequestRef") {
         AuxField::consumed_weight>;
 
     request_log.clear();
-    Request r { *ToolTag::for_tool(0) };
+    Request r { *ToolTag::for_tool_ephemeral(0) };
 
     using Ref = buddy::openprinttag::MultiReadFieldRequestRef<MainField::nominal_netto_full_weight, AuxField::consumed_weight>;
     Ref ref { r };

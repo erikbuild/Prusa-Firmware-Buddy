@@ -133,7 +133,7 @@ MI_FROM_OPENPRINTTAG::MI_FROM_OPENPRINTTAG(VirtualToolIndex tool)
 }
 
 void MI_FROM_OPENPRINTTAG::click(IWindowMenu &) {
-    const auto tag = buddy::openprinttag::ToolTag::for_tool(tool_);
+    const auto tag = buddy::openprinttag::ToolTag::for_tool_ephemeral(tool_);
     if (!tag.has_value()) {
         // Will get disabled in Loop
         return;
@@ -143,7 +143,7 @@ void MI_FROM_OPENPRINTTAG::click(IWindowMenu &) {
 }
 
 void MI_FROM_OPENPRINTTAG::Loop() {
-    set_enabled(buddy::openprinttag::ToolTag::for_tool(tool_).has_value());
+    set_enabled(buddy::openprinttag::ToolTag::for_tool_ephemeral(tool_).has_value());
 }
 #endif
 
@@ -192,7 +192,7 @@ void WindowMenuPreheat::update_list() {
 #if HAS_ANFC()
     // If there is an NFC tag detected for the specified tool, auto-focus the "Load from openprinttag"
     if (std::holds_alternative<VirtualToolIndex>(tool) //
-        && buddy::openprinttag::ToolTag::for_tool(std::get<VirtualToolIndex>(tool)).has_value()) {
+        && buddy::openprinttag::ToolTag::for_tool_ephemeral(std::get<VirtualToolIndex>(tool)).has_value()) {
         move_focus_to_index(index_mapping.to_index<Item::from_openprinttag>());
     }
 #endif
