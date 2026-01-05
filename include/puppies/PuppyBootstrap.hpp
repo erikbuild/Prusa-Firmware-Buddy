@@ -5,6 +5,7 @@
 #include <option/has_puppy_modularbed.h>
 #include <puppies/puppy_constants.hpp>
 #include <common/utils/algorithm_extensions.hpp>
+#include <option/has_indx_head.h>
 #include <bit>
 
 namespace buddy::puppies {
@@ -20,7 +21,7 @@ public:
 
     /// @brief Result of puppy bootstrap - indicates which docks are occupied
     struct BootstrapResult {
-        uint8_t docks_preset { 0 }; // every bit corresponds with one dock
+        uint16_t docks_preset { 0 }; // every bit corresponds with one dock
 
         // number of detected puppies
         [[nodiscard]] uint8_t discovered_num() const {
@@ -29,12 +30,12 @@ public:
 
         /// sets that this dock is occupied
         void set_dock_occupied(Dock k) {
-            docks_preset |= 1 << static_cast<uint8_t>(k);
+            docks_preset |= 1 << static_cast<uint16_t>(k);
         }
 
         /// checks if dock is occupied
         [[nodiscard]] bool is_dock_occupied(Dock k) const {
-            return docks_preset & (1 << static_cast<uint8_t>(k));
+            return docks_preset & (1 << static_cast<uint16_t>(k));
         }
     };
 
@@ -66,10 +67,10 @@ public:
     static constexpr inline BootstrapResult MINIMAL_PUPPY_CONFIG {
         0
 #if HAS_PUPPY_MODULARBED()
-            | 1 << static_cast<uint8_t>(Dock::MODULAR_BED)
+            | 1 << static_cast<uint16_t>(Dock::MODULAR_BED)
 #endif
 #if HAS_DWARF()
-            | 1 << static_cast<uint8_t>(Dock::DWARF_1)
+            | 1 << static_cast<uint16_t>(Dock::DWARF_1)
 #endif
     };
 
