@@ -122,4 +122,8 @@ private:
 /// !!! To be used only from the default task
 FilamentUsageTracker &filament_usage_tracker();
 
+/// @returns filament_usage_tracker().is_tracking(tool)
+/// Contrary to filament_usage_tracker, this can be used from any thread - but the result is purely informational and prone to race conditions.
+bool is_filament_usage_tracking(VirtualToolIndex tool);
+
 } // namespace buddy::openprinttag

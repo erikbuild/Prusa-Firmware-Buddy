@@ -21,18 +21,39 @@ namespace {
     enum class Item {
         return_,
         data_section,
+        filament_tracking,
         print_parameters,
     };
 
     static constexpr auto index_mapping_items = std::to_array<DynamicIndexMappingRecord<Item>>({
         Item::return_,
         { Item::data_section, DynamicIndexMappingType::dynamic_section, 0 },
+        Item::filament_tracking,
         Item::print_parameters,
     });
 
+    class MenuItemFilamentTracking final : public IWindowMenuItem {
+        static constexpr auto font = GuiDefaults::FontMenuSpecial;
+        static constexpr auto w_for_icon = 16;
+
+        static constinit const std::array<const char *, 2> values;
+
+    public:
+        MenuItemFilamentTracking(VirtualToolIndex tool);
+
+    protected:
+        void Loop() final;
+        void click(IWindowMenu &) final;
+        void printExtension(Rect16 extension_rect, Color color_text, Color color_back, ropfn raster_op) const final;
+
+    private:
+        VirtualToolIndex tool_;
+        bool is_tracking_;
+    };
+
     class ScreenOPTInfo;
 
-    class WindowMenuOPTInfo final : public WindowMenuVirtual<MI_RETURN, WI_INFO_t, WindowMenuCallbackItem> {
+    class WindowMenuOPTInfo final : public WindowMenuVirtual<MI_RETURN, WI_INFO_t, MenuItemFilamentTracking, WindowMenuCallbackItem> {
         friend class ScreenOPTInfo;
 
     public:

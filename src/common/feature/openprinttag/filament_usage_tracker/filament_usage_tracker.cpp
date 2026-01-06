@@ -286,4 +286,8 @@ FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::write_consump
     };
 }
 
+bool is_filament_usage_tracking(VirtualToolIndex tool) {
+    return filament_usage_tracker_unsafe().is_tracking(tool);
+}
+
 } // namespace buddy::openprinttag
