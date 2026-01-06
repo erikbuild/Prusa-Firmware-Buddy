@@ -295,6 +295,16 @@ extern "C" void main_cpp(void) {
     }
 #endif
 
+#if HAS_XBUDDY_EXTENSION()
+    buddy::hw::Configuration::Instance().setup_ext_reset();
+    #if XBUDDY_EXTENSION_VARIANT_IS_iX()
+    buddy::hw::ext_shutdown.writeb(want_error_screen);
+    buddy::hw::ext_pwr_enable.writeb(!want_error_screen);
+    #else
+    buddy::hw::ext_pwr_enable.set();
+    #endif
+#endif
+
     /*
      * If we have BSOD or red screen we want to have as small boot process as we can.
      * We want to init just xflash, display and start gui task to display the bsod or redscreen
@@ -458,11 +468,6 @@ extern "C" void main_cpp(void) {
 
 #if HAS_TMC_UART()
     uart_for_tmc.Open();
-#endif
-
-#if HAS_XBUDDY_EXTENSION()
-    buddy::hw::Configuration::Instance().setup_ext_reset();
-    buddy::hw::ext_pwr_enable.set();
 #endif
 
 #if HAS_MMU2_OVER_UART()
