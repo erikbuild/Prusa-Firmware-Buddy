@@ -12,14 +12,10 @@ namespace buddy::openprinttag {
 /// Basically a tuple of multiple ReadFieldRequests
 template <CField auto... fields_>
 class MultiReadFieldRequestImpl final : public MultiRequestBase {
-    static constexpr auto fields_unsorted = ValuePack<fields_...> {};
-    static constexpr auto main_fields = fields_unsorted.template filter<[](CField auto field) { return field_section(field) == Section::main; }>();
-    static constexpr auto other_fields = fields_unsorted.template filter<[](CField auto field) { return field_section(field) != Section::main; }>();
 
 public:
-    // Group fields together by section to prevent unnecessary read cache misses on the reader
-    static constexpr auto fields = main_fields.concatenate(other_fields);
-    static_assert(sizeof...(fields_) > 0);
+    static constexpr auto fields = ValuePack<fields_...> {};
+    static_assert(fields.size > 0);
 
 public:
     MultiReadFieldRequestImpl(ToolTag tag)
@@ -30,7 +26,7 @@ public:
         // Put pointers of all the requests in the tuple to the array
         [this]<size_t... index>(std::index_sequence<index...>) {
             ((requests_array_[index] = &std::get<index>(requests_tuple)), ...);
-        }(std::make_index_sequence<sizeof...(fields_)>());
+        }(std::make_index_sequence<fields.size>());
 
         // Set up the span inherited from MultiRequestBase
         requests_span_ = requests_array_;
@@ -59,14 +55,25 @@ private:
     std::tuple<ReadFieldRequest<fields_>...> requests_tuple;
 
     /// Array with pointers to all requests from the requests_tuple
-    std::array<Request *, sizeof...(fields_)> requests_array_;
+    std::array<Request *, fields.size> requests_array_;
 };
 
 /// Same as @p MultiReadFieldRequest, but:
 /// - Removes duplicates (that would otherwise throw errors)
 /// - Unpacks nested ValuePacks
 template <auto... values>
-using MultiReadFieldRequest = ValuePack<values...>::template Flatten<>::template Unique<>::template ApplyOn<MultiReadFieldRequestImpl>;
+using MultiReadFieldRequest = decltype([] {
+    constexpr auto all_unsorted = ValuePack<values...> {}.flatten().unique();
+
+    // Group fields together by section to prevent unnecessary read cache misses on the reader
+    constexpr auto main_f = [](CField auto field) { return field_section(field) == Section::main; };
+    constexpr auto other_f = [](CField auto field) { return field_section(field) != Section::main; };
+
+    constexpr auto main = all_unsorted.template filter<main_f>();
+    constexpr auto other = all_unsorted.template filter<other_f>();
+
+    return main.concatenate(other);
+}())::template ApplyOn<MultiReadFieldRequestImpl>;
 
 /// Basically a tuple of REFERENCES to specified fields ReadRequests.
 /// Used for referencing a subset of requests from MultiReadFieldRequest for data operations

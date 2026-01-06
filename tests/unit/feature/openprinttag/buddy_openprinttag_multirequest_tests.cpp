@@ -51,6 +51,24 @@ TEST_CASE("buddy::openprinttag::MultiRequest") {
     }
 }
 
+TEST_CASE("buddy::openprinttag::MultiRequest grouping") {
+    using Request = MultiReadFieldRequest<
+        MainField::material_name,
+        AuxField::consumed_weight,
+        MainField::nominal_netto_full_weight>;
+
+    request_log.clear();
+    Request r { *ToolTag::for_tool(0) };
+
+    r.issue();
+
+    // Multirequest should group main field requests together to reduce read cache misses
+    REQUIRE(request_log.size() == 3);
+    CHECK(request_log[0] == &r.request<MainField::material_name>());
+    CHECK(request_log[1] == &r.request<MainField::nominal_netto_full_weight>());
+    CHECK(request_log[2] == &r.request<AuxField::consumed_weight>());
+}
+
 TEST_CASE("buddy::openprinttag::MultiRequestRef") {
     using Request = MultiReadFieldRequest<
         MainField::material_name,
