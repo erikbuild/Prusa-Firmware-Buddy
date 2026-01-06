@@ -3,6 +3,7 @@
 
 #include <screen_menu.hpp>
 #include <ScreenHandler.hpp>
+#include <img_resources.hpp>
 
 namespace buddy::openprinttag {
 
@@ -36,7 +37,7 @@ public:
 };
 
 MI_OPT_SETTINGS::MI_OPT_SETTINGS()
-    : IWindowMenuItem(_("OpenPrintTag")) {
+    : IWindowMenuItem(_("OpenPrintTag"), &img::openprinttag_white_16x16) {
     set_show_expand_icon();
 }
 
