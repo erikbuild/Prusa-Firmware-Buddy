@@ -1,0 +1,23 @@
+add_executable(sp_lowpass_test low_pass_test.cpp)
+target_link_libraries(sp_lowpass_test signal_processing)
+add_dependencies(tests sp_lowpass_test)
+
+add_executable(sp_agc_test agc_test.cpp)
+target_link_libraries(sp_agc_test signal_processing)
+add_dependencies(tests sp_agc_test)
+
+add_executable(sp_signal_generator_test signal_generator_test.cpp)
+target_link_libraries(sp_signal_generator_test signal_processing)
+add_dependencies(tests sp_signal_generator_test)
+
+add_executable(sp_noise_test noise_test.cpp)
+target_link_libraries(sp_noise_test signal_processing)
+add_dependencies(tests sp_noise_test)
+
+add_executable(sp_windows_test windows_test.cpp)
+target_link_libraries(sp_windows_test signal_processing)
+add_dependencies(tests sp_windows_test)
+
+add_executable(sp_transfer_test transfer_test.cpp)
+target_link_libraries(sp_transfer_test signal_processing)
+add_dependencies(tests sp_transfer_test)
