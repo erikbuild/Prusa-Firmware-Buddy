@@ -13,6 +13,7 @@
 #include <sys/fcntl.h>
 #include <sys/unistd.h>
 #include <version/version.hpp>
+#include <gcode/gcode.h>
 
 namespace {
 
@@ -89,6 +90,8 @@ public:
 };
 
 void calibration_helper(AxisEnum axis, CalibrateAxisHooks &hooks) {
+    GcodeSuite::G28_no_parser(true, true, false, { .only_if_needed = true, .z_raise = 3, .precise = false });
+
     phase_stepping::CalibrateAxisResult result;
     phase_stepping::calibrate_axis(axis, hooks, result);
     if (result.has_value()) {
