@@ -3,6 +3,7 @@
 
 #include <feature/openprinttag/detail/defines.hpp>
 #include <feature/openprinttag/detail/requests_read_base.hpp>
+#include <feature/openprinttag/detail/requests_write_base.hpp>
 
 namespace buddy::openprinttag {
 
@@ -19,6 +20,9 @@ template <>
 struct FieldTypeTraits<FieldType::number> {
     template <auto field>
     using ReadFieldRequest = ReadFloatFieldRequest;
+
+    template <auto field>
+    using WriteFieldRequest = WriteFloatFieldRequest;
 };
 
 template <>
