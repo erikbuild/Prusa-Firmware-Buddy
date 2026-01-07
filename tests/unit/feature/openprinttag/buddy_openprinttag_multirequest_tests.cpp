@@ -58,7 +58,7 @@ TEST_CASE("buddy::openprinttag::MultiRequest grouping") {
         MainField::nominal_netto_full_weight>;
 
     request_log.clear();
-    Request r { *ToolTag::for_tool(0) };
+    Request r { *ToolTag::for_tool_ephemeral(0) };
 
     r.issue();
 

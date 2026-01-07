@@ -80,7 +80,7 @@ static FSMResponseVariant preheatTempUnKnown(PreheatData preheat_data) {
 
 #if HAS_ANFC()
     const auto tool = stdext::get_optional<VirtualToolIndex>(preheat_data.tool);
-    const auto tag = tool.and_then(buddy::openprinttag::ToolTag::for_tool);
+    const auto tag = tool.and_then(buddy::openprinttag::ToolTag::for_tool_ephemeral);
 
     // If an OPT is detected for the tool, possibly automatically load data from it
     if (can_use_openprinttag(preheat_data.mode) && tag.has_value()) {

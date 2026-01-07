@@ -303,7 +303,7 @@ public:
             return;
         }
 
-        const auto tag = buddy::openprinttag::ToolTag::for_tool(*tool);
+        const auto tag = buddy::openprinttag::ToolTag::for_tool_ephemeral(*tool);
 
         if (!tag) {
             return;
@@ -356,7 +356,7 @@ struct FrameOPTParameters {
     void update(const fsm::PhaseData &data) {
         const auto d = PreheatData::deserialize(data);
 
-        if (const auto tag = buddy::openprinttag::ToolTag::for_tool(std::get<VirtualToolIndex>(d.tool))) {
+        if (const auto tag = buddy::openprinttag::ToolTag::for_tool_ephemeral(std::get<VirtualToolIndex>(d.tool))) {
             Screens::Access()->Open(screen_openprinttag_preheat_mode_creator(*tag));
         }
 
