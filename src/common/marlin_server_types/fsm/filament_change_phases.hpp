@@ -7,6 +7,7 @@
 #include <option/has_loadcell.h>
 #include <option/has_mmu2.h>
 #include <option/has_indx.h>
+#include <option/has_anfc.h>
 
 // define enum classes for responses here
 // and YES phase can have 0 responses
@@ -61,6 +62,11 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
 
 #if HAS_AUTO_RETRACT()
     AutoRetracting,
+#endif
+
+#if HAS_ANFC()
+    /// Warning that some filament usage has not been commited to the tag
+    OPT_UncommitedUsage,
 #endif
 
 #if HAS_MMU2()

@@ -12,6 +12,7 @@
 #include "text_error_url.hpp"
 #include "window_colored_rect.hpp"
 #include "screen_fsm.hpp"
+#include <gui/standard_frame/frame_prompt.hpp>
 
 #include <option/has_mmu2.h>
 #include <option/has_nozzle_cleaner.h>
@@ -464,6 +465,9 @@ using Frames = FrameDefinitionList<DialogLoadUnload::FrameStorage,
 #endif
 #if HAS_AUTO_RETRACT()
     FrameDefinition<Phase::AutoRetracting, FrameProgress, txt_auto_retracting>,
+#endif
+#if HAS_ANFC()
+    FrameDefinition<Phase::OPT_UncommitedUsage, FramePrompt, N_("OpenPrintTag Pending Write"), N_("There is filament usage to be written to the OpenPrintTag. Make sure the spool is close to the NFC reader.")>,
 #endif
 #if HAS_MMU2()
     FrameDefinition<Phase::LoadFilamentIntoMMU, FrameProgress, txt_mmu_insert_filament>,

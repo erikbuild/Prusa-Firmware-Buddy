@@ -72,6 +72,7 @@ static_assert(HAS_PAUSE());
 #include <option/has_anfc.h>
 #if HAS_ANFC()
     #include <feature/openprinttag/tool_tag.hpp>
+    #include <feature/openprinttag/filament_usage_tracker/filament_usage_tracker.hpp>
 #endif
 
 LOG_COMPONENT_REF(MarlinServer);
@@ -1017,6 +1018,23 @@ void Pause::unload_start_process([[maybe_unused]] Response response) {
             set(LoadState::mmu_unload_start);
         }
         return;
+    }
+#endif
+
+#if HAS_ANFC()
+    buddy::openprinttag::filament_usage_tracker().flush(settings.virtual_tool());
+
+    // Warn the user if there is some uncommited consumption and wait till it is written
+    while (buddy::openprinttag::filament_usage_tracker().uncommited_consumption_mm(settings.virtual_tool()).value_or(0) > 5) {
+        setPhase(PhasesLoadUnload::OPT_UncommitedUsage);
+
+        if (marlin_server::get_response_from_phase(PhasesLoadUnload::OPT_UncommitedUsage) != Response::_none) {
+            break;
+        }
+
+        if (gcode_exceptions().is_unwinding()) {
+            return;
+        }
     }
 #endif
 

@@ -55,6 +55,9 @@ constinit const EnumArray<PhasesLoadUnload, PhaseResponses, CountPhases<PhasesLo
 #if HAS_AUTO_RETRACT()
         { PhasesLoadUnload::AutoRetracting, {} },
 #endif
+#if HAS_ANFC()
+        { PhasesLoadUnload::OPT_UncommitedUsage, { Response::Ignore } },
+#endif
 #if HAS_MMU2()
         { PhasesLoadUnload::LoadFilamentIntoMMU, { Response::Continue } },
         { PhasesLoadUnload::MMUDummyStartNoAttention, {} },
