@@ -60,7 +60,7 @@ class Task {
     size_t tx_buffer_size = 0; ///< Size of data stored in tx_buffer
 
     AtomicCircularQueueSizeless<TaskRxBufferElement, size_t> &rx_queue; ///< Buffer for received Cyphal transfers
-    std::atomic<bool> rq_queue_used = false; ///< True if rx_queue is being used by thread and is blocked for interrupt
+    std::atomic<bool> rx_queue_used = false; ///< True if rx_queue is being used by thread and is blocked for interrupt
 
 public:
     struct TimeSync {
@@ -101,7 +101,7 @@ private:
             break;
         case Driver::Notification::RxHighPrio:
         case Driver::Notification::RxDone:
-            if (rx_queue.size() > 1 && rq_queue_used.load() == false) {
+            if (rx_queue.size() > 1) { // Only if we have a queue
                 rx_canard();
             }
             notify(Notify::Rx);

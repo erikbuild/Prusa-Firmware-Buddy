@@ -304,13 +304,18 @@ void Task::tx_loop() {
 }
 
 void Task::rx_canard() {
+    if (rx_queue_used.exchange(true) == true) {
+        return; // Already used by task
+    }
     if (rx_queue.isFull()) {
+        rx_queue_used.store(false);
         return; // Nothing to do
     }
 
     CanardFrame frame;
     CanardMicrosecond timestamp_us;
     if (driver.receive(frame, &timestamp_us) == false) {
+        rx_queue_used.store(false);
         return; // No frame in the queue
     } else {
         notify(Notify::Rx); // Check again until we run out of frames
@@ -325,6 +330,7 @@ void Task::rx_canard() {
         // The frame did not complete a transfer so there is nothing to do
         assert(canard_result == 0); // OOM should never occur if the heap is sized correctly, no other error can possibly occur at runtime
     }
+    rx_queue_used.store(false);
 }
 
 void Task::rx_loop() {
@@ -339,9 +345,7 @@ void Task::rx_loop() {
         xSemaphoreGive(tx_buffer_semaphore); // Buffer can be used again
 
         // Try to clear frames from driver
-        rq_queue_used.store(true);
         rx_canard();
-        rq_queue_used.store(false);
 
         return;
     } else {
@@ -357,9 +361,7 @@ void Task::rx_loop() {
     auto element = rx_queue.dequeue();
 
     // Try to clear frames from driver
-    rq_queue_used.store(true);
     rx_canard();
-    rq_queue_used.store(false);
 
     if (!is_anonymous() // Allow only if we are not in anonymous mode
         || (pnp_suber != nullptr && element.subscription == &pnp_suber->get_raw())) { // Or PnP subscription
