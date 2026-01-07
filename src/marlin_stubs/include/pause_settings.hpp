@@ -39,6 +39,10 @@ public:
     void SetExtruder(uint8_t target) { target_extruder = target; }
     uint8_t GetExtruder() const { return target_extruder; }
 
+    inline VirtualToolIndex virtual_tool() const {
+        return VirtualToolIndex::from_raw(target_extruder);
+    }
+
     float purge_length() const;
 
 private:

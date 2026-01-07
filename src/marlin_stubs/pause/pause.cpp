@@ -910,12 +910,10 @@ void Pause::eject_process([[maybe_unused]] Response response) {
 }
 
 void Pause::load_finalize_process(Response) {
-    [[maybe_unused]] const auto virtual_tool = VirtualToolIndex::from_raw(settings.target_extruder);
-
 #if HAS_ANFC()
     // If tag is detected, assign it to the tool
-    if (auto tag = buddy::openprinttag::ToolTag::for_tool_ephemeral(virtual_tool)) {
-        config_store().opt_tool_assigned_tag.set(virtual_tool.to_raw(), tag->uid_hash());
+    if (auto tag = buddy::openprinttag::ToolTag::for_tool_ephemeral(settings.virtual_tool())) {
+        config_store().opt_tool_assigned_tag.set(settings.virtual_tool().to_raw(), tag->uid_hash());
 
         // Pop up a "warning" saying that the OpenPrintTag has been assigned
         // We're using the warning mechanism here because it alows us to pop up the screen asynchronously
