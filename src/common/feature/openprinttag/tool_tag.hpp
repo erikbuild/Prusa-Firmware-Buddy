@@ -48,6 +48,8 @@ public:
 public:
     explicit ToolTag(VirtualToolIndex tool, UIDHash uid_hash);
 
+    ToolTag(const ToolTag &) = default;
+
     inline VirtualToolIndex tool() const {
         return tool_;
     }
@@ -62,6 +64,8 @@ public:
 
     constexpr inline bool operator==(const ToolTag &) const = default;
     constexpr inline bool operator!=(const ToolTag &) const = default;
+
+    ToolTag &operator=(const ToolTag &) = default;
 
 private:
     /// Hash of the tag UID (to reduce size)
