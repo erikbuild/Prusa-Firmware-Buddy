@@ -634,8 +634,8 @@ void GCodeInfo::parse_comment(GcodeBuffer::String comment, bool plaintext_gcodes
                     continue;
 
                 } else if (is_filament_type) {
-                    filament_buff filament_name;
-                    snprintf(filament_name.begin(), filament_name.size(), "%.*s", static_cast<int>(item->size()), item->data());
+                    FilamentTypeParameters::Name filament_name;
+                    snprintf(filament_name.data(), filament_name.capacity(), "%.*s", static_cast<int>(item->size()), item->data());
                     per_extruder_info[extruder].filament_name = filament_name;
                     filament_described = true;
 

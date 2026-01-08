@@ -207,7 +207,7 @@ void EndResultBody::handle_consumed_tool_fields(const GCodeInfo &gcode, size_t n
             const auto used_g = static_cast<int>(std::lround(ext_info.filament_used_g.value())); // guaranteed to have value, see above guard
 
             auto print_fname = [&]() {
-                return fname.has_value() ? fname.value().data() : "---";
+                return !fname.empty() ? fname.data() : "---";
             };
 
             auto &buff { consumed_material_values_buffers[consumed_material_line_idx] };

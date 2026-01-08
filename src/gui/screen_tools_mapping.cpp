@@ -191,7 +191,7 @@ window_text_t make_left_gcode_text(size_t idx, window_t *parent,
     std::array<std::array<char, ToolsMappingBody::max_item_text_width>, ToolsMappingBody::max_item_rows> &text_buffers, GCodeInfo &gcode, bool drawing_nozzles) {
 
     const auto fil_name = gcode.get_extruder_info(idx).filament_name;
-    snprintf(text_buffers[idx].data(), ToolsMappingBody::max_item_text_width, "%hhu. %-5.5s", static_cast<uint8_t>(idx + 1), fil_name.has_value() ? fil_name->data() : "---");
+    snprintf(text_buffers[idx].data(), ToolsMappingBody::max_item_text_width, "%hhu. %-5.5s", static_cast<uint8_t>(idx + 1), !fil_name.empty() ? fil_name.data() : "---");
 
     if (drawing_nozzles) {
         const auto cur_strlen = strlen(text_buffers[idx].data());
@@ -642,19 +642,19 @@ MultiFilamentChangeConfig ToolsMappingBody::build_changeall_config() {
         config.color = gcode.get_extruder_info(real_mapped_gcode).extruder_colour;
 
         const auto &opt_name = gcode.get_extruder_info(real_mapped_gcode).filament_name;
-        if (!opt_name.has_value()) {
+        if (opt_name.empty()) {
             continue;
         }
 
         // only preselect if we don't have it already
-        if (config_store().get_filament_type(real_phys).matches(opt_name.value().data())) {
+        if (config_store().get_filament_type(real_phys).matches(opt_name)) {
             continue;
         }
 
         config.action = multi_filament_change::Action::change;
 
         // We're loading a new filament, do not fallback into ad-hoc one -> extruder_index = std::nullopt
-        config.new_filament = FilamentType::from_name(opt_name.value().data());
+        config.new_filament = FilamentType::from_name(opt_name);
     }
 
     return result;

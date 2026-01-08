@@ -59,7 +59,7 @@ TEST_CASE("GCodeInfo") {
                 CHECK(info.UsedExtrudersCount() == 1);
                 auto extruder_info = info.get_extruder_info(0);
                 CHECK(extruder_info.used());
-                CHECK(strcmp(extruder_info.filament_name->data(), "PLA") == 0);
+                CHECK(std::string_view(extruder_info.filament_name) == "PLA");
                 CHECK(extruder_info.requires_hardened_nozzle == Tristate::other);
                 CHECK(extruder_info.requires_high_flow_nozzle == Tristate::other);
             }

@@ -254,7 +254,7 @@ bool PrintPreview::check_correct_filament_type(uint8_t physical_extruder, uint8_
         return true; // when tool not used in print, return OK filament type
     }
 
-    if (!extruder_info.filament_name.has_value()) {
+    if (extruder_info.filament_name.empty()) {
         return true; // filament type unspecified, return tool OK
     }
 
@@ -262,7 +262,7 @@ bool PrintPreview::check_correct_filament_type(uint8_t physical_extruder, uint8_
     const FilamentTypeParameters loaded_filament_params = loaded_filament_type.parameters();
 
     // when filament type not known, return that filament type is OK
-    return strcmp(extruder_info.filament_name->data(), "---") == 0 || strcmp(extruder_info.filament_name->data(), loaded_filament_params.name.data()) == 0;
+    return (extruder_info.filament_name == "---") || (extruder_info.filament_name == loaded_filament_params.name);
 }
 
 static bool check_correct_filament_type_tools_mapping(uint8_t physical_extruder) {
@@ -328,10 +328,11 @@ static void queue_filament_load_gcodes() {
             continue;
         }
 
+        const auto &extruder_info = GCodeInfo::getInstance().get_extruder_info(gcode_extruder);
+
         // pass filament type from gcode, so that user doesn't have to select filament type
-        const char *filament_name = GCodeInfo::getInstance().get_extruder_info(gcode_extruder).filament_name.has_value()
-            ? GCodeInfo::getInstance().get_extruder_info(gcode_extruder).filament_name.value().data()
-            : "";
+        const char *filament_name = extruder_info.filament_name.data();
+
 #if HOTENDS > 1
         // if printer has multiple hotends (eg: XL), preheat all that will be loaded to save time for user
         // We're loading a new filament, do not fallback into ad-hoc one -> extruder_index = std::nullopt
@@ -356,9 +357,7 @@ static void queue_filament_change_gcodes() {
         }
 
         // pass filament type from gcode, so that user doesn't have to select filament type
-        const char *filament_name = GCodeInfo::getInstance().get_extruder_info(gcode_extruder).filament_name.has_value()
-            ? GCodeInfo::getInstance().get_extruder_info(gcode_extruder).filament_name.value().data()
-            : "";
+        const char *filament_name = GCodeInfo::getInstance().get_extruder_info(gcode_extruder).filament_name.data();
 
 #if HOTENDS > 1 // Here we would love mapping of extruder -> hotend, but since we don't have it, this check will have to suffice
         // if printer has multiple hotends (eg: XL), preheat all that will be loaded to save time for user

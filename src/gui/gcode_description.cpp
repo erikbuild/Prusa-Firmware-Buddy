@@ -72,13 +72,13 @@ static void print_single_extruder_material_info(std::span<char> buffer, GCodeInf
     }
     if (used_extruder.has_value()) {
         const auto &extruder_info = gcode.get_extruder_info(used_extruder.value());
-        if (!extruder_info.filament_name.has_value() && !extruder_info.filament_used_g.has_value() && !extruder_info.filament_used_mm.has_value()) {
+        if (extruder_info.filament_name.empty() && !extruder_info.filament_used_g.has_value() && !extruder_info.filament_used_mm.has_value()) {
             snprintf(buffer.data(), buffer.size(), "unknown");
         } else {
             snprintf(buffer.data(), buffer.size(), "%s/%1.0f g/%0.2f m",
-                extruder_info.filament_name.has_value() ? extruder_info.filament_name->begin() : "?",
-                extruder_info.filament_used_g.has_value() ? static_cast<double>(extruder_info.filament_used_g.value()) : 0.0,
-                extruder_info.filament_used_mm.has_value() ? static_cast<double>(extruder_info.filament_used_mm.value() / 1000.0f) : 0.0);
+                !extruder_info.filament_name.empty() ? extruder_info.filament_name.data() : "?",
+                (double)extruder_info.filament_used_g.value_or(0),
+                (double)extruder_info.filament_used_mm.value_or(0) / 1000);
         }
     } else {
         snprintf(buffer.data(), buffer.size(), "unknown");
@@ -92,13 +92,14 @@ static void print_material_types(std::span<char> buffer, GCodeInfo &gcode) {
     delimited_items_per_extruder(buffer, ',', [&](int extruder, std::span<char> item_buffer) {
         const auto &extruder_info = gcode.get_extruder_info(extruder);
         const auto &filament_name = extruder_info.filament_name;
-        if (extruder_info.used() && filament_name.has_value()) {
-            return snprintf(item_buffer.data(), item_buffer.size(), "%s", filament_name.value().begin());
+
+        const char *str = "-";
+        if (extruder_info.used() && !filament_name.empty()) {
+            str = filament_name.data();
         } else if (extruder_info.used()) {
-            return snprintf(item_buffer.data(), item_buffer.size(), "%s", "?");
-        } else {
-            return snprintf(item_buffer.data(), item_buffer.size(), "%s", "-");
+            str = "?";
         }
+        return snprintf(item_buffer.data(), item_buffer.size(), "%s", str);
     });
 }
 

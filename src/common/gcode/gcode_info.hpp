@@ -57,16 +57,14 @@ public:
     static constexpr size_t search_first_x_gcodes = 200;
 
     using time_buff = std::array<char, 16>;
-    using filament_buff = std::array<char, filament_name_buffer_size>;
 
     struct ExtruderInfo {
-        std::optional<filament_buff> filament_name; /**< stores string representation of filament type */
-
         CompactOptional<float, NAN> filament_used_g; /**< stores how much filament will be used for this print (weight) */
         CompactOptional<float, NAN> filament_used_mm; /**< stores how much filament will be used for this print (distance) */
         CompactOptional<float, NAN> nozzle_diameter; /**< stores diameter of nozzle*/
 
         CompactOptional<Color, COLOR_NONE> extruder_colour; /**< stores colour of extruder*/
+        FilamentTypeParameters::Name filament_name; /**< stores string representation of filament type */
 
         // Tristate::other represents std::nullopt/data not present in the gcode
         Tristate requires_hardened_nozzle = Tristate::other;
