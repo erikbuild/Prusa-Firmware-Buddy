@@ -65,7 +65,7 @@ inline constexpr const char *get_response_text(Response response) {
     case Response::Pause:
         return N_("PAUSE");
     case Response::Print:
-        return "Print";
+        return N_("PRINT");
     case Response::Purge_more:
 #if PRINTER_IS_PRUSA_MINI()
         return N_("MORE");
@@ -104,8 +104,6 @@ inline constexpr const char *get_response_text(Response response) {
         return N_("HEATUP");
     case Response::Postpone5Days:
         return N_("POSTPONE");
-    case Response::PRINT:
-        return N_("PRINT");
     case Response::Tool1:
         return N_("Tool1");
     case Response::Tool2:

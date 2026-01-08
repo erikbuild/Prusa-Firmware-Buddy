@@ -1171,7 +1171,7 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
             set_idle(left_gcode_texts[left_gcode_idx_to_real[last_left_idx]], &left_gcode_colors[left_gcode_idx_to_real[last_left_idx]]);
             go_left();
             return;
-        } else if (response == Response::PRINT || response == Response::Print) {
+        } else if (response == Response::Print) {
             string_view_utf8 warning_text {};
             bool disable_fs { false };
 

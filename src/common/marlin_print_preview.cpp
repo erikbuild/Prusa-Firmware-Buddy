@@ -524,7 +524,6 @@ PrintPreview::Result PrintPreview::Loop() {
 
         case Response::Continue: // no difference in state machine, some checks will not be run if tools_mapping is possible
         case Response::Print:
-        case Response::PRINT:
             ChangeState(stateFromSelftestCheck());
             if (skip_if_able == marlin_server::PreviewSkipIfAble::no) {
                 // If print wasn't maked as started immediately, mark it now
@@ -605,7 +604,7 @@ PrintPreview::Result PrintPreview::Loop() {
             tools_mapping_cleanup();
             return Result::Abort;
 
-        case Response::PRINT:
+        case Response::Print:
             tools_mapping_cleanup(true);
             ChangeState(State::done);
             break;
@@ -620,7 +619,7 @@ PrintPreview::Result PrintPreview::Loop() {
     case State::wrong_printer_wait_user_abort:
         switch (response) {
 
-        case Response::PRINT:
+        case Response::Print:
             ChangeState(stateFromFilamentPresence());
             break;
 

@@ -41,8 +41,6 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
         { PhasesPrintPreview::main_dialog, {
 #if PRINTER_IS_PRUSA_XL()
                                                Response::Continue,
-#elif PRINTER_IS_PRUSA_MINI()
-                                               Response::PRINT,
 #else
                                                Response::Print,
 #endif
@@ -57,7 +55,7 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
                                                       } },
         { PhasesPrintPreview::wrong_printer, {
                                                  Response::Abort,
-                                                 Response::PRINT,
+                                                 Response::Print,
                                              } },
         { PhasesPrintPreview::wrong_printer_abort, {
                                                        Response::Abort,
@@ -77,7 +75,7 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
         { PhasesPrintPreview::tools_mapping, {
                                                  Response::Back,
                                                  Response::Filament,
-                                                 Response::PRINT,
+                                                 Response::Print,
                                              } },
 #endif
         { PhasesPrintPreview::wrong_filament, {

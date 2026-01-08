@@ -44,7 +44,7 @@ public:
         []() {
             auto modified_resps = responses_with_print;
             for (auto &r : modified_resps) {
-                if (r == Response::PRINT || r == Response::Print) {
+                if (r == Response::Print) {
                     r = Response::_none;
                 }
             }
@@ -52,7 +52,7 @@ public:
         }()
     }; // precalculated phase responses without PRINT button
     static constexpr auto responses_count { cnt_filled_responses(responses_with_print) };
-    static constexpr auto print_response_idx { get_response_idx(responses_with_print, Response::PRINT) };
+    static constexpr auto print_response_idx { get_response_idx(responses_with_print, Response::Print) };
     static constexpr size_t max_item_rows { 5 };
     static constexpr size_t max_item_text_width { 15 }; // #. FILAM 1.23 // = max 13 chars
 

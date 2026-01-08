@@ -58,7 +58,6 @@ enum class Response : uint8_t {
     Yes,
     Heatup,
     Postpone5Days,
-    PRINT,
     Tool1,
     Tool2,
     Tool3,
