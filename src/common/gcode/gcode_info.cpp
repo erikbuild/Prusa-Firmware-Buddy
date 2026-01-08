@@ -406,7 +406,9 @@ void GCodeInfo::parse_m862(GcodeBuffer::String cmd) {
             switch (subcode) {
 
             case '1':
-                p_diameter = cmd.get_float(); // Only store value in case Tx comes later
+                if (auto val = cmd.get_float(); std::isfinite(val)) {
+                    p_diameter = val; // Only store value in case Tx comes later
+                }
                 break;
 
             case '3': {
@@ -638,14 +640,18 @@ void GCodeInfo::parse_comment(GcodeBuffer::String comment, bool plaintext_gcodes
                     filament_described = true;
 
                 } else if (is_filament_used_mm) {
-                    float filament_used_mm;
-                    sscanf(item->data(), "%f", &filament_used_mm);
-                    per_extruder_info[extruder].filament_used_mm = filament_used_mm;
+                    float val;
+                    sscanf(item->data(), "%f", &val);
+                    if (std::isfinite(val)) {
+                        per_extruder_info[extruder].filament_used_mm = val;
+                    }
 
                 } else if (is_filament_used_g) {
-                    float filament_used_g;
-                    sscanf(item->data(), "%f", &filament_used_g);
-                    per_extruder_info[extruder].filament_used_g = filament_used_g;
+                    float val;
+                    sscanf(item->data(), "%f", &val);
+                    if (std::isfinite(val)) {
+                        per_extruder_info[extruder].filament_used_g = val;
+                    }
 
                 } else if (is_extruder_colour) {
                     per_extruder_info[extruder].extruder_colour = Color::from_string(*item);

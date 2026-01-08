@@ -9,9 +9,6 @@
 struct Color {
 
 public:
-    constexpr Color() = default;
-    constexpr Color(const Color &) = default;
-
     static constexpr Color from_rgb(uint8_t r, uint8_t g, uint8_t b) {
         return from_raw(b | (g << 8) | (r << 16));
     }
@@ -39,12 +36,14 @@ public:
     }
 
 public:
-    inline bool operator==(const Color &o) const {
+    bool operator==(const Color &o) const {
         return raw == o.raw;
     }
-    inline bool operator!=(const Color &o) const {
+    bool operator!=(const Color &o) const {
         return raw != o.raw;
     }
+
+    Color &operator=(const Color &) = default;
 
 public:
     union {
@@ -59,6 +58,9 @@ public:
     // The order of BGR depends on correct endianess
     static_assert(std::endian::native == std::endian::little);
 };
+
+/// Invalid color, used for CompactOptional
+constexpr Color COLOR_NONE { .b = 1, .g = 1, .r = 1, ._unused = 1 };
 
 constexpr Color COLOR_BLACK = Color::from_raw(0x000000);
 constexpr Color COLOR_WHITE = Color::from_raw(0xffffff);
