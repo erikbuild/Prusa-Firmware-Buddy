@@ -66,6 +66,7 @@ if not os.path.isfile(args.gdb) and which(args.gdb) is None:
 cmd = f'{args.gdb} {args.elf} -ex "set target-charset ASCII" -ex "target remote | \\"{crash_debug_path}\\" --elf \\"{args.elf}\\" --dump \\"{args.dump}\\""'
 cmd += f' -ex "source {project_root_dir}/utils/freertos-gdb-plugin/freertos-gdb-plugin.py"'
 if args.fast:
+    cmd += f' -ex "set confirm off"'
     cmd += f' -ex "freertos info threads"'
     cmd += f' -ex "freertos thread apply all bt"'
     cmd += f' -ex "quit"'
