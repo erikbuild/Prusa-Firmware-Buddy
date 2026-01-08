@@ -84,8 +84,8 @@ public:
 
     struct ValidPrinterSettings {
         class Feature {
-            bool wrong { false };
-            HWCheckSeverity severity;
+            bool wrong : 1 = false;
+            HWCheckSeverity severity : 2;
 
         public:
             Feature(HWCheckSeverity severity_)
