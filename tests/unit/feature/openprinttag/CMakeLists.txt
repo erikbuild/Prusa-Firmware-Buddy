@@ -36,3 +36,25 @@ target_link_libraries(
   buddy_openprinttag_datautils_tests openprinttag_fields buddy_utils logging-mock
   )
 add_catch_test(buddy_openprinttag_datautils_tests)
+
+# filament_usage_tracker_tests
+add_executable(
+  filament_usage_tracker_tests
+  ${CMAKE_SOURCE_DIR}/src/common/feature/filament_tracker/filament_tracker.cpp
+  ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
+  ${OPT_SRC}/detail/requests_base.cpp
+  ${OPT_SRC}/filament_usage_tracker/filament_usage_tracker.cpp
+  ${OPT_SRC}/detail/requests_multi_base.cpp
+  ${OPT_SRC}/tool_tag.cpp
+  filament_usage_tracker_tests.cpp
+  )
+target_include_directories(
+  filament_usage_tracker_tests
+  PRIVATE stub_include/requests stub_include/tool_tag stub_include/filament_usage_tracker
+          ${CMAKE_SOURCE_DIR}/tests/stubs ${CMAKE_SOURCE_DIR}/include
+          ${CMAKE_SOURCE_DIR}/src/common
+  )
+target_link_libraries(
+  filament_usage_tracker_tests openprinttag_fields buddy_utils raii logging-mock freertos-mock
+  )
+add_catch_test(filament_usage_tracker_tests)
