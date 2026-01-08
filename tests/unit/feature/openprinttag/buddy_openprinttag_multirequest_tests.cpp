@@ -8,6 +8,8 @@ using namespace buddy::openprinttag;
 
 thread_local std::vector<const Request *> request_log;
 
+const ToolTag tool_tag { VirtualToolIndex::from_raw(0), 10 };
+
 void Request::issue() {
     issued_ = true;
     request_log.push_back(this);
@@ -23,7 +25,7 @@ TEST_CASE("buddy::openprinttag::MultiRequest") {
             MainField::nominal_netto_full_weight> {}>;
 
     request_log.clear();
-    Request r { *ToolTag::for_tool_ephemeral(0) };
+    Request r { tool_tag };
 
     // Requests should be issued only once issue() is called
     CHECK(request_log.empty());
@@ -58,7 +60,7 @@ TEST_CASE("buddy::openprinttag::MultiRequest grouping") {
         MainField::nominal_netto_full_weight>;
 
     request_log.clear();
-    Request r { *ToolTag::for_tool_ephemeral(0) };
+    Request r { tool_tag };
 
     r.issue();
 
@@ -77,7 +79,7 @@ TEST_CASE("buddy::openprinttag::MultiRequestRef") {
         AuxField::consumed_weight>;
 
     request_log.clear();
-    Request r { *ToolTag::for_tool_ephemeral(0) };
+    Request r { tool_tag };
 
     using Ref = buddy::openprinttag::MultiReadFieldRequestRef<MainField::nominal_netto_full_weight, AuxField::consumed_weight>;
     Ref ref { r };

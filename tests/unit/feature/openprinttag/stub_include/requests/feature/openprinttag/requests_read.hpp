@@ -1,13 +1,12 @@
 #pragma once
 
-#include <any>
+#include <catch2/catch_test_macros.hpp>
 
 #include <feature/openprinttag/detail/requests_meta.hpp>
+#include <feature/openprinttag/tool_tag.hpp>
+#include <requests_data_stub.hpp>
 
 namespace buddy::openprinttag {
-
-using StubData = std::unordered_map<ToolTagField, std::any, ToolTagFieldHash>;
-inline thread_local StubData stub_data;
 
 template <CField auto field>
 class ReadFieldRequest final : public FieldTypeTraits<FieldTraits<field>::field_type>::template ReadFieldRequest<field> {
@@ -18,9 +17,9 @@ public:
     using BaseReadFieldRequest = FieldTypeTraits::template ReadFieldRequest<field>;
 
     template <typename... Args>
-    explicit inline ReadFieldRequest(ToolTag, Args &&...args)
-        : BaseReadFieldRequest(field, std::forward<Args>(args)...) {
-        const auto it = stub_data.find(field);
+    explicit inline ReadFieldRequest(ToolTag tag, Args &&...args)
+        : BaseReadFieldRequest(tag.field(field), std::forward<Args>(args)...) {
+        const auto it = stub_data.find(tag.field(field));
         if (it != stub_data.end()) {
             const auto field_type = typeid(typename BaseReadFieldRequest::Value).name();
             const auto any_type = it->second.type().name();

@@ -10,9 +10,11 @@ void Request::issue() {
     issued_ = true;
 }
 
+const ToolTag tool_tag { VirtualToolIndex::from_raw(0), 10 };
+
 template <CField auto field>
 auto stub_field(typename ReadFieldRequest<field>::Value val) {
-    return std::pair { ToolTagField(field), val };
+    return std::pair { tool_tag.field(field), val };
 }
 
 FilamentTypeParameters FilamentType::parameters() const {
@@ -35,7 +37,7 @@ TEST_CASE("buddy::openprinttag::data_utils::AmountsInfo") {
             stub_field<MainField::nominal_netto_full_weight>(1000.0f),
         };
 
-        MultiReadFieldRequest<AmountsInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<AmountsInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         AmountsInfo info { req };
@@ -52,7 +54,7 @@ TEST_CASE("buddy::openprinttag::data_utils::AmountsInfo") {
             stub_field<AuxField::consumed_weight>(150.0f),
         };
 
-        MultiReadFieldRequest<AmountsInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<AmountsInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         AmountsInfo info { req };
@@ -67,7 +69,7 @@ TEST_CASE("buddy::openprinttag::data_utils::AmountsInfo") {
             // Missing full weights
         };
 
-        MultiReadFieldRequest<AmountsInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<AmountsInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         AmountsInfo info { req };
@@ -86,7 +88,7 @@ TEST_CASE("buddy::openprinttag::data_utils::AbbreviationInfo") {
             stub_field<MainField::material_type>(MaterialType::PLA),
         };
 
-        MultiReadFieldRequest<AbbreviationInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<AbbreviationInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         AbbreviationInfo info { req };
@@ -101,7 +103,7 @@ TEST_CASE("buddy::openprinttag::data_utils::AbbreviationInfo") {
             stub_field<MainField::material_abbreviation>("LOL"),
         };
 
-        MultiReadFieldRequest<AbbreviationInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<AbbreviationInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         AbbreviationInfo info { req };
@@ -124,7 +126,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::max_bed_temperature>(90),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
@@ -145,7 +147,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::shore_hardness_a>(uint8_t { 85 }),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
@@ -165,7 +167,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::tags>(tags),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
@@ -184,7 +186,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::max_print_temperature>(215),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
@@ -205,7 +207,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::tags>(tags),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
@@ -224,7 +226,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::material_type>(MaterialType::ASA),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
@@ -250,7 +252,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
             stub_field<MainField::preheat_temperature>(170),
         };
 
-        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { ToolTag {} };
+        MultiReadFieldRequest<FilamentParametersInfo::Requirements {}> req { tool_tag };
         req.issue();
 
         FilamentParametersInfo info { req };
