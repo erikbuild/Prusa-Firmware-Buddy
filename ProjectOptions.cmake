@@ -581,7 +581,9 @@ set_feature_for_printers(
   "MINI"
   )
 set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "COREONEL" "MK4" "iX" "XL")
-set_feature_for_printers(HAS_FILAMENT_TRACKER "COREONE" "COREONEL" "MK4" "iX" "XL")
+set_feature_for_printers(
+  HAS_FILAMENT_TRACKER "COREONE" "COREONEL" "MK4" "iX" "XL"
+  ) # TODO: When INDX gets fixed, also try enabling HAS_ANFC
 set_feature_for_printers_master_board(
   HAS_E2EE_SUPPORT
   "MK4"
@@ -707,7 +709,8 @@ set_feature_for_printers_master_board(
 set_feature_for_printers_master_board(HAS_BED_FAN "COREONEL" "COREONEL_INDX")
 set_feature_for_printers_master_board(HAS_PSU_FAN "COREONEL" "COREONEL_INDX")
 set_feature_for_printers(HAS_AC_CONTROLLER "COREONEL" "COREONEL_INDX")
-set_feature_for_printers(HAS_ANFC "COREONE" "COREONE_INDX" "COREONEL" "COREONEL_INDX")
+set_feature_for_printers(HAS_ANFC "COREONE" "COREONEL") # TODO: Add INDX once HAS_FILAMENT_TRACKER
+                                                        # is sorted out
 set_feature_for_printers(HAS_HEATBED_SCREWS_DURING_TRANSPORT "COREONEL" "COREONEL_INDX")
 
 # Use websocket to talk to Connect instead of many http requests.
