@@ -7,6 +7,7 @@
 #include <mutex>
 #include <option/has_spool_join.h>
 #include <option/has_tool_mapping.h>
+#include <tool_index.hpp>
 
 static_assert(HAS_SPOOL_JOIN());
 static_assert(HAS_TOOL_MAPPING());
@@ -32,23 +33,47 @@ public:
     /// Reset spool join (remove all joins)
     void reset();
 
-    /// Add join, when spool_1 runs out, spool_2 will continue
-    /// Note: spool_1/2 refers to physical tool
+    [[deprecated("Use the overload with ToolIndex")]]
     bool add_join(uint8_t spool_1, uint8_t spool_2);
 
-    // reroutes all succeeding joins to previous ones
+    /// Add join, when spool_1 runs out, spool_2 will continue
+    inline bool add_join(VirtualToolIndex spool_1, VirtualToolIndex spool_2) {
+        return add_join(spool_1.to_raw(), spool_2.to_raw());
+    }
+
+    [[deprecated("Use the overload with ToolIndex")]]
     bool reroute_joins_containing(uint8_t spool);
+
+    // reroutes all succeeding joins to previous ones
+    bool reroute_joins_containing(VirtualToolIndex spool) {
+        return reroute_joins_containing(spool.to_raw());
+    }
 
     // removes whole join chain that contains given spool
     bool remove_join_chain_containing(uint8_t spool);
 
-    // gets the first spool that will be printed with in the spool join chain, returns spool_2 if not in chain
+    [[deprecated("Use the overload with ToolIndex")]]
     uint8_t get_first_spool_1_from_chain(uint8_t spool_2) const;
 
+    // gets the first spool that will be printed with in the spool join chain, returns spool_2 if not in chain
+    inline VirtualToolIndex get_first_spool_1_from_chain(VirtualToolIndex spool_2) const {
+        return VirtualToolIndex::from_raw(get_first_spool_1_from_chain(spool_2.to_raw()));
+    }
+
+    [[deprecated("Use the overload with ToolIndex")]]
     uint8_t get_last_spool_2_from_chain(uint8_t spool_1) const;
 
-    // gets the spool_2 of the given spool_1
+    inline uint8_t get_last_spool_2_from_chain(VirtualToolIndex spool_1) const {
+        return get_last_spool_2_from_chain(spool_1.to_raw());
+    }
+
+    [[deprecated("Use the overload with ToolIndex")]]
     std::optional<uint8_t> get_spool_2(uint8_t spool_1) const;
+
+    // gets the spool_2 of the given spool_1
+    inline std::optional<VirtualToolIndex> get_spool_2(VirtualToolIndex spool_1) const {
+        return get_spool_2(spool_1.to_raw()).transform(VirtualToolIndex::from_raw);
+    }
 
     // return number of configured joins
     inline uint8_t get_num_joins() const {
@@ -62,11 +87,18 @@ public:
         return joins[join_nr];
     }
 
-    /// Execute join
+    [[deprecated("Use the overload with ToolIndex")]]
     bool do_join(uint8_t current_tool);
+
+    /// Execute join
+    inline bool do_join(VirtualToolIndex current_tool) {
+        return do_join(current_tool.to_raw());
+    }
+
     struct __attribute__((packed)) serialized_state_t {
         join_config_t joins[EXTRUDERS];
     };
+
     /// Serialize data to packed serialized_state_t structure (for power panic)
     void serialize(serialized_state_t &to);
 
