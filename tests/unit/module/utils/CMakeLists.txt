@@ -63,3 +63,10 @@ target_include_directories(
   single_linked_list_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
   )
 add_catch_test(single_linked_list_tests)
+
+# compact_optional_tests
+add_executable(compact_optional_tests compact_optional_tests.cpp)
+target_include_directories(
+  compact_optional_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
+  )
+add_catch_test(compact_optional_tests)
