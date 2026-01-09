@@ -9,7 +9,6 @@ target_sources(
           file_sort.cpp
           fonts.cpp
           frame_calibration_common.cpp
-          frame_invalid_printer.cpp
           frame_qr_layout.cpp
           gcode_description.cpp
           gui_media_events.cpp

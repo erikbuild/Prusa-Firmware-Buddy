@@ -23,8 +23,8 @@ constexpr std::optional<ErrCode> map_print_preview_phase_to_error_code(const FSM
 #endif
     case PhasesPrintPreview::file_error:
         return ErrCode::CONNECT_PRINT_PREVIEW_FILE_ERROR;
-    case PhasesPrintPreview::wrong_printer:
-    case PhasesPrintPreview::wrong_printer_abort:
+    case PhasesPrintPreview::gcode_incompatible_warning:
+    case PhasesPrintPreview::gcode_incompatible_fatal:
         return ErrCode::CONNECT_PRINT_PREVIEW_WRONG_PRINTER;
     case PhasesPrintPreview::wrong_filament:
         return ErrCode::CONNECT_PRINT_PREVIEW_WRONG_FILAMENT;

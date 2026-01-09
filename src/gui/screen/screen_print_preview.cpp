@@ -10,10 +10,9 @@
 #include <gcode/gcode_info.hpp>
 #include <cassert>
 #include <fsm/print_preview_mapper.hpp>
-#include <frame_invalid_printer.hpp>
+#include <gui/screen/print/frame_gcode_incompatible.hpp>
 #include <sound.hpp>
 #include <meta_utils.hpp>
-#include <frame_invalid_printer.hpp>
 
 #if HAS_LARGE_DISPLAY()
     #include <dialogs/resolution_480x320/radio_button_preview.hpp>
@@ -137,8 +136,8 @@ using Frames = FrameDefinitionList<ScreenPrintPreview::FrameStorage,
     FrameDefinition<Phase::main_dialog, frames::FrameThumbnailPreview>,
     FrameDefinition<Phase::unfinished_selftest, FramePrompt, Phase::unfinished_selftest, map_print_preview_phase_to_error_code>,
     FrameDefinition<Phase::new_firmware_available, FramePrompt, Phase::new_firmware_available, map_print_preview_phase_to_error_code>,
-    FrameDefinition<Phase::wrong_printer, FrameInvalidPrinter, Phase::wrong_printer>,
-    FrameDefinition<Phase::wrong_printer_abort, FrameInvalidPrinter, Phase::wrong_printer_abort>,
+    FrameDefinition<Phase::gcode_incompatible_warning, FrameGCodeIncompatible, Phase::gcode_incompatible_warning>,
+    FrameDefinition<Phase::gcode_incompatible_fatal, FrameGCodeIncompatible, Phase::gcode_incompatible_fatal>,
     FrameDefinition<Phase::filament_not_inserted, FramePrompt, Phase::filament_not_inserted, map_print_preview_phase_to_error_code>,
 #if HAS_MMU2()
     FrameDefinition<Phase::mmu_filament_inserted, FramePrompt, Phase::mmu_filament_inserted, map_print_preview_phase_to_error_code>,

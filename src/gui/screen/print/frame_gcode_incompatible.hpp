@@ -5,9 +5,9 @@
 #include <standard_frame/frame_prompt.hpp>
 #include <fsm/print_preview_phases.hpp>
 
-class FrameInvalidPrinter : public FramePrompt {
+class FrameGCodeIncompatible : public FramePrompt {
 public:
-    FrameInvalidPrinter(window_frame_t *parent, PhasesPrintPreview phase)
+    FrameGCodeIncompatible(window_frame_t *parent, PhasesPrintPreview phase)
         : FramePrompt(parent, phase, {}) {}
 
     /* Will be completely rewritten in the next commit

@@ -12,8 +12,8 @@ enum class PhasesPrintPreview : PhaseUnderlyingType {
     main_dialog,
     unfinished_selftest,
     new_firmware_available,
-    wrong_printer,
-    wrong_printer_abort,
+    gcode_incompatible_warning,
+    gcode_incompatible_fatal,
     filament_not_inserted,
 #if HAS_MMU2()
     mmu_filament_inserted,
@@ -53,13 +53,13 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
         { PhasesPrintPreview::new_firmware_available, {
                                                           Response::Continue,
                                                       } },
-        { PhasesPrintPreview::wrong_printer, {
-                                                 Response::Abort,
-                                                 Response::Print,
-                                             } },
-        { PhasesPrintPreview::wrong_printer_abort, {
-                                                       Response::Abort,
-                                                   } },
+        { PhasesPrintPreview::gcode_incompatible_warning, {
+                                                              Response::Abort,
+                                                              Response::Print,
+                                                          } },
+        { PhasesPrintPreview::gcode_incompatible_fatal, {
+                                                            Response::Abort,
+                                                        } },
         { PhasesPrintPreview::filament_not_inserted, {
                                                          Response::Yes,
                                                          Response::No,

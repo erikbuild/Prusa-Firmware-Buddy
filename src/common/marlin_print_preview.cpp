@@ -77,11 +77,11 @@ std::optional<PhasesPrintPreview> IPrintPreview::getCorrespondingPhase(IPrintPre
         return PhasesPrintPreview::tools_mapping;
 #endif
 
-    case State::wrong_printer_wait_user:
-        return PhasesPrintPreview::wrong_printer;
+    case State::gcode_invalid_wait_user:
+        return PhasesPrintPreview::gcode_incompatible_warning;
 
-    case State::wrong_printer_wait_user_abort:
-        return PhasesPrintPreview::wrong_printer_abort;
+    case State::gcode_invalid_wait_user_abort:
+        return PhasesPrintPreview::gcode_incompatible_fatal;
 
     case State::filament_not_inserted_wait_user:
     case State::filament_not_inserted_load:
@@ -614,8 +614,8 @@ PrintPreview::Result PrintPreview::Loop() {
         break;
 #endif
 
-    case State::wrong_printer_wait_user:
-    case State::wrong_printer_wait_user_abort:
+    case State::gcode_invalid_wait_user:
+    case State::gcode_invalid_wait_user_abort:
         switch (response) {
 
         case Response::Print:
@@ -807,8 +807,8 @@ PrintPreview::Result PrintPreview::stateToResult() const {
 
     case State::unfinished_selftest_wait_user:
     case State::new_firmware_available_wait_user:
-    case State::wrong_printer_wait_user:
-    case State::wrong_printer_wait_user_abort:
+    case State::gcode_invalid_wait_user:
+    case State::gcode_invalid_wait_user_abort:
     case State::wrong_filament_change:
     case State::wrong_filament_wait_user:
     case State::filament_not_inserted_load:
@@ -875,10 +875,10 @@ IPrintPreview::State PrintPreview::stateFromPrinterCheck() {
         return stateFromFilamentPresence();
 
     case HWCheckSeverity::Warning:
-        return State::wrong_printer_wait_user;
+        return State::gcode_invalid_wait_user;
 
     case HWCheckSeverity::Abort:
-        return State::wrong_printer_wait_user_abort;
+        return State::gcode_invalid_wait_user_abort;
     }
 
     bsod_unreachable();

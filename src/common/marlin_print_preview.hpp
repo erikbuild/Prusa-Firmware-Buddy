@@ -37,8 +37,8 @@ public:
 
         new_firmware_available_wait_user,
 
-        wrong_printer_wait_user,
-        wrong_printer_wait_user_abort,
+        gcode_invalid_wait_user,
+        gcode_invalid_wait_user_abort,
 
         filament_not_inserted_wait_user,
         filament_not_inserted_load,

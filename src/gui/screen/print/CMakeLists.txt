@@ -1,0 +1,1 @@
+target_sources(firmware PRIVATE frame_gcode_incompatible.cpp)

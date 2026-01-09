@@ -1,4 +1,4 @@
-#include "frame_invalid_printer.hpp"
+#include "frame_gcode_incompatible.hpp"
 
 #include "img_resources.hpp"
 #include <guiconfig/guiconfig.h>
@@ -9,7 +9,7 @@
 #include <fonts.hpp>
 
 /* Will be completely rewritten in the next commit
-FrameInvalidPrinter::Message::Message(window_t *parent, const string_view_utf8 &text, HWCheckSeverity severity, bool valid)
+FrameGCodeIncompatible::Message::Message(window_t *parent, const string_view_utf8 &text, HWCheckSeverity severity, bool valid)
     : icon(parent, {}, (severity == HWCheckSeverity::Abort) ? &img::nok_16x16 : &img::warning_16x16)
     , text(parent, {}, is_multiline::yes, is_closed_on_click_t::no, text) {
     if (valid) {
@@ -18,10 +18,10 @@ FrameInvalidPrinter::Message::Message(window_t *parent, const string_view_utf8 &
     }
 }
 
-FrameInvalidPrinter::Message::Message(window_t *parent, const string_view_utf8 &text, const GCodeInfo::ValidPrinterSettings::Feature &feature)
+FrameGCodeIncompatible::Message::Message(window_t *parent, const string_view_utf8 &text, const GCodeInfo::ValidPrinterSettings::Feature &feature)
     : Message(parent, text, feature.get_severity(), feature.is_valid()) {}
 
-FrameInvalidPrinter::FrameInvalidPrinter(window_frame_t *parent, PhasesPrintPreview phase)
+FrameGCodeIncompatible::FrameGCodeIncompatible(window_frame_t *parent, PhasesPrintPreview phase)
     : FramePrompt(parent, phase, map_print_preview_phase_to_error_code)
     , valid_printer_settings(GCodeInfo::getInstance().get_valid_printer_settings())
     , messages({

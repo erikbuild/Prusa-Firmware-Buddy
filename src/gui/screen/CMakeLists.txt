@@ -1,5 +1,6 @@
 add_subdirectory(filament)
 add_subdirectory(toolhead)
+add_subdirectory(print)
 
 target_sources(
   firmware PRIVATE dialog_safety_timer.cpp screen_factory_reset.cpp screen_m600.cpp
