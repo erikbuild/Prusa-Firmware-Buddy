@@ -46,28 +46,18 @@ IRadioButton::IRadioButton(window_t *parent, Rect16 rect, size_t count)
     Enable();
 }
 
-// no overflow
-IRadioButton &IRadioButton::operator++() {
-    int8_t index = GetBtnIndex();
-    if (isIndexValid(index + 1)) {
-        SetBtnIndex(index + 1);
-        sound::play(SoundType::encoder_move);
-    } else {
-        sound::play(SoundType::blind_alert);
-    }
-    return *this;
-}
+bool IRadioButton::next_button(int diff) {
+    const int new_index = GetBtnIndex() + diff;
 
-// no underflow
-IRadioButton &IRadioButton::operator--() {
-    uint8_t index = GetBtnIndex();
-    if (index > 0 && (isIndexValid(index - 1))) {
-        SetBtnIndex(index - 1);
+    if (isIndexValid(new_index)) {
+        SetBtnIndex(new_index);
         sound::play(SoundType::encoder_move);
+        return true;
+
     } else {
         sound::play(SoundType::blind_alert);
+        return false;
     }
-    return *this;
 }
 
 void IRadioButton::windowEvent(window_t *sender, GUI_event_t event, void *param) {
@@ -88,11 +78,11 @@ void IRadioButton::windowEvent(window_t *sender, GUI_event_t event, void *param)
     } break;
 
     case GUI_event_t::ENC_UP:
-        ++(*this);
+        next_button();
         return;
 
     case GUI_event_t::ENC_DN:
-        --(*this);
+        previous_button();
         return;
 
     case GUI_event_t::TOUCH_CLICK: {
@@ -303,12 +293,16 @@ void IRadioButton::validateBtnIndex() {
     }
 }
 
-bool IRadioButton::isIndexValid(size_t index) {
-    if (fixed_width_buttons_count > 0) {
-        return (responseFromIndex(index) != Response::_none);
+bool IRadioButton::isIndexValid(int index) {
+    if (index < 0) {
+        return false;
     }
 
-    return index < GetBtnCount();
+    if (fixed_width_buttons_count > 0) {
+        return (responseFromIndex(index) != Response::_none);
+    } else {
+        return index < GetBtnCount();
+    }
 }
 
 /**

@@ -346,11 +346,11 @@ void ScreenCrashRecovery::windowEvent(window_t * /*sender*/, GUI_event_t event, 
         }
 
         case GUI_event_t::ENC_UP:
-            ++(*radio);
+            radio->next_button();
             break;
 
         case GUI_event_t::ENC_DN:
-            --(*radio);
+            radio->previous_button();
             break;
 
         default:

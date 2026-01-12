@@ -45,10 +45,14 @@ public:
      */
     IRadioButton(window_t *parent, Rect16 rect, size_t count);
 
-    // No postfix increment/decrement operator, it would have to return button by value.
-    // it would not be a problem, but buttons are not meant to be used that way
-    IRadioButton &operator++(); // Prefix increment operator no overflow
-    IRadioButton &operator--(); // Prefix decrement operator no underflow
+    /// Selects next button
+    /// Also beeps
+    /// @return whether we've hit the end and cannot continue
+    bool next_button(int diff = 1);
+
+    bool previous_button() {
+        return next_button(-1);
+    }
 
     Response Click() const; // click returns response to be send, 0 buttons will return Response::_none
     bool IsEnabled(size_t index) const;
@@ -82,7 +86,7 @@ protected:
 
     void invalidateWhatIsNeeded();
     void validateBtnIndex(); // needed for iconned layout
-    bool isIndexValid(size_t index);
+    bool isIndexValid(int index);
     size_t maxSize() const; // depends id it is iconned
 
     // TODO: REMOVEME BFW-6028
