@@ -9,6 +9,11 @@
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
 
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 using namespace selftest;
 LOG_COMPONENT_REF(Selftest);
 

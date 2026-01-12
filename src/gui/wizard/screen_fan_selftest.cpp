@@ -8,7 +8,12 @@
 #include <window_wizard_progress.hpp>
 #include <window_text.hpp>
 #include <status_footer.hpp>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <option/has_switched_fan_test.h>
 #include <timing.h>
 #include <config_store/store_instance.hpp>

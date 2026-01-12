@@ -1,7 +1,12 @@
 #include "print_status_message_formatter_buddy.hpp"
 
 #include <option/has_spool_join.h>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <option/has_translations.h>
 
 #include <buddy/unreachable.hpp>

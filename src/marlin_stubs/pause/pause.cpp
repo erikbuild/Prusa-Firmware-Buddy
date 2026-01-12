@@ -61,7 +61,12 @@ static_assert(HAS_PAUSE());
 #include <option/has_human_interactions.h>
 #include <option/has_wastebin.h>
 #include <option/has_side_fsensor.h>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <option/has_indx.h>
 
 #include <option/has_auto_retract.h>

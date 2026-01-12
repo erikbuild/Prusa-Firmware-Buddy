@@ -7,7 +7,12 @@
 #include "../../Marlin/src/module/temperature.h"
 #include "i_selftest.hpp"
 #include "algorithm_scale.hpp"
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include "advanced_power.hpp"
 #include <printers.h>
 #include "config_store/store_instance.hpp"

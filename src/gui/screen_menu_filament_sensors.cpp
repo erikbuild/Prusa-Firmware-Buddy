@@ -3,7 +3,11 @@
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <ScreenHandler.hpp>
 #include <utils/string_builder.hpp>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
 
 using namespace NScreenMenuFilamentSensors;
 

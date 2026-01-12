@@ -39,11 +39,6 @@
   #include "modular_heatbed.h"
 #endif
 
-#include <option/has_toolchanger.h>
-#if HAS_TOOLCHANGER()
-  #include "prusa/toolchanger.h"
-#endif
-
 #include <atomic>
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
@@ -668,19 +663,7 @@ class Temperature {
 
     #if HAS_TEMP_HEATBREAK_CONTROL
       [[deprecated("Use the ToolIndex overload")]]
-      static void setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME) {
-        temp_heatbreak[HOTEND_INDEX].target =
-          #ifdef HEATBREAK_MAXTEMP
-            _MIN(celsius, HEATBREAK_MAXTEMP)
-          #else
-            celsius
-          #endif
-        ;
-        #if HAS_TOOLCHANGER()
-          prusa_toolchanger.getTool(HOTEND_INDEX).set_heatbreak_target_temp(celsius);
-        #endif
-        start_watching_heatbreak(HOTEND_INDEX);
-      }
+      static void setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME);
 
       inline static void setTargetHeatbreak(int16_t celsius, PhysicalToolIndex tool) {
         setTargetHeatbreak(celsius, tool.to_raw());
@@ -745,18 +728,7 @@ public:
        * Update the temp manager when PID values change
        */
       #if ENABLED(PIDTEMP)
-        FORCE_INLINE static void updatePID() {
-          #if ENABLED(PID_EXTRUSION_SCALING)
-            last_e_position = 0;
-          #endif
-          #if HAS_TOOLCHANGER()
-            // Set PID parameters to all dwarves
-            for (auto tool : PhysicalToolIndex::all()) {
-              const auto& pid = Temperature::temp_hotend[tool].pid;
-              buddy::puppies::dwarfs[tool].set_pid(pid.Kp, pid.Ki, pid.Kd);
-            }
-          #endif /*HAS_DWARF()*/
-        }
+        static void updatePID();
       #endif
 
     #endif

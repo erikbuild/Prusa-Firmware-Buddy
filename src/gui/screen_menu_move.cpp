@@ -3,7 +3,12 @@
 #include <algorithm>
 
 #include <marlin_client.hpp>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <gui/menu_vars.h>
 #include <img_resources.hpp>
 #include <utils/string_builder.hpp>

@@ -45,7 +45,11 @@
 #include <module/motion.h>
 #include "../../../../src/common/adc.hpp"
 #include "../marlin_stubs/skippable_gcode.hpp"
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+  #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
 
 #include <option/board_is_master_board.h>
 #if BOARD_IS_MASTER_BOARD()
@@ -3349,5 +3353,36 @@ void Temperature::updateModularBedTemperature(){
         }
       }
       temp_bed.celsius = sum / count;
+}
+#endif
+
+#if HAS_TEMP_HEATBREAK_CONTROL
+void Temperature::setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME) {
+  temp_heatbreak[HOTEND_INDEX].target =
+    #ifdef HEATBREAK_MAXTEMP
+      _MIN(celsius, HEATBREAK_MAXTEMP)
+    #else
+      celsius
+    #endif
+  ;
+  #if HAS_TOOLCHANGER()
+    prusa_toolchanger.getTool(HOTEND_INDEX).set_heatbreak_target_temp(celsius);
+  #endif
+  start_watching_heatbreak(HOTEND_INDEX);
+}
+#endif
+
+#if ENABLED(PIDTEMP)
+void Temperature::updatePID() {
+  #if ENABLED(PID_EXTRUSION_SCALING)
+    last_e_position = 0;
+  #endif
+  #if HAS_TOOLCHANGER()
+    // Set PID parameters to all dwarves
+    for (auto tool : PhysicalToolIndex::all()) {
+      const auto& pid = Temperature::temp_hotend[tool].pid;
+      buddy::puppies::dwarfs[tool].set_pid(pid.Kp, pid.Ki, pid.Kd);
+    }
+  #endif
 }
 #endif

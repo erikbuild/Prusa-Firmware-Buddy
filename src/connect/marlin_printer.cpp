@@ -59,12 +59,16 @@ static_assert(HAS_CHAMBER_FILTRATION_API());
 #include <crc32.h>
 
 #include <config_store/store_instance.hpp>
-#include <option/has_mmu2.h>
-#include <option/has_toolchanger.h>
 
+#include <option/has_mmu2.h>
 #if HAS_MMU2()
     #include <Marlin/src/feature/prusa/MMU2/mmu2_mk4.h>
     #include <mmu2/mmu2_fsm.hpp>
+#endif
+
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
 #endif
 
 using marlin_client::GcodeTryResult;

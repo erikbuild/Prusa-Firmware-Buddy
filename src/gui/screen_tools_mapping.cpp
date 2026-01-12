@@ -16,7 +16,12 @@
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <buddy/unreachable.hpp>
 #include <option/has_mmu2.h>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <string_builder.hpp>
 
 namespace {

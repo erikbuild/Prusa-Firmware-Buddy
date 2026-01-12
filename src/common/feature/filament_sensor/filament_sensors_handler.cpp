@@ -11,7 +11,12 @@
 #include <logging/log.hpp>
 #include <option/has_selftest.h>
 #include <option/has_mmu2.h>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <stdio.h>
 
 #include "str_utils.hpp"

@@ -56,7 +56,12 @@ static_assert(HAS_PAUSE());
 #if ENABLED(CRASH_RECOVERY)
     #include <feature/prusa/crash_recovery.hpp>
 #endif /*ENABLED(CRASH_RECOVERY)*/
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
+
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
     #include "Marlin/src/feature/prusa/MMU2/mmu2_mk4.h"

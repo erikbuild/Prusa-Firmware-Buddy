@@ -28,6 +28,11 @@
     #include <feature/bed_fan/controller.hpp>
 #endif
 
+#include <option/has_dwarf.h>
+#if HAS_DWARF()
+    #include <puppies/Dwarf.hpp>
+#endif
+
 #if FAN_COUNT > 0
 
     #include "../gcode.h"

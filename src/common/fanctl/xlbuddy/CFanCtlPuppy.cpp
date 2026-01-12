@@ -1,5 +1,7 @@
 #include "CFanCtlPuppy.hpp"
+
 #include "puppies/Dwarf.hpp"
+#include <Marlin/src/module/motion.h>
 
 void CFanCtlPuppy::enter_selftest_mode() {
     selftest_mode = true;

@@ -8,7 +8,11 @@
 #include <timing.h>
 #include <config_store/store_instance.hpp>
 #include <utils/string_builder.hpp>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
 
 namespace {
 

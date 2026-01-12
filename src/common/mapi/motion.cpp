@@ -3,7 +3,11 @@
 #include <Marlin/src/module/planner.h>
 
 #include <option/has_remote_accelerometer.h>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
 
 #if HAS_REMOTE_ACCELEROMETER() && HAS_TOOLCHANGER()
     #include <module/tool_change.h>

@@ -11,7 +11,11 @@
 #include "selftest_log.hpp"
 #include <config_store/store_instance.hpp>
 #include <printers.h>
+
 #include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <Marlin/src/module/prusa/toolchanger.h>
+#endif
 
 #include <option/has_advanced_power.h>
 #if HAS_ADVANCED_POWER()
