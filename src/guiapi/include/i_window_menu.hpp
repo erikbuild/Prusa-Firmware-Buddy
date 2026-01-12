@@ -142,6 +142,11 @@ protected:
     virtual void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
 
 private:
+    /// Updates variables that are calculated from the window size
+    /// Gets automatically called if the window gets resized
+    void update_sized_data();
+
+private:
     int max_items_on_screen_count_;
 
     /// How many items we've scrolled down by

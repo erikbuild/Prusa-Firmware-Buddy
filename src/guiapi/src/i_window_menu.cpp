@@ -16,7 +16,7 @@ IWindowMenu::IWindowMenu(window_t *parent, Rect16 rect)
     Enable();
 
     assert(height(GuiDefaults::FontMenuItems) == font_h_);
-    max_items_on_screen_count_ = Height() / (item_height() + GuiDefaults::MenuItemDelimeterHeight);
+    update_sized_data();
 }
 
 void IWindowMenu::set_scroll_offset(int set) {
@@ -335,8 +335,18 @@ void IWindowMenu::windowEvent(window_t *sender, GUI_event_t event, void *param) 
         IWindowMenuItem::handle_roll();
         break;
 
+    case GUI_event_t::RESIZED:
+        update_sized_data();
+        ensure_item_on_screen(focused_item_index());
+        break;
+
     default:
         window_t::windowEvent(sender, event, param);
         break;
     }
+}
+
+void IWindowMenu::update_sized_data() {
+    // Make minimum 1. Things go weird if this gets set to 0 due to empty rect
+    max_items_on_screen_count_ = std::max<int>(Height() / (item_height() + GuiDefaults::MenuItemDelimeterHeight), 1);
 }

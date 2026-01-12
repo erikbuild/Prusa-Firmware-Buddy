@@ -104,6 +104,16 @@ void WindowMenuVirtualBase::windowEvent(window_t *sender, GUI_event_t event, voi
         }
         break;
 
+    case GUI_event_t::RESIZED:
+        // MUST be before our implementation because we first need to recalculate item size, then setup items again
+        IWindowMenu::windowEvent(sender, event, param);
+
+        // Visible area has changed, we might need to create/show more items
+        setup_items();
+
+        // Return, not break - we have already called the parent function
+        return;
+
     default:
         break;
     }

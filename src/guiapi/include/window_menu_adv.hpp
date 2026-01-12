@@ -38,6 +38,22 @@ public:
         menu.SetFocus();
     }
 
+protected:
+    void windowEvent(window_t *sender, GUI_event_t event, void *param) override {
+        switch (event) {
+
+        case GUI_event_t::RESIZED:
+            menu.SetRect(window_menu_frame_ns::calc_menu_rect(GetRect()));
+            scroll_bar.SetRect(window_menu_frame_ns::calc_scroll_bar_rect(GetRect()));
+            break;
+
+        default:
+            break;
+        }
+
+        window_frame_t::windowEvent(sender, event, param);
+    }
+
 public:
     Menu menu;
     MenuScrollbar scroll_bar;
