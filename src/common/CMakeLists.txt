@@ -32,6 +32,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             hardware_rng.cpp
             hardware_serial.cpp
             heap.cpp
+            hw_check.cpp
             hwio_pindef_check.cpp
             i2c.cpp
             ini_handler.cpp
