@@ -35,11 +35,11 @@ private:
 /**
  * @brief Thread-safe marlin variable. Uses std::atomic inside, but also does same checks that this is used properly.
  */
-template <typename T>
+template <typename T, auto init_val = 0>
 class MarlinVariable {
 public:
     MarlinVariable()
-        : value((T)0) {
+        : value(init_val) {
     }
 
     /**
@@ -334,12 +334,12 @@ public:
     MarlinVariable<uint32_t> media_size_estimate;
 
     /// marlin_server.print_state
-    MarlinVariable<marlin_server::State> print_state;
+    MarlinVariable<marlin_server::State, marlin_server::State::Idle> print_state;
 
     /// Marlin variable for passing string data from the running gcode/FSM to the UI thread/whatever
     MarlinVariableString<64> generic_param_string;
 
-    MarlinVariable<marlin_server::Cmd> gcode_command; // Currently executed command, encoded as marlin_server::Cmd
+    MarlinVariable<marlin_server::Cmd, marlin_server::Cmd::NONE> gcode_command; // Currently executed command, encoded as marlin_server::Cmd
 
 #if HAS_CANCEL_OBJECT()
     static constexpr size_t CANCEL_OBJECT_NAME_LEN = 32; ///< Maximal length of cancel_object_names strings
