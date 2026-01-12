@@ -214,10 +214,7 @@ void window_frame_t::draw() {
 }
 
 void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, void *param) {
-    window_t *pWin = GetFocusedWindow();
-    if (!pWin || !pWin->IsChildOf(this)) {
-        pWin = nullptr;
-    }
+    window_t *pWin = get_focused_child_window();
 
     switch (event) {
 
@@ -340,7 +337,7 @@ void window_frame_t::validate(Rect16 validation_rect) {
 }
 
 bool window_frame_t::IsChildFocused() {
-    return GetFocusedWindow() != nullptr ? (GetFocusedWindow()->GetParent() == this) : false;
+    return get_focused_child_window() != nullptr;
 }
 
 window_t *window_frame_t::GetNextSubWin(window_t *win) const {
@@ -468,6 +465,21 @@ window_t *window_frame_t::get_child_by_touch_point(point_ui16_t point) {
             return r;
         }
     }
+    return nullptr;
+}
+
+window_t *window_frame_t::get_focused_child_window() {
+    window_t *child = GetFocusedWindow();
+
+    while (child) {
+        window_t *parent = child->GetParent();
+        if (parent == this) {
+            return child;
+        }
+
+        child = parent;
+    }
+
     return nullptr;
 }
 

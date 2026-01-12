@@ -53,6 +53,10 @@ public:
     /// \returns a child window whose touch rect contains the point (or nullptr)
     window_t *get_child_by_touch_point(point_ui16_t point);
 
+    /// @returns a child window that has focus (or one of its childen has focus)
+    /// @returns nullptr if there is no focused window or it is not a child
+    window_t *get_focused_child_window();
+
     bool IsChildFocused();
 
     void SetMenuTimeoutClose();
