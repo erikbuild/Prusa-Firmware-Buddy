@@ -14,6 +14,11 @@
 #include <printers.h>
 #include <string_view_utf8.hpp>
 
+#include <option/has_tool_mapping.h>
+#if HAS_TOOL_MAPPING()
+class ToolMapper;
+#endif
+
 #include "tool_index_iterator.hpp"
 
 /// Strong type for representing no tool using `std::variant<SomeToolIndex, NoTool>`
@@ -189,6 +194,11 @@ struct GcodeToolIndexExtension {
     /// Will return NoTool if no tool is mapped
     std::variant<VirtualToolIndex, ToolNotMapped> to_virtual() const;
 
+#if HAS_TOOL_MAPPING()
+    /// Override allowing using non-default tool mapper
+    std::variant<VirtualToolIndex, ToolNotMapped> to_virtual(const ToolMapper &tool_mapper) const;
+#endif
+
     /// @returns PhysicalToolIndex corresponding to the GCodeToolIndex, if there is any
     /// Will return NoTool if no tool is mapped
     std::variant<PhysicalToolIndex, ToolNotMapped> to_physical() const;
@@ -212,7 +222,7 @@ auto to_physical_tool_index(const std::variant<T...> &variant) {
         if constexpr (std::is_same_v<V, GcodeToolIndex> || std::is_same_v<V, VirtualToolIndex>) {
             return val.to_physical();
 
-        } else if constexpr (std::is_same_v<V, NoTool> || std::is_same_v<V, AllTools>) {
+        } else if constexpr (std::is_same_v<V, NoTool> || std::is_same_v<V, ToolNotMapped> || std::is_same_v<V, AllTools>) {
             return val;
 
         } else {
