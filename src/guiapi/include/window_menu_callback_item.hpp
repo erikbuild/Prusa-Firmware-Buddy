@@ -13,6 +13,8 @@ public:
         : IWindowMenuItem(label, icon, is_enabled_t::yes, is_hidden_t::no, expands)
         , callback(callback) {}
 
+    using IWindowMenuItem::setLabelFont;
+
 protected:
     inline void click(IWindowMenu &) override {
         if (callback) {
