@@ -27,6 +27,7 @@ enum class GUI_event_t : uint8_t {
     MEDIA, ///< marlin media change
     CHILD_CHANGED, ///< notify parent about child window change, bahavior depends on implementation
     REINIT_FOOTER, ///< forces reinitialization of all footers in GUI
+    RESIZED, ///< The window has been resized
     TOUCH_CLICK, ///< touch click; captured window only
     TOUCH_SWIPE_UP, ///< touch gesture, single finger swipe; all windows; scroll semantic
     TOUCH_SWIPE_DOWN, ///< touch gesture, single finger swipe; all windows; scroll semantic

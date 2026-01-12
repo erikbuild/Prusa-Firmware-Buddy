@@ -244,16 +244,20 @@ Rect16 window_t::GetRectWithoutTransformation() const {
 }
 
 void window_t::SetRect(Rect16 rc) {
-    if (GetParent()) {
-        rect = GetParent()->TransformRect(rc); // do not use SetRect() - would be recursive
+    if (auto parent = GetParent()) {
+        rc = parent->TransformRect(rc);
+    }
+
+    SetRectWithoutTransformation(rc);
+}
+
+void window_t::SetRectWithoutTransformation(Rect16 rc) {
+    if (rect == rc) {
         return;
     }
 
     rect = rc;
-}
-
-void window_t::SetRectWithoutTransformation(Rect16 rc) {
-    rect = rc;
+    windowEvent(nullptr, GUI_event_t::RESIZED, nullptr);
 }
 
 // TransformRect calls GetRect which calls TransformRect on parrent level ...
