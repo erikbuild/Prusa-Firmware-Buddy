@@ -24,6 +24,7 @@
 #include "module/motion.h"
 #include "module/tool_change.h"
 #include "marlin_stubs/PrusaGcodeSuite.hpp"
+#include "utils/variant_utils.hpp"
 #include <logging/log.hpp>
 #include <filament_to_load.hpp>
 
@@ -209,12 +210,12 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
     struct ToolChangeData {
         xyze_float_t original_resume_point;
         int16_t target_extruder_original_temperature;
-        uint8_t original_extruder;
+        std::variant<VirtualToolIndex, NoTool> original_extruder;
     };
 
     // Check if we need to do a toolchange
     std::optional<ToolChangeData> tool_change_data {};
-    if (target_extruder != marlin_vars().active_extruder) {
+    if (VirtualToolIndex::from_raw_notool(target_extruder) != marlin_vars().active_extruder.get()) {
         // Since the native coordinates contain hotend_currently_applied_offset we need to store the logical
         // version of these coordinates to make it easier to convert to the target_extruder's native coordinates.
         const auto logical_resume = resume_point.asLogical();
@@ -277,12 +278,16 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
             Temperature::setTargetHotend(change_data.target_extruder_original_temperature, target_extruder);
         }
 
+        destination = current_position;
         if (std::isfinite(change_data.original_resume_point.x) && std::isfinite(change_data.original_resume_point.y) && std::isfinite(change_data.original_resume_point.z)) {
             destination = change_data.original_resume_point.asNative();
         } else {
-            destination = prusa_toolchanger.get_tool_dock_position(change_data.original_extruder);
+            destination = match(
+                change_data.original_extruder,
+                [](VirtualToolIndex virtual_tool) { return prusa_toolchanger.get_tool_dock_position(virtual_tool.to_raw()); },
+                [](NoTool) -> xy_float_t { return current_position; });
         }
-        tool_change(VirtualToolIndex::from_raw(change_data.original_extruder), tool_return_t::to_destination, tool_change_lift_t::mbl_only_lift, true);
+        tool_change(stdext::to_variant(change_data.original_extruder), tool_return_t::to_destination, tool_change_lift_t::mbl_only_lift, true);
         report_current_position();
     }
 #endif

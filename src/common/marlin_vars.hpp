@@ -15,6 +15,8 @@
 #include <tuple>
 #include <marlin_events.h>
 #include <marlin_server_types/marlin_server_state.h>
+#include <variant>
+#include <tool_index.hpp>
 
 #include <option/has_cancel_object.h>
 
@@ -364,7 +366,7 @@ public:
     MarlinVariable<uint8_t> fan_check_enabled; // fan_check [on/off]
     MarlinVariable<uint8_t> mmu2_state; // Corresponds to MMU2::xState
     MarlinVariable<uint8_t> mmu2_finda; // FINDA pressed = 1, FINDA not pressed = 0 - shall be used as the main fsensor in case of mmu2State
-    MarlinVariable<uint8_t> active_extruder; // See marlin's active_extruder. It will contain currently selected extruder (tool in case of XL, loaded filament nr in case of MMU2)
+    MarlinVariable<std::variant<VirtualToolIndex, NoTool>, NoTool {}> active_extruder; // See marlin's active_extruder. It will contain currently selected extruder (tool in case of XL, loaded filament nr in case of MMU2)
     MarlinVariable<bool> allow_cold_extrude; // See if marlin's allows cold extrusion
 
     // TODO: prints fans should be in extruder struct, but we are not able to control multiple print fans yet
@@ -399,7 +401,10 @@ public:
             return 0;
         } else {
             // for toolchanger printers
-            const uint8_t hotend = active_extruder.get();
+            const uint8_t hotend = match(
+                active_extruder.get(),
+                [](VirtualToolIndex virtual_tool) { return virtual_tool.to_raw(); },
+                [](NoTool) { return VirtualToolIndex::count; });
             assert(hotend < hotends.max_size());
             return hotend;
         }

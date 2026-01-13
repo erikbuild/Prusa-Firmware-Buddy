@@ -6,6 +6,7 @@
 #include "marlin_client.hpp"
 #include "img_resources.hpp"
 #include "i18n.h"
+#include "string_builder.hpp"
 #include <device/board.h>
 
 #include <option/has_toolchanger.h>
@@ -33,21 +34,19 @@ FooterItemCurrentTool::FooterItemCurrentTool(window_t *parent)
 }
 
 int FooterItemCurrentTool::static_readValue() {
-    return int(marlin_vars().active_extruder);
+    return match(
+        marlin_vars().active_extruder.get(),
+        [](VirtualToolIndex virtual_tool) { return virtual_tool.display_index(); },
+        [](NoTool) -> uint8_t { return 0; });
 }
 
 string_view_utf8 FooterItemCurrentTool::static_makeView(int value) {
-    static char buff[2] = { 0, 0 };
-
-#if HAS_TOOLCHANGER()
-    if (value == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
-        buff[0] = '-'; // Parked tool
+    static std::array<char, 3> buff;
+    StringBuilder b(buff);
+    if (std::holds_alternative<VirtualToolIndex>(VirtualToolIndex::currently_selected())) {
+        b.append_float(value, { .max_decimal_places = 0, .skip_zero_before_dot = false });
     } else {
-        buff[0] = ((value + 1) % 10) + '0'; // Indexing from tool 1
+        b.append_char('-'); // No filament loaded
     }
-#else
-    buff[0] = (value % 10) + '0'; // avoid rendering >1 characters
-#endif
-
-    return string_view_utf8::MakeRAM(buff);
+    return string_view_utf8::MakeRAM(buff.data());
 }

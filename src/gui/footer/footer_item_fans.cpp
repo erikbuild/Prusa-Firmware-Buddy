@@ -39,7 +39,7 @@ FooterItemPrintFan::FooterItemPrintFan(window_t *parent)
 
 int FooterItemPrintFan::static_readValue() {
 #if HAS_TOOLCHANGER()
-    if (marlin_vars().active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+    if (std::holds_alternative<NoTool>(marlin_vars().active_extruder.get())) {
         return no_tool_value;
     }
 #endif
@@ -53,7 +53,7 @@ FooterItemHeatBreakFan::FooterItemHeatBreakFan(window_t *parent)
 
 int FooterItemHeatBreakFan::static_readValue() {
 #if HAS_TOOLCHANGER()
-    if (marlin_vars().active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+    if (std::holds_alternative<NoTool>(marlin_vars().active_extruder.get())) {
         return no_tool_value;
     }
 #endif

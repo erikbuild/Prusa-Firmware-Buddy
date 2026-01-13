@@ -68,9 +68,14 @@ public:
         : IWindowMenuItem(_("Active Tool"), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 
     void click([[maybe_unused]] IWindowMenu &window_menu) override {
-        if (inject(marlin_vars().active_extruder)) {
-            Screens::Access()->Close();
-        }
+        match(
+            marlin_vars().active_extruder.get(),
+            [](VirtualToolIndex virtual_tool) {
+                if (inject(virtual_tool.to_raw())) {
+                    Screens::Access()->Close();
+                }
+            },
+            [](NoTool) { assert(false); });
     }
 };
 template <typename I>
@@ -108,7 +113,10 @@ void MI_M600::click([[maybe_unused]] IWindowMenu &window_menu) {
         return;
     }
 #endif
-    inject(marlin_vars().active_extruder);
+    match(
+        marlin_vars().active_extruder.get(),
+        [](VirtualToolIndex virtual_tool) { inject(virtual_tool.to_raw()); },
+        [](NoTool) { assert(false); });
 }
 
 void MI_M600::Loop() {

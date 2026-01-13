@@ -178,7 +178,7 @@ int FooterItemNozzle::static_readValue() {
     const uint target = static_cast<uint>(marlin_vars().active_hotend().target_nozzle);
     const uint display = static_cast<uint>(round(marlin_vars().active_hotend().display_nozzle));
 #if HAS_TOOLCHANGER()
-    const bool no_tool = marlin_vars().active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED;
+    const bool no_tool = std::holds_alternative<NoTool>(marlin_vars().active_extruder.get());
 #else
     constexpr bool no_tool = false;
 #endif
@@ -189,7 +189,10 @@ int FooterItemNozzle::static_readValue() {
 }
 
 float FooterItemNozzleDiameter::static_readValue() {
-    return config_store().get_nozzle_diameter(marlin_vars().active_extruder.get());
+    return match(
+        marlin_vars().active_extruder.get(),
+        [](VirtualToolIndex virtual_tool) -> float { return config_store().get_nozzle_diameter(virtual_tool.to_raw()); },
+        [](NoTool) { return 0.0f; });
 }
 
 int FooterItemNozzlePWM::static_readValue() {
@@ -251,8 +254,12 @@ string_view_utf8 FooterItemNozzle::static_makeView(int value) {
 string_view_utf8 FooterItemNozzleDiameter::static_makeView(float value) {
     static std::array<char, 8> buff;
     StringBuilder b(buff);
-    b.append_float(value, { .max_decimal_places = nozzle_diameter_spin_config.max_decimal_places, .skip_zero_before_dot = true });
-    b.append_string("mm");
+    if (std::holds_alternative<PhysicalToolIndex>(PhysicalToolIndex::currently_selected())) {
+        b.append_float(value, { .max_decimal_places = nozzle_diameter_spin_config.max_decimal_places, .skip_zero_before_dot = true });
+        b.append_string("mm");
+    } else {
+        b.append_string(no_tool_str);
+    }
     return string_view_utf8::MakeRAM(buff.data());
 }
 

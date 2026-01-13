@@ -23,21 +23,25 @@ FooterItemFilament::FooterItemFilament(window_t *parent)
 
 int FooterItemFilament::static_readValue() {
 #if HAS_TOOLCHANGER()
-    if (marlin_vars().active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+    if (std::holds_alternative<NoTool>(marlin_vars().active_extruder.get())) {
         return no_tool_value;
     }
 #endif
 
-    uint8_t slot = marlin_vars().active_extruder;
+    auto slot = marlin_vars().active_extruder.get();
 
 #if HAS_MMU2()
     // There's a bug in marlin_vars::active_extruder that always reports 0 for MMU. Fixing it is complicated, this is a workaround.
     if (marlin_vars().mmu2_state.get() != static_cast<uint8_t>(MMU2::xState::Stopped)) {
-        slot = MMU2::mmu2.get_current_tool();
+        slot = VirtualToolIndex::from_raw_notool(MMU2::mmu2.get_current_tool());
     }
 #endif
 
-    return EncodedFilamentType(slot < EXTRUDERS ? config_store().get_filament_type(slot) : FilamentType::none).data;
+    auto filament_type = match(
+        slot,
+        [](VirtualToolIndex virtual_tool) -> FilamentType { return config_store().get_filament_type(virtual_tool); },
+        [](NoTool) { return FilamentType::none; });
+    return EncodedFilamentType(filament_type).data;
 }
 
 string_view_utf8 FooterItemFilament::static_makeView(int value) {

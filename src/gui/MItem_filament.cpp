@@ -54,7 +54,11 @@ void MI_LOAD::click(IWindowMenu &) {
         return;
     }
 #endif
-    auto current_filament = config_store().get_filament_type(marlin_vars().active_extruder);
+
+    const FilamentType current_filament = match(
+        marlin_vars().active_extruder.get(),
+        [](VirtualToolIndex virtual_tool) -> FilamentType { return config_store().get_filament_type(virtual_tool); },
+        [](NoTool) { return FilamentType::none; });
     if ((current_filament == FilamentType::none) || (MsgBoxWarning(_(warning_loaded), Responses_YesNo, 1) == Response::Yes)) {
         marlin_client::gcode("M701 W2"); // load with return option
     }

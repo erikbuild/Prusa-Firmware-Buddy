@@ -548,7 +548,12 @@ FilamentSensorStateAndValue MI_INFO_FILAMENT_SENSOR::get_value(IFSensor *fsensor
 MI_INFO_PRINTER_FILL_SENSOR::MI_INFO_PRINTER_FILL_SENSOR()
     : MI_INFO_FILAMENT_SENSOR(
         PRINTER_IS_PRUSA_XL() ? _("Tool Filament sensor") : _("Filament Sensor"),
-        [](auto) { return get_value(GetExtruderFSensor(marlin_vars().active_extruder.get())); } //
+        [](auto) {
+            return match(
+                marlin_vars().active_extruder.get(),
+                [](VirtualToolIndex virtual_tool) { return get_value(GetExtruderFSensor(virtual_tool.to_physical())); },
+                [](NoTool) { return FilamentSensorStateAndValue {}; });
+        } //
     ) {}
 
 /*****************************************************************************/
@@ -556,9 +561,14 @@ MI_INFO_PRINTER_FILL_SENSOR::MI_INFO_PRINTER_FILL_SENSOR()
 MI_INFO_SIDE_FILL_SENSOR::MI_INFO_SIDE_FILL_SENSOR()
     : MI_INFO_FILAMENT_SENSOR(
         _("Side Filament sensor"),
-        [](auto) { return get_value(GetSideFSensor(marlin_vars().active_extruder.get())); } //
+        [](auto) {
+            return match(
+                marlin_vars().active_extruder.get(),
+                [](VirtualToolIndex virtual_tool) { return get_value(GetSideFSensor(virtual_tool.to_physical())); },
+                [](NoTool) { return FilamentSensorStateAndValue {}; });
+        } //
     ) {
-    set_is_hidden(GetSideFSensor(marlin_vars().active_extruder.get()) == nullptr);
+    set_is_hidden(std::holds_alternative<NoTool>(marlin_vars().active_extruder.get()));
 }
 
 MI_ODOMETER_DIST::MI_ODOMETER_DIST(const string_view_utf8 &label, const img::Resource *icon, is_enabled_t enabled, is_hidden_t hidden, float initVal)
