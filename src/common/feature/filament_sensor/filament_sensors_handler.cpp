@@ -179,7 +179,13 @@ void FilamentSensors::reconfigure_sensors_if_needed(bool force) {
 
     const bool new_has_mmu =
 #if HAS_MMU2()
-        mmu2.State() != xState::Stopped;
+        config_store().mmu2_enabled.get(); // there is a slight semantic difference:
+    // - mmu2_enabled in eeprom describes the "intent" to enable MMU on the machine (this flag is true even when the MMU is not communicating)
+    // - mmu2.Enabled() is true when the MMU is operational (i.e. powered up and initial communication handshake accomplished)
+    // at this spot of filament runout logic, using the "intent" is better because:
+    // - you cannot start a print with MMU in the "connecting" stage
+    // - when communication drops out during print, an error screen occurrs and must be resolved to continue -> runout are completely irrelevant at that moment
+    // - enabling MMU in the eeprom ("intent") is an atomic operation, while it takes ~10s for the MMU to become operational
 #else
         false;
 #endif
@@ -299,7 +305,11 @@ void FilamentSensors::process_enable_state_update() {
             s->set_enabled(global_enable && (extruder_enable_bits & (1 << e)));
         }
         if (IFSensor *s = GetSideFSensor(e)) {
-            s->set_enabled(global_enable && (side_enable_bits & (1 << e)));
+            // FSensorMMU (FINDA) must be enabled when MMU is active and filament sensing is enabled (global_enable).
+            // The sideFS enable setting only applies to physical side sensors, not to MMU's FINDA.
+            // This ensures FINDA is used for runout detection in MMU mode even if user disabled sideFS.
+            // FSensor modes without the MMU are not affected: has_mmu is false in such a case.
+            s->set_enabled(global_enable && (has_mmu || (side_enable_bits & (1 << e))));
         }
     }
 
