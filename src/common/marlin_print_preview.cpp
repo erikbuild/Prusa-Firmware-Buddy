@@ -134,95 +134,6 @@ Response IPrintPreview::GetResponse() {
     return phase ? marlin_server::get_response_from_phase(*phase) : Response::_none;
 }
 
-#if HAS_SPOOL_JOIN() && HAS_TOOL_MAPPING()
-
-bool PrintPreview::ToolsMappingValidty::all_ok() const {
-    return unassigned_gcodes.count() == 0 &&
-    #if not HAS_MMU2()
-        mismatched_filaments.count() == 0 &&
-    #endif
-        mismatched_nozzles.count() == 0 && unloaded_tools.count() == 0;
-}
-
-auto PrintPreview::check_tools_mapping_validity(const ToolMapper &mapper, const SpoolJoin &joiner, const GCodeInfo &gcode) -> ToolsMappingValidty {
-    ToolsMappingValidty result;
-
-    // unassigned gcode check
-    for (int gcode_tool = 0; gcode_tool < gcode.GivenExtrudersCount(); ++gcode_tool) {
-        if (!gcode.get_extruder_info(gcode_tool).used()) {
-            continue;
-        }
-
-        if (mapper.to_virtual(gcode_tool) == ToolMapper::NO_TOOL_MAPPED) {
-            result.unassigned_gcodes.set(gcode_tool);
-        }
-    }
-
-    auto get_nozzle_diameter = [&]([[maybe_unused]] size_t idx) {
-    #if HAS_TOOLCHANGER()
-        return config_store().get_nozzle_diameter(idx);
-    #elif HAS_MMU2()
-        return config_store().get_nozzle_diameter(0);
-    #endif // else unknown configuration
-    };
-
-    auto nozzles_match = [&](uint8_t physical_extruder) {
-        auto gcode_tool = tools_mapping::to_gcode_tool_custom(mapper, joiner, physical_extruder);
-        if (gcode_tool == tools_mapping::no_tool
-            || !gcode.get_extruder_info(gcode_tool).used()
-            || !gcode.get_extruder_info(gcode_tool).nozzle_diameter.has_value()) {
-            return true;
-        }
-
-        float nozzle_diameter_distance = std::abs(static_cast<float>(gcode.get_extruder_info(gcode_tool).nozzle_diameter.value()) - static_cast<float>(get_nozzle_diameter(physical_extruder)));
-        if (nozzle_diameter_distance > 0.001f) {
-            return false;
-        }
-
-        return true;
-    };
-
-    auto tool_needs_to_be_loaded = [&]([[maybe_unused]] uint8_t physical_extruder) { // if any tool needs filament load
-    #if HAS_TOOLCHANGER()
-        if (!config_store().fsensor_enabled.get()) {
-            return false;
-        }
-
-        return PrintPreview::check_extruder_need_filament_load(physical_extruder, ToolMapper::NO_TOOL_MAPPED, [&](uint8_t pe) {
-            return tools_mapping::to_gcode_tool_custom(mapper, joiner, pe);
-        });
-    #elif HAS_MMU2()
-        return false; // MMU is purposefully unloaded before print
-    #endif
-    };
-
-    auto tool_has_correct_filament_type = [&](uint8_t physical_extruder) {
-        return PrintPreview::check_correct_filament_type(physical_extruder, ToolMapper::NO_TOOL_MAPPED, [&](uint8_t pe) {
-            return tools_mapping::to_gcode_tool_custom(mapper, joiner, pe);
-        });
-    };
-
-    // The other 3 checks
-    for (size_t physical = 0; physical < EXTRUDERS; ++physical) {
-        if (!is_tool_enabled(physical)) {
-            continue;
-        }
-        if (tool_needs_to_be_loaded(physical)) {
-            result.unloaded_tools.set(physical);
-        }
-        if (!nozzles_match(physical)) {
-            result.mismatched_nozzles.set(physical);
-        }
-        if (!tool_has_correct_filament_type(physical)) {
-            result.mismatched_filaments.set(physical);
-        }
-    }
-
-    return result;
-}
-
-#endif
-
 bool PrintPreview::check_extruder_need_filament_load(uint8_t physical_extruder, uint8_t no_gcode_value, stdext::inplace_function<uint8_t(uint8_t)> gcode_extruder_getter) {
     auto gcode_extruder = gcode_extruder_getter(physical_extruder);
     if (gcode_extruder == no_gcode_value) {
@@ -766,8 +677,11 @@ PrintPreview::Result PrintPreview::Loop() {
 
         if (tools_mapping::is_tool_mapping_possible()) {
 #if HAS_SPOOL_JOIN() && HAS_TOOL_MAPPING()
-            if ((skip_if_able >= marlin_server::PreviewSkipIfAble::tool_mapping) && PrintPreview::check_tools_mapping_validity(tool_mapper, spool_join, gcode_info).all_ok()) {
-                // we can skip tools mapping if there is not warning/error in global tools mapping
+            buddy::gcode_compatibility::CompatibilityReport compatibility;
+            compatibility.generate_toolmapping_only({});
+
+            // we can skip tools mapping if there is not warning/error in global tools mapping
+            if ((skip_if_able >= marlin_server::PreviewSkipIfAble::tool_mapping) && compatibility.failure_severity() == HWCheckSeverity::Ignore) {
                 ChangeState(State::done);
             } else {
                 ChangeState(State::tools_mapping_wait_user);

@@ -12,6 +12,7 @@
 #include <window_icon.hpp>
 #include <window_colored_rect.hpp>
 #include <gcode_info.hpp>
+#include <gcode/gcode_compatibility.hpp>
 
 #include <option/has_spool_join.h>
 #if HAS_SPOOL_JOIN()
@@ -67,8 +68,10 @@ private:
     void update_shown_state();
     /// Redraws middle connectors based on current state
     void update_middle_connectors();
-    /// Redraws icons based on current state
-    void update_icons();
+
+    /// Updates the compatibility check and icons reporting it
+    void update_compatibility();
+
     /// Updates bottom_guide based on current state and preprint-check status
     void update_bottom_guide();
 
@@ -122,10 +125,8 @@ private:
     window_text_t bottom_guide; // Currently supports up to two lines of text on our ILI. Shows some text to the user guiding them on what to do/fix
     window_icon_t bottom_icon; // Shows most important icon on the left of the bottom guide
 
-    uint8_t num_unassigned_gcodes { 0 }; // holds the number of currently drawn unassigned gcodes
-    uint8_t num_mismatched_filaments { 0 }; // holds the number of physical tools with mismatched filament
-    uint8_t num_mismatched_nozzles { 0 }; // holds the number of physical tools with mismatched nozzles
-    uint8_t num_unloaded_tools { 0 }; // holds the number of physical tools that are assigned but aren't loaded
+    buddy::gcode_compatibility::CompatibilityReport compatibility_report;
+    std::optional<buddy::gcode_compatibility::CompatibilityReport::FailedCheck> highest_severity_failed_compatibility_check;
 
     RadioButton bottom_radio;
 

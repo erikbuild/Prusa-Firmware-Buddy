@@ -3,6 +3,7 @@
 #include <config_store/store_instance.hpp>
 #include <gcode_info.hpp>
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
+#include <window_msgbox.hpp>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -344,6 +345,35 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
         virtual_tool_check(base_virtual_tool);
 #endif
     }
+}
+
+bool CompatibilityReport::gui_confirm_all_incompatibilities() const {
+    const auto highest_severity_failed_check = this->highest_severity_failed_check();
+    if (auto &ch = highest_severity_failed_check; ch.has_value() && ch->meta->evaluate_severity() == HWCheckSeverity::Abort) {
+        MsgBoxError(_(ch->meta->description), { Response::Abort });
+        return false;
+    }
+
+    return visit_failed_checks([&](const FailedCheck &check) -> bool {
+        // Don't even bother showing ignore level severities
+        if (check.meta->evaluate_severity() == HWCheckSeverity::Ignore) {
+            return true;
+        }
+
+        // Special case for the filament loaded check - continuing that one requires disabling the filament sensors
+        else if (check.meta == &ChecksTraits<VirtualToolCheck>::metadata[VirtualToolCheck::filament_loaded]) {
+            if (MsgBoxWarning(_(check.meta->description), { Response::Abort, Response::FS_disable }) == Response::FS_disable) {
+                FSensors_instance().set_enabled_global(false);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        else {
+            return MsgBoxWarning(_(check.meta->description), { Response::Abort, Response::Ignore }) == Response::Ignore;
+        }
+    });
 }
 
 } // namespace buddy::gcode_compatibility

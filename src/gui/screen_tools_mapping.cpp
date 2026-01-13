@@ -16,6 +16,7 @@
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <buddy/unreachable.hpp>
 #include <option/has_mmu2.h>
+#include <utils/variant_utils.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -24,6 +25,8 @@
 
 #include <string_builder.hpp>
 #include <gui/event/knob_event.hpp>
+
+using namespace buddy::gcode_compatibility;
 
 namespace {
 
@@ -104,11 +107,6 @@ constexpr Rect16 bottom_guide_rect { text_side_margin, row_guide_text, GuiDefaul
 constexpr Rect16 bottom_icon_rect { 0, row_guide_text + (text_height - alert_icon_size) / 2, alert_icon_size, alert_icon_size }; // this rect will have 'left' modified by the current strlen of text in bottom_guide (needs to be 0)
 
 constexpr Rect16 bottom_radio_rect { GuiDefaults::GetButtonRect(GuiDefaults::DialogFrameRect) };
-
-constexpr const img::Resource *unassigned_filament_icon { &img::nok_color_16x16 };
-constexpr const img::Resource *mismatched_nozzles_icon { &img::error_16x16 };
-constexpr const img::Resource *mismatched_filaments_icon { &img::warning_16x16 };
-constexpr const img::Resource *unloaded_tools_icon { &img::question_16x16 };
 
 void set_hovered(window_text_t &item, window_colored_rect *color) {
     item.SetTextColor(COLOR_BLACK);
@@ -679,35 +677,20 @@ void ToolsMappingBody::update_bottom_guide() {
     static constexpr const char *right_pre_translated = N_("Ready to print");
     static constexpr const char *done_pre_translated = N_("Please assign a tool to the filament");
 
-    static constexpr const char *unassigned_gcodes_pre_translated = N_("Unassigned G-Code filament(s)");
-    static constexpr const char *unloaded_tools_pre_translated = N_("Assigned tool(s) without filament");
-    static constexpr const char *mismatched_nozzles_pre_translated = N_("Mismatching nozzle diameters");
-    static constexpr const char *mismatched_filaments_pre_translated = N_("Mismatching filament types");
-
     string_view_utf8 strview;
 
-    auto print_alert_part_of_guide = [&](const char *state_text, const img::Resource *img) {
-        strview = _(state_text);
-        bottom_icon.SetRes(img);
+    if (auto &check = highest_severity_failed_compatibility_check) {
+        strview = _(check->meta->title);
+        bottom_icon.SetRes(hw_check_severity_icons[check->meta->evaluate_severity()]);
         size_t cur_strlen = strview.computeNumUtf8Chars();
         int16_t left_pos = (GuiDefaults::ScreenWidth - (width(Font::normal) + 1) * (cur_strlen + 1) - alert_icon_size) / 2; // make the pos to be on the left of the text (+ one added space to the left of the text)
         Rect16 new_icon_rect = bottom_icon_rect + Rect16::X_t { static_cast<int16_t>(left_pos) };
         bottom_icon.SetRect(static_cast<Rect16>(new_icon_rect));
         bottom_icon.Show();
-        bottom_icon.Invalidate();
-    };
 
-    if (num_unassigned_gcodes > 0) {
-        print_alert_part_of_guide(unassigned_gcodes_pre_translated, unassigned_filament_icon);
-    } else if (num_unloaded_tools > 0) {
-        print_alert_part_of_guide(unloaded_tools_pre_translated, unloaded_tools_icon);
-    } else if (num_mismatched_nozzles > 0) {
-        print_alert_part_of_guide(mismatched_nozzles_pre_translated, mismatched_nozzles_icon);
-    } else if (num_mismatched_filaments > 0) {
-        print_alert_part_of_guide(mismatched_filaments_pre_translated, mismatched_filaments_icon);
     } else {
         bottom_icon.Hide();
-        bottom_icon.Invalidate();
+
         switch (state) {
         case State::left:
             strview = _(left_pre_translated);
@@ -726,6 +709,7 @@ void ToolsMappingBody::update_bottom_guide() {
 
     bottom_guide.SetText(strview);
     bottom_guide.Invalidate();
+    bottom_icon.Invalidate();
 }
 
 void ToolsMappingBody::update_shown_state_after_scroll(uint8_t previous_idx) {
@@ -807,36 +791,27 @@ void ToolsMappingBody::update_dwarf_lights() {
 void ToolsMappingBody::update_shown_state() {
     ensure_nicely_ordered();
     update_middle_connectors();
-    update_icons();
+    update_compatibility();
 }
 
-void ToolsMappingBody::update_icons() {
-    // precondition: nicely ordered, otherwise the icons will not match
-    auto validity = PrintPreview::check_tools_mapping_validity(mapper, joiner, gcode);
-    num_unassigned_gcodes = validity.unassigned_gcodes.count();
-    num_mismatched_filaments = validity.mismatched_filaments.count();
-    num_mismatched_nozzles = validity.mismatched_nozzles.count();
-    num_unloaded_tools = validity.unloaded_tools.count();
+void ToolsMappingBody::update_compatibility() {
+    compatibility_report.generate_toolmapping_only({
+        .gcode_info = gcode,
+        .tool_mapper = mapper,
+        .spool_join = joiner,
+    });
 
-    for (size_t real_gcode = 0; real_gcode < std::size(left_gcode_icons); ++real_gcode) {
-        if (validity.unassigned_gcodes.test(real_gcode)) {
-            left_gcode_icons[real_gcode].SetRes(unassigned_filament_icon);
-        } else {
-            left_gcode_icons[real_gcode].SetRes(nullptr);
-        }
+    for (auto gcode_tool : GcodeToolIndex::all()) {
+        const auto worst_fail = compatibility_report.highest_severity_failed_check(gcode_tool);
+        left_gcode_icons[gcode_tool.to_raw()].SetRes(worst_fail.has_value() ? hw_check_severity_icons[worst_fail->meta->evaluate_severity()] : nullptr);
     }
 
-    for (size_t real_physical = 0; real_physical < std::size(right_phys_icons); ++real_physical) {
-        if (validity.unloaded_tools.test(real_physical)) {
-            right_phys_icons[real_physical].SetRes(unloaded_tools_icon);
-        } else if (validity.mismatched_nozzles.test(real_physical)) {
-            right_phys_icons[real_physical].SetRes(mismatched_nozzles_icon);
-        } else if (validity.mismatched_filaments.test(real_physical)) {
-            right_phys_icons[real_physical].SetRes(mismatched_filaments_icon);
-        } else {
-            right_phys_icons[real_physical].SetRes(nullptr);
-        }
+    for (auto virtual_tool : VirtualToolIndex::all()) {
+        const auto worst_fail = compatibility_report.highest_severity_failed_check(virtual_tool);
+        right_phys_icons[virtual_tool.to_raw()].SetRes(worst_fail.has_value() ? hw_check_severity_icons[worst_fail->meta->evaluate_severity()] : nullptr);
     }
+
+    highest_severity_failed_compatibility_check = compatibility_report.highest_severity_failed_check();
 }
 
 void ToolsMappingBody::update_middle_connectors() {
@@ -1177,38 +1152,15 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
             set_idle(left_gcode_texts[left_gcode_idx_to_real[last_left_idx]], &left_gcode_colors[left_gcode_idx_to_real[last_left_idx]]);
             go_left();
             return;
+
         } else if (response == Response::Print) {
-            string_view_utf8 warning_text {};
-            bool disable_fs { false };
-
-            // unassigned gcodes doesn't allow clicking print
-            if (num_unloaded_tools > 0) {
-                disable_fs = true;
-                warning_text = _("There are printing tools with no filament loaded, this could ruin the print.\nDisable filament sensor and print anyway?");
-            } else if (num_mismatched_filaments > 0) {
-                // Hide warning about mismatching filament types for MMU prints
-                // - it is yet to be decided how shall we set filament types and work with them in the FW.
-                // Contrary to the XL, the MMU is rarely used to switch among different filament types
-                // in the same print due to filament mixing in the melt zone.
-                warning_text = _("Detected mismatching loaded filament types, this could ruin the print.\nPrint anyway?");
-            } else if (num_mismatched_nozzles > 0) {
-                warning_text = _("Detected mismatching nozzle diameters, this could ruin the print.\nPrint anyway?");
+            AutoRestore ar(querying_user, true);
+            if (!compatibility_report.gui_confirm_all_incompatibilities()) {
+                return;
             }
 
-            if (!warning_text.isNULLSTR()) {
-                AutoRestore ar(querying_user, true);
-
-                if (MsgBoxWarning(warning_text,
-                        { Response::Back, Response::Yes })
-                    == Response::Back) {
-                    return; // go back to tools mapping
-                } else {
-                    if (disable_fs) {
-                        FSensors_instance().set_enabled_global(false);
-                    }
-                    Screens::Access()->Get()->Validate(); // don't redraw tools mapping screen since we're leaving
-                }
-            }
+            // don't redraw tools mapping screen since we're leaving
+            Screens::Access()->Get()->Validate();
 
             // we're leaving this screen successfully, so update marlin accordingly
             tool_mapper = mapper;
@@ -1220,7 +1172,7 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
                 return;
             }
             refresh_physical_tool_filament_labels();
-            update_icons();
+            update_compatibility();
             update_bottom_guide();
         }
 

@@ -143,18 +143,6 @@ public:
      */
     static bool check_extruder_need_filament_load(uint8_t physical_extruder, uint8_t no_gcode_value, stdext::inplace_function<uint8_t(uint8_t)> gcode_extruder_getter);
 
-#if HAS_SPOOL_JOIN() && HAS_TOOL_MAPPING()
-    struct ToolsMappingValidty {
-        std::bitset<EXTRUDERS> unassigned_gcodes {};
-        std::bitset<EXTRUDERS> mismatched_filaments {};
-        std::bitset<EXTRUDERS> mismatched_nozzles {};
-        std::bitset<EXTRUDERS> unloaded_tools {};
-
-        [[nodiscard]] bool all_ok() const;
-    };
-    [[nodiscard]] static ToolsMappingValidty check_tools_mapping_validity(const ToolMapper &mapper, const SpoolJoin &joiner, const GCodeInfo &gcode);
-#endif
-
 private:
     uint32_t last_run = 0;
     uint32_t last_still_valid_check_ms = 0;

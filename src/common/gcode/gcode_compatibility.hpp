@@ -240,6 +240,14 @@ struct CompatibilityReport {
     /// generate_without_toolmapping + generate_toolmapping_only
     void generate_full(const ToolMappingArgs &args);
 
+    /// If there is a failed check with abort severity, shows that one.
+    /// Otherwise shows a warning for each failed check with the warning severity.
+    /// The user needs to confirm ignoring all of the warnings.
+    /// Some warning ignores can change printer state (for example filament not loaded disables FS)
+    /// @returns true if the user confirmed to skip all warnings
+    /// !!! TO BE EXECUTED FROM THE GUI THREAD ONLY
+    [[nodiscard]] bool gui_confirm_all_incompatibilities() const;
+
 private:
     void generate_toolmapping_only_noclear(const ToolMappingArgs &args);
 };
