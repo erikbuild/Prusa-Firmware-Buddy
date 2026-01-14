@@ -44,11 +44,16 @@ void PrusaGcodeSuite::M704() {
  *
  *#### Parameters
  *
- * - `P` - MMU index of slot (zero based)
+ * - `P` - MMU index of slot (if M0) or G-Code tool index (if M1) (zero based)
+ * - `M` - Apply tool mapping on P (default is yes)
  */
 void PrusaGcodeSuite::M1704() {
-    const uint8_t val = parser.byteval('P', 0);
-    filament_gcodes::mmu_load_test(val);
+    const auto tool = GcodeSuite::get_virtual_tool_from_command(parser.byteval('P', 0), parser.boolval('M', true));
+    match(
+        tool,
+        [](VirtualToolIndex virtual_tool) { filament_gcodes::mmu_load_test(virtual_tool); },
+        [](NoTool) {} //
+    );
 }
 
 /**
@@ -93,4 +98,4 @@ void PrusaGcodeSuite::M706() {
 __attribute__((weak)) void filament_gcodes::mmu_load([[maybe_unused]] uint8_t data) {}
 __attribute__((weak)) void filament_gcodes::mmu_eject([[maybe_unused]] uint8_t data) {}
 __attribute__((weak)) void filament_gcodes::mmu_cut([[maybe_unused]] uint8_t data) {}
-__attribute__((weak)) void filament_gcodes::mmu_load_test([[maybe_unused]] uint8_t data) {}
+__attribute__((weak)) void filament_gcodes::mmu_load_test([[maybe_unused]] VirtualToolIndex data) {}
