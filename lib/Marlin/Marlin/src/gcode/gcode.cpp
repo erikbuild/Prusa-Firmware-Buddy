@@ -93,6 +93,33 @@ PrinterGCodeCompatibilityReport GcodeSuite::compatibility;
   GcodeSuite::WorkspacePlane GcodeSuite::workspace_plane = PLANE_XY;
 #endif
 
+std::variant<VirtualToolIndex, NoTool> GcodeSuite::get_virtual_tool_from_command(uint8_t tool_index, bool tool_mapping) {
+  if(tool_mapping) {
+    if (tool_index > GcodeToolIndex::count) {
+      fatal_error("Invalid tool index", "GcodeSuite");
+
+    } else if (tool_index == GcodeToolIndex::count) {
+      return NoTool{};
+    }
+    
+    return match(GcodeToolIndex::from_raw(tool_index).to_virtual(),
+      [] (VirtualToolIndex virtual_tool) { return virtual_tool; },
+      [] (ToolNotMapped) -> VirtualToolIndex { fatal_error("Tool is not mapped", "GcodeSuite"); }
+  ) ;
+    
+  } else {
+    if (tool_index > VirtualToolIndex::count) {
+      fatal_error("Invalid tool index", "GcodeSuite");
+
+    } else if (tool_index == VirtualToolIndex::count) {
+      return NoTool{};
+
+    } else {
+      return VirtualToolIndex::from_raw(tool_index);
+    }
+  }
+}
+
 int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> extruder, const bool is_physical) {
   uint8_t e = active_extruder;
   if (extruder.has_value()) {

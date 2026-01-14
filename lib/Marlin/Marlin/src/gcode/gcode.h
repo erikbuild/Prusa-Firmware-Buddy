@@ -313,6 +313,12 @@ public:
     static WorkspacePlane workspace_plane;
   #endif
 
+  
+  /// Parses tool_index from command.
+  /// @param tool_mapping if true, the tool_index is considered GCodeToolIndex and mapping is applied, else it is considered a VirtualToolIndex
+  /// Shows a RSOD if the input is invalid/tool cannot be mapped
+  static std::variant<VirtualToolIndex, NoTool> get_virtual_tool_from_command(uint8_t tool_index, bool tool_mapping);
+
   /// Validates that the option value is valid and may pass it through tool mapping (depending on is_physical flag)
   static int8_t get_target_extruder_from_option_value(std::optional<uint8_t> option_value, const bool is_physical);
 
