@@ -99,7 +99,7 @@ void GcodeSuite::T() {
   if (move_type >= 1) return_type = tool_return_t::no_return;
   #if HAS_TOOLCHANGER()
   // toolchange to or from no tool is no_return, but if user provided X, Y or Z, return to that position
-  if (active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED && destination == current_position) {
+  if (std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected()) && destination == current_position) {
     return_type = tool_return_t::no_return;
   }
   #endif
