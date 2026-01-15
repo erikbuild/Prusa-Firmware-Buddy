@@ -1,7 +1,9 @@
 #include "toolchanger_utils.h"
 #include "tool_offset.hpp"
 #include "dock_position.hpp"
+#include "utils/variant_utils.hpp"
 #include <option/has_toolchanger.h>
+#include <tool_index.hpp>
 
 #if HAS_TOOLCHANGER()
     #include "Marlin/src/module/stepper.h"
@@ -173,17 +175,18 @@ bool PrusaToolChangerUtils::update(PuppyModbus &bus) {
 }
 
 uint8_t PrusaToolChangerUtils::get_active_tool_nr() const {
-    return active_extruder;
+    return match(
+        VirtualToolIndex::currently_selected(),
+        [](VirtualToolIndex virtual_tool) { return virtual_tool.to_raw(); },
+        [](NoTool) { return VirtualToolIndex::count; });
 }
 
 bool PrusaToolChangerUtils::is_any_tool_active() const {
-    assert(active_extruder >= 0 && active_extruder < EXTRUDERS);
-    return active_extruder != MARLIN_NO_TOOL_PICKED;
+    return std::holds_alternative<VirtualToolIndex>(VirtualToolIndex::currently_selected());
 }
 
 bool PrusaToolChangerUtils::is_tool_active(uint8_t idx) const {
-    assert(active_extruder >= 0 && active_extruder < EXTRUDERS);
-    return active_extruder == idx;
+    return VirtualToolIndex::currently_selected() == VirtualToolIndex::from_raw_notool(idx);
 }
 
 uint8_t PrusaToolChangerUtils::get_num_enabled_tools() const {
@@ -191,12 +194,10 @@ uint8_t PrusaToolChangerUtils::get_num_enabled_tools() const {
 }
 
 Dwarf *PrusaToolChangerUtils::get_marlin_picked_tool() {
-    assert(active_extruder >= 0 && active_extruder < EXTRUDERS);
-    if (active_extruder == MARLIN_NO_TOOL_PICKED) {
-        return nullptr;
-    } else {
-        return &dwarfs[active_extruder];
-    }
+    return match(
+        VirtualToolIndex::currently_selected(),
+        [](VirtualToolIndex virtual_tool) { return &dwarfs[virtual_tool.to_physical()]; },
+        [](NoTool) -> Dwarf * { return nullptr; });
 }
 
 void PrusaToolChangerUtils::force_marlin_picked_tool(Dwarf *dwarf) {
