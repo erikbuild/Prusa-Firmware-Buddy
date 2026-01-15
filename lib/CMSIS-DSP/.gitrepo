@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/ARM-software/CMSIS-DSP.git
+	branch = v1.16.2
+	commit = d5717e454fec0337bef114a21f1d2d01d74f2701
+	parent = dba79970c1395a652131977e810998965144bd0c
+	method = merge
+	cmdver = 0.4.9
