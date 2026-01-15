@@ -98,8 +98,14 @@ ScreenError::ScreenError()
     const auto &internal_error = find_error(ErrCode::ERR_SYSTEM_INTERNAL_ERROR);
 
     // Extract crash dump info
-    if (!load_message(err_msg_buff.data(), MSG_MAX_LEN, err_title_buff.data(), MSG_TITLE_MAX_LEN)
-        || error_code / 1000 != ERR_PRINTER_CODE) {
+    const bool msg_successfuly_loaded = load_message(err_msg_buff.data(), MSG_MAX_LEN, err_title_buff.data(), MSG_TITLE_MAX_LEN);
+    // Function fatal_error can create message for RSOD with custom message, but ErrCode::ErrUndef, so the function
+    // is set to also handle messages with non-empty title or message. All-zero results in default error message.
+    const bool show_something_specific = (((error_code / 1000) == ERR_PRINTER_CODE)
+        || (err_title_buff.data()[0] != '\0')
+        || (err_msg_buff.data()[0] != '\0'));
+
+    if ((!msg_successfuly_loaded) || (!show_something_specific)) {
         // Fallback to default error message
         error_code = static_cast<uint16_t>(internal_error.err_code);
         txt_err_title.SetText(_(internal_error.err_title));
