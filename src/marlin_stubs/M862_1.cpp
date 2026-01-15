@@ -38,11 +38,10 @@ void PrusaGcodeSuite::M862_1() {
     }
 
     // Get for which tool
-    #if HAS_TOOLCHANGER()
-    const uint8_t default_tool = active_extruder;
-    #else
-    const uint8_t default_tool = 0;
-    #endif
+    if (std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
+        fatal_error("cannot do M862.1 with no picked tool", "PrusaGcodeSuite");
+    }
+    const uint8_t default_tool = std::get<PhysicalToolIndex>(PhysicalToolIndex::currently_selected()).to_raw();
     uint8_t tool = parser.byteval('T', default_tool);
 
     // Fetch diameter from EEPROM
