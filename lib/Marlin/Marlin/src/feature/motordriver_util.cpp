@@ -18,7 +18,14 @@
 #endif
 
 #if USE_SENSORLESS
+std::bitset<3> axis_crash_detection_enabled {};
+
 bool enable_crash_detection(AxisEnum axis) {
+    if (axis_crash_detection_enabled.test(axis)) {
+        bsod("Double crash enable");
+    }
+
+    axis_crash_detection_enabled.set(axis);
     #if HAS_TRINAMIC
     return tmc_enable_stallguard(stepper_axis(axis));
     #else
@@ -27,6 +34,11 @@ bool enable_crash_detection(AxisEnum axis) {
 }
 
 void disable_crash_detection(AxisEnum axis, bool restore_stealth) {
+    if (!axis_crash_detection_enabled.test(axis)) {
+        bsod("Double crash disable");
+    }
+
+    axis_crash_detection_enabled.reset(axis);
     #if HAS_TRINAMIC
     tmc_disable_stallguard(stepper_axis(axis), restore_stealth);
     #else

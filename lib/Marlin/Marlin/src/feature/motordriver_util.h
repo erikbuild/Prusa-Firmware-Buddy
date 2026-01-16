@@ -9,6 +9,7 @@
 #include "../inc/MarlinConfig.h"
 #include <bsod.h>
 #include <optional>
+#include <bitset>
 
 #if USE_SENSORLESS
 /**
@@ -24,6 +25,8 @@ bool enable_crash_detection(AxisEnum axis);
  */
 void disable_crash_detection(AxisEnum axis, bool restore_stealth);
 #endif
+
+extern std::bitset<3> axis_crash_detection_enabled;
 
 // Track enabled status of stealthChop and only re-enable where applicable
 struct sensorless_t {

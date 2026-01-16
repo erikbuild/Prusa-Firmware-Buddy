@@ -708,6 +708,27 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
 void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const feedRate_t fr_mm_s) {
   assert(fr_mm_s != 0.f);
 
+  // If you're seeing either of these BSODs,
+  // you're probably calling do_homing_move_axis_rel instead of do_homing_move
+  
+  if(axis == X_AXIS || axis == Y_AXIS) {
+    #if HAS_PHASE_STEPPING()
+      // Sensorless homing does not work with phstep enabled
+      if(phase_stepping::axis_states[axis].enabled) {
+        bsod("Homing w/ phstep");
+      }
+    #endif
+    #if ENABLED(SENSORLESS_HOMING)
+      if(!axis_crash_detection_enabled.test(axis)) {
+        bsod("Homing w/o crash detection");
+      }
+    #endif
+  }
+
+  if(!endstops.is_enabled()) {
+    bsod("Homing w/o endstops");
+  }
+
   // avoid trashing the position when aborted
   planner.synchronize();
   if (planner.draining())
