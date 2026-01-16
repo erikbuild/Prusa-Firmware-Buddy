@@ -1180,7 +1180,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     #endif
     if ((axis == X_AXIS) || (axis == Y_AXIS)) {
       const float move_back_distance = attempt ? MOVE_BACK_BEFORE_HOMING_DISTANCE : MOVE_BACK_BEFORE_HOMING_DISTANCE_FIRST;
-      do_homing_move_axis_rel(axis, axis_home_dir * -move_back_distance, real_fr_mm_s);
+      do_homing_move(axis, axis_home_dir * -move_back_distance, real_fr_mm_s);
     }
   #endif // ENABLED(MOVE_BACK_BEFORE_HOMING)
 
@@ -1210,7 +1210,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
   for(uint8_t i = 0; i < bump_count; i++) {
 
     // Move away from the endstop by the axis HOME_BUMP_MM
-    do_homing_move_axis_rel(axis, -bump, real_fr_mm_s);
+    do_homing_move(axis, -bump, real_fr_mm_s);
 
     // Slow move towards endstop until triggered
 
