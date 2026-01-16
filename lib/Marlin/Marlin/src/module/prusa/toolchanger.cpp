@@ -737,7 +737,7 @@ bool PrusaToolChanger::align_locks() {
     planner.synchronize();
 
     // Bump right edge
-    if (!homeaxis(X_AXIS, 0, true)) {
+    if (!do_homing_move(X_AXIS, 1.5f * max_length(X_AXIS), 0)) {
         axes_home_level[X_AXIS] = AxisHomeLevel::not_homed; // Needs homing
         return false; // Failed to bump right edge
     }
