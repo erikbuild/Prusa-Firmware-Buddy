@@ -723,10 +723,12 @@ void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const fe
         bsod("Homing w/o crash detection");
       }
     #endif
-  }
 
-  if(!endstops.is_enabled()) {
-    bsod("Homing w/o endstops");
+    // Funny thing, endstops can be disabled when homing Z at this moment
+    // I wish I had the nerves to try to fix this...
+    if(!endstops.is_enabled()) {
+      bsod("Homing w/o endstops");
+    }
   }
 
   // avoid trashing the position when aborted
