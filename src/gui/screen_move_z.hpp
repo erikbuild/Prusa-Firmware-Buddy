@@ -65,7 +65,6 @@ private:
     static constexpr Rect16 numb_rc { 243, 240, 237, 22 };
     static constexpr Rect16 arrows_rc { 236, 240, 8, 22 };
 #endif
-    void process_enc_move(int diff);
 
 protected:
     virtual void windowEvent(window_t *sender, GUI_event_t event, void *param) override;

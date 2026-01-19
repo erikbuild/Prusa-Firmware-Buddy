@@ -45,15 +45,6 @@ public:
      */
     IRadioButton(window_t *parent, Rect16 rect, size_t count);
 
-    /// Selects next button
-    /// Also beeps
-    /// @return whether we've hit the end and cannot continue
-    bool next_button(int diff = 1);
-
-    bool previous_button() {
-        return next_button(-1);
-    }
-
     Response Click() const; // click returns response to be send, 0 buttons will return Response::_none
     bool IsEnabled(size_t index) const;
 

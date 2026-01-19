@@ -4,6 +4,7 @@
 #include "sound.hpp"
 #include "display.hpp"
 #include "marlin_client.hpp"
+#include <gui/event/knob_event.hpp>
 
 window_frame_t::window_frame_t(window_t *parent, Rect16 rect, win_type_t type, is_closed_on_timeout_t timeout, is_closed_on_printing_t close_on_print)
     : window_t(parent, rect, type)
@@ -213,7 +214,6 @@ void window_frame_t::draw() {
 }
 
 void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, void *param) {
-    intptr_t dif = (intptr_t)param;
     window_t *pWin = GetFocusedWindow();
     if (!pWin || !pWin->IsChildOf(this)) {
         pWin = nullptr;
@@ -252,38 +252,38 @@ void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t 
         }
         break;
 
-    case GUI_event_t::ENC_DN:
-        while (pWin && dif--) {
-            window_t *const pPrev = GetPrevEnabledSubWin(pWin);
-            if (!pPrev) {
-                sound::play(SoundType::blind_alert);
-                break;
-            } else {
-                sound::play(SoundType::encoder_move);
-            }
-            pWin = pPrev;
-        }
+    case GUI_event_t::KNOB: {
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+
+        // First give the child the opportunity to handle the knob event
         if (pWin) {
-            pWin->SetFocus();
-        }
-        break;
-
-    case GUI_event_t::ENC_UP:
-        while (pWin && dif--) {
-            window_t *const pNext = GetNextEnabledSubWin(pWin);
-
-            if (pNext && pNext->IsVisible()) {
-                sound::play(SoundType::encoder_move);
-            } else {
-                sound::play(SoundType::blind_alert);
+            pWin->WindowEvent(sender, event, param);
+            if (ctx.is_accepted()) {
                 break;
             }
-            pWin = pNext;
         }
+
+        // If the child didn't accept the event, interpret the rotation as focus change
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
+        int diff = ev.diff;
+
+        while (pWin && diff != 0) {
+            if (diff > 0) {
+                pWin = GetNextEnabledSubWin(pWin);
+                diff--;
+            } else {
+                pWin = GetPrevEnabledSubWin(pWin);
+                diff++;
+            }
+        }
+
         if (pWin) {
             pWin->SetFocus();
+            sound::play(SoundType::encoder_move);
+            ctx.accept();
         }
         break;
+    }
 
     case GUI_event_t::CAPT_0:
         break;

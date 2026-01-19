@@ -23,6 +23,7 @@
 #endif
 
 #include <string_builder.hpp>
+#include <gui/event/knob_event.hpp>
 
 namespace {
 
@@ -1317,13 +1318,14 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
         break;
     }
 
-    case GUI_event_t::ENC_UP:
-        adjust_index(1);
-        return;
+    case GUI_event_t::KNOB: {
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
 
-    case GUI_event_t::ENC_DN:
-        adjust_index(-1);
+        adjust_index(ev.diff);
+        ctx.accept();
         return;
+    }
 
     default:
         break;

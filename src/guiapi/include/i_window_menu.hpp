@@ -19,11 +19,6 @@ protected:
     static constexpr uint16_t item_height_ = font_h_ + GuiDefaults::MenuPaddingItems.top + GuiDefaults::MenuPaddingItems.bottom;
 
 public:
-    enum class YNPlaySound {
-        no,
-        yes,
-    };
-
     enum class PageScrollDirection {
         up,
         down
@@ -91,7 +86,7 @@ public: // Focus related stuff
 
     /// Moves the focus by $amount items. Sets the focus if there is no focus.
     /// \returns if the focus was changed
-    bool move_focus_by(int amount, YNPlaySound play_sound);
+    bool move_focus_by(int amount);
 
     /// Tries to move focus as a result of the touch click event (param is to be passed here).
     ///

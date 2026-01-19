@@ -1,6 +1,7 @@
 // liveadjustz.cpp
 
 #include "liveadjust_z.hpp"
+#include <gui/event/gui_event.hpp>
 #include "sound.hpp"
 #include "ScreenHandler.hpp"
 #include <ScreenFactory.hpp>
@@ -11,6 +12,7 @@
 #include "img_resources.hpp"
 #include <option/has_sheet_profiles.h>
 #include "config_features.h"
+#include <gui/event/knob_event.hpp>
 #include <guiconfig/guiconfig.h>
 #include <menu_vars.h>
 #include <gui.hpp>
@@ -120,17 +122,19 @@ void WindowLiveAdjustZ::Change(int dif) {
 void WindowLiveAdjustZ::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     switch (event) {
 
-    case GUI_event_t::ENC_UP:
-        Change(1);
-        sound::play(SoundType::encoder_move);
-        arrows.SetState(WindowArrows::State_t::up);
-        break;
+    case GUI_event_t::KNOB: {
+        const auto old_value = number.GetValue();
 
-    case GUI_event_t::ENC_DN:
-        Change(-1);
-        sound::play(SoundType::encoder_move);
-        arrows.SetState(WindowArrows::State_t::down);
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
+
+        Change(ev.diff);
+        arrows.SetState(ev.diff > 0 ? WindowArrows::State_t::up : WindowArrows::State_t::down);
+        sound::play(number.GetValue() != old_value ? SoundType::encoder_move : SoundType::blind_alert);
+
+        ctx.accept();
         break;
+    }
 
     default:
         window_frame_t::windowEvent(sender, event, param);
@@ -152,8 +156,7 @@ WindowLiveAdjustZ_withText::WindowLiveAdjustZ_withText(window_t *parent, point_i
 void WindowLiveAdjustZ_withText::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     switch (event) {
 
-    case GUI_event_t::ENC_UP:
-    case GUI_event_t::ENC_DN:
+    case GUI_event_t::KNOB:
         if (!active) {
             return; // discard event
         }
@@ -214,10 +217,8 @@ void ScreenLiveAdjustZ::moveNozzle() {
 void ScreenLiveAdjustZ::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     switch (event) {
 
-    case GUI_event_t::ENC_UP:
-    case GUI_event_t::ENC_DN:
+    case GUI_event_t::KNOB:
         adjuster.WindowEvent(sender, event, param);
-        sound::play(SoundType::encoder_move);
         moveNozzle();
         break;
 

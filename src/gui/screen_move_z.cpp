@@ -7,6 +7,7 @@
 #include <menu_vars.h>
 #include <sound.hpp>
 #include <utils/string_builder.hpp>
+#include <gui/event/knob_event.hpp>
 
 ScreenMoveZ::ScreenMoveZ()
     : screen_t()
@@ -60,18 +61,6 @@ ScreenMoveZ::ScreenMoveZ()
     arrows.SetState(WindowArrows::State_t::undef);
 };
 
-void ScreenMoveZ::process_enc_move(int diff) {
-    int32_t val = diff + value;
-    auto range = MenuVars::axis_range(Z_AXIS);
-    value = std::clamp<int32_t>(val, range.first, range.second);
-    numb.SetValue(value);
-#if ENABLED(COREXY) // CoreXY moves bed down while Z goes up
-    arrows.SetState(diff < 0 ? WindowArrows::State_t::up : WindowArrows::State_t::down);
-#else /*PRINTER_TYPE*/
-    arrows.SetState(diff < 0 ? WindowArrows::State_t::down : WindowArrows::State_t::up);
-#endif /*PRINTER_TYPE*/
-}
-
 void ScreenMoveZ::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     switch (event) {
 
@@ -79,10 +68,26 @@ void ScreenMoveZ::windowEvent(window_t *sender, GUI_event_t event, void *param) 
         Screens::Access()->Close();
         break;
 
-    case GUI_event_t::ENC_UP:
-    case GUI_event_t::ENC_DN:
-        process_enc_move(event == GUI_event_t::ENC_DN ? (int)param * -1 : (int)param);
+    case GUI_event_t::KNOB: {
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
+        const auto diff = ev.diff;
+
+        int32_t val = diff + value;
+        auto range = MenuVars::axis_range(Z_AXIS);
+        val = std::clamp<int32_t>(val, range.first, range.second);
+
+        value = val;
+        numb.SetValue(value);
+#if ENABLED(COREXY) // CoreXY moves bed down while Z goes up
+        arrows.SetState(diff < 0 ? WindowArrows::State_t::up : WindowArrows::State_t::down);
+#else /*PRINTER_TYPE*/
+        arrows.SetState(diff < 0 ? WindowArrows::State_t::down : WindowArrows::State_t::up);
+#endif /*PRINTER_TYPE*/
+
+        ctx.accept();
         break;
+    }
 
     case GUI_event_t::LOOP:
         if (value != lastQueuedPos) {

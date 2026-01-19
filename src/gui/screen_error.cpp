@@ -177,8 +177,7 @@ ScreenError::ScreenError()
 
 void ScreenError::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t event, [[maybe_unused]] void *param) {
     switch (event) {
-    case GUI_event_t::ENC_UP:
-    case GUI_event_t::ENC_DN:
+    case GUI_event_t::KNOB:
     case GUI_event_t::HOLD:
     case GUI_event_t::CLICK:
         sound::stop();

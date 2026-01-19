@@ -60,6 +60,7 @@ void WiSpin::event(WindowMenuItemEventContext &ctx) {
     if (auto e = ctx.event.value_maybe<gui_event::KnobEvent>()) {
         const bool has_changed = change(e->diff);
         sound::play(has_changed ? SoundType::encoder_move : SoundType::blind_alert);
+        ctx.accept();
     }
 
     IWindowMenuItem::event(ctx);

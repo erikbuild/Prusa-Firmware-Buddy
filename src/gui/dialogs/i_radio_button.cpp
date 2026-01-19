@@ -4,6 +4,7 @@
 #include "fonts.hpp"
 #include "gui.hpp"
 #include "display.hpp"
+#include <gui/event/knob_event.hpp>
 
 #include <algorithm> //find
 
@@ -46,20 +47,6 @@ IRadioButton::IRadioButton(window_t *parent, Rect16 rect, size_t count)
     Enable();
 }
 
-bool IRadioButton::next_button(int diff) {
-    const int new_index = GetBtnIndex() + diff;
-
-    if (isIndexValid(new_index)) {
-        SetBtnIndex(new_index);
-        sound::play(SoundType::encoder_move);
-        return true;
-
-    } else {
-        sound::play(SoundType::blind_alert);
-        return false;
-    }
-}
-
 void IRadioButton::windowEvent(window_t *sender, GUI_event_t event, void *param) {
     if (!GetParent()) {
         return;
@@ -77,13 +64,21 @@ void IRadioButton::windowEvent(window_t *sender, GUI_event_t event, void *param)
         }
     } break;
 
-    case GUI_event_t::ENC_UP:
-        next_button();
-        return;
+    case GUI_event_t::KNOB: {
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
+        const int new_index = GetBtnIndex() + ev.diff;
 
-    case GUI_event_t::ENC_DN:
-        previous_button();
+        if (isIndexValid(new_index)) {
+            SetBtnIndex(new_index);
+            sound::play(SoundType::encoder_move);
+
+            // Accept the event only if we've actually changed the button
+            // If we're at the end of the radio, this allows the system to focus a different window
+            ctx.accept();
+        }
         return;
+    }
 
     case GUI_event_t::TOUCH_CLICK: {
         event_conversion_union un;

@@ -100,7 +100,7 @@ bool IWindowMenu::move_focus_to_index(std::optional<int> index) {
     return false;
 }
 
-bool IWindowMenu::move_focus_by(int amount, YNPlaySound play_sound) {
+bool IWindowMenu::move_focus_by(int amount) {
     int new_index;
 
     if (auto opt_old_index = focused_item_index()) {
@@ -108,9 +108,6 @@ bool IWindowMenu::move_focus_by(int amount, YNPlaySound play_sound) {
         new_index = (amount >= 0) ? std::min(old_index + amount, item_count() - 1) : std::max(old_index + amount, 0);
 
         if (new_index == old_index) {
-            if (static_cast<bool>(play_sound)) {
-                sound::play(SoundType::blind_alert);
-            }
             return false;
         }
     }
@@ -123,10 +120,6 @@ bool IWindowMenu::move_focus_by(int amount, YNPlaySound play_sound) {
     /// sets new cursor position to a visible item, also invalidates items at old and new index
     if (!move_focus_to_index(new_index)) {
         return false;
-    }
-
-    if (static_cast<bool>(play_sound)) {
-        sound::play(SoundType::encoder_move);
     }
 
     return true;
@@ -291,20 +284,28 @@ void IWindowMenu::windowEvent(window_t *sender, GUI_event_t event, void *param) 
         }
         break;
 
-    case GUI_event_t::ENC_DN:
-    case GUI_event_t::ENC_UP: {
-        const int diff = std::bit_cast<int>(param) * (event == GUI_event_t::ENC_DN ? -1 : 1);
+    case GUI_event_t::KNOB: {
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
+
+        const int diff = ev.diff;
 
         if (focused_item && focused_item->is_edited()) {
-            const gui_event::KnobEvent event {
-                .diff = diff,
-            };
-            WindowMenuItemEventContext ctx(event, this);
-            focused_item->event(ctx);
+            WindowMenuItemEventContext wectx(ev, this);
+            focused_item->event(wectx);
+
+            // Accept the event in any case
+            ctx.accept();
             break;
         }
 
-        move_focus_by(diff, YNPlaySound::yes);
+        if (move_focus_by(diff)) {
+            sound::play(SoundType::encoder_move);
+
+            // Accept the event only if we've actually changed the button
+            // If we're at the end of the menu, this allows the system to focus a different window
+            ctx.accept();
+        }
         break;
     }
 

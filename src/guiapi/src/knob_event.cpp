@@ -7,6 +7,7 @@
 #include "ScreenHandler.hpp" // GetCapturedWindow
 #include "sound.hpp"
 #include <option/has_side_leds.h>
+#include <gui/event/knob_event.hpp>
 
 #if HAS_SIDE_LEDS()
     #include <leds/side_strip_handler.hpp>
@@ -82,10 +83,16 @@ bool gui::knob::EventEncoder(int diff) {
         return false;
     }
 
-    if (diff > 0) {
-        capture_ptr->WindowEvent(capture_ptr, GUI_event_t::ENC_UP, (void *)(intptr_t)diff);
-    } else {
-        capture_ptr->WindowEvent(capture_ptr, GUI_event_t::ENC_DN, (void *)(intptr_t)-diff);
+    {
+        GuiEventContext ctx { gui_event::KnobEvent {
+            .diff = diff,
+        } };
+        capture_ptr->WindowEvent(capture_ptr, GUI_event_t::KNOB, &ctx);
+
+        // If the event is accepted, the accepting entity is responsible for playing the sound, if they want to
+        if (!ctx.is_accepted()) {
+            sound::play(SoundType::blind_alert);
+        }
     }
 
     Screens::Access()->ResetTimeout();

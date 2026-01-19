@@ -22,6 +22,7 @@
 #include <option/has_tool_mapping.h>
 #include <buddy/unreachable.hpp>
 #include <utils/string_builder.hpp>
+#include <gui/event/knob_event.hpp>
 
 #if HAS_MMU2()
     #include <feature/prusa/MMU2/mmu2_mk4.h>
@@ -381,13 +382,17 @@ void screen_printing_data_t::windowEvent(window_t *sender, GUI_event_t event, vo
         break;
 
 #if HAS_LARGE_DISPLAY()
-    case GUI_event_t::ENC_DN:
-        if (shown_end_result
+    case GUI_event_t::KNOB: {
+        auto &ctx = *static_cast<GuiEventContext *>(param);
+        auto &ev = ctx.event.value<gui_event::KnobEvent>();
+
+        if (ev.diff < 0 && shown_end_result
             && ((buttons[0].IsEnabled() && buttons[0].IsFocused()) || (!buttons[0].IsEnabled() && buttons[1].IsFocused()))) {
             start_showing_end_result();
-            break;
+            ctx.accept();
         }
         break;
+    }
 #endif
 
 #if HAS_TOUCH()

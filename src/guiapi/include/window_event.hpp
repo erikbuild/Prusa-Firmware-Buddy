@@ -13,8 +13,15 @@ enum class GUI_event_t : uint8_t {
     LOOP = 1, ///< gui loop (every 50ms)
     BTN_DN, ///< button down                ... all windows - not only captured
     BTN_UP, ///< button up                  ... all windows - not only captured
-    ENC_DN, ///< encoder minus              ... captured window only
-    ENC_UP, ///< encoder plus               ... captured window only
+
+    /// Knob turned clockwise/anticlockwise
+    /// Event parameter contains a pointer to GuiEventContext holding gui_event::KnobEvent
+    /// If something happened as a result of this event, you need to call ctx.accept().
+    /// If the event is NOT accepted, it will be offered to processing to the parent windows (for example to change focus)
+    /// If the event is NOT accepted at all, blind_alert sound will be made
+    /// If the event IS accepted, the accepting code is responsible for making a sound if it wants to.
+    KNOB,
+
     CLICK, ///< clicked (tag > 0)          ... captured window only
     HOLD, ///< held button                ... captured window only
     HELD_LEFT, ///< held and moved left        ... captured window only
@@ -56,8 +63,7 @@ constexpr bool GUI_event_IsKnob(GUI_event_t event) {
 }
 
 static constexpr std::bitset<GUI_event_t_count> GUI_event_IsCaptureEv_data = gui_event_t_bitset(
-    GUI_event_t::ENC_DN,
-    GUI_event_t::ENC_UP,
+    GUI_event_t::KNOB,
     GUI_event_t::CLICK,
     GUI_event_t::HOLD,
     GUI_event_t::TOUCH_CLICK);
@@ -69,8 +75,7 @@ constexpr bool GUI_event_IsCaptureEv(GUI_event_t event) {
 static constexpr std::bitset<GUI_event_t_count> GUI_event_is_input_event_data = gui_event_t_bitset(
     GUI_event_t::BTN_DN,
     GUI_event_t::BTN_UP,
-    GUI_event_t::ENC_DN,
-    GUI_event_t::ENC_UP,
+    GUI_event_t::KNOB,
     // GUI_event_t::CLICK, click can be raised because of BTN_UP or TOUCH_CLICK, so it's not a direct input event
     GUI_event_t::HOLD,
     GUI_event_t::HELD_LEFT,

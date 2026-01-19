@@ -320,7 +320,7 @@ concept WithRadio = requires(T a) {
     { a.radio } -> std::convertible_to<RadioButton &>;
 };
 
-void ScreenCrashRecovery::windowEvent(window_t * /*sender*/, GUI_event_t event, [[maybe_unused]] void *param) {
+void ScreenCrashRecovery::windowEvent(window_t *sender, GUI_event_t event, [[maybe_unused]] void *param) {
     const auto visitor = [&](auto &mem) -> IRadioButton * {
         if constexpr (WithRadio<decltype(mem)>) {
             return &mem.radio;
@@ -345,12 +345,8 @@ void ScreenCrashRecovery::windowEvent(window_t * /*sender*/, GUI_event_t event, 
             break;
         }
 
-        case GUI_event_t::ENC_UP:
-            radio->next_button();
-            break;
-
-        case GUI_event_t::ENC_DN:
-            radio->previous_button();
+        case GUI_event_t::KNOB:
+            radio->WindowEvent(sender, event, param);
             break;
 
         default:
