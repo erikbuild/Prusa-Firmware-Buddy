@@ -136,11 +136,10 @@ private:
     /**
      * @brief Calculate fingerprint of a puppy's firmware.
      * @param file this firmware
-     * @param fw_size size of the fingerprinted area in bytes
      * @param fingerprint output fingerprint
      * @param salt add this salt before the app firmware
      */
-    void calculate_fingerprint(unique_file_ptr &file, off_t fw_size, fingerprint_t &fingerprint, uint32_t salt);
+    void calculate_fingerprint(unique_file_ptr &file, fingerprint_t &fingerprint, uint32_t salt);
 
     /**
      * @brief Check chunk of fingerprint from puppy.

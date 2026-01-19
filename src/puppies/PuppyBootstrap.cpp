@@ -179,8 +179,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run(
             fingerprints.get_fingerprint(dock) = fingerprints.get_fingerprint(Dock::DWARF_1);
         } else {
             unique_file_ptr fw_file = get_firmware(puppy_type);
-            const off_t fw_size = get_firmware_size(puppy_type);
-            calculate_fingerprint(fw_file, fw_size, fingerprints.get_fingerprint(dock), fingerprints.get_salt(dock));
+            calculate_fingerprint(fw_file, fingerprints.get_fingerprint(dock), fingerprints.get_salt(dock));
         }
     }
     #endif /* PUPPY_FLASH_FW() */
@@ -540,7 +539,7 @@ void PuppyBootstrap::flash_firmware(Dock dock, fingerprints_t &fw_fingerprints, 
 
         auto fingerprint_wait_start = ticks_ms();
 
-        calculate_fingerprint(fw_file, fw_size, fw_fingerprints.get_fingerprint(dock), fw_fingerprints.get_salt(dock));
+        calculate_fingerprint(fw_file, fw_fingerprints.get_fingerprint(dock), fw_fingerprints.get_salt(dock));
 
         // Check puppy if it finished fingerprint calculation
         wait_for_fingerprint(fingerprint_wait_start);
@@ -572,8 +571,7 @@ void PuppyBootstrap::wait_for_fingerprint(uint32_t calculation_start) {
     }
 }
 
-void PuppyBootstrap::calculate_fingerprint(unique_file_ptr &file, off_t fw_size, fingerprint_t &fingerprint, uint32_t salt) {
-    (void)fw_size;
+void PuppyBootstrap::calculate_fingerprint(unique_file_ptr &file, fingerprint_t &fingerprint, uint32_t salt) {
     Digest digest {
         (std::byte *)fingerprint.data(),
         fingerprint.size(),
