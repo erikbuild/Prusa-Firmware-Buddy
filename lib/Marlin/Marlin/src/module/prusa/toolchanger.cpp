@@ -150,9 +150,9 @@ static void plan_dock2pos(const float arc_r, const xy_pos_t pos, const xy_pos_t 
 
 } // namespace arc_move
 
-bool PrusaToolChanger::can_move_safely() {
+bool PrusaToolChanger::can_move_safely(AxisHomeLevel required_level) {
     // Toolchange requires precise homing, otherwise we might not hit the docks right
-    return !axis_unhomed_error(_BV(X_AXIS) | _BV(Y_AXIS), AxisHomeLevel::full);
+    return !axis_unhomed_error(_BV(X_AXIS) | _BV(Y_AXIS), required_level);
 }
 
 bool PrusaToolChanger::ensure_safe_move() {
@@ -709,7 +709,7 @@ bool PrusaToolChanger::align_locks() {
     const float travel_feedrate = limit_stealth_feedrate(TRAVEL_MOVE_MM_S);
 
     // Move to safe position before homing move
-    if (can_move_safely()) {
+    if (can_move_safely(AxisHomeLevel::imprecise)) {
         if (current_position.y > SAFE_Y_WITHOUT_TOOL) {
             move(current_position.x, SAFE_Y_WITHOUT_TOOL, SLOW_MOVE_MM_S); // To safe Y
             planner.synchronize();

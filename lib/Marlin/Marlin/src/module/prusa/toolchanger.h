@@ -171,7 +171,7 @@ private:
      * @brief Know if it is safe to move in X and Y.
      * @return true if X and Y are homed
      */
-    [[nodiscard]] bool can_move_safely();
+    [[nodiscard]] bool can_move_safely(AxisHomeLevel required_level = AxisHomeLevel::full);
 
     /**
      * @brief Pickup tool.
