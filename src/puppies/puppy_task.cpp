@@ -1,23 +1,16 @@
-#include "puppies/puppy_task.hpp"
+#include <puppies/puppy_task.hpp>
 
-#include "task.h"
-
-#include <iterator>
-#include "cmsis_os.h"
-#include <logging/log.hpp>
-#include <buddy/main.h>
-#include <option/has_xbuddy_extension.h>
-#include "puppies/PuppyBootstrap.hpp"
-#include "timing.h"
-#include "Marlin/src/module/stepper.h"
 #include "Marlin/src/module/prusa/toolchanger.h"
-#include <tasks.hpp>
-#include <option/has_ac_controller.h>
-#include <option/has_puppy_modularbed.h>
-#include <option/has_toolchanger.h>
-#include <buddy/ccm_thread.hpp>
+#include "Marlin/src/module/stepper.h"
 #include <buddy/bootstrap_state.hpp>
-#include "bsod.h"
+#include <buddy/ccm_thread.hpp>
+#include <cmsis_os.h>
+#include <common/bsod.h>
+#include <common/timing.h>
+#include <logging/log.hpp>
+#include <option/has_toolchanger.h>
+#include <puppies/PuppyBootstrap.hpp>
+#include <tasks.hpp>
 
 #include <option/has_dwarf.h>
 #if HAS_DWARF()
@@ -29,6 +22,7 @@
 // #include <puppies/INDX.hpp>
 #endif
 
+#include <option/has_ac_controller.h>
 #if HAS_AC_CONTROLLER()
     #include <puppies/ac_controller.hpp>
 #endif
@@ -39,10 +33,12 @@
     #include <feature/openprinttag/request_manager.hpp>
 #endif
 
+#include <option/has_puppy_modularbed.h>
 #if HAS_PUPPY_MODULARBED()
     #include <puppies/modular_bed.hpp>
 #endif
 
+#include <option/has_xbuddy_extension.h>
 #if HAS_XBUDDY_EXTENSION()
     #include <puppies/xbuddy_extension.hpp>
 #endif
@@ -83,9 +79,7 @@ namespace {
 } // namespace
 #endif
 
-osThreadId puppy_task_handle;
-
-std::atomic<bool> stop_request = false; // when this is set to true, puppy task will gracefully stop its execution
+static std::atomic<bool> stop_request = false; // when this is set to true, puppy task will gracefully stop its execution
 
 static PuppyBootstrap::BootstrapResult bootstrap_puppies(PuppyBootstrap::BootstrapResult minimal_config) {
     // boostrap first
@@ -432,9 +426,8 @@ static void puppy_task_body([[maybe_unused]] void const *argument) {
 }
 
 void start_puppy_task() {
-
     osThreadCCMDef(puppies, puppy_task_body, TASK_PRIORITY_PUPPY_TASK, 0, 896);
-    puppy_task_handle = osThreadCreate(osThread(puppies), NULL);
+    osThreadCreate(osThread(puppies), NULL);
 }
 
 void suspend_puppy_task() {
