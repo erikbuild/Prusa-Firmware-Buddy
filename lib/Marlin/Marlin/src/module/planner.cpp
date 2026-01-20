@@ -2140,7 +2140,7 @@ bool Planner::buffer_segment(const abce_pos_t &abce
   #error Z_CEILING_CLEARANCE must be defined only if HAS_CEILING_CLEARANCE()
 #endif
 
-  [[maybe_unused]] const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::from_raw_notool(active_extruder));
+  [[maybe_unused]] const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
   [[maybe_unused]] const auto physical_tool = virtual_tool.transform(&VirtualToolIndex::to_physical);
 
   // The target position of the tool in absolute mini-steps
@@ -2396,24 +2396,34 @@ bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, 
  */
 
 void Planner::set_machine_position_mm(const abce_pos_t &abce) {
+  const auto virtual_notool = VirtualToolIndex::currently_selected();
+  const bool has_tool = std::holds_alternative<NoTool>(virtual_notool);
+
   #if ENABLED(DISTINCT_E_FACTORS)
     last_extruder = active_extruder;
   #endif
   position_float = abce;
   position.set(LROUND(abce.a * settings.axis_msteps_per_mm[A_AXIS]),
                LROUND(abce.b * settings.axis_msteps_per_mm[B_AXIS]),
-               LROUND(abce.c * settings.axis_msteps_per_mm[C_AXIS]),
-               LROUND(abce.e * settings.axis_msteps_per_mm[E_AXIS_N(active_extruder)]));
+               LROUND(abce.c * settings.axis_msteps_per_mm[C_AXIS]));
+
+  if(has_tool) {
+    position.e = LROUND(abce.e * settings.axis_msteps_per_mm[E_AXIS_N(std::get<VirtualToolIndex>(virtual_notool).to_raw())]);
+  }
 
   if (processing()) {
     //previous_nominal_speed = 0.0f; // Reset planner junction speeds. Assume start from rest.
     //previous_speed.reset();
     buffer_sync_block();
   } else {
-    const xyze_long_t stepper_position = { LROUND(abce.a * settings.axis_steps_per_mm[A_AXIS]),
-                                           LROUND(abce.b * settings.axis_steps_per_mm[B_AXIS]),
-                                           LROUND(abce.c * settings.axis_steps_per_mm[C_AXIS]),
-                                           LROUND(abce.e * settings.axis_steps_per_mm[E_AXIS_N(active_extruder)]) };
+    xyze_long_t stepper_position = { 
+      LROUND(abce.a * settings.axis_steps_per_mm[A_AXIS]),
+      LROUND(abce.b * settings.axis_steps_per_mm[B_AXIS]),
+      LROUND(abce.c * settings.axis_steps_per_mm[C_AXIS]),
+    };
+    if(has_tool) {
+      stepper_position.e = LROUND(abce.e * settings.axis_steps_per_mm[E_AXIS_N(std::get<VirtualToolIndex>(virtual_notool).to_raw())]);
+    }
     stepper.set_position(stepper_position);
   }
 }
@@ -2428,17 +2438,22 @@ void Planner::set_position_mm(const xyze_pos_t &xyze) {
  * Setters for planner position (also setting stepper position).
  */
 void Planner::set_e_position_mm(const float e) {
-  const uint8_t axis_index = E_AXIS_N(active_extruder);
+  const auto virtual_notool = VirtualToolIndex::currently_selected();
+  if (std::holds_alternative<NoTool>(virtual_notool)) {
+    return;
+  }
+  [[maybe_unused]] auto virtual_tool = std::get<VirtualToolIndex>(virtual_notool);
+
   #if ENABLED(DISTINCT_E_FACTORS)
     last_extruder = active_extruder;
   #endif
-  position.e = LROUND(settings.axis_msteps_per_mm[axis_index] * e);
+  position.e = LROUND(settings.axis_msteps_per_mm[E_AXIS_N(virtual_tool.to_raw())] * e);
   position_float.e = e;
 
   if (processing())
     buffer_sync_block();
   else
-    stepper.set_axis_position(E_AXIS, LROUND(settings.axis_steps_per_mm[axis_index] * e));
+    stepper.set_axis_position(E_AXIS, LROUND(settings.axis_steps_per_mm[E_AXIS_N(virtual_tool.to_raw())] * e));
 }
 
 void Planner::reset_position() {
