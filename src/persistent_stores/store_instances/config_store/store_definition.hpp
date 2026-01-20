@@ -414,7 +414,12 @@ struct CurrentStore
     /// Stores the nozzle diameter for each hotend
     StoreItemArray<float, defaults::nozzle_diameter, ItemFlag::hw_config, journal::hash("Nozzle Diameter Array"), 16, HOTENDS> nozzle_diameters;
 
+    [[deprecated("Use the ToolIndex overload")]]
     float get_nozzle_diameter(uint8_t index);
+
+    inline float get_nozzle_diameter(PhysicalToolIndex index) {
+        return get_nozzle_diameter(index.to_raw());
+    }
 
     [[deprecated("Use the ToolIndex overload")]]
     void set_nozzle_diameter(uint8_t index, float value);
