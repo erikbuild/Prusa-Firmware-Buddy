@@ -68,7 +68,7 @@ void ToolBox::I_MI_TOOL::do_click(IWindowMenu &window_menu, Tool tool, Action ac
         break;
     case Action::CalibrateDock:
 #if HAS_SELFTEST()
-        marlin_client::test_start_with_data(stmDocks, static_cast<ToolMask>(1 << std::to_underlying(tool)));
+        marlin_client::test_start_with_data(stmDocks, PhysicalToolIndex::from_raw(std::to_underlying(tool)));
 #endif
         break;
     case Action::PickCurrent: // do nothing (Pick what is already picked)

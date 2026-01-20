@@ -7,6 +7,7 @@
 #include "../queue.h"
 #include <cstdio>
 #include <stdarg.h>
+#include <bsod.h>
 
 #if HAS_GCODE_COMPATIBILITY()
 

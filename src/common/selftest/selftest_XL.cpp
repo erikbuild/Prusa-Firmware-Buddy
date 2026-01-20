@@ -208,7 +208,7 @@ static constexpr ToolOffsetsConfig_t Config_ToolOffsets = {};
 // class representing whole self-test
 class CSelftest : public ISelftest {
 public:
-    CSelftest();
+    CSelftest() {}
 
 public:
     virtual bool IsInProgress() const override;
@@ -224,14 +224,14 @@ protected:
     void phaseDidSelftestPass();
 
 protected:
-    SelftestState_t m_State;
-    SelftestMask_t m_Mask;
-    ToolMask tool_mask = ToolMask::AllTools;
-    selftest::IPartHandler *pXAxis;
-    selftest::IPartHandler *pYAxis;
-    selftest::IPartHandler *pZAxis;
+    SelftestState_t m_State = stsIdle;
+    SelftestMask_t m_Mask = stmNone;
+    ToolMask tool_mask = AllTools {};
+    selftest::IPartHandler *pXAxis = nullptr;
+    selftest::IPartHandler *pYAxis = nullptr;
+    selftest::IPartHandler *pZAxis = nullptr;
     std::array<selftest::IPartHandler *, HOTENDS> pNozzles;
-    selftest::IPartHandler *pBed;
+    selftest::IPartHandler *pBed = nullptr;
     std::array<selftest::IPartHandler *, HOTENDS> m_pLoadcell;
     std::array<selftest::IPartHandler *, HOTENDS> pDocks;
     selftest::IPartHandler *pToolOffsets;
@@ -240,16 +240,6 @@ protected:
 
     SelftestResult m_result;
 };
-
-CSelftest::CSelftest()
-    : m_State(stsIdle)
-    , m_Mask(stmNone)
-    , tool_mask(ToolMask::AllTools)
-    , pXAxis(nullptr)
-    , pYAxis(nullptr)
-    , pZAxis(nullptr)
-    , pBed(nullptr) {
-}
 
 bool CSelftest::IsInProgress() const {
     return ((m_State != stsIdle) && (m_State != stsFinished) && (m_State != stsAborted));
@@ -280,7 +270,7 @@ bool CSelftest::Start(const uint64_t test_mask, const selftest::TestData test_da
     if (std::holds_alternative<ToolMask>(test_data)) {
         this->tool_mask = std::get<ToolMask>(test_data);
     } else {
-        this->tool_mask = ToolMask::AllTools;
+        this->tool_mask = AllTools {};
     }
 
     m_State = stsStart;

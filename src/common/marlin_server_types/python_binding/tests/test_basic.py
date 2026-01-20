@@ -115,7 +115,6 @@ def test_fsm_phase_convert():
 
 
 def test_selftest_types():
-    check_marlin_server_enum(marlin_server_types.ToolMask)
     check_marlin_server_enum(marlin_server_types.SelftestState)
 
 

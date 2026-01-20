@@ -52,7 +52,7 @@ MI_DOCK_CALIBRATE::MI_DOCK_CALIBRATE(Toolhead toolhead)
 }
 
 void MI_DOCK_CALIBRATE::click(IWindowMenu &) {
-    marlin_client::test_start_with_data(stmDocks, static_cast<ToolMask>(1 << std::get<ToolheadIndex>(toolhead())));
+    marlin_client::test_start_with_data(stmDocks, PhysicalToolIndex::from_raw(std::get<ToolheadIndex>(toolhead())));
 }
 #endif
 

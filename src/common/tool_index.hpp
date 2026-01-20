@@ -8,7 +8,7 @@
 #include <inc/MarlinConfigPre.h>
 #include <utils/array_extensions.hpp>
 #include <utils/storage/strong_index_array.hpp>
-#include <bsod.h>
+#include <bsod/bsod.h>
 #include <utils/overloaded_visitor.hpp>
 #include <option/board_is_master_board.h>
 #include <printers.h>

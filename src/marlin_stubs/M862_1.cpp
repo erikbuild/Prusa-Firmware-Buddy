@@ -8,6 +8,7 @@
 #include <config_store/store_instance.hpp>
 #include <utils/string_builder.hpp>
 #include <option/has_toolchanger.h>
+#include <bsod.h>
 
 #ifdef PRINT_CHECKING_Q_CMDS
 

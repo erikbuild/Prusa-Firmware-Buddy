@@ -24,15 +24,6 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-#if HAS_SELFTEST()
-// Change exported range for some types
-template <>
-struct magic_enum::customize::enum_range<ToolMask> {
-    static constexpr int min = 0;
-    static constexpr int max = 256;
-};
-#endif
-
 template <typename enum_T>
 void export_enum(::nanobind::module_ &m, char const *name) {
     auto enumeration = ::nanobind::enum_<enum_T>(m, name, ::nanobind::is_arithmetic());
@@ -101,7 +92,6 @@ NB_MODULE(marlin_server_types_python_module_impl, m) {
 
 #if HAS_SELFTEST()
     // basic enums from selftest_types.hpp
-    export_enum<ToolMask>(m, "ToolMask");
     export_enum<SelftestState_t>(m, "SelftestState");
     export_enum<SelftestSubtestState_t>(m, "SelftestSubtestState");
 

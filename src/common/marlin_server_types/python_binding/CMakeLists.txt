@@ -42,7 +42,9 @@ target_include_directories(
   marlin_server_types_python_module_impl PRIVATE ${OPTIONS_INCLUDE_DIR} ${NB_DIR}/include
                                                  ${Python_INCLUDE_DIRS}
   )
-target_link_libraries(marlin_server_types_python_module_impl PUBLIC marlin_server_types magic_enum)
+target_link_libraries(
+  marlin_server_types_python_module_impl PUBLIC marlin_server_types magic_enum bsod
+  )
 
 set_target_properties(marlin_server_types_python_module_impl PROPERTIES LINKER_LANGUAGE CXX)
 nanobind_link_options(marlin_server_types_python_module_impl)

@@ -21,7 +21,7 @@ namespace {
 /// @brief Set temperature to all enabled tools
 void set_nozzle_temps(int16_t temp) {
     for (auto tool : PhysicalToolIndex::all()) {
-        if (is_tool_selftest_enabled(tool, ToolMask::AllTools)) { // set temperature on all tools, its not possible to calibrate just one tool
+        if (is_tool_selftest_enabled(tool, AllTools {})) { // set temperature on all tools, its not possible to calibrate just one tool
             thermalManager.setTargetHotend(temp, tool);
         }
     }
@@ -30,7 +30,7 @@ void set_nozzle_temps(int16_t temp) {
 /// @brief Check temperature of all enabled tools is at target
 bool all_nozzles_at_target() {
     for (auto tool : PhysicalToolIndex::all()) {
-        if (is_tool_selftest_enabled(tool, ToolMask::AllTools)) { // check temperature on all tools, its not possible to calibrate just one tool
+        if (is_tool_selftest_enabled(tool, AllTools {})) { // check temperature on all tools, its not possible to calibrate just one tool
             if (!thermalManager.is_hotend_temperature_reached(tool)) {
                 return false;
             }
@@ -46,7 +46,7 @@ public:
     /// Request cooldown on all tools
     static void cooldown() {
         for (auto tool : PhysicalToolIndex::all()) {
-            if (is_tool_selftest_enabled(tool, ToolMask::AllTools) && thermalManager.degHotend(tool) > SelftestToolOffsets_t::TOOL_CALIBRATION_TEMPERATURE && // tool is hot
+            if (is_tool_selftest_enabled(tool, AllTools {}) && thermalManager.degHotend(tool) > SelftestToolOffsets_t::TOOL_CALIBRATION_TEMPERATURE && // tool is hot
                 !tool_cooling_down[tool]) { // cooling is not already turned on
 
                 start_cooling(tool);
@@ -59,7 +59,7 @@ public:
     static void manage() {
         // periodically check if tool is cooled down, stop fans
         for (auto tool : PhysicalToolIndex::all()) {
-            if (is_tool_selftest_enabled(tool, ToolMask::AllTools) && // manage temperature on all tools, its not possible to calibrate just one tool
+            if (is_tool_selftest_enabled(tool, AllTools {}) && // manage temperature on all tools, its not possible to calibrate just one tool
                 thermalManager.degHotend(tool) <= SelftestToolOffsets_t::TOOL_CALIBRATION_TEMPERATURE && tool_cooling_down[tool]) {
                 stop_cooling(tool);
             }
@@ -69,7 +69,7 @@ public:
     /// When cooldown is active, reset it and go back to normal fan operation
     static void reset() {
         for (auto tool : PhysicalToolIndex::all()) {
-            if (is_tool_selftest_enabled(tool, ToolMask::AllTools) && // manage temperature on all tools, its not possible to calibrate just one tool
+            if (is_tool_selftest_enabled(tool, AllTools {}) && // manage temperature on all tools, its not possible to calibrate just one tool
                 tool_cooling_down[tool]) { // tool is cooling down
 
                 stop_cooling(tool);

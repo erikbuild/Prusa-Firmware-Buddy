@@ -122,7 +122,6 @@ try:
     # selftest types are not allways preset
 
     from .marlin_server_types_python_module_impl import (
-        ToolMask,
         SelftestState,
         SelftestSubtestState,
         SelftestHeater,
@@ -132,7 +131,7 @@ try:
     has_selftest_types = True
 
     __all__ += [
-        "ToolMask", "SelftestState", "SelftestSubtestState", "SelftestHeater",
+        "SelftestState", "SelftestSubtestState", "SelftestHeater",
         "SelftestHeaters"
     ]
 

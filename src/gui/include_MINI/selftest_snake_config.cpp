@@ -35,10 +35,6 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
     return TestResult_Unknown;
 }
 
-ToolMask get_tool_mask([[maybe_unused]] Tool tool) {
-    return ToolMask::AllTools;
-}
-
 uint64_t get_test_mask(Action action) {
     switch (action) {
     case Action::XYCheck:

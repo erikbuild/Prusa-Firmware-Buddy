@@ -97,28 +97,6 @@ TestResult get_test_result(Action action, Tool tool) {
     return TestResult_Unknown;
 }
 
-ToolMask get_tool_mask(Tool tool) {
-#if HAS_TOOLCHANGER()
-    switch (tool) {
-    case Tool::Tool1:
-        return ToolMask::Tool0;
-    case Tool::Tool2:
-        return ToolMask::Tool1;
-    case Tool::Tool3:
-        return ToolMask::Tool2;
-    case Tool::Tool4:
-        return ToolMask::Tool3;
-    case Tool::Tool5:
-        return ToolMask::Tool4;
-        break;
-    default:
-        assert(false);
-        break;
-    }
-#endif
-    return ToolMask::AllTools;
-}
-
 uint64_t get_test_mask(Action action) {
     switch (action) {
     case Action::YCheck:
