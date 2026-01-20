@@ -18,11 +18,11 @@ MI_FS_REF_NINS::MI_FS_REF_NINS(Toolhead toolhead)
 }
 
 float MI_FS_REF_NINS::read_value_impl(ToolheadIndex ix) {
-    return config_store().get_extruder_fs_ref_nins_value(ix);
+    return config_store().get_extruder_fs_ref_nins_value(ix.to_raw());
 }
 
 void MI_FS_REF_NINS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_extruder_fs_ref_nins_value(ix, static_cast<int32_t>(set));
+    config_store().set_extruder_fs_ref_nins_value(ix.to_raw(), static_cast<int32_t>(set));
 }
 
 // * MI_FS_REF_INS
@@ -32,11 +32,11 @@ MI_FS_REF_INS::MI_FS_REF_INS(Toolhead toolhead)
 }
 
 float MI_FS_REF_INS::read_value_impl(ToolheadIndex ix) {
-    return config_store().get_extruder_fs_ref_ins_value(ix);
+    return config_store().get_extruder_fs_ref_ins_value(ix.to_raw());
 }
 
 void MI_FS_REF_INS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_extruder_fs_ref_ins_value(ix, static_cast<int32_t>(set));
+    config_store().set_extruder_fs_ref_ins_value(ix.to_raw(), static_cast<int32_t>(set));
 }
 
 #if HAS_ADC_SIDE_FSENSOR()
@@ -47,11 +47,11 @@ MI_SIDE_FS_REF_NINS::MI_SIDE_FS_REF_NINS(Toolhead toolhead)
 }
 
 float MI_SIDE_FS_REF_NINS::read_value_impl(ToolheadIndex ix) {
-    return config_store().get_side_fs_ref_nins_value(ix);
+    return config_store().get_side_fs_ref_nins_value(ix.to_raw());
 }
 
 void MI_SIDE_FS_REF_NINS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_side_fs_ref_nins_value(ix, static_cast<int32_t>(set));
+    config_store().set_side_fs_ref_nins_value(ix.to_raw(), static_cast<int32_t>(set));
 }
 
 // * MI_SIDE_FS_REF_INS
@@ -61,11 +61,11 @@ MI_SIDE_FS_REF_INS::MI_SIDE_FS_REF_INS(Toolhead toolhead)
 }
 
 float MI_SIDE_FS_REF_INS::read_value_impl(ToolheadIndex ix) {
-    return config_store().get_side_fs_ref_ins_value(ix);
+    return config_store().get_side_fs_ref_ins_value(ix.to_raw());
 }
 
 void MI_SIDE_FS_REF_INS::store_value_impl(ToolheadIndex ix, float set) {
-    config_store().set_side_fs_ref_ins_value(ix, static_cast<int32_t>(set));
+    config_store().set_side_fs_ref_ins_value(ix.to_raw(), static_cast<int32_t>(set));
 }
 #endif
 

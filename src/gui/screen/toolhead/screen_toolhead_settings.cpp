@@ -7,11 +7,13 @@
 #include <gcode/queue.h>
 #include <module/planner.h>
 #include <utils/string_builder.hpp>
+#include <utils/variant_utils.hpp>
 #include <option/has_toolchanger.h>
 
 #include "screen_toolhead_settings_fs.hpp"
 #include "screen_toolhead_settings_dock.hpp"
 #include "screen_toolhead_settings_nozzle_offset.hpp"
+#include "tool_index.hpp"
 
 using namespace screen_toolhead_settings;
 
@@ -98,11 +100,11 @@ void MI_HOTEND_TYPE::update() {
 }
 
 HotendType MI_HOTEND_TYPE::read_value_impl(ToolheadIndex ix) {
-    return config_store().hotend_type.get(ix);
+    return config_store().hotend_type.get(ix.to_raw());
 }
 
 void MI_HOTEND_TYPE::store_value_impl(ToolheadIndex ix, HotendType set) {
-    config_store().hotend_type.set(ix, set);
+    config_store().hotend_type.set(ix.to_raw(), set);
 }
 
 // * MI_NOZZLE_SOCK
@@ -112,11 +114,11 @@ MI_NOZZLE_SOCK::MI_NOZZLE_SOCK(Toolhead toolhead)
 }
 
 bool MI_NOZZLE_SOCK::read_value_impl(ToolheadIndex ix) {
-    return config_store().hotend_type.get(ix) == HotendType::stock_with_sock;
+    return config_store().hotend_type.get(ix.to_raw()) == HotendType::stock_with_sock;
 }
 
 void MI_NOZZLE_SOCK::store_value_impl(ToolheadIndex ix, bool set) {
-    config_store().hotend_type.set(ix, set ? HotendType::stock_with_sock : HotendType::stock);
+    config_store().hotend_type.set(ix.to_raw(), set ? HotendType::stock_with_sock : HotendType::stock);
 }
 #endif /* HAS_HOTEND_TYPE_SUPPORT() */
 
@@ -127,11 +129,11 @@ MI_PRINT_FAN_TYPE::MI_PRINT_FAN_TYPE(Toolhead toolhead)
 }
 
 PrintFanType MI_PRINT_FAN_TYPE::read_value_impl(ToolheadIndex ix) {
-    return get_print_fan_type(ix);
+    return get_print_fan_type(ix.to_raw());
 }
 
 void MI_PRINT_FAN_TYPE::store_value_impl(ToolheadIndex ix, PrintFanType set) {
-    set_print_fan_type(ix, set);
+    set_print_fan_type(ix.to_raw(), set);
 }
 
 void MI_PRINT_FAN_TYPE::build_item_text(int index, const std::span<char> &buffer) const {
@@ -184,12 +186,12 @@ MI_NOZZLE_HARDENED::MI_NOZZLE_HARDENED(Toolhead toolhead)
 }
 
 bool MI_NOZZLE_HARDENED::read_value_impl(ToolheadIndex ix) {
-    return config_store().nozzle_is_hardened.get().test(ix);
+    return config_store().nozzle_is_hardened.get().test(ix.to_raw());
 }
 
 void MI_NOZZLE_HARDENED::store_value_impl(ToolheadIndex ix, bool set) {
     config_store().nozzle_is_hardened.apply([&](auto &item) {
-        item.set(ix, set);
+        item.set(ix.to_raw(), set);
     });
 }
 
@@ -201,12 +203,12 @@ MI_NOZZLE_HIGH_FLOW::MI_NOZZLE_HIGH_FLOW(Toolhead toolhead)
 }
 
 bool MI_NOZZLE_HIGH_FLOW::read_value_impl(ToolheadIndex ix) {
-    return config_store().nozzle_is_high_flow.get().test(ix);
+    return config_store().nozzle_is_high_flow.get().test(ix.to_raw());
 }
 
 void MI_NOZZLE_HIGH_FLOW::store_value_impl(ToolheadIndex ix, bool set) {
     config_store().nozzle_is_high_flow.apply([&](auto &item) {
-        item.set(ix, set);
+        item.set(ix.to_raw(), set);
     });
 }
 
@@ -226,8 +228,12 @@ MI_PICK_PARK::MI_PICK_PARK(Toolhead toolhead)
 }
 
 void MI_PICK_PARK::update() {
-    const auto picked_tool = prusa_toolchanger.detect_tool_nr();
-    is_picked = (toolhead() == all_toolheads) ? (picked_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) : (picked_tool == std::get<ToolheadIndex>(toolhead()));
+    const auto picked_tool = PhysicalToolIndex::currently_selected();
+    is_picked = match(
+        toolhead(), //
+        [&](AllTools) { return std::holds_alternative<PhysicalToolIndex>(picked_tool); }, //
+        [&](PhysicalToolIndex tool) { return stdext::holds_value(picked_tool, tool); } //
+    );
 
     // Do not show "Pick Tool" at all for all_toolheads, only "Park Tool" that gets disabled when no tool is selected
     SetLabel(_(is_picked || (toolhead() == all_toolheads) ? N_("Park Tool") : N_("Pick Tool")));
@@ -238,7 +244,7 @@ void MI_PICK_PARK::update() {
 
 void MI_PICK_PARK::click(IWindowMenu &) {
     marlin_client::gcode("G27 P0 Z5"); // Lift Z if not high enough
-    marlin_client::gcode_printf("T%d S1 L0 D0", (!is_picked && toolhead() != all_toolheads) ? std::get<ToolheadIndex>(toolhead()) : PrusaToolChanger::MARLIN_NO_TOOL_PICKED);
+    marlin_client::gcode_printf("T%d S1 L0 D0", (!is_picked && toolhead() != all_toolheads) ? std::get<ToolheadIndex>(toolhead()).to_raw() : PrusaToolChanger::MARLIN_NO_TOOL_PICKED);
     window_dlg_wait_t::wait_for_gcodes_to_finish();
     update();
 }
@@ -272,7 +278,7 @@ void MI_CALIBRATE_FILAMENT_SENSORS::click(IWindowMenu &) {
     if (toolhead() == all_toolheads) {
         marlin_client::gcode_printf("M1981 F%i", (1 << HOTENDS) - 1);
     } else {
-        marlin_client::gcode_printf("M1981 T%i", std::get<ToolheadIndex>(toolhead()));
+        marlin_client::gcode_printf("M1981 T%i", std::get<ToolheadIndex>(toolhead()).to_raw());
     }
 }
 #endif
@@ -295,7 +301,7 @@ ScreenToolheadDetail::ScreenToolheadDetail(Toolhead toolhead)
     if (toolhead == all_toolheads) {
         header.SetText(_("ALL TOOLS"));
     } else if (prusa_toolchanger.is_toolchanger_enabled()) {
-        header.SetText(_("TOOL %d").formatted(title_params, std::get<ToolheadIndex>(toolhead) + 1));
+        header.SetText(_("TOOL %d").formatted(title_params, std::get<ToolheadIndex>(toolhead).display_index()));
     } else {
         header.SetText(_("TOOLHEAD"));
     }
@@ -351,11 +357,9 @@ MI_TOOLHEAD::MI_TOOLHEAD(Toolhead toolhead)
         SetLabel(_("All Tools"));
 
     } else {
-        const ToolheadIndex ix = std::get<ToolheadIndex>(toolhead);
-        SetLabel(_("Tool %d").formatted(label_params, ix + 1));
-#if HAS_TOOLCHANGER()
-        set_is_hidden(!prusa_toolchanger.is_tool_enabled(ix));
-#endif
+        const PhysicalToolIndex ix = std::get<PhysicalToolIndex>(toolhead);
+        SetLabel(ix.display_name(label_params));
+        set_is_hidden(!ix.is_enabled());
     }
 }
 

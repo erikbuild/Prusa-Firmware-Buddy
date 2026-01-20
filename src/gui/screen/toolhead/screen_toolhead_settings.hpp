@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "screen_toolhead_settings_common.hpp"
+#include <tool_index.hpp>
 
 #include <config_store/store_definition.hpp>
 #include <option/has_mmu2.h>
@@ -181,6 +182,10 @@ class MI_TOOLHEAD : public IWindowMenuItem {
 public:
     MI_TOOLHEAD(Toolhead toolhead);
 
+    // For passing the index through template args in ScreenToolheadSettingsList_
+    MI_TOOLHEAD(uint8_t toolhead)
+        : MI_TOOLHEAD(PhysicalToolIndex::from_raw(toolhead)) {}
+
 protected:
     void click(IWindowMenu &) final;
 
@@ -195,7 +200,7 @@ struct ScreenToolheadSettingsList_;
 
 template <size_t... i>
 struct ScreenToolheadSettingsList_<std::index_sequence<i...>> {
-    using T = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, WithConstructorArgs<MI_TOOLHEAD, ToolheadIndex(i)>..., WithConstructorArgs<MI_TOOLHEAD, AllToolheads {}>>;
+    using T = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, WithConstructorArgs<MI_TOOLHEAD, i>..., WithConstructorArgs<MI_TOOLHEAD, AllTools {}>>;
 };
 
 class ScreenToolheadSettingsList : public ScreenToolheadSettingsList_<std::make_index_sequence<toolhead_count>>::T {

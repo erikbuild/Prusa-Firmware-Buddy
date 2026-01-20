@@ -10,6 +10,7 @@
 #include <screen_menu.hpp>
 #include <WindowMenuSpin.hpp>
 #include <MItem_tools.hpp>
+#include <tool_index.hpp>
 
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
@@ -18,13 +19,12 @@
 namespace screen_toolhead_settings {
 
 /// Applies settings to all toolheads
-using AllToolheads = std::monostate;
-using ToolheadIndex = uint8_t;
-using Toolhead = std::variant<ToolheadIndex, AllToolheads>;
+using ToolheadIndex = ::PhysicalToolIndex;
+using Toolhead = std::variant<PhysicalToolIndex, AllTools>;
 
-static constexpr ToolheadIndex toolhead_count = HOTENDS;
-static constexpr Toolhead default_toolhead = ToolheadIndex(0);
-static constexpr Toolhead all_toolheads = AllToolheads();
+static constexpr auto toolhead_count = PhysicalToolIndex::count;
+static constexpr Toolhead default_toolhead = ToolheadIndex::from_raw(0);
+static constexpr Toolhead all_toolheads = AllTools {};
 
 template <typename T>
 concept CMI_TOOLHEAD_SPECIFIC = requires(T a) {
@@ -90,7 +90,7 @@ protected:
         if (this->toolhead() == all_toolheads) {
             std::optional<Value> result;
 
-            for (ToolheadIndex i = 0; i < toolhead_count; i++) {
+            for (auto i : ToolheadIndex::all()) {
                 if (prusa_toolchanger.is_tool_enabled(i)) {
                     const auto val = read_value_impl(i);
                     if (result.has_value() && *result != val) {
@@ -113,7 +113,7 @@ protected:
     void store_value(Value value) {
 #if HAS_TOOLCHANGER()
         if (this->toolhead() == all_toolheads) {
-            for (ToolheadIndex i = 0; i < toolhead_count; i++) {
+            for (auto i : ToolheadIndex::all()) {
                 store_value_impl(i, value);
             }
         } else
