@@ -7,6 +7,7 @@
 #include <warning_type.hpp>
 #include <option/has_selftest.h>
 #include <option/has_cancel_object.h>
+#include <selftest/selftest_data.hpp>
 
 namespace marlin_server {
 
@@ -39,8 +40,7 @@ struct Request {
         } set_variable; // Type::SetVariable
         struct {
             uint64_t test_mask;
-            size_t test_data_index;
-            uint32_t test_data_data;
+            selftest::TestData test_data;
         } test_start; // Type::TestStart
         char gcode[MARLIN_MAX_REQUEST + 1]; // Type::Gcode
         InjectQueueRecord inject; // Type::Inject

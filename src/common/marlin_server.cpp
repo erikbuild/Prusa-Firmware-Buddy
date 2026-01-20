@@ -3420,9 +3420,7 @@ bool _process_server_valid_request(const Request &request, int client_id) {
         return true;
 #if HAS_SELFTEST()
     case Request::Type::TestStart:
-        marlin_server::test_start(
-            request.test_start.test_mask,
-            selftest::deserialize_test_data_from_int(request.test_start.test_data_index, request.test_start.test_data_data));
+        marlin_server::test_start(request.test_start.test_mask, request.test_start.test_data);
         return true;
 #else
         return false;

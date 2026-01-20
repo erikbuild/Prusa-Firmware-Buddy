@@ -266,9 +266,10 @@ void do_babysteps_Z(float offs) {
 void test_start_with_data(const uint64_t test_mask, const ::selftest::TestData test_data) {
     Request request;
     request.type = Request::Type::TestStart;
-    request.test_start.test_mask = test_mask;
-    request.test_start.test_data_index = test_data.index();
-    request.test_start.test_data_data = ::selftest::serialize_test_data_to_int(test_data);
+    request.test_start = {
+        .test_mask = test_mask,
+        .test_data = test_data,
+    };
     _send_request_to_server_and_wait(request);
 }
 
