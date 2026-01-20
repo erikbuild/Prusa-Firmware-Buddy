@@ -580,16 +580,6 @@ public:
 protected:
     virtual void click(IWindowMenu &window_menu) override;
 };
-
-class MI_CALIBRATE_DOCK : public IWindowMenuItem {
-    static constexpr const char *const label = N_("Calibrate Dock Position");
-
-public:
-    MI_CALIBRATE_DOCK();
-
-protected:
-    virtual void click(IWindowMenu &window_menu) override;
-};
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()

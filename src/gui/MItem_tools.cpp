@@ -891,16 +891,6 @@ MI_PICK_PARK_TOOL::MI_PICK_PARK_TOOL()
 void MI_PICK_PARK_TOOL::click(IWindowMenu & /*window_menu*/) {
     ToolActionBox<ToolBox::MenuPickPark>();
 }
-
-/*****************************************************************************/
-MI_CALIBRATE_DOCK::MI_CALIBRATE_DOCK()
-    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, prusa_toolchanger.is_toolchanger_enabled() ? is_hidden_t::no : is_hidden_t::yes, expands_t::yes) {
-}
-
-void MI_CALIBRATE_DOCK::click(IWindowMenu & /*window_menu*/) {
-    ToolActionBox<ToolBox::MenuCalibrateDock>();
-    Screens::Access()->Get()->Validate();
-}
 #endif
 
 /*****************************************************************************/
