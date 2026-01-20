@@ -32,6 +32,7 @@ GcodeSuite gcode;
 #include "queue.h"
 #include "../module/motion.h"
 #include "../module/planner.h"
+#include <utils/variant_utils.hpp>
 
 #if ENABLED(HOST_PROMPT_SUPPORT)
   #include "../feature/host_actions.h"
@@ -93,23 +94,24 @@ PrinterGCodeCompatibilityReport GcodeSuite::compatibility;
   GcodeSuite::WorkspacePlane GcodeSuite::workspace_plane = PLANE_XY;
 #endif
 
-std::variant<VirtualToolIndex, NoTool> GcodeSuite::get_virtual_tool_from_command(uint8_t tool_index, bool tool_mapping) {
+std::variant<VirtualToolIndex, NoTool, GcodeSuite::ToolParsingError> GcodeSuite::get_virtual_tool_from_command(uint8_t tool_index, bool tool_mapping) {
   if(tool_mapping) {
     if (tool_index > GcodeToolIndex::count) {
-      fatal_error("Invalid tool index", "GcodeSuite");
+      return ToolParsingError { .msg =  "Invalid tool index" };
 
     } else if (tool_index == GcodeToolIndex::count) {
       return NoTool{};
     }
     
+    using Result = std::variant<VirtualToolIndex, NoTool, ToolParsingError>;
     return match(GcodeToolIndex::from_raw(tool_index).to_virtual(),
-      [] (VirtualToolIndex virtual_tool) { return virtual_tool; },
-      [] (ToolNotMapped) -> VirtualToolIndex { fatal_error("Tool is not mapped", "GcodeSuite"); }
-  ) ;
+      [] (VirtualToolIndex virtual_tool) -> Result { return virtual_tool; },
+      [] (ToolNotMapped) -> Result { return ToolParsingError { .msg = "Tool is not mapped" }; }
+    );
     
   } else {
     if (tool_index > VirtualToolIndex::count) {
-      fatal_error("Invalid tool index", "GcodeSuite");
+      return ToolParsingError { .msg = "Invalid tool index" };
 
     } else if (tool_index == VirtualToolIndex::count) {
       return NoTool{};
@@ -120,33 +122,23 @@ std::variant<VirtualToolIndex, NoTool> GcodeSuite::get_virtual_tool_from_command
   }
 }
 
-int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> extruder, const bool is_physical) {
-  uint8_t e = active_extruder;
-  if (extruder.has_value()) {
-    e = *extruder;
+int8_t GcodeSuite::get_target_extruder_from_optional(std::optional<uint8_t> extruder, const bool tool_map) {
+  auto maybe_virtual = extruder.transform([&](uint8_t e){
+    return get_virtual_tool_from_command(e, tool_map);
+  }).value_or(stdext::to_variant(VirtualToolIndex::currently_selected()));
 
-    if(!is_physical) {
-    #if HAS_TOOL_MAPPING()
-      // map gcode tool to virtual tool if mapping is enabled
-      const uint8_t mapped = tool_mapper.to_virtual(e);
-      e = mapped == ToolMapper::NO_TOOL_MAPPED ? -1 : mapped;
-    #endif
-    }
+  auto virtual_tool = std::get_if<VirtualToolIndex>(&maybe_virtual);
+  if (virtual_tool && virtual_tool->is_enabled()) {
+    return virtual_tool->to_raw();
   }
 
-  static_assert(EXTRUDERS <= INT8_MAX, "We need to return int8_t");
-  bool valid_extruder = (e < EXTRUDERS);
-#if HAS_TOOLCHANGER()
-  valid_extruder = valid_extruder && prusa_toolchanger.is_tool_enabled(e);
-#endif
-  if (valid_extruder) {
-    return e;
-  } else {
-    SERIAL_ECHO_START();
-    SERIAL_CHAR('M'); SERIAL_ECHO(parser.codenum);
-    SERIAL_ECHOLNPAIR(" " MSG_INVALID_EXTRUDER " ", int(e));
-    return -1;
+  SERIAL_ECHO_START();
+  SERIAL_ECHOLNPAIR(" " MSG_INVALID_EXTRUDER " ", static_cast<std::optional<int>>(extruder).value_or(-1));
+  auto error = std::get_if<ToolParsingError>(&maybe_virtual);
+  if (error) {
+    SERIAL_ECHOLNPAIR(" ", error->msg);
   }
+  return -1;
 }
 
 /**
@@ -154,15 +146,15 @@ int8_t GcodeSuite::get_target_extruder_from_option_value(std::optional<uint8_t> 
  * Return -1 if the T parameter is out of range
  */
 int8_t GcodeSuite::get_target_extruder_from_command() {
-  return get_target_extruder_from_option_value(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt, false);
+  return get_target_extruder_from_optional(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt, true);
 }
 
 /**
  * + specify if target extruder is logical or physical
  */
 int8_t GcodeSuite::get_target_extruder_from_command_p() {
-  return get_target_extruder_from_option_value(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt, 
-  parser.seen('P') ? parser.value_bool() : false);
+  return get_target_extruder_from_optional(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt, 
+  parser.seen('P') ? !parser.value_bool() : true);
 }
 /**
  * Get the target e stepper from the T parameter

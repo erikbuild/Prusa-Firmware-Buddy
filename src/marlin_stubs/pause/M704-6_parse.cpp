@@ -52,8 +52,8 @@ void PrusaGcodeSuite::M1704() {
     match(
         tool,
         [](VirtualToolIndex virtual_tool) { filament_gcodes::mmu_load_test(virtual_tool); },
-        [](NoTool) {} //
-    );
+        [](NoTool) {},
+        [](GcodeSuite::ToolParsingError error) { fatal_error(error.msg, "PrusaGcodeSuite"); });
 }
 
 /**

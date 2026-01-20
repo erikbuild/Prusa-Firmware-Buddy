@@ -78,7 +78,11 @@
  * - `Tc` - Load to nozzle after filament was prepared by Tc and nozzle is already heated.
  */
 void GcodeSuite::T() {
-  const auto virtual_tool = GcodeSuite::get_virtual_tool_from_command(parser.codenum, parser.boolval('M', true));
+  const auto result = GcodeSuite::get_virtual_tool_from_command(parser.codenum, parser.boolval('M', true));
+  const auto virtual_tool = match(result,
+    [](GcodeSuite::ToolParsingError error) -> std::variant<VirtualToolIndex, NoTool> { fatal_error(error.msg, "GcodeSuite"); },
+    [](auto virtual_tool) -> std::variant<VirtualToolIndex, NoTool> { return virtual_tool; }
+  );
 
 #if HAS_MMU2()
   if (parser.string_arg) {
