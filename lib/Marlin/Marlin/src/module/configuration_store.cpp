@@ -494,28 +494,10 @@ void MarlinSettings::reset() {
           SERIAL_ECHOLNPGM(" Disabled");
       }
 
-      CONFIG_ECHO_START();
-      SERIAL_ECHOLNPAIR("  M200 D", LINEAR_UNIT(planner.filament_size[0]));
-      #if EXTRUDERS > 1
+      for(int i = 0; i < VirtualToolIndex::count; i++) {
         CONFIG_ECHO_START();
-        SERIAL_ECHOLNPAIR("  M200 T1 D", LINEAR_UNIT(planner.filament_size[1]));
-        #if EXTRUDERS > 2
-          CONFIG_ECHO_START();
-          SERIAL_ECHOLNPAIR("  M200 T2 D", LINEAR_UNIT(planner.filament_size[2]));
-          #if EXTRUDERS > 3
-            CONFIG_ECHO_START();
-            SERIAL_ECHOLNPAIR("  M200 T3 D", LINEAR_UNIT(planner.filament_size[3]));
-            #if EXTRUDERS > 4
-              CONFIG_ECHO_START();
-              SERIAL_ECHOLNPAIR("  M200 T4 D", LINEAR_UNIT(planner.filament_size[4]));
-              #if EXTRUDERS > 5
-                CONFIG_ECHO_START();
-                SERIAL_ECHOLNPAIR("  M200 T5 D", LINEAR_UNIT(planner.filament_size[5]));
-              #endif // EXTRUDERS > 5
-            #endif // EXTRUDERS > 4
-          #endif // EXTRUDERS > 3
-        #endif // EXTRUDERS > 2
-      #endif // EXTRUDERS > 1
+        SERIAL_ECHOLNPAIR("  M200 T", i, " D", LINEAR_UNIT(planner.filament_size[i]));
+      }
 
       if (!parser.volumetric_enabled)
         CONFIG_ECHO_MSG("  M200 D0");
@@ -981,26 +963,11 @@ void MarlinSettings::reset() {
      */
     #if HAS_PAUSE()
       CONFIG_ECHO_HEADING("Filament load/unload lengths:");
-      #if EXTRUDERS == 1
+      for(size_t i = 0; i < std::size(fc_settings); i++) {
+        const auto &s = fc_settings[i];
         say_M603(forReplay);
-        SERIAL_ECHOLNPAIR("L", LINEAR_UNIT(fc_settings[0].load_length), " U", LINEAR_UNIT(fc_settings[0].unload_length));
-      #else
-        #define _ECHO_603(N) do{ say_M603(forReplay); SERIAL_ECHOLNPAIR("T" STRINGIFY(N) " L", LINEAR_UNIT(fc_settings[N].load_length), " U", LINEAR_UNIT(fc_settings[N].unload_length)); }while(0)
-        _ECHO_603(0);
-        _ECHO_603(1);
-        #if EXTRUDERS > 2
-          _ECHO_603(2);
-          #if EXTRUDERS > 3
-            _ECHO_603(3);
-            #if EXTRUDERS > 4
-              _ECHO_603(4);
-              #if EXTRUDERS > 5
-                _ECHO_603(5);
-              #endif // EXTRUDERS > 5
-            #endif // EXTRUDERS > 4
-          #endif // EXTRUDERS > 3
-        #endif // EXTRUDERS > 2
-      #endif // EXTRUDERS == 1
+        SERIAL_ECHOLNPAIR("T", i, " L", LINEAR_UNIT(s.load_length), " U", LINEAR_UNIT(s.unload_length)); 
+      }
     #endif
 
     #if EXTRUDERS > 1
