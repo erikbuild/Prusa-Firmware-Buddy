@@ -660,7 +660,7 @@ static bool corexy_rehome_and_phase(xyze_pos_t &origin_pos, xy_long_t &origin_st
     // reposition parallel to the origin
     current_position[X_AXIS] = (base_home_pos(X_AXIS) - XY_HOMING_ORIGIN_OFFSET * X_HOME_DIR);
     current_position[Y_AXIS] = (base_home_pos(Y_AXIS) - XY_HOMING_ORIGIN_OFFSET * Y_HOME_DIR);
-    planner.buffer_line(current_position, fr_mm_s, active_extruder);
+    planner.buffer_line(current_position, fr_mm_s, VirtualToolIndex::currently_selected());
     planner.synchronize();
 
     // this position will become our reference for the rest of the home, and might not be exact or

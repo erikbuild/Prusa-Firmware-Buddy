@@ -277,7 +277,7 @@ void set_current_from_steppers() {
  * Suitable for homing, does not apply UBL.
  */
 void line_to_current_position(const feedRate_t &fr_mm_s/*=feedrate_mm_s*/) {
-  planner.buffer_line(current_position, fr_mm_s, active_extruder);
+  planner.buffer_line(current_position, fr_mm_s, VirtualToolIndex::currently_selected());
 }
 
 void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, const PrepareMoveHints & hints) {

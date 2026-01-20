@@ -690,10 +690,7 @@ class Planner {
      *  extruder     - target extruder
      *  hints        - optional parameters to aid planner calculations
      */
-    static bool buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s
-      , const uint8_t extruder
-      , const PlannerHints &hints=PlannerHints()
-    );
+    static bool buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<VirtualToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
 
     static bool buffer_raw_line(const xyze_pos_t &cart, float acceleration, float nominal_speed,
         float entry_speed, float exit_speed, std::variant<VirtualToolIndex, NoTool> tool);
