@@ -106,19 +106,16 @@ namespace {
     #if HAS_TOOLCHANGER()
     PhasesColdPull select_tool() {
         selected_tool = PrusaToolChanger::MARLIN_NO_TOOL_PICKED;
-        const auto r { wait_for_response(PhasesColdPull::select_tool) };
-        switch (r) {
-        case Response::Tool1:
-        case Response::Tool2:
-        case Response::Tool3:
-        case Response::Tool4:
-        case Response::Tool5:
-            selected_tool = std::to_underlying(r) - std::to_underlying(Response::Tool1);
+        const auto r = marlin_server::wait_for_response_variant(PhasesColdPull::select_tool);
+        if (auto tool = r.value_maybe<PhysicalToolIndex>()) {
+            selected_tool = tool->to_raw();
             return PhasesColdPull::pick_tool;
-        case Response::Continue:
+
+        } else if (r == FSMResponseVariant::make(Response::Continue)) {
             selected_tool = active_extruder;
             return PhasesColdPull::pick_tool;
-        default:
+
+        } else {
             bsod("Invalid phase encountered.");
         }
     }

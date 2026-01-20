@@ -148,32 +148,25 @@ namespace frame {
     public:
         SelectTool(window_t *) {
             Screens::Access()->gui_loop_until_dialog_closed();
-            Response r;
-            switch (dlg.get_result()) {
+            FSMResponseVariant r;
+            const auto result = dlg.get_result();
+            switch (result) {
             case ToolBox::DialogResult::Tool1:
-                r = Response::Tool1;
-                break;
             case ToolBox::DialogResult::Tool2:
-                r = Response::Tool2;
-                break;
             case ToolBox::DialogResult::Tool3:
-                r = Response::Tool3;
-                break;
             case ToolBox::DialogResult::Tool4:
-                r = Response::Tool4;
-                break;
             case ToolBox::DialogResult::Tool5:
-                r = Response::Tool5;
+                r = FSMResponseVariant::make<PhysicalToolIndex>(PhysicalToolIndex::from_raw(std::to_underlying(result) - std::to_underlying(ToolBox::DialogResult::Tool1)));
                 break;
             case ToolBox::DialogResult::Unknown:
             case ToolBox::DialogResult::Park:
             case ToolBox::DialogResult::Return:
                 [[fallthrough]];
             default:
-                r = Response::Continue;
+                r = FSMResponseVariant::make<Response>(Response::Continue);
                 break;
             }
-            marlin_client::FSM_response(PhasesColdPull::select_tool, r);
+            marlin_client::FSM_response_variant(PhasesColdPull::select_tool, r);
         }
     };
 
