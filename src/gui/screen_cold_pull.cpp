@@ -5,16 +5,6 @@
 #include "fonts.hpp"
 #include "utility_extensions.hpp"
 
-#include <option/has_toolchanger.h>
-#if HAS_TOOLCHANGER()
-    #include <window_tool_action_box.hpp>
-#endif
-
-#include <option/has_mmu2.h>
-#if HAS_MMU2()
-    #include <feature/prusa/MMU2/mmu2_mk4.h>
-#endif
-
 #include <find_error.hpp>
 #include <gui/text_error_url.hpp>
 #include <gui/qr.hpp>
@@ -23,6 +13,16 @@
 #include <common/sound.hpp>
 #include <lang/i18n.h>
 #include <option/has_auto_retract.h>
+
+#include <option/has_mmu2.h>
+#if HAS_MMU2()
+    #include <feature/prusa/MMU2/mmu2_mk4.h>
+#endif
+
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <gui/dialogs/dialog_tool_select.hpp>
+#endif
 
 namespace {
 
@@ -142,31 +142,15 @@ namespace frame {
     };
 
 #if HAS_TOOLCHANGER()
+
     class SelectTool final {
-        ToolBox::DialogToolActionBox<ToolBox::MenuSelect> dlg;
 
     public:
-        SelectTool(window_t *) {
-            Screens::Access()->gui_loop_until_dialog_closed();
-            FSMResponseVariant r;
-            const auto result = dlg.get_result();
-            switch (result) {
-            case ToolBox::DialogResult::Tool1:
-            case ToolBox::DialogResult::Tool2:
-            case ToolBox::DialogResult::Tool3:
-            case ToolBox::DialogResult::Tool4:
-            case ToolBox::DialogResult::Tool5:
-                r = FSMResponseVariant::make<PhysicalToolIndex>(PhysicalToolIndex::from_raw(std::to_underlying(result) - std::to_underlying(ToolBox::DialogResult::Tool1)));
-                break;
-            case ToolBox::DialogResult::Unknown:
-            case ToolBox::DialogResult::Park:
-            case ToolBox::DialogResult::Return:
-                [[fallthrough]];
-            default:
-                r = FSMResponseVariant::make<Response>(Response::Continue);
-                break;
-            }
-            marlin_client::FSM_response_variant(PhasesColdPull::select_tool, r);
+        SelectTool(window_frame_t) {
+            const auto dlg_result = select_tool_dialog({
+                .allow_return = false,
+            });
+            marlin_client::FSM_response_variant(PhasesColdPull::select_tool, FSMResponseVariant::make<PhysicalToolIndex>(dlg_result->to_physical()));
         }
     };
 
@@ -370,7 +354,6 @@ ScreenColdPull::ScreenColdPull()
     : ScreenFSM(text_header, ScreenColdPull::get_inner_frame_rect())
     , radio { this, GuiDefaults::GetButtonRect(GuiDefaults::RectScreenBody), PhasesColdPull::introduction }
     , footer { this, 0, footer::Item::nozzle, footer::Item::bed, footer::Item::heatbreak_temp } {
-    CaptureNormalWindow(radio);
     create_frame();
 }
 
@@ -379,6 +362,7 @@ ScreenColdPull::~ScreenColdPull() {
 }
 
 void ScreenColdPull::create_frame() {
+    CaptureNormalWindow(radio);
     Frames::create_frame(frame_storage, get_phase(), &inner_frame);
     radio.Change(get_phase());
 }

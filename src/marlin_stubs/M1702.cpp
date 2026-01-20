@@ -111,12 +111,8 @@ namespace {
             selected_tool = tool->to_raw();
             return PhasesColdPull::pick_tool;
 
-        } else if (r == FSMResponseVariant::make(Response::Continue)) {
-            selected_tool = active_extruder;
-            return PhasesColdPull::pick_tool;
-
         } else {
-            bsod("Invalid phase encountered.");
+            bsod_unreachable();
         }
     }
 
