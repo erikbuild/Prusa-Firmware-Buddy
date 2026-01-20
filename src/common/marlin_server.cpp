@@ -3620,19 +3620,19 @@ void clear_fsm_response(ClientFSM fsm) {
     });
 }
 
-Response wait_for_response(FSMAndPhase fsm_and_phase, uint32_t timeout_ms) {
+FSMResponseVariant wait_for_response_variant(FSMAndPhase fsm_and_phase, uint32_t timeout_ms) {
     // Warning phase response is consumed in marlin_server::handle_warnings
     assert(fsm_and_phase != PhasesWarning::Warning);
 
     const auto wait_start = ticks_ms();
 
     while (true) {
-        if (auto r = get_response_from_phase(fsm_and_phase); r != Response::_none) {
+        if (auto r = get_response_variant_from_phase(fsm_and_phase)) {
             return r;
         }
 
         if (timeout_ms && ticks_diff(ticks_ms(), wait_start) > int32_t(timeout_ms)) {
-            return Response::_none;
+            return FSMResponseVariant::make(Response::_none);
         }
 
         ::idle(true);

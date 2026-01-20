@@ -230,7 +230,13 @@ inline Response get_response_from_phase(FSMAndPhase fsm_and_phase, bool consume_
 }
 
 /// idles() for FSM response for the given phase and then \returns it
-Response wait_for_response(FSMAndPhase fsm_and_phase, uint32_t timeout_ms = 0);
+FSMResponseVariant wait_for_response_variant(FSMAndPhase fsm_and_phase, uint32_t timeout_ms = 0);
+
+/// idles() for FSM response for the given phase and then \returns it
+/// @returns Response::_none if got a reponse that is not of the Response enum (or on timeout)
+inline Response wait_for_response(FSMAndPhase fsm_and_phase, uint32_t timeout_ms = 0) {
+    return wait_for_response_variant(fsm_and_phase, timeout_ms).value_or<Response>(Response::_none);
+}
 
 /// Replacement for the FSM_Notifier. Hooked callbacks will get called in marlin idle()
 extern Publisher<> idle_publisher;
