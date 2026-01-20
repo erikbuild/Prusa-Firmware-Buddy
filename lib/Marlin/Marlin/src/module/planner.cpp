@@ -2127,12 +2127,12 @@ void Planner::buffer_sync_block() {
  *
  * @param a,b,c,e       Target positions in mm and/or degrees
  * @param fr_mm_s       (target) speed of the move
- * @param extruder      optional target extruder (otherwise active_extruder)
+ * @param extruder      target extruder
  * @param hints         optional parameters to aid planner calculations
  */
 bool Planner::buffer_segment(const abce_pos_t &abce
   , const feedRate_t fr_mm_s
-  , const uint8_t extruder/*=active_extruder*/
+  , const uint8_t extruder
   , const PlannerHints &hints/*=PlannerHints()*/
 ) {
 
@@ -2370,11 +2370,11 @@ bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleratio
  *
  *  rx,ry,rz,e      - target position in mm or degrees
  *  fr_mm_s         - (target) speed of the move (mm/s)
- *  extruder        - optional target extruder (otherwise active_extruder)
+ *  extruder        - target extruder
  *  hints           - optional parameters to aid planner calculations
  */
 bool Planner::buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s
-  , const uint8_t extruder/*=active_extruder*/
+  , const uint8_t extruder
   , const PlannerHints &hints/*=PlannerHints()*/
 ) {
   xyze_pos_t machine = cart;

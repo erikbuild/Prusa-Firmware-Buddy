@@ -518,7 +518,7 @@ void plan_move_by(const feedRate_t fr, const float dx, const float dy, const flo
   target.y += dy;
   target.z += dz;
   target.e += de;
-  planner.buffer_segment(target, fr);
+  planner.buffer_segment(target, fr, active_extruder);
 }
 
 uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {

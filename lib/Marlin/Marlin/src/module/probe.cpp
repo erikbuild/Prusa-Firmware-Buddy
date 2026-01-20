@@ -409,7 +409,7 @@ static bool do_probe_move(const float z, const feedRate_t fr_mm_s) {
   // Move down until the probe is triggered
   auto target = planner.get_machine_position_mm();
   target.z = z;
-  planner.buffer_segment(target, fr_mm_s);
+  planner.buffer_segment(target, fr_mm_s, active_extruder);
   planner.synchronize();
   // Note: current_position is updated lower in this function
 

@@ -672,12 +672,12 @@ class Planner {
      *
      *  a,b,c,e     - target positions in mm and/or degrees
      *  fr_mm_s     - (target) speed of the move
-     *  extruder    - optional target extruder (otherwise active_extruder)
+     *  extruder    - target extruder
      *  hints       - optional parameters to aid planner calculations
      */
     static bool buffer_segment(const abce_pos_t &abce
       , const feedRate_t fr_mm_s
-      , const uint8_t extruder=active_extruder
+      , const uint8_t extruder
       , const PlannerHints &hints=PlannerHints()
     );
 
@@ -692,11 +692,11 @@ class Planner {
      *
      *  cart         - target position in mm or degrees
      *  fr_mm_s      - (target) speed of the move (mm/s)
-     *  extruder     - optional target extruder (otherwise active_extruder)
+     *  extruder     - target extruder
      *  hints        - optional parameters to aid planner calculations
      */
     static bool buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s
-      , const uint8_t extruder=active_extruder
+      , const uint8_t extruder
       , const PlannerHints &hints=PlannerHints()
     );
 
