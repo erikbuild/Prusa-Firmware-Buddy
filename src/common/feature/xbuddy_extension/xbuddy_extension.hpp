@@ -147,6 +147,10 @@ public: // Other
 
 #elif XBUDDY_EXTENSION_VARIANT_IS_iX()
     void set_heatbreak_fan_pwm(uint32_t value);
+    uint32_t get_heatbreak_fan_pwm();
+    uint32_t get_heatbreak_fan_rpm();
+    bool is_heatbreak_fan_ok();
+
     void set_white_led(uint32_t intensity);
     void set_strobe(std::optional<uint16_t> freq);
     void set_rgbw_led(leds::ColorRGBW rgbw);
@@ -181,6 +185,8 @@ private:
     bool critical_warning_shown = false;
 
 #elif XBUDDY_EXTENSION_VARIANT_IS_iX()
+    uint32_t hbr_fan_start_timestamp;
+
     std::optional<uint32_t> white_intensity_override;
 #endif
 };

@@ -305,9 +305,40 @@ bool XBuddyExtension::usb_power() const {
 
 #elif XBUDDY_EXTENSION_VARIANT_IS_iX()
 void XBuddyExtension::set_heatbreak_fan_pwm(uint32_t value) {
+    if (buddy::puppies::xbuddy_extension.get_requested_fan_pwm(0) == 0 && value > 0) {
+        std::lock_guard guard(mutex_);
+        hbr_fan_start_timestamp = ticks_ms();
+    }
+
     // Fan 1 and Fan 2 on xbe share PWM, but the interface is schizophrenic, we need to set both
     buddy::puppies::xbuddy_extension.set_fan_pwm(0, value);
     buddy::puppies::xbuddy_extension.set_fan_pwm(1, value);
+}
+
+uint32_t XBuddyExtension::get_heatbreak_fan_pwm() {
+    return buddy::puppies::xbuddy_extension.get_requested_fan_pwm(0);
+}
+
+uint32_t XBuddyExtension::get_heatbreak_fan_rpm() {
+    return buddy::puppies::xbuddy_extension.get_fan_rpm(0).value_or(0);
+}
+
+bool XBuddyExtension::is_heatbreak_fan_ok() {
+    const auto pwm = buddy::puppies::xbuddy_extension.get_requested_fan_pwm(0);
+    const auto rpm = buddy::puppies::xbuddy_extension.get_fan_rpm(0);
+
+    std::lock_guard guard(mutex_);
+
+    if (pwm == 0) {
+        // Fan is not supposed to spin - all is well
+    } else if (rpm && *rpm > 0) {
+        // Fan is spinning - all is well
+    } else if (ticks_diff(ticks_ms(), hbr_fan_start_timestamp) >= FANCTL_START_TIMEOUT) {
+        // Fan should be spinning for some time now, but it isn't -> report a problem
+        return false;
+    }
+
+    return true;
 }
 
 void XBuddyExtension::set_white_led(uint32_t intensity) {

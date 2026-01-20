@@ -392,11 +392,7 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue) {
     if (HAL_PWM_Initialized) {
         switch (ulPin) {
         case MARLIN_PIN(FAN1):
-#if PRINTER_IS_PRUSA_iX() && HAS_XBUDDY_EXTENSION()
-            buddy::xbuddy_extension().set_heatbreak_fan_pwm(ulValue);
-#else
             Fans::heat_break(0).set_pwm(ulValue);
-#endif
             return;
         case MARLIN_PIN(FAN):
             Fans::print(0).set_pwm(ulValue);
