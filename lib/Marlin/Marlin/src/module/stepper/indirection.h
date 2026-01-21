@@ -402,5 +402,12 @@
 
 #endif
 
+// Enable/disable stepper by axis
+void stepper_enable(AxisEnum axis, bool enabled=true);
+static inline void stepper_disable(AxisEnum axis) { stepper_enable(axis, false); }
+
+// Return stepper enabled status
+[[nodiscard]] bool stepper_enabled(AxisEnum axis);
+
 void enable_E(uint8_t index);
 void disable_E(uint8_t index);
