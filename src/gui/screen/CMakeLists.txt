@@ -34,3 +34,7 @@ endif()
 if(HAS_SELFTEST)
   add_subdirectory(selftest)
 endif()
+
+if(HAS_TOOLCHANGER)
+  target_sources(firmware PRIVATE screen_tool_pick_park.cpp)
+endif()

@@ -55,7 +55,7 @@
 #if HAS_TOOLCHANGER()
     #include "../../../lib/Marlin/Marlin/src/module/prusa/toolchanger.h"
     #include "screen_menu_tools.hpp"
-    #include <window_tool_action_box.hpp>
+    #include <gui/screen/screen_tool_pick_park.hpp>
 #endif
 
 #if HAS_LEDS()
@@ -889,7 +889,7 @@ MI_PICK_PARK_TOOL::MI_PICK_PARK_TOOL()
 }
 
 void MI_PICK_PARK_TOOL::click(IWindowMenu & /*window_menu*/) {
-    ToolActionBox<ToolBox::MenuPickPark>();
+    Screens::Access()->Open(screen_tool_pick_park_creator());
 }
 #endif
 
