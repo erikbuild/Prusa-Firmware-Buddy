@@ -245,9 +245,6 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
 
 #if QUIET_PROBING
   void probing_pause(const bool p) {
-    #if ENABLED(PROBING_FANS_OFF)
-      thermalManager.set_fans_paused(p);
-    #endif
     #if ENABLED(PROBING_STEPPERS_OFF)
       disable_e_steppers();
       #if NONE(HOME_AFTER_DEACTIVATE)

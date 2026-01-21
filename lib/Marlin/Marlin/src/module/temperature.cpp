@@ -164,11 +164,6 @@ uint32_t Temperature::temp_hotend_residency_start_ms[HOTENDS];
   uint8_t Temperature::fan_speed[FAN_COUNT] = {};
   uint8_t Temperature::applied_fan_speed[FAN_COUNT] = {};
 
-  #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
-    bool Temperature::fans_paused; // = false;
-    uint8_t Temperature::saved_fan_speed[FAN_COUNT]; // = { 0 }
-  #endif
-
   uint16_t Temperature::get_fan_speed(const uint8_t target) {
     return target < FAN_COUNT ? fan_speed[target] : 0;
   }
@@ -199,20 +194,6 @@ uint32_t Temperature::temp_hotend_residency_start_ms[HOTENDS];
 
     fan_speed[target] = speed;
   }
-
-  #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
-
-    void Temperature::set_fans_paused(const bool p) {
-      if (p != fans_paused) {
-        fans_paused = p;
-        if (p)
-          FANS_LOOP(i) { saved_fan_speed[i] = fan_speed[i]; fan_speed[i] = 0; }
-        else
-          FANS_LOOP(i) fan_speed[i] = saved_fan_speed[i];
-      }
-    }
-
-  #endif
 
 #endif // FAN_COUNT > 0
 

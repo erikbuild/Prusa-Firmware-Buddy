@@ -105,10 +105,6 @@ void GcodeSuite::M81() {
 
   #if FAN_COUNT > 0
     thermalManager.zero_fan_speeds();
-    #if ENABLED(PROBING_FANS_OFF)
-      thermalManager.fans_paused = false;
-      ZERO(thermalManager.saved_fan_speed);
-    #endif
   #endif
 
   safe_delay(1000); // Wait 1 second before switching off

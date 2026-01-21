@@ -392,10 +392,6 @@ void stop() {
   thermalManager.disable_all_heaters(); // 'unpause' taken care of in here
   print_job_timer.stop();
 
-  #if ENABLED(PROBING_FANS_OFF)
-    if (thermalManager.fans_paused) thermalManager.set_fans_paused(false); // put things back the way they were
-  #endif
-
   if (IsRunning()) {
     queue.stop();
     buddy::cork::tracker.clear();

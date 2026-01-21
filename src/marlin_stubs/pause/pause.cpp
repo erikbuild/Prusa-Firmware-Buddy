@@ -1537,10 +1537,6 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
     // Wait for buffered blocks to complete
     planner.synchronize();
 
-#if ENABLED(ADVANCED_PAUSE_FANS_PAUSE) && FAN_COUNT > 0
-    thermalManager.set_fans_paused(true);
-#endif
-
     invoke_loop();
 
     // Now all extrusion positions are resumed and ready to be confirmed
@@ -1548,10 +1544,6 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
     planner.set_e_position_mm((destination.e = current_position.e = settings.resume_pos.e));
 
     --did_pause_print;
-
-#if ENABLED(ADVANCED_PAUSE_FANS_PAUSE) && FAN_COUNT > 0
-    thermalManager.set_fans_paused(false);
-#endif
 
     // Resume the print job timer if it was running
     if (print_job_timer.isPaused()) {

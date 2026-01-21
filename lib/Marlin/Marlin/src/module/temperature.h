@@ -467,12 +467,6 @@ class Temperature {
       }
 
       static void set_fan_speed(const uint8_t target, const uint16_t speed);
-
-      #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
-        static bool fans_paused;
-        static uint8_t saved_fan_speed[FAN_COUNT];
-      #endif
-
       static constexpr inline uint8_t fanPercent(const uint8_t speed) { return ui8_to_percent(speed); }
 
       static inline uint8_t scaledFanSpeed([[maybe_unused]] const uint8_t target, const uint8_t fs) {
@@ -484,10 +478,6 @@ class Temperature {
       static inline uint8_t scaledFanSpeed(const uint8_t target) {
         return scaledFanSpeed(target, fan_speed[target]);
       }
-
-      #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
-        void set_fans_paused(const bool p);
-      #endif
 
     #endif // FAN_COUNT > 0
 
