@@ -58,7 +58,7 @@ std::variant<PhysicalToolIndex, ToolNotMapped> GcodeExtension::to_physical() con
 }
 
 template <>
-bool PhysicalExtension::is_enabled() const {
+bool PhysicalToolIndex::is_enabled() const {
     [[maybe_unused]] const auto &self = static_cast<const PhysicalToolIndex &>(*this);
 
 #if HAS_TOOLCHANGER()
@@ -70,7 +70,7 @@ bool PhysicalExtension::is_enabled() const {
 }
 
 template <>
-bool VirtualExtension::is_enabled() const {
+bool VirtualToolIndex::is_enabled() const {
     [[maybe_unused]] const auto &self = static_cast<const VirtualToolIndex &>(*this);
 
 #if HAS_TOOLCHANGER()
@@ -98,7 +98,7 @@ bool VirtualExtension::is_enabled() const {
 }
 
 template <>
-bool GcodeExtension::is_enabled() const {
+bool GcodeToolIndex::is_enabled() const {
     const auto &self = static_cast<const GcodeToolIndex &>(*this);
 
     return match(

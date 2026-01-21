@@ -15,13 +15,13 @@ std::set<uint8_t> enabled_physical_tools;
 std::set<uint8_t> enabled_virtual_tools;
 
 template <>
-bool PhysicalExtension::is_enabled() const {
+bool PhysicalToolIndex::is_enabled() const {
     const auto &self = static_cast<const PhysicalToolIndex &>(*this);
     return enabled_physical_tools.contains(self.to_raw());
 }
 
 template <>
-bool VirtualExtension::is_enabled() const {
+bool VirtualToolIndex::is_enabled() const {
     const auto &self = static_cast<const VirtualToolIndex &>(*this);
     return enabled_virtual_tools.contains(self.to_raw());
 }
