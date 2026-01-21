@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <variant>
+#include <optional>
 
 #include <inc/MarlinConfig.h>
 #include <utils/array_extensions.hpp>
@@ -80,6 +81,24 @@ public:
 
     /// Maximum number of tools the firmware supports
     static constexpr uint8_t count = count_;
+
+    /// @returns the single tool that is enabled, if there is just one tool enabled
+    static std::optional<ToolIndex> single_enabled_tool() {
+        const auto tool = all().skip_all_disabled();
+        if (tool.at_end()) {
+            // Not a single tool enabled
+            return std::nullopt;
+        }
+
+        auto next = tool;
+        ++next;
+        if (!next.at_end()) {
+            // Multiple tools enabled
+            return std::nullopt;
+        }
+
+        return *tool;
+    }
 
     /// List of all tools the printer offers, for `for()` loops
     static consteval Iterator all() {
