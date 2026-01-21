@@ -1,8 +1,5 @@
 #include <option/has_coldpull.h>
-#include <option/has_mmu2.h>
-#include <option/has_toolchanger.h>
 #include <option/has_gui.h>
-#include <option/has_auto_retract.h>
 
 #include <M70X.hpp>
 #include <fs_autoload_autolock.hpp>
@@ -16,16 +13,19 @@
 #include <raii/auto_restore.hpp>
 #include <mapi/cold_extrude.hpp>
 
+#include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
     #include <feature/auto_retract/auto_retract.hpp>
 #endif
 
-#if HAS_TOOLCHANGER() && HAS_GUI()
-    #include <window_tool_action_box.hpp>
-#endif
-
+#include <option/has_mmu2.h>
 #if HAS_MMU2()
     #include <feature/prusa/MMU2/mmu2_mk4.h>
+#endif
+
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <module/prusa/toolchanger.h>
 #endif
 
 #include <optional>

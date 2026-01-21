@@ -48,10 +48,6 @@ if(HAS_LEDS)
   target_sources(firmware PRIVATE led_lcd_cs_selector.cpp)
 endif()
 
-if(HAS_TOOLCHANGER)
-  target_sources(firmware PRIVATE window_tool_action_box.cpp)
-endif()
-
 if(BOARD IN_LIST BOARDS_WITH_ST7789V)
   target_sources(firmware PRIVATE display_st7789v.cpp st7789v.cpp)
 elseif(BOARD IN_LIST BOARDS_WITH_ILI9488)
