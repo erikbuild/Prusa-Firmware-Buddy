@@ -422,6 +422,22 @@ CommunicationStatus XBuddyExtension::ping(PuppyModbus &bus) {
     return refresh_input(bus, 0);
 }
 
+CommunicationStatus XBuddyExtension::set_mmu_power(PuppyModbus &bus, bool mmu_power) {
+    Lock lock(mutex);
+
+    config.value.mmu_power = mmu_power;
+    config.dirty = true;
+    return refresh_holding(bus);
+}
+
+CommunicationStatus XBuddyExtension::set_mmu_nreset(PuppyModbus &bus, bool mmu_nreset) {
+    Lock lock(mutex);
+
+    config.value.mmu_nreset = mmu_nreset;
+    config.dirty = true;
+    return refresh_holding(bus);
+}
+
 CommunicationStatus XBuddyExtension::refresh_log_message(PuppyModbus &bus) {
     // Already locked by caller
 
