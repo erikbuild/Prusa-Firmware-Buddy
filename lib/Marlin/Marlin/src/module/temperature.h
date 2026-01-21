@@ -262,19 +262,31 @@ class Temperature {
       static bool allow_cold_extrude;
       static int16_t extrude_min_temp;
       FORCE_INLINE static bool tooCold(const int16_t temp) { return allow_cold_extrude ? false : temp < extrude_min_temp; }
+
+      [[deprecated("Use the ToolIndex overload")]]
       FORCE_INLINE static bool tooColdToExtrude(const uint8_t E_NAME) {
         return tooCold(static_cast<int16_t>(degHotend(HOTEND_INDEX)));
       }
+
+      [[deprecated("Use the ToolIndex overload")]]
       FORCE_INLINE static bool targetTooColdToExtrude(const uint8_t E_NAME) {
         return tooCold(degTargetHotend(HOTEND_INDEX));
       }
     #else
+      [[deprecated("Use the ToolIndex overload")]]
       FORCE_INLINE static bool tooColdToExtrude(const uint8_t) { return false; }
+
+      [[deprecated("Use the ToolIndex overload")]]
       FORCE_INLINE static bool targetTooColdToExtrude(const uint8_t) { return false; }
     #endif
 
-    FORCE_INLINE static bool hotEnoughToExtrude(const uint8_t e) { return !tooColdToExtrude(e); }
-    FORCE_INLINE static bool targetHotEnoughToExtrude(const uint8_t e) { return !targetTooColdToExtrude(e); }
+    inline static bool tooColdToExtrude(PhysicalToolIndex physical_tool) {
+      return tooColdToExtrude(physical_tool.to_raw());
+    }
+
+    inline static bool targetTooColdToExtrude(PhysicalToolIndex physical_tool) {
+      return targetTooColdToExtrude(physical_tool.to_raw());
+    }
 
     #if HEATER_IDLE_HANDLER
       static heater_idle_t hotend_idle[HOTENDS];

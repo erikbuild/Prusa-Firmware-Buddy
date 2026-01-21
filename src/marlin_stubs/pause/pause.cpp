@@ -1322,7 +1322,7 @@ bool Pause::parkMoveXGreaterThanY(const xyz_pos_t &pos0, const xyz_pos_t &pos1) 
 void Pause::park_nozzle_and_notify() {
     setPhase(is_unstoppable() ? PhasesLoadUnload::Parking_unstoppable : PhasesLoadUnload::Parking_stoppable);
     // Initial retract before move to filament change position
-    if (settings.retract && thermalManager.hotEnoughToExtrude(active_extruder)) {
+    if (settings.retract && !thermalManager.tooColdToExtrude(active_extruder)) {
         do_pause_e_move(settings.retract, PAUSE_PARK_RETRACT_FEEDRATE);
     }
 
