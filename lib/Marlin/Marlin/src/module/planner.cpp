@@ -2304,7 +2304,11 @@ bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, s
   return true;
 } // buffer_segment()
 
-bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
+bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<VirtualToolIndex, NoTool> tool) {
+    uint8_t extruder = match(tool,
+        [](VirtualToolIndex virtual_tool){ return virtual_tool.to_raw(); },
+        [](NoTool){ return VirtualToolIndex::count; }
+    );
     // If we are aborting, do not accept queuing of movements
     if (draining() || PreciseStepping::stopping()) {
         return false;
@@ -2385,7 +2389,7 @@ bool Planner::buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s
 bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
     xyze_pos_t machine = cart;
     TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine));
-    return buffer_raw_segment(machine, acceleration, nominal_speed, entry_speed, exit_speed, extruder);
+    return buffer_raw_segment(machine, acceleration, nominal_speed, entry_speed, exit_speed, VirtualToolIndex::from_raw_notool(extruder));
 } // buffer_raw_line()
 
 /**
