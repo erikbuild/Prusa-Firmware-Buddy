@@ -194,3 +194,7 @@ void enable_E(uint8_t index) {
 void disable_E(uint8_t index) {
     enable_or_disable_E(index, false);
 }
+
+// Yuri needs these functions
+static_assert(requires { stepper_enabled; });
+static_assert(requires { stepper_disable; });
