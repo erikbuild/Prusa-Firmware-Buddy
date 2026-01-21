@@ -3,11 +3,17 @@
 
 #include <cstdint>
 #include <cassert>
+
 struct EndToolIndexIterator {};
 
 /// Doubles as a range
 template <typename Index>
 class ToolIndexIterator {
+
+public:
+    // Necessary to satisfy std::input_iterator, even though it doesn't make sense
+    using difference_type = std::ptrdiff_t;
+    using value_type = Index;
 
 public:
     ToolIndexIterator(const ToolIndexIterator &) = default;
@@ -59,6 +65,9 @@ public:
         increment_impl();
         ensure_valid();
         return *this;
+    }
+    constexpr void operator++(int) {
+        ++*this;
     }
 
     constexpr inline Index index() const {

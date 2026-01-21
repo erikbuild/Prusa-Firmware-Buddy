@@ -24,6 +24,10 @@ using VirtualExtension = VirtualToolIndexExtension<VirtualToolIndex>;
 using PhysicalExtension = PhysicalToolIndexExtension<PhysicalToolIndex>;
 using GcodeExtension = GcodeToolIndexExtension<GcodeToolIndex>;
 
+static_assert(std::input_iterator<VirtualToolIndex::Iterator>);
+static_assert(std::input_iterator<PhysicalToolIndex::Iterator>);
+static_assert(std::input_iterator<GcodeToolIndex::Iterator>);
+
 template <>
 PhysicalToolIndex VirtualExtension::to_physical() const {
     [[maybe_unused]] const auto &self = static_cast<const VirtualToolIndex &>(*this);
