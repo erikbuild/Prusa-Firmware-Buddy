@@ -152,10 +152,6 @@ Temperature thermalManager;
 
 // public:
 
-#if ENABLED(NO_FAN_SLOWING_IN_PID_TUNING)
-  bool Temperature::adaptive_fan_slowing = true;
-#endif
-
 StrongIndexArray<hotend_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_hotend;
 uint32_t Temperature::temp_hotend_residency_start_ms[HOTENDS];
 
@@ -171,10 +167,6 @@ uint32_t Temperature::temp_hotend_residency_start_ms[HOTENDS];
   #if EITHER(PROBING_FANS_OFF, ADVANCED_PAUSE_FANS_PAUSE)
     bool Temperature::fans_paused; // = false;
     uint8_t Temperature::saved_fan_speed[FAN_COUNT]; // = { 0 }
-  #endif
-
-  #if ENABLED(ADAPTIVE_FAN_SLOWING)
-    uint8_t Temperature::fan_speed_scaler[FAN_COUNT] = ARRAY_N(FAN_COUNT, 128, 128, 128, 128, 128, 128);
   #endif
 
   uint16_t Temperature::get_fan_speed(const uint8_t target) {
@@ -441,10 +433,6 @@ temp_range_t Temperature::temp_range[HOTENDS] = ARRAY_BY_HOTENDS(sensor_heater_0
 
     wait_for_heatup = true; // Can be interrupted with M108
 
-    #if ENABLED(NO_FAN_SLOWING_IN_PID_TUNING)
-      adaptive_fan_slowing = false;
-    #endif
-
     // PID Tuning loop
     while (wait_for_heatup) {
 
@@ -641,9 +629,6 @@ temp_range_t Temperature::temp_range[HOTENDS] = ARRAY_BY_HOTENDS(sensor_heater_0
     disable_all_heaters();
 
     EXIT_M303:
-      #if ENABLED(NO_FAN_SLOWING_IN_PID_TUNING)
-        adaptive_fan_slowing = true;
-      #endif
       return;
   }
   #endif
@@ -2248,23 +2233,6 @@ void Temperature::init() {
 
       // While the temperature is stable watch for a bad temperature
       case TRStable:
-
-        #if ENABLED(ADAPTIVE_FAN_SLOWING)
-          if (adaptive_fan_slowing && heater_id >= 0) {
-            const int fan_index = _MIN(heater_id, FAN_COUNT - 1);
-            if (fan_speed[fan_index] == 0 || current >= tr_target_temperature[heater_id] - (hysteresis_degc * 0.25f))
-              fan_speed_scaler[fan_index] = 128;
-            else if (current >= tr_target_temperature[heater_id] - (hysteresis_degc * 0.3335f))
-              fan_speed_scaler[fan_index] = 96;
-            else if (current >= tr_target_temperature[heater_id] - (hysteresis_degc * 0.5f))
-              fan_speed_scaler[fan_index] = 64;
-            else if (current >= tr_target_temperature[heater_id] - (hysteresis_degc * 0.8f))
-              fan_speed_scaler[fan_index] = 32;
-            else
-              fan_speed_scaler[fan_index] = 0;
-          }
-        #endif
-
         if (current >= tr_target_temperature[heater_index] - hysteresis_degc) {
           sm.timer = millis() + period_seconds * 1000UL;
           break;

@@ -475,17 +475,9 @@ class Temperature {
 
       static constexpr inline uint8_t fanPercent(const uint8_t speed) { return ui8_to_percent(speed); }
 
-      #if ENABLED(ADAPTIVE_FAN_SLOWING)
-        static uint8_t fan_speed_scaler[FAN_COUNT];
-      #endif
-
       static inline uint8_t scaledFanSpeed([[maybe_unused]] const uint8_t target, const uint8_t fs) {
         return (fs * uint16_t(
-          #if ENABLED(ADAPTIVE_FAN_SLOWING)
-            fan_speed_scaler[target]
-          #else
             128
-          #endif
         )) >> 7;
       }
 
@@ -716,12 +708,6 @@ public:
     #if HAS_PID_HEATING
       #if ENABLED(PID_AUTOTUNE)
         static void PID_autotune(const float &target, const heater_ind_t hotend, const int8_t ncycles, const bool set_result=false);
-      #endif
-
-      #if ENABLED(NO_FAN_SLOWING_IN_PID_TUNING)
-        static bool adaptive_fan_slowing;
-      #elif ENABLED(ADAPTIVE_FAN_SLOWING)
-        static constexpr bool adaptive_fan_slowing = true;
       #endif
 
       /**
