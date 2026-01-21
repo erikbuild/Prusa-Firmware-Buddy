@@ -223,4 +223,8 @@ if(BOARD_IS_MASTER_BOARD)
   add_subdirectory(mapi)
 endif()
 
+if(BOARD_IS_MASTER_BOARD OR (BOARD STREQUAL "DWARF"))
+  add_subdirectory(hotend)
+endif()
+
 add_subdirectory(utils)
