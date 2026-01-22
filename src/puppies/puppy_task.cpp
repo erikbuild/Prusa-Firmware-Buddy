@@ -53,6 +53,13 @@
     #include <puppies/PuppyBootstrap.hpp>
 #endif
 
+/// Set this to true when debugging puppy task issues.
+///
+/// This is useful especially for debugging XBE crashes, without this the puppy
+/// task would reset running puppy and retry the bootstrap procedure, making
+/// the debugging session impossible.
+///
+/// MAKE SURE TO ALWAYS REVERT THIS TO FALSE BEFORE MERGING!
 #define PUPPY_TASK_DEBUG() false
 
 LOG_COMPONENT_DEF(Puppies, logging::Severity::debug);
