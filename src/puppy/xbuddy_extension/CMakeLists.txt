@@ -25,6 +25,7 @@ target_sources(
           hal_clock.cpp
           hal_gpio_expander.cpp
           hal_memory.cpp
+          hal_mmu.cpp
           hal_pub.cpp
           hal_rng.cpp
           hal_usb.cpp

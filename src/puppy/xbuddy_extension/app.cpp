@@ -4,6 +4,7 @@
 #include "cyphal_application.hpp"
 #include "extension_variant.h"
 #include "hal.hpp"
+#include "hal_mmu.hpp"
 #include "hal_usb.hpp"
 #include "master_activity.hpp"
 #include <modbus/modbus.hpp>

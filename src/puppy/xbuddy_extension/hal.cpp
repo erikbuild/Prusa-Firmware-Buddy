@@ -4,6 +4,7 @@
 #include "extension_variant.h"
 #include "hal_clock.hpp"
 #include "hal_gpio_expander.hpp"
+#include "hal_mmu.hpp"
 #include "hal_pub.hpp"
 #include "hal_rng.hpp"
 #include "hal_usb.hpp"
@@ -23,22 +24,12 @@ static volatile size_t rx_len_rs485;
 static freertos::BinarySemaphore tx_semaphore_rs485;
 static std::atomic<bool> ore_occurred_rs485;
 
-static UART_HandleTypeDef huart_mmu;
-static std::byte rx_byte_mmu;
-static std::span<const std::byte> rx_byte_span_mmu { &rx_byte_mmu, 1 };
-static freertos::StreamBuffer<32> rx_mmu_buffer;
-static freertos::BinarySemaphore tx_semaphore_mmu;
-
 // Default prescaler for our timers.
 // 6 MHz clock (30 MHz peripheral clock, *2 to timer, /10 prescaler)
 static constexpr uint32_t default_prescaler = 10;
 
 extern "C" void USART3_IRQHandler(void) {
     HAL_UART_IRQHandler(&huart_rs485);
-}
-
-extern "C" void USART2_IRQHandler(void) {
-    HAL_UART_IRQHandler(&huart_mmu);
 }
 
 extern "C" void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
@@ -69,28 +60,7 @@ extern "C" void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
         HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
         HAL_NVIC_EnableIRQ(USART3_IRQn);
     }
-    if (huart->Instance == USART2) {
-        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART2;
-        PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-            abort();
-        }
-        __HAL_RCC_USART2_CLK_ENABLE();
-        __HAL_RCC_GPIOA_CLK_ENABLE();
-        GPIO_InitStruct.Pin = GPIO_PIN_15;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF9_USART2;
-        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-        __HAL_RCC_GPIOB_CLK_ENABLE();
-        GPIO_InitStruct.Pin = GPIO_PIN_4;
-        GPIO_InitStruct.Alternate = GPIO_AF13_USART2;
-
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-        HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
-        HAL_NVIC_EnableIRQ(USART2_IRQn);
-    }
+    hal::mmu::msp_init(huart);
 }
 
 extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
@@ -111,37 +81,22 @@ static void rx_callback_rs485(UART_HandleTypeDef *huart, uint16_t size) {
     }
 }
 
-static void rx_callback_mmu(UART_HandleTypeDef *huart, uint16_t size) {
-    if (size) {
-        // If the buffer is full, we just start dropping bytes and that's ok.
-        (void)rx_mmu_buffer.send_from_isr(rx_byte_span_mmu);
-    }
-    HAL_UARTEx_ReceiveToIdle_IT(huart, (uint8_t *)&rx_byte_mmu, 1);
-}
-
 extern "C" void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
     if (huart == &huart_rs485) {
         rx_callback_rs485(huart, size);
-    } else if (huart == &huart_mmu) {
-        rx_callback_mmu(huart, size);
     }
+    hal::mmu::rx_callback(huart, size);
 }
 
 static void tx_callback_rs485(UART_HandleTypeDef *huart) {
     HAL_UARTEx_ReceiveToIdle_IT(huart, (uint8_t *)rx_buf_rs485, sizeof(rx_buf_rs485));
 }
 
-static void tx_callback_mmu(UART_HandleTypeDef *huart) {
-    (void)huart;
-    tx_semaphore_mmu.release_from_isr();
-}
-
 extern "C" void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart == &huart_rs485) {
         tx_callback_rs485(huart);
-    } else if (huart == &huart_mmu) {
-        tx_callback_mmu(huart);
     }
+    hal::mmu::tx_callback(huart);
 }
 
 void rs485_init() {
@@ -171,33 +126,6 @@ void rs485_init() {
     if (HAL_RS485Ex_Init(&huart_rs485, UART_DE_POLARITY_HIGH, 0x1f, 0x1f) != HAL_OK) {
         abort();
     }
-}
-
-void mmu_init() {
-    huart_mmu.Instance = USART2;
-    huart_mmu.Init.BaudRate = 115'200;
-    huart_mmu.Init.WordLength = UART_WORDLENGTH_8B;
-    huart_mmu.Init.StopBits = UART_STOPBITS_1;
-    huart_mmu.Init.Parity = UART_PARITY_NONE;
-    huart_mmu.Init.Mode = UART_MODE_TX_RX;
-    huart_mmu.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart_mmu.Init.OverSampling = UART_OVERSAMPLING_16;
-    huart_mmu.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-    huart_mmu.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-    huart_mmu.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart_mmu) != HAL_OK) {
-        abort();
-    }
-    if (HAL_UARTEx_SetTxFifoThreshold(&huart_mmu, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK) {
-        abort();
-    }
-    if (HAL_UARTEx_SetRxFifoThreshold(&huart_mmu, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK) {
-        abort();
-    }
-    if (HAL_UARTEx_DisableFifoMode(&huart_mmu) != HAL_OK) {
-        abort();
-    }
-    HAL_UARTEx_ReceiveToIdle_IT(&huart_mmu, (uint8_t *)&rx_byte_mmu, 1);
 }
 
 extern "C" void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc) {
@@ -497,17 +425,6 @@ extern "C" void TIM1_CC_IRQHandler() {
     TIM1_IRQHandler();
 }
 
-static void mmu_pins_init() {
-    GPIO_InitTypeDef GPIO_InitStruct;
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    GPIO_InitStruct.Pin = GPIO_PIN_13;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = 0;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-}
-
 static constexpr auto FSENSOR_PIN = EXTENSION_IS_IX() ? GPIO_PIN_9 : GPIO_PIN_5;
 
 static void filament_sensor_pins_init() {
@@ -533,10 +450,8 @@ void hal::init() {
     tim3_postinit();
     MX_ADC1_Init();
     rs485_init();
-    mmu_init();
+    hal::mmu::init();
     hal::gpio_expander::init();
-    mmu_pins_init();
-    mmu::nreset_pin_set(false);
     hal::usb::init();
     hal::pub::init();
     filament_sensor_pins_init();
@@ -747,35 +662,4 @@ void hal::rs485::housekeeping() {
         HAL_UARTEx_ReceiveToIdle_IT(&huart_rs485, (uint8_t *)rx_buf_rs485, sizeof(rx_buf_rs485));
         ore_occurred_rs485 = false;
     }
-}
-
-void hal::mmu::transmit(std::span<const std::byte> payload) {
-    HAL_UART_Transmit_IT(&huart_mmu, (const uint8_t *)payload.data(), payload.size());
-    tx_semaphore_mmu.acquire();
-}
-
-std::span<std::byte> hal::mmu::receive(std::span<std::byte> buffer) {
-    return rx_mmu_buffer.receive(buffer);
-}
-
-void hal::mmu::flush() {
-    std::byte buf[8];
-    while (!receive(buf).empty()) {
-    }
-}
-
-void hal::mmu::power_pin_set(bool b) {
-    hal::gpio_expander::write(hal::gpio_expander::Pin::mmu_power, b);
-}
-
-void hal::mmu::nreset_pin_set(bool b) {
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, b ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-bool hal::mmu::power_pin_get() {
-    return hal::gpio_expander::read(hal::gpio_expander::Pin::mmu_power);
-}
-
-bool hal::mmu::nreset_pin_get() {
-    return HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET;
 }

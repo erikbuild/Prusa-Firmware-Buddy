@@ -1,7 +1,7 @@
 /// @file
 #include "mmu.hpp"
 
-#include "hal.hpp"
+#include "hal_mmu.hpp"
 #include <freertos/timing.hpp>
 #include <xbuddy_extension/mmu_bridge.hpp>
 
