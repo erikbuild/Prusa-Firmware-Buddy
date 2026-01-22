@@ -24,6 +24,8 @@
             ```
         </details>
 
+4. Install `gdb-multiarch`
+
 3. In Visual Studio Code, open the directory with this repository.
 
 ### FAQ
