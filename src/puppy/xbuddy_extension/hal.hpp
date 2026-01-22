@@ -164,11 +164,4 @@ namespace memory {
 
 }; // namespace memory
 
-namespace rng {
-
-    /// Obtain a truly random number.
-    uint32_t get();
-
-} // namespace rng
-
 } // namespace hal

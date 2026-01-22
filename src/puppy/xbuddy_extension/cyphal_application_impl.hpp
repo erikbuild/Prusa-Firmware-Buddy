@@ -5,7 +5,7 @@
 #include "cyphal_nfc_node.hpp"
 #include "cyphal_presentation.hpp"
 #include <anfc/modbus.hpp>
-#include "hal.hpp"
+#include "hal_rng.hpp"
 #include "master_activity.hpp"
 #include "yet_another_circular_buffer.hpp"
 #include <algorithm>

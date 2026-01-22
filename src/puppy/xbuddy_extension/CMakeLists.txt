@@ -24,6 +24,7 @@ target_sources(
           hal.cpp
           hal_clock.cpp
           hal_pub.cpp
+          hal_rng.cpp
           main.cpp
           master_activity.cpp
           stdlib.c

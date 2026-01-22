@@ -4,13 +4,13 @@
 #include "extension_variant.h"
 #include "hal_clock.hpp"
 #include "hal_pub.hpp"
+#include "hal_rng.hpp"
 #include <bitset>
 #include <freertos/binary_semaphore.hpp>
 #include <freertos/stream_buffer.hpp>
 #include <freertos/timing.hpp>
 #include <stm32h5xx_hal.h>
 #include <stm32h5xx_ll_gpio.h>
-#include <stm32h5xx_ll_rng.h>
 
 #include <utils/timing/timer_event_period_tracker.hpp>
 #include <atomic>
@@ -608,36 +608,6 @@ static void filament_sensor_pins_init() {
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
-static void rng_init() {
-    __HAL_RCC_RNG_CONFIG(RCC_RNGCLKSOURCE_PLL1Q);
-    __HAL_RCC_RNG_CLK_ENABLE();
-    LL_RNG_Disable(RNG);
-    LL_RNG_EnableClkErrorDetect(RNG);
-    LL_RNG_SetHealthConfig(RNG, RNG_HTCR_NIST_VALUE);
-    LL_RNG_EnableNistCompliance(RNG);
-    while (LL_RNG_IsEnabledCondReset(RNG)) {
-    }
-    LL_RNG_Enable(RNG);
-}
-
-static void rng_recovery() {
-    if (LL_RNG_IsActiveFlag_SECS(RNG)) {
-        // Sequence to fully recover from a seed error
-        LL_RNG_EnableCondReset(RNG);
-        LL_RNG_DisableCondReset(RNG);
-        while (LL_RNG_IsEnabledCondReset(RNG)) {
-        }
-        if (LL_RNG_IsActiveFlag_SEIS(RNG)) {
-            LL_RNG_ClearFlag_SEIS(RNG);
-        }
-        while (LL_RNG_IsActiveFlag_SECS(RNG)) {
-        }
-    } else {
-        // peripheral performed the reset automatically
-        LL_RNG_ClearFlag_SEIS(RNG);
-    }
-}
-
 void hal::init() {
     HAL_Init();
     HAL_ICACHE_Enable();
@@ -659,7 +629,7 @@ void hal::init() {
     usb_pins_init();
     hal::pub::init();
     filament_sensor_pins_init();
-    rng_init();
+    hal::rng::init();
 }
 
 void hal::panic() {
@@ -906,27 +876,4 @@ bool hal::mmu::nreset_pin_get() {
 
 void hal::usb::power_pin_set(bool enabled) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, enabled ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-uint32_t hal::rng::get() {
-    // Note: RNG functionality is critical for correct operation of xbuddy extension.
-    //       If we ever hang in these loops, parent system will restart us after a while.
-    for (;;) {
-        // check if there is a seed error
-        if (LL_RNG_IsActiveFlag_SEIS(RNG)) {
-            rng_recovery();
-        }
-
-        // wait for random data
-        while (!LL_RNG_IsActiveFlag_DRDY(RNG)) {
-        }
-        const uint32_t result = LL_RNG_ReadRandData32(RNG);
-
-        if (LL_RNG_IsActiveFlag_SEIS(RNG)) {
-            // not enough entropy, try again
-            continue;
-        } else {
-            return result;
-        }
-    }
 }
