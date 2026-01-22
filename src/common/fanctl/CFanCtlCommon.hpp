@@ -21,8 +21,8 @@ public:
         error_running = -2, // running error - means zero RPM measured (no feedback)
     };
 
-    inline uint8_t get_min_rpm() const { return min_rpm; }
-    inline uint8_t get_max_rpm() const { return max_rpm; }
+    inline uint16_t get_min_rpm() const { return min_rpm; }
+    inline uint16_t get_max_rpm() const { return max_rpm; }
     inline uint16_t get_max_pwm() const { return 255; }
 
     virtual uint16_t get_min_pwm() const = 0;
