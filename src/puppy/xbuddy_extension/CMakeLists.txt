@@ -28,6 +28,7 @@ target_sources(
           hal_mmu.cpp
           hal_pub.cpp
           hal_rng.cpp
+          hal_rs485.cpp
           hal_usb.cpp
           main.cpp
           master_activity.cpp

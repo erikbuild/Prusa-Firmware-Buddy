@@ -6,126 +6,37 @@
 #include "hal_gpio_expander.hpp"
 #include "hal_mmu.hpp"
 #include "hal_pub.hpp"
+#include "hal_rs485.hpp"
 #include "hal_rng.hpp"
 #include "hal_usb.hpp"
 #include <bitset>
-#include <freertos/binary_semaphore.hpp>
-#include <freertos/stream_buffer.hpp>
 #include <freertos/timing.hpp>
 #include <stm32h5xx_hal.h>
 #include <stm32h5xx_ll_gpio.h>
 
 #include <utils/timing/timer_event_period_tracker.hpp>
-#include <atomic>
-
-static UART_HandleTypeDef huart_rs485;
-alignas(uint16_t) static std::byte rx_buf_rs485[256];
-static volatile size_t rx_len_rs485;
-static freertos::BinarySemaphore tx_semaphore_rs485;
-static std::atomic<bool> ore_occurred_rs485;
 
 // Default prescaler for our timers.
 // 6 MHz clock (30 MHz peripheral clock, *2 to timer, /10 prescaler)
 static constexpr uint32_t default_prescaler = 10;
 
-extern "C" void USART3_IRQHandler(void) {
-    HAL_UART_IRQHandler(&huart_rs485);
-}
-
 extern "C" void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
-    GPIO_InitTypeDef GPIO_InitStruct {};
-    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct {};
-    if (huart->Instance == USART3) {
-        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
-        PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-            abort();
-        }
-        __HAL_RCC_USART3_CLK_ENABLE();
-        __HAL_RCC_GPIOB_CLK_ENABLE();
-        GPIO_InitStruct.Pin = GPIO_PIN_8;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStruct.Pull = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF13_USART3;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-        GPIO_InitStruct.Pin = GPIO_PIN_7;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-        GPIO_InitStruct.Pin = GPIO_PIN_14;
-        GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-        HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
-        HAL_NVIC_EnableIRQ(USART3_IRQn);
-    }
+    hal::rs485::msp_init(huart);
     hal::mmu::msp_init(huart);
 }
 
 extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    // TODO add ORE handling for MMU too
-    if (huart->ErrorCode & HAL_UART_ERROR_ORE) {
-        if (huart == &huart_rs485) {
-            ore_occurred_rs485 = true;
-        }
-    }
-}
-
-static void rx_callback_rs485(UART_HandleTypeDef *huart, uint16_t size) {
-    if (size == 0) {
-        HAL_UARTEx_ReceiveToIdle_IT(huart, (uint8_t *)rx_buf_rs485, sizeof(rx_buf_rs485));
-    } else {
-        rx_len_rs485 = size;
-        tx_semaphore_rs485.release_from_isr();
-    }
+    hal::rs485::error_callback(huart);
 }
 
 extern "C" void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
-    if (huart == &huart_rs485) {
-        rx_callback_rs485(huart, size);
-    }
+    hal::rs485::rx_callback(huart, size);
     hal::mmu::rx_callback(huart, size);
 }
 
-static void tx_callback_rs485(UART_HandleTypeDef *huart) {
-    HAL_UARTEx_ReceiveToIdle_IT(huart, (uint8_t *)rx_buf_rs485, sizeof(rx_buf_rs485));
-}
-
 extern "C" void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart == &huart_rs485) {
-        tx_callback_rs485(huart);
-    }
+    hal::rs485::tx_callback(huart);
     hal::mmu::tx_callback(huart);
-}
-
-void rs485_init() {
-    huart_rs485.Instance = USART3;
-    huart_rs485.Init.BaudRate = 230'400;
-    huart_rs485.Init.WordLength = UART_WORDLENGTH_8B;
-    huart_rs485.Init.StopBits = UART_STOPBITS_1;
-    huart_rs485.Init.Parity = UART_PARITY_NONE;
-    huart_rs485.Init.Mode = UART_MODE_TX_RX;
-    huart_rs485.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart_rs485.Init.OverSampling = UART_OVERSAMPLING_16;
-    huart_rs485.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-    huart_rs485.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-    huart_rs485.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart_rs485) != HAL_OK) {
-        abort();
-    }
-    if (HAL_UARTEx_SetTxFifoThreshold(&huart_rs485, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK) {
-        abort();
-    }
-    if (HAL_UARTEx_SetRxFifoThreshold(&huart_rs485, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK) {
-        abort();
-    }
-    if (HAL_UARTEx_DisableFifoMode(&huart_rs485) != HAL_OK) {
-        abort();
-    }
-    if (HAL_RS485Ex_Init(&huart_rs485, UART_DE_POLARITY_HIGH, 0x1f, 0x1f) != HAL_OK) {
-        abort();
-    }
 }
 
 extern "C" void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc) {
@@ -449,7 +360,7 @@ void hal::init() {
     tim2_postinit();
     tim3_postinit();
     MX_ADC1_Init();
-    rs485_init();
+    hal::rs485::init();
     hal::mmu::init();
     hal::gpio_expander::init();
     hal::usb::init();
@@ -634,32 +545,4 @@ uint32_t hal::temperature::get_raw() {
 
 hal::filament_sensor::State hal::filament_sensor::get() {
     return filament_sensor_state;
-}
-
-void hal::rs485::start_receiving() {
-    HAL_UART_TxCpltCallback(&huart_rs485);
-}
-
-std::span<std::byte> hal::rs485::receive() {
-    tx_semaphore_rs485.acquire();
-    return { rx_buf_rs485, rx_len_rs485 };
-}
-
-std::span<std::byte> hal::rs485::receive_timeout(uint32_t timeout_ms) {
-    if (tx_semaphore_rs485.try_acquire_for(timeout_ms)) {
-        return { rx_buf_rs485, rx_len_rs485 };
-    }
-    return {};
-}
-
-void hal::rs485::transmit_and_then_start_receiving(std::span<std::byte> payload) {
-    HAL_UART_Transmit_IT(&huart_rs485, (uint8_t *)payload.data(), payload.size());
-}
-
-void hal::rs485::housekeeping() {
-    if (ore_occurred_rs485) {
-        HAL_UART_AbortReceive_IT(&huart_rs485);
-        HAL_UARTEx_ReceiveToIdle_IT(&huart_rs485, (uint8_t *)rx_buf_rs485, sizeof(rx_buf_rs485));
-        ore_occurred_rs485 = false;
-    }
 }
