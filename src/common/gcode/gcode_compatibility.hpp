@@ -186,8 +186,6 @@ struct CompatibilityReport {
     StrongIndexArray<ChecksTraits<VirtualToolCheck>::Bitset, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> failed_virtual_tool_checks;
     StrongIndexArray<ChecksTraits<GCodeToolCheck>::Bitset, GcodeToolIndex::count, GcodeToolIndex, GcodeToolIndex::to_raw_static> failed_gcode_tool_checks;
 
-    std::bitset<GcodeToolIndex::count> unassigned_gcode_tools;
-
     struct FailedCheck {
         using Tool = std::variant<VirtualToolIndex, GcodeToolIndex, NoTool>;
 
