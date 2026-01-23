@@ -276,7 +276,6 @@ namespace Language_en {
   PROGMEM Language_Str MSG_NOZZLE_4                        = _UxGT("Nozzle ") LCD_STR_N4;
   PROGMEM Language_Str MSG_NOZZLE_5                        = _UxGT("Nozzle ") LCD_STR_N5;
   PROGMEM Language_Str MSG_BED                             = _UxGT("Bed");
-  PROGMEM Language_Str MSG_CHAMBER                         = _UxGT("Enclosure");
   PROGMEM Language_Str MSG_HEATBREAK                       = _UxGT("Heatbreak");
   PROGMEM Language_Str MSG_FAN_SPEED                       = _UxGT("Fan Speed");
   PROGMEM Language_Str MSG_FAN_SPEED_1                     = _UxGT("Fan Speed 1");
@@ -507,19 +506,15 @@ namespace Language_en {
   PROGMEM Language_Str MSG_ENDSTOP_ABORT                   = _UxGT("Endstop Abort");
   PROGMEM Language_Str MSG_HEATING_FAILED_LCD              = _UxGT("Heating Failed");
   PROGMEM Language_Str MSG_HEATING_FAILED_LCD_BED          = _UxGT("Bed Heating Failed");
-  PROGMEM Language_Str MSG_HEATING_FAILED_LCD_CHAMBER      = _UxGT("Chamber Heating Fail");
   PROGMEM Language_Str MSG_ERR_REDUNDANT_TEMP              = _UxGT("Err: REDUNDANT TEMP");
   PROGMEM Language_Str MSG_THERMAL_RUNAWAY                 = _UxGT("THERMAL RUNAWAY");
   PROGMEM Language_Str MSG_THERMAL_RUNAWAY_BED             = _UxGT("BED THERMAL RUNAWAY");
-  PROGMEM Language_Str MSG_THERMAL_RUNAWAY_CHAMBER         = _UxGT("CHAMBER T. RUNAWAY");
   PROGMEM Language_Str MSG_ERR_MAXTEMP                     = _UxGT("Err: MAXTEMP");
   PROGMEM Language_Str MSG_ERR_MINTEMP                     = _UxGT("Err: MINTEMP");
   PROGMEM Language_Str MSG_ERR_MINTEMP_HEATBREAK           = _UxGT("Err: MINTEMP HBR");
   PROGMEM Language_Str MSG_ERR_MAXTEMP_HEATBREAK           = _UxGT("Err: MAXTEMP HBR");
   PROGMEM Language_Str MSG_ERR_MAXTEMP_BED                 = _UxGT("Err: MAXTEMP BED");
   PROGMEM Language_Str MSG_ERR_MINTEMP_BED                 = _UxGT("Err: MINTEMP BED");
-  PROGMEM Language_Str MSG_ERR_MAXTEMP_CHAMBER             = _UxGT("Err: MAXTEMP CHAMBER");
-  PROGMEM Language_Str MSG_ERR_MINTEMP_CHAMBER             = _UxGT("Err: MINTEMP CHAMBER");
   PROGMEM Language_Str MSG_ERR_NOZZLE_OVERCURRENT          = _UxGT("Err: NOZZLE OVERCURRENT");
   PROGMEM Language_Str MSG_ERR_Z_HOMING                    = _UxGT("Home XY First");
   PROGMEM Language_Str MSG_ERR_HOMING_X                    = _UxGT("HOMING ERROR X");
@@ -534,8 +529,6 @@ namespace Language_en {
   PROGMEM Language_Str MSG_COOLING                         = _UxGT("Cooling...");
   PROGMEM Language_Str MSG_BED_HEATING                     = _UxGT("Bed Heating...");
   PROGMEM Language_Str MSG_BED_COOLING                     = _UxGT("Bed Cooling...");
-  PROGMEM Language_Str MSG_CHAMBER_HEATING                 = _UxGT("Chamber Heating...");
-  PROGMEM Language_Str MSG_CHAMBER_COOLING                 = _UxGT("Chamber Cooling...");
   PROGMEM Language_Str MSG_INFO_MENU                       = _UxGT("About Printer");
   PROGMEM Language_Str MSG_INFO_PRINTER_MENU               = _UxGT("Printer Info");
   PROGMEM Language_Str MSG_3POINT_LEVELING                 = _UxGT("3-Point Leveling");

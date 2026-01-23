@@ -179,11 +179,6 @@ void RecordMarlinVariables() {
     }
 #endif
 
-#if HAS_TEMP_CHAMBER
-    METRIC_DEF(chamber, "temp_chamber", METRIC_VALUE_FLOAT, 1000 - 10, METRIC_DISABLED);
-    metric_record_float(&chamber, thermalManager.degChamber());
-#endif /*HAS_TEMP_CHAMBER*/
-
     // These temperature metrics go outside of Marlin and are filtered and converted here
     {
         METRIC_DEF(mcu, "temp_mcu", METRIC_VALUE_INTEGER, 0, METRIC_DISABLED);

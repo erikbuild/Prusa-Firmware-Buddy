@@ -57,8 +57,8 @@
 
 // Identifiers for other heaters
 typedef enum : int8_t {
-  INDEX_NONE = -5,
-  H_REDUNDANT, H_CHAMBER, H_BOARD, H_BED,
+  INDEX_NONE = -4,
+  H_REDUNDANT, H_BOARD, H_BED,
   H_NOZZLE_FIRST,
   H_NOZZLE_LAST = H_NOZZLE_FIRST + HOTENDS - 1,
   H_HEATBREAK_FIRST,
@@ -106,9 +106,6 @@ enum ADCSensorState : char {
   #endif
   #if HAS_LOCAL_BED()
     PrepareTemp_BED, MeasureTemp_BED,
-  #endif
-  #if HAS_TEMP_CHAMBER
-    PrepareTemp_CHAMBER, MeasureTemp_CHAMBER,
   #endif
   #if HAS_TEMP_HEATBREAK
     PrepareTemp_HEATBREAK, MeasureTemp_HEATBREAK,
@@ -203,9 +200,6 @@ struct ModularBedHeater: public HeaterInfo {
     typedef heater_info_t bed_info_t;
   #endif
 #endif
-#if HAS_TEMP_CHAMBER
-  typedef temp_info_t chamber_info_t;
-#endif
 
 #if HAS_TEMP_HEATBREAK
   #if ENABLED(PIDTEMPHEATBREAK)
@@ -284,9 +278,6 @@ class Temperature {
       static uint32_t bed_frame_millis;
     #endif
 
-    #if HAS_TEMP_CHAMBER
-      static chamber_info_t temp_chamber;
-    #endif
     #if HAS_TEMP_BOARD
       static board_info_t temp_board;
     #endif
@@ -299,10 +290,6 @@ class Temperature {
     #if PRINTER_IS_PRUSA_iX()
       static TempInfo temp_psu;
       static TempInfo temp_ambient;
-    #endif
-
-    #if ENABLED(AUTO_POWER_CHAMBER_FAN)
-      static uint8_t chamberfan_speed;
     #endif
 
     // For metrics only
@@ -425,9 +412,6 @@ class Temperature {
 
     #if HAS_HEATED_BED
       static float analog_to_celsius_bed(const int raw);
-    #endif
-    #if HAS_TEMP_CHAMBER
-      static float analog_to_celsius_chamber(const int raw);
     #endif
     #if HAS_TEMP_BOARD
       static float analog_to_celsius_board(const int raw);
@@ -611,10 +595,6 @@ class Temperature {
 
     #endif // HAS_HEATED_BED
 
-    #if HAS_TEMP_CHAMBER
-      FORCE_INLINE static float degChamber()            { return temp_chamber.celsius; }
-    #endif // HAS_TEMP_CHAMBER
-
     #if HAS_TEMP_HEATBREAK
       [[deprecated("Use the ToolIndex overload")]]
       FORCE_INLINE static float degHeatbreak(const uint8_t E_NAME)            { return temp_heatbreak[HOTEND_INDEX].celsius; }
@@ -775,7 +755,7 @@ public:
     static void min_temp_error(const heater_ind_t e);
     static void max_temp_error(const heater_ind_t e);
 
-    #define HAS_THERMAL_PROTECTION (EITHER(THERMAL_PROTECTION_HOTENDS, THERMAL_PROTECTION_CHAMBER) || HAS_THERMALLY_PROTECTED_BED)
+    #define HAS_THERMAL_PROTECTION (ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED)
 
     #if HAS_THERMAL_PROTECTION
 
@@ -791,9 +771,6 @@ public:
       #endif
       #if HAS_THERMALLY_PROTECTED_BED
         static tr_state_machine_t tr_state_machine_bed;
-      #endif
-      #if ENABLED(THERMAL_PROTECTION_CHAMBER)
-        static tr_state_machine_t tr_state_machine_chamber;
       #endif
 
 

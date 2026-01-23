@@ -156,10 +156,6 @@ Temperature thermalManager;
 StrongIndexArray<hotend_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_hotend;
 StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_hotend_residency_start_ms;
 
-#if ENABLED(AUTO_POWER_CHAMBER_FAN)
-  uint8_t Temperature::chamberfan_speed; // = 0
-#endif
-
 #if FAN_COUNT > 0
 
   uint8_t Temperature::fan_speed[FAN_COUNT] = {};
@@ -254,10 +250,6 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
     heater_idle_t Temperature::bed_idle; // = { 0 }
   #endif
 #endif // HAS_HEATED_BED
-
-#if HAS_TEMP_CHAMBER
-  chamber_info_t Temperature::temp_chamber; // = { 0 }
-#endif // HAS_TEMP_CHAMBER
 
 // Initialized by settings.load()
 #if ENABLED(PIDTEMP)
@@ -658,8 +650,6 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
 
 #if HAS_AUTO_FAN
 
-  #define CHAMBER_FAN_INDEX HOTENDS
-
   void Temperature::checkExtruderAutoFans() {
     #define _EFAN(A,B) _EFANOVERLAP(A,B) ? B :
     static const uint8_t fanBit[] PROGMEM = {
@@ -679,21 +669,12 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
       #if HOTENDS > 5
         , _EFAN(5,0) _EFAN(5,1) _EFAN(5,2) _EFAN(5,3) _EFAN(5,4) 5
       #endif
-      #if HAS_AUTO_CHAMBER_FAN
-        #define _CFAN(B) _FANOVERLAP(CHAMBER,B) ? B :
-        , _CFAN(0) _CFAN(1) _CFAN(2) _CFAN(3) _CFAN(4) _CFAN(5) 6
-      #endif
     };
     uint8_t fanState = 0;
 
     for (int8_t e = 0; e < HOTENDS; e++)
       if (temp_hotend[e].celsius >= EXTRUDER_AUTO_FAN_TEMPERATURE)
         SBI(fanState, pgm_read_byte(&fanBit[e]));
-
-    #if HAS_AUTO_CHAMBER_FAN
-      if (temp_chamber.celsius >= CHAMBER_AUTO_FAN_TEMPERATURE)
-        SBI(fanState, pgm_read_byte(&fanBit[CHAMBER_FAN_INDEX]));
-    #endif
 
     #define _UPDATE_AUTO_FAN(P,D,A) do{                  \
       if (PWM_PIN(P##_AUTO_FAN_PIN) && A < 255)          \
@@ -707,16 +688,6 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
       const uint8_t realFan = pgm_read_byte(&fanBit[f]);
       if (TEST(fanDone, realFan)) continue;
       const bool fan_on = TEST(fanState, realFan);
-      switch (f) {
-        #if ENABLED(AUTO_POWER_CHAMBER_FAN)
-          case CHAMBER_FAN_INDEX:
-            chamberfan_speed = fan_on ? CHAMBER_AUTO_FAN_SPEED : 0;
-            break;
-        #endif
-        default:
-          break;
-      }
-
       switch (f) {
         #if HAS_AUTO_FAN_0
           case 0: _UPDATE_AUTO_FAN(E0, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
@@ -735,9 +706,6 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
         #endif
         #if HAS_AUTO_FAN_5
           case 5: _UPDATE_AUTO_FAN(E5, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-        #if HAS_AUTO_CHAMBER_FAN && !AUTO_CHAMBER_IS_E
-          case CHAMBER_FAN_INDEX: _UPDATE_AUTO_FAN(CHAMBER, fan_on, CHAMBER_AUTO_FAN_SPEED); break;
         #endif
       }
       SBI(fanDone, realFan);
@@ -1708,18 +1676,6 @@ constexpr float compensate_bed_temperature(float celsius) {
   }
 #endif // HAS_HEATED_BED
 
-#if HAS_TEMP_CHAMBER
-  // Derived from RepRap FiveD extruder::getTemperature()
-  // For chamber temperature measurement.
-  float Temperature::analog_to_celsius_chamber(const int raw) {
-    #if ENABLED(HEATER_CHAMBER_USES_THERMISTOR)
-      SCAN_THERMISTOR_TABLE(CHAMBER_TEMPTABLE, CHAMBER_TEMPTABLE_LEN);
-    #else
-      return 0;
-    #endif
-  }
-#endif // HAS_TEMP_CHAMBER
-
 #if HAS_TEMP_HEATBREAK
   // Derived from RepRap FiveD extruder::getTemperature()
   // For heatbreak temperature measurement.
@@ -1849,9 +1805,6 @@ void Temperature::updateTemperaturesFromRawValues() {
     bed_frame_millis = now_millis;
   #endif
 
-  #if HAS_TEMP_CHAMBER
-    temp_chamber.celsius = analog_to_celsius_chamber(temp_chamber.raw);
-  #endif
   #if HAS_TEMP_HEATBREAK
     #if HAS_TOOLCHANGER()
       for (auto tool : PhysicalToolIndex::all()) {
@@ -1892,11 +1845,6 @@ void Temperature::updateTemperaturesFromRawValues() {
   #define INIT_E_AUTO_FAN_PIN(P) do{ if (P == FAN1_PIN || P == FAN2_PIN) { SET_PWM(P); } else SET_OUTPUT(P); }while(0)
 #else
   #define INIT_E_AUTO_FAN_PIN(P) SET_OUTPUT(P)
-#endif
-#if CHAMBER_AUTO_FAN_SPEED != 255
-  #define INIT_CHAMBER_AUTO_FAN_PIN(P) do{ if (P == FAN1_PIN || P == FAN2_PIN) { SET_PWM(P); } else SET_OUTPUT(P); }while(0)
-#else
-  #define INIT_CHAMBER_AUTO_FAN_PIN(P) SET_OUTPUT(P)
 #endif
 
 /**
@@ -1973,9 +1921,6 @@ void Temperature::init() {
     HAL_ANALOG_SELECT(TEMP_PSU_PIN);
     HAL_ANALOG_SELECT(TEMP_AMBIENT_PIN);
   #endif
-  #if HAS_TEMP_CHAMBER
-    HAL_ANALOG_SELECT(TEMP_CHAMBER_PIN);
-  #endif
   #if HAS_TEMP_HEATBREAK
     HAL_ANALOG_SELECT(TEMP_HEATBREAK_PIN);
   #endif
@@ -2000,9 +1945,6 @@ void Temperature::init() {
   #endif
   #if HAS_AUTO_FAN_5 && !(_EFANOVERLAP(5,0) || _EFANOVERLAP(5,1) || _EFANOVERLAP(5,2) || _EFANOVERLAP(5,3) || _EFANOVERLAP(5,4))
     INIT_E_AUTO_FAN_PIN(E5_AUTO_FAN_PIN);
-  #endif
-  #if HAS_AUTO_CHAMBER_FAN && !AUTO_CHAMBER_IS_E
-    INIT_CHAMBER_AUTO_FAN_PIN(CHAMBER_AUTO_FAN_PIN);
   #endif
 
   // Wait for temperature measurement to settle
@@ -2159,9 +2101,6 @@ void Temperature::init() {
   #endif
   #if HAS_THERMALLY_PROTECTED_BED
     Temperature::tr_state_machine_t Temperature::tr_state_machine_bed; // = { TRInactive, 0 };
-  #endif
-  #if ENABLED(THERMAL_PROTECTION_CHAMBER)
-    Temperature::tr_state_machine_t Temperature::tr_state_machine_chamber; // = { TRInactive, 0 };
   #endif
 
   void Temperature::thermal_runaway_protection(Temperature::tr_state_machine_t &sm, const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc) {
@@ -2384,10 +2323,6 @@ void Temperature::set_current_temp_raw() {
     temp_bed.update();
   #endif
 
-  #if HAS_TEMP_CHAMBER
-    temp_chamber.update();
-  #endif
-
   #if HAS_TEMP_HEATBREAK
     for (auto tool : PhysicalToolIndex::all()) {
       temp_heatbreak[tool].update();
@@ -2417,10 +2352,6 @@ void Temperature::readings_ready() {
 
   #if HAS_HEATED_BED
     temp_bed.reset();
-  #endif
-
-  #if HAS_TEMP_CHAMBER
-    temp_chamber.reset();
   #endif
 
   #if HAS_TEMP_HEATBREAK
@@ -2725,11 +2656,6 @@ void Temperature::isr() {
       case MeasureTemp_BED: temp_bed.sample(analogRead_TEMP_BED()); break;
     #endif
 
-    #if HAS_TEMP_CHAMBER
-      case PrepareTemp_CHAMBER: HAL_START_ADC(TEMP_CHAMBER_PIN); break;
-      case MeasureTemp_CHAMBER: ACCUMULATE_ADC(temp_chamber); break;
-    #endif
-
     #if HAS_TEMP_HEATBREAK
       case PrepareTemp_HEATBREAK: HAL_START_ADC(TEMP_HEATBREAK_PIN); break;
       case MeasureTemp_HEATBREAK: ACCUMULATE_ADC(temp_heatbreak[0]); break;
@@ -2804,9 +2730,6 @@ void Temperature::isr() {
   static void print_heater_state(const float &c, const float &t, const heater_ind_t e=INDEX_NONE) {
     char k;
     int8_t tool_nr = -1;
-    #if HAS_TEMP_CHAMBER
-    if (e == H_CHAMBER) k = 'C';
-    #endif
     #if HAS_TEMP_HOTEND
     if (e == INDEX_NONE) k = 'T';
     if (e >= H_NOZZLE_FIRST && e <= H_NOZZLE_LAST) {
@@ -2847,12 +2770,6 @@ void Temperature::isr() {
     #if HAS_HEATED_BED
       print_heater_state(degBed(), degTargetBed(), H_BED);
     #endif
-    #if HAS_TEMP_CHAMBER
-      print_heater_state(degChamber()
-          , 0
-        , H_CHAMBER
-      );
-    #endif // HAS_TEMP_CHAMBER
 
     #if HAS_TEMP_HEATBREAK
       print_heater_state(degHeatbreak(target_extruder)

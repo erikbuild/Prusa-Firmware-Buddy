@@ -320,13 +320,6 @@
     #define E5_AUTO_FAN_PIN -1
   #endif
 #endif
-#ifndef CHAMBER_AUTO_FAN_PIN
-  #ifdef ORIG_CHAMBER_AUTO_FAN_PIN
-    #define CHAMBER_AUTO_FAN_PIN ORIG_CHAMBER_AUTO_FAN_PIN
-  #else
-    #define CHAMBER_AUTO_FAN_PIN -1
-  #endif
-#endif
 
 //
 // Assign endstop pins for boards with only 3 connectors
