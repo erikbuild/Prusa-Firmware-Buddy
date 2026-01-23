@@ -1,4 +1,5 @@
 #pragma once
+
 #include <array>
 #include <cassert>
 #include <type_traits>
@@ -57,6 +58,19 @@ constexpr auto array_concat(const std::array<T, N1> &a1, const std::array<T, N2>
     std::copy(a1.begin(), a1.end(), result.begin());
     std::copy(a2.begin(), a2.end(), result.begin() + N1);
     return result;
+}
+
+/// Constructs and returns an Array where each item is filler_item
+template <typename Item, std::size_t size>
+constexpr auto make_filled_array(Item filler_item) {
+    return [&]<size_t... i>(std::index_sequence<i...>) {
+        return std::array<Item, size> { ((void)i, filler_item)... };
+    }(std::make_index_sequence<size>());
+}
+
+template <typename Array>
+constexpr auto make_filled_array(typename Array::value_type filler_item) {
+    return make_filled_array<typename Array::value_type, std::tuple_size_v<Array>>(filler_item);
 }
 
 } // namespace stdext
