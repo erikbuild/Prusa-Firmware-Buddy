@@ -585,11 +585,6 @@ void Temperature::manage_heater() {
     const auto tool = PhysicalToolIndex::from_raw_notool(e);
     Hotend &hotend = Hotend::for_tool(tool);
     hotend.manage();
-
-    #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-      if (degHotend(e) > temp_range[e].maxtemp)
-        _temp_error((heater_ind_t)e, PSTR(MSG_T_THERMAL_RUNAWAY), GET_TEXT(MSG_THERMAL_RUNAWAY));
-    #endif
     
     update_temp_residency_hotend(e);
 
@@ -1198,27 +1193,6 @@ void Temperature::disable_heaters(Temperature::disable_bed_t disable_bed) {
  * Get raw temperatures
  */
 void Temperature::set_current_temp_raw() {
-
-  #if HAS_TEMP_ADC_0
-    temp_hotend[0].update();
-  #endif
-
-  #if HAS_TEMP_ADC_1
-      temp_hotend[1].update();
-    #if HAS_TEMP_ADC_2
-      temp_hotend[2].update();
-      #if HAS_TEMP_ADC_3
-        temp_hotend[3].update();
-        #if HAS_TEMP_ADC_4
-          temp_hotend[4].update();
-          #if HAS_TEMP_ADC_5
-            temp_hotend[5].update();
-          #endif // HAS_TEMP_ADC_5
-        #endif // HAS_TEMP_ADC_4
-      #endif // HAS_TEMP_ADC_3
-    #endif // HAS_TEMP_ADC_2
-  #endif // HAS_TEMP_ADC_1
-
   #if HAS_HEATED_BED
     temp_bed.update();
   #endif
@@ -1247,7 +1221,7 @@ void Temperature::readings_ready() {
   if (!temp_meas_ready) set_current_temp_raw();
 
   for (auto tool : PhysicalToolIndex::all()) {
-    temp_hotend[tool].reset();
+    Hotend::for_tool(tool).isr_on_readings_ready();
   }
 
   #if HAS_HEATED_BED
@@ -1268,28 +1242,6 @@ void Temperature::readings_ready() {
     temp_psu.reset();
     temp_ambient.reset();
   #endif
-
-  for (auto tool : PhysicalToolIndex::all()) {
-    const auto e = tool.to_raw();
-    const Hotend &hotend = Hotend::for_tool(tool);
-
-    const bool heater_on = (hotend.nozzle_target_temp() > 0
-      #if ENABLED(PIDTEMP)
-        || temp_hotend[e].soft_pwm_amount > 0
-      #endif
-    );
-  #if HAS_TOOLCHANGER()
-    // Toolchanger doesn't report raw
-    if (hotend.nozzle_temp() > temp_range[e].maxtemp) {
-      max_temp_error((heater_ind_t)e);
-    }
-    if (heater_on && hotend.nozzle_temp() < temp_range[e].mintemp) {
-      min_temp_error((heater_ind_t)e);
-    }
-  #else
-    temp_range[e].raw.check_temperror(temp_hotend[e].raw, e, heater_on);
-  #endif
-  }
 
   #if HAS_HEATED_BED
     #if HAS_REMOTE_BED()

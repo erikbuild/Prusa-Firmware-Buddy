@@ -51,6 +51,12 @@ protected:
     /// This function is called from the DefaultTask at regular intervals (from temperature.manage_heater())
     virtual void manage() = 0;
 
+    /// Raw values are accumulated by the Temperature::isr to temp_hotend.acc
+    /// Once there's OVERSAMPLENR values accumulated, this function is called
+    /// It is supposed to pass the accumulated values to the defaultTask
+    /// And reset the accumulators
+    virtual void isr_on_readings_ready() {};
+
 protected:
     Temperature nozzle_temp_ = temperature_uninitialized;
     TargetTemperature nozzle_target_temp_ = 0;

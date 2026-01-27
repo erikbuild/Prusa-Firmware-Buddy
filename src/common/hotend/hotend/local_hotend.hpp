@@ -2,6 +2,7 @@
 #pragma once
 
 #include <span>
+#include <atomic>
 
 #include "base_hotend.hpp"
 
@@ -24,6 +25,12 @@ public:
 protected:
     virtual void manage() override;
 
+    virtual void isr_on_readings_ready() override;
+
 protected:
     const Config &local_config_;
+
+    /// Written from the Temperature ISR, read from the defaultTask
+    /// !!! Contains a sum of OVERSAMPLENR samples
+    std::atomic<uint16_t> nozzle_raw_temp_;
 };

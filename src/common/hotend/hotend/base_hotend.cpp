@@ -57,5 +57,11 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 }
 
 void BaseHotend::manage() {
-    // Common local/remote hotend code will be moved here in the upcoming PRs.
+    if (nozzle_temp() > base_config_.max_nozzle_temp) {
+        thermalManager.max_temp_error((heater_ind_t)tool_.to_raw());
+    }
+
+    if ((nozzle_target_temp() > 0) && (nozzle_temp() < base_config_.min_nozzle_temp)) {
+        thermalManager.min_temp_error((heater_ind_t)tool_.to_raw());
+    }
 }

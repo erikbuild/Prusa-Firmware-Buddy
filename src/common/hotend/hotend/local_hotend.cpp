@@ -14,8 +14,25 @@ LocalHotend::LocalHotend(PhysicalToolIndex tool, const Config *config)
 }
 
 void LocalHotend::manage() {
-    nozzle_temp_ = marlin_temptable_lookup(local_config_.nozzle_temp_table, thermalManager.temp_hotend[tool_].raw);
+    nozzle_temp_ = marlin_temptable_lookup(local_config_.nozzle_temp_table, nozzle_raw_temp_);
 
     // !!! MUST be called after temps are set properly
     BaseHotend::manage();
+}
+
+void LocalHotend::isr_on_readings_ready() {
+    auto &th = thermalManager.temp_hotend[tool_.to_raw()];
+
+    // Note: Before Hotend refactoring, updating the raw value was waiting for temp_meas_ready
+    // Now, we are using std::atomic like sane people, so it shouldn't be necessary
+    nozzle_raw_temp_ = th.acc;
+    th.acc = 0;
+
+    const bool heater_on = (nozzle_target_temp() > 0
+#if ENABLED(PIDTEMP)
+        || th.soft_pwm_amount > 0
+#endif
+    );
+
+    temp_range[tool_].raw.check_temperror(nozzle_raw_temp_, (heater_ind_t)tool_.to_raw(), heater_on);
 }
