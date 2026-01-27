@@ -3259,21 +3259,22 @@ static void _server_update_vars() {
         marlin_vars().logical_curr_pos[i] = curr_pos_mm[i];
     }
 
-    for (int8_t e = 0; e < HOTENDS; e++) {
-        auto &extruder = marlin_vars().hotend(e);
+    for (auto tool : PhysicalToolIndex::all()) {
+        auto &extruder = marlin_vars().hotend(tool);
 
-        extruder.temp_nozzle = thermalManager.degHotend(e);
-        extruder.target_nozzle = thermalManager.degTargetHotend(e);
-        extruder.pwm_nozzle = thermalManager.getHeaterPower(static_cast<heater_ind_t>(H_NOZZLE_FIRST + e));
+        extruder.temp_nozzle = thermalManager.degHotend(tool);
+        extruder.target_nozzle = thermalManager.degTargetHotend(tool);
+        extruder.pwm_nozzle = thermalManager.getHeaterPower(static_cast<heater_ind_t>(H_NOZZLE_FIRST + tool.to_raw()));
 
 #if (TEMP_SENSOR_HEATBREAK > 0)
         // TODO: this should track multiple extruders
-        extruder.temp_heatbreak = thermalManager.temp_heatbreak[e].celsius;
-        extruder.target_heatbreak = thermalManager.temp_heatbreak[e].target;
+        extruder.temp_heatbreak = thermalManager.temp_heatbreak[tool].celsius;
+        extruder.target_heatbreak = thermalManager.temp_heatbreak[tool].target;
 #endif
-        extruder.flow_factor = static_cast<uint16_t>(planner.flow_percentage[e]);
-        extruder.print_fan_rpm = Fans::print(e).get_actual_rpm();
-        extruder.heatbreak_fan_rpm = Fans::heat_break(e).get_actual_rpm();
+        // FIXME: flow_percentage should be indexed by VirtualToolIndex
+        extruder.flow_factor = static_cast<uint16_t>(planner.flow_percentage[tool.to_raw()]);
+        extruder.print_fan_rpm = Fans::print(tool).get_actual_rpm();
+        extruder.heatbreak_fan_rpm = Fans::heat_break(tool).get_actual_rpm();
     }
 
     marlin_vars().temp_bed = thermalManager.degBed();
