@@ -1252,7 +1252,7 @@ bool Planner::_populate_block(block_t * const block,
   #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
     if (de) {
       #if ENABLED(PREVENT_COLD_EXTRUSION)
-        if (thermalManager.tooColdToExtrude(extruder)) {
+        if (hints.move.extrusion_safety_checks && thermalManager.tooColdToExtrude(extruder)) {
           position.e = target.e; // Behave as if the move really took place, but ignore E part
           position_float.e = target_float.e;
           de = 0; // no difference

@@ -49,6 +49,9 @@ static constexpr uint8_t xyz_bits = _BV(X_AXIS) | _BV(Y_AXIS) | _BV(Z_AXIS);
 struct MoveHints {
   /// The move is a printing move and should possibly count into max printed Z
   bool is_printing_move : 1 = false;
+
+  /// Whether extrusion safety checks (PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE) should be applied
+  bool extrusion_safety_checks : 1 = true;
 };
 
 /** Holds flags related to configuration and segment generation
@@ -65,9 +68,6 @@ struct PrepareMoveHints {
 
   /// Whether motion limits should be applied (not allowing moves outside of MIN/MAX coordinates)
   bool apply_motion_limits : 1 = true;
-
-  /// Whether extrusion safety checks (PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE) should be applied
-  bool extrusion_safety_checks : 1 = true;
   
   MoveHints move = {}; 
 

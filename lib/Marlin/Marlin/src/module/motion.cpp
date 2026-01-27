@@ -855,7 +855,7 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
       return;
   }
 
-  if(hints.extrusion_safety_checks) {
+  if(hints.move.extrusion_safety_checks) {
     #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
       if (!DEBUGGING(DRYRUN)) {
         if (destination.e != current_position.e) {
