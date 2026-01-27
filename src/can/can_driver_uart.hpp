@@ -103,11 +103,7 @@ class UartDriver : public Driver {
     // decoder is only ever linked with one of the receive buffers
     cobs::CobsStreamDecoder decoder;
 
-    ErrorStats error_stats = ErrorStats {
-        .tec = 0,
-        .rec = 0,
-        .err_log = 0,
-    };
+    std::atomic<uint32_t> error_log = 0; ///< Sum of error increments in both Rx and Tx error counters since start
 
     uint8_t uart_rx_byte;
     UART_HandleTypeDef &huart; // HAL UART Instance
@@ -135,20 +131,10 @@ public:
     ~UartDriver() = default;
 
     /**
-     * @brief Get error statistics.
-     * @note Reading clears err_log counter.
-     * @return error statistics
+     * @brief Get sum of error increments in both Rx and Tx error counters since start.
+     * @return error log counter
      */
-    ErrorStats get_error_stats() override {
-        ErrorStats temp = error_stats;
-        error_stats = ErrorStats {
-            .tec = 0,
-            .rec = 0,
-            .err_log = 0,
-        };
-
-        return temp;
-    };
+    uint32_t get_error_log() const override { return error_log; };
 
     // -- Interrupt Callbacks --
     // These are public but are not intended for direct use.

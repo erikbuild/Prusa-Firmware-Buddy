@@ -41,8 +41,7 @@ bool UartDriver::send(const CanardFrame &frame, bool store_timestamp) {
 
     // Check if tx process is not already ongoing (before send buffer is overwritten)
     if (this->huart.gState != HAL_UART_STATE_READY) {
-        error_stats.tec++;
-        error_stats.err_log++;
+        error_log++;
         return false;
     }
     // Prepare the raw payload for COBS encoding and CRC calculation.
@@ -77,8 +76,7 @@ bool UartDriver::send(const CanardFrame &frame, bool store_timestamp) {
     enforce_bsod(encoded_message);
 
     if (HAL_UART_Transmit_IT(&this->huart, encoded_message->data(), encoded_message->size()) != HAL_OK) {
-        error_stats.tec++;
-        error_stats.err_log++;
+        error_log++;
         return false;
     }
 
@@ -201,8 +199,7 @@ void UartDriver::error_callback() {
     // implementation, transmit errors would typically be managed in the send()
     // method itself (e.g., if HAL_UART_Transmit_IT() returns a failure status)
     // and not via this global callback.
-    error_stats.rec++;
-    error_stats.err_log++;
+    error_log++;
 }
 
 extern "C" {
