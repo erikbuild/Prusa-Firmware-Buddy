@@ -64,6 +64,7 @@
 #include "../Marlin/src/feature/print_area.h"
 #include "../Marlin/src/Marlin.h"
 #include "utility_extensions.hpp"
+#include "utils/variant_utils.hpp"
 #include <common/gcode/gcode_info_scan.hpp>
 
 #include <option/has_mmu2.h>
@@ -1970,30 +1971,28 @@ void set_axes_length(xy_float_t xy) {
 
 // Checking valid behaviour of Heatbreak fan & Print fan of currently active extruder/tool
 bool active_extruder_fan_checks() {
-    if (marlin_vars().fan_check_enabled
-#if HAS_TOOLCHANGER()
-        && prusa_toolchanger.is_any_tool_active() // Nothing to check
-#endif
-    ) {
-        auto check_fan = [](CFanCtlCommon &fan, const char *fan_name) {
-            if (!fan.is_fan_ok()) {
-                log_error(MarlinServer, "%s FAN RPM is not OK - Actual: %d rpm, PWM: %d",
-                    fan_name,
-                    (int)fan.get_actual_rpm(),
-                    fan.get_pwm());
-                return true;
-            }
-            return false;
-        };
-
-        bool fan_failed = false;
-#if !PRINTER_IS_PRUSA_iX()
-        fan_failed |= check_fan(Fans::heat_break(active_extruder), "Heatbreak");
-#endif
-        fan_failed |= check_fan(Fans::print(active_extruder), "Print");
-        return fan_failed;
+    auto tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (!tool.has_value() || !tool->is_enabled() || !marlin_vars().fan_check_enabled) {
+        return false;
     }
-    return false;
+
+    auto check_fan = [](CFanCtlCommon &fan, const char *fan_name) {
+        if (!fan.is_fan_ok()) {
+            log_error(MarlinServer, "%s FAN RPM is not OK - Actual: %d rpm, PWM: %d",
+                fan_name,
+                (int)fan.get_actual_rpm(),
+                (int)fan.get_pwm());
+            return true;
+        }
+        return false;
+    };
+
+    bool fan_failed = false;
+#if !PRINTER_IS_PRUSA_iX()
+    fan_failed |= check_fan(Fans::heat_break(*tool), "Heatbreak");
+#endif
+    fan_failed |= check_fan(Fans::print(*tool), "Print");
+    return fan_failed;
 }
 
 static void resuming_reheating() {
