@@ -155,7 +155,13 @@ struct ModularBedHeater: public HeaterInfo {
 };
 #endif
 
-struct hotend_info_t : public TempInfo {
+struct hotend_info_t {
+  uint16_t acc;
+  int16_t raw;
+  inline void reset() { acc = 0; }
+  inline void sample(const uint16_t s) { acc += s; }
+  inline void update() { raw = acc; }
+
   static_assert(ENABLED(PIDTEMP));
   hotend_pid_t pid;  // Initialized by settings.load()
   

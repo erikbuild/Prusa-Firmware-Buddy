@@ -16,9 +16,6 @@ LocalHotend::LocalHotend(PhysicalToolIndex tool, const Config *config)
 void LocalHotend::manage() {
     nozzle_temp_ = marlin_temptable_lookup(local_config_.nozzle_temp_table, thermalManager.temp_hotend[tool_].raw);
 
-    // Temporary till the temp_hotend.celsius is removed
-    thermalManager.temp_hotend[tool_].celsius = nozzle_temp_;
-
     // !!! MUST be called after temps are set properly
     BaseHotend::manage();
 }
