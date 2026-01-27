@@ -113,7 +113,7 @@ public:
     }
 
     /// This is special tool identifier, that says that this tool is not mapped to any tool, and is threfore disabled by tool mapping
-    [[deprecated("Use NoTool from tool_index.hpp")]] static constexpr auto NO_TOOL_MAPPED = std::numeric_limits<uint8_t>::max();
+    [[deprecated("Use ToolNotMapped from tool_index.hpp")]] static constexpr auto NO_TOOL_MAPPED = std::numeric_limits<uint8_t>::max();
 
     /// Container with serialized state of tool mapping
     struct __attribute__((packed)) serialized_state_t {
