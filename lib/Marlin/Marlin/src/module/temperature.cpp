@@ -1126,6 +1126,14 @@ void Temperature::init() {
     INIT_E_AUTO_FAN_PIN(E5_AUTO_FAN_PIN);
   #endif
 
+  // Wait for the temperature readings to become available
+  for(uint8_t retry = 0; !temp_meas_ready; retry++) {
+    delay(10);
+    if(retry > 100) {
+      bsod("Temps ded");
+    }
+  }
+
   // Wait for temperature measurement to settle
   delay(250);
 
@@ -1137,8 +1145,7 @@ void Temperature::init() {
     minmaxtemp_raw_HEATBREAK = MarlinTemptableRawMinMax::compute(heatbreak_temptable(), HEATBREAK_MINTEMP, HEATBREAK_MAXTEMP);
   #endif
 
-  // At the end of init, load the temperatures
-  updateTemperaturesFromRawValues();
+  manage_heater();
 }
 
 #if HAS_THERMAL_PROTECTION
