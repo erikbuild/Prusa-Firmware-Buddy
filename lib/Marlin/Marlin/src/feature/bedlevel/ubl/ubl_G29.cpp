@@ -335,7 +335,7 @@
     //
     // NOTE: We can't turn the fan off, because some filaments can start get runny in the whole tube that goes to the nozzle.
     #if HAS_LOVE_BOARD() && !PRINTER_IS_PRUSA_iX()
-    auto &fan = Fans::heat_break(0);
+    auto &fan = Fans::heat_break(PhysicalToolIndex::from_raw(0));
     fan.disable_autocontrol();
     if (buddy::hw::Configuration::Instance().has_inverted_fans()) {
         buddy::hw::fanHeatBreakPwm.write(buddy::hw::Pin::State::low);

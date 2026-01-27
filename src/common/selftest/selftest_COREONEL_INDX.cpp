@@ -380,8 +380,8 @@ void CSelftest::restoreAfterSelftest() {
     thermalManager.setTargetHotend(0, 0);
 
     // restore fan behavior
-    Fans::print(0).exit_selftest_mode();
-    Fans::heat_break(0).exit_selftest_mode();
+    Fans::print(PhysicalToolIndex::from_raw(0)).exit_selftest_mode();
+    Fans::heat_break(PhysicalToolIndex::from_raw(0)).exit_selftest_mode();
 
     thermalManager.disable_all_heaters();
     disable_all_steppers();

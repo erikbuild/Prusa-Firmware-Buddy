@@ -31,5 +31,5 @@ CFanCtlCommon &Fans::heat_break(size_t index) {
 };
 
 void Fans::tick() {
-    Fans::print(0).tick();
+    Fans::print(PhysicalToolIndex::from_raw(0)).tick();
 }
