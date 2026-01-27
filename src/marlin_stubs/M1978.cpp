@@ -416,31 +416,26 @@ namespace PrusaGcodeSuite {
 void M1978() {
 
     auto print_fans = [&]<size_t... ix>(std::index_sequence<ix...>) {
-        return std::array {
-            CommonFanHandler(FanType::print, ix, print_fan_range, &Fans::print(ix), print_low_fan_range)...
+        return StrongIndexArray<CommonFanHandler, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> {
+            CommonFanHandler(FanType::print, ix, print_fan_range, &Fans::print(PhysicalToolIndex::from_raw(ix)), print_low_fan_range)...
         };
-    }(std::make_index_sequence<HOTENDS>());
+    }(std::make_index_sequence<PhysicalToolIndex::count>());
 
     auto heatbreak_fans = [&]<size_t... ix>(std::index_sequence<ix...>) {
-        return std::array {
-            CommonFanHandler(FanType::heatbreak, ix, heatbreak_fan_range, &Fans::heat_break(ix))...
+        return StrongIndexArray<CommonFanHandler, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> {
+            CommonFanHandler(FanType::heatbreak, ix, heatbreak_fan_range, &Fans::heat_break(PhysicalToolIndex::from_raw(ix)))...
         };
-    }(std::make_index_sequence<HOTENDS>());
+    }(std::make_index_sequence<PhysicalToolIndex::count>());
 
     std::array<FanHandler *, HOTENDS * 2 + 5 /* enclosure/chamber fans (1-2) + AC fans (2) + reserve */> fan_container;
-    std::array<std::pair<FanHandler *, FanHandler *>, HOTENDS> tool_fan_pairs;
+    std::array<std::pair<FanHandler *, FanHandler *>, PhysicalToolIndex::count> tool_fan_pairs;
 
     size_t container_index = 0;
     uint8_t pairs = 0;
-    for (uint8_t i = 0; i < HOTENDS; i++) {
-#if HAS_TOOLCHANGER()
-        if (!prusa_toolchanger.is_tool_enabled(i)) {
-            continue;
-        }
-#endif
-        fan_container[container_index++] = &print_fans[i];
-        fan_container[container_index++] = &heatbreak_fans[i];
-        tool_fan_pairs[pairs++] = std::make_pair(&print_fans[i], &heatbreak_fans[i]);
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+        fan_container[container_index++] = &print_fans[tool];
+        fan_container[container_index++] = &heatbreak_fans[tool];
+        tool_fan_pairs[pairs++] = std::make_pair(&print_fans[tool], &heatbreak_fans[tool]);
     }
 
 #if XL_ENCLOSURE_SUPPORT()
