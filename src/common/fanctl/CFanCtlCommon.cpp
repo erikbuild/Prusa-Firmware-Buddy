@@ -35,11 +35,13 @@ void record_fanctl_metrics() {
             fan_name, state, static_cast<int>(std::lround(pwm)), static_cast<int>(std::lround(measured)));
     };
 
-    if (HAL_GetTick() - last_update > UPDATE_PERIOD) {
-        record(Fans::print(active_extruder), "print");
-        metric_record_integer(&fan_print, Fans::print(active_extruder).get_actual_rpm());
-        record(Fans::heat_break(active_extruder), "heatbreak");
-        metric_record_integer(&fan_hbr, Fans::heat_break(active_extruder).get_actual_rpm());
+    auto maybe_tool = PhysicalToolIndex::currently_selected();
+    if (HAL_GetTick() - last_update > UPDATE_PERIOD && std::holds_alternative<PhysicalToolIndex>(maybe_tool)) {
+        auto tool = std::get<PhysicalToolIndex>(maybe_tool);
+        record(Fans::print(tool), "print");
+        metric_record_integer(&fan_print, Fans::print(tool).get_actual_rpm());
+        record(Fans::heat_break(tool), "heatbreak");
+        metric_record_integer(&fan_hbr, Fans::heat_break(tool).get_actual_rpm());
 #if XL_ENCLOSURE_SUPPORT() // XLBOARD has additional enclosure fan
         record(Fans::enclosure(), "enclosure");
         metric_record_integer(&fan_enclosure, Fans::enclosure().get_actual_rpm());
