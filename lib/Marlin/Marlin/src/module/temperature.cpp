@@ -121,11 +121,6 @@ HotendRegulator hotend_regulators[HOTENDS];
 
 LOG_COMPONENT_REF(MarlinServer);
 
-#if HOTEND_USES_THERMISTOR
-    static constexpr MarlinTempTable heater_ttbl_map[HOTENDS] = ARRAY_BY_HOTENDS(TT_NAME(THERMISTOR_HEATER_0), TT_NAME(THERMISTOR_HEATER_1), TT_NAME(THERMISTOR_HEATER_2), TT_NAME(THERMISTOR_HEATER_3), TT_NAME(THERMISTOR_HEATER_4), TT_NAME(THERMISTOR_HEATER_5));
-    static_assert(HOTENDS <= 6);
-#endif
-
 #if ENABLED(HW_PWM_HEATERS)
   static constexpr uint8_t soft_pwm_bit_shift = 0;
 #else
@@ -584,6 +579,7 @@ void Temperature::manage_heater() {
   for (int8_t e = 0; e < HOTENDS; e++) {
     const auto tool = PhysicalToolIndex::from_raw_notool(e);
     Hotend &hotend = Hotend::for_tool(tool);
+    hotend.manage();
 
     #if ENABLED(THERMAL_PROTECTION_HOTENDS)
       if (degHotend(e) > temp_range[e].maxtemp)
@@ -785,29 +781,6 @@ void Temperature::suspend_heatbreak_fan(millis_t ms) {
 }
 #endif
 
-// Derived from RepRap FiveD extruder::getTemperature()
-// For hot end temperature measurement.
-float Temperature::analog_to_celsius_hotend(const int raw, const uint8_t e) {
-    if (e >= HOTENDS)
-    {
-      SERIAL_ERROR_START();
-      SERIAL_ECHO((int)e);
-      SERIAL_ECHOLNPGM(MSG_INVALID_EXTRUDER_NUM);
-      kill(PSTR(MSG_INVALID_EXTRUDER_NUM));
-      return 0.0;
-    }
-
-  #if HAS_TOOLCHANGER()
-    return prusa_toolchanger.getTool(e).get_hotend_temp();
-  #endif
-
-  #if HOTEND_USES_THERMISTOR
-    // Thermistor with conversion table?
-    return marlin_temptable_lookup(heater_ttbl_map[e], raw);
-  #endif
-
-  return 0;
-}
 #if HAS_HEATED_BED
 
 #if PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_COREONE()
@@ -946,15 +919,6 @@ void translate_ac_controller_faults() {
  * as it would block the stepper routine.
  */
 void Temperature::updateTemperaturesFromRawValues() {
-  #if HAS_TOOLCHANGER()
-    for (auto tool : PhysicalToolIndex::all()) {
-      temp_hotend[tool].celsius = prusa_toolchanger.getTool(tool).get_hotend_temp();
-    }
-  #else
-    for (auto tool : PhysicalToolIndex::all()) {
-      temp_hotend[tool].celsius = analog_to_celsius_hotend(temp_hotend[tool].raw, tool);
-    }
-  #endif
   #if HAS_HEATED_BED
     #if HAS_MODULAR_BED()
       updateModularBedTemperature();

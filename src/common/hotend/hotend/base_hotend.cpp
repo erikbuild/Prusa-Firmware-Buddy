@@ -13,6 +13,12 @@
 BaseHotend::BaseHotend(PhysicalToolIndex tool, const Config *config)
     : base_config_(*config)
     , tool_(tool) {
+    auto &r = temp_range[tool_];
+
+    // TODO: Move the whole structure here
+    // It's a mess, will do in a next PR
+    r.mintemp = base_config_.min_nozzle_temp;
+    r.maxtemp = base_config_.max_nozzle_temp;
 }
 
 void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
@@ -48,4 +54,8 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 #if WATCH_HOTENDS
     watch_hotend[tool_].reset(t.degHotend(tool_), new_temp);
 #endif
+}
+
+void BaseHotend::manage() {
+    // Common local/remote hotend code will be moved here in the upcoming PRs.
 }

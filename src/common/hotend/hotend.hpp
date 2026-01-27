@@ -32,6 +32,11 @@ public:
     static Hotend &for_tool(uint8_t tool);
 
 public:
+    /// Current temperature of the nozzle
+    Temperature nozzle_temp() const {
+        return nozzle_temp_;
+    }
+
     /// Target temperature of the nozzle
     TargetTemperature nozzle_target_temp() const {
         return nozzle_target_temp_;
@@ -43,5 +48,10 @@ protected:
     explicit Hotend() = default;
 
 protected:
+    /// This function is called from the DefaultTask at regular intervals (from temperature.manage_heater())
+    virtual void manage() = 0;
+
+protected:
+    Temperature nozzle_temp_ = 0;
     TargetTemperature nozzle_target_temp_ = 0;
 };

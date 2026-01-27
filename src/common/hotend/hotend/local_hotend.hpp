@@ -22,5 +22,8 @@ public:
     explicit LocalHotend(PhysicalToolIndex tool, const Config *config);
 
 protected:
+    virtual void manage() override;
+
+protected:
     const Config &local_config_;
 };

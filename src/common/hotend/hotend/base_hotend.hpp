@@ -26,6 +26,11 @@ protected:
     /// !!! Careful, the config pointer is stored, so make sure the config is persistent!
     explicit BaseHotend(PhysicalToolIndex tool, const Config *config);
 
+    // !!! MUST be called after temps are set properly
+    // Note: the = 0; is here to enforce overriding.
+    // !!! The function is actually implemented and MUST be called from the overriding function.
+    virtual void manage() override = 0;
+
 protected:
     const Config &base_config_;
     const PhysicalToolIndex tool_;

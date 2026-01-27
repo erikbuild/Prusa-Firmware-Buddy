@@ -302,13 +302,6 @@ class Temperature {
      * Static (class) methods
      */
 
-    [[deprecated("Use the ToolIndex overload")]]
-    static float analog_to_celsius_hotend(const int raw, const uint8_t e);
-
-    inline static float analog_to_celsius_hotend(const int raw, PhysicalToolIndex tool) {
-      return analog_to_celsius_hotend(raw, tool.to_raw());
-    }
-
     #if HAS_HEATED_BED
       static float analog_to_celsius_bed(const int raw);
     #endif

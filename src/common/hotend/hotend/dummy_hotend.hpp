@@ -11,4 +11,7 @@ public:
     using Hotend::Hotend;
 
     void set_nozzle_target_temp([[maybe_unused]] TargetTemperature set) override {}
+
+protected:
+    virtual void manage() override {}
 };

@@ -13,4 +13,7 @@ public:
 
 public:
     virtual void set_nozzle_target_temp(TargetTemperature set) override;
+
+protected:
+    virtual void manage() override;
 };
