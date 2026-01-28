@@ -43,6 +43,7 @@
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
 #include <module/temperature/temp_defines.hpp>
+#include <module/temperature/thermal_runaway.hpp>
 
 // PID storage
 typedef struct { float Kp, Ki, Kd;     } PID_t;
@@ -736,23 +737,12 @@ public:
     #define HAS_THERMAL_PROTECTION (ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED)
 
     #if HAS_THERMAL_PROTECTION
-
-      enum TRState : char { TRInactive, TRFirstHeating, TRStable, TRRunaway };
-
-      typedef struct {
-        millis_t timer = 0;
-        TRState state = TRInactive;
-      } tr_state_machine_t;
-
       #if ENABLED(THERMAL_PROTECTION_HOTENDS)
         static tr_state_machine_t tr_state_machine[HOTENDS];
       #endif
       #if HAS_THERMALLY_PROTECTED_BED
         static tr_state_machine_t tr_state_machine_bed;
       #endif
-
-
-      static void thermal_runaway_protection(tr_state_machine_t &state, const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc);
 
       #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
         static int_least8_t failed_cycles[HOTENDS];
