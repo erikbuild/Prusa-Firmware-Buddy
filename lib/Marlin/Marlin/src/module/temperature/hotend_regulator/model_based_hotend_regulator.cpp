@@ -1,11 +1,9 @@
 /// @file
 #include "model_based_hotend_regulator.hpp"
 
-#include <module/temperature.h>
 #include <module/temperature/steady_state_hotend.hpp>
 #include <module/stepper.h>
-
-static constexpr float sample_frequency = TEMP_TIMER_FREQUENCY / MIN_ADC_ISR_LOOPS / OVERSAMPLENR;
+#include <module/temperature.h>
 
 static_assert(ENABLED(PIDTEMP), "Not supported anymore");
 static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
@@ -24,24 +22,7 @@ float ModelBasedHotendRegulator::get_model_output_hotend(float &last_target, flo
 
     const uint8_t ee = HOTEND_INDEX;
 
-    enum class Ramp : uint_least8_t {
-        Up,
-        Down,
-        None,
-    };
-
-    constexpr float epsilon = 0.01f;
-    constexpr float transport_delay_seconds = 5.60f;
-    constexpr int transport_delay_cycles = static_cast<int>(transport_delay_seconds * sample_frequency);
-    constexpr float transport_delay_cycles_inv = 1.0f / transport_delay_cycles;
-    constexpr float deg_per_second = 3.58f; //!< temperature rise at full power at zero cooling loses
-    constexpr float deg_per_cycle = deg_per_second / sample_frequency;
-    constexpr float pid_max_inv = 1.0f / PID_MAX;
-
     float hotend_pwm = 0;
-
-    static int delay = transport_delay_cycles;
-    static Ramp state = Ramp::None;
 
     if (temp_hotend[ee].target > (last_target + epsilon)) {
         if (state != Ramp::Up) {
@@ -123,13 +104,6 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
 
     const uint8_t ee = HOTEND_INDEX;
 
-    static hotend_pid_t work_pid[HOTENDS];
-    static float temp_iState[HOTENDS] = { 0 },
-                 temp_dState[HOTENDS] = { 0 };
-    static bool pid_reset[HOTENDS] = { false };
-    static float target_temp = .0;
-    static float expected_temp = .0;
-
     float pid_output;
 #if ENABLED(PID_DEBUG)
     float feed_forward_debug = -1.0f;
@@ -141,14 +115,14 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
 #endif
     ) {
         pid_output = 0;
-        pid_reset[ee] = true;
+        pid_reset = true;
     } else {
-        if (pid_reset[ee]) {
-            temp_iState[ee] = 0.0;
-            work_pid[ee].Kd = 0.0;
+        if (pid_reset) {
+            temp_iState = 0.0;
+            work_pid.Kd = 0.0;
             target_temp = temp_hotend[ee].celsius;
             expected_temp = temp_hotend[ee].celsius;
-            pid_reset[ee] = false;
+            pid_reset = false;
         }
 #if DISABLED(MODEL_DETECT_STUCK_THERMISTOR)
         const float
@@ -159,10 +133,10 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
         feed_forward_debug = feed_forward;
 #endif
         const float pid_error = expected_temp - temp_hotend[ee].celsius;
-        work_pid[ee].Kd = work_pid[ee].Kd + PID_K2 * (PID_PARAM(Kd, ee) * (pid_error - temp_dState[ee]) - work_pid[ee].Kd);
-        work_pid[ee].Kp = PID_PARAM(Kp, ee) * pid_error;
+        work_pid.Kd = work_pid.Kd + PID_K2 * (PID_PARAM(Kd, ee) * (pid_error - temp_dState) - work_pid.Kd);
+        work_pid.Kp = PID_PARAM(Kp, ee) * pid_error;
 
-        pid_output = feed_forward + work_pid[ee].Kp + work_pid[ee].Kd + float(MIN_POWER);
+        pid_output = feed_forward + work_pid.Kp + work_pid.Kd + float(MIN_POWER);
 
 #if ENABLED(PID_EXTRUSION_SCALING)
     #if HOTENDS == 1
@@ -170,7 +144,7 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
     #else
         const bool this_hotend = (ee == active_extruder);
     #endif
-        work_pid[ee].Kc = 0;
+        work_pid.Kc = 0;
         if (this_hotend) {
             constexpr float distance_to_volume = std::numbers::pi_v<float> * std::pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2.f);
             constexpr float distance_to_volume_per_second = distance_to_volume * sample_frequency;
@@ -178,25 +152,25 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
             const int32_t e_pos_diff = e_position - last_e_position;
             last_e_position = e_position;
 
-            work_pid[ee].Kc = e_pos_diff * planner.mm_per_step[E_AXIS] * distance_to_volume_per_second * (temp_hotend[ee].target - ambient_temp) * PID_PARAM(Kc, ee);
+            work_pid.Kc = e_pos_diff * planner.mm_per_step[E_AXIS] * distance_to_volume_per_second * (temp_hotend[ee].target - ambient_temp) * PID_PARAM(Kc, ee);
             if (extrusion_scaling_enabled) {
-                pid_output += work_pid[ee].Kc;
+                pid_output += work_pid.Kc;
     #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-                feed_forward += work_pid[ee].Kc;
+                feed_forward += work_pid.Kc;
     #endif
             }
         }
 #endif // PID_EXTRUSION_SCALING
 
         // Sum error only if it has effect on output value
-        if (!((((pid_output + work_pid[ee].Ki) < 0) && (pid_error < 0))
-                || (((pid_output + work_pid[ee].Ki) > PID_MAX) && (pid_error > 0)))) {
-            temp_iState[ee] += pid_error;
+        if (!((((pid_output + work_pid.Ki) < 0) && (pid_error < 0))
+                || (((pid_output + work_pid.Ki) > PID_MAX) && (pid_error > 0)))) {
+            temp_iState += pid_error;
         }
-        work_pid[ee].Ki = PID_PARAM(Ki, ee) * temp_iState[ee];
-        pid_output += work_pid[ee].Ki;
+        work_pid.Ki = PID_PARAM(Ki, ee) * temp_iState;
+        pid_output += work_pid.Ki;
 
-        temp_dState[ee] = pid_error;
+        temp_dState = pid_error;
         LIMIT(pid_output, 0, PID_MAX);
     }
 
@@ -210,12 +184,12 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
         SERIAL_ECHOPAIR(
             " target ", expected_temp,
             " fTerm ", feed_forward_debug,
-            MSG_PID_DEBUG_PTERM, work_pid[ee].Kp,
-            MSG_PID_DEBUG_ITERM, work_pid[ee].Ki,
-            MSG_PID_DEBUG_DTERM, work_pid[ee].Kd
+            MSG_PID_DEBUG_PTERM, work_pid.Kp,
+            MSG_PID_DEBUG_ITERM, work_pid.Ki,
+            MSG_PID_DEBUG_DTERM, work_pid.Kd
     #if ENABLED(PID_EXTRUSION_SCALING)
             ,
-            MSG_PID_DEBUG_CTERM, work_pid[ee].Kc
+            MSG_PID_DEBUG_CTERM, work_pid.Kc
     #endif
         );
         SERIAL_EOL();

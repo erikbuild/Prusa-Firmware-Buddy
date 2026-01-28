@@ -45,15 +45,6 @@
 #include <module/temperature/temp_defines.hpp>
 #include <module/temperature/thermal_runaway.hpp>
 
-// PID storage
-typedef struct { float Kp, Ki, Kd;     } PID_t;
-typedef struct { float Kp, Ki, Kd, Kc; } PIDC_t;
-#if ENABLED(PID_EXTRUSION_SCALING)
-  typedef PIDC_t hotend_pid_t;
-#else
-  typedef PID_t hotend_pid_t;
-#endif
-
 #define DUMMY_PID_VALUE 3000.0f
 
 #if ENABLED(PIDTEMP)
@@ -113,11 +104,6 @@ enum ADCSensorState : char {
   SensorsReady, // Temperatures ready. Delay the next round of readings to let ADC pins settle.
   StartupDelay  // Startup, delay initial temp reading a tiny bit so the hardware can settle
 };
-
-// Minimum number of Temperature::ISR loops between sensor readings.
-// Multiplied by 16 (OVERSAMPLENR) to obtain the total time to
-// get all oversampled sensor readings
-#define MIN_ADC_ISR_LOOPS 10
 
 #define ACTUAL_ADC_SAMPLES _MAX(int(MIN_ADC_ISR_LOOPS), int(SensorsReady))
 
