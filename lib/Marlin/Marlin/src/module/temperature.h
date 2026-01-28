@@ -706,6 +706,11 @@ public:
       static bool saneTempReadingHotend(const uint8_t){return true;}
     #endif
 
+    
+    static void _temp_error(const heater_ind_t e, PGM_P const serial_msg, PGM_P const lcd_msg);
+    static void min_temp_error(const heater_ind_t e);
+    static void max_temp_error(const heater_ind_t e);
+
   private:
     static void set_current_temp_raw();
     static void updateTemperaturesFromRawValues();
@@ -727,10 +732,6 @@ public:
     #if ENABLED(PIDTEMPHEATBREAK)
       static float get_pid_output_heatbreak();
     #endif
-
-    static void _temp_error(const heater_ind_t e, PGM_P const serial_msg, PGM_P const lcd_msg);
-    static void min_temp_error(const heater_ind_t e);
-    static void max_temp_error(const heater_ind_t e);
 
     #define HAS_THERMAL_PROTECTION (ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED)
 
