@@ -6,37 +6,35 @@
 #include <avr/pgmspace.h>
 
 float marlin_temptable_lookup(MarlinTempTable temp_table, int16_t raw) {
-    const auto tt = temp_table.data();
-    const auto len = temp_table.size();
+    const auto TBL = temp_table.data();
+    const auto LEN = temp_table.size();
 
-    // Ugly macro stolen from temperature.cpp
-//   One day, we want to get rid of it, but it's still used on several places
-/**
- * Bisect search for the range of the 'raw' value, then interpolate
- * proportionally between the under and over values.
- */
-#define SCAN_THERMISTOR_TABLE(TBL, LEN)                                         \
-    do {                                                                        \
-        uint8_t l = 0, r = LEN, m;                                              \
-        for (;;) {                                                              \
-            m = (l + r) >> 1;                                                   \
-            if (!m)                                                             \
-                return short(pgm_read_word(&TBL[0][1]));                        \
-            if (m == l || m == r)                                               \
-                return short(pgm_read_word(&TBL[LEN - 1][1]));                  \
-            short v00 = pgm_read_word(&TBL[m - 1][0]),                          \
-                  v10 = pgm_read_word(&TBL[m - 0][0]);                          \
-            if (raw < v00)                                                      \
-                r = m;                                                          \
-            else if (raw > v10)                                                 \
-                l = m;                                                          \
-            else {                                                              \
-                const short v01 = short(pgm_read_word(&TBL[m - 1][1])),         \
-                            v11 = short(pgm_read_word(&TBL[m - 0][1]));         \
-                return v01 + (raw - v00) * float(v11 - v01) / float(v10 - v00); \
-            }                                                                   \
-        }                                                                       \
-    } while (0)
-
-    SCAN_THERMISTOR_TABLE(tt, len);
+    // Ugly code stolen from temperature.cpp
+    // One day, we want to get rid of it, but it's still used on several places
+    /**
+     * Bisect search for the range of the 'raw' value, then interpolate
+     * proportionally between the under and over values.
+     */
+    uint8_t l = 0,
+            r = LEN, m;
+    for (;;) {
+        m = (l + r) >> 1;
+        if (!m) {
+            return short(pgm_read_word(&TBL[0][1]));
+        }
+        if (m == l || m == r) {
+            return short(pgm_read_word(&TBL[LEN - 1][1]));
+        }
+        short v00 = pgm_read_word(&TBL[m - 1][0]),
+              v10 = pgm_read_word(&TBL[m - 0][0]);
+        if (raw < v00) {
+            r = m;
+        } else if (raw > v10) {
+            l = m;
+        } else {
+            const short v01 = short(pgm_read_word(&TBL[m - 1][1])),
+                        v11 = short(pgm_read_word(&TBL[m - 0][1]));
+            return v01 + (raw - v00) * float(v11 - v01) / float(v10 - v00);
+        }
+    }
 }
