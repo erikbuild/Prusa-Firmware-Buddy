@@ -265,10 +265,6 @@ volatile bool Temperature::temp_meas_ready = false;
   bool Temperature::extrusion_scaling_enabled = true;
 #endif
 
-#define TEMPDIR(N) ((HEATER_##N##_RAW_LO_TEMP) < (HEATER_##N##_RAW_HI_TEMP) ? 1 : -1)
-#define TEMPDIRHEATBREAK ((HEATBREAK_RAW_LO_TEMP) < (HEATBREAK_RAW_HI_TEMP) ? 1 : -1)
-#define TEMPDIRBOARD ((BOARD_RAW_LO_TEMP) < (BOARD_RAW_HI_TEMP) ? 1 : -1)
-
 struct temp_range_t {
   int16_t mintemp, maxtemp;
   MarlinTemptableRawMinMax raw;
@@ -1954,15 +1950,6 @@ void Temperature::readings_ready() {
     }
     #endif
   #endif
-
-  #if HAS_TEMP_BOARD
-    #if TEMPDIRBOARD < 0
-      #define BOARDCMP(A,B) ((A)<=(B))
-    #else
-      #define BOARDCMP(A,B) ((A)>=(B))
-    #endif
-  #endif
-
 }
 
 /**
