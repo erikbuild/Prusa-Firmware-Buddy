@@ -417,6 +417,13 @@ struct CurrentStore
     inline void set_nozzle_diameter(PhysicalToolIndex tool, float value) {
         set_nozzle_diameter(tool.to_raw(), value);
     }
+
+// Make sure we dont need migration from bitset<8> to bitset<16>, also that bitset size doesnt change in some gcc version
+#ifndef UNITTESTS // unittests are built on a different platform (64bit vs 32bit)
+    static_assert(sizeof(std::bitset<8>) == 4);
+#endif
+    static_assert(sizeof(std::bitset<8>) == sizeof(std::bitset<16>));
+
     /// Stores whether a nozzle is hardened (resistant to abrasive filament) or not. One bit per each hotend
     StoreItem<std::bitset<16>, defaults::nozzle_is_hardened, ItemFlag::hw_config, journal::hash("Nozzle is Hardened")> nozzle_is_hardened;
 
