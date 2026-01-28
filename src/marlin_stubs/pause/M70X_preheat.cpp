@@ -287,7 +287,7 @@ void filament_gcodes::preheat_to(FilamentType filament, std::variant<PhysicalToo
 #endif
 }
 
-void filament_gcodes::M1700_no_parser(const M1700Args &args) {
+void filament_gcodes::M1700_preheat(const M1700Args &args) {
     InProgress progress;
     const FSMResponseVariant response_variant = preheatTempUnKnown(PreheatData::make(args.mode, args.tool, args.preheat));
 

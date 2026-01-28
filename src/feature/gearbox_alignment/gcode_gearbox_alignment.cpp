@@ -102,7 +102,7 @@ private:
     void filament_unload() {
         const uint8_t target_extruder = active_extruder;
 
-        filament_gcodes::M702_no_parser(std::nullopt, Z_AXIS_LOAD_POS, RetAndCool_t::Return, target_extruder, false);
+        filament_gcodes::M702_unload(std::nullopt, Z_AXIS_LOAD_POS, RetAndCool_t::Return, target_extruder, false);
 
         // check if we returned from preheat or finished the unload
         if (PreheatStatus::ConsumeResult() == PreheatStatus::Result::DoneNoFilament) {

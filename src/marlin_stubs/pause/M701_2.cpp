@@ -67,7 +67,7 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     return res;
 }
 
-void filament_gcodes::M701_no_parser(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request) {
+void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request) {
     InProgress progress;
 
     const auto virtual_tool = VirtualToolIndex::from_raw(target_extruder);
@@ -131,7 +131,7 @@ void filament_gcodes::M701_no_parser(FilamentType filament_to_be_loaded, const s
     }
 }
 
-void filament_gcodes::M702_no_parser(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, bool ask_unloaded) {
+void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, bool ask_unloaded) {
     InProgress progress;
 
     const auto virtual_tool = VirtualToolIndex::from_raw(target_extruder);
@@ -219,7 +219,7 @@ void filament_gcodes::M70X_process_user_response(PreheatStatus::Result res, Virt
     PreheatStatus::SetResult(res);
 }
 
-void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_length, float z_min_pos, uint8_t target_extruder) {
+void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_length, float z_min_pos, uint8_t target_extruder) {
     const auto virtual_tool = VirtualToolIndex::from_raw(target_extruder);
 
     filament::set_type_to_load(FilamentType::none);
@@ -232,7 +232,7 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
 
     if constexpr (option::has_bowden) {
         config_store().set_filament_type(virtual_tool, FilamentType::none);
-        M701_no_parser(FilamentType::none, fast_load_length, z_min_pos, RetAndCool_t::Return, target_extruder, 0, std::nullopt, ResumePrint_t::No);
+        M701_load(FilamentType::none, fast_load_length, z_min_pos, RetAndCool_t::Return, target_extruder, 0, std::nullopt, ResumePrint_t::No);
         return;
     }
 
@@ -306,7 +306,7 @@ void filament_gcodes::M1701_no_parser(const std::optional<float> &fast_load_leng
     PreheatStatus::SetResult(PreheatStatus::Result::DoneHasFilament);
 }
 
-void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, VirtualToolIndex virtual_tool, RetAndCool_t preheat, AskFilament_t ask_filament, std::optional<Color> color_to_be_loaded) {
+void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, VirtualToolIndex virtual_tool, RetAndCool_t preheat, AskFilament_t ask_filament, std::optional<Color> color_to_be_loaded) {
     InProgress progress;
 
     FilamentType filament = config_store().get_filament_type(virtual_tool);
@@ -317,7 +317,7 @@ void filament_gcodes::M1600_no_parser(FilamentType filament_to_be_loaded, Virtua
 
     if (ask_filament == AskFilament_t::Always || (filament == FilamentType::none && ask_filament == AskFilament_t::IfUnknown)) {
         // need to save filament to check if operation went well, PreheatMode::unload for user info in header
-        M1700_no_parser(M1700Args {
+        M1700_preheat(M1700Args {
             .preheat = preheat,
             .mode = PreheatMode::unload,
             .tool = virtual_tool,

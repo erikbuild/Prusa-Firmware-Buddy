@@ -305,7 +305,7 @@ bool SelftestFSensors::initial_remove_filament() {
                 break;
 
             case Response::Unload:
-                filament_gcodes::M702_no_parser({}, Z_AXIS_LOAD_POS, RetAndCool_t::Neither, params_.tool, false);
+                filament_gcodes::M702_unload({}, Z_AXIS_LOAD_POS, RetAndCool_t::Neither, params_.tool, false);
                 break;
 
             case Response::Abort:
