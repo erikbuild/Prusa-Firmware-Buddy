@@ -3,18 +3,10 @@
 
 #include <module/temperature.h>
 
-void thermal_runaway_protection(tr_state_machine_t &sm, const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc) {
-    if (heater_id >= HOTENDS) {
-        bsod("Not implemented"); // thermal protection is implemened only for BED+HOTENDS, not Heatbreaks etc
-    }
-
+void thermal_runaway_protection(tr_state_machine_t &sm, const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc, bool reset) {
 #if HEATER_IDLE_HANDLER
     // If the heater idle timeout expires, restart
-    if ((heater_id >= 0 && thermalManager.hotend_idle[heater_id].timed_out)
-    #if HAS_HEATED_BED
-        || (heater_id < 0 && thermalManager.bed_idle.timed_out)
-    #endif
-    ) {
+    if (reset) {
         sm.state = TRInactive;
         sm.tr_target_temperature = 0;
     } else
