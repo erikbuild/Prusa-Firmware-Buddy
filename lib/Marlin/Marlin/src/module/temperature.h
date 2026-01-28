@@ -225,11 +225,6 @@ typedef struct {
   inline bool elapsed() { return elapsed(millis()); }
 } heater_watch_t;
 
-// Temperature sensor read value ranges
-typedef struct { int16_t raw_min, raw_max; } raw_range_t;
-typedef struct { int16_t mintemp, maxtemp; } celsius_range_t;
-typedef struct { int16_t raw_min, raw_max, mintemp, maxtemp; } temp_range_t;
-
 #define THERMISTOR_ADC_RESOLUTION       1024           // 10-bit ADC .. shame to waste 12-bits of resolution on 32-bit
 #define THERMISTOR_ABS_ZERO_C           -273.15f       // bbbbrrrrr cold !
 #define THERMISTOR_RESISTANCE_NOMINAL_C 25.0f          // mmmmm comfortable
@@ -323,8 +318,6 @@ class Temperature {
       static uint32_t last_e_position;
       static bool extrusion_scaling_enabled;
     #endif
-
-    static StrongIndexArray<temp_range_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> temp_range;
 
     #if HAS_HEATED_BED
       #if WATCH_BED

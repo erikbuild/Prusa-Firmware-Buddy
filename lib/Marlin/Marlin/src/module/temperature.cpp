@@ -283,16 +283,42 @@ volatile bool Temperature::temp_meas_ready = false;
 #define TEMPDIRHEATBREAK ((HEATBREAK_RAW_LO_TEMP) < (HEATBREAK_RAW_HI_TEMP) ? 1 : -1)
 #define TEMPDIRBOARD ((BOARD_RAW_LO_TEMP) < (BOARD_RAW_HI_TEMP) ? 1 : -1)
 
-// Init mintemp and maxtemp with extreme values to prevent false errors during startup
-constexpr temp_range_t sensor_heater_0 { HEATER_0_RAW_LO_TEMP, HEATER_0_RAW_HI_TEMP, 0, 16383 },
-                        sensor_heater_1 { HEATER_1_RAW_LO_TEMP, HEATER_1_RAW_HI_TEMP, 0, 16383 },
-                        sensor_heater_2 { HEATER_2_RAW_LO_TEMP, HEATER_2_RAW_HI_TEMP, 0, 16383 },
-                        sensor_heater_3 { HEATER_3_RAW_LO_TEMP, HEATER_3_RAW_HI_TEMP, 0, 16383 },
-                        sensor_heater_4 { HEATER_4_RAW_LO_TEMP, HEATER_4_RAW_HI_TEMP, 0, 16383 },
-                        sensor_heater_5 { HEATER_5_RAW_LO_TEMP, HEATER_5_RAW_HI_TEMP, 0, 16383 };
+struct temp_range_t {
+  int16_t mintemp, maxtemp;
+  MarlinTemptableRawMinMax raw;
 
-StrongIndexArray<temp_range_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_range ARRAY_BY_HOTENDS(sensor_heater_0, sensor_heater_1, sensor_heater_2, sensor_heater_3, sensor_heater_4, sensor_heater_5);
+  temp_range_t(MarlinTempTable temptable, int16_t mintemp, int16_t maxtemp)
+    : mintemp(mintemp)
+    , maxtemp(maxtemp)
+    , raw(MarlinTemptableRawMinMax::compute(temptable, mintemp, maxtemp))
+    {}
+};
+
+#define TEMP_RANGE_INIT(i) temp_range_t(HEATER_ ## i ## _TEMPTABLE, HEATER_ ## i ## _MINTEMP, HEATER_ ## i ## _MAXTEMP)
+                        
+static StrongIndexArray<temp_range_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> temp_range {
+  #if HOTENDS > 0
+    TEMP_RANGE_INIT(0),
+  #endif
+  #if HOTENDS > 1
+    TEMP_RANGE_INIT(1),
+  #endif
+  #if HOTENDS > 2
+    TEMP_RANGE_INIT(2),
+  #endif
+  #if HOTENDS > 3
+    TEMP_RANGE_INIT(3),
+  #endif
+  #if HOTENDS > 4
+    TEMP_RANGE_INIT(4),
+  #endif
+  #if HOTENDS > 5
+    TEMP_RANGE_INIT(5),
+  #endif
+};
 static_assert(HOTENDS <= 6);
+
+#undef TEMP_RANGE_INIT
 
 #if HAS_AUTO_FAN
   millis_t Temperature::next_auto_fan_check_ms = 0;
@@ -1617,65 +1643,6 @@ void Temperature::init() {
   // Wait for temperature measurement to settle
   delay(250);
 
-  #define _TEMP_MIN_E(NR) do{ \
-    temp_range[NR].mintemp = HEATER_ ##NR## _MINTEMP; \
-    while (analog_to_celsius_hotend(temp_range[NR].raw_min, NR) < HEATER_ ##NR## _MINTEMP) \
-      temp_range[NR].raw_min += TEMPDIR(NR) * (OVERSAMPLENR); \
-  }while(0)
-  #define _TEMP_MAX_E(NR) do{ \
-    temp_range[NR].maxtemp = HEATER_ ##NR## _MAXTEMP; \
-    while (analog_to_celsius_hotend(temp_range[NR].raw_max, NR) > HEATER_ ##NR## _MAXTEMP) \
-      temp_range[NR].raw_max -= TEMPDIR(NR) * (OVERSAMPLENR); \
-  }while(0)
-
-  #ifdef HEATER_0_MINTEMP
-    _TEMP_MIN_E(0);
-  #endif
-  #ifdef HEATER_0_MAXTEMP
-    _TEMP_MAX_E(0);
-  #endif
-
-  #if HOTENDS > 1
-    #ifdef HEATER_1_MINTEMP
-      _TEMP_MIN_E(1);
-    #endif
-    #ifdef HEATER_1_MAXTEMP
-      _TEMP_MAX_E(1);
-    #endif
-    #if HOTENDS > 2
-      #ifdef HEATER_2_MINTEMP
-        _TEMP_MIN_E(2);
-      #endif
-      #ifdef HEATER_2_MAXTEMP
-        _TEMP_MAX_E(2);
-      #endif
-      #if HOTENDS > 3
-        #ifdef HEATER_3_MINTEMP
-          _TEMP_MIN_E(3);
-        #endif
-        #ifdef HEATER_3_MAXTEMP
-          _TEMP_MAX_E(3);
-        #endif
-        #if HOTENDS > 4
-          #ifdef HEATER_4_MINTEMP
-            _TEMP_MIN_E(4);
-          #endif
-          #ifdef HEATER_4_MAXTEMP
-            _TEMP_MAX_E(4);
-          #endif
-          #if HOTENDS > 5
-            #ifdef HEATER_5_MINTEMP
-              _TEMP_MIN_E(5);
-            #endif
-            #ifdef HEATER_5_MAXTEMP
-              _TEMP_MAX_E(5);
-            #endif
-          #endif // HOTENDS > 5
-        #endif // HOTENDS > 4
-      #endif // HOTENDS > 3
-    #endif // HOTENDS > 2
-  #endif // HOTENDS > 1
-
   #if HAS_HEATED_BED
     #ifdef BED_MINTEMP
       while (analog_to_celsius_bed(mintemp_raw_BED) < BED_MINTEMP) mintemp_raw_BED += TEMPDIR(BED) * (OVERSAMPLENR);
@@ -1969,52 +1936,25 @@ void Temperature::readings_ready() {
     temp_ambient.reset();
   #endif
 
-  static constexpr int8_t temp_dir[] = {
-      TEMPDIR(0)
-    #if HOTENDS > 1
-        , TEMPDIR(1)
-      #if HOTENDS > 2
-        , TEMPDIR(2)
-        #if HOTENDS > 3
-          , TEMPDIR(3)
-          #if HOTENDS > 4
-            , TEMPDIR(4)
-            #if HOTENDS > 5
-              , TEMPDIR(5)
-            #endif // HOTENDS > 5
-          #endif // HOTENDS > 4
-        #endif // HOTENDS > 3
-      #endif // HOTENDS > 2
-    #endif // HOTENDS > 1
-  };
+  for (auto tool : PhysicalToolIndex::all()) {
+    const auto e = tool.to_raw();
 
-  for (uint8_t e = 0; e < COUNT(temp_dir); e++) {
-    const int8_t tdir = temp_dir[e];
-    if (tdir) {
-      [[maybe_unused]] const int16_t rawtemp = temp_hotend[e].raw * tdir; // normal direction, +rawtemp, else -rawtemp
-      const bool heater_on = (temp_hotend[e].target > 0
-        #if ENABLED(PIDTEMP)
-          || temp_hotend[e].soft_pwm_amount > 0
-        #endif
-      );
-    #if HAS_TOOLCHANGER()
-      if (temp_hotend[e].celsius > temp_range[e].maxtemp) // Toolchanger doesn't report raw
-    #else
-      if (rawtemp > temp_range[e].raw_max * tdir)
-    #endif
-      {
-        max_temp_error((heater_ind_t)e);
-      }
-
-    #if HAS_TOOLCHANGER()
-      if (heater_on && temp_hotend[e].celsius < temp_range[e].mintemp) // Toolchanger doesn't report raw
-    #else
-      if (heater_on && rawtemp < temp_range[e].raw_min * tdir)
-    #endif
-      {
-            min_temp_error((heater_ind_t)e);
-      }
+    const bool heater_on = (temp_hotend[e].target > 0
+      #if ENABLED(PIDTEMP)
+        || temp_hotend[e].soft_pwm_amount > 0
+      #endif
+    );
+  #if HAS_TOOLCHANGER()
+    // Toolchanger doesn't report raw
+    if (temp_hotend[e].celsius > temp_range[e].maxtemp) {
+      max_temp_error((heater_ind_t)e);
     }
+    if (heater_on && temp_hotend[e].celsius < temp_range[e].mintemp) {
+      min_temp_error((heater_ind_t)e);
+    }
+  #else
+    temp_range[e].raw.check_temperror(temp_hotend[e].raw, e, heater_on);
+  #endif
   }
 
   #if HAS_HEATED_BED
