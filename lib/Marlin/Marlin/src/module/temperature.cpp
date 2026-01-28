@@ -1368,7 +1368,7 @@ void Temperature::manage_heater() {
 
     #if ENABLED(THERMAL_PROTECTION_HOTENDS)
       // Check for thermal runaway
-      thermal_runaway_protection(tr_state_machine[e], temp_hotend[e].celsius, temp_hotend[e].target, (heater_ind_t)e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS, thermalManager.hotend_idle[e].timed_out);
+      thermal_runaway_hotends[e].step(temp_hotend[e].celsius, temp_hotend[e].target, (heater_ind_t)e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS, thermalManager.hotend_idle[e].timed_out);
     #endif
 
       {
@@ -1441,7 +1441,7 @@ void Temperature::manage_heater() {
       #endif
 
       #if HAS_THERMALLY_PROTECTED_BED
-        thermal_runaway_protection(tr_state_machine_bed, temp_bed.celsius, temp_bed.target, H_BED, THERMAL_PROTECTION_BED_PERIOD, THERMAL_PROTECTION_BED_HYSTERESIS, thermalManager.bed_idle.timed_out);
+        thermal_runaway_bed.step(temp_bed.celsius, temp_bed.target, H_BED, THERMAL_PROTECTION_BED_PERIOD, THERMAL_PROTECTION_BED_HYSTERESIS, thermalManager.bed_idle.timed_out);
       #endif
 
       #if HEATER_IDLE_HANDLER
@@ -2074,10 +2074,10 @@ void Temperature::init() {
 #if HAS_THERMAL_PROTECTION
 
   #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-    tr_state_machine_t Temperature::tr_state_machine[HOTENDS];
+    ThermalRunaway Temperature::thermal_runaway_hotends[HOTENDS];
   #endif
   #if HAS_THERMALLY_PROTECTED_BED
-    tr_state_machine_t Temperature::tr_state_machine_bed;
+    ThermalRunaway Temperature::thermal_runaway_bed;
   #endif
 
   #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)

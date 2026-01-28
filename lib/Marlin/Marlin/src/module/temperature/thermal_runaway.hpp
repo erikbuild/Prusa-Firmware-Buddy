@@ -5,17 +5,23 @@
 #include <cstdint>
 #include <module/temperature/temp_defines.hpp>
 
-enum TRState : uint8_t {
-    TRInactive,
-    TRFirstHeating,
-    TRStable,
-    TRRunaway,
-};
+class ThermalRunaway {
 
-struct tr_state_machine_t {
+public:
+    /// Manages the thermal runaway protection
+    /// Kills the printer if it detects a problem
+    void step(const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc, bool reset);
+
+private:
+    enum State : uint8_t {
+        TRInactive,
+        TRFirstHeating,
+        TRStable,
+        TRRunaway,
+    };
+
+private:
     millis_t timer = 0;
-    TRState state = TRInactive;
+    State state = TRInactive;
     float tr_target_temperature = 0.0;
 };
-
-void thermal_runaway_protection(tr_state_machine_t &state, const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc, bool reset);

@@ -738,10 +738,10 @@ public:
 
     #if HAS_THERMAL_PROTECTION
       #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-        static tr_state_machine_t tr_state_machine[HOTENDS];
+        static ThermalRunaway thermal_runaway_hotends[HOTENDS];
       #endif
       #if HAS_THERMALLY_PROTECTED_BED
-        static tr_state_machine_t tr_state_machine_bed;
+        static ThermalRunaway thermal_runaway_bed;
       #endif
 
       #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
