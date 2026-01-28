@@ -3,7 +3,7 @@
 
 #include <module/temperature.h>
 
-void ThermalRunaway::step(const float &current, const float &target, const heater_ind_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc, bool reset) {
+void ThermalRunaway::step(float current, float target, heater_ind_t heater_id, uint16_t period_seconds, uint16_t hysteresis_degc, bool reset) {
 #if HEATER_IDLE_HANDLER
     // If the heater idle timeout expires, restart
     if (reset) {
