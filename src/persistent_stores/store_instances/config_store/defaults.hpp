@@ -32,50 +32,6 @@ namespace config_store_ns {
 // Holds default constants so they can be referenced by store item. Placing these constants in another header where it's more meaningful is welcome. These defaults could be passed directly as template parameter to store items from gcc 11 onwards (and store items would accept them as value instead of as a const ref).
 namespace defaults {
     // default values for variables that have distinct requirements
-    inline constexpr float pid_nozzle_p {
-#ifdef DEFAULT_Kp
-        DEFAULT_Kp
-#else
-        0.0f
-#endif
-    };
-    inline constexpr float pid_nozzle_i {
-#ifdef DEFAULT_Ki
-        scalePID_i(DEFAULT_Ki)
-#else
-        0.0f
-#endif
-    };
-    inline constexpr float pid_nozzle_d {
-#ifdef DEFAULT_Kd
-        scalePID_d(DEFAULT_Kd)
-#else
-        0.0f
-#endif
-    };
-
-    inline constexpr float pid_bed_p {
-#ifdef DEFAULT_bedKp
-        DEFAULT_bedKp
-#else
-        0.0f
-#endif
-    };
-    inline constexpr float pid_bed_i {
-#ifdef DEFAULT_bedKi
-        scalePID_i(DEFAULT_bedKi)
-#else
-        0.0f
-#endif
-    };
-    inline constexpr float pid_bed_d {
-#ifdef DEFAULT_bedKd
-        scalePID_d(DEFAULT_bedKd)
-#else
-        0.0f
-#endif
-    };
-
     inline constexpr TestResult test_result_unknown { TestResult_Unknown };
 
     inline constexpr std::array<char, lan_hostname_max_len + 1> net_hostname { LAN_HOSTNAME_DEF };

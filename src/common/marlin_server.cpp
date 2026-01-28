@@ -1190,15 +1190,15 @@ static void settings_load() {
     probe_offset.z = SteelSheets::GetZOffset();
 #endif
 #if ENABLED(PIDTEMPBED)
-    Temperature::temp_bed.pid.Kp = config_store().pid_bed_p.get();
-    Temperature::temp_bed.pid.Ki = config_store().pid_bed_i.get();
-    Temperature::temp_bed.pid.Kd = config_store().pid_bed_d.get();
+    Temperature::temp_bed.pid.Kp = DEFAULT_bedKp;
+    Temperature::temp_bed.pid.Ki = scalePID_i(DEFAULT_bedKi);
+    Temperature::temp_bed.pid.Kd = scalePID_d(DEFAULT_bedKd);
 #endif
 #if ENABLED(PIDTEMP)
     for (auto tool : PhysicalToolIndex::all()) {
-        Temperature::temp_hotend[tool].pid.Kp = config_store().pid_nozzle_p.get();
-        Temperature::temp_hotend[tool].pid.Ki = config_store().pid_nozzle_i.get();
-        Temperature::temp_hotend[tool].pid.Kd = config_store().pid_nozzle_d.get();
+        Temperature::temp_hotend[tool].pid.Kp = DEFAULT_Kp;
+        Temperature::temp_hotend[tool].pid.Ki = scalePID_i(DEFAULT_Ki);
+        Temperature::temp_hotend[tool].pid.Kd = scalePID_d(DEFAULT_Kd);
     }
     thermalManager.updatePID();
 #endif

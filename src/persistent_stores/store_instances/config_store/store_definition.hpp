@@ -183,16 +183,6 @@ struct CurrentStore
     /// Bitfield of enabled toolhead filament sensors
     StoreItem<uint8_t, 0xff, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Side FSensors enabled")> fsensor_extruder_enabled_bits;
 
-    // nozzle PID variables
-    StoreItem<float, defaults::pid_nozzle_p, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Nozzle P")> pid_nozzle_p;
-    StoreItem<float, defaults::pid_nozzle_i, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Nozzle I")> pid_nozzle_i;
-    StoreItem<float, defaults::pid_nozzle_d, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Nozzle D")> pid_nozzle_d;
-
-    // bed PID variables
-    StoreItem<float, defaults::pid_bed_p, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed P")> pid_bed_p;
-    StoreItem<float, defaults::pid_bed_i, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed I")> pid_bed_i;
-    StoreItem<float, defaults::pid_bed_d, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed D")> pid_bed_d;
-
     // LAN settings
     // lan_flag & 1 -> On = 0/off = 1, lan_flag & 2 -> dhcp = 0/static = 1
     StoreItem<uint8_t, 0, ItemFlag::network, journal::hash("LAN Flag")> lan_flag;
@@ -955,6 +945,18 @@ struct DeprecatedStore
     StoreItem<int32_t, defaults::extruder_fs_ref_nins_value, journal::hash("Extruder FS Ref Value 5")> extruder_fs_ref_nins_value_5;
     StoreItem<int32_t, defaults::extruder_fs_ref_ins_value, journal::hash("Extruder FS INS Ref Value 5")> extruder_fs_ref_ins_value_5;
 #endif
+
+    /*
+        // nozzle PID variables
+        StoreItem<float, defaults::pid_nozzle_p, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Nozzle P")> pid_nozzle_p;
+        StoreItem<float, defaults::pid_nozzle_i, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Nozzle I")> pid_nozzle_i;
+        StoreItem<float, defaults::pid_nozzle_d, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Nozzle D")> pid_nozzle_d;
+
+        // bed PID variables
+        StoreItem<float, defaults::pid_bed_p, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed P")> pid_bed_p;
+        StoreItem<float, defaults::pid_bed_i, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed I")> pid_bed_i;
+        StoreItem<float, defaults::pid_bed_d, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed D")> pid_bed_d;
+        */
 };
 
 } // namespace config_store_ns
