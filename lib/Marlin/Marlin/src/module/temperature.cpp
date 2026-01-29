@@ -665,7 +665,7 @@ void Temperature::manage_heater() {
         // Make sure temperature is increasing
         if (watch_hotend[e].next_ms && ELAPSED(ms, watch_hotend[e].next_ms)) { // Time to check this extruder?
           if (degHotend(e) < watch_hotend[e].target)                           // Failed to increase enough?
-            _temp_error((heater_ind_t)e, PSTR(MSG_T_HEATING_FAILED), GET_TEXT(MSG_HEATING_FAILED_LCD));
+            fatal_error(ErrCode::ERR_TEMPERATURE_HOTEND_PREHEAT_ERROR);
           else                                                                 // Start again if the target is still far off
             start_watching_hotend(e);
         }
@@ -691,7 +691,7 @@ void Temperature::manage_heater() {
       // Make sure temperature is increasing
       if (watch_bed.elapsed(ms)) {        // Time to check the bed?
         if (degBed() < watch_bed.target)                                // Failed to increase enough?
-          _temp_error(H_BED, PSTR(MSG_T_HEATING_FAILED), GET_TEXT(MSG_HEATING_FAILED_LCD_BED));
+          fatal_error(ErrCode::ERR_TEMPERATURE_BED_PREHEAT_ERROR);
         else                                                            // Start again if the target is still far off
           start_watching_bed();
       }

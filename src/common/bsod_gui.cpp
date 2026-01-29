@@ -142,8 +142,6 @@ extern PRIVILEGED_DATA TCB_t *volatile pxCurrentTCB;
     /// TODO share these strings (saves ~100 B of binary size)
     if (strcmp("Emergency stop (M112)", error) == 0) {
         fatal_error(ErrCode::ERR_SYSTEM_EMERGENCY_STOP);
-    } else if (strcmp(MSG_HEATING_FAILED_LCD, error) == 0) {
-        fatal_error(ErrCode::ERR_TEMPERATURE_HOTEND_PREHEAT_ERROR);
     } else if (strcmp(MSG_THERMAL_RUNAWAY, error) == 0) {
         fatal_error(ErrCode::ERR_TEMPERATURE_HOTEND_THERMAL_RUNAWAY);
     } else if (strcmp(MSG_ERR_MAXTEMP, error) == 0) {
@@ -151,8 +149,6 @@ extern PRIVILEGED_DATA TCB_t *volatile pxCurrentTCB;
     } else if (strcmp(MSG_ERR_MINTEMP, error) == 0) {
         fatal_error(ErrCode::ERR_TEMPERATURE_HOTEND_MINTEMP_ERROR);
 #if !PRINTER_IS_PRUSA_XL()
-    } else if (strcmp(MSG_HEATING_FAILED_LCD_BED, error) == 0) {
-        fatal_error(ErrCode::ERR_TEMPERATURE_BED_PREHEAT_ERROR);
     } else if (strcmp(MSG_THERMAL_RUNAWAY_BED, error) == 0) {
         fatal_error(ErrCode::ERR_TEMPERATURE_BED_THERMAL_RUNAWAY);
     } else if (strcmp(MSG_ERR_MAXTEMP_BED, error) == 0) {
