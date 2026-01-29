@@ -207,7 +207,13 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
 #endif // FAN_COUNT > 0
 
 #if WATCH_HOTENDS
-  heater_watch_t watch_hotend[HOTENDS];
+  static constexpr HeaterWatch::Config watch_hotend_config {
+    .temp_increase = WATCH_TEMP_INCREASE,
+    .period_s = WATCH_TEMP_PERIOD,
+    .min_temp_diff = WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1,
+  };
+
+  HeaterWatchWithConfig<watch_hotend_config> watch_hotend[HOTENDS];
 #endif
 
 #if HAS_TEMP_HEATBREAK
@@ -216,7 +222,15 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
   static MarlinTemptableRawMinMax minmaxtemp_raw_HEATBREAK;
 
   #if WATCH_HEATBREAK
-    heater_watch_t watch_heatbreak[HOTENDS];
+    static constexpr HeaterWatch::Config watch_heatbreak_config {
+      .temp_increase = -WATCH_HEATBREAK_TEMP_DECREASE,
+      .period_s = WATCH_HEATBREAK_TEMP_PERIOD,
+      .min_temp_diff = -HEATBREAK_MAXTEMP_OFFSET,
+      .watch_cooling_instead = true,
+    };
+
+
+    HeaterWatchWithConfig<watch_heatbreak_config> watch_heatbreak[HOTENDS];
   #endif
   millis_t Temperature::next_heatbreak_check_ms;
 
@@ -236,7 +250,13 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
   static MarlinTemptableRawMinMax minmaxtemp_raw_BED;
 
   #if WATCH_BED
-    heater_watch_t watch_bed;
+  static constexpr HeaterWatch::Config watch_bed_config {
+    .temp_increase = WATCH_BED_TEMP_INCREASE,
+    .period_s = WATCH_BED_TEMP_PERIOD,
+    .min_temp_diff = WATCH_BED_TEMP_INCREASE + TEMP_BED_HYSTERESIS + 1,
+  };
+
+  HeaterWatchWithConfig<watch_bed_config> watch_bed;
   #endif
   #if DISABLED(PIDTEMPBED)
     millis_t Temperature::next_bed_check_ms;
@@ -1189,12 +1209,7 @@ void Temperature::init() {
    */
   void Temperature::start_watching_hotend(const uint8_t E_NAME) {
     const uint8_t ee = HOTEND_INDEX;
-    if (degTargetHotend(ee) && degHotend(ee) < degTargetHotend(ee) - (WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1)) {
-      watch_hotend[ee].target = static_cast<int16_t>(degHotend(ee)) + WATCH_TEMP_INCREASE;
-      watch_hotend[ee].next_ms = millis() + (WATCH_TEMP_PERIOD) * 1000UL;
-    }
-    else
-      watch_hotend[ee].next_ms = 0;
+    watch_hotend[ee].reset(degHotend(ee), degTargetHotend(ee));
   }
 #endif
 
@@ -1205,12 +1220,7 @@ void Temperature::init() {
    * This is called when the temperature is set. (M140, M190)
    */
   void Temperature::start_watching_bed() {
-    if (degTargetBed() && degBed() < degTargetBed() - (WATCH_BED_TEMP_INCREASE + TEMP_BED_HYSTERESIS + 1)) {
-      watch_bed.target = static_cast<int16_t>(degBed()) + WATCH_BED_TEMP_INCREASE;
-      watch_bed.next_ms = millis() + (WATCH_BED_TEMP_PERIOD) * 1000UL;
-    }
-    else
-      watch_bed.next_ms = 0;
+    watch_bed.reset(degBed(), degTargetBed());
   }
 #endif
 
@@ -1222,16 +1232,7 @@ void Temperature::init() {
    */
   void Temperature::start_watching_heatbreak(const uint8_t E_NAME) {
     const uint8_t ee = HOTEND_INDEX;
-
-    // If the target temperature is set and the heatbreak is above the target + offset, keep watching the cooling
-    if (degTargetHeatbreak(ee) > 0 && degHeatbreak(ee) > degTargetHeatbreak(ee) + HEATBREAK_MAXTEMP_OFFSET) {
-      watch_heatbreak[ee].target = static_cast<int16_t>(degHeatbreak(ee)) - WATCH_HEATBREAK_TEMP_DECREASE;
-      watch_heatbreak[ee].next_ms = millis() + (WATCH_HEATBREAK_TEMP_PERIOD) * 1000UL;
-    }
-    else {
-      // We have reached the target temperature or the target temperature is not set -> stop watching
-      watch_heatbreak[ee].next_ms = 0;
-    }
+    watch_heatbreak[ee].reset(degHeatbreak(ee), degTargetHeatbreak(ee));
   }
 
 #endif
