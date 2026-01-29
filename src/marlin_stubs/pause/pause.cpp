@@ -272,6 +272,13 @@ bool Pause::should_park() {
         return option::has_human_interactions || !FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
     case Pause::LoadType::unload_from_gears:
         return false;
+    case Pause::LoadType::unload:
+#if HAS_AUTO_RETRACT()
+        if (auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(active_extruder))) {
+            return false;
+        }
+#endif
+        return true;
     default:
         return true;
     }
