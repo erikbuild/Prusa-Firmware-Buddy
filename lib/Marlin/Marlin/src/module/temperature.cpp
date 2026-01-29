@@ -728,6 +728,9 @@ void Temperature::manage_heater() {
         .fan_speed = fan_speed[0], // FIXME: Bit of a cockup if we have multiple hotends.
         .current_temp = temp_hotend[e].celsius,
         .target_temp = temp_hotend[e].target,
+      #if HEATER_IDLE_HANDLER
+        .reset_pid = hotend_idle[e].timed_out,
+      #endif
       #if ENABLED(PID_EXTRUSION_SCALING)
         .e_volume_delta = (extrusion_scaling_enabled && tool == current_tool) ? e_volume_delta : 0,
       #endif

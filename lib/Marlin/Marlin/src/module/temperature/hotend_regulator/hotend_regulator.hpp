@@ -19,6 +19,9 @@ struct HotendRegulatorArgs {
     /// Target temperature of the hotend, in °C
     int16_t target_temp;
 
+    /// If set, forcefully resets the PID
+    bool reset_pid = false;
+
 #if ENABLED(PID_EXTRUSION_SCALING)
     /// Delta of the E stepper, in some weird volumetric units
     float e_volume_delta;

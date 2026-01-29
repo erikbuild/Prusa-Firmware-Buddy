@@ -8,9 +8,6 @@ static_assert(ENABLED(PIDTEMP), "Not supported anymore");
 static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
 
 HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
-    // TODO: Get rid of these dependencies on thermalManager
-    auto &hotend_idle = thermalManager.hotend_idle;
-
     const uint8_t ee = args.hotend_index;
 
     const float pid_error = args.target_temp - args.current_temp;
@@ -18,12 +15,7 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
     float pid_output;
     float feed_forward = 0;
 
-    if (args.target_temp == 0
-        || pid_error < -(PID_FUNCTIONAL_RANGE)
-#if HEATER_IDLE_HANDLER
-        || hotend_idle[ee].timed_out
-#endif
-    ) {
+    if (args.target_temp == 0 || pid_error < -(PID_FUNCTIONAL_RANGE) || args.reset_pid) {
         pid_output = 0;
         pid_reset = true;
     } else if (pid_error > PID_FUNCTIONAL_RANGE) {

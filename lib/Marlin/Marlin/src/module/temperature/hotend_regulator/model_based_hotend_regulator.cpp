@@ -81,19 +81,12 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
 }
 
 HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
-    // TODO: Get rid of these dependencies on thermalManager
-    auto &hotend_idle = thermalManager.hotend_idle;
-
     const uint8_t ee = args.hotend_index;
 
     float pid_output;
     float feed_forward = 0;
 
-    if (args.target_temp == 0
-#if HEATER_IDLE_HANDLER
-        || hotend_idle[ee].timed_out
-#endif
-    ) {
+    if (args.target_temp == 0 || args.reset_pid) {
         pid_output = 0;
         pid_reset = true;
     } else {
