@@ -208,9 +208,6 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
 #if WATCH_HOTENDS
   heater_watch_t Temperature::watch_hotend[HOTENDS]; // = { { 0 } }
 #endif
-#if HEATER_IDLE_HANDLER
-  heater_idle_t Temperature::hotend_idle[HOTENDS]; // = { { 0 } }
-#endif
 
 #if HAS_TEMP_HEATBREAK
   StrongIndexArray<heatbreak_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_heatbreak;
@@ -242,9 +239,6 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
   #endif
   #if DISABLED(PIDTEMPBED)
     millis_t Temperature::next_bed_check_ms;
-  #endif
-  #if HEATER_IDLE_HANDLER
-    heater_idle_t Temperature::bed_idle; // = { 0 }
   #endif
 #endif // HAS_HEATED_BED
 
@@ -616,16 +610,12 @@ void Temperature::manage_heater() {
       if (degHotend(e) > temp_range[e].maxtemp)
         _temp_error((heater_ind_t)e, PSTR(MSG_T_THERMAL_RUNAWAY), GET_TEXT(MSG_THERMAL_RUNAWAY));
     #endif
-
-    #if HEATER_IDLE_HANDLER
-      hotend_idle[e].update(ms);
-    #endif
     
     update_temp_residency_hotend(e);
 
     #if ENABLED(THERMAL_PROTECTION_HOTENDS)
       // Check for thermal runaway
-      thermal_runaway_hotends[e].step(temp_hotend[e].celsius, temp_hotend[e].target, (heater_ind_t)e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS, thermalManager.hotend_idle[e].timed_out);
+      thermal_runaway_hotends[e].step(temp_hotend[e].celsius, temp_hotend[e].target, (heater_ind_t)e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS, false);
     #endif
 
     HotendRegulatorResult regulation_result {
@@ -639,9 +629,6 @@ void Temperature::manage_heater() {
         .fan_speed = fan_speed[0], // FIXME: Bit of a cockup if we have multiple hotends.
         .current_temp = temp_hotend[e].celsius,
         .target_temp = temp_hotend[e].target,
-      #if HEATER_IDLE_HANDLER
-        .reset_pid = hotend_idle[e].timed_out,
-      #endif
       #if ENABLED(PID_EXTRUSION_SCALING)
         .e_volume_delta = (extrusion_scaling_enabled && tool == current_tool) ? e_volume_delta : 0,
       #endif
@@ -654,9 +641,6 @@ void Temperature::manage_heater() {
     #endif
 
     #if WATCH_HOTENDS
-      if (hotend_idle[e].timed_out)
-        start_watching_hotend(e);
-      else
         // Make sure temperature is increasing
         if (watch_hotend[e].next_ms && ELAPSED(ms, watch_hotend[e].next_ms)) { // Time to check this extruder?
           if (degHotend(e) < watch_hotend[e].target)                           // Failed to increase enough?
@@ -700,23 +684,10 @@ void Temperature::manage_heater() {
         next_bed_check_ms = ms + 5000; // ms between checks in bang-bang control
       #endif
 
-      #if HEATER_IDLE_HANDLER
-        bed_idle.update(ms);
-      #endif
-
       #if HAS_THERMALLY_PROTECTED_BED
-        thermal_runaway_bed.step(temp_bed.celsius, temp_bed.target, H_BED, THERMAL_PROTECTION_BED_PERIOD, THERMAL_PROTECTION_BED_HYSTERESIS, thermalManager.bed_idle.timed_out);
+        thermal_runaway_bed.step(temp_bed.celsius, temp_bed.target, H_BED, THERMAL_PROTECTION_BED_PERIOD, THERMAL_PROTECTION_BED_HYSTERESIS, false);
       #endif
 
-      #if HEATER_IDLE_HANDLER
-        if (bed_idle.timed_out) {
-          temp_bed.soft_pwm_amount = 0;
-          #if DISABLED(PIDTEMPBED)
-            WRITE_HEATER_BED(LOW);
-          #endif
-        }
-        else
-      #endif
       {
         #if ENABLED(PIDTEMPBED)
           temp_bed.soft_pwm_amount = WITHIN(temp_bed.celsius, BED_MINTEMP, BED_MAXTEMP) ? (int)get_pid_output_bed() >> soft_pwm_bit_shift : 0;

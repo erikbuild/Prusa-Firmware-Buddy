@@ -180,16 +180,6 @@ struct ModularBedHeater: public HeaterInfo {
   typedef temp_info_t board_info_t;
 #endif
 
-// Heater idle handling
-typedef struct {
-  millis_t timeout_ms;
-  bool timed_out;
-  inline void update(const millis_t &ms) { if (!timed_out && timeout_ms && ELAPSED(ms, timeout_ms)) timed_out = true; }
-  inline void start(const millis_t &ms) { timeout_ms = millis() + ms; timed_out = false; }
-  inline void reset() { timeout_ms = 0; timed_out = false; }
-  inline void expire() { start(0); }
-} heater_idle_t;
-
 // Heater watch handling
 typedef struct {
   /**
@@ -275,13 +265,6 @@ class Temperature {
     inline static bool tooColdToExtrude(PhysicalToolIndex physical_tool) {
       return tooColdToExtrude(physical_tool.to_raw());
     }
-
-    #if HEATER_IDLE_HANDLER
-      static heater_idle_t hotend_idle[HOTENDS];
-      #if HAS_HEATED_BED
-        static heater_idle_t bed_idle;
-      #endif
-    #endif
 
     #if ENABLED(PID_EXTRUSION_SCALING)
       FORCE_INLINE static bool getExtrusionScalingEnabled() { return extrusion_scaling_enabled; }

@@ -4,13 +4,6 @@
 #include <module/temperature.h>
 
 void ThermalRunaway::step(float current, float target, heater_ind_t heater_id, uint16_t period_seconds, uint16_t hysteresis_degc, bool reset) {
-#if HEATER_IDLE_HANDLER
-    // If the heater idle timeout expires, restart
-    if (reset) {
-        state = TRInactive;
-        tr_target_temperature = 0;
-    } else
-#endif
     {
         // If the target temperature changes, restart
         if (tr_target_temperature != target) {
