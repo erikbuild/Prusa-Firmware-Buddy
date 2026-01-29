@@ -127,6 +127,7 @@ public:
         constexpr float sin45 = std::numbers::sqrt2_v<float> / 2;
         out.val[X_AXIS] = static_cast<int16_t>(sample.val[2] * cos45 + sample.val[1] * sin45);
         out.val[Y_AXIS] = static_cast<int16_t>(sample.val[2] * (-sin45) + sample.val[1] * cos45);
+        out.val[Z_AXIS] = sample.val[0];
 #elif PRINTER_IS_PRUSA_MK4() || PRINTER_IS_PRUSA_MK3_5()
         // In MK printers the world and motors align
         out = to_printer_coords(sample);
