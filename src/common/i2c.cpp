@@ -154,7 +154,7 @@ Result Mem_Write_16bit_Addr(I2C_HandleTypeDef &hi2c, uint16_t DevAddress, uint16
             result = HAL_I2C_Mem_Read(&hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
         }
         res = process_result(result);
-        if (res != Result::ok) {
+        if (res == Result::ok) {
             break;
         }
     }
