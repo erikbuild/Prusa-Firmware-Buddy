@@ -18,7 +18,6 @@ static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
 float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorArgs &args) {
     // TODO: Get rid of these dependencies on thermalManager
     auto &temp_hotend = thermalManager.temp_hotend;
-    auto &fan_speed = thermalManager.fan_speed;
 
     const uint8_t ee = args.hotend_index;
 
@@ -37,7 +36,7 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
         //! = 86% P(rated)
         constexpr float target_heater_pwm = PID_MAX * 0.8607f;
         const float temp_diff = deg_per_cycle * pid_max_inv
-            * (target_heater_pwm - steady_state_hotend(target_temp, fan_speed[0] * pid_max_inv));
+            * (target_heater_pwm - steady_state_hotend(target_temp, args.fan_speed * pid_max_inv));
         target_temp += temp_diff;
         if (delay > 1) {
             --delay;
@@ -54,7 +53,7 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
             state = Ramp::Down;
         }
         const float temp_diff = deg_per_cycle * pid_max_inv
-            * steady_state_hotend(target_temp, fan_speed[0] * pid_max_inv);
+            * steady_state_hotend(target_temp, args.fan_speed * pid_max_inv);
         target_temp -= temp_diff;
         if (delay > 1) {
             --delay;
@@ -83,7 +82,7 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
         } else {
             expected_temp = target_temp;
         }
-        hotend_pwm = steady_state_hotend(target_temp, fan_speed[0] * pid_max_inv);
+        hotend_pwm = steady_state_hotend(target_temp, args.fan_speed * pid_max_inv);
     }
     return hotend_pwm;
 }

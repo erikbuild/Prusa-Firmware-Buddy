@@ -13,7 +13,6 @@ static constexpr float sample_frequency = TEMP_TIMER_FREQUENCY / MIN_ADC_ISR_LOO
 HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
     // TODO: Get rid of these dependencies on thermalManager
     auto &temp_hotend = thermalManager.temp_hotend;
-    auto &fan_speed = thermalManager.fan_speed;
     auto &hotend_idle = thermalManager.hotend_idle;
 #if ENABLED(PID_EXTRUSION_SCALING)
     auto &last_e_position = thermalManager.last_e_position;
@@ -52,7 +51,7 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
 
     #if ENABLED(STEADY_STATE_HOTEND)
         static constexpr float pid_max_inv = 1.0f / PID_MAX;
-        feed_forward = steady_state_hotend(temp_hotend[ee].target, fan_speed[0] * pid_max_inv);
+        feed_forward = steady_state_hotend(temp_hotend[ee].target, args.fan_speed * pid_max_inv);
         pid_output += feed_forward;
     #endif
 #endif
