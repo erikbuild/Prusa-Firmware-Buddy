@@ -677,10 +677,6 @@ public:
       static float get_pid_output_bed();
     #endif
 
-    #if ENABLED(PIDTEMPHEATBREAK)
-      static float get_pid_output_heatbreak();
-    #endif
-
     #define HAS_THERMAL_PROTECTION (ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED)
 
     #if HAS_THERMAL_PROTECTION
