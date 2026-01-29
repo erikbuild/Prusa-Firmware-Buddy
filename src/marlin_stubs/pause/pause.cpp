@@ -949,14 +949,9 @@ void Pause::load_finalize_process(Response) {
             idle(true);
         }
 
-        switch (load_type) {
-        case Pause::LoadType::load:
-        case Pause::LoadType::autoload:
-        case Pause::LoadType::load_to_gears:
-        case Pause::LoadType::load_purge:
+        if (!marlin_server::is_printing()) {
+            // If not printing, park on the nozzle cleaner planchette
             mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
-        default:
-            break;
         }
     }
 #endif
