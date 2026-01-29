@@ -354,6 +354,7 @@ public:
 
     FORCE_INLINE static void step_generator_state_clear() {
         step_generator_state.initialized = false;
+        step_generator_state.first_step_done = false;
 
         // always drop buffered step/s as those can be processed also with an empty move queue
         step_generator_state.buffered_step.flags = 0;

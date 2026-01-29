@@ -270,6 +270,7 @@ struct step_generator_state_t {
     // to produce more step events with a mark right after each other.
     int8_t left_insert_start_of_move_segment;
 
+    bool first_step_done; // First step has been produced
     bool initialized;
 };
 

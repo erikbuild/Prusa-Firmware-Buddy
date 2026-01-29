@@ -513,8 +513,13 @@ static bool generate_next_step_event(step_event_i32_t &step_event, step_generato
             --step_state.left_insert_start_of_move_segment;
         }
 
-        if (step_state.previous_step_time == 0.) {
+        if (!step_state.first_step_done) {
+            // The first step event should be produced only once to initialize the step isr.
+            // We cannot rely on previous_step_time alone, as it is reset by move discarding events,
+            // but we can verify that such events happen only together
+            assert(step_state.previous_step_time == 0.);
             step_event.flags |= STEP_EVENT_FLAG_FIRST_STEP_EVENT;
+            step_state.first_step_done = true;
         }
 
         step_state.previous_step_time = step_time_absolute;
@@ -1277,7 +1282,11 @@ STEPPING_INLINE void trigger_first_step_event_after_specified_ticks(const uint32
     // Ensure we didn't overshoot the first step event, which should be always far away enough into
     // the future to account for scheduling overhead. This is normally ensured by the length of the
     // initial empty move.
-    assert(ticks_diff(ticks_us(), PreciseStepping::step_generator_state.initial_time) < static_cast<int32_t>(ticks));
+    int32_t ticks_start = ticks_diff(ticks_us(), static_cast<uint32_t>(PreciseStepping::step_generator_state.initial_time));
+    int32_t ticks_delay = ticks_start - static_cast<int32_t>(ticks);
+    if (ticks_delay > 0) {
+        log_warning(PreciseStepping, "first tick delayed by %ldus", ticks_delay);
+    }
 }
 
 STEPPING_INLINE void append_split_step_event(const split_step_event_t &split_step_event, step_event_u16_t *&next_step_event, uint16_t &next_step_event_queue_head) {
