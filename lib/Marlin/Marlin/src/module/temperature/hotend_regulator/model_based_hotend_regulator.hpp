@@ -16,7 +16,7 @@ public:
         const uint8_t e);
 
 private:
-    float get_model_output_hotend(float &last_target, float &expected, const uint8_t e);
+    float get_model_output_hotend(const uint8_t e);
 
     enum class Ramp : uint_least8_t {
         Up,

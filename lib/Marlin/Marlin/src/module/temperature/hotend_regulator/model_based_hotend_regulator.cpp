@@ -15,7 +15,7 @@ static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
 //! @param expected Expected measurable hotend temperature in this cycle
 //! @param E_NAME hotend index
 
-float ModelBasedHotendRegulator::get_model_output_hotend(float &last_target, float &expected, const uint8_t E_NAME) {
+float ModelBasedHotendRegulator::get_model_output_hotend(const uint8_t E_NAME) {
     // TODO: Get rid of these dependencies on thermalManager
     auto &temp_hotend = thermalManager.temp_hotend;
     auto &fan_speed = thermalManager.fan_speed;
@@ -24,10 +24,10 @@ float ModelBasedHotendRegulator::get_model_output_hotend(float &last_target, flo
 
     float hotend_pwm = 0;
 
-    if (temp_hotend[ee].target > (last_target + epsilon)) {
+    if (temp_hotend[ee].target > (target_temp + epsilon)) {
         if (state != Ramp::Up) {
             delay = transport_delay_cycles;
-            expected = last_target;
+            expected_temp = target_temp;
             state = Ramp::Up;
         }
         //! Target for less than full power, so regulator can catch
@@ -37,53 +37,53 @@ float ModelBasedHotendRegulator::get_model_output_hotend(float &last_target, flo
         //! = 86% P(rated)
         constexpr float target_heater_pwm = PID_MAX * 0.8607f;
         const float temp_diff = deg_per_cycle * pid_max_inv
-            * (target_heater_pwm - steady_state_hotend(last_target, fan_speed[0] * pid_max_inv));
-        last_target += temp_diff;
+            * (target_heater_pwm - steady_state_hotend(target_temp, fan_speed[0] * pid_max_inv));
+        target_temp += temp_diff;
         if (delay > 1) {
             --delay;
         }
-        expected += temp_diff / delay;
-        if (last_target > temp_hotend[ee].target) {
-            last_target = temp_hotend[ee].target;
+        expected_temp += temp_diff / delay;
+        if (target_temp > temp_hotend[ee].target) {
+            target_temp = temp_hotend[ee].target;
         }
         hotend_pwm = target_heater_pwm;
-    } else if (temp_hotend[ee].target < (last_target - epsilon)) {
+    } else if (temp_hotend[ee].target < (target_temp - epsilon)) {
         if (state != Ramp::Down) {
             delay = transport_delay_cycles;
-            expected = last_target;
+            expected_temp = target_temp;
             state = Ramp::Down;
         }
         const float temp_diff = deg_per_cycle * pid_max_inv
-            * steady_state_hotend(last_target, fan_speed[0] * pid_max_inv);
-        last_target -= temp_diff;
+            * steady_state_hotend(target_temp, fan_speed[0] * pid_max_inv);
+        target_temp -= temp_diff;
         if (delay > 1) {
             --delay;
         }
-        expected -= temp_diff / delay;
-        if (last_target < temp_hotend[ee].target) {
-            last_target = temp_hotend[ee].target;
+        expected_temp -= temp_diff / delay;
+        if (target_temp < temp_hotend[ee].target) {
+            target_temp = temp_hotend[ee].target;
         }
         hotend_pwm = 0;
     } else {
         state = Ramp::None;
-        last_target = temp_hotend[ee].target;
-        const float remaining = last_target - expected;
-        if (expected > (last_target + epsilon)) {
+        target_temp = temp_hotend[ee].target;
+        const float remaining = target_temp - expected_temp;
+        if (expected_temp > (target_temp + epsilon)) {
             float diff = remaining * transport_delay_cycles_inv;
             if (abs(diff) < epsilon) {
                 diff = -epsilon;
             }
-            expected += diff;
-        } else if (expected < (last_target - epsilon)) {
+            expected_temp += diff;
+        } else if (expected_temp < (target_temp - epsilon)) {
             float diff = remaining * transport_delay_cycles_inv;
             if (abs(diff) < epsilon) {
                 diff = epsilon;
             }
-            expected += diff;
+            expected_temp += diff;
         } else {
-            expected = last_target;
+            expected_temp = target_temp;
         }
-        hotend_pwm = steady_state_hotend(last_target, fan_speed[0] * pid_max_inv);
+        hotend_pwm = steady_state_hotend(target_temp, fan_speed[0] * pid_max_inv);
     }
     return hotend_pwm;
 }
@@ -128,7 +128,7 @@ float ModelBasedHotendRegulator::get_pid_output_hotend(
         const float
 #endif
             feed_forward
-            = get_model_output_hotend(target_temp, expected_temp, ee);
+            = get_model_output_hotend(ee);
 #if ENABLED(PID_DEBUG)
         feed_forward_debug = feed_forward;
 #endif
