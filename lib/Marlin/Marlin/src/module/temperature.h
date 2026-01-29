@@ -409,12 +409,6 @@ class Temperature {
       #endif
     }
 
-    #if WATCH_HOTENDS
-      static void start_watching_hotend(const uint8_t e=0);
-    #else
-      static inline void start_watching_hotend(const uint8_t=0) {}
-    #endif
-
     #if HAS_TEMP_HOTEND
       [[deprecated("Use the ToolIndex overload")]]
       static void setTargetHotend(const int16_t celsius, const uint8_t E_NAME);
@@ -474,12 +468,6 @@ class Temperature {
 
       #endif
 
-      #if WATCH_BED
-        static void start_watching_bed();
-      #else
-        static inline void start_watching_bed() {}
-      #endif
-
       static void setTargetBed(const int16_t celsius);
 
       /// @returns whether the bed has stabilized on the target temperature (or if the target temp is 0)
@@ -514,12 +502,6 @@ class Temperature {
         static void suspend_heatbreak_fan(millis_t ms);
       #endif
     #endif // HAS_TEMP_HEATBREAK
-
-    #if WATCH_HEATBREAK
-      static void start_watching_heatbreak(const uint8_t E_NAME);
-    #else
-      static inline void start_watching_heatbreak(const uint8_t) {}
-    #endif
 
     #if HAS_TEMP_HEATBREAK_CONTROL
       [[deprecated("Use the ToolIndex overload")]]

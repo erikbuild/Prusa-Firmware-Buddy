@@ -1186,42 +1186,6 @@ void Temperature::init() {
   updateTemperaturesFromRawValues();
 }
 
-#if WATCH_HOTENDS
-  /**
-   * Start Heating Sanity Check for hotends that are below
-   * their target temperature by a configurable margin.
-   * This is called when the temperature is set. (M104, M109)
-   */
-  void Temperature::start_watching_hotend(const uint8_t E_NAME) {
-    const uint8_t ee = HOTEND_INDEX;
-    watch_hotend[ee].reset(degHotend(ee), degTargetHotend(ee));
-  }
-#endif
-
-#if WATCH_BED
-  /**
-   * Start Heating Sanity Check for hotends that are below
-   * their target temperature by a configurable margin.
-   * This is called when the temperature is set. (M140, M190)
-   */
-  void Temperature::start_watching_bed() {
-    watch_bed.reset(degBed(), degTargetBed());
-  }
-#endif
-
-#if WATCH_HEATBREAK
-  /**
-   * Start cooling check for heatbreak that is above
-   * its target temperature by a configurable margin.
-   * This is called when the target temperature for heatbreak is set. 
-   */
-  void Temperature::start_watching_heatbreak(const uint8_t E_NAME) {
-    const uint8_t ee = HOTEND_INDEX;
-    watch_heatbreak[ee].reset(degHeatbreak(ee), degTargetHeatbreak(ee));
-  }
-
-#endif
-
 #if HAS_THERMAL_PROTECTION
 
   #if ENABLED(THERMAL_PROTECTION_HOTENDS)
@@ -1870,7 +1834,9 @@ void Temperature::isr() {
         marlin_server::call_manually::set_temp_to_display(new_temp, ee);
     #endif
 
-        start_watching_hotend(ee);
+    #if WATCH_HOTENDS
+        watch_hotend[ee].reset(degHotend(ee), new_temp);
+    #endif
     #if HAS_TOOLCHANGER()
         prusa_toolchanger.getTool(ee).set_hotend_target_temp(temp_hotend[ee].target);
     #endif
@@ -2011,7 +1977,9 @@ void Temperature::isr() {
         buddy::puppies::ac_controller.set_bed_target_temp(temp_bed.target);
     #endif
 
-        start_watching_bed();
+    #if WATCH_BED
+        watch_bed.reset(degBed(), temp_bed.target);
+    #endif
     }
 
 
@@ -2210,7 +2178,9 @@ void Temperature::setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME
   #if HAS_TOOLCHANGER()
     prusa_toolchanger.getTool(HOTEND_INDEX).set_heatbreak_target_temp(celsius);
   #endif
-  start_watching_heatbreak(HOTEND_INDEX);
+  #if WATCH_HEATBREAK
+    watch_heatbreak[HOTEND_INDEX].reset(degHeatbreak(HOTEND_INDEX), degTargetHeatbreak(HOTEND_INDEX));
+  #endif
 }
 #endif
 
