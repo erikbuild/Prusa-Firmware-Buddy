@@ -421,6 +421,7 @@ public:
      * @param extruder
      * @return Extruder&
      */
+    [[deprecated("Use the ToolIndex overload")]]
     Hotend &hotend(uint8_t hotend) {
         if (hotend == marlin_server::CURRENT_TOOL) {
             return active_hotend();
@@ -428,6 +429,10 @@ public:
             assert(hotend < hotends.max_size());
             return hotends[hotend];
         }
+    }
+
+    inline Hotend &hotend(PhysicalToolIndex physical_tool) {
+        return hotend(physical_tool.to_raw());
     }
 
     struct JobInfo {
