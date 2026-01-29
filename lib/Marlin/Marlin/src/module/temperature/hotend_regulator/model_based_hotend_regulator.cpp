@@ -16,8 +16,6 @@ static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
 //! @param E_NAME hotend index
 
 float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorArgs &args) {
-    float hotend_pwm = 0;
-
     if (args.target_temp > (target_temp + epsilon)) {
         if (state != Ramp::Up) {
             delay = transport_delay_cycles;
@@ -40,7 +38,8 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
         if (target_temp > args.target_temp) {
             target_temp = args.target_temp;
         }
-        hotend_pwm = target_heater_pwm;
+        return target_heater_pwm;
+
     } else if (args.target_temp < (target_temp - epsilon)) {
         if (state != Ramp::Down) {
             delay = transport_delay_cycles;
@@ -57,7 +56,8 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
         if (target_temp < args.target_temp) {
             target_temp = args.target_temp;
         }
-        hotend_pwm = 0;
+        return 0;
+
     } else {
         state = Ramp::None;
         target_temp = args.target_temp;
@@ -77,9 +77,8 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
         } else {
             expected_temp = target_temp;
         }
-        hotend_pwm = steady_state_hotend(target_temp, args.fan_speed * pid_max_inv);
+        return steady_state_hotend(target_temp, args.fan_speed * pid_max_inv);
     }
-    return hotend_pwm;
 }
 
 HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
