@@ -631,22 +631,6 @@ public:
 
     #endif
 
-    #if HEATER_IDLE_HANDLER
-
-      static void reset_heater_idle_timer(const uint8_t E_NAME) {
-        hotend_idle[HOTEND_INDEX].reset();
-        start_watching_hotend(HOTEND_INDEX);
-      }
-
-      #if HAS_HEATED_BED
-        static void reset_bed_idle_timer() {
-          bed_idle.reset();
-          start_watching_bed();
-        }
-      #endif
-
-    #endif // HEATER_IDLE_HANDLER
-
     #if HAS_TEMP_SENSOR
       static void print_heater_states(const uint8_t target_extruder);
       #if ENABLED(AUTO_REPORT_TEMPERATURES)
