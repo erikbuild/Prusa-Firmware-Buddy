@@ -2,7 +2,6 @@
 #include "model_based_hotend_regulator.hpp"
 
 #include <module/temperature/steady_state_hotend.hpp>
-#include <module/stepper.h>
 #include <module/temperature.h>
 
 static_assert(ENABLED(PIDTEMP), "Not supported anymore");
@@ -84,10 +83,6 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
 HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
     // TODO: Get rid of these dependencies on thermalManager
     auto &hotend_idle = thermalManager.hotend_idle;
-#if ENABLED(PID_EXTRUSION_SCALING)
-    auto &last_e_position = thermalManager.last_e_position;
-    const auto extrusion_scaling_enabled = thermalManager.extrusion_scaling_enabled;
-#endif
 
     const uint8_t ee = args.hotend_index;
 
@@ -118,27 +113,11 @@ HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const Hot
         pid_output = feed_forward + work_pid.Kp + work_pid.Kd + float(MIN_POWER);
 
 #if ENABLED(PID_EXTRUSION_SCALING)
-    #if HOTENDS == 1
-        constexpr bool this_hotend = true;
-    #else
-        const bool this_hotend = (ee == active_extruder);
-    #endif
-        work_pid.Kc = 0;
-        if (this_hotend) {
-            constexpr float distance_to_volume = std::numbers::pi_v<float> * std::pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2.f);
-            constexpr float distance_to_volume_per_second = distance_to_volume * sample_frequency;
-            uint32_t e_position = stepper.position(E_AXIS);
-            const int32_t e_pos_diff = e_position - last_e_position;
-            last_e_position = e_position;
-
-            work_pid.Kc = e_pos_diff * planner.mm_per_step[E_AXIS] * distance_to_volume_per_second * (args.target_temp - ambient_temp) * PID_PARAM(Kc, ee);
-            if (extrusion_scaling_enabled) {
-                pid_output += work_pid.Kc;
+        work_pid.Kc = args.e_volume_delta * (args.target_temp - ambient_temp) * PID_PARAM(Kc, ee);
+        pid_output += work_pid.Kc;
     #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-                feed_forward += work_pid.Kc;
+        feed_forward += work_pid.Kc;
     #endif
-            }
-        }
 #endif // PID_EXTRUSION_SCALING
 
         // Sum error only if it has effect on output value

@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include <inc/MarlinConfig.h>
+
 struct HotendRegulatorArgs {
     /// Hotend index
     uint8_t hotend_index;
@@ -16,6 +18,11 @@ struct HotendRegulatorArgs {
 
     /// Target temperature of the hotend, in °C
     int16_t target_temp;
+
+#if ENABLED(PID_EXTRUSION_SCALING)
+    /// Delta of the E stepper, in some weird volumetric units
+    float e_volume_delta;
+#endif
 };
 
 struct HotendRegulatorResult {

@@ -687,7 +687,20 @@ void Temperature::manage_heater() {
 
   millis_t ms = millis();
 
+  #if ENABLED(PID_EXTRUSION_SCALING)
+    uint32_t e_position = stepper.position(E_AXIS);
+    static constexpr float sample_frequency = TEMP_TIMER_FREQUENCY / MIN_ADC_ISR_LOOPS / OVERSAMPLENR;
+    constexpr float distance_to_volume = std::numbers::pi_v<float> * std::pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2.f);
+    constexpr float distance_to_volume_per_second = distance_to_volume * sample_frequency;
+    const float e_volume_delta = (e_position - last_e_position) * planner.mm_per_step[E_AXIS] * distance_to_volume_per_second;
+    last_e_position = e_position;
+  #endif
+
+  const auto current_tool = PhysicalToolIndex::currently_selected();
+
   for (int8_t e = 0; e < HOTENDS; e++) {
+    const auto tool = PhysicalToolIndex::from_raw_notool(e);
+
     #if ENABLED(THERMAL_PROTECTION_HOTENDS)
       if (degHotend(e) > temp_range[e].maxtemp)
         _temp_error((heater_ind_t)e, PSTR(MSG_T_THERMAL_RUNAWAY), GET_TEXT(MSG_THERMAL_RUNAWAY));
@@ -715,6 +728,9 @@ void Temperature::manage_heater() {
         .fan_speed = fan_speed[0], // FIXME: Bit of a cockup if we have multiple hotends.
         .current_temp = temp_hotend[e].celsius,
         .target_temp = temp_hotend[e].target,
+      #if ENABLED(PID_EXTRUSION_SCALING)
+        .e_volume_delta = (extrusion_scaling_enabled && tool == current_tool) ? e_volume_delta : 0,
+      #endif
       });
     }
     

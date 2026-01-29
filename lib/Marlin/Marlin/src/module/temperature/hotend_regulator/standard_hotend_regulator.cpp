@@ -3,20 +3,13 @@
 
 #include <module/temperature.h>
 #include <module/temperature/steady_state_hotend.hpp>
-#include <module/stepper.h>
 
 static_assert(ENABLED(PIDTEMP), "Not supported anymore");
 static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
 
-static constexpr float sample_frequency = TEMP_TIMER_FREQUENCY / MIN_ADC_ISR_LOOPS / OVERSAMPLENR;
-
 HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
     // TODO: Get rid of these dependencies on thermalManager
     auto &hotend_idle = thermalManager.hotend_idle;
-#if ENABLED(PID_EXTRUSION_SCALING)
-    auto &last_e_position = thermalManager.last_e_position;
-    const auto extrusion_scaling_enabled = thermalManager.extrusion_scaling_enabled;
-#endif
 
     const uint8_t ee = args.hotend_index;
 
@@ -56,24 +49,8 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
 #endif
 
 #if ENABLED(PID_EXTRUSION_SCALING)
-    #if HOTENDS == 1
-        constexpr bool this_hotend = true;
-    #else
-        const bool this_hotend = (ee == active_extruder);
-    #endif
-        work_pid.Kc = 0;
-        if (this_hotend) {
-            constexpr float distance_to_volume = std::numbers::pi_v<float> * std::pow(DEFAULT_NOMINAL_FILAMENT_DIA / 2, 2.f);
-            constexpr float distance_to_volume_per_second = distance_to_volume * sample_frequency;
-            uint32_t e_position = stepper.position(E_AXIS);
-            const int32_t e_pos_diff = e_position - last_e_position;
-            last_e_position = e_position;
-
-            work_pid.Kc = e_pos_diff * planner.mm_per_step[E_AXIS] * distance_to_volume_per_second * (args.current_temp - ambient_temp) * PID_PARAM(Kc, ee);
-            if (extrusion_scaling_enabled) {
-                pid_output += work_pid.Kc;
-            }
-        }
+        work_pid.Kc = args.e_volume_delta * (args.current_temp - ambient_temp) * PID_PARAM(Kc, ee);
+        pid_output += work_pid.Kc;
 #endif // PID_EXTRUSION_SCALING
 
         // Sum error only if it has effect on output value before D term is applied
