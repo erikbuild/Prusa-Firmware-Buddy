@@ -122,6 +122,7 @@ void PrusaGcodeSuite::M1701() {
  *   - `U2` - always ask
  * - `S"Filament"` - change to filament by name, for example `S"PLA"`
  * - `O<value>` - Color number corresponding to Color, RGB order
+ * - `P` - If set, the parameter 'T' is interpreted as a VirtualToolIndex (tool mapping is not applied)
  */
 void PrusaGcodeSuite::M1600() {
     GCodeParser2 p;
@@ -129,7 +130,7 @@ void PrusaGcodeSuite::M1600() {
         return;
     }
 
-    const int8_t target_extruder = PrusaGcodeSuite::get_target_extruder_from_command(p);
+    const int8_t target_extruder = PrusaGcodeSuite::get_target_extruder_from_command_p(p);
     if (target_extruder < 0) {
         return;
     }
