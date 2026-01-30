@@ -893,8 +893,6 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
     #endif
   #endif // HAS_HOMING_CURRENT
 
-  ui.refresh();
-
   TERN_(HAS_DWIN_E3V2_BASIC, DWIN_HomingDone());
   //TERN_(EXTENSIBLE_UI, ExtUI::onHomingDone());
 

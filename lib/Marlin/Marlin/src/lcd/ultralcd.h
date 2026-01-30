@@ -100,9 +100,6 @@ public:
 
   static void init();
   static void update();
-  static void abort_print();
-  static void pause_print();
-  static void resume_print();
 
   #if HAS_GUI()
 
@@ -113,8 +110,6 @@ public:
 
     static uint8_t alert_level; // Higher levels block lower levels
     static inline void reset_alert_level() { alert_level = 0; }
-
-    static void refresh() {}
 
     static bool get_blink();
     static void set_status(const char* const message, const bool persist=false);
@@ -136,20 +131,7 @@ public:
 
   #endif
 
-  #if ENABLED(LCD_BED_LEVELING) && ENABLED(PROBE_MANUALLY)
-    static bool wait_for_bl_move;
-  #else
-    static constexpr bool wait_for_bl_move = false;
-  #endif
-
-  static constexpr bool external_control = false;
-
-  static inline void update_buttons() {}
-
 private:
-
-  static void _synchronize();
-
   #if ENABLED(EXTENSIBLE_UI)
     static void finish_status(const bool persist);
   #endif

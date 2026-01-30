@@ -151,35 +151,4 @@
     }
   }
 
-  void MarlinUI::abort_print() {
-    #ifdef ACTION_ON_CANCEL
-      host_action_cancel();
-    #endif
-    #if ENABLED(HOST_PROMPT_SUPPORT)
-      host_prompt_open(PROMPT_INFO, PSTR("UI Aborted"), PSTR("Dismiss"));
-    #endif
-    print_job_timer.stop();
-    set_status_P(GET_TEXT(MSG_PRINT_ABORTED));
-  }
-
-  void MarlinUI::pause_print() {
-    #if ENABLED(HOST_PROMPT_SUPPORT)
-      host_prompt_open(PROMPT_PAUSE_RESUME, PSTR("UI Pause"), PSTR("Resume"));
-    #endif
-
-    set_status_P(print_paused);
-
-    #if defined(ACTION_ON_PAUSE)
-      host_action_pause();
-    #endif
-  }
-
-  void MarlinUI::resume_print() {
-    reset_status();
-    #ifdef ACTION_ON_RESUME
-      host_action_resume();
-    #endif
-    print_job_timer.start(); // Also called by M24
-  }
-
 #endif // HAS_GUI()

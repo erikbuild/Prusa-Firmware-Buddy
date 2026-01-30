@@ -1734,12 +1734,6 @@ void Temperature::isr() {
   #endif // HW_PWM_HEATERS
 
 
-  //
-  // Update lcd buttons 488 times per second
-  //
-  static bool do_buttons;
-  if ((do_buttons ^= true)) ui.update_buttons();
-
   /**
    * One sensor is sampled on every other call of the ISR.
    * Each sensor is read 16 (OVERSAMPLENR) times, taking the average.
