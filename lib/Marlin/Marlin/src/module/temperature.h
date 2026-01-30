@@ -593,6 +593,10 @@ public:
     static void min_temp_error(const heater_ind_t e);
     static void max_temp_error(const heater_ind_t e);
 
+    #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
+      static int_least8_t failed_cycles[HOTENDS];
+    #endif
+
   private:
     static void set_current_temp_raw();
     static void updateTemperaturesFromRawValues();
@@ -611,13 +615,6 @@ public:
       #endif
       #if HAS_THERMALLY_PROTECTED_BED
         static ThermalRunaway thermal_runaway_bed;
-      #endif
-
-      #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-        static int_least8_t failed_cycles[HOTENDS];
-        static constexpr int_least8_t self_healing_cycles = 10;
-        static_assert((THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles) < INT_LEAST8_MAX, "THERMAL_PROTECTION_MODEL_PERIOD doesn't fit int_least8_t.");
-        static void thermal_model_protection(const float &pid_output, const float &feed_forward, const uint8_t e);
       #endif
     #endif // HAS_THERMAL_PROTECTION
 };

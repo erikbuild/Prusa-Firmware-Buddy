@@ -92,6 +92,10 @@
   #include "tool_change.h"
 #endif
 
+#if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
+  #include <module/temperature/thermal_model_protection.hpp>
+#endif
+
 #include <option/board_is_master_board.h>
 #if BOARD_IS_MASTER_BOARD()
   #include <feature/safety_timer/safety_timer.hpp>
@@ -215,6 +219,12 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
   };
 
   HeaterWatchWithConfig<watch_hotend_config> watch_hotend[HOTENDS];
+#endif
+
+
+#if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
+  int_least8_t Temperature::failed_cycles[HOTENDS] = {};
+  ThermalModelProtection thermal_model_protection[HOTENDS];
 #endif
 
 #if HAS_TEMP_HEATBREAK
@@ -661,7 +671,7 @@ void Temperature::manage_heater() {
     
     temp_hotend[e].soft_pwm_amount = static_cast<int>(regulation_result.pid_output) >> soft_pwm_bit_shift;
     #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-        thermal_model_protection(regulation_result.pid_output, regulation_result.feed_forward, e);
+        thermal_model_protection[e].thermal_model_protection(regulation_result.pid_output, regulation_result.feed_forward, e);
     #endif
 
     #if WATCH_HOTENDS
@@ -1193,57 +1203,6 @@ void Temperature::init() {
   #endif
   #if HAS_THERMALLY_PROTECTED_BED
     ThermalRunaway Temperature::thermal_runaway_bed;
-  #endif
-
-  #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-
-  int_least8_t Temperature::failed_cycles[HOTENDS] = {};
-
-  /**
-   * @brief Detect discrepancy between expected heating based on model and actual heating
-   *
-   * PWM output is checked once per 1 second. Each time it is THERMAL_PROTECTION_MODEL_DISCREPANCY
-   * over feed_forward value failed_cycles are incremented. Each time it is under it is decremented.
-   * Once failed_cycles reaches over THERMAL_PROTECTION_MODEL_PERIOD, temperature error is announced.
-   *
-   * @param pid_output heater PWM output
-   * @param feed_forward part of the heater PWM output not affected by temperature readings
-   * @param e hotend index
-   */
-  void Temperature::thermal_model_protection(const float& pid_output, const float& feed_forward, const uint8_t E_NAME) {
-    const uint8_t ee = HOTEND_INDEX;
-
-    // Zero initialize timers. Zero means not started.
-    static millis_t timer[HOTENDS] = {};
-    // Expected interval is 1000 ms. min_interval_ms set to 100 ms, so it will be visible in samples collected if
-    // expected interval doesn't hold.
-    METRIC_DEF(heating_model_discrepancy, "heating_model_discrepancy", METRIC_VALUE_INTEGER, 100, METRIC_DISABLED);
-
-    // Start the timer if already not started. In case millis() == 0 it will not start the timer.
-    // But it will do no harm, as it will be started in the next call to this function.
-    if(!timer[ee]) timer[ee] = millis();
-
-    //Each 1 second
-    if (ELAPSED(millis(), timer[ee]))
-    {
-      timer[ee] = millis() + 1000UL;
-
-      float work_feed_forward = feed_forward;
-      // Ignore extreme model forecasts caused by extrusion
-      // scaling during un/retractions.
-      LIMIT(work_feed_forward, 0, PID_MAX);
-      const float model_discrepancy = pid_output - work_feed_forward;
-      metric_record_integer(&heating_model_discrepancy, static_cast<int>(model_discrepancy));
-
-      if (model_discrepancy > THERMAL_PROTECTION_MODEL_DISCREPANCY) ++failed_cycles[ee];
-      else --failed_cycles[ee];
-
-      if (failed_cycles[ee] < 0) failed_cycles[ee] = 0;
-      if (failed_cycles[ee] > THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles) {
-          failed_cycles[ee] = THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles;
-      }
-    }
-  }
   #endif
 
 #endif // HAS_THERMAL_PROTECTION
