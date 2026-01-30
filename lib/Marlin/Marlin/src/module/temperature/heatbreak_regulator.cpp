@@ -76,7 +76,7 @@ float HeatbreakRegulator::step(const Args &args) {
 
     #else // PID_OPENLOOP
 
-    const float pid_output = constrain(temp_heatbreak[0].target, 0, MAX_BED_POWER);
+    const float pid_output = constrain(args.target_temp, 0, MAX_HEATBREAK_POWER);
 
     #endif // PID_OPENLOOP
 
