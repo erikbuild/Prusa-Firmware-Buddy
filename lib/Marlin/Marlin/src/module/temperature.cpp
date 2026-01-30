@@ -121,7 +121,7 @@ HotendRegulator hotend_regulators[HOTENDS];
 LOG_COMPONENT_REF(MarlinServer);
 
 #if HOTEND_USES_THERMISTOR
-    static constexpr MarlinTempTable heater_ttbl_map[HOTENDS] = ARRAY_BY_HOTENDS(HEATER_0_TEMPTABLE, HEATER_1_TEMPTABLE, HEATER_2_TEMPTABLE, HEATER_3_TEMPTABLE, HEATER_4_TEMPTABLE, HEATER_5_TEMPTABLE);
+    static constexpr MarlinTempTable heater_ttbl_map[HOTENDS] = ARRAY_BY_HOTENDS(TT_NAME(THERMISTOR_HEATER_0), TT_NAME(THERMISTOR_HEATER_1), TT_NAME(THERMISTOR_HEATER_2), TT_NAME(THERMISTOR_HEATER_3), TT_NAME(THERMISTOR_HEATER_4), TT_NAME(THERMISTOR_HEATER_5));
     static_assert(HOTENDS <= 6);
 #endif
 
@@ -287,7 +287,7 @@ struct temp_range_t {
     {}
 };
 
-#define TEMP_RANGE_INIT(i) temp_range_t(HEATER_ ## i ## _TEMPTABLE, HEATER_ ## i ## _MINTEMP, HEATER_ ## i ## _MAXTEMP)
+#define TEMP_RANGE_INIT(i) temp_range_t(TT_NAME(THERMISTOR_HEATER_ ## i), HEATER_ ## i ## _MINTEMP, HEATER_ ## i ## _MAXTEMP)
                         
 static StrongIndexArray<temp_range_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> temp_range {
   #if HOTENDS > 0
@@ -989,7 +989,7 @@ constexpr float compensate_bed_temperature(float celsius) {
 #endif
 
   float scan_thermistor_table_bed(const int raw){
-      return marlin_temptable_lookup(BED_TEMPTABLE, raw);
+      return marlin_temptable_lookup(TT_NAME(THERMISTORBED), raw);
   }
   // Derived from RepRap FiveD extruder::getTemperature()
   // For bed temperature measurement.
@@ -1014,7 +1014,7 @@ constexpr float compensate_bed_temperature(float celsius) {
         }
     #endif
 
-    return HEATBREAK_TEMPTABLE;
+    return TT_NAME(TEMP_SENSOR_HEATBREAK);
   }
 
   // Derived from RepRap FiveD extruder::getTemperature()
@@ -1033,7 +1033,7 @@ constexpr float compensate_bed_temperature(float celsius) {
   // For ambient temperature measurement.
   float Temperature::analog_to_celsius_board(const int raw) {
     #if ENABLED(BOARD_USES_THERMISTOR)
-      return marlin_temptable_lookup(BOARD_TEMPTABLE, raw);
+      return marlin_temptable_lookup(TT_NAME(TEMP_SENSOR_BOARD), raw);
     #else
       return 0;
     #endif
@@ -1283,7 +1283,7 @@ void Temperature::init() {
   delay(250);
 
   #if HAS_HEATED_BED
-    minmaxtemp_raw_BED = MarlinTemptableRawMinMax::compute(BED_TEMPTABLE, BED_MINTEMP, BED_MAXTEMP);
+    minmaxtemp_raw_BED = MarlinTemptableRawMinMax::compute(TT_NAME(THERMISTORBED), BED_MINTEMP, BED_MAXTEMP);
   #endif // HAS_HEATED_BED
 
   #if HAS_TEMP_HEATBREAK
