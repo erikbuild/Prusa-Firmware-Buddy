@@ -241,10 +241,10 @@ void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t 
         if (pWin) {
             pWin->SetFocus();
             if (pWin->IsFocused()) {
-                // sending click if sitting of focus failed can be harmful
+                // sending click if setting of focus failed can be harmful
                 // DialogTimed resends capture events if it is not active
                 // this generates unwanted click on focused window
-                pWin->WindowEvent(this, GUI_event_t::CLICK, nullptr);
+                pWin->WindowEvent(this, GUI_event_t::TOUCH_CLICK, param);
             }
         }
         break;
