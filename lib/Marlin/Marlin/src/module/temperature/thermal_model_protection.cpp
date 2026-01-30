@@ -23,24 +23,19 @@ static_assert((THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles) < INT_LEAS
  * @param e hotend index
  */
 void ThermalModelProtection::thermal_model_protection(const float &pid_output, const float &feed_forward, const uint8_t E_NAME) {
-    auto &failed_cycles = thermalManager.failed_cycles;
-    const uint8_t ee = HOTEND_INDEX;
-
-    // Zero initialize timers. Zero means not started.
-    static millis_t timer[HOTENDS] = {};
     // Expected interval is 1000 ms. min_interval_ms set to 100 ms, so it will be visible in samples collected if
     // expected interval doesn't hold.
     METRIC_DEF(heating_model_discrepancy, "heating_model_discrepancy", METRIC_VALUE_INTEGER, 100, METRIC_DISABLED);
 
     // Start the timer if already not started. In case millis() == 0 it will not start the timer.
     // But it will do no harm, as it will be started in the next call to this function.
-    if (!timer[ee]) {
-        timer[ee] = millis();
+    if (!timer) {
+        timer = millis();
     }
 
     // Each 1 second
-    if (ELAPSED(millis(), timer[ee])) {
-        timer[ee] = millis() + 1000UL;
+    if (ELAPSED(millis(), timer)) {
+        timer = millis() + 1000UL;
 
         float work_feed_forward = feed_forward;
         // Ignore extreme model forecasts caused by extrusion
@@ -50,18 +45,22 @@ void ThermalModelProtection::thermal_model_protection(const float &pid_output, c
         metric_record_integer(&heating_model_discrepancy, static_cast<int>(model_discrepancy));
 
         if (model_discrepancy > THERMAL_PROTECTION_MODEL_DISCREPANCY) {
-            ++failed_cycles[ee];
+            ++failed_cycles;
         } else {
-            --failed_cycles[ee];
+            --failed_cycles;
         }
 
-        if (failed_cycles[ee] < 0) {
-            failed_cycles[ee] = 0;
+        if (failed_cycles < 0) {
+            failed_cycles = 0;
         }
-        if (failed_cycles[ee] > THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles) {
-            failed_cycles[ee] = THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles;
+        if (failed_cycles > THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles) {
+            failed_cycles = THERMAL_PROTECTION_MODEL_PERIOD + self_healing_cycles;
         }
     }
+}
+
+bool ThermalModelProtection::is_ok() const {
+    return failed_cycles <= THERMAL_PROTECTION_MODEL_PERIOD;
 }
 
 #endif

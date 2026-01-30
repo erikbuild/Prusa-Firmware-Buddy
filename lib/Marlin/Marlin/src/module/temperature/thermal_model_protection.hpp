@@ -18,4 +18,10 @@ public:
      * @param e hotend index
      */
     void thermal_model_protection(const float &pid_output, const float &feed_forward, const uint8_t E_NAME);
+
+    bool is_ok() const;
+
+private:
+    millis_t timer = 0;
+    int_least8_t failed_cycles = 0;
 };

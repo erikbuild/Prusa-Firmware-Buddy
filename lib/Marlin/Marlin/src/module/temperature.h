@@ -45,6 +45,10 @@
 #include <module/temperature/temp_defines.hpp>
 #include <module/temperature/thermal_runaway.hpp>
 
+#if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
+  #include <module/temperature/thermal_model_protection.hpp>
+#endif
+
 #define DUMMY_PID_VALUE 3000.0f
 
 #if ENABLED(PIDTEMP)
@@ -581,8 +585,7 @@ public:
 
     #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
       static bool saneTempReadingHotend(const uint8_t E_NAME) {
-          if (failed_cycles[HOTEND_INDEX] > THERMAL_PROTECTION_MODEL_PERIOD) return false;
-          else return true;
+          return thermal_model_protection[HOTEND_INDEX].is_ok();
       }
     #else
       static bool saneTempReadingHotend(const uint8_t){return true;}
@@ -594,7 +597,7 @@ public:
     static void max_temp_error(const heater_ind_t e);
 
     #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-      static int_least8_t failed_cycles[HOTENDS];
+      static ThermalModelProtection thermal_model_protection[HOTENDS];
     #endif
 
   private:

@@ -92,10 +92,6 @@
   #include "tool_change.h"
 #endif
 
-#if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-  #include <module/temperature/thermal_model_protection.hpp>
-#endif
-
 #include <option/board_is_master_board.h>
 #if BOARD_IS_MASTER_BOARD()
   #include <feature/safety_timer/safety_timer.hpp>
@@ -223,8 +219,7 @@ StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw
 
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
-  int_least8_t Temperature::failed_cycles[HOTENDS] = {};
-  ThermalModelProtection thermal_model_protection[HOTENDS];
+  ThermalModelProtection Temperature::thermal_model_protection[HOTENDS];
 #endif
 
 #if HAS_TEMP_HEATBREAK
