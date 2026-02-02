@@ -225,19 +225,19 @@ void ScreenOPTInfo::add_string_item(const char *label, std::string_view val, std
     // Copy the text to the provided buffer - the val likely comes from ReadFieldRequest, which is on the stack and will get destroyed
     const std::string_view cpy { buffer.data(), val.copy(buffer.data(), buffer.size()) };
     menu.menu.data_items_.push_back([label, cpy](ItemVariant &iv) {
-        iv.emplace<WI_INFO_t>(_(label), cpy);
+        iv.emplace<MenuItemInfo>(_(label), cpy);
     });
 }
 
 template <auto label, auto fmt, typename... Args>
 void ScreenOPTInfo::add_fmt_item(std::type_identity_t<Args>... args) {
     menu.menu.data_items_.push_back([args...](ItemVariant &iv) {
-        WI_INFO_t::Buffer buf;
+        MenuItemInfo::Buffer buf;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
         snprintf(buf.data(), buf.size(), fmt, args...);
 #pragma GCC diagnostic pop
-        iv.emplace<WI_INFO_t>(_(label), buf.data());
+        iv.emplace<MenuItemInfo>(_(label), buf.data());
     });
 }
 
