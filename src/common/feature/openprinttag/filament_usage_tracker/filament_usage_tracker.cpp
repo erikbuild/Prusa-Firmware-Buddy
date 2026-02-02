@@ -37,6 +37,15 @@ uint32_t FilamentUsageTracker::uncommited_consumption_mm(VirtualToolIndex tool) 
     return std::max<uint32_t>(0, filament_tracker().get_extruded_distance(tool) - tool_data_[tool].base_extruded_distance_mm);
 }
 
+std::optional<float> FilamentUsageTracker::remaining_filament_g(VirtualToolIndex tool) const {
+    const auto &tool_data = tool_data_[tool];
+    if (std::isnan(tool_data.base_remaining_filament_g)) {
+        return std::nullopt;
+    }
+
+    return std::max<float>(0, tool_data.base_remaining_filament_g - uncommited_consumption_mm(tool) * tool_data.g_per_mm);
+}
+
 bool FilamentUsageTracker::is_tracking(VirtualToolIndex tool) const {
     const auto &tool_data = tool_data_[tool];
     return !tool_data.init_pending && !tool_data.unrecoverable_error;
@@ -147,7 +156,7 @@ void FilamentUsageTracker::retry_finish_cb(ToolData &tool_data) {
 }
 
 FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::tool_init_async([[maybe_unused]] AsyncJobExecutionControl &ctrl, ToolTag tag) {
-    MultiReadFieldRequest<MainField::nominal_full_length, MainField::actual_full_length, MainField::nominal_netto_full_weight, MainField::actual_netto_full_weight> req { tag };
+    MultiReadFieldRequest<MainField::nominal_full_length, MainField::actual_full_length, MainField::nominal_netto_full_weight, MainField::actual_netto_full_weight, AuxField::consumed_weight> req { tag };
     req.issue();
 
     // Wait for the request to be finished
@@ -196,8 +205,11 @@ FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::tool_init_asy
         return cannot_track_finish_cb;
     }
 
-    return [g_per_mm](ToolData &tool_data) {
+    const float remaining_g = full_weight - req.result<AuxField::consumed_weight>().value_or(0);
+
+    return [g_per_mm, remaining_g](ToolData &tool_data) {
         tool_data.g_per_mm = g_per_mm;
+        tool_data.base_remaining_filament_g = remaining_g;
         tool_data.init_pending = false;
     };
 }
@@ -244,7 +256,8 @@ FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::write_consump
         old_consumed_weight = req.result().value_or(0);
     }
 
-    const float new_consumed_weight = old_consumed_weight + args.extruded_distance_delta_mm * args.g_per_mm;
+    const float consumed_diff = args.extruded_distance_delta_mm * args.g_per_mm;
+    const float new_consumed_weight = old_consumed_weight + consumed_diff;
 
     {
         WriteFieldRequest<AuxField::consumed_weight> req { args.tag, new_consumed_weight };
@@ -281,9 +294,10 @@ FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::write_consump
         }
     }
 
-    return [extruded = args.extruded_distance_delta_mm](ToolData &tool_data) {
+    return [extruded = args.extruded_distance_delta_mm, consumed_diff](ToolData &tool_data) {
         // Let the tracker know that we've succesfully written this amount of filament usage
         tool_data.base_extruded_distance_mm += extruded;
+        tool_data.base_remaining_filament_g -= consumed_diff;
         tool_data.write_pending = false;
         tool_data.warn_if_next_write_fails = false;
 

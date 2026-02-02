@@ -19,5 +19,6 @@ struct ToolTagFieldHash {
 
 using StubData = std::unordered_map<ToolTagField, std::any, ToolTagFieldHash>;
 inline thread_local StubData stub_data;
+inline thread_local size_t write_count = 0;
 
 } // namespace buddy::openprinttag

@@ -50,6 +50,9 @@ public:
     /// @returns extruded distance (in mm) that is not yet committed to the tag
     [[nodiscard]] uint32_t uncommited_consumption_mm(VirtualToolIndex tool) const;
 
+    /// @returns amount of filament remaining on the spool
+    [[nodiscard]] std::optional<float> remaining_filament_g(VirtualToolIndex tool) const;
+
     /// @returns whether usage tracking is active for the specified tool
     bool is_tracking(VirtualToolIndex tool) const;
 
@@ -68,6 +71,9 @@ private:
         /// FilamentTracker::get_extruded_distance that corresponds to the current consumed_weight value in the tag
         /// Pending distance is current FilamentTracker::get_extruded_distance - base_extruded_distance
         uint32_t base_extruded_distance_mm;
+
+        /// Remaining filament on the spool that has been already commited
+        float base_remaining_filament_g = NAN;
 
         /// Tag we're currently tracking
         ToolTag::UIDHash assigned_tag = ToolTag::no_tag_hash;
@@ -89,7 +95,7 @@ private:
         bool unrecoverable_error : 1 = true;
     };
     // Make sure the struct is not too big, it will be instantiated for each virtual tool (>=10 for INDX)
-    static_assert(sizeof(ToolData) == 12);
+    static_assert(sizeof(ToolData) == 16);
 
     StrongIndexArray<ToolData, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> tool_data_;
 

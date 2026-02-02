@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <test_utils/formatters.hpp>
 #include <feature/openprinttag/filament_usage_tracker/filament_usage_tracker.hpp>
 #include <feature/openprinttag/detail/requests_base.hpp>
 #include <feature/openprinttag/requests_read.hpp>
@@ -126,8 +127,10 @@ TEST_CASE("buddy::openprinttag::filament_usage_tracker") {
 
     const float full_length = 1000;
     const float full_weight = 500;
+    const float pre_consumed_weight = 10;
     stub_data[tag(0).field(MainField::nominal_full_length)] = full_length;
     stub_data[tag(0).field(MainField::actual_netto_full_weight)] = full_weight;
+    stub_data[tag(0).field(AuxField::consumed_weight)] = pre_consumed_weight;
 
     assigned_tags.emplace(0, tag(1));
     stub_data[tag(1).field(MainField::nominal_full_length)] = full_length;
@@ -135,6 +138,7 @@ TEST_CASE("buddy::openprinttag::filament_usage_tracker") {
     // The tracker should now pick up the new tools and start tracking
     step_tracker();
     CHECK(tracker.is_tracking(tool(0)));
+    CHECK(tracker.remaining_filament_g(tool(0)) == full_weight - pre_consumed_weight);
 
     // Cannot track - missing full_legth
     CHECK(!tracker.is_tracking(tool(1)));
@@ -143,13 +147,33 @@ TEST_CASE("buddy::openprinttag::filament_usage_tracker") {
     step_tracker();
 
     // The tracker had no usage to write, so nothing should have been written
-    CHECK(!stub_data.contains(tag(0).field(AuxField::consumed_weight)));
+    CHECK(write_count == 0);
 
-    const float extruded_dist = 50;
-    filament_tracker().extruded_distances[tool(0)] = extruded_dist;
-    filament_usage_tracker().flush({ .tools = AllTools {} });
-    step_tracker();
-    REQUIRE(stub_data.contains(tag(0).field(AuxField::consumed_weight)));
-    CHECK(stub_data.size() == 4);
-    CHECK(std::any_cast<float>(stub_data[tag(0).field(AuxField::consumed_weight)]) == extruded_dist / full_length * full_weight);
+    // Extrude standard amount
+    {
+        const float extruded_dist = 50;
+        filament_tracker().extruded_distances[tool(0)] = extruded_dist;
+        filament_usage_tracker().flush({ .tools = AllTools {} });
+        step_tracker();
+        REQUIRE(stub_data.contains(tag(0).field(AuxField::consumed_weight)));
+        CHECK(stub_data.size() == 4);
+
+        const float consumed_weight = pre_consumed_weight + extruded_dist / full_length * full_weight;
+        CHECK(std::any_cast<float>(stub_data[tag(0).field(AuxField::consumed_weight)]) == consumed_weight);
+        CHECK(tracker.remaining_filament_g(tool(0)) == full_weight - consumed_weight);
+    }
+
+    // Extrude more than what is supposed to be on the spool
+    {
+        filament_tracker().extruded_distances[tool(0)] = full_length + 100;
+        filament_usage_tracker().flush({ .tools = AllTools {} });
+        step_tracker();
+
+        const float consumed_weight = pre_consumed_weight + (full_length + 100) / full_length * full_weight;
+        CHECK(std::any_cast<float>(stub_data[tag(0).field(AuxField::consumed_weight)]) == consumed_weight);
+        CHECK(consumed_weight > full_weight);
+
+        // Should crop to zero
+        CHECK(tracker.remaining_filament_g(tool(0)) == 0);
+    }
 }

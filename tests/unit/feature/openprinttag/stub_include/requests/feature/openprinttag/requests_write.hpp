@@ -20,6 +20,7 @@ public:
         : BaseWriteFieldRequest(tag.field(field), value) {
 
         stub_data[tag.field(field)] = value;
+        write_count++;
         this->set_finished(std::monostate {});
     }
 };
