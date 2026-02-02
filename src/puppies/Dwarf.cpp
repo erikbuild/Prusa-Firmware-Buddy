@@ -646,9 +646,14 @@ void Dwarf::handle_dwarf_fault(PuppyModbus &bus) {
         char module[31] = { 0 };
         snprintf(module, sizeof(module), "Dwarf %d: %s", dwarf_nr, title_span.data());
 
-        // this calls generic fatal error
-        // any marlin fault on dwarf will be decoded based on error string and converted to propper ErrCode, or displayed as-is if no error code matches
-        fatal_error(message_span.data(), module);
+        if (int error_code; sscanf(message_span.data(), "ERRC%i", &error_code) == 1) {
+            fatal_error(static_cast<ErrCode>(error_code));
+        } else {
+            // this calls generic fatal error
+            // any marlin fault on dwarf will be decoded based on error string and converted to propper ErrCode, or displayed as-is if no error code matches
+            fatal_error(message_span.data(), module);
+        }
+
     } else if (fault_int & std::to_underlying(dwarf_shared::errors::FaultStatusMask::TMC_FAULT)) {
         fatal_error(ErrCode::ERR_SYSTEM_DWARF_TMC, dwarf_nr);
     } else {

@@ -28,9 +28,7 @@
 
 LOG_COMPONENT_REF(Marlin);
 
-static bool marlin_kill = false;
-
-void stop_marlin();
+[[noreturn]] void stop_marlin();
 
 /**
  * @brief Marlin's watchdog init.
@@ -63,13 +61,18 @@ void check_operation_safety() {
     }
 }
 
+static auto &watchdog() {
+    static hal::MultiWatchdog wdg; // Add one instance of watchdog
+    return wdg;
+}
+
 void dwarf::modules::marlin::start() {
-    hal::MultiWatchdog wdg; // Add one instance of watchdog
+    auto &wdg = watchdog();
     setup();
 
     modbus::ModbusTask::EnableModbus();
 
-    while (!marlin_kill) {
+    while (true) {
         switch (ModbusControl::status_led.mode) {
         case dwarf_shared::StatusLed::Mode::solid_color:
             led::set_rgb(ModbusControl::status_led.r, ModbusControl::status_led.g, ModbusControl::status_led.b);
@@ -117,27 +120,27 @@ void dwarf::modules::marlin::start() {
         // with yield it would not let idle task to refresh another watchdog instance
         osDelay(1);
     }
-
-    // marlin killed, handle it
-    while (1) {
-        led::blinking(0xFF, 0x00, 0x00, 500, 500);
-        stop_marlin();
-        osDelay(100);
-
-        wdg.kick(); // Reload this instance of watchdog
-    }
 }
 
-void stop_marlin() {
-    // stop marlin loop
-    marlin_kill = true;
-
+[[noreturn]] void stop_marlin() {
 #if HAS_PLANNER()
     planner.quick_stop();
 #endif
+
+    dwarf::ModbusControl::ProcessModbusMessages();
+    dwarf::ModbusControl::UpdateRegisters();
+
+    // Safe state AFTER processing modbus messages
+    // The modbus message could try to set the nozzle temp and whatnot
     DISABLE_TEMPERATURE_INTERRUPT();
     dwarf_init_done = false;
     hwio_safe_state();
+
+    while (1) {
+        watchdog().kick(); // Reload this instance of watchdog
+        led::blinking(0xFF, 0x00, 0x00, 500, 500);
+        osDelay(100);
+    }
 }
 
 void analogWrite(uint32_t ulPin, uint32_t ulValue) {
@@ -185,7 +188,14 @@ void kill(PGM_P const lcd_error /*=nullptr*/, PGM_P const lcd_component /*=nullp
     log_error(Marlin, "Printer killed: %s: %s", lcd_component, lcd_error);
     dwarf::ModbusControl::TriggerMarlinKillFault(dwarf_shared::errors::FaultStatusMask::MARLIN_KILLED, lcd_component, lcd_error);
     stop_marlin();
-    // keep running for modbus
+}
+
+[[noreturn]] void fatal_error(ErrCode error_code, ...) {
+    log_error(Marlin, "Fatal error: %i", (int)error_code);
+    std::array<char, 32> err;
+    snprintf(err.data(), err.size(), "ERRC%i", (int)error_code);
+    dwarf::ModbusControl::TriggerMarlinKillFault(dwarf_shared::errors::FaultStatusMask::MARLIN_KILLED, "", err.data());
+    stop_marlin();
 }
 
 #include "SPI.h"
