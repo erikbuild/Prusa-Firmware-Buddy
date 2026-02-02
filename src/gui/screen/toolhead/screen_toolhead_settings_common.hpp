@@ -25,8 +25,8 @@ static constexpr Toolhead default_toolhead = PhysicalToolIndex::from_raw(0);
 static constexpr Toolhead all_toolheads = AllTools {};
 
 template <typename T>
-concept CMI_TOOLHEAD_SPECIFIC = requires(T a) {
-    { a.set_toolhead(Toolhead()) };
+concept CMI_TOOLHEAD_SPECIFIC = requires(T &a, Toolhead t) {
+    { a.set_toolhead(t) };
 };
 
 template <typename Container>
