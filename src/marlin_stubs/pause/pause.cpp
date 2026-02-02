@@ -1013,15 +1013,18 @@ void Pause::unload_start_process([[maybe_unused]] Response response) {
 #endif
 
 #if HAS_ANFC()
-    buddy::openprinttag::filament_usage_tracker().flush({
-        .tools = settings.virtual_tool(),
+    const auto tool = settings.virtual_tool();
+    auto &fut = buddy::openprinttag::filament_usage_tracker();
+
+    fut.flush({
+        .tools = tool,
         // Don't warn - the PhasesLoadUnload::OPT_UncommitedUsage conveys the same information
         .warn_on_failure = false,
     });
 
     // Warn the user if there is some uncommited consumption and wait till it is written
     // If the uncommited usage resets to zero, automatically continues
-    while (buddy::openprinttag::filament_usage_tracker().uncommited_consumption_mm(settings.virtual_tool()).value_or(0) > 5) {
+    while (fut.is_tracking(tool) && fut.uncommited_consumption_mm(tool) > 5) {
         setPhase(PhasesLoadUnload::OPT_UncommitedUsage);
 
         if (marlin_server::get_response_from_phase(PhasesLoadUnload::OPT_UncommitedUsage) != Response::_none) {

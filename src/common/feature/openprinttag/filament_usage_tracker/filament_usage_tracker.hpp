@@ -48,7 +48,7 @@ public:
     void flush(const FlushArgs &args);
 
     /// @returns extruded distance (in mm) that is not yet committed to the tag
-    [[nodiscard]] std::expected<uint32_t, TrackingImpossible> uncommited_consumption_mm(VirtualToolIndex tool) const;
+    [[nodiscard]] uint32_t uncommited_consumption_mm(VirtualToolIndex tool) const;
 
     /// @returns whether usage tracking is active for the specified tool
     bool is_tracking(VirtualToolIndex tool) const;

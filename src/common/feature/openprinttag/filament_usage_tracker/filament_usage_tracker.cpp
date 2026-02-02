@@ -33,13 +33,8 @@ void FilamentUsageTracker::flush(const FlushArgs &args) {
     }
 }
 
-std::expected<uint32_t, FilamentUsageTracker::TrackingImpossible> FilamentUsageTracker::uncommited_consumption_mm(VirtualToolIndex tool) const {
-    const auto &tool_data = tool_data_[tool];
-    if (tool_data.unceroverable_error) {
-        return std::unexpected(TrackingImpossible {});
-    }
-
-    return filament_tracker().get_extruded_distance(tool) - tool_data.base_extruded_distance_mm;
+uint32_t FilamentUsageTracker::uncommited_consumption_mm(VirtualToolIndex tool) const {
+    return std::max<uint32_t>(0, filament_tracker().get_extruded_distance(tool) - tool_data_[tool].base_extruded_distance_mm);
 }
 
 bool FilamentUsageTracker::is_tracking(VirtualToolIndex tool) const {
@@ -113,8 +108,7 @@ void FilamentUsageTracker::step() {
         assert(!std::isnan(tool_data.g_per_mm));
         const auto &args = write_consumption_args_.emplace(WriteConsumptionArgs {
             .tag = tool_tag,
-            // Should be guaranteed by the tool_data.unceroverable_error check above
-            .extruded_distance_delta_mm = *uncommited_consumption_mm(current_tool_),
+            .extruded_distance_delta_mm = uncommited_consumption_mm(current_tool_),
             .g_per_mm = tool_data.g_per_mm,
         });
 
