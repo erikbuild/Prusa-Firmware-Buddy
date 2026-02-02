@@ -25,9 +25,11 @@ FilamentUsageTracker &filament_usage_tracker() {
     return filament_usage_tracker_unsafe();
 }
 
-void FilamentUsageTracker::flush(std::variant<VirtualToolIndex, AllTools> tools) {
-    for (VirtualToolIndex tool : tool_index_iterator(tools)) {
-        tool_data_[tool].write_pending = true;
+void FilamentUsageTracker::flush(const FlushArgs &args) {
+    for (VirtualToolIndex tool : tool_index_iterator(args.tools)) {
+        ToolData &td = tool_data_[tool];
+        td.write_pending = true;
+        td.warn_if_next_write_fails |= args.warn_on_failure;
     }
 }
 
@@ -51,7 +53,10 @@ void FilamentUsageTracker::step() {
     }
 
     if (flush_timer_ms_.check(freertos::millis())) {
-        flush(AllTools {});
+        flush({
+            .tools = AllTools {},
+            .warn_on_failure = false,
+        });
     }
 
     if (async_job_.is_active()) {
@@ -121,6 +126,7 @@ void FilamentUsageTracker::step() {
         } else {
             // We have nothing to write
             tool_data.write_pending = false;
+            tool_data.warn_if_next_write_fails = false;
         }
     }
 }
@@ -130,14 +136,20 @@ void FilamentUsageTracker::cannot_track_finish_cb(ToolData &tool_data) {
     tool_data.unceroverable_error = true;
     tool_data.init_pending = false;
     tool_data.write_pending = false;
+    tool_data.warn_if_next_write_fails = false;
 
     marlin_server::set_warning(WarningType::OpenPrintTagCannotTrack);
 }
 
 void FilamentUsageTracker::retry_finish_cb(ToolData &tool_data) {
-    // Maybe something? We don't really need to do anything.
-    // We could possibly show a warning after a few retries.
-    (void)tool_data;
+    // Show the warning even if this is not a write. If we fail init before write, it's also not good.
+    if (tool_data.warn_if_next_write_fails) {
+        marlin_server::set_warning(WarningType::OpenPrintTagUsageWriteFailed);
+
+        // Clear ONLY if we've shown the warning - this might NOT be a write command
+        // Without showing the warning, the flag should only reset on a successfull write
+        tool_data.warn_if_next_write_fails = false;
+    }
 }
 
 FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::tool_init_async([[maybe_unused]] AsyncJobExecutionControl &ctrl, ToolTag tag) {
@@ -279,6 +291,9 @@ FilamentUsageTracker::AsyncJobFinishCallback FilamentUsageTracker::write_consump
         // Let the tracker know that we've succesfully written this amount of filament usage
         tool_data.base_extruded_distance_mm += extruded;
         tool_data.write_pending = false;
+        tool_data.warn_if_next_write_fails = false;
+
+        marlin_server::clear_warning(WarningType::OpenPrintTagUsageWriteFailed);
     };
 }
 

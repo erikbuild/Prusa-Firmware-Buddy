@@ -8,4 +8,8 @@ void set_warning(WarningType) {
     // TODO
 }
 
+void clear_warning(WarningType) {
+    // TODO
+}
+
 } // namespace marlin_server

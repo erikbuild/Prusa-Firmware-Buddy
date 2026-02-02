@@ -103,8 +103,11 @@ enum class WarningType : uint32_t {
     /// This is an info, not a warning
     OpenPrintTagAssigned,
 
-    /// Filament tracking failed for any reason
+    /// Filament tracking unrecoverably failed for any reason
     OpenPrintTagCannotTrack,
+
+    /// Filament tracking write failed, maybe the user removed the tag?
+    OpenPrintTagUsageWriteFailed,
 #endif
 
 #if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()

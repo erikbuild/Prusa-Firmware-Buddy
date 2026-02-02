@@ -1013,9 +1013,14 @@ void Pause::unload_start_process([[maybe_unused]] Response response) {
 #endif
 
 #if HAS_ANFC()
-    buddy::openprinttag::filament_usage_tracker().flush(settings.virtual_tool());
+    buddy::openprinttag::filament_usage_tracker().flush({
+        .tools = settings.virtual_tool(),
+        // Don't warn - the PhasesLoadUnload::OPT_UncommitedUsage conveys the same information
+        .warn_on_failure = false,
+    });
 
     // Warn the user if there is some uncommited consumption and wait till it is written
+    // If the uncommited usage resets to zero, automatically continues
     while (buddy::openprinttag::filament_usage_tracker().uncommited_consumption_mm(settings.virtual_tool()).value_or(0) > 5) {
         setPhase(PhasesLoadUnload::OPT_UncommitedUsage);
 

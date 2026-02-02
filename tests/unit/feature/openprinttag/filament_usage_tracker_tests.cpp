@@ -139,7 +139,7 @@ TEST_CASE("buddy::openprinttag::filament_usage_tracker") {
     // Cannot track - missing full_legth
     CHECK(!tracker.is_tracking(tool(1)));
 
-    filament_usage_tracker().flush(AllTools {});
+    filament_usage_tracker().flush({ .tools = AllTools {} });
     step_tracker();
 
     // The tracker had no usage to write, so nothing should have been written
@@ -147,7 +147,7 @@ TEST_CASE("buddy::openprinttag::filament_usage_tracker") {
 
     const float extruded_dist = 50;
     filament_tracker().extruded_distances[tool(0)] = extruded_dist;
-    filament_usage_tracker().flush(AllTools {});
+    filament_usage_tracker().flush({ .tools = AllTools {} });
     step_tracker();
     REQUIRE(stub_data.contains(tag(0).field(AuxField::consumed_weight)));
     CHECK(stub_data.size() == 4);

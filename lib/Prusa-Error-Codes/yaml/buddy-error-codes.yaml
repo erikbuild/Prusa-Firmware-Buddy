@@ -884,6 +884,13 @@ Errors:
     gui_layout: "warning_dialog"
     approved: false
 
+  - code: "XX406"
+    title: "OPENPRINTTAG WRITE FAILED"
+    text: "Failed to write usage data to OpenPrintTag. Make sure it has not been removed from the reader."
+    id: "OPENPRINTTAG_USAGE_WRITE_FAILED"
+    gui_layout: "warning_dialog"
+    approved: false
+
   - code: "XX501"
     printers: [iX, XL]
     title: "MODULAR BED ERROR"

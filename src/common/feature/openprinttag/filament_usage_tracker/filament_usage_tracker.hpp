@@ -36,9 +36,16 @@ public:
     /// Do one step of whatever the tracker is doing
     void step();
 
+    struct FlushArgs {
+        std::variant<VirtualToolIndex, AllTools> tools;
+
+        /// If set, shows a warning if the write fails
+        bool warn_on_failure = false;
+    };
+
     /// Marks the specified tool(s) for immediate write of the usage
     /// The operation is still not blocking, one needs to check @p is_write_pending
-    void flush(std::variant<VirtualToolIndex, AllTools> tools);
+    void flush(const FlushArgs &args);
 
     /// @returns extruded distance (in mm) that is not yet committed to the tag
     [[nodiscard]] std::expected<uint32_t, TrackingImpossible> uncommited_consumption_mm(VirtualToolIndex tool) const;
@@ -71,6 +78,11 @@ private:
 
         /// Whether we're supposed to update the consumed weight
         bool write_pending : 1 = false;
+
+        /// If the next job fails, show a warning
+        /// Used to warn the user about failing openprinttag for example at the end of the print
+        /// Resets after the job is complete
+        bool warn_if_next_write_fails : 1 = false;
 
         /// If something happens that prevents tracking and is not recoverable by retrying, gets set to true
         /// Set to true by defalut because there is not tag assigned

@@ -923,7 +923,10 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
 #endif // HAS_NOZZLE_CLEANER()
 
 #if HAS_ANFC()
-    buddy::openprinttag::filament_usage_tracker().flush(AllTools {});
+    buddy::openprinttag::filament_usage_tracker().flush({
+        .tools = AllTools {},
+        .warn_on_failure = true,
+    });
 #endif
 
 #if HAS_AUTO_RETRACT()

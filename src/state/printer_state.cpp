@@ -699,6 +699,9 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 
     case WarningType::OpenPrintTagCannotTrack:
         return ErrCode::ERR_CONNECT_OPENPRINTTAG_CANNOT_TRACK;
+
+    case WarningType::OpenPrintTagUsageWriteFailed:
+        return ErrCode::ERR_CONNECT_OPENPRINTTAG_USAGE_WRITE_FAILED;
 #endif
 
     case WarningType::_cnt:
