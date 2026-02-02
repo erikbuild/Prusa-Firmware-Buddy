@@ -55,8 +55,11 @@ private:
         nfcv::ReaderWriterInterface::AntennaID antenna;
         uint8_t block_size;
         uint8_t block_count;
-        State state = State::free;
-        TagType tag_type;
+
+        /// How many discoveries the tag wasn't consecutively detected for
+        uint8_t missed_discovery_count = 0;
+        State state : 2 = State::free;
+        TagType tag_type : 2;
     };
 
     nfcv::ReaderWriterInterface &reader;

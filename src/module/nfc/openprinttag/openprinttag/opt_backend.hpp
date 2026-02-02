@@ -44,6 +44,10 @@ public:
         /// Limits tags per antenna, so that one antenna does not take all the slots
         uint8_t max_known_tags_per_antenna = 1;
 
+        /// How many discoveries a tag can miss before it's considered lost
+        /// Count it in missed discoveries rather than straight up ms - there might be long blocking operations between discoveries
+        uint8_t tag_max_missed_discoveries = 4;
+
         /// How often should the discovery sequences run
         /// Please note that in OPT_NFCV, the discoveries alternate per antenna, so the actual interval for each antenna is longer
         uint32_t discovery_interval_ms = 250;

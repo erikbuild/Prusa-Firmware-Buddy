@@ -180,6 +180,7 @@ bool OPTBackend_NFCV::get_event(Event &e, uint32_t current_time_ms) {
         }
         // if we don't have any => run discovery to detect new tags
         run_next_discovery();
+
         // if still don't have any events => return false;
         if (events.isEmpty()) {
             return false;
@@ -501,7 +502,10 @@ void OPTBackend_NFCV::run_next_discovery() {
         auto tag_data = std::ranges::find_if(tags, [&](const auto &tag) { return tag.state != TagData::State::free && tag.uid == uid; });
         if (tag_data != tags.end()) {
             // But mark it as found
-            found_tags.set(std::distance(tags.begin(), tag_data));
+            if (tag_data->antenna == discovery_antenna) {
+                found_tags.set(std::distance(tags.begin(), tag_data));
+                tag_data->missed_discovery_count = 0;
+            }
             // We already know the tag, we don't need to register it
             continue;
         }
@@ -540,7 +544,7 @@ void OPTBackend_NFCV::run_next_discovery() {
 
         // Lets store all the information available
         static constexpr nfcv::TagInfo::MemorySize def_mem_size { .block_size = 0, .block_count = 0 };
-        *tag_data = {
+        *tag_data = TagData {
             .uid = uid,
             .antenna = discovery_antenna,
             .block_size = tag_info->mem_size.value_or(def_mem_size).block_size,
@@ -571,24 +575,34 @@ void OPTBackend_NFCV::run_next_discovery() {
 
     // Lets find a uid that we lost
     for (TagID tag_id = 0; tag_id < tags.size(); ++tag_id) {
-        if (is_valid(tag_id)) {
-            auto &tag_data = tags.at(tag_id);
-            // check if the tag was found during this procedure and check if originaly the it was found on current antenna
-            if (tag_data.antenna == discovery_antenna && !found_tags.test(tag_id)) {
-                // Detected lost tag - lets mark it and enqueue an event
-                if (!events.enqueue(OPTBackend::TagLostEvent { .tag = tag_id })) {
-                    // we have too many events - this should never happend but lets be sure
-                    // we can't report the lost tag => so we don't want to mark it as lost
-                    // if this ultimately happens increase the events queue by little bit
-                    continue;
-                }
+        if (!is_valid(tag_id)) {
+            continue;
+        }
 
-                if (config_.auto_forget_tag) {
-                    forget_tag(tag_id);
-                } else {
-                    tag_data.state = TagData::State::lost;
-                }
-            }
+        auto &tag_data = tags.at(tag_id);
+
+        // check if the tag was found during this procedure and check if originaly the it was found on current antenna
+        if (tag_data.antenna != discovery_antenna || found_tags.test(tag_id)) {
+            continue;
+        }
+
+        if (tag_data.missed_discovery_count < config_.tag_max_missed_discoveries) {
+            tag_data.missed_discovery_count++;
+            continue;
+        }
+
+        // Detected lost tag - lets mark it and enqueue an event
+        if (!events.enqueue(OPTBackend::TagLostEvent { .tag = tag_id })) {
+            // we have too many events - this should never happend but lets be sure
+            // we can't report the lost tag => so we don't want to mark it as lost
+            // if this ultimately happens increase the events queue by little bit
+            continue;
+        }
+
+        if (config_.auto_forget_tag) {
+            forget_tag(tag_id);
+        } else {
+            tag_data.state = TagData::State::lost;
         }
     }
 

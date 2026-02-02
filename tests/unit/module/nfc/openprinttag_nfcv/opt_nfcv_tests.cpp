@@ -376,6 +376,10 @@ constexpr nfcv::UID uid1 { std::byte { 0x01 }, std::byte { 0x02 }, std::byte { 0
 constexpr nfcv::UID uid2 { std::byte { 0x04 }, std::byte { 0x05 }, std::byte { 0x06 }, std::byte { 0x07 }, std::byte { 0x39 }, std::byte { 0x01 }, std::byte { 0x04 }, nfcv::UID_MSB };
 constexpr nfcv::UID uid3 { std::byte { 0x08 }, std::byte { 0x09 }, std::byte { 0x0a }, std::byte { 0x0b }, std::byte { 0x39 }, std::byte { 0x01 }, std::byte { 0x04 }, nfcv::UID_MSB };
 
+static nfcv::UID make_uid(uint8_t ix) {
+    return nfcv::UID { std::byte { ix }, std::byte { 0x02 }, std::byte { 0x02 }, std::byte { 0x03 }, std::byte { 0x39 }, std::byte { 0x01 }, std::byte { 0x04 }, nfcv::UID_MSB };
+}
+
 // Actual UID of a sample SLIX2 tag
 constexpr nfcv::UID uid1_slix2 { std::byte { 0xBC }, std::byte { 0x6F }, std::byte { 0x2F }, std::byte { 0x66 }, std::byte { 0x08 }, std::byte { 0x01 }, std::byte { 0x04 }, nfcv::UID_MSB };
 
@@ -389,7 +393,13 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         OPTBackend::Config {
             // We're not testing tag limiting here
             .max_known_tags_per_antenna = 4,
+
+            // Forget tags immediately - max_missed_discoveries has a dedicated test
+            .tag_max_missed_discoveries = 0,
         });
+
+    const auto discovery_interval = reader.config().discovery_interval_ms;
+
     OPTBackend::Event event;
 
     SECTION("Test simple TagDisovered -> TagLost functionality") {
@@ -399,7 +409,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
             .antennas = { 0 },
         };
 
-        auto res = reader.get_event(event, 1);
+        auto config = reader.config();
+        config.tag_max_missed_discoveries = 4;
+        reader.set_config(config);
+
+        uint32_t time = 1;
+        auto res = reader.get_event(event, time);
         REQUIRE(res == true);
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 0);
@@ -413,7 +428,8 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
                                                 }));
         logger.events.clear();
 
-        res = reader.get_event(event, 100);
+        time += discovery_interval / 2;
+        res = reader.get_event(event, time);
         REQUIRE(res == false);
         CHECK(logger.events.empty());
 
@@ -421,16 +437,35 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
 
         logger.tags[data::uid1].antennas = {};
 
-        res = reader.get_event(event, 251);
-        REQUIRE(res == false);
-        CHECK(std::ranges::equal(logger.events, std::vector<Event> {
-                                                    FieldUp { .antenna = 1 },
-                                                    Inventory {},
-                                                    FieldDown {},
-                                                }));
-        logger.events.clear();
+        for (int i = 0;; i++) {
+            time += discovery_interval;
+            res = reader.get_event(event, time);
+            REQUIRE(res == false);
+            CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                        FieldUp { .antenna = 1 },
+                                                        Inventory {},
+                                                        FieldDown {},
+                                                    }));
+            logger.events.clear();
 
-        res = reader.get_event(event, 501);
+            if (i == config.tag_max_missed_discoveries) {
+                break;
+            }
+
+            time += discovery_interval;
+            res = reader.get_event(event, discovery_interval);
+            REQUIRE(res == false);
+            CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                        FieldUp { .antenna = 0 },
+                                                        Inventory {},
+                                                        FieldDown {},
+                                                    }));
+
+            logger.events.clear();
+        }
+
+        time += discovery_interval;
+        res = reader.get_event(event, discovery_interval);
         REQUIRE(res == true);
         REQUIRE(std::holds_alternative<OPTBackend::TagLostEvent>(event));
         REQUIRE(std::get<OPTBackend::TagLostEvent>(event).tag == 0);
@@ -1176,6 +1211,11 @@ TEST_CASE("Test NFC debug mode", "[nfcv][openprinttag]") {
         .antennas = { 1 },
     };
 
+    OPTBackend::Config config {
+        // Forget tags immediately, not testing that functionality here
+        .tag_max_missed_discoveries = 0,
+    };
+    OPTBackend_NFCV reader(logger, config);
     const auto discovery_interval = reader.config().discovery_interval_ms;
 
     OPTBackend::Event event;
@@ -1292,4 +1332,89 @@ TEST_CASE("Test NFC get_tag_uid", "[nfcv][openprinttag]") {
 
     CHECK(reader.get_tag_uid(1, uid) == std::unexpected(OPTBackend::IOError::invalid_id));
     CHECK(reader.get_tag_uid(0, small_buffer) == std::unexpected(OPTBackend::IOError::data_too_big));
+}
+
+TEST_CASE("NFCV::max_known_tags_per_antenna", "[nfcv][openprinttag]") {
+    EventLogger logger;
+    logger.events = {};
+
+    OPTBackend::Config config {
+        .max_known_tags_per_antenna = 2,
+        // Not testing that here
+        .tag_max_missed_discoveries = 0,
+    };
+    OPTBackend_NFCV reader(logger, config);
+    OPTBackend::Event event;
+
+    REQUIRE(config.max_known_tags_per_antenna <= OPTBackend_NFCV::MAX_KNOWN_TAGS / 2);
+
+    for (int i = 0; i < 4; i++) {
+        logger.tags[data::make_uid(i)] = TagData {
+            .info = data::tag_info1,
+            .antennas = { 0 },
+        };
+    }
+
+    nfcv::UID uid;
+
+    uint32_t time = 1;
+
+    std::unordered_map<openprinttag::TagID, nfcv::UID> tag_uids;
+
+    // Check that we've detected all the expected tags in one go
+    for (int i = 0; i < config.max_known_tags_per_antenna; i++) {
+        REQUIRE(reader.get_event(event, time));
+        REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
+        const auto tag_id = std::get<OPTBackend::TagDetectedEvent>(event).tag;
+        REQUIRE(reader.get_tag_uid(tag_id, uid));
+        REQUIRE(uid == data::make_uid(i));
+        tag_uids[tag_id] = uid;
+    }
+
+    // Tag limit reached
+    REQUIRE(!reader.get_event(event, time));
+
+    // Move tag 0 to antenna 1
+    logger.tags[data::make_uid(0)].antennas = { 1 };
+
+    // Next discovery should be for antenna 1, but the tag was not lost on antenna 0 yet
+    time += config.discovery_interval_ms;
+    REQUIRE(!reader.get_event(event, time));
+
+    // Antenna 0 discovery - should lose tag 0
+    {
+        time += config.discovery_interval_ms;
+        REQUIRE(reader.get_event(event, time));
+        REQUIRE(std::holds_alternative<OPTBackend::TagLostEvent>(event));
+        const auto tag_id = std::get<OPTBackend::TagLostEvent>(event).tag;
+        REQUIRE(tag_uids[tag_id] == data::make_uid(0));
+        reader.forget_tag(tag_id);
+
+        REQUIRE(!reader.get_event(event, time));
+    }
+
+    // Antenna 1 discovery - detect tag 0
+    {
+        time += config.discovery_interval_ms;
+        REQUIRE(reader.get_event(event, time));
+        REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
+        const auto tag_id = std::get<OPTBackend::TagDetectedEvent>(event).tag;
+        REQUIRE(std::get<OPTBackend::TagDetectedEvent>(event).antenna == 1);
+        REQUIRE(reader.get_tag_uid(tag_id, uid));
+        REQUIRE(uid == data::make_uid(0));
+
+        REQUIRE(!reader.get_event(event, time));
+    }
+
+    // Antenna 0 discovery - get tag 2
+    {
+        time += config.discovery_interval_ms;
+        REQUIRE(reader.get_event(event, time));
+        REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
+        const auto tag_id = std::get<OPTBackend::TagDetectedEvent>(event).tag;
+        REQUIRE(reader.get_tag_uid(tag_id, uid));
+        REQUIRE(uid == data::make_uid(2));
+
+        REQUIRE(!reader.get_event(event, time));
+    }
 }
