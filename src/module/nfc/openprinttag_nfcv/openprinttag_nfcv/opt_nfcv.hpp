@@ -14,6 +14,7 @@ namespace openprinttag {
 
 class OPTBackend_NFCV final : public OPTBackend {
 public:
+    static constexpr size_t MAX_ANTENNA_COUNT = 2;
     static constexpr size_t MAX_KNOWN_TAGS = 8;
 
     OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, const Config &initial_config = {});
@@ -60,6 +61,9 @@ private:
 
     nfcv::ReaderWriterInterface &reader;
     std::array<TagData, MAX_KNOWN_TAGS> tags {};
+
+    /// Stores how many known tags each antenna has
+    std::array<uint8_t, MAX_ANTENNA_COUNT> known_tags_per_antenna {};
 
     RateLimiter<uint32_t> discoveries_limiter;
     nfcv::ReaderWriterInterface::AntennaID discovery_antenna = 0;

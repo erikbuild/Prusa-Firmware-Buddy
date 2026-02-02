@@ -47,6 +47,7 @@ std::unexpected<OPTBackend::IOError> to_backend_unexpected(nfcv::Error error) {
 OPTBackend_NFCV::OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, const Config &initial_config)
     : reader(reader)
     , discoveries_limiter(initial_config.discovery_interval_ms) {
+    assert(reader.antenna_count() <= MAX_ANTENNA_COUNT);
     set_config(initial_config);
     reset_state();
 }
@@ -234,6 +235,12 @@ void OPTBackend_NFCV::forget_tag(TagID tag) {
     }
 
     auto &tag_data = tags.at(tag);
+
+    if (tag_data.state == TagData::State::free) {
+        return;
+    }
+
+    known_tags_per_antenna[tag_data.antenna]--;
     tag_data.state = TagData::State::free;
 }
 
@@ -499,6 +506,11 @@ void OPTBackend_NFCV::run_next_discovery() {
             continue;
         }
 
+        // Don't track more tags than the limit per antenna
+        if (known_tags_per_antenna[discovery_antenna] >= config_.max_known_tags_per_antenna) {
+            continue;
+        }
+
         // We found unknown tag, lets ask for more information about it
         const auto tag_info = reader.get_system_info(uid);
         if (!tag_info.has_value()) {
@@ -536,6 +548,7 @@ void OPTBackend_NFCV::run_next_discovery() {
             .state = TagData::State::known,
             .tag_type = TagType::unknown,
         };
+        known_tags_per_antenna[discovery_antenna]++;
 
         // Determine tag type
         {
@@ -570,7 +583,11 @@ void OPTBackend_NFCV::run_next_discovery() {
                     continue;
                 }
 
-                tag_data.state = config_.auto_forget_tag ? TagData::State::free : TagData::State::lost;
+                if (config_.auto_forget_tag) {
+                    forget_tag(tag_id);
+                } else {
+                    tag_data.state = TagData::State::lost;
+                }
             }
         }
     }

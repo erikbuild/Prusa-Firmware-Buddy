@@ -41,6 +41,9 @@ public:
         /// If set, only the specified antenna will ever be used
         ReaderAntenna enforced_antenna = no_antenna_enforce;
 
+        /// Limits tags per antenna, so that one antenna does not take all the slots
+        uint8_t max_known_tags_per_antenna = 1;
+
         /// How often should the discovery sequences run
         /// Please note that in OPT_NFCV, the discoveries alternate per antenna, so the actual interval for each antenna is longer
         uint32_t discovery_interval_ms = 250;

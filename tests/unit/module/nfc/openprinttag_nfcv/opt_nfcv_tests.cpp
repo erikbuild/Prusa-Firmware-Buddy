@@ -385,7 +385,11 @@ constexpr nfcv::TagInfo tag_info1 { .dsfid = std::nullopt, .afi = std::nullopt, 
 TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprinttag]") {
     EventLogger logger {};
 
-    OPTBackend_NFCV reader(logger);
+    OPTBackend_NFCV reader(logger,
+        OPTBackend::Config {
+            // We're not testing tag limiting here
+            .max_known_tags_per_antenna = 4,
+        });
     OPTBackend::Event event;
 
     SECTION("Test simple TagDisovered -> TagLost functionality") {

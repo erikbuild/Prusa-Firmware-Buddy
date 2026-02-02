@@ -97,6 +97,9 @@ static constexpr openprinttag::OPTBackend::Config ll_config {
     .enforced_antenna = convert_antenna(option::nfc_st25r3919b_enabled_antennas),
 };
 
+// !!! Buddy implementation cannot correctly track multiple tags per antenna, the implementation will need to be adjusted if this value changes
+static_assert(ll_config.max_known_tags_per_antenna == 1);
+
 static openprinttag::OPTBackend_NFCV ll_reader { nfc::reader_1, ll_config };
 
 NFCTask nfc_task(
