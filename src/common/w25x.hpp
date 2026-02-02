@@ -93,7 +93,7 @@ void w25x_block64_erase(uint32_t addr);
 /// This operation can not be suspended, so it can not be used
 /// during print.
 /// Errors can be checked (and cleared) using w25x_fetch_error()
-void w25x_chip_erase(void (*wait_callback)() = NULL);
+void w25x_chip_erase();
 
 /// Fetch and clear error of a previous operation.
 /// Returns 0 if there hasn't been any error

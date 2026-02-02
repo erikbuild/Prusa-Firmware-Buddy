@@ -189,8 +189,7 @@ static FactoryReset::ItemBitset decode_items_to_keep(uint16_t encoded_params) {
 
     if (hard_reset) {
         // Wipe xFlash
-        w25x_chip_erase([] {
-        });
+        w25x_chip_erase();
 
 #if BOOTLOADER()
         // Invalidate firmware by erasing part of it

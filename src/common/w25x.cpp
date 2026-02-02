@@ -234,15 +234,12 @@ bool is_suspended() {
     return (read_status2_reg() & W25X_STATUS2_SUS);
 }
 
-bool w25x_wait_busy(void (*wait_callback)() = NULL) {
+bool w25x_wait_busy() {
     uint32_t loop_counter = 0;
     while (read_status1_reg() & W25X_STATUS_BUSY) {
         ++loop_counter;
         if (loop_counter > max_wait_loops()) {
             return false;
-        }
-        if (wait_callback) {
-            wait_callback();
         }
     }
     return true;
@@ -503,7 +500,7 @@ void w25x_block64_erase(uint32_t addr) {
     w25x_erase(CMD_BLOCK64_ERASE, addr);
 }
 
-void w25x_chip_erase(void (*wait_callback)()) {
+void w25x_chip_erase() {
     OptionalMutex eraseMutex(erase_mutex);
     OptionalMutex communicationMutex(communication_mutex);
 
@@ -511,7 +508,7 @@ void w25x_chip_erase(void (*wait_callback)()) {
     w25x_select();
     w25x_send_byte(CMD_CHIP_ERASE); // send command 0xc7
     w25x_deselect();
-    if (!w25x_wait_busy(wait_callback)) {
+    if (!w25x_wait_busy()) {
         w25x_set_error(HAL_TIMEOUT);
     }
 }
