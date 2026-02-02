@@ -163,15 +163,15 @@ void M600_manual(const GCodeParser2 &p) {
     xyz_pos_t park_point = XYZ_NOZZLE_PARK_POINT_M600;
 
     // Lift Z axis
-    if (p.store_option('Z', park_point.z)) {
+    if (p.store_option_if_present('Z', park_point.z)) {
         park_point.z = LOGICAL_TO_NATIVE(park_point.z, Z_AXIS);
     }
 
     // Move XY axes to filament change position or given position
-    if (p.store_option('X', park_point.x)) {
+    if (p.store_option_if_present('X', park_point.x)) {
         park_point.x = LOGICAL_TO_NATIVE(park_point.x, X_AXIS);
     }
-    if (p.store_option('Y', park_point.y)) {
+    if (p.store_option_if_present('Y', park_point.y)) {
         park_point.y = LOGICAL_TO_NATIVE(park_point.y, Y_AXIS);
     }
 

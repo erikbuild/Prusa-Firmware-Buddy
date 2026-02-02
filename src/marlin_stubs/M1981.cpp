@@ -31,7 +31,7 @@ void M1981() {
     }
 
     uint8_t tools = 0;
-    std::ignore = parser.store_option('F', tools);
+    std::ignore = parser.store_option_if_present('F', tools);
 
     if (auto tool = parser.option<uint8_t>('T')) {
         tools |= (1 << *tool);

@@ -7,7 +7,7 @@
 #include <cinttypes>
 #include <str_utils.hpp>
 
-GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, std::string_view &target, std::span<char> buffer) const {
+GCodeParser2::StoreOptionResult GCodeParser2::store_option_if_present(char key, std::string_view &target, std::span<char> buffer) const {
     if (key < first_option_letter || key > last_option_letter) {
         assert(0); // You shouldn't be feeding invalid keys to the function
         return std::unexpected(OptionError::not_present);
@@ -28,7 +28,7 @@ GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, std::string
     return {};
 }
 
-GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, bool &target) const {
+GCodeParser2::StoreOptionResult GCodeParser2::store_option_if_present(char key, bool &target) const {
     std::array<char, 2> buffer;
     const auto str = option_expected<std::string_view>(key, buffer);
     if (!str) {
@@ -49,7 +49,7 @@ GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, bool &targe
     }
 }
 
-GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, LargestInteger &target, LargestInteger min_value, LargestInteger max_value) const {
+GCodeParser2::StoreOptionResult GCodeParser2::store_option_if_present(char key, LargestInteger &target, LargestInteger min_value, LargestInteger max_value) const {
     std::array<char, 32> buffer;
     const auto str = option_expected<std::string_view>(key, buffer);
     if (!str) {
@@ -72,7 +72,7 @@ GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, LargestInte
     return {};
 }
 
-GCodeParser2::StoreOptionResult GCodeParser2::store_option(char key, float &target, float min_value, float max_value) const {
+GCodeParser2::StoreOptionResult GCodeParser2::store_option_if_present(char key, float &target, float min_value, float max_value) const {
     std::array<char, 32> buffer;
     const auto str = option_expected<std::string_view>(key, buffer);
     if (!str) {

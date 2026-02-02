@@ -26,7 +26,7 @@ public:
         parse_error,
     };
 
-    /// Used for "store_option" functions.
+    /// Used for "store_option_if_present" functions.
     /// On success, the option value is stored in the \p target reference that the function takes and \p void is returned.
     /// On error, the \p target remains unchanged and an appropriate \p OptionError is returned.
     using StoreOptionResult = std::expected<void, OptionError>;
@@ -53,7 +53,7 @@ public:
     template <typename T, typename... Args>
     [[nodiscard]] std::optional<T> option(char key, Args &&...args) const {
         T val {};
-        const auto result = store_option(key, val, std::forward<Args>(args)...);
+        const auto result = store_option_if_present(key, val, std::forward<Args>(args)...);
         if (!result.has_value()) {
             return std::nullopt;
         }
@@ -65,7 +65,7 @@ public:
     template <typename T, typename... Args>
     [[nodiscard]] std::expected<T, OptionError> option_expected(char key, Args &&...args) const {
         T val {};
-        const auto result = store_option(key, val, std::forward<Args>(args)...);
+        const auto result = store_option_if_present(key, val, std::forward<Args>(args)...);
         if (!result.has_value()) {
             return std::unexpected(result.error());
         }
@@ -78,7 +78,7 @@ public:
     [[nodiscard]] std::optional<std::pair<T, char>> option_multikey(std::initializer_list<char> keys, Args &&...args) const {
         T val {};
         for (const char key : keys) {
-            if (store_option(key, val, args...)) {
+            if (store_option_if_present(key, val, args...)) {
                 return { { val, key } };
             }
         }
@@ -87,7 +87,7 @@ public:
     }
 
     /**
-     * !!! General structure of store_option functions:
+     * !!! General structure of store_option_if_present functions:
      * - First parameter is always "char key"
      * - Second parameter is always reference to a target variable, where the result is stored
      * - Must return StoreOptionResult
@@ -99,24 +99,24 @@ public:
     /// Uses \param buffer as a buffer to store the result (target is a subset of the buffer)
     /// The value is stripped from trailing and leading whitespace.
     /// If the value was quoted (G1 T"some \' str"), it is unquoted and unescaped (target is set to "some ' str")
-    StoreOptionResult store_option(char key, std::string_view &target, std::span<char> buffer) const;
+    StoreOptionResult store_option_if_present(char key, std::string_view &target, std::span<char> buffer) const;
 
     /// Parses a bool option.
     /// Present option \param key with no value is considered as \p true.
-    StoreOptionResult store_option(char key, bool &target) const;
+    StoreOptionResult store_option_if_present(char key, bool &target) const;
 
     /// Parses an integer.
     /// The parsed value must be within \param min_value and \param max_value (both inclusive), otherwise an error is returned.
     /// \param target is changed only on success.
-    StoreOptionResult store_option(char key, LargestInteger &target, LargestInteger min_value = std::numeric_limits<LargestInteger>::min(), LargestInteger max_value = std::numeric_limits<LargestInteger>::max()) const;
+    StoreOptionResult store_option_if_present(char key, LargestInteger &target, LargestInteger min_value = std::numeric_limits<LargestInteger>::min(), LargestInteger max_value = std::numeric_limits<LargestInteger>::max()) const;
 
     /// Convenience functions for smaller integers
     template <std::integral T>
         requires(!std::is_same_v<T, bool> && !std::is_same_v<T, LargestInteger>)
-    StoreOptionResult store_option(char key, T &target, T min_value = std::numeric_limits<T>::min(), T max_value = std::numeric_limits<T>::max()) const {
+    StoreOptionResult store_option_if_present(char key, T &target, T min_value = std::numeric_limits<T>::min(), T max_value = std::numeric_limits<T>::max()) const {
         LargestInteger val {};
         // There is an explicit overload for LargestInteger, so this does not infinitely recurse
-        const auto result = store_option(key, val, static_cast<LargestInteger>(min_value), static_cast<LargestInteger>(max_value));
+        const auto result = store_option_if_present(key, val, static_cast<LargestInteger>(min_value), static_cast<LargestInteger>(max_value));
         if (!result) {
             return result;
         }
@@ -128,14 +128,14 @@ public:
     /// Parses an enum
     template <typename T>
         requires(std::is_enum_v<T>)
-    StoreOptionResult store_option(char key, T &target, auto enum_count) const {
+    StoreOptionResult store_option_if_present(char key, T &target, auto enum_count) const {
         using TB = std::underlying_type_t<T>;
-        return store_option<TB>(key, reinterpret_cast<TB &>(target), static_cast<TB>(0), static_cast<TB>(enum_count) - 1);
+        return store_option_if_present<TB>(key, reinterpret_cast<TB &>(target), static_cast<TB>(0), static_cast<TB>(enum_count) - 1);
     }
 
     /// Parses a compatible type (see GCodeParser2CopatibleType)
     template <GCodeParser2CompatibleType T, typename... Args>
-    StoreOptionResult store_option(char key, T &target, Args &&...args) const {
+    StoreOptionResult store_option_if_present(char key, T &target, Args &&...args) const {
         std::array<char, 64> buffer;
         const auto str = option_expected<std::string_view>(key, buffer);
         if (!str.has_value()) {
@@ -154,9 +154,9 @@ public:
 
     // Parses an optional
     template <typename T, typename... Args>
-    StoreOptionResult store_option(char key, std::optional<T> &target, Args &&...args) const {
+    StoreOptionResult store_option_if_present(char key, std::optional<T> &target, Args &&...args) const {
         T val {};
-        const auto result = store_option(key, val, std::forward<Args>(args)...);
+        const auto result = store_option_if_present(key, val, std::forward<Args>(args)...);
         if (result) {
             target = val;
         }
@@ -164,7 +164,7 @@ public:
     }
 
     /// Parses a float
-    StoreOptionResult store_option(char key, float &target, float min_value = -std::numeric_limits<float>::infinity(), float max_value = std::numeric_limits<float>::infinity()) const;
+    StoreOptionResult store_option_if_present(char key, float &target, float min_value = -std::numeric_limits<float>::infinity(), float max_value = std::numeric_limits<float>::infinity()) const;
 
 protected:
     /// Parses an option value

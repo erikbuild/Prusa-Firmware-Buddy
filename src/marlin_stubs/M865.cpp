@@ -73,22 +73,22 @@ void PrusaGcodeSuite::M865() {
         params = {};
     }
 
-    p.store_option('T', params.nozzle_temperature);
-    p.store_option('P', params.nozzle_preheat_temperature);
-    p.store_option('B', params.heatbed_temperature);
+    p.store_option_if_present('T', params.nozzle_temperature);
+    p.store_option_if_present('P', params.nozzle_preheat_temperature);
+    p.store_option_if_present('B', params.heatbed_temperature);
 
-    p.store_option('A', params.is_abrasive);
-    p.store_option('G', params.do_not_auto_retract);
+    p.store_option_if_present('A', params.is_abrasive);
+    p.store_option_if_present('G', params.do_not_auto_retract);
 
 #if HAS_FILAMENT_HEATBREAK_PARAM()
-    p.store_option('H', params.heatbreak_temperature);
+    p.store_option_if_present('H', params.heatbreak_temperature);
 #endif
 
 #if HAS_CHAMBER_API()
-    p.store_option('C', params.chamber_target_temperature);
-    p.store_option('D', params.chamber_min_temperature);
-    p.store_option('E', params.chamber_max_temperature);
-    p.store_option('F', params.requires_filtration);
+    p.store_option_if_present('C', params.chamber_target_temperature);
+    p.store_option_if_present('D', params.chamber_min_temperature);
+    p.store_option_if_present('E', params.chamber_max_temperature);
+    p.store_option_if_present('F', params.requires_filtration);
 #endif
 
     std::array<char, filament_name_buffer_size - 1> name_buf;
