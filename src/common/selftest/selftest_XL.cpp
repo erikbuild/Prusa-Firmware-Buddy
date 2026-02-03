@@ -196,12 +196,13 @@ static consteval DockConfig_t make_dock_config(uint8_t index) {
     };
 }
 
-static constexpr std::array<const DockConfig_t, HOTENDS> Config_Docks = { { make_dock_config(0),
+static constexpr std::array<const DockConfig_t, PhysicalToolIndex::count> Config_Docks = { {
+    make_dock_config(0),
     make_dock_config(1),
     make_dock_config(2),
     make_dock_config(3),
     make_dock_config(4),
-    make_dock_config(5) } };
+} };
 
 static constexpr ToolOffsetsConfig_t Config_ToolOffsets = {};
 
@@ -230,12 +231,12 @@ protected:
     selftest::IPartHandler *pXAxis = nullptr;
     selftest::IPartHandler *pYAxis = nullptr;
     selftest::IPartHandler *pZAxis = nullptr;
-    std::array<selftest::IPartHandler *, HOTENDS> pNozzles;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pNozzles;
     selftest::IPartHandler *pBed = nullptr;
-    std::array<selftest::IPartHandler *, HOTENDS> m_pLoadcell;
-    std::array<selftest::IPartHandler *, HOTENDS> pDocks;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> m_pLoadcell;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pDocks;
     selftest::IPartHandler *pToolOffsets;
-    std::array<selftest::IPartHandler *, HOTENDS> pFSensor;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pFSensor;
     selftest::IPartHandler *pPhaseStepping;
 
     SelftestResult m_result;

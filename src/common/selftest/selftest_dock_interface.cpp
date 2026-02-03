@@ -10,7 +10,7 @@ namespace selftest {
 
 std::array<SelftestDock_t, HOTENDS> staticResultDocks;
 
-TestReturn phaseDocks(const ToolMask tool_mask, std::array<IPartHandler *, HOTENDS> &pDocks, const std::array<const DockConfig_t, HOTENDS> &configs) {
+TestReturn phaseDocks(const ToolMask tool_mask, std::array<IPartHandler *, PhysicalToolIndex::count> &pDocks, const std::array<const DockConfig_t, PhysicalToolIndex::count> &configs) {
     for (uint i = 0; i < pDocks.size(); ++i) {
         if (!is_tool_selftest_enabled(i, tool_mask)) {
             continue;

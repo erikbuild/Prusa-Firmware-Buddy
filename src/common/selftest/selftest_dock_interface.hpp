@@ -8,6 +8,6 @@
 
 namespace selftest {
 
-TestReturn phaseDocks(const ToolMask tool_mask, std::array<IPartHandler *, HOTENDS> &pDocks, const std::array<const DockConfig_t, HOTENDS> &configs);
+TestReturn phaseDocks(const ToolMask tool_mask, std::array<IPartHandler *, PhysicalToolIndex::count> &pDocks, const std::array<const DockConfig_t, PhysicalToolIndex::count> &configs);
 
 };

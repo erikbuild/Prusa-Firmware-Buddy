@@ -57,7 +57,7 @@ static inline void power_check_callback(CSelftestPart_Heater &part) {
 }
 #endif
 
-void phaseHeaters_noz_ena(std::array<IPartHandler *, HOTENDS> &pNozzles, const std::span<const HeaterConfig_t> config_nozzle) {
+void phaseHeaters_noz_ena(std::array<IPartHandler *, PhysicalToolIndex::count> &pNozzles, const std::span<const HeaterConfig_t> config_nozzle) {
     resultHeaters.tested_parts |= to_one_hot(SelftestHeaters_t::TestedParts::noz);
 
     for (size_t i = 0; i < config_nozzle.size(); i++) {
@@ -159,7 +159,7 @@ void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed)
 
 // data for both subtests must be sent together
 // we could loose some events, so we must be sending entire state of both parts
-bool phaseHeaters(std::array<IPartHandler *, HOTENDS> &pNozzles, IPartHandler **pBed) {
+bool phaseHeaters(std::array<IPartHandler *, PhysicalToolIndex::count> &pNozzles, IPartHandler **pBed) {
     // true when nozzle just finished test
     bool just_finished_noz[HOTENDS] {};
     for (size_t i = 0; i < HOTENDS; i++) {

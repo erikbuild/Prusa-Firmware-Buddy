@@ -18,6 +18,6 @@ class TestReturn;
 
 namespace selftest {
 
-TestReturn phaseLoadcell(const ToolMask tool_mask, std::array<IPartHandler *, HOTENDS> &m_pLoadcell, const std::span<const LoadcellConfig_t> config);
+TestReturn phaseLoadcell(const ToolMask tool_mask, std::array<IPartHandler *, PhysicalToolIndex::count> &m_pLoadcell, const std::span<const LoadcellConfig_t> config);
 
 };
