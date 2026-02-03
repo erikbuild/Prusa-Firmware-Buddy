@@ -152,9 +152,7 @@ struct TaskControlBlock {
 #if BUDDY_ENABLE_CONNECT()
     StaticTask_t connect;
 #endif
-#if !FILAMENT_SENSOR_IS_NO()
     StaticTask_t measure;
-#endif
 };
 static TaskControlBlock task_control_block;
 
@@ -170,9 +168,7 @@ struct TaskStack {
 #if BUDDY_ENABLE_CONNECT()
     uint32_t connect[2336];
 #endif
-#if !FILAMENT_SENSOR_IS_NO()
     uint32_t measure[620];
-#endif
 };
 static TaskStack __attribute__((section(".ccmram"))) task_stack;
 
@@ -561,9 +557,7 @@ extern "C" void main_cpp(void) {
     logging::syslog_reconfigure();
     metrics_reconfigure();
 
-#if !FILAMENT_SENSOR_IS_NO()
     create_task("measure", StartMeasurementTask, TASK_PRIORITY_MEASUREMENT_TASK, task_stack.measure, task_control_block.measure);
-#endif
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
