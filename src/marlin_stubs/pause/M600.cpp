@@ -121,17 +121,12 @@ void GcodeSuite::M600() {
 
 #if HAS_SPOOL_JOIN()
     if (is_auto_m600) {
+        auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+        if (!virtual_tool.has_value()) {
+            bsod("Spool join to notool");
+        }
 
-        uint8_t current_tool = 0;
-    #if HAS_TOOLCHANGER()
-        current_tool = active_extruder;
-    #elif HAS_MMU2()
-        // active_extruder variable is not altered by MMU2 (always 0)
-        // We need to select current filament slot
-        current_tool = MMU2::mmu2.get_current_tool();
-    #endif
-
-        if (spool_join.do_join(current_tool)) {
+        if (spool_join.do_join(*virtual_tool)) {
             // if automatic M600 succeeded, don't do manual M600, if not, do manual M600
             do_manual_m600 = false;
         }
