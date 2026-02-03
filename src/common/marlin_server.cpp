@@ -2465,22 +2465,18 @@ static void _server_print_loop(void) {
         }
         set_current_from_steppers();
         sync_plan_position();
-        report_current_position();
+        // Note technically Z position is also wrong after the quick_stop(),
+        // but Z is not moved often and moves slower, so the position should be
+        // quite accurate
+        set_axis_is_not_at_home(X_AXIS);
+        set_axis_is_not_at_home(Y_AXIS);
 
 #if HAS_EMERGENCY_STOP()
         if (!buddy::emergency_stop().in_emergency()) {
 #else
         {
 #endif
-            if (axes_need_homing()
-#if ENABLED(CRASH_RECOVERY)
-                || server.aborting_did_crash_trigger
-#endif /*ENABLED(CRASH_RECOVERY)*/
-            )
-                lift_head(); // It would be dangerous to move XY
-            else {
-                park_head();
-            }
+            park_head();
         }
 
         thermalManager.disable_all_heaters();
