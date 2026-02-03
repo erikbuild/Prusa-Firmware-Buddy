@@ -35,7 +35,7 @@ static void sample_sg() {
     sample_sg(&metric_tmc_sg_e, 3);
 }
 
-void StartMeasurementTask(void const *) {
+void StartMeasurementTask() {
     FSensors_instance().task_init();
     for (;;) {
         FSensors_instance().task_cycle();

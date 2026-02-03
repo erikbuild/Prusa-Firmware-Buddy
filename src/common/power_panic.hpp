@@ -54,6 +54,6 @@ void ac_fault_isr();
 // AC fault Task handler
 extern osThreadId ac_fault_task;
 
-void ac_fault_task_main(void const *argument);
+void ac_fault_task_main();
 
 }; // namespace power_panic

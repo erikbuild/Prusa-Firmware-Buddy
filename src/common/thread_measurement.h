@@ -11,7 +11,7 @@
 extern "C" {
 #endif //__cplusplus
 
-void StartMeasurementTask(void const *argument);
+void StartMeasurementTask();
 
 #ifdef __cplusplus
 }

@@ -92,7 +92,7 @@ public:
 
 protected:
     /// For some historical reason, filament sensor runs in the context of measurement task
-    friend void StartMeasurementTask(void const *);
+    friend void StartMeasurementTask();
 
     /// Called from measurement task once
     void task_init();

@@ -28,6 +28,7 @@
 #include "hwio_pindef.h"
 #include "gui.hpp"
 #include "display.hpp"
+#include <span>
 #include <stdint.h>
 #include "printers.h"
 #include "MarlinPin.h"
@@ -61,7 +62,6 @@
 #include <appmain.hpp>
 #include "safe_state.h"
 #include "sound.hpp"
-#include <buddy/ccm_thread.hpp>
 #include <version/version.hpp>
 #include "data_exchange.hpp"
 #include "bootloader/bootloader.hpp"
@@ -131,12 +131,6 @@ osThreadId defaultTaskHandle;
 osThreadId displayTaskHandle;
 osThreadId connectTaskHandle;
 
-#if HAS_GUI()
-static constexpr size_t displayTask_stacksz = 1024 + 512; // in words
-static uint32_t __attribute__((section(".ccmram"))) displayTask_buffer[displayTask_stacksz];
-static StaticTask_t __attribute__((section(".ccmram"))) displayTask_control;
-#endif
-
 unsigned HAL_RCC_CSR = 0;
 int HAL_GPIO_Initialized = 0;
 int HAL_ADC_Initialized = 0;
@@ -144,11 +138,55 @@ int HAL_PWM_Initialized = 0;
 int HAL_SPI_Initialized = 0;
 
 void SystemClock_Config(void);
-void StartDefaultTask(void const *argument);
-void StartDisplayTask(void const *argument);
-void StartConnectTask(void const *argument);
-void StartConnectTaskError(void const *argument); // Version for redscreen
 void iwdg_warning_cb(void);
+
+/// Keep task control blocks together and away from stacks.
+struct TaskControlBlock {
+    StaticTask_t marlin;
+#if HAS_POWER_PANIC()
+    StaticTask_t acfault;
+#endif
+#if HAS_GUI()
+    StaticTask_t display;
+#endif
+#if BUDDY_ENABLE_CONNECT()
+    StaticTask_t connect;
+#endif
+#if !FILAMENT_SENSOR_IS_NO()
+    StaticTask_t measure;
+#endif
+};
+static TaskControlBlock task_control_block;
+
+/// Keep task stacks together and in the CCMRAM.
+struct TaskStack {
+    uint32_t marlin[1160];
+#if HAS_POWER_PANIC()
+    uint32_t acfault[80];
+#endif
+#if HAS_GUI()
+    uint32_t display[1536];
+#endif
+#if BUDDY_ENABLE_CONNECT()
+    uint32_t connect[2336];
+#endif
+#if !FILAMENT_SENSOR_IS_NO()
+    uint32_t measure[620];
+#endif
+};
+static TaskStack __attribute__((section(".ccmram"))) task_stack;
+
+/// Helper to run freertos task.
+static TaskHandle_t create_task(const char *name, void (*func)(), osPriority priority, std::span<uint32_t> stack, StaticTask_t &tcb) {
+    return xTaskCreateStatic(
+        [](void *arg) { reinterpret_cast<void (*)()>(arg)(); },
+        name,
+        stack.size(),
+        reinterpret_cast<void *>(func),
+        tskIDLE_PRIORITY + priority - osPriorityIdle,
+        stack.data(),
+        &tcb);
+}
 
 /**
  * Report bootstrap finished and firmware version.
@@ -258,11 +296,6 @@ extern "C" void main_cpp(void) {
 
     const bool want_error_screen = (dump_is_valid() && !dump_is_displayed()) || (message_is_valid() && message_get_type() != MsgType::EMPTY && !message_is_displayed());
 
-#if BUDDY_ENABLE_CONNECT()
-    // On a place shared for both code branches, so we have just one connectTask buffer.
-    osThreadCCMDef(connectTask, want_error_screen ? StartConnectTaskError : StartConnectTask, TASK_PRIORITY_CONNECT, 0, 2336);
-#endif
-
 #if HAS_NFC()
     nfc::turn_off();
 #endif
@@ -339,9 +372,8 @@ extern "C" void main_cpp(void) {
 
             TaskDeps::wait(TaskDeps::Tasks::network);
             start_network_task(/*allow_full=*/false);
-            // definition and creation of connectTask
             TaskDeps::wait(TaskDeps::Tasks::connect);
-            connectTaskHandle = osThreadCreate(osThread(connectTask), NULL);
+            connectTaskHandle = create_task("connect", connect_client::run_error, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
         }
 #endif
         return;
@@ -440,8 +472,7 @@ extern "C" void main_cpp(void) {
     filesystem_init();
 
 #if HAS_GUI()
-    osThreadStaticDef(displayTask, StartDisplayTask, TASK_PRIORITY_DISPLAY_TASK, 0, displayTask_stacksz, displayTask_buffer, &displayTask_control);
-    displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
+    displayTaskHandle = create_task("display", gui_run, TASK_PRIORITY_DISPLAY_TASK, task_stack.display, task_control_block.display);
 #endif
     // wait for gui to init and render loading screen before starting flashing. We need to init bootstrap screen so we can send process percentage to it. Also it would look laggy without it.
     TaskDeps::wait(TaskDeps::Tasks::bootstrap_start);
@@ -484,14 +515,11 @@ extern "C" void main_cpp(void) {
     buddy::hw::io_expander2.initialize();
 #endif
 
-    osThreadCCMDef(defaultTask, StartDefaultTask, TASK_PRIORITY_DEFAULT_TASK, 0, 1160);
-    defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+    defaultTaskHandle = create_task("marlin", app_run, TASK_PRIORITY_DEFAULT_TASK, task_stack.marlin, task_control_block.marlin);
 
 #if HAS_POWER_PANIC()
     power_panic::check_ac_fault_at_startup();
-    /* definition and creation of acFaultTask */
-    osThreadCCMDef(acFaultTask, power_panic::ac_fault_task_main, TASK_PRIORITY_AC_FAULT, 0, 80);
-    power_panic::ac_fault_task = osThreadCreate(osThread(acFaultTask), NULL);
+    power_panic::ac_fault_task = create_task("acfault", power_panic::ac_fault_task_main, TASK_PRIORITY_AC_FAULT, task_stack.acfault, task_control_block.acfault);
 #endif
 
 #if HAS_PUPPIES()
@@ -523,9 +551,8 @@ extern "C" void main_cpp(void) {
     // In tester mode ESP UART is being used to talk to the testing station,
     // thus it must not be used for the ESP -> no networking tasks shall be started.
     if (!running_in_tester_mode()) {
-        // definition and creation of connectTask
         TaskDeps::wait(TaskDeps::Tasks::connect);
-        connectTaskHandle = osThreadCreate(osThread(connectTask), NULL);
+        connectTaskHandle = create_task("connect", connect_client::run, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
     }
 #endif
 
@@ -535,9 +562,7 @@ extern "C" void main_cpp(void) {
     metrics_reconfigure();
 
 #if !FILAMENT_SENSOR_IS_NO()
-    /* definition and creation of measurementTask */
-    osThreadCCMDef(measurementTask, StartMeasurementTask, TASK_PRIORITY_MEASUREMENT_TASK, 0, 620);
-    osThreadCreate(osThread(measurementTask), NULL);
+    create_task("measure", StartMeasurementTask, TASK_PRIORITY_MEASUREMENT_TASK, task_stack.measure, task_control_block.measure);
 #endif
 }
 
@@ -582,37 +607,6 @@ void HAL_SPI_TxRxCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi) {
 #endif
     BUDDY_UNREACHABLE();
 }
-
-void StartDefaultTask([[maybe_unused]] void const *argument) {
-    app_run();
-    for (;;) {
-        osDelay(1);
-    }
-}
-
-void StartDisplayTask([[maybe_unused]] void const *argument) {
-    gui_run();
-    for (;;) {
-        osDelay(1);
-    }
-}
-
-void StartErrorDisplayTask([[maybe_unused]] void const *argument) {
-    gui_error_run();
-    for (;;) {
-        osDelay(1);
-    }
-}
-
-#if BUDDY_ENABLE_CONNECT()
-void StartConnectTask([[maybe_unused]] void const *argument) {
-    connect_client::run();
-}
-
-void StartConnectTaskError([[maybe_unused]] void const *argument) {
-    connect_client::run_error();
-}
-#endif
 
 /**
  * @brief  Period elapsed callback in non blocking mode
@@ -667,8 +661,7 @@ void init_error_screen() {
 
     init_only_littlefs();
 
-    osThreadStaticDef(displayTask, StartErrorDisplayTask, TASK_PRIORITY_DISPLAY_TASK, 0, displayTask_stacksz, displayTask_buffer, &displayTask_control);
-    displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
+    displayTaskHandle = create_task("display", gui_error_run, TASK_PRIORITY_DISPLAY_TASK, task_stack.display, task_control_block.display);
 #endif
 }
 

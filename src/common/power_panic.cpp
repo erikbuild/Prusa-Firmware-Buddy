@@ -114,7 +114,7 @@ LOG_COMPONENT_DEF(PowerPanic, logging::Severity::info);
 runtime_state_t runtime_state;
 osThreadId ac_fault_task;
 
-void ac_fault_task_main([[maybe_unused]] void const *argument) {
+void ac_fault_task_main() {
 
     // suspend until resumed by the fault isr
     vTaskSuspend(NULL);
