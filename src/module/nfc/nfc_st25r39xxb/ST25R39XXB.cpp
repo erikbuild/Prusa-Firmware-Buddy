@@ -179,10 +179,13 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
     hw_int.write_fifo(buffer);
 
     // Start transmission
-    hw_int.direct_command(Command::transmit_without_crc); // Temporary without CRC until I make it calculate it
-    auto res = await_interrupt(IRQType::tx_end, 10);
-    if (!res.has_value()) {
-        return res;
+    hw_int.direct_command(Command::transmit_without_crc); // Temporary without CRC until I make it calculate it)
+
+    {
+        const auto res = await_interrupt(IRQType::tx_end, 10);
+        if (!res.has_value()) {
+            return res;
+        }
     }
     // Transmission finished
 
@@ -196,17 +199,23 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         }
         return {};
     }
-    const auto receive_res = await_interrupt(IRQType::rx_start, 20, IRQType::no_response_timer_expire);
-    if (!receive_res.has_value()) {
-        // We timed out - we didn't receive any response
-        if (receive_res.error() == nfcv::Error::timeout) {
-            return std::unexpected(nfcv::Error::no_response);
+
+    {
+        const auto res = await_interrupt(IRQType::rx_start, 20, IRQType::no_response_timer_expire);
+        if (!res.has_value()) {
+            // We timed out - we didn't receive any response
+            if (res.error() == nfcv::Error::timeout) {
+                return std::unexpected(nfcv::Error::no_response);
+            }
+            return res;
         }
-        return receive_res;
     }
-    res = await_interrupt(IRQType::rx_end, 100);
-    if (!res.has_value()) {
-        return res;
+
+    {
+        const auto res = await_interrupt(IRQType::rx_end, 100);
+        if (!res.has_value()) {
+            return res;
+        }
     }
 
     // Read received data
@@ -216,22 +225,32 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         hw_int.read_fifo(buffer);
     }
 
-    const auto decode_res = nfcv::decode(buffer, buffer);
-    if (!decode_res.has_value()) {
-        return std::unexpected(decode_res.error());
-    }
-    if (decode_res->size() < 3) {
-        return std::unexpected(nfcv::Error::response_invalid_size);
+    std::span<std::byte> decoded_data;
+    {
+        const auto res = nfcv::decode(buffer, buffer);
+        if (!res.has_value()) {
+            return std::unexpected(res.error());
+        }
+
+        decoded_data = *res;
+        if (decoded_data.size() < 3) {
+            return std::unexpected(nfcv::Error::response_invalid_size);
+        }
     }
 
     // Parse response to message
-    const auto deserialization_res = nfcv::parse_response(*decode_res, command);
-    if (!deserialization_res.has_value()) {
-        return std::unexpected(deserialization_res.error());
+    {
+        const auto res = nfcv::parse_response(decoded_data, command);
+        if (!res.has_value()) {
+            return std::unexpected(res.error());
+        }
     }
 
-    if (const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2); !res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
-        return res;
+    {
+        const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2);
+        if (!res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
+            return res;
+        }
     }
     return {};
 }
