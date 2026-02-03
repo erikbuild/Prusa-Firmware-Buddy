@@ -306,17 +306,12 @@ pipeline {
                     }
                     steps {
                         sh """
-                        export PATH=/work/.dependencies/cmake-3.28.3/bin:/work/.dependencies/ninja-1.10.2:\$PATH
                         ln -fs /work/.dependencies
                         ln -fs /work/.venv
                         . .venv/bin/activate
-                        mkdir -p build-test
-                        LD_LIBRARY_PATH=/usr/local/lib32 /work/.dependencies/cmake-3.28.3/bin/ctest --build-and-test . build-test \
-                            -DCMAKE_MAKE_PROGRAM=/work/.dependencies/ninja-1.10.2/ninja \
-                            --build-generator Ninja \
-                            --build-target tests \
-                            --build-options -DBOARD=BUDDY \
-                            --test-command ctest
+
+                        # Build tests using the test build script
+                        python3 utils/build_tests.py --build-dir build-test --run -- --output-on-failure
                         """
                     }
                     post {

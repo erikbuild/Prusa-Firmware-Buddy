@@ -1,6 +1,40 @@
 # How to run unit tests?
 
-### Building Unit Tests
+## Quick Start (Recommended)
+
+Use the automated build script for streamlined building with parallel compilation:
+
+```bash
+# Build all tests (uses all CPU cores automatically)
+python3 utils/build_tests.py
+
+# Build specific tests only
+python3 utils/build_tests.py cobs_tests ring_allocator_tests
+
+# Build with debug symbols
+python3 utils/build_tests.py --debug
+
+# List available test targets
+python3 utils/build_tests.py --list
+
+```
+
+After building, run tests with:
+```bash
+cd build_tests && ctest                    # Run all tests
+cd build_tests && ctest -R gcode           # Run tests matching pattern
+cd build_tests && ctest --verbose          # Verbose output
+cd build_tests && ctest -L "label"         # Run tests by label
+```
+
+> The script automatically handles CMake/Ninja from bootstrap.py if available.
+
+> It is recommended to use GCC for compiling unit tests.
+
+## Manual Building (Alternative)
+
+If you prefer to build manually or need more control:
+
 ```bash
 # create a build folder and run cmake within it
 cd ../.. && mkdir build_tests && cd build_tests
@@ -15,8 +49,7 @@ ninja tests
 >   export PATH="$(python ../utils/bootstrap.py --print-dependency-directory cmake)/bin:$PATH"
 >   export PATH="$(python ../utils/bootstrap.py --print-dependency-directory ninja):$PATH"
 ```
-
-> It is recommended to use GCC for compiling unit tests.
+```
 
 ### **Running All Tests**
 CMake with Catch2 automatically creates a special target that you can build/run with:
