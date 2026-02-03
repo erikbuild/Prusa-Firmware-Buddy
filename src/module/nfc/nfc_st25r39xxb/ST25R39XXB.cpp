@@ -202,7 +202,7 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         if (receive_res.error() == nfcv::Error::timeout) {
             return std::unexpected(nfcv::Error::no_response);
         }
-        return res;
+        return receive_res;
     }
     res = await_interrupt(IRQType::rx_end, 100);
     if (!res.has_value()) {
