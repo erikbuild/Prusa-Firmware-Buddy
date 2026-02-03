@@ -491,6 +491,7 @@ extern "C" void main_cpp(void) {
     metric_system_init();
     if (running_in_tester_mode()) {
         manufacture_report_endless_loop();
+        return;
     }
 
 #if HAS_TMC_UART()
@@ -531,12 +532,8 @@ extern "C" void main_cpp(void) {
 #endif
 
 #if BUDDY_ENABLE_WUI()
-    // In tester mode ESP UART is being used to talk to the testing station,
-    // thus it must not be used for the ESP -> no networking tasks shall be started.
-    if (!running_in_tester_mode()) {
-        TaskDeps::wait(TaskDeps::Tasks::network);
-        start_network_task(/*allow_full=*/true);
-    }
+    TaskDeps::wait(TaskDeps::Tasks::network);
+    start_network_task(/*allow_full=*/true);
 #endif
 
 #if BUDDY_ENABLE_CONNECT()
@@ -544,12 +541,8 @@ extern "C" void main_cpp(void) {
         // FIXME: We should be able to split networking to the lower-level network part and the Link part. Currently, both are done through WUI.
         #error "Can't have connect without WUI"
     #endif
-    // In tester mode ESP UART is being used to talk to the testing station,
-    // thus it must not be used for the ESP -> no networking tasks shall be started.
-    if (!running_in_tester_mode()) {
-        TaskDeps::wait(TaskDeps::Tasks::connect);
-        connectTaskHandle = create_task("connect", connect_client::run, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
-    }
+    TaskDeps::wait(TaskDeps::Tasks::connect);
+    connectTaskHandle = create_task("connect", connect_client::run, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
 #endif
 
     // There is no point in initializing syslog before networking is up
