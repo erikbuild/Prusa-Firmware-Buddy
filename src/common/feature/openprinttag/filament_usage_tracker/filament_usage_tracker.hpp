@@ -86,7 +86,7 @@ private:
 
         /// If something happens that prevents tracking and is not recoverable by retrying, gets set to true
         /// Set to true by defalut because there is not tag assigned
-        bool unceroverable_error : 1 = true;
+        bool unrecoverable_error : 1 = true;
     };
     // Make sure the struct is not too big, it will be instantiated for each virtual tool (>=10 for INDX)
     static_assert(sizeof(ToolData) == 12);

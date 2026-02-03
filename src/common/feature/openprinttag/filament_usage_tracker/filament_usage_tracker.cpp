@@ -39,7 +39,7 @@ uint32_t FilamentUsageTracker::uncommited_consumption_mm(VirtualToolIndex tool) 
 
 bool FilamentUsageTracker::is_tracking(VirtualToolIndex tool) const {
     const auto &tool_data = tool_data_[tool];
-    return !tool_data.init_pending && !tool_data.unceroverable_error;
+    return !tool_data.init_pending && !tool_data.unrecoverable_error;
 }
 
 void FilamentUsageTracker::step() {
@@ -88,11 +88,11 @@ void FilamentUsageTracker::step() {
             .base_extruded_distance_mm = filament_tracker().get_extruded_distance(current_tool_),
             .assigned_tag = new_assigned_tag,
             .init_pending = true,
-            .unceroverable_error = (new_assigned_tag == ToolTag::no_tag_hash),
+            .unrecoverable_error = (new_assigned_tag == ToolTag::no_tag_hash),
         };
     }
 
-    if (tool_data.assigned_tag == ToolTag::no_tag_hash || tool_data.unceroverable_error) {
+    if (tool_data.assigned_tag == ToolTag::no_tag_hash || tool_data.unrecoverable_error) {
         return;
     }
 
@@ -127,7 +127,7 @@ void FilamentUsageTracker::step() {
 
 void FilamentUsageTracker::cannot_track_finish_cb(ToolData &tool_data) {
     // Further disregard this tag
-    tool_data.unceroverable_error = true;
+    tool_data.unrecoverable_error = true;
     tool_data.init_pending = false;
     tool_data.write_pending = false;
     tool_data.warn_if_next_write_fails = false;
