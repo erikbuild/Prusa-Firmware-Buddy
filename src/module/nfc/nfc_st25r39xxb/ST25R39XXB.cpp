@@ -155,8 +155,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
     }
 
     set_interrupt_mask(~(IRQType::tx_end | IRQType::rx_start | IRQType::rx_end | IRQType::no_response_timer_expire | IRQType::general_purpose_timer_expire | IRQType::errors));
-    // Clear fifos
-    hw_int.direct_command(Command::clear_fifo);
 
     // For write commands we need to wait longer for responses - according to iso from 10 to 20 ms.
     // FIXME: write the damn registers in 1 command
@@ -168,6 +166,70 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         hw_int.write_register(RegisterA::no_response_timer_2, std::byte { 0x52 });
     }
 
+    // Retry sending the message a few times if we failed
+    for (uint8_t attempt = 0;; attempt++) {
+        // Clear fifos before each retry
+        hw_int.direct_command(Command::clear_fifo);
+
+        const auto result = nfcv_command_inner(command);
+        if (result.has_value()) {
+            break;
+        }
+
+        if (attempt >= nfcv_command_max_attempts - 1) {
+            // Failed too many times - return the last failure
+            return result;
+        }
+
+        sys_int.delay(retry_delay_ms);
+    }
+
+    if (nfcv::is_response_expected(command)) {
+        // Read received data
+        buffer.clear();
+        buffer.resize(get_fifo_len());
+        if (!buffer.empty()) {
+            hw_int.read_fifo(buffer);
+        }
+
+        std::span<std::byte> decoded_data;
+        {
+            const auto res = nfcv::decode(buffer, buffer);
+            if (!res.has_value()) {
+                return std::unexpected(res.error());
+            }
+
+            decoded_data = *res;
+            if (decoded_data.size() < 3) {
+                return std::unexpected(nfcv::Error::response_invalid_size);
+            }
+        }
+
+        // Parse response to message
+        {
+            const auto res = nfcv::parse_response(decoded_data, command);
+            if (!res.has_value()) {
+                return std::unexpected(res.error());
+            }
+        }
+
+    } else {
+        // We trigger GPT on RX end, but since the command doesn't
+        // send a response, then we need to start it manually via command
+        hw_int.direct_command(Command::start_general_purpose_timer);
+    }
+
+    {
+        const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2);
+        if (!res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
+            return res;
+        }
+    }
+
+    return {};
+}
+
+[[nodiscard]] nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command_inner(const nfcv::Command &command) {
     // Pass tx_buffer size to the chip (the length is calculated in bits, that why * 8)
     // The size is technically in bits, but only NFC-A supports writing in bits
     uint16_t tx_buffer_len = buffer.size() * 8;
@@ -179,7 +241,7 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
     hw_int.write_fifo(buffer);
 
     // Start transmission
-    hw_int.direct_command(Command::transmit_without_crc); // Temporary without CRC until I make it calculate it)
+    hw_int.direct_command(Command::transmit_without_crc); // Temporary without CRC until I make it calculate it
 
     {
         const auto res = await_interrupt(IRQType::tx_end, 10);
@@ -191,12 +253,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
 
     // Some commands doesn't send a response according to the iso - like StayQuiet
     if (!nfcv::is_response_expected(command)) {
-        // We trigger GPT on RX end, but since the command doesn't
-        // send a response, then we need to start it manually via command
-        hw_int.direct_command(Command::start_general_purpose_timer);
-        if (const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2); !res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
-            return res;
-        }
         return {};
     }
 
@@ -218,40 +274,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &com
         }
     }
 
-    // Read received data
-    buffer.clear();
-    buffer.resize(get_fifo_len());
-    if (!buffer.empty()) {
-        hw_int.read_fifo(buffer);
-    }
-
-    std::span<std::byte> decoded_data;
-    {
-        const auto res = nfcv::decode(buffer, buffer);
-        if (!res.has_value()) {
-            return std::unexpected(res.error());
-        }
-
-        decoded_data = *res;
-        if (decoded_data.size() < 3) {
-            return std::unexpected(nfcv::Error::response_invalid_size);
-        }
-    }
-
-    // Parse response to message
-    {
-        const auto res = nfcv::parse_response(decoded_data, command);
-        if (!res.has_value()) {
-            return std::unexpected(res.error());
-        }
-    }
-
-    {
-        const auto res = await_interrupt(IRQType::general_purpose_timer_expire, 2);
-        if (!res.has_value() && res != std::unexpected(nfcv::Error::timeout)) {
-            return res;
-        }
-    }
     return {};
 }
 

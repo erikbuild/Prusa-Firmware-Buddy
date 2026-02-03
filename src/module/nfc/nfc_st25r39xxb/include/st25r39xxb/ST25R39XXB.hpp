@@ -13,6 +13,12 @@ namespace st25r39xxb {
 
 class ST25R39XXB : public nfcv::ReaderWriterInterface {
 public:
+    /// Max retries attempted for each failed nfcv_command
+    static constexpr uint8_t nfcv_command_max_attempts = 4;
+
+    /// Delay after each failed retry
+    static constexpr uint32_t retry_delay_ms = 10;
+
     ST25R39XXB(HWInterface &hw_int, SystemInterface &sys_int)
         : hw_int(hw_int)
         , sys_int(sys_int) //
@@ -37,6 +43,8 @@ private:
     HWInterface &hw_int;
     SystemInterface &sys_int;
     stdext::inplace_vector<std::byte, constant::FIFO_SIZE> buffer;
+
+    [[nodiscard]] nfcv::Result<void> nfcv_command_inner(const nfcv::Command &command);
 
     [[nodiscard]] uint16_t get_fifo_len();
     /**
