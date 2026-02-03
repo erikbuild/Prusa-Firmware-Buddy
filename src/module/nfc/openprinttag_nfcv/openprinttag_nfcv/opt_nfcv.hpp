@@ -15,9 +15,8 @@ namespace openprinttag {
 class OPTBackend_NFCV final : public OPTBackend {
 public:
     static constexpr size_t MAX_KNOWN_TAGS = 8;
-    static constexpr uint32_t PAUSE_BETWEEN_DISCOVERIES_MS = 250;
 
-    OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, ReaderAntenna enforced_antenna = OPTBackend::no_antenna_enforce);
+    OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, const Config &initial_config = {});
 
     [[nodiscard]] IOResult<void> read(TagID tag, PayloadPos start, const std::span<std::byte> &buffer) final;
 
@@ -36,6 +35,8 @@ public:
     [[nodiscard]] virtual IOResult<void> initialize_tag(TagID tag, const InitializeTagParams &params) override;
 
     [[nodiscard]] virtual IOResult<void> unlock_tag(TagID tag, uint32_t password) override;
+
+    virtual void set_config(const Config &config) override;
 
 private:
     enum class TagType : uint8_t {
@@ -60,7 +61,7 @@ private:
     nfcv::ReaderWriterInterface &reader;
     std::array<TagData, MAX_KNOWN_TAGS> tags {};
 
-    RateLimiter<uint32_t> discoveries_limiter { PAUSE_BETWEEN_DISCOVERIES_MS };
+    RateLimiter<uint32_t> discoveries_limiter;
     nfcv::ReaderWriterInterface::AntennaID discovery_antenna = 0;
 
     AtomicCircularQueue<Event, uint8_t, 4> events;

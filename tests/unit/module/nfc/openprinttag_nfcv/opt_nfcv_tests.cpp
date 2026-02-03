@@ -1172,95 +1172,98 @@ TEST_CASE("Test NFC debug mode", "[nfcv][openprinttag]") {
         .antennas = { 1 },
     };
 
-    OPTBackend_NFCV reader(logger);
+    const auto discovery_interval = reader.config().discovery_interval_ms;
+
     OPTBackend::Event event;
 
     SECTION("No debug") {
         uint32_t time = 0;
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagDetectedEvent { .tag = 0, .antenna = 0 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagDetectedEvent { .tag = 1, .antenna = 1 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // Remove first tag from the reader
         logger.tags[data::uid1].antennas = {};
 
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagLostEvent { .tag = 0 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // Put the tag back
         logger.tags[data::uid1].antennas = { 0 };
 
         // No event should happen - the tag was not forgotten and thus should not be redetected
         CHECK(!reader.get_event(event, time));
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         CHECK(!reader.get_event(event, time));
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
     }
 
     SECTION("Auto forget") {
-        reader.set_debug_config({ .auto_forget_tag = true });
+        config.auto_forget_tag = true;
+        reader.set_config(config);
 
         uint32_t time = 0;
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagDetectedEvent { .tag = 0, .antenna = 0 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagDetectedEvent { .tag = 1, .antenna = 1 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // Remove first tag from the reader
         logger.tags[data::uid1].antennas = {};
 
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagLostEvent { .tag = 0 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         CHECK(!reader.get_event(event, time));
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         CHECK(!reader.get_event(event, time));
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // Put the tag back
         logger.tags[data::uid1].antennas = { 0 };
 
         // The reader is alternating antennas, there should be no changes on antenna 1
         CHECK(!reader.get_event(event, time));
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // The tag should be reported again and the ID reused
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagDetectedEvent { .tag = 0, .antenna = 0 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
     }
 
     SECTION("Force antenna") {
-        reader.enforce_antenna(1);
+        config.enforced_antenna = 1;
+        reader.set_config(config);
 
         uint32_t time = 0;
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagDetectedEvent { .tag = 0, .antenna = 1 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // Remove first tag from the reader - should do nothing
         logger.tags[data::uid1].antennas = {};
 
         CHECK(!reader.get_event(event, time));
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
 
         // Remove second tag from the reader - should result in tag lost event
         logger.tags[data::uid2].antennas = {};
 
         CHECK(reader.get_event(event, time));
         CHECK(event == OPTBackend::Event { OPTBackend::TagLostEvent { .tag = 0 } });
-        time += OPTBackend_NFCV::PAUSE_BETWEEN_DISCOVERIES_MS;
+        time += discovery_interval;
     }
 }
 

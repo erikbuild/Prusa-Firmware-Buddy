@@ -482,11 +482,10 @@ void NFCTask::handle_unlock_tag_request(const prusa3d_nfc_request_UnlockTag_1_0 
 }
 
 void NFCTask::handle_set_debug_config_request(const prusa3d_nfc_request_SetDebugConfig_1_0 &request) {
-    const OPTBackend::DebugConfig config {
-        .auto_forget_tag = request.auto_forget_tag,
-    };
-    reader_.backend().enforce_antenna(request.enforce_antenna);
-    reader_.backend().set_debug_config(config);
+    OPTBackend::Config config = reader_.backend().config();
+    config.auto_forget_tag = request.auto_forget_tag;
+    config.enforced_antenna = request.enforce_antenna;
+    reader_.backend().set_config(config);
 
     if (request.modulation_settings.count == 1) {
         hw_reconfiguration_callback_(request.modulation_settings.elements[0]);

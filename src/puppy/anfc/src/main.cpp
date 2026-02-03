@@ -92,7 +92,13 @@ static constexpr openprinttag::ReaderAntenna convert_antenna(const option::NfcSt
         return openprinttag::OPTBackend::no_antenna_enforce;
     }
 }
-static openprinttag::OPTBackend_NFCV ll_reader { nfc::reader_1, convert_antenna(option::nfc_st25r3919b_enabled_antennas) };
+
+static constexpr openprinttag::OPTBackend::Config ll_config {
+    .enforced_antenna = convert_antenna(option::nfc_st25r3919b_enabled_antennas),
+};
+
+static openprinttag::OPTBackend_NFCV ll_reader { nfc::reader_1, ll_config };
+
 NFCTask nfc_task(
     ll_reader, [](prusa3d_nfc_event_Event_1_0 &event) { can_node.enqueue_event(event); }, nfc::reconfigure_readers);
 

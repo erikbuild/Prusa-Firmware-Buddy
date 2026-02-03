@@ -33,8 +33,18 @@ public:
         inline bool operator==(const TagLostEvent &) const = default;
     };
 
-    struct DebugConfig {
+    /// Use all antennas, do not enforce a specific one
+    static constexpr ReaderAntenna no_antenna_enforce = std::numeric_limits<ReaderAntenna>::max();
+
+    struct Config {
     public:
+        /// If set, only the specified antenna will ever be used
+        ReaderAntenna enforced_antenna = no_antenna_enforce;
+
+        /// How often should the discovery sequences run
+        /// Please note that in OPT_NFCV, the discoveries alternate per antenna, so the actual interval for each antenna is longer
+        uint32_t discovery_interval_ms = 250;
+
         /// Automatically forget tags on TagLost event
         bool auto_forget_tag : 1 = false;
     };
@@ -98,15 +108,11 @@ public:
 
     virtual void reset_state() = 0;
 
-    /// A set of config tweaks useful for debugging
-    virtual void set_debug_config(const DebugConfig &config) {
-        debug_config_ = config;
+    const Config &config() const {
+        return config_;
     }
-
-    /// Use all antennas, do not enforce a specific one
-    static constexpr ReaderAntenna no_antenna_enforce = std::numeric_limits<ReaderAntenna>::max();
-    inline void enforce_antenna(ReaderAntenna antenna) {
-        enforced_antenna = antenna;
+    virtual void set_config(const Config &config) {
+        config_ = config;
     }
 
 public:
@@ -161,10 +167,7 @@ public:
     }
 
 protected:
-    DebugConfig debug_config_;
-
-    /// If set, only the specified antenna will ever be used
-    ReaderAntenna enforced_antenna = no_antenna_enforce;
+    Config config_;
 };
 
 } // namespace openprinttag

@@ -44,10 +44,16 @@ std::unexpected<OPTBackend::IOError> to_backend_unexpected(nfcv::Error error) {
 
 } // namespace
 
-OPTBackend_NFCV::OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, ReaderAntenna enforced_antenna)
-    : reader(reader) {
+OPTBackend_NFCV::OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, const Config &initial_config)
+    : reader(reader)
+    , discoveries_limiter(initial_config.discovery_interval_ms) {
+    set_config(initial_config);
     reset_state();
-    enforce_antenna(enforced_antenna);
+}
+
+void openprinttag::OPTBackend_NFCV::set_config(const Config &config) {
+    OPTBackend::set_config(config);
+    discoveries_limiter.set_min_delay(config.discovery_interval_ms);
 }
 
 OPTBackend::IOResult<void> OPTBackend_NFCV::io_op(TagID tag, PayloadPos start, size_t buffer_size, const stdext::inplace_function<IOOpFunc> &impl) {
@@ -459,8 +465,8 @@ std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag,
 }
 
 void OPTBackend_NFCV::run_next_discovery() {
-    if (enforced_antenna != OPTBackend::no_antenna_enforce) {
-        discovery_antenna = enforced_antenna;
+    if (config_.enforced_antenna != OPTBackend::no_antenna_enforce) {
+        discovery_antenna = config_.enforced_antenna;
     }
 
     nfcv::FieldGuard field_guard { reader, discovery_antenna };
@@ -564,7 +570,7 @@ void OPTBackend_NFCV::run_next_discovery() {
                     continue;
                 }
 
-                tag_data.state = debug_config_.auto_forget_tag ? TagData::State::free : TagData::State::lost;
+                tag_data.state = config_.auto_forget_tag ? TagData::State::free : TagData::State::lost;
             }
         }
     }

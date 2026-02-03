@@ -20,6 +20,10 @@ public:
         assert(min_delay >= 0);
     }
 
+    void set_min_delay(UT set) {
+        min_delay_ = set;
+    }
+
     /// Forget any previous events. Next event will not be limited
     void reset() {
         last_event_ = 0;
