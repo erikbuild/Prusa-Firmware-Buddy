@@ -119,7 +119,7 @@ namespace {
         static constexpr std::byte INFO_AFI_SUPPORTED { 0x02 };
         static constexpr std::byte INFO_VICC_MEM_SIZE_SUPPORTED { 0x04 };
         static constexpr std::byte INFO_IC_REF_SUPPORTED { 0x08 };
-        size_t size = 12; // 1B flags + 1B info_flags + 8B uid + 2BCRC
+        size_t size = 12; // 1B flags + 1B info_flags + 8B uid + 2B CRC
         if ((info_flags & INFO_DSFID_SUPPORTED) == INFO_DSFID_SUPPORTED) {
             size += 1;
         }
@@ -148,10 +148,10 @@ namespace {
             command.response.dsfid = std::nullopt;
         }
         if ((info_flags & INFO_AFI_SUPPORTED) == INFO_AFI_SUPPORTED) {
-            command.response.dsfid = std::to_integer<uint8_t>(*it);
+            command.response.afi = std::to_integer<uint8_t>(*it);
             ++it;
         } else {
-            command.response.dsfid = std::nullopt;
+            command.response.afi = std::nullopt;
         }
         if ((info_flags & INFO_VICC_MEM_SIZE_SUPPORTED) == INFO_VICC_MEM_SIZE_SUPPORTED) {
             const auto first = *it;

@@ -87,8 +87,8 @@ TEST_CASE("Test NFC-V response deserialization - SysInfo response (SLIX 2)", "[n
     nfcv::Command cmd { nfcv::command::SystemInfo { .request = { .uid = uid }, .response = tag_info } };
     const auto res = nfcv::parse_response(std::as_bytes(std::span { input }), cmd);
     REQUIRE(res.has_value());
-    CHECK(tag_info.dsfid.has_value());
-    CHECK(!tag_info.afi.has_value());
+    CHECK(tag_info.dsfid == 0);
+    CHECK(tag_info.afi == 0);
     REQUIRE(tag_info.mem_size.has_value());
     CHECK(tag_info.mem_size->block_size == 4);
     CHECK(tag_info.mem_size->block_count == 80);
