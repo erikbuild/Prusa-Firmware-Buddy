@@ -64,6 +64,11 @@
     #include "hx717mux.hpp"
 #endif
 
+#include <option/has_mmu2.h>
+#if HAS_MMU2()
+    #include <Marlin/src/feature/prusa/MMU2/mmu2_mk4.h>
+#endif
+
 #include <option/has_touch.h>
 #if HAS_TOUCH()
     #include <hw/touchscreen/touchscreen.hpp>
@@ -183,6 +188,12 @@ static void app_startup() {
 
 static void app_setup(void) {
     metric_record_event(&metric_app_start);
+
+#if HAS_MMU2()
+    if (config_store().mmu2_enabled.get()) {
+        MMU2::mmu2.Start();
+    }
+#endif
 
 #if HAS_LOADCELL()
     if (config_store().stuck_filament_detection.get()) {

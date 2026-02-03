@@ -45,7 +45,7 @@
 #include <option/has_puppies_bootloader.h>
 #include <option/filament_sensor.h>
 #include <option/has_gui.h>
-#include <option/has_mmu2.h>
+#include <option/has_mmu2_over_uart.h>
 #include <option/resources.h>
 #include <option/bootloader_update.h>
 #include <option/has_side_leds.h>
@@ -96,10 +96,6 @@
 
 #if (BOARD_IS_XBUDDY() || BOARD_IS_XLBUDDY())
     #include "hw_configuration.hpp"
-#endif
-
-#if HAS_MMU2()
-    #include "feature/prusa/MMU2/mmu2_mk4.h"
 #endif
 
 #if HAS_PHASE_STEPPING()
@@ -514,11 +510,6 @@ extern "C" void main_cpp(void) {
 
 #if HAS_MMU2_OVER_UART()
     uart_for_mmu.Open();
-    // mmu2 is normally serviced from the marlin thread
-    // so execute it before the defaultTask is created to prevent race conditions while powering up
-    if (config_store().mmu2_enabled.get()) {
-        MMU2::mmu2.Start();
-    }
 #endif
 
 #if HAS_I2C_EXPANDER()
@@ -535,14 +526,6 @@ extern "C" void main_cpp(void) {
 
 #if HAS_PUPPIES()
     create_task("puppies", buddy::puppies::run, TASK_PRIORITY_PUPPY_TASK, task_stack.puppies, task_control_block.puppies);
-    #if HAS_MMU2()
-    // for printers with MMU connected through MODBUS, the MMU implementation relies vaguely on MODBUS data structures
-    // -> better have the puppy task at least existent
-    TaskDeps::wait(TaskDeps::Tasks::puppy_task_start);
-    if (config_store().mmu2_enabled.get()) {
-        MMU2::mmu2.Start();
-    }
-    #endif
 #endif
 
 #if BUDDY_ENABLE_WUI()
