@@ -38,6 +38,8 @@ void gui_error_run(void) {
     // gui_error_run executes before bootstrap so resources may not be up to date resulting in artefects
     display::enable_resource_file();
 
+    LangEEPROM::getInstance(); // Initialize language EEPROM value
+
     screen_node screen_initializer { ScreenFactory::Screen<ScreenError> };
     Screens::Init(screen_initializer);
 
@@ -48,8 +50,6 @@ void gui_error_run(void) {
 #if HAS_LEDS()
     leds::LEDManager::instance().init();
 #endif
-
-    LangEEPROM::getInstance(); // Initialize language EEPROM value
 
     while (true) {
         gui::StartLoop();
