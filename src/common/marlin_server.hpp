@@ -154,18 +154,6 @@ resume_state_t *get_resume_data();
 // set the resume state for unpausing a print
 void set_resume_data(const resume_state_t *data);
 
-/// Plans retract and returns E stepper position in mm
-void retract();
-
-/// Lifts printing head
-void lift_head();
-
-/// Parks head at print pause or crash
-/// If Z lift or retraction wasn't performed
-/// you can rerun them.
-void park_head();
-
-//
 void unpark_head_XY();
 void unpark_head_ZE();
 

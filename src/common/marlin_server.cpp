@@ -679,6 +679,10 @@ static bool _process_server_request(const Request &);
 static void _server_set_var(const Request &);
 static void process_request_flags();
 
+static void retract();
+static void lift_head();
+static void park_head();
+
 static void settings_load();
 
 //-----------------------------------------------------------------------------
@@ -2543,7 +2547,6 @@ static void _server_print_loop(void) {
 
 #ifdef PARK_HEAD_ON_PRINT_FINISH
             if (!server.print_is_serial) {
-                // do not move head if printing via serial
                 park_head();
             }
 #endif // PARK_HEAD_ON_PRINT_FINISH
@@ -3001,7 +3004,7 @@ void set_media_position(uint32_t set) {
     queue.last_executed_sdpos = set;
 }
 
-void retract() {
+static void retract() {
     // Can't retract without a tool picked (no extruder to drive)
     if (std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
         return;
@@ -3021,7 +3024,7 @@ void retract() {
 #endif
 }
 
-void lift_head() {
+static void lift_head() {
     const float distance = std::min<float>(
                                std::max<float>({
                                    Z_NOZZLE_PARK_RISE + std::max(current_position.z, planner.max_printed_z),
@@ -3058,7 +3061,7 @@ void lift_head() {
     }
 }
 
-void park_head() {
+static void park_head() {
     server.resume.pos = current_position;
     retract();
     lift_head();
