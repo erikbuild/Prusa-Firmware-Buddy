@@ -313,7 +313,7 @@ TEST_CASE("Mixed vs split readers", "[GcodeReader]") {
     }
 }
 
-TEST_CASE("stream restore at offset", "[GcodeReader]") {
+TEST_CASE("stream restore at offset", "[GcodeReader][slow]") {
     // tests reads reader1 continuously, and seeks in reader2 to same position
     //  as where it is in reader1 and compares if they give same results while seeking to middle of file
 

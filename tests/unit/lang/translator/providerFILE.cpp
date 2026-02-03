@@ -27,7 +27,7 @@ static void test_language(const std::string &language_code) {
     REQUIRE(CheckAllTheStrings(original, translated, provider, language_code.c_str()));
 }
 
-TEST_CASE("providerFILE::Translations test", "[translator]") {
+TEST_CASE("providerFILE::Translations test", "[translator][slow]") {
     test_language("cs");
     test_language("de");
     test_language("es");

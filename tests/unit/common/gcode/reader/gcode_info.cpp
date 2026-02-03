@@ -67,7 +67,7 @@ TEST_CASE("GCodeInfo") {
     }
 }
 
-TEST_CASE("GCodeInfo::is_valid_for_print") {
+TEST_CASE("GCodeInfo::is_valid_for_print", "[slow]") {
     struct stat st;
     REQUIRE(stat(NEW_ENCRYPTED, &st) == 0);
 

@@ -322,7 +322,7 @@ TEST_CASE("providerCPUFLASH::Translations singleton", "[translator]") {
 
 /// This is a complex test of the whole translation mechanism
 /// We must prepare the search structures first and then lookup all the string keys
-TEST_CASE("providerCPUFLASH::ComplexTest", "[translator]") {
+TEST_CASE("providerCPUFLASH::ComplexTest", "[translator][slow]") {
     StringTableCSTest::Reset();
 
     // now we'll need more input files
