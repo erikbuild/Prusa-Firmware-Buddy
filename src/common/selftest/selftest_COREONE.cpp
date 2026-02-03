@@ -172,7 +172,6 @@ protected:
     std::array<selftest::IPartHandler *, HOTENDS> pNozzles;
     selftest::IPartHandler *pBed;
     std::array<selftest::IPartHandler *, HOTENDS> m_pLoadcell;
-    std::array<selftest::IPartHandler *, HOTENDS> pFSensor;
 
     SelftestResult m_result;
 };
@@ -335,7 +334,6 @@ bool CSelftest::Abort() {
     for (auto &loadcell : m_pLoadcell) {
         abort_part(&loadcell);
     }
-    abort_part((selftest::IPartHandler **)&pFSensor);
     m_State = stsAborted;
 
     phaseFinish();

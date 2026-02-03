@@ -236,8 +236,6 @@ protected:
     std::array<selftest::IPartHandler *, PhysicalToolIndex::count> m_pLoadcell;
     std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pDocks;
     selftest::IPartHandler *pToolOffsets;
-    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pFSensor;
-    selftest::IPartHandler *pPhaseStepping;
 
     SelftestResult m_result;
 };
@@ -426,14 +424,10 @@ bool CSelftest::Abort() {
     for (auto &loadcell : m_pLoadcell) {
         abort_part(&loadcell);
     }
-    abort_part((selftest::IPartHandler **)&pFSensor);
     for (auto &dock : pDocks) {
         abort_part(&dock);
     }
     abort_part(&pToolOffsets);
-    for (auto &fsensor : pFSensor) {
-        abort_part(&fsensor);
-    }
     m_State = stsAborted;
 
     phaseFinish();
