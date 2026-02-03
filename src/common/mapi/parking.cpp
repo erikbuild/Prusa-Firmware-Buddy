@@ -119,6 +119,10 @@ void move_out_of_nozzle_cleaner_area() {
 void park(ZAction z_action, const ParkingPosition &parking_position) {
     static constexpr feedRate_t fr_xy = NOZZLE_PARK_XY_FEEDRATE, fr_z = NOZZLE_PARK_Z_FEEDRATE;
 
+    if (!(axes_home_level.is_homed(X_AXIS, AxisHomeLevel::imprecise) && axes_home_level.is_homed(Y_AXIS, AxisHomeLevel::imprecise))) {
+        return;
+    }
+
     if (parking_position.z != ParkingPosition::unchanged) {
         const float z = std::get<float>(parking_position.z);
         switch (z_action) {
