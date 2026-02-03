@@ -86,7 +86,7 @@
     #include "resources/revision_standard.hpp"
 #endif
 
-#if ENABLED(POWER_PANIC)
+#if HAS_POWER_PANIC()
     #include "power_panic.hpp"
 #endif
 
@@ -427,7 +427,7 @@ extern "C" void main_cpp(void) {
         // this means we are either starting from defaults or after a FW upgrade -> invalidate the
         // XFLASH dump and power-panic data, since it is not relevant anymore
         dump_reset();
-#if ENABLED(POWER_PANIC)
+#if HAS_POWER_PANIC()
         power_panic::reset();
 #endif
     }
@@ -439,10 +439,10 @@ extern "C" void main_cpp(void) {
 
     filesystem_init();
 
-    if (option::has_gui) {
-        osThreadStaticDef(displayTask, StartDisplayTask, TASK_PRIORITY_DISPLAY_TASK, 0, displayTask_stacksz, displayTask_buffer, &displayTask_control);
-        displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
-    }
+#if HAS_GUI()
+    osThreadStaticDef(displayTask, StartDisplayTask, TASK_PRIORITY_DISPLAY_TASK, 0, displayTask_stacksz, displayTask_buffer, &displayTask_control);
+    displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
+#endif
     // wait for gui to init and render loading screen before starting flashing. We need to init bootstrap screen so we can send process percentage to it. Also it would look laggy without it.
     TaskDeps::wait(TaskDeps::Tasks::bootstrap_start);
 
@@ -487,7 +487,7 @@ extern "C" void main_cpp(void) {
     osThreadCCMDef(defaultTask, StartDefaultTask, TASK_PRIORITY_DEFAULT_TASK, 0, 1160);
     defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-#if ENABLED(POWER_PANIC)
+#if HAS_POWER_PANIC()
     power_panic::check_ac_fault_at_startup();
     /* definition and creation of acFaultTask */
     osThreadCCMDef(acFaultTask, power_panic::ac_fault_task_main, TASK_PRIORITY_AC_FAULT, 0, 80);
@@ -534,11 +534,11 @@ extern "C" void main_cpp(void) {
     logging::syslog_reconfigure();
     metrics_reconfigure();
 
-    if constexpr (option::filament_sensor != option::FilamentSensor::no) {
-        /* definition and creation of measurementTask */
-        osThreadCCMDef(measurementTask, StartMeasurementTask, TASK_PRIORITY_MEASUREMENT_TASK, 0, 620);
-        osThreadCreate(osThread(measurementTask), NULL);
-    }
+#if !FILAMENT_SENSOR_IS_NO()
+    /* definition and creation of measurementTask */
+    osThreadCCMDef(measurementTask, StartMeasurementTask, TASK_PRIORITY_MEASUREMENT_TASK, 0, 620);
+    osThreadCreate(osThread(measurementTask), NULL);
+#endif
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
@@ -660,18 +660,16 @@ void init_error_screen() {
     touchscreen.disable_till_reset();
 #endif
 
-    if constexpr (option::has_gui) {
-#if !(_DEBUG)
-    #if HAS_GUI() && !(BOARD_IS_XLBUDDY())
-        hw_tim2_init(); // TIM2 is used to generate buzzer PWM, except on XL. Not needed without display.
+#if HAS_GUI()
+    #if !(_DEBUG) && !(BOARD_IS_XLBUDDY())
+    hw_tim2_init(); // TIM2 is used to generate buzzer PWM, except on XL. Not needed without display.
     #endif
+
+    init_only_littlefs();
+
+    osThreadStaticDef(displayTask, StartErrorDisplayTask, TASK_PRIORITY_DISPLAY_TASK, 0, displayTask_stacksz, displayTask_buffer, &displayTask_control);
+    displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
 #endif
-
-        init_only_littlefs();
-
-        osThreadStaticDef(displayTask, StartErrorDisplayTask, TASK_PRIORITY_DISPLAY_TASK, 0, displayTask_stacksz, displayTask_buffer, &displayTask_control);
-        displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
-    }
 }
 
 static void enable_trap_on_division_by_zero() {
