@@ -123,6 +123,11 @@
     #include "buddy/esp_flash_task.hpp"
 #endif
 
+#if BUDDY_ENABLE_CONNECT() && !BUDDY_ENABLE_WUI()
+    // FIXME: We should be able to split networking to the lower-level network part and the Link part. Currently, both are done through WUI.
+    #error "Can't have connect without WUI"
+#endif
+
 using namespace crash_dump;
 
 LOG_COMPONENT_REF(Buddy);
@@ -539,10 +544,6 @@ extern "C" void main_cpp(void) {
 #endif
 
 #if BUDDY_ENABLE_CONNECT()
-    #if !BUDDY_ENABLE_WUI()
-        // FIXME: We should be able to split networking to the lower-level network part and the Link part. Currently, both are done through WUI.
-        #error "Can't have connect without WUI"
-    #endif
     create_task("connect", connect_client::run, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
 #endif
 
