@@ -12,6 +12,7 @@
 #include <cmath>
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include "M70X.hpp"
+#include <utils/variant_utils.hpp>
 #include <config_store/store_instance.hpp>
 #include <filament_to_load.hpp>
 #include <Marlin/src/gcode/gcode.h>
@@ -248,10 +249,15 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
     };
     settings.SetParkPoint(pos);
 
-    const uint16_t orig_temp = Temperature::degTargetHotend(active_extruder);
+    auto active_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (!active_tool.has_value()) {
+        bsod("Autoload to notool");
+    }
+
+    const uint16_t orig_temp = Temperature::degTargetHotend(*active_tool);
 
     ScopeGuard fail_guard = [&] {
-        thermalManager.setTargetHotend(orig_temp, active_extruder);
+        thermalManager.setTargetHotend(orig_temp, *active_tool);
         PreheatStatus::SetResult(PreheatStatus::Result::DoneNoFilament);
     };
 
@@ -260,7 +266,7 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
     };
 
     if (orig_temp < EXTRUDE_MINTEMP) {
-        thermalManager.setTargetHotend(EXTRUDE_MINTEMP, active_extruder);
+        thermalManager.setTargetHotend(EXTRUDE_MINTEMP, *active_tool);
     }
 
     // catch filament in gear and then ask for temp
