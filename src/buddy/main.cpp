@@ -129,7 +129,6 @@ LOG_COMPONENT_REF(Buddy);
 
 osThreadId defaultTaskHandle;
 osThreadId displayTaskHandle;
-osThreadId connectTaskHandle;
 
 unsigned HAL_RCC_CSR = 0;
 int HAL_GPIO_Initialized = 0;
@@ -369,7 +368,7 @@ extern "C" void main_cpp(void) {
             TaskDeps::wait(TaskDeps::Tasks::network);
             start_network_task(/*allow_full=*/false);
             TaskDeps::wait(TaskDeps::Tasks::connect);
-            connectTaskHandle = create_task("connect", connect_client::run_error, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
+            create_task("connect", connect_client::run_error, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
         }
 #endif
         return;
@@ -542,7 +541,7 @@ extern "C" void main_cpp(void) {
         #error "Can't have connect without WUI"
     #endif
     TaskDeps::wait(TaskDeps::Tasks::connect);
-    connectTaskHandle = create_task("connect", connect_client::run, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
+    create_task("connect", connect_client::run, TASK_PRIORITY_CONNECT, task_stack.connect, task_control_block.connect);
 #endif
 
     // There is no point in initializing syslog before networking is up
