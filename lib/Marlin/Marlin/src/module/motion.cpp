@@ -1236,7 +1236,10 @@ float homeaxis_single_run(const HomeAxisSingleRunArgs &args) {
   for(uint8_t i = 0; i < bump_count; i++) {
 
     // Move away from the endstop by the axis HOME_BUMP_MM
-    do_homing_move(axis, -bump, real_fr_mm_s);
+    if(do_homing_move(axis, -bump, real_fr_mm_s)) {
+      // Hitting an endstop during move away should never happen, fail in this case.
+      return NAN;
+    }
 
     // Slow move towards endstop until triggered
 
