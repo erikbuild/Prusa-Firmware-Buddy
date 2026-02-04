@@ -293,12 +293,12 @@ extern "C" void HAL_FDCAN_HighPriorityMessageCallback(FDCAN_HandleTypeDef *hfdca
     FdcanDriver::get_driver(hfdcan).isr_notify(Driver::Notification::RxHighPrio); // Notify driver user
 }
 
-bool FdcanDriver::receive(CanardFrame &frame, CanardMicrosecond *timestamp_us) {
+bool FdcanDriver::receive(CanardFrame &frame, std::array<uint8_t, CANARD_MTU_CAN_FD> &rx_buffer, CanardMicrosecond *timestamp_us) {
     FDCAN_RxHeaderTypeDef RxHeader;
 
     // Try FIFO1, higher priority, with timestamp
     if (HAL_FDCAN_GetRxFifoFillLevel(&hfdcan, FDCAN_RX_FIFO1) > 0) {
-        if (auto ret = HAL_FDCAN_GetRxMessage(&hfdcan, FDCAN_RX_FIFO1, &RxHeader, buffer); ret != HAL_OK) {
+        if (auto ret = HAL_FDCAN_GetRxMessage(&hfdcan, FDCAN_RX_FIFO1, &RxHeader, rx_buffer.data()); ret != HAL_OK) {
             bsod("CAN HAL Rx failed %i,%i", static_cast<int>(ret), static_cast<int>(hfdcan.ErrorCode));
         }
 
@@ -310,7 +310,7 @@ bool FdcanDriver::receive(CanardFrame &frame, CanardMicrosecond *timestamp_us) {
             }
         }
     } else if (HAL_FDCAN_GetRxFifoFillLevel(&hfdcan, FDCAN_RX_FIFO0) > 0) { // Try FIFO0
-        if (auto ret = HAL_FDCAN_GetRxMessage(&hfdcan, FDCAN_RX_FIFO0, &RxHeader, buffer); ret != HAL_OK) {
+        if (auto ret = HAL_FDCAN_GetRxMessage(&hfdcan, FDCAN_RX_FIFO0, &RxHeader, rx_buffer.data()); ret != HAL_OK) {
             bsod("CAN HAL Rx failed %i,%i", static_cast<int>(ret), static_cast<int>(hfdcan.ErrorCode));
         }
 
@@ -324,7 +324,7 @@ bool FdcanDriver::receive(CanardFrame &frame, CanardMicrosecond *timestamp_us) {
 
     frame.extended_can_id = RxHeader.Identifier;
     frame.payload_size = CanardCANDLCToLength[RxHeader.DataLength / FDCAN_DLC_BYTES_1];
-    frame.payload = buffer;
+    frame.payload = rx_buffer.data();
 
     return true;
 }

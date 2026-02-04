@@ -48,7 +48,7 @@ public:
         return {};
     }
 
-    bool receive(CanardFrame &, CanardMicrosecond *) override {
+    bool receive(CanardFrame &, std::array<uint8_t, CANARD_MTU_CAN_FD> &, CanardMicrosecond *) override {
         return false;
     }
 

@@ -98,7 +98,6 @@ class UartDriver : public Driver {
     cobs::ArrayCobsStreamEncoder<uart::MAX_FRAME_SIZE> send_buffer;
     AtomicReservableCircularQueue<ReceiveBuffer, uint8_t, 2> receive_buffers;
     ReceiveBuffer *curr_recv_buffer; // pointer to one currently allocated element of receive_buffers queue
-    uint8_t payload_buffer[CANARD_MTU_MAX] = { 0 };
 
     // decoder is only ever linked with one of the receive buffers
     cobs::CobsStreamDecoder decoder;
@@ -112,7 +111,7 @@ public:
     UartDriver(UART_HandleTypeDef &huart);
     void start_listening();
     bool send(const CanardFrame &frame, bool store_timestamp = false) override;
-    bool receive(CanardFrame &frame, CanardMicrosecond *timestamp_us = nullptr) override;
+    bool receive(CanardFrame &frame, std::array<uint8_t, CANARD_MTU_CAN_FD> &rx_buffer, CanardMicrosecond *timestamp_us = nullptr) override;
     void start(bool automatic_retransmission_enable = true) override {
         UNUSED(automatic_retransmission_enable);
         start_listening();

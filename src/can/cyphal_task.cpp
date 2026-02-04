@@ -303,7 +303,7 @@ void Task::tx_loop() {
     }
 }
 
-void Task::rx_canard() {
+void Task::rx_to_queue() {
     if (rx_queue_used.exchange(true) == true) {
         return; // Already used by task
     }
@@ -312,24 +312,13 @@ void Task::rx_canard() {
         return; // Nothing to do
     }
 
-    CanardFrame frame;
-    CanardMicrosecond timestamp_us;
-    if (driver.receive(frame, &timestamp_us) == false) {
-        rx_queue_used.store(false);
-        return; // No frame in the queue
-    } else {
-        notify(Notify::Rx); // Check again until we run out of frames
+    auto write_pointer = rx_queue.get_write_pointer();
+
+    if (driver.receive(write_pointer->frame, write_pointer->payload, &write_pointer->timestamp_us)) {
+        rx_queue.increment_write_pointer();
+        notify(Notify::Rx); // Check the frame in rx_loop()
     }
 
-    TaskRxBufferElement element;
-    const int8_t canard_result = canardRxAccept(&canard_instance, timestamp_us, &frame, 0, &element.transfer, &element.subscription);
-    if (canard_result > 0) {
-        [[maybe_unused]] bool ret = rx_queue.enqueue(element);
-        assert(ret);
-    } else {
-        // The frame did not complete a transfer so there is nothing to do
-        assert(canard_result == 0); // OOM should never occur if the heap is sized correctly, no other error can possibly occur at runtime
-    }
     rx_queue_used.store(false);
 }
 
@@ -345,7 +334,7 @@ void Task::rx_loop() {
         xSemaphoreGive(tx_buffer_semaphore); // Buffer can be used again
 
         // Try to clear frames from driver
-        rx_canard();
+        rx_to_queue();
 
         return;
     } else {
@@ -361,14 +350,26 @@ void Task::rx_loop() {
     auto element = rx_queue.dequeue();
 
     // Try to clear frames from driver
-    rx_canard();
+    rx_to_queue();
 
-    if (!is_anonymous() // Allow only if we are not in anonymous mode
-        || (pnp_suber != nullptr && element.subscription == &pnp_suber->get_raw())) { // Or PnP subscription
+    // Put to libcanard
+    CanardRxTransfer transfer = {};
+    CanardRxSubscription *subscription = nullptr;
+    const int8_t canard_result = canardRxAccept(&canard_instance, element.timestamp_us, &element.frame, 0, &transfer, &subscription);
+    if (canard_result > 0) {
+        if (!is_anonymous() // Allow only if we are not in anonymous mode
+            || (pnp_suber != nullptr && subscription == &pnp_suber->get_raw())) { // Or PnP subscription
 
-        ProtoSuber::static_callback(element.subscription, element.transfer, rx_buffer); // Call subscription callback
+            ProtoSuber::static_callback(subscription, transfer, rx_buffer); // Call subscription callback
+        }
+        canard_instance.memory_free(&canard_instance, (void *)transfer.payload);
+    } else if (canard_result != 0) { // Some error occurred
+        log_error(can, "Canard Rx accept error %d", canard_result);
+        if (error_callback) {
+            error_callback(Driver::Notification::RxLost);
+        }
     }
-    canard_instance.memory_free(&canard_instance, (void *)element.transfer.payload);
+    // else The frame did not complete a transfer so there is nothing to do
 
     if (tx_buffer_reserved.load()) { // Nobody used the reserved buffer
         assert(tx_buffer_used == false); // Buffer should not be used

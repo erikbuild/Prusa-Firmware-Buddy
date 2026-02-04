@@ -24,8 +24,6 @@ class FdcanDriver : public Driver {
     static FdcanDriver *list; ///< List of all instances for lookup from interrupt
     FdcanDriver *next; ///< Next instance in the list
 
-    uint8_t buffer[CANARD_MTU_CAN_FD]; ///< Buffer for received frames
-
     bool enable_bit_rate_switch; ///< Enable bit rate switch?
 
     std::atomic<uint32_t> error_log = 0; ///< Sum of error increments in both Rx and Tx error counters since start, add to this in the child
@@ -87,12 +85,12 @@ public:
     /**
      * @brief Get CAN frame from hardware Rx queue.
      * @param[out] frame CAN frame
-     * @warning Buffer for frame.payload is overwritten when this function is called second time.
+     * @param[out] rx_buffer buffer to store received payload, it is linked into the frame
      * @param[out] timestamp_us timestamp of the received frame
      * @return true on success, false if there is no frame in the queue
      * @note Throw bsod on hardware error.
      */
-    bool receive(CanardFrame &frame, CanardMicrosecond *timestamp_us = nullptr) override;
+    bool receive(CanardFrame &frame, std::array<uint8_t, CANARD_MTU_CAN_FD> &rx_buffer, CanardMicrosecond *timestamp_us = nullptr) override;
 
     /**
      * @brief Get number of available filters.

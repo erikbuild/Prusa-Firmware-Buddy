@@ -91,7 +91,7 @@ void UartDriver::start_listening() {
     }
 }
 
-bool UartDriver::receive(CanardFrame &frame, CanardMicrosecond *timestamp_us) {
+bool UartDriver::receive(CanardFrame &frame, std::array<uint8_t, CANARD_MTU_CAN_FD> &rx_buffer, CanardMicrosecond *timestamp_us) {
 
     if (receive_buffers.isEmpty()) {
         return false;
@@ -116,8 +116,8 @@ bool UartDriver::receive(CanardFrame &frame, CanardMicrosecond *timestamp_us) {
         assert(false);
         return false;
     }
-    std::copy(&decoded_data[uart::HEADER_SIZE], &decoded_data[uart::HEADER_SIZE + frame.payload_size], payload_buffer);
-    frame.payload = payload_buffer;
+    std::copy(&decoded_data[uart::HEADER_SIZE], &decoded_data[uart::HEADER_SIZE + frame.payload_size], rx_buffer.data());
+    frame.payload = rx_buffer.data();
 
     // Extract received CRC (little-endian)
     const size_t crc_pos = uart::HEADER_SIZE + frame.payload_size;

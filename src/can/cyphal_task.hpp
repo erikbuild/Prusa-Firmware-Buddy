@@ -23,8 +23,9 @@ namespace can::cyphal {
 
 /// Element stored in Rx queue
 struct TaskRxBufferElement {
-    CanardRxTransfer transfer = {}; ///< The Cyphal data
-    CanardRxSubscription *subscription = nullptr; ///< Subscription that received the data
+    CanardFrame frame = {}; ///< Incoming CAN frame
+    std::array<uint8_t, CANARD_MTU_CAN_FD> payload = {}; ///< Storage for payload data (needs to be linked into frame)
+    CanardMicrosecond timestamp_us = 0; ///< Timestamp when the transfer was received
 };
 
 class Task {
@@ -102,7 +103,7 @@ private:
         case Driver::Notification::RxHighPrio:
         case Driver::Notification::RxDone:
             if (rx_queue.size() > 1) { // Only if we have a queue
-                rx_canard();
+                rx_to_queue();
             }
             notify(Notify::Rx);
             break;
@@ -150,10 +151,10 @@ private:
     /// @brief Transmit CAN frames from the Cyphal Tx queue.
     void tx_loop();
 
-    /// Receive one CAN frame from HAL and put it through libcanard.
-    void rx_canard();
+    /// Receive one CAN frame from HAL and put it to rx_queue.
+    void rx_to_queue();
 
-    /// @brief Receive CAN frames from HAL and put them to Cyphal.
+    /// @brief Receive CAN frames from queue or HAL and put them to Cyphal.
     void rx_loop();
 
     /**

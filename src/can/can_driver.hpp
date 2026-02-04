@@ -82,12 +82,12 @@ public:
     /**
      * @brief Get CAN frame from hardware Rx queue.
      * @param[out] frame CAN frame
-     * @warning Buffer for frame.payload is overwritten when this function is called second time.
+     * @param[out] rx_buffer buffer to store received payload, it is linked into the frame
      * @param[out] timestamp_us timestamp of the received frame
      * @return true on success, false if there is no frame in the queue
      * @note Throw bsod on hardware error.
      */
-    virtual bool receive(CanardFrame &frame, CanardMicrosecond *timestamp_us = nullptr) = 0;
+    virtual bool receive(CanardFrame &frame, std::array<uint8_t, CANARD_MTU_CAN_FD> &rx_buffer, CanardMicrosecond *timestamp_us = nullptr) = 0;
 
     /**
      * @brief Get number of available filters.
