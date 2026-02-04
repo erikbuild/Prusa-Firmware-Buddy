@@ -669,9 +669,9 @@ class Planner {
      *  extruder    - target extruder
      *  hints       - optional parameters to aid planner calculations
      */
-    static bool buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, std::variant<VirtualToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
+    static bool buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
 
-    static bool buffer_raw_segment(const abce_pos_t &abce, float acceleration, float nominal_speed, float entry_speed, float exit_speed, std::variant<VirtualToolIndex, NoTool> tool);
+    static bool buffer_raw_segment(const abce_pos_t &abce, float acceleration, float nominal_speed, float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
 
   public:
 
@@ -684,10 +684,10 @@ class Planner {
      *  extruder     - target extruder
      *  hints        - optional parameters to aid planner calculations
      */
-    static bool buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<VirtualToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
+    static bool buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
 
     static bool buffer_raw_line(const xyze_pos_t &cart, float acceleration, float nominal_speed,
-        float entry_speed, float exit_speed, std::variant<VirtualToolIndex, NoTool> tool);
+        float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
 
     /**
      * Set the planner.position and individual stepper positions.

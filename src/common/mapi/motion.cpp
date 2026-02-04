@@ -37,7 +37,7 @@ bool extruder_move(float distance, float feed_rate, bool ignore_flow_factor) {
     current_position.e = pos.e;
 
     // ! Imporant - do not use buffer_line, it would reapply modifiers on top of the position_float
-    return planner.buffer_segment(pos, feed_rate, VirtualToolIndex::currently_selected());
+    return planner.buffer_segment(pos, feed_rate, PhysicalToolIndex::currently_selected());
 }
 
 float extruder_schedule_turning(float feed_rate, float step) {

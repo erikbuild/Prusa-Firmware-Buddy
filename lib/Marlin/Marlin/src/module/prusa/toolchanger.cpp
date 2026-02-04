@@ -96,7 +96,7 @@ static void plan_arc2(const xy_pos_t &dest, const xy_pos_t &center, const feedRa
     xyze_dest.set(dest);
 
     if (current_position.x == xyze_dest.x) {
-        planner.buffer_line(xyze_dest, fr, VirtualToolIndex::currently_selected());
+        planner.buffer_line(xyze_dest, fr, PhysicalToolIndex::currently_selected());
     } else {
         feedRate_t orig_feedrate = feedrate_mm_s;
         feedrate_mm_s = fr;

@@ -284,6 +284,40 @@ xyze_pos_t Planner::position_float; // Needed for accurate maths. Steps cannot b
 
 float Planner::max_printed_z = 0;
 
+struct PlannerMoveTools {
+  std::optional<VirtualToolIndex> virtual_tool;
+  std::optional<PhysicalToolIndex> physical_tool;
+
+  /// Extruder index, for ye old indexed arrays that don't have the strong thing yet
+  [[deprecated("Try to rather rely on virtual_tool/physical_tool")]]
+  uint8_t extruder;
+
+  explicit PlannerMoveTools(std::variant<PhysicalToolIndex, NoTool> tool) {
+    physical_tool = stdext::get_optional<PhysicalToolIndex>(tool);
+
+    if(physical_tool.has_value()) {
+      virtual_tool = stdext::get_optional<VirtualToolIndex>(physical_tool->currently_selected_virtual_tool());
+    } else {
+      #if HOTENDS == 1
+        // This should never happen on non-toolchangers
+        bsod("No PhysicalTool");
+      #endif
+    }
+
+    if(virtual_tool.has_value()) {
+      extruder = virtual_tool->to_raw();
+    } else {
+      #if EXTRUDERS > 1
+        static_assert(EXTRUDERS == VirtualToolIndex::count + 1);
+        extruder = VirtualToolIndex::count;
+      #else
+        // Non-toolchanger and non-mmu targets should never get to a situation where no virtual tool is selected
+        bsod("No VirtualTool");
+      #endif
+    }
+  }
+};
+
 /**
  * Class and Instance Methods
  */
@@ -2085,18 +2119,12 @@ void Planner::buffer_sync_block() {
  * @param extruder      target extruder
  * @param hints         optional parameters to aid planner calculations
  */
-bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, std::variant<VirtualToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
-  uint8_t extruder = match(tool,
-    [](VirtualToolIndex virtual_tool){ return virtual_tool.to_raw(); },
-    [](NoTool){ return VirtualToolIndex::count; }
-  );
-
+bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
 #if defined(Z_CEILING_CLEARANCE) != HAS_CEILING_CLEARANCE()
   #error Z_CEILING_CLEARANCE must be defined only if HAS_CEILING_CLEARANCE()
 #endif
-
-  [[maybe_unused]] const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(tool);
-  [[maybe_unused]] const auto physical_tool = virtual_tool.transform(&VirtualToolIndex::to_physical);
+  PlannerMoveTools tools { tool };
+  const auto extruder = tools.extruder;
 
   // The target position of the tool in absolute mini-steps
   // Calculate target position in absolute mini-steps
@@ -2139,15 +2167,17 @@ bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, s
 
   if (!hints.move.is_service_extruder_move && target.e != position.e) {
     /// Extruder movement without a tool picked doesn't make any sense
-    if(!physical_tool.has_value()) {
+    if(!tools.physical_tool.has_value()) {
       bsod("E move without tool");
     }
 
 #if HAS_FILAMENT_TRACKER()
-    // Note: This is not >>ideal<<, because although the moves get planned, they might get discarded through (gcode_exceptions/quick_stop)
-    // Most notably, this will track some extra filament usage if user intterupts purging
-    // Tying this directly to the immediate motor positions might be better, but one would also need to also handle the origin resets
-    buddy::filament_tracker().track_extruder_move(*virtual_tool, (abce.e - position_float.e) * e_factor[virtual_tool->to_raw()]);
+    if(tools.virtual_tool.has_value()) {
+      // Note: This is not >>ideal<<, because although the moves get planned, they might get discarded through (gcode_exceptions/quick_stop)
+      // Most notably, this will track some extra filament usage if user intterupts purging
+      // Tying this directly to the immediate motor positions might be better, but one would also need to also handle the origin resets
+      buddy::filament_tracker().track_extruder_move(*tools.virtual_tool, (abce.e - position_float.e) * e_factor[tools.virtual_tool->to_raw()]);
+    }
 #endif
   }
 
@@ -2168,8 +2198,8 @@ bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, s
     // Invalidate auto_retract value if we retract E at least some amount (5 mm)
     // maybe_retract_from_nozzle will overwrite the value at the end of it's sequence, other moves invalidate auto_retract value
     // Before retract tracker's value is validated invalidate on any retract E move (10)
-    if (buddy::filament_tracker().get_retracted_distance(*physical_tool).value_or(10) > 5) {
-      buddy::auto_retract().set_retracted_distance(physical_tool->to_raw(), std::nullopt);
+    if (buddy::filament_tracker().get_retracted_distance(*tools.physical_tool).value_or(10) > 5) {
+      buddy::auto_retract().set_retracted_distance(tools.physical_tool->to_raw(), std::nullopt);
     }
   }
 #endif
@@ -2235,7 +2265,7 @@ bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, s
   #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
     if (const float de = target.e - position.e) {
       #if ENABLED(PREVENT_COLD_EXTRUSION)
-        if (hints.move.extrusion_safety_checks && thermalManager.tooColdToExtrude(*physical_tool)) {
+        if (hints.move.extrusion_safety_checks && thermalManager.tooColdToExtrude(*tools.physical_tool)) {
           position.e = target.e; // Behave as if the move really took place, but ignore E part
           position_float.e = abce.e;
           SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
@@ -2286,11 +2316,9 @@ bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, s
   return true;
 } // buffer_segment()
 
-bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<VirtualToolIndex, NoTool> tool) {
-    uint8_t extruder = match(tool,
-        [](VirtualToolIndex virtual_tool){ return virtual_tool.to_raw(); },
-        [](NoTool){ return VirtualToolIndex::count; }
-    );
+bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
+    const uint8_t extruder = PlannerMoveTools{tool}.extruder;
+
     // If we are aborting, do not accept queuing of movements
     if (draining() || PreciseStepping::stopping()) {
         return false;
@@ -2359,13 +2387,13 @@ bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleratio
  *  extruder        - target extruder
  *  hints           - optional parameters to aid planner calculations
  */
-bool Planner::buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<VirtualToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
+bool Planner::buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
   xyze_pos_t machine = cart;
   TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine));
   return buffer_segment(machine, fr_mm_s, tool, hints);
 } // buffer_line()
 
-bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<VirtualToolIndex, NoTool> tool) {
+bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
     xyze_pos_t machine = cart;
     TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine));
     return buffer_raw_segment(machine, acceleration, nominal_speed, entry_speed, exit_speed, tool);

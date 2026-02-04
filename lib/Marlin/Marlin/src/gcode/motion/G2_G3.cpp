@@ -361,7 +361,7 @@ void plan_arc(
         hints.safe_exit_speed_sqr = _MIN(limiting_speed_sqr, 2 * limiting_accel * arc_mm_remaining);
       #endif
 
-      if (!planner.buffer_line(raw, scaled_fr_mm_s, VirtualToolIndex::currently_selected(), hints))
+      if (!planner.buffer_line(raw, scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints))
         break;
 
       hints.curve_radius = radius;
@@ -382,7 +382,7 @@ void plan_arc(
     hints.safe_exit_speed_sqr = 0.0f;
   #endif
 
-  planner.buffer_line(raw, scaled_fr_mm_s, VirtualToolIndex::currently_selected(), hints);
+  planner.buffer_line(raw, scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints);
 
   current_position = cart;
 

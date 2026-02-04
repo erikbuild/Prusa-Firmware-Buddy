@@ -409,7 +409,7 @@ static bool do_probe_move(const float z, const feedRate_t fr_mm_s) {
   // Move down until the probe is triggered
   auto target = planner.get_machine_position_mm();
   target.z = z;
-  planner.buffer_segment(target, fr_mm_s, VirtualToolIndex::currently_selected());
+  planner.buffer_segment(target, fr_mm_s, PhysicalToolIndex::currently_selected());
   planner.synchronize();
   // Note: current_position is updated lower in this function
 
@@ -637,7 +637,7 @@ float run_z_probe(const RunZProbeParams& params) {
         // Return slowly back. Ensure this move is not optimized even when small
         float move_back = 0.09f;
         current_position.z += move_back;
-        planner.buffer_line(current_position, MMM_TO_MMS(Z_PROBE_SPEED_BACK_MOVE), VirtualToolIndex::currently_selected(), { .raw_block = true });
+        planner.buffer_line(current_position, MMM_TO_MMS(Z_PROBE_SPEED_BACK_MOVE), PhysicalToolIndex::currently_selected(), { .raw_block = true });
         planner.synchronize();
         if (planner.draining())
           return NAN;
