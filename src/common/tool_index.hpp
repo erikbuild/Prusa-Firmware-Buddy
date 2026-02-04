@@ -10,7 +10,6 @@
 #include <utils/storage/strong_index_array.hpp>
 #include <bsod/bsod.h>
 #include <utils/overloaded_visitor.hpp>
-#include <option/board_is_master_board.h>
 #include <printers.h>
 #include <string_view_utf8.hpp>
 
@@ -33,34 +32,34 @@ struct PhysicalToolIndexExtension;
 /// - XL has (up to) 5 physical tools
 /// - INDX has a lot if physical tools (even though only one nozzle can be heated at a time)
 /// - MINI, MKx, C1 (non-index) have a single physical tool
-#if PRINTER_IS_PRUSA_XL() && BOARD_IS_MASTER_BOARD()
-// HOTENDS is set to 6 instead of 5.
-// Values 0 to 4 represents tools and 5 represents no tool, which we need to disallow in strong types.
-// For representing no tool we will use NoTool type instead.
-static_assert(HOTENDS == 6);
+#if HOTENDS > 1
+// HOTENDS - 1 index represents NoTool picked
+static_assert(HOTENDS > 2);
 using PhysicalToolIndex = ToolIndex<HOTENDS - 1, PhysicalToolIndexExtension>;
 #else
 using PhysicalToolIndex = ToolIndex<HOTENDS, PhysicalToolIndexExtension>;
 #endif
 
-struct VirtualToolIndexExtension;
-
-#if PRINTER_IS_PRUSA_XL() && BOARD_IS_MASTER_BOARD()
-// EXTRUDERS is set to 6 instead of 5.
-// Values 0 to 4 represents tools and 5 represents no tool, which we need to disallow in strong types.
-// For representing no tool we will use NoTool type instead.
-static_assert(EXTRUDERS == 6);
+// Use VirtualToolIndex::count instead
+// This is only necessary to share the value between GcodeToolIndex and VirtualToolIndex forward declarations
+namespace tool_index_private {
+#if EXTRUDERS > 1
+// EXTRUDERS - 1 index represents NoTool picked
+static_assert(EXTRUDERS > 2);
 static constexpr uint8_t virtual_tool_index_count = EXTRUDERS - 1;
 #else
 static constexpr uint8_t virtual_tool_index_count = EXTRUDERS;
 #endif
+}; // namespace tool_index_private
+
+struct VirtualToolIndexExtension;
 
 /// Strong type for indexing "virtual" tools.
 /// Virtual tools extend the physical tools with the possibility of filament multiplexing,
 /// where multiple virtual tools can be mapped to a single physical tool and swapped through multiplexing (MMU).
 /// This more or less corresponds with the old marlin EXTRUDERS macro.
 /// Used virtual tools are surjectively mapped to physical tools.
-using VirtualToolIndex = ToolIndex<virtual_tool_index_count, VirtualToolIndexExtension>;
+using VirtualToolIndex = ToolIndex<tool_index_private::virtual_tool_index_count, VirtualToolIndexExtension>;
 
 struct GcodeToolIndexExtension;
 
@@ -69,7 +68,7 @@ struct GcodeToolIndexExtension;
 /// These indexes are then mapped to VirtualToolIndex, based on the current tool mapping configuration.
 /// There is a bijection relation between the active virtual tools and gcode tools,
 /// (spool join kind of extends this to surjection, but at any single moment, a GCodeTool is always mapped to a single VirtualTool)
-using GcodeToolIndex = ToolIndex<virtual_tool_index_count, GcodeToolIndexExtension>;
+using GcodeToolIndex = ToolIndex<tool_index_private::virtual_tool_index_count, GcodeToolIndexExtension>;
 
 /// Strong type for representing no tool using `std::variant<SomeToolIndex, NoTool>`
 /// This type means a VALID situation where the toolchanger has no tool picked

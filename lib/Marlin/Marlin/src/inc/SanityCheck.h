@@ -1371,8 +1371,8 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
  * Prusa MMU2 requirements
  */
 #if HAS_MMU2()
-  #if EXTRUDERS != 5
-    #error "HAS_MMU2() requires EXTRUDERS = 5."
+  #if EXTRUDERS != 6
+    #error "HAS_MMU2() requires EXTRUDERS = 6."
   #endif
 #endif
 

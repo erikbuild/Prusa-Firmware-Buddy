@@ -134,7 +134,7 @@
 // :[1, 2, 3, 4, 5, 6]
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
-#define EXTRUDERS 5
+#define EXTRUDERS 6 // 5 + NoTool
 #else
 #define EXTRUDERS 1
 #endif

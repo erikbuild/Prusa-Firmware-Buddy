@@ -1,4 +1,4 @@
 #pragma once
 
-#define EXTRUDERS 4
-#define HOTENDS   5
+#define EXTRUDERS 5
+#define HOTENDS   6

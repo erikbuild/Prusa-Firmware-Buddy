@@ -140,7 +140,7 @@
 // This defines the number of extruders
 // :[1, 2, 3, 4, 5, 6]
 #if HAS_MMU2()
-#define EXTRUDERS 5
+#define EXTRUDERS 6 // 5 + NoTool
 #else
 #define EXTRUDERS 1
 #endif
