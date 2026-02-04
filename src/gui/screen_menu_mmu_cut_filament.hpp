@@ -16,7 +16,7 @@ struct ScreenMenuMMUCutFilament_<std::index_sequence<i...>> {
     using T = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_MMU_CUT_FILAMENT_I<i>...>;
 };
 
-class ScreenMenuMMUCutFilament : public ScreenMenuMMUCutFilament_<std::make_index_sequence<EXTRUDERS>>::T {
+class ScreenMenuMMUCutFilament : public ScreenMenuMMUCutFilament_<std::make_index_sequence<VirtualToolIndex::count>>::T {
 public:
     constexpr static const char *label = N_("Cut Filament");
     ScreenMenuMMUCutFilament();

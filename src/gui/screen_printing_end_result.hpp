@@ -72,8 +72,8 @@ private:
     DateBufferT print_ended_value_buffer;
 
     window_text_t consumed_material_label;
-    std::array<window_text_t, EXTRUDERS> consumed_material_values;
-    std::array<std::array<char, sizeof("T1 HIFIPETG 10.000g") + extra_buffer_size>, EXTRUDERS> consumed_material_values_buffers;
+    std::array<window_text_t, VirtualToolIndex::count> consumed_material_values;
+    std::array<std::array<char, sizeof("T1 HIFIPETG 10.000g") + extra_buffer_size>, VirtualToolIndex::count> consumed_material_values_buffers;
 
     window_text_t consumed_wipe_tower_value;
     StringViewUtf8Parameters<7> wipe_tower_params;

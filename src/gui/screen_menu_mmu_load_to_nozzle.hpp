@@ -16,7 +16,7 @@ struct ScreenMenuMMULoadToNozzle_<std::index_sequence<i...>> {
     using T = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, MI_MMU_LOAD_TO_NOZZLE_I<i>...>;
 };
 
-class ScreenMenuMMULoadToNozzle : public ScreenMenuMMULoadToNozzle_<std::make_index_sequence<EXTRUDERS>>::T {
+class ScreenMenuMMULoadToNozzle : public ScreenMenuMMULoadToNozzle_<std::make_index_sequence<VirtualToolIndex::count>>::T {
 public:
     constexpr static const char *label = N_("Load to Nozzle");
     ScreenMenuMMULoadToNozzle();

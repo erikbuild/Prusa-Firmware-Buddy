@@ -7,6 +7,7 @@
 #include "mmu2_toolchanger_common.hpp"
 #include "print_time_module.hpp"
 #include <option/has_mmu2.h>
+#include <tool_index.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -201,7 +202,8 @@ void EndResultBody::handle_wipe_tower_showing([[maybe_unused]] const GCodeInfo &
 
 void EndResultBody::handle_consumed_tool_fields(const GCodeInfo &gcode, size_t num_extruders_with_valid_grams) {
     if (num_extruders_with_valid_grams > 0) {
-        for (size_t i = 0, consumed_material_line_idx = 0; i < EXTRUDERS; ++i) {
+        size_t consumed_material_line_idx = 0;
+        for (auto i : GcodeToolIndex::all()) {
             const auto &ext_info { gcode.get_extruder_info(i) };
             if (!ext_info.used() || !ext_info.filament_used_g.has_value() || std::lround(ext_info.filament_used_g.value()) < minimum_grams_valid) {
                 continue;
@@ -238,7 +240,7 @@ void EndResultBody::handle_consumed_tool_fields(const GCodeInfo &gcode, size_t n
             };
 
             if (show_t_label) {
-                snprintf(buff.data(), buff.size(), "T%d %s %dg", i + 1, print_fname(), used_g);
+                snprintf(buff.data(), buff.size(), "T%d %s %dg", i.display_index(), print_fname(), used_g);
             } else {
                 snprintf(buff.data(), buff.size(), "%s %dg", print_fname(), used_g);
             }

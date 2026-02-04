@@ -195,7 +195,7 @@ void tuneIdlerStallguardThreshold() {
 }
 
 void UpdateCurrentFilamentType(uint8_t slot) {
-    if (slot < EXTRUDERS) {
+    if (slot < VirtualToolIndex::count) {
         filament::set_type_to_load(config_store().get_filament_type(slot));
     } // ignore out-of-bounds slot indices (uknown filament types)
 }

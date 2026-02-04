@@ -177,7 +177,7 @@ namespace migrations {
         // See BFW-6236
         using NewItem = decltype(CurrentStore::loaded_filament_type);
 
-        std::array<NewItem::value_type, EXTRUDERS> filament_types;
+        std::array<NewItem::value_type, VirtualToolIndex::count> filament_types;
 
         auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             const auto ix = stdext::index_of(deprecated_ids::loaded_filament_type, static_cast<uint16_t>(header.id));

@@ -278,7 +278,7 @@ bool all_nozzles_same(GCodeInfo &gcode_info) {
         return nozzle_diameter_distance <= 0.001f;
     };
     // check gcodes
-    for (int8_t e = 0; e < EXTRUDERS; e++) {
+    for (auto e : GcodeToolIndex::all()) {
         if (!gcode_info.get_extruder_info(e).used()) {
             continue;
         }
@@ -300,7 +300,7 @@ bool all_nozzles_same(GCodeInfo &gcode_info) {
     }
 
     // check physicals
-    for (int8_t e = 0; e < EXTRUDERS; e++) {
+    for (int8_t e = 0; e < PhysicalToolIndex::count; e++) {
         if (!is_tool_enabled(e)) {
             continue;
         }
@@ -362,7 +362,7 @@ ToolsMappingBody::ToolsMappingBody(window_t *parent, GCodeInfo &gcode_info)
 
     // Then skip some numbers (and increment the rest) if a tool is missing (ie dwarf 1 is not connected)
     for (int left_idx = 0; left_idx < gcode.UsedExtrudersCount(); ++left_idx) {
-        for (size_t current_real = left_gcode_idx_to_real[left_idx]; current_real < std::min<size_t>(max_item_rows, EXTRUDERS); ++current_real) {
+        for (size_t current_real = left_gcode_idx_to_real[left_idx]; current_real < std::min<size_t>(max_item_rows, VirtualToolIndex::count); ++current_real) {
             // loop until we find a valid gcode
             if (gcode_info.get_extruder_info(current_real).used()) {
                 // increment by 1 from this offset to the rest of the array
@@ -373,7 +373,7 @@ ToolsMappingBody::ToolsMappingBody(window_t *parent, GCodeInfo &gcode_info)
     }
 
     for (int right_idx = 0; right_idx < get_num_of_enabled_tools(); ++right_idx) {
-        for (size_t current_real = right_phys_idx_to_real[right_idx]; current_real < std::min<size_t>(max_item_rows, EXTRUDERS); ++current_real) {
+        for (size_t current_real = right_phys_idx_to_real[right_idx]; current_real < std::min<size_t>(max_item_rows, VirtualToolIndex::count); ++current_real) {
             // loop until we find a valid physical tool
             if (is_tool_enabled(current_real)) {
                 // increment by 1 from this offset to the rest of the array

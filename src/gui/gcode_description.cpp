@@ -63,8 +63,8 @@ static std::span<char> delimited_items_per_extruder(std::span<char> buffer, char
 /// Fills the buffer with a used material info (meant for single tool prints)
 /// Example:     PLA/230 g/15 m
 static void print_single_extruder_material_info(std::span<char> buffer, GCodeInfo &gcode) {
-    std::optional<int> used_extruder;
-    for (int e = 0; e < EXTRUDERS; e++) {
+    std::optional<GcodeToolIndex> used_extruder;
+    for (auto e : GcodeToolIndex::all()) {
         if (gcode.get_extruder_info(e).used()) {
             used_extruder = e;
             break;
@@ -176,7 +176,7 @@ void GCodeInfoWithDescription::update(GCodeInfo &gcode) {
 
     bool has_filament_used_info = false;
 
-    for (int e = 0; e < std::min(5, EXTRUDERS); e++) {
+    for (auto e : GcodeToolIndex::all()) {
         has_filament_used_info |= gcode.get_extruder_info(e).filament_used_mm.has_value();
         has_filament_used_info |= gcode.get_extruder_info(e).filament_used_g.has_value();
     }
