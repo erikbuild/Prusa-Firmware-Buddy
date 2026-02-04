@@ -103,7 +103,7 @@ std::span<const std::byte> trans_with_crc(Dispatch &dispatch, const char *s, siz
 
 } // namespace
 
-TEST_CASE("Modbus transaction - refused inputs") {
+TEST_CASE("Modbus transaction - refused inputs", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -152,7 +152,7 @@ TEST_CASE("Modbus transaction - refused inputs") {
     }
 }
 
-TEST_CASE("Invalid function") {
+TEST_CASE("Invalid function", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -170,7 +170,7 @@ TEST_CASE("Invalid function") {
     REQUIRE(resp[2] == 1);
 }
 
-TEST_CASE("Invalid address") {
+TEST_CASE("Invalid address", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -189,7 +189,7 @@ TEST_CASE("Invalid address") {
     REQUIRE(resp[2] == 2);
 }
 
-TEST_CASE("Success write") {
+TEST_CASE("Success write", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -211,7 +211,7 @@ TEST_CASE("Success write") {
     REQUIRE(md1.registers[3] == 3);
 }
 
-TEST_CASE("Success read") {
+TEST_CASE("Success read", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -226,7 +226,7 @@ TEST_CASE("Success read") {
     REQUIRE(memcmp("\1\3\4\0\1\0\2", resp, 7) == 0);
 }
 
-TEST_CASE("Success coils read") {
+TEST_CASE("Success coils read", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -242,7 +242,7 @@ TEST_CASE("Success coils read") {
     REQUIRE(memcmp("\1\1\3\x55\x55\1", resp, 6) == 0);
 }
 
-TEST_CASE("Sucess coil write") {
+TEST_CASE("Sucess coil write", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
@@ -268,7 +268,7 @@ TEST_CASE("Sucess coil write") {
     REQUIRE(md1.coils[1]);
 }
 
-TEST_CASE("Sucess coils write") {
+TEST_CASE("Sucess coils write", "[modbus]") {
     MockDevice1 md1;
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
