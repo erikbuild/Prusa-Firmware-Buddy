@@ -108,7 +108,7 @@ TEST_CASE("Modbus transaction - refused inputs") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     SECTION("Too short") {
         REQUIRE(handle_transaction(dispatch, {}, out_buffer).empty());
@@ -157,7 +157,7 @@ TEST_CASE("Invalid function") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     auto response = trans_with_crc(dispatch, "\1\x22\0\1\0\2\4\0AA\0", 11, out_buffer);
     REQUIRE(response.size() == 5);
@@ -175,7 +175,7 @@ TEST_CASE("Invalid address") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     // 3 is in-range, 4 is out of range
     auto response = trans_with_crc(dispatch, "\1\x10\0\3\0\2\4\0AA\0", 11, out_buffer);
@@ -194,7 +194,7 @@ TEST_CASE("Success write") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     auto response = trans_with_crc(dispatch, "\1\x10\0\1\0\2\4\0AA\0", 11, out_buffer);
     REQUIRE(response.size() == 8);
@@ -216,7 +216,7 @@ TEST_CASE("Success read") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     auto response = trans_with_crc(dispatch, "\1\3\0\1\0\2", 6, out_buffer);
     REQUIRE(response.size() == 9);
@@ -231,7 +231,8 @@ TEST_CASE("Success coils read") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    // zero-initialized out buffer
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     auto response = trans_with_crc(dispatch, "\1\1\0\1\0\x11", 6, out_buffer);
     REQUIRE(response.size() == 8);
@@ -246,7 +247,7 @@ TEST_CASE("Sucess coil write") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     auto response = trans_with_crc(dispatch, "\1\5\0\1\0\0", 6, out_buffer);
     REQUIRE(response.size() == 8);
@@ -272,7 +273,7 @@ TEST_CASE("Sucess coils write") {
     std::array<modbus::Callbacks *, 1> devices { &md1 };
     modbus::Dispatch dispatch { devices };
 
-    alignas(uint16_t) std::array<std::byte, 40> out_buffer;
+    alignas(uint16_t) std::array<std::byte, 40> out_buffer {};
 
     auto response = trans_with_crc(dispatch, "\1\x0F\0\1\0\x10\2\x01\x0F", 10, out_buffer);
     REQUIRE(response.size() == 8);
