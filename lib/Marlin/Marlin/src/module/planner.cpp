@@ -1249,32 +1249,6 @@ bool Planner::_populate_block(block_t * const block,
                     );
   //*/
 
-  #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
-    if (de) {
-      #if ENABLED(PREVENT_COLD_EXTRUSION)
-        if (hints.move.extrusion_safety_checks && thermalManager.tooColdToExtrude(extruder)) {
-          position.e = target.e; // Behave as if the move really took place, but ignore E part
-          position_float.e = target_float.e;
-          de = 0; // no difference
-          SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
-        }
-      #endif // PREVENT_COLD_EXTRUSION
-      #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
-        const float e_msteps = ABS(de * e_factor[extruder]);
-        const float max_e_msteps = settings.axis_msteps_per_mm[E_AXIS_N(extruder)] * (EXTRUDE_MAXLENGTH);
-        if (e_msteps > max_e_msteps) {
-          constexpr bool ignore_e = true;
-          if (ignore_e) {
-            position.e = target.e; // Behave as if the move really took place, but ignore E part
-            position_float.e = target_float.e;
-            de = 0; // no difference
-            SERIAL_ECHO_MSG(MSG_ERR_LONG_EXTRUDE_STOP);
-          }
-        }
-      #endif // PREVENT_LENGTHY_EXTRUDE
-    }
-  #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
-
   // Compute direction bit-mask for this block
   uint8_t dm = 0;
   if (da < 0) SBI(dm, X_AXIS);
@@ -2257,6 +2231,30 @@ bool Planner::buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, s
     position.e = target.e;
     position_float.e = abce.e;
   }
+
+  #if EITHER(PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE)
+    if (const float de = target.e - position.e) {
+      #if ENABLED(PREVENT_COLD_EXTRUSION)
+        if (hints.move.extrusion_safety_checks && thermalManager.tooColdToExtrude(extruder)) {
+          position.e = target.e; // Behave as if the move really took place, but ignore E part
+          position_float.e = abce.e;
+          SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
+        }
+      #endif // PREVENT_COLD_EXTRUSION
+      #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
+        const float e_msteps = ABS(de * e_factor[extruder]);
+        const float max_e_msteps = settings.axis_msteps_per_mm[E_AXIS_N(extruder)] * (EXTRUDE_MAXLENGTH);
+        if (e_msteps > max_e_msteps) {
+          constexpr bool ignore_e = true;
+          if (ignore_e) {
+            position.e = target.e; // Behave as if the move really took place, but ignore E part
+            position_float.e = abce.e;
+            SERIAL_ECHO_MSG(MSG_ERR_LONG_EXTRUDE_STOP);
+          }
+        }
+      #endif // PREVENT_LENGTHY_EXTRUDE
+    }
+  #endif // PREVENT_COLD_EXTRUSION || PREVENT_LENGTHY_EXTRUDE
 
   /* <-- add a slash to enable
     SERIAL_ECHOPAIR("  buffer_segment FR:", fr_mm_s);
