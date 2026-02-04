@@ -1867,17 +1867,6 @@ bool Planner::populate_raw_block(block_t *const block, const abce_long_t &target
 
     int32_t de = target.e - position.e;
 
-    #if ENABLED(PREVENT_COLD_EXTRUSION)
-        if (de) {
-            if (Temperature::tooColdToExtrude(extruder)) {
-                position.e = target.e; // Behave as if the move really took place, but ignore E part
-                position_float.e = target_float.e;
-                de = 0; // no difference
-                SERIAL_ECHO_MSG(MSG_ERR_COLD_EXTRUDE_STOP);
-            }
-        }
-    #endif // PREVENT_COLD_EXTRUSION
-
     // Clear all flags, including the "busy" bit
     block->flag.clear();
     block->busy = false;
