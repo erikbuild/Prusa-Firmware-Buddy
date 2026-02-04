@@ -1167,8 +1167,11 @@ bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s, bool invert_home_di
  * return distance between fast and slow probe
  * @param homing_z_with_probe default true, set to false to home without using probe (useful to calibrate Z on XL)
  */
-float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const feedRate_t fr_mm_s,
-  bool invert_home_dir, bool homing_z_with_probe, const int attempt) {
+float homeaxis_single_run(const HomeAxisSingleRunArgs &args) {
+  const AxisEnum axis = args.axis;
+  const int axis_home_dir = args.axis_home_dir;
+  [[maybe_unused]] const bool homing_z_with_probe = args.homing_z_with_probe;
+
   // Homing Z towards the bed? Deploy the Z probe or endstop.
   #if HOMING_Z_WITH_PROBE
     if (axis == Z_AXIS && homing_z_with_probe && DEPLOY_PROBE()) {
@@ -1195,14 +1198,14 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     }
   #endif
 
-  const feedRate_t real_fr_mm_s = fr_mm_s ?: homing_feedrate(axis);
+  const feedRate_t real_fr_mm_s = args.fr_mm_s ?: homing_feedrate(axis);
 
   #if ENABLED(MOVE_BACK_BEFORE_HOMING)
     #ifndef MOVE_BACK_BEFORE_HOMING_DISTANCE_FIRST
       #define MOVE_BACK_BEFORE_HOMING_DISTANCE_FIRST MOVE_BACK_BEFORE_HOMING_DISTANCE
     #endif
     if ((axis == X_AXIS) || (axis == Y_AXIS)) {
-      const float move_back_distance = attempt ? MOVE_BACK_BEFORE_HOMING_DISTANCE : MOVE_BACK_BEFORE_HOMING_DISTANCE_FIRST;
+      const float move_back_distance = args.attempt ? MOVE_BACK_BEFORE_HOMING_DISTANCE : MOVE_BACK_BEFORE_HOMING_DISTANCE_FIRST;
       do_homing_move(axis, axis_home_dir * -move_back_distance, real_fr_mm_s);
     }
   #endif // ENABLED(MOVE_BACK_BEFORE_HOMING)
@@ -1269,7 +1272,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     } else
     #endif //HOMING_Z_WITH_PROBE
     {
-      bump_feedrate = fr_mm_s ?: get_homing_bump_feedrate(axis);
+      bump_feedrate = args.fr_mm_s ?: get_homing_bump_feedrate(axis);
     }
 
     do_homing_move(axis, 2 * bump, bump_feedrate, false, homing_z_with_probe);
@@ -1342,7 +1345,7 @@ float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const fe
     if (planner.draining() || gcode_exceptions().throw_count() != initial_throw_count)
       return NAN;
 
-  if (!invert_home_dir) {
+  if (!args.invert_home_dir) {
     bool is_homed_precisely = false;
     if(axis == Z_AXIS) {
       // Z is homed precisely only if we used probe (so banging against the ceiling is not considered precise homing)

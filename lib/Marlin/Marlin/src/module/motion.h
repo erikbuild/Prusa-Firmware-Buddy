@@ -345,9 +345,30 @@ void homing_failed(stdext::inplace_function<void()> fallback_error, bool crash_w
 [[nodiscard]] bool homeaxis(const AxisEnum axis, const feedRate_t fr_mm_s=0.0, bool invert_home_dir = false,
   void (*enable_wavetable)(AxisEnum) = NULL, bool can_calibrate = true, bool homing_z_with_probe = true, bool throw_homing_failed = true);
 
+struct HomeAxisSingleRunArgs {
+  AxisEnum axis;
+  int axis_home_dir;
+  feedRate_t fr_mm_s = 0;
+  int attempt = 0;
+  bool invert_home_dir : 1 = false;
+  bool homing_z_with_probe : 1 = true;
+};
+
 // Perform a single homing probe on a logical axis
-float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const feedRate_t fr_mm_s = 0.0,
-  bool invert_home_dir = false, bool homing_z_with_probe = true, const int attempt = 0);
+float homeaxis_single_run(const HomeAxisSingleRunArgs &args);
+
+[[deprecated("Use the HomeAxisSingleRunArgs overload")]]
+inline float homeaxis_single_run(const AxisEnum axis, const int axis_home_dir, const feedRate_t fr_mm_s = 0.0,
+  bool invert_home_dir = false, bool homing_z_with_probe = true, const int attempt = 0) {
+    return homeaxis_single_run(HomeAxisSingleRunArgs{
+      .axis = axis,
+      .axis_home_dir = axis_home_dir,
+      .fr_mm_s = fr_mm_s,
+      .attempt = attempt,
+      .invert_home_dir = invert_home_dir,
+      .homing_z_with_probe = homing_z_with_probe,
+    });
+}
 
 /**
  * @brief Perform a blocking, relative move on the specified axis *without* position modifiers
