@@ -144,7 +144,7 @@ void GcodeSuite::M600() {
 
 /** @}*/
 
-void M600_execute(xyz_pos_t park_point, uint8_t target_extruder,
+void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool,
     xyze_float_t resume_point, std::optional<float> unloadLength, std::optional<float> fastLoadLength,
     std::optional<float> retractLength, std::optional<Color> filament_colour,
     std::optional<FilamentType> filament_type, bool);
@@ -154,6 +154,7 @@ void M600_manual(const GCodeParser2 &p) {
     if (target_extruder < 0) {
         return;
     }
+    auto target_tool = VirtualToolIndex::from_raw(target_extruder);
 
     xyz_pos_t park_point = XYZ_NOZZLE_PARK_POINT_M600;
 
@@ -177,7 +178,7 @@ void M600_manual(const GCodeParser2 &p) {
     const xyze_float_t no_return = { { { NAN, NAN, NAN, current_position.e } } };
 
     M600_execute(park_point,
-        target_extruder,
+        target_tool,
         p.option<bool>('N') ? no_return : current_position,
         p.option<float>('U'),
         p.option<float>('L'),
@@ -187,13 +188,15 @@ void M600_manual(const GCodeParser2 &p) {
         false);
 }
 
-void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t resume_point,
+void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool, xyze_float_t resume_point,
     std::optional<float> unloadLength, std::optional<float> fastLoadLength, std::optional<float> retractLength,
     std::optional<Color> filament_colour, std::optional<FilamentType> filament_type,
     bool is_filament_stuck) {
 
     // Ignore estalls during filament change
     BlockEStallDetection estall_blocker;
+
+    auto physical_target_tool = target_tool.to_physical();
 
 #if ENABLED(CRASH_RECOVERY)
     if (crash_s.get_state() != Crash_s::PRINTING && crash_s.get_state() != Crash_s::IDLE) {
@@ -210,25 +213,25 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
 
     // Check if we need to do a toolchange
     std::optional<ToolChangeData> tool_change_data {};
-    if (VirtualToolIndex::from_raw_notool(target_extruder) != marlin_vars().active_extruder.get()) {
+    if (!stdext::holds_value(VirtualToolIndex::currently_selected(), target_tool)) {
         // Since the native coordinates contain hotend_currently_applied_offset we need to store the logical
         // version of these coordinates to make it easier to convert to the target_extruder's native coordinates.
         const auto logical_resume = resume_point.asLogical();
         tool_change_data = ToolChangeData {
             .original_resume_point = logical_resume,
-            .target_extruder_original_temperature = Temperature::degTargetHotend(target_extruder),
+            .target_extruder_original_temperature = Temperature::degTargetHotend(physical_target_tool),
             .original_extruder = marlin_vars().active_extruder,
         };
 
-        tool_change(VirtualToolIndex::from_raw(target_extruder), tool_return_t::no_return, tool_change_lift_t::mbl_only_lift, true);
+        tool_change(target_tool, tool_return_t::no_return, tool_change_lift_t::mbl_only_lift, true);
 
         resume_point = logical_resume.asNative(); // Convert original resume point to the new native coordinates
-        resume_point = prusa_toolchanger.get_tool_dock_position(PhysicalToolIndex::from_raw(target_extruder)); // Sets only x, y coordinates
+        resume_point = prusa_toolchanger.get_tool_dock_position(physical_target_tool); // Sets only x, y coordinates
 
         // Sets the target temperature based on the current filament type
         // M600 generally should not set target temperature, this is an exception for specific scenario where user wants to change filament on currently unused toolhead during print
-        const auto filament_data = config_store().get_filament_type(target_extruder).parameters();
-        Temperature::setTargetHotend(filament_data.nozzle_temperature, target_extruder);
+        const auto filament_data = config_store().get_filament_type(target_tool).parameters();
+        Temperature::setTargetHotend(filament_data.nozzle_temperature, physical_target_tool);
     }
 #endif
     park_point.z = std::max({ current_position.z + Z_NOZZLE_PARK_RISE, park_point.z, planner.max_printed_z + Z_NOZZLE_PARK_RISE });
@@ -244,25 +247,25 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
     if (retractLength.has_value()) {
         settings.SetRetractLength(retractLength.value());
     } // Initial retract before move to filament change position
-    settings.SetExtruder(target_extruder);
+    settings.SetExtruder(target_tool);
 
-    const float disp_temp = marlin_vars().hotend(target_extruder).display_nozzle;
-    const float targ_temp = Temperature::degTargetHotend(target_extruder);
+    const float disp_temp = marlin_vars().hotend(physical_target_tool).display_nozzle;
+    const float targ_temp = Temperature::degTargetHotend(physical_target_tool);
 
     if (disp_temp > targ_temp) {
-        Temperature::setTargetHotend(static_cast<int16_t>(disp_temp), target_extruder);
+        Temperature::setTargetHotend(static_cast<int16_t>(disp_temp), physical_target_tool);
     }
 
     if (filament_type.has_value()) {
-        config_store().set_filament_type(target_extruder, filament_type.value());
+        config_store().set_filament_type(target_tool, filament_type.value());
     }
 
-    filament::set_type_to_load(config_store().get_filament_type(target_extruder));
+    filament::set_type_to_load(config_store().get_filament_type(target_tool));
     filament::set_color_to_load(filament_colour);
     Pause::Instance().filament_change(settings, is_filament_stuck);
 
     if (disp_temp > targ_temp) {
-        Temperature::setTargetHotend(static_cast<int16_t>(targ_temp), target_extruder);
+        Temperature::setTargetHotend(static_cast<int16_t>(targ_temp), physical_target_tool);
     }
 
 #if HAS_TOOLCHANGER()
@@ -270,7 +273,7 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
         const auto &change_data = *tool_change_data;
 
         if (std::isfinite(change_data.target_extruder_original_temperature)) {
-            Temperature::setTargetHotend(change_data.target_extruder_original_temperature, target_extruder);
+            Temperature::setTargetHotend(change_data.target_extruder_original_temperature, physical_target_tool);
         }
 
         destination = current_position;
@@ -303,9 +306,13 @@ void M600_execute(xyz_pos_t park_point, uint8_t target_extruder, xyze_float_t re
  */
 #if HAS_LOADCELL()
 void PrusaGcodeSuite::M1601() {
+    auto active_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+    if (!active_tool.has_value()) {
+        bsod_unreachable();
+    }
     M600_execute(
         XYZ_NOZZLE_PARK_POINT_M600,
-        active_extruder,
+        *active_tool,
         current_position,
         std::nullopt, std::nullopt, std::nullopt,
         std::nullopt, std::nullopt,
