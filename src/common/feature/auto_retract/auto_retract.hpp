@@ -1,6 +1,7 @@
 /// @file
 #pragma once
 
+#include "tool_index.hpp"
 #include <optional>
 #include <bitset>
 #include <inplace_function.hpp>
@@ -23,7 +24,13 @@ public:
     bool will_deretract(uint8_t hotend = current_hotend()) const;
 
     /// \returns true if the filament is completely retracted from the \param hotend's nozzle (distance >= minimum_retract_distance), allowing for cold unload.
+    [[deprecated("Use the ToolIndex overload")]]
     bool is_safely_retracted_for_unload(uint8_t hotend = current_hotend()) const;
+
+    /// \returns true if the filament is completely retracted from the \param hotend's nozzle (distance >= minimum_retract_distance), allowing for cold unload.
+    inline bool is_safely_retracted_for_unload(PhysicalToolIndex physical_tool) const {
+        return is_safely_retracted_for_unload(physical_tool.to_raw());
+    }
 
     /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
     std::optional<float> retracted_distance(uint8_t hotend = current_hotend()) const;
