@@ -7,6 +7,7 @@
 #include <optional>
 #include "../../../lib/Marlin/Marlin/src/core/macros.h"
 #include "../../../lib/Marlin/Marlin/src/core/types.h"
+#include <tool_index.hpp>
 #include <mapi/parking.hpp>
 
 class Pause; // forward declaration, so Settings does not think Pause is member of pause namespace
@@ -34,7 +35,10 @@ public:
     void SetResumePoint(const xyze_pos_t &resume_point);
     void SetMmuFilamentToLoad(uint8_t index);
 
+    [[deprecated("Use the ToolIndex overload")]]
     void SetExtruder(uint8_t target) { target_extruder = target; }
+    inline void SetExtruder(VirtualToolIndex target) { target_extruder = target.to_raw(); }
+
     uint8_t GetExtruder() const { return target_extruder; }
 
     inline VirtualToolIndex virtual_tool() const {
