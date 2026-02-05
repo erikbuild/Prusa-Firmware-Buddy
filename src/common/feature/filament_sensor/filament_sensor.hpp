@@ -23,7 +23,7 @@ public:
     typedef int32_t value_type;
     static constexpr int32_t undefined_value = HX717::undefined_value;
 
-    enum class Event {
+    enum class Event : uint8_t {
         no_event,
         filament_inserted,
         filament_removed
