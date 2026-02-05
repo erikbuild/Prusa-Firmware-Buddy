@@ -24,6 +24,10 @@ using VirtualExtension = VirtualToolIndexExtension;
 using PhysicalExtension = PhysicalToolIndexExtension;
 using GcodeExtension = GcodeToolIndexExtension;
 
+static_assert(sizeof(PhysicalToolIndex) == 1);
+static_assert(sizeof(VirtualToolIndex) == 1);
+static_assert(sizeof(GcodeToolIndex) == 1);
+
 static_assert(std::input_iterator<VirtualToolIndex::Iterator>);
 static_assert(std::input_iterator<PhysicalToolIndex::Iterator>);
 static_assert(std::input_iterator<GcodeToolIndex::Iterator>);
