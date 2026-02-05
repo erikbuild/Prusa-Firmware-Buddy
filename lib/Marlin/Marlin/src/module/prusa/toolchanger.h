@@ -65,7 +65,7 @@ public:
      *
      * @param tool_nr number of tool
      */
-    const xy_float_t get_tool_dock_position(uint8_t tool_nr);
+    const xy_float_t get_tool_dock_position(PhysicalToolIndex tool);
 
     /**
      * @brief Loop that checks toolchanger state.
