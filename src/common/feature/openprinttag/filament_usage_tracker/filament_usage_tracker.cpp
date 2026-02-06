@@ -36,7 +36,8 @@ uint32_t FilamentUsageTracker::uncommited_consumption_mm(VirtualToolIndex tool) 
 }
 
 uint32_t FilamentUsageTracker::uncommited_consumption_mm_nolock(VirtualToolIndex tool) const {
-    return std::max<uint32_t>(0, filament_tracker().get_extruded_distance(tool) - tool_data_[tool].base_extruded_distance_mm);
+    const uint32_t extruded_distance = filament_tracker().get_extruded_distance(tool);
+    return extruded_distance - std::min<uint32_t>(extruded_distance, tool_data_[tool].base_extruded_distance_mm);
 }
 
 std::optional<float> FilamentUsageTracker::remaining_filament_g(VirtualToolIndex tool) const {
