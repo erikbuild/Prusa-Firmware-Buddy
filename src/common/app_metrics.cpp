@@ -223,7 +223,7 @@ void RecordMarlinVariables() {
     static auto nozzle_should_record = RateLimiter<uint32_t>(1000 - 10);
     if (nozzle_should_record.check(ticks_ms())) {
         for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
-            metric_record_custom(&nozzle, ",n=%i,a=%i value=%.2f", tool.to_raw(), tool.to_raw() == active_extruder, static_cast<double>(thermalManager.degHotend(tool)));
+            metric_record_custom(&nozzle, ",n=%i,a=%i value=%.2f", tool.to_raw(), stdext::holds_value(PhysicalToolIndex::currently_selected(), tool), static_cast<double>(thermalManager.degHotend(tool)));
         }
     }
 
@@ -231,7 +231,7 @@ void RecordMarlinVariables() {
     static auto target_nozzle_should_record = RateLimiter<uint32_t>(1000 + 9);
     if (target_nozzle_should_record.check(ticks_ms())) {
         for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
-            metric_record_custom(&target_nozzle, ",n=%i,a=%i value=%ii", tool.to_raw(), tool.to_raw() == active_extruder, thermalManager.degTargetHotend(tool));
+            metric_record_custom(&target_nozzle, ",n=%i,a=%i value=%ii", tool.to_raw(), stdext::holds_value(PhysicalToolIndex::currently_selected(), tool), thermalManager.degTargetHotend(tool));
         }
     }
 

@@ -145,7 +145,7 @@ LoopResult CSelftestPart_Loadcell::stateCooldownDeinit() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateToolSelectInit() {
-    if (active_extruder != rConfig.tool_nr) {
+    if (PhysicalToolIndex::currently_selected() != PhysicalToolIndex::from_raw_notool(rConfig.tool_nr)) {
         IPartHandler::SetFsmPhase(PhasesSelftest::Loadcell_tool_select);
 
         marlin_server::enqueue_gcode_printf("T%d S1 L0 D0", rConfig.tool_nr);

@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <limits>
+#include <utils/variant_utils.hpp>
 
 #include "core/types.h"
 #include "metric.h"
@@ -203,7 +204,7 @@ inline void wait_ms(const uint32_t duration_ms) {
 
 #if HOTENDS > 1
 inline void set_nozzle([[maybe_unused]] measurements_t &m, const uint8_t extruder) {
-    if (extruder != active_extruder) {
+    if (!stdext::holds_value(PhysicalToolIndex::currently_selected(), PhysicalToolIndex::from_raw(extruder))) {
         tool_change(PhysicalToolIndex::from_raw(extruder));
     }
 }
