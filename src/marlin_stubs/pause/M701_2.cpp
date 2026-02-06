@@ -129,13 +129,11 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     }
 }
 
-void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, bool ask_unloaded) {
+void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex virtual_tool, bool ask_unloaded) {
     InProgress progress;
 
-    const auto virtual_tool = VirtualToolIndex::from_raw(target_extruder);
-
 #if HAS_AUTO_RETRACT()
-    if (op_preheat && !buddy::auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(target_extruder))) {
+    if (op_preheat && !buddy::auto_retract().is_safely_retracted_for_unload(virtual_tool.to_physical())) {
 #else
     if (op_preheat) {
 #endif
@@ -150,7 +148,7 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
     }
 
     pause::Settings settings;
-    settings.SetExtruder(target_extruder);
+    settings.SetExtruder(virtual_tool);
     settings.SetUnloadLength(unload_length);
     settings.SetRetractLength(0.f);
     mapi::ParkingPosition park_position = {
@@ -162,7 +160,7 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
     xyze_pos_t current_position_tmp = current_position;
 
     // Pick the right tool
-    if (!Pause::Instance().tool_change(target_extruder, Pause::LoadType::unload, settings)) {
+    if (!Pause::Instance().tool_change(virtual_tool.to_raw(), Pause::LoadType::unload, settings)) {
         return;
     }
 

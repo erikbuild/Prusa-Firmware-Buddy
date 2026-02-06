@@ -96,12 +96,13 @@ void GcodeSuite::M702() {
     if (target_extruder < 0) {
         return;
     }
+    const auto target_tool = VirtualToolIndex::from_raw(target_extruder);
 
     std::optional<RetAndCool_t> op_preheat = std::nullopt;
     if (preheat <= uint8_t(RetAndCool_t::last_)) {
         op_preheat = RetAndCool_t(preheat);
     }
 
-    M702_unload(unload_len, min_Z_pos, op_preheat, target_extruder, ask_unloaded);
+    M702_unload(unload_len, min_Z_pos, op_preheat, target_tool, ask_unloaded);
 }
 /** @}*/

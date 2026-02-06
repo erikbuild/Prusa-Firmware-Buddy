@@ -52,7 +52,7 @@ private:
 };
 
 void M701_load(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex virtual_tool, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request);
-void M702_unload(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex target_tool, bool ask_unloaded);
+void M702_unload(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex virtual_tool, bool ask_unloaded);
 void M70X_process_user_response(PreheatStatus::Result res, VirtualToolIndex target_extruder);
 
 void M1600_change_filament(FilamentType filament_to_be_loaded, VirtualToolIndex virtual_tool, RetAndCool_t preheat, AskFilament_t ask_filament, std::optional<Color> color_to_be_loaded);

@@ -237,7 +237,7 @@ namespace {
             std::nullopt,
             Z_AXIS_UNLOAD_POS,
             RetAndCool_t::Return,
-            active_tool->to_raw(),
+            *active_tool,
     #if HAS_MMU2()
             !MMU2::mmu2.Enabled() // MUST be false when MMU is enabled otherwise unload wont do full length
     #else

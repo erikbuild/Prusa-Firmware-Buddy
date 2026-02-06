@@ -11,6 +11,7 @@
 #include <Marlin/src/module/temperature.h>
 #include <Marlin/src/gcode/gcode.h>
 #include <mapi/cold_extrude.hpp>
+#include <utils/variant_utils.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -100,13 +101,16 @@ private:
     }
 
     void filament_unload() {
-        const uint8_t target_extruder = active_extruder;
+        const auto target_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+        if (!target_tool.has_value()) {
+            bsod("no virtual tool to unload");
+        }
 
-        filament_gcodes::M702_unload(std::nullopt, Z_AXIS_LOAD_POS, RetAndCool_t::Return, target_extruder, false);
+        filament_gcodes::M702_unload(std::nullopt, Z_AXIS_LOAD_POS, RetAndCool_t::Return, *target_tool, false);
 
         // check if we returned from preheat or finished the unload
         if (PreheatStatus::ConsumeResult() == PreheatStatus::Result::DoneNoFilament) {
-            Temperature::setTargetHotend(0, target_extruder);
+            Temperature::setTargetHotend(0, target_tool->to_physical());
             Temperature::setTargetBed(0);
             fsm_change(PhaseGearboxAlignment::loosen_screws);
         } else {
