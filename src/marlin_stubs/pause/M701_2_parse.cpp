@@ -56,11 +56,12 @@ void GcodeSuite::M701() {
     if (target_extruder < 0) {
         return;
     }
+    const auto target_tool = VirtualToolIndex::from_raw(target_extruder);
 
     const int8_t mmu_slot = p.option<int8_t>('P').value_or(-1);
     const ResumePrint_t resume_print = static_cast<ResumePrint_t>(p.option<bool>('R').value_or(false));
 
-    M701_load(filament_to_be_loaded, fast_load_length, min_Z_pos, op_preheat, target_extruder, mmu_slot, color_to_be_loaded, resume_print);
+    M701_load(filament_to_be_loaded, fast_load_length, min_Z_pos, op_preheat, target_tool, mmu_slot, color_to_be_loaded, resume_print);
 }
 
 /**

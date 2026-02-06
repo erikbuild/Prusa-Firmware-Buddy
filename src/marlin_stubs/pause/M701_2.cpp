@@ -68,11 +68,8 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     return res;
 }
 
-void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, uint8_t target_extruder, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request) {
+void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex virtual_tool, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request) {
     InProgress progress;
-
-    const auto virtual_tool = VirtualToolIndex::from_raw(target_extruder);
-    const auto physical_tool = virtual_tool.to_physical();
 
     const bool do_purge_only = fast_load_length.has_value() && fast_load_length <= 0.0f;
 
@@ -88,14 +85,14 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
 
             filament_to_be_loaded = preheat_ret.second;
         } else {
-            preheat_to(filament_to_be_loaded, physical_tool, PreheatBehavior::for_filament_change(false));
+            preheat_to(filament_to_be_loaded, virtual_tool.to_physical(), PreheatBehavior::for_filament_change(false));
         }
     }
     filament::set_type_to_load(filament_to_be_loaded);
     filament::set_color_to_load(color_to_be_loaded);
 
     pause::Settings settings;
-    settings.SetExtruder(target_extruder);
+    settings.SetExtruder(virtual_tool);
     settings.SetFastLoadLength(fast_load_length);
     settings.SetRetractLength(0.f);
     settings.SetMmuFilamentToLoad(mmu_slot);
@@ -107,7 +104,7 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     xyze_pos_t current_position_tmp = current_position;
 
     // Pick the right tool
-    if (!Pause::Instance().tool_change(target_extruder, Pause::LoadType::load, settings)) {
+    if (!Pause::Instance().tool_change(virtual_tool.to_raw(), Pause::LoadType::load, settings)) {
         return;
     }
 
@@ -233,7 +230,7 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
 
     if constexpr (option::has_bowden) {
         config_store().set_filament_type(virtual_tool, FilamentType::none);
-        M701_load(FilamentType::none, fast_load_length, z_min_pos, RetAndCool_t::Return, target_extruder, 0, std::nullopt, ResumePrint_t::No);
+        M701_load(FilamentType::none, fast_load_length, z_min_pos, RetAndCool_t::Return, virtual_tool, 0, std::nullopt, ResumePrint_t::No);
         return;
     }
 
