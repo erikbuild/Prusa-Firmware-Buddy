@@ -228,11 +228,16 @@ namespace {
     }
 
     PhasesColdPull blank_unload() {
+        auto active_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+        if (!active_tool.has_value()) {
+            bsod("no virtual tool to unload");
+        }
+
         filament_gcodes::M702_unload(
             std::nullopt,
             Z_AXIS_UNLOAD_POS,
             RetAndCool_t::Return,
-            active_extruder,
+            active_tool->to_raw(),
     #if HAS_MMU2()
             !MMU2::mmu2.Enabled() // MUST be false when MMU is enabled otherwise unload wont do full length
     #else
@@ -249,13 +254,17 @@ namespace {
     }
 
     PhasesColdPull blank_load() {
+        auto active_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+        if (!active_tool.has_value()) {
+            bsod("no virtual tool to load");
+        }
 
         filament_gcodes::M701_load(
             PresetFilamentType::PLA,
             std::nullopt,
             Z_AXIS_LOAD_POS,
             RetAndCool_t::Return,
-            active_extruder,
+            active_tool->to_raw(),
     #if HAS_MMU2()
             MMU2::FILAMENT_UNKNOWN,
     #else
@@ -282,20 +291,24 @@ namespace {
     }
 
     PhasesColdPull cool_down() {
+        auto active_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+        if (!active_tool.has_value()) {
+            bsod_unreachable();
+        }
 
         thermalManager.disable_hotend(); // cool down without target to avoid PID handling target temp
 
         // This is a legit use (is it?)
-        marlin_server::call_manually::set_temp_to_display(HOTEND_COLD_TEMP, active_extruder); // still show target temperature
+        marlin_server::call_manually::set_temp_to_display(HOTEND_COLD_TEMP, active_tool->to_raw()); // still show target temperature
 
-        auto too_hot = []() {
-            return static_cast<uint16_t>(Temperature::degHotend(active_extruder)) > HOTEND_COLD_TEMP;
+        auto too_hot = [active_tool]() {
+            return static_cast<uint16_t>(Temperature::degHotend(*active_tool)) > HOTEND_COLD_TEMP;
         };
 
-        auto progress = [](const millis_t time_left) {
+        auto progress = [active_tool](const millis_t time_left) {
             cold_pull::TemperatureProgressData data { { 0 } };
             data.percent = static_cast<uint8_t>(
-                100.0f * HOTEND_COLD_TEMP / Temperature::degHotend(active_extruder));
+                100.0f * HOTEND_COLD_TEMP / Temperature::degHotend(*active_tool));
             data.time_sec = time_left / 1000;
             marlin_server::fsm_change(PhasesColdPull::cool_down, data.fsm_data);
         };
@@ -316,16 +329,21 @@ namespace {
     }
 
     bool heat_up(const uint16_t target_hotend_temp, PhasesColdPull current_phase) {
-        thermalManager.setTargetHotend(target_hotend_temp, active_extruder);
+        auto active_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+        if (!active_tool.has_value()) {
+            bsod_unreachable();
+        }
 
-        auto too_cold = []() {
-            return static_cast<uint16_t>(Temperature::degHotend(active_extruder)) < Temperature::degTargetHotend(active_extruder);
+        thermalManager.setTargetHotend(target_hotend_temp, *active_tool);
+
+        auto too_cold = [active_tool]() {
+            return static_cast<uint16_t>(Temperature::degHotend(*active_tool)) < Temperature::degTargetHotend(*active_tool);
         };
 
         auto progress = [&](millis_t) {
             cold_pull::TemperatureProgressData data { { 0 } };
             data.percent = static_cast<uint8_t>(
-                100.0f * Temperature::degHotend(active_extruder) / Temperature::degTargetHotend(active_extruder));
+                100.0f * Temperature::degHotend(*active_tool) / Temperature::degTargetHotend(*active_tool));
             marlin_server::fsm_change(current_phase, data.fsm_data);
         };
 
