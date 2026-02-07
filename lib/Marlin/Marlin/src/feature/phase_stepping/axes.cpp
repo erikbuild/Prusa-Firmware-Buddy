@@ -48,6 +48,10 @@ int32_t phase_stepping::pos_to_phase(AxisEnum axis, float position) {
     return normalize_motor_phase(static_cast<int>(position * axis_motor_params[axis].pos_to_phase));
 }
 
+float phase_stepping::phase_to_pos(AxisEnum axis, int32_t phase) {
+    return phase / axis_motor_params[axis].pos_to_phase;
+}
+
 int32_t phase_stepping::pos_to_steps(AxisEnum axis, float position) {
     return static_cast<int32_t>(position * axis_motor_params[static_cast<int>(axis)].pos_to_steps);
 }

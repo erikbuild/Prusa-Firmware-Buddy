@@ -520,9 +520,6 @@ void setup() {
     // NOTE: this enables (timer) interrupts!
     planner.init();
     stepper.init();
-    #if HAS_PHASE_STEPPING()
-      phase_stepping::init();
-    #endif
     PreciseStepping::init();
     #ifdef ADVANCED_STEP_GENERATORS
       input_shaper::init();
