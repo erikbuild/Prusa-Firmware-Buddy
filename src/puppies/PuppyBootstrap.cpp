@@ -245,8 +245,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run_address_assignment() {
             get_puppy_info(puppy_type).name, std::to_underlying(*dock));
 
         // Wait for puppy to boot up
-        // INDX_TODO: Check if correct
-        osDelay(puppy_type == INDX_HEAD ? 200 : 5);
+        osDelay(5);
 
         if (is_dynamicly_addressable(puppy_type)) {
             // assign address to all of them
@@ -254,8 +253,7 @@ PuppyBootstrap::BootstrapResult PuppyBootstrap::run_address_assignment() {
             assign_address(BootloaderProtocol::Address::DEFAULT_ADDRESS, address);
 
             // delay to make sure that command was sent fully before reset
-            // INDX_TODO: Check if correct
-            osDelay(puppy_type == INDX_HEAD ? 200 : 10);
+            osDelay(10);
 
             // reset, all the not-bootstrapped-yet puppies which we don't care about now
             reset_puppies_range(std::next(dock), DOCKS.end());
