@@ -355,7 +355,7 @@ void PuppyBootstrap::reset_puppies_range(DockIterator begin, DockIterator end) {
     write_puppies_reset_pin(begin, end, Pin::State::low);
 }
 
-bool PuppyBootstrap::discover(PuppyType type, BootloaderProtocol::Address address) {
+bool PuppyBootstrap::discover_once(PuppyType type, BootloaderProtocol::Address address) {
     flasher.set_address(address);
 
     auto check_status = [](BootloaderProtocol::status_t status) {
@@ -409,6 +409,19 @@ bool PuppyBootstrap::discover(PuppyType type, BootloaderProtocol::Address addres
 
     // puppy responded, all is as expected
     return true;
+}
+
+bool PuppyBootstrap::discover(PuppyType type, BootloaderProtocol::Address address) {
+    const auto timeout_ms = 1000;
+    const auto start_ms = ticks_ms();
+    for (;;) {
+        if (discover_once(type, address)) {
+            return true;
+        }
+        if (ticks_diff(ticks_ms(), start_ms) > timeout_ms) {
+            return false;
+        }
+    }
 }
 
 void PuppyBootstrap::start_app([[maybe_unused]] PuppyType type, BootloaderProtocol::Address address, uint32_t salt, const fingerprint_t &fingerprint) {

@@ -105,7 +105,11 @@ private:
      * @param type expecting this type of puppy
      * @param address check puppy with this modbus address
      */
+    bool discover_once(PuppyType type, BootloaderProtocol::Address address);
+
+    /// Same as discover_once() but with retries
     bool discover(PuppyType type, BootloaderProtocol::Address address);
+
     unique_file_ptr get_firmware(PuppyType type);
     off_t get_firmware_size(PuppyType type);
 
