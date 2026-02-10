@@ -43,7 +43,6 @@
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
 #include <module/temperature/temp_defines.hpp>
-#include <module/temperature/thermal_runaway.hpp>
 #include <hotend/hotend.hpp>
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
@@ -601,9 +600,6 @@ public:
     #define HAS_THERMAL_PROTECTION (ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED)
 
     #if HAS_THERMAL_PROTECTION
-      #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-        static ThermalRunaway thermal_runaway_hotends[HOTENDS];
-      #endif
       #if HAS_THERMALLY_PROTECTED_BED
         static ThermalRunaway thermal_runaway_bed;
       #endif

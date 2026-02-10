@@ -572,11 +572,6 @@ void Temperature::manage_heater() {
     Hotend &hotend = Hotend::for_tool(tool);
     hotend.manage();
 
-    #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-      // Check for thermal runaway
-      thermal_runaway_hotends[e].step(hotend.nozzle_temp(), hotend.nozzle_target_temp(), (heater_ind_t)e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS, false);
-    #endif
-
     HotendRegulatorResult regulation_result {
       .pid_output = 0,
       .feed_forward = 0,
@@ -1097,10 +1092,6 @@ void Temperature::init() {
 }
 
 #if HAS_THERMAL_PROTECTION
-
-  #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-    ThermalRunaway Temperature::thermal_runaway_hotends[HOTENDS];
-  #endif
   #if HAS_THERMALLY_PROTECTED_BED
     ThermalRunaway Temperature::thermal_runaway_bed;
   #endif
