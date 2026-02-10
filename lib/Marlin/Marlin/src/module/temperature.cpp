@@ -45,9 +45,8 @@
 #include <module/motion.h>
 #include "../../../../src/common/adc.hpp"
 #include "../marlin_stubs/skippable_gcode.hpp"
-#include <module/temperature/marlin_temptable.hpp>
 #include <module/temperature/steady_state_hotend.hpp>
-#include <module/temperature/heater_watch.hpp>
+#include <module/temperature/temperature_declares.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -104,6 +103,7 @@
 #include <option/has_modular_bed.h>
 #include <utils/serial_logging_disabler.hpp>
 #include <raii/scope_guard.hpp>
+#include <hotend/hotend.hpp>
 
 #if ENABLED(MODEL_BASED_HOTEND_REGULATOR)
   #include <module/temperature/hotend_regulator/model_based_hotend_regulator.hpp>
@@ -1713,38 +1713,8 @@ void Temperature::isr() {
       return true;
     }
 
-    void Temperature::setTargetHotend(const int16_t celsius, const uint8_t E_NAME) {
-    #if BOARD_IS_MASTER_BOARD()
-        // We cannot overwrite target temps while the safety_timer is active, deactivate it first
-        buddy::safety_timer().reset_restore_nonblocking();
-    #endif
-
-        const uint8_t ee = HOTEND_INDEX;
-        const int16_t new_temp = _MIN(celsius, temp_range[ee].maxtemp - HEATER_MAXTEMP_SAFETY_MARGIN);
-
-    #if ENABLED(AUTO_POWER_CONTROL)
-        if (celsius) {
-            powerManager.power_on();
-        }
-    #endif
-
-        // target changed, reset time when it reached target
-        if (temp_hotend[ee].target != new_temp) {
-            temp_hotend_residency_start_ms[ee] = 0;
-        }
-
-        temp_hotend[ee].target = new_temp;
-    #if BOARD_IS_MASTER_BOARD()
-        // This is a legit use
-        marlin_server::call_manually::set_temp_to_display(new_temp, ee);
-    #endif
-
-    #if WATCH_HOTENDS
-        watch_hotend[ee].reset(degHotend(ee), new_temp);
-    #endif
-    #if HAS_TOOLCHANGER()
-        prusa_toolchanger.getTool(ee).set_hotend_target_temp(temp_hotend[ee].target);
-    #endif
+    void Temperature::setTargetHotend(const int16_t celsius, const uint8_t tool) {
+      Hotend::for_tool(tool).set_nozzle_target_temp(celsius);
     }
 
     bool Temperature::wait_for_hotend(const uint8_t target_extruder, const bool no_wait_for_cooling/*=true*/, bool fan_cooling/*=false*/) {

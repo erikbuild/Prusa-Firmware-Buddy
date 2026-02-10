@@ -31,6 +31,16 @@ public:
     [[deprecated("Use the strong typed variant")]]
     static Hotend &for_tool(uint8_t tool);
 
+public:
+    TargetTemperature nozzle_target_temp() const {
+        return nozzle_target_temp_;
+    }
+
+    virtual void set_nozzle_target_temp(TargetTemperature set) = 0;
+
 protected:
     explicit Hotend() = default;
+
+protected:
+    TargetTemperature nozzle_target_temp_ = 0;
 };

@@ -54,5 +54,5 @@ inline constexpr HeaterWatch::Config watch_hotend_config {
     .error_code = ErrCode::ERR_TEMPERATURE_HOTEND_PREHEAT_ERROR,
 };
 
-inline HeaterWatchWithConfig<watch_hotend_config> watch_hotend[HOTENDS];
+inline StrongIndexArray<HeaterWatchWithConfig<watch_hotend_config>, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> watch_hotend;
 #endif

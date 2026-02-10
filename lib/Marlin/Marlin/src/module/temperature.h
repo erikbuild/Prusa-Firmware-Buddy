@@ -190,6 +190,7 @@ struct ModularBedHeater: public HeaterInfo {
 
 class Temperature {
   friend class MarlinTemptableRawMinMax;
+  friend class BaseHotend;
 
   public:
 

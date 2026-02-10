@@ -9,4 +9,6 @@ class DummyHotend final : public Hotend {
 
 public:
     using Hotend::Hotend;
+
+    void set_nozzle_target_temp([[maybe_unused]] TargetTemperature set) override {}
 };

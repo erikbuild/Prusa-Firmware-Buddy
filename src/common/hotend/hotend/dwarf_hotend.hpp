@@ -9,4 +9,7 @@ class DwarfHotend final : public BaseHotend {
 public:
     explicit DwarfHotend(PhysicalToolIndex tool)
         : BaseHotend(tool) {}
+
+public:
+    virtual void set_nozzle_target_temp(TargetTemperature set) override;
 };
