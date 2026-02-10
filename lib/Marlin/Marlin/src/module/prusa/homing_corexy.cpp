@@ -452,7 +452,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
 
         // measure distance B-/B+
         for (uint8_t dir = 0; dir != 2;) {
-            int32_t dist_steps = (exp_dist_steps[dir] + measure_eps_steps_max + measure_acc_steps) * (dir ? measure_dir : -measure_dir);
+            const int32_t dist_steps = (exp_dist_steps[dir] + measure_eps_steps_max + measure_acc_steps) * (dir ? measure_dir : -measure_dir);
             if (!measure_axis_distance(axis, origin_steps, dist_steps, p_steps[slot][dir], p_dist[slot][dir], fr_mm_s)) {
                 // we can't possibly reach the endstop by retrying, abort
                 SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": not reached");
@@ -466,7 +466,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
 
             // pushing in the first direction, which moves us away from the endstop, can also cause
             // the gantry to flex. allow this constant deflection to pass through
-            int32_t exp_dir_steps_max = exp_dist_steps[dir]
+            const int32_t exp_dir_steps_max = exp_dist_steps[dir]
                 + (dir ? measure_eps_steps_min : measure_eps_steps_max);
             if (p_steps[slot][dir] >= exp_dir_steps_max) {
                 // calculated travel ends within deceleration, wrong position or short travel
