@@ -42,6 +42,9 @@ protected:
     /// True if last_presence is valid and being checked, set on first call to present(), reset on timeout
     std::atomic<bool> watching[COUNT] = {};
 
+    /// True if we have already reported missing, to avoid spamming logs, may seem duplicate but it is used differently in children
+    std::atomic<bool> faulted[COUNT] = {};
+
 public:
     Proto() = default;
 
@@ -56,6 +59,7 @@ public:
             if (watching[i].load() // Only if we have seen this thing
                 && ticks_diff(now32, last_presence[i].load()) > timeout_us) {
                 watching[i].store(false);
+                faulted[i].store(true);
                 proto_callback(Watched(i));
             }
         }
@@ -69,7 +73,20 @@ public:
     void present(int64_t now, Watched what) {
         assert(std::to_underlying(what) < COUNT);
         last_presence[std::to_underlying(what)].store(static_cast<uint32_t>(now));
+        faulted[std::to_underlying(what)].store(false);
         watching[std::to_underlying(what)].store(true);
+    }
+
+    /// @return True if we are currently watching this thing.
+    inline bool is_watching(Watched what) const {
+        assert(std::to_underlying(what) < COUNT);
+        return watching[std::to_underlying(what)].load();
+    }
+
+    /// @return True if this thing is currently considered missing.
+    inline bool is_faulted(Watched what) const {
+        assert(std::to_underlying(what) < COUNT);
+        return faulted[std::to_underlying(what)].load();
     }
 
     /**
@@ -190,7 +207,9 @@ public:
     void register_node_id(Watched what, CanardNodeID node_id, int64_t now, bool watch_change = true) {
         assert(std::to_underlying(what) < inherited::COUNT);
         if (inherited::watching[std::to_underlying(what)].load() == false) {
-            inherited::present(now, what); // mark it as preset -  to establish baseline from which to count timeout
+            if (inherited::faulted[std::to_underlying(what)].load() == false) {
+                inherited::present(now, what); // mark it as present - to establish baseline from which to count timeout
+            }
             watch_node_id[std::to_underlying(what)].store(node_id);
         } else if (watch_change) {
             if (auto previous = watch_node_id[std::to_underlying(what)].exchange(node_id); previous != node_id) {
