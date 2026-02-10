@@ -1608,13 +1608,9 @@ void Temperature::isr() {
       #define MIN_COOLING_SLOPE_TIME 60
     #endif
 
-    bool Temperature::is_hotend_temperature_reached(uint8_t hotend) {
-      return Hotend::for_tool(hotend).is_nozzle_temp_reached();
-    }
-
     bool Temperature::are_hotend_temperatures_reached() {
       for (auto tool : PhysicalToolIndex::all()) {
-        if (!is_hotend_temperature_reached(tool)) {
+        if (!Hotend::for_tool(tool).is_nozzle_temp_reached()) {
             return false;
         }
       }
@@ -1699,7 +1695,7 @@ void Temperature::isr() {
             old_temp = temp;
           }
         }
-      } while (wait_for_heatup && !is_hotend_temperature_reached(target_extruder));
+      } while (wait_for_heatup && !hotend.is_nozzle_temp_reached());
 
       return wait_for_heatup;
     }

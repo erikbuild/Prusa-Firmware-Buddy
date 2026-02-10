@@ -420,15 +420,6 @@ class Temperature {
         setTargetHotend(celsius, tool.to_raw());
       }
 
-      /// @returns whether the hotend has stabilized on the target temperature (or if the target temp is 0)
-      [[deprecated("Use the ToolIndex overload")]]
-      static bool is_hotend_temperature_reached(uint8_t hotend);
-
-      /// @returns whether the hotend has stabilized on the target temperature (or if the target temp is 0)
-      inline static bool is_hotend_temperature_reached(PhysicalToolIndex tool) {
-        return is_hotend_temperature_reached(tool.to_raw());
-      }
-
       static bool are_hotend_temperatures_reached();
 
       static bool wait_for_hotend(const uint8_t target_extruder, const bool no_wait_for_cooling=true, bool fan_cooling=false);
