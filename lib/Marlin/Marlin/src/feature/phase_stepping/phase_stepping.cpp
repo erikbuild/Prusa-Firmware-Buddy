@@ -80,6 +80,11 @@ float MoveTarget::target_position() const {
 }
 
 void phase_stepping::init() {
+    // Enforce the proper init sequence
+    if (!PreciseStepping::inverted_dirs_set) {
+        bsod("stepper directions not initialized");
+    }
+
     phase_stepping::initialize_axis_motor_params();
 
     // Setup fixed axis parameters so that they can be used before the axis is initialized

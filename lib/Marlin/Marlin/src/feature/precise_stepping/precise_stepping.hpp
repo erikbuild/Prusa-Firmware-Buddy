@@ -160,6 +160,12 @@ public:
 
     PreciseStepping() = default;
 
+    /**
+     * @brief Initialize the legacy stepper functions
+     * @warning Should be called before init()
+     */
+    static void init_stepper();
+
     // Initialize
     static void init();
 
