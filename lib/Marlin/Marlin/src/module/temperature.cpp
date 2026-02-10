@@ -161,7 +161,6 @@ Temperature thermalManager;
 // public:
 
 StrongIndexArray<hotend_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_hotend;
-StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_hotend_residency_start_ms;
 
 #if FAN_COUNT > 0
 
@@ -525,19 +524,6 @@ static HeatbreakRegulator heatbreak_regulator[HOTENDS];
 
 #endif // PIDTEMPBED
 
-void Temperature::update_temp_residency_hotend(uint8_t hotend) {
-  auto &h = Hotend::for_tool(hotend);
-  const float temp_diff = ABS(h.nozzle_target_temp() - h.nozzle_temp());
-
-  if (!temp_hotend_residency_start_ms[hotend] && temp_diff < TEMP_WINDOW) {
-    // Start the TEMP_RESIDENCY_TIME timer when we reach target temp for the first time.
-    temp_hotend_residency_start_ms[hotend] = millis();
-  } else if (temp_diff > TEMP_HYSTERESIS) {
-    // Restart the timer whenever the temperature falls outside the hysteresis.
-    temp_hotend_residency_start_ms[hotend] = 0;
-  }
-}
-
 /**
  * Manage heating activities for extruder hot-ends and a heated bed
  *  - Acquire updated temperature readings
@@ -585,8 +571,6 @@ void Temperature::manage_heater() {
     const auto tool = PhysicalToolIndex::from_raw_notool(e);
     Hotend &hotend = Hotend::for_tool(tool);
     hotend.manage();
-    
-    update_temp_residency_hotend(e);
 
     #if ENABLED(THERMAL_PROTECTION_HOTENDS)
       // Check for thermal runaway
@@ -1625,7 +1609,7 @@ void Temperature::isr() {
     #endif
 
     bool Temperature::is_hotend_temperature_reached(uint8_t hotend) {
-      return degTargetHotend(hotend) <= 0 || (temp_hotend_residency_start_ms[hotend] && !PENDING(millis(), temp_hotend_residency_start_ms[hotend] + (TEMP_RESIDENCY_TIME) * 1000UL));
+      return Hotend::for_tool(hotend).is_nozzle_temp_reached();
     }
 
     bool Temperature::are_hotend_temperatures_reached() {
@@ -1696,15 +1680,7 @@ void Temperature::isr() {
 
           next_temp_ms = now + 1000UL;
           print_heater_states(target_extruder);
-          SERIAL_ECHOPGM(" W:");
-          if (temp_hotend_residency_start_ms[target_extruder]) {
-              if (!is_hotend_temperature_reached(target_extruder)){
-                SERIAL_ECHO(long((((TEMP_RESIDENCY_TIME) * 1000UL) - (now - temp_hotend_residency_start_ms[target_extruder])) / 1000UL));
-              } else {
-                SERIAL_CHAR('0');
-              }
-          } else
-            SERIAL_CHAR('?');
+          SERIAL_ECHOPGM(" W:?");
           SERIAL_EOL();
         }
 

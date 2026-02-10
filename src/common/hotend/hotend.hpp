@@ -37,6 +37,11 @@ public:
         return nozzle_temp_;
     }
 
+    /// @returns whether the nozzle temperature has stabilized on the target
+    bool is_nozzle_temp_reached() const {
+        return nozzle_temp_reached_;
+    }
+
     /// Target temperature of the nozzle
     TargetTemperature nozzle_target_temp() const {
         return nozzle_target_temp_;
@@ -60,4 +65,6 @@ protected:
 protected:
     Temperature nozzle_temp_ = temperature_uninitialized;
     TargetTemperature nozzle_target_temp_ = 0;
+
+    bool nozzle_temp_reached_ : 1 = false;
 };

@@ -42,7 +42,7 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
     }
 
     // target changed, reset time when it reached target
-    t.temp_hotend_residency_start_ms[tool_] = 0;
+    nozzle_temp_residency_start_ms_ = 0;
 
     nozzle_target_temp_ = new_temp;
 
@@ -64,4 +64,25 @@ void BaseHotend::manage() {
     if ((nozzle_target_temp() > 0) && (nozzle_temp() < base_config_.min_nozzle_temp)) {
         thermalManager.min_temp_error((heater_ind_t)tool_.to_raw());
     }
+
+    manage_temp_residency();
+}
+
+void BaseHotend::manage_temp_residency() {
+    const auto now = millis();
+    const auto temp_diff = std::abs(nozzle_target_temp() - nozzle_temp());
+
+    if (!nozzle_temp_residency_start_ms_ && temp_diff < TEMP_WINDOW) {
+        nozzle_temp_residency_start_ms_ = now;
+
+    } else if (temp_diff > TEMP_HYSTERESIS) {
+        nozzle_temp_residency_start_ms_ = 0;
+    }
+
+    nozzle_temp_reached_ = //
+        (nozzle_target_temp() <= 0) //
+        || ( //
+            nozzle_temp_residency_start_ms_ //
+            && !PENDING(now, nozzle_temp_residency_start_ms_ + (TEMP_RESIDENCY_TIME)*1000UL) //
+        );
 }

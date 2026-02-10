@@ -207,10 +207,6 @@ class Temperature {
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
     static StrongIndexArray<hotend_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> temp_hotend;
 
-    // timestamp when temeperature reached target +-TEMP_WINDOW, 0 when outside this window
-    // note: 0 is valid timestamp, but if temperature reaches window at time 0, it will just be evaluated again little later, so it doesn't cause any bug
-    static StrongIndexArray<uint32_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> temp_hotend_residency_start_ms;
-
     #if HAS_HEATED_BED
       static bed_info_t temp_bed;
       // Estimated temperature of the bed frame as a rate-limited (linear)
@@ -539,8 +535,6 @@ private:
      * used by disable_all_heaters and disable_hotend
      */
     static void disable_heaters(disable_bed_t disable_bed);
-  
-    static void update_temp_residency_hotend(uint8_t hotend);
     
 public:
     /**
