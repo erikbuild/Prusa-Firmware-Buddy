@@ -3,13 +3,11 @@
 
 #include <module/temperature.h>
 
-void ThermalRunaway::step(float current, float target, heater_ind_t heater_id, uint16_t period_seconds, uint16_t hysteresis_degc, bool reset) {
-    {
-        // If the target temperature changes, restart
-        if (tr_target_temperature != target) {
-            tr_target_temperature = target;
-            state = target > 0 ? TRFirstHeating : TRInactive;
-        }
+void ThermalRunaway::step(float current, float target, heater_ind_t heater_id, uint16_t period_seconds, uint16_t hysteresis_degc) {
+    // If the target temperature changes, restart
+    if (tr_target_temperature != target) {
+        tr_target_temperature = target;
+        state = target > 0 ? TRFirstHeating : TRInactive;
     }
 
     switch (state) {

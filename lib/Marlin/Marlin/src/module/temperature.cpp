@@ -627,7 +627,7 @@ void Temperature::manage_heater() {
       #endif
 
       #if HAS_THERMALLY_PROTECTED_BED
-        thermal_runaway_bed.step(temp_bed.celsius, temp_bed.target, H_BED, THERMAL_PROTECTION_BED_PERIOD, THERMAL_PROTECTION_BED_HYSTERESIS, false);
+        thermal_runaway_bed.step(temp_bed.celsius, temp_bed.target, H_BED, THERMAL_PROTECTION_BED_PERIOD, THERMAL_PROTECTION_BED_HYSTERESIS);
       #endif
 
       {

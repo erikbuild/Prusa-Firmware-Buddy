@@ -70,7 +70,7 @@ void BaseHotend::manage() {
 #if ENABLED(THERMAL_PROTECTION_HOTENDS)
     // Note: This being in BaseHotend means that we're checking for this twice on remote hotends
     // But better safe than sorry
-    thermal_runaway_.step(nozzle_temp(), nozzle_target_temp(), (heater_ind_t)tool_.to_raw(), THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS, false);
+    thermal_runaway_.step(nozzle_temp(), nozzle_target_temp(), (heater_ind_t)tool_.to_raw(), THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS);
 #endif
 }
 
