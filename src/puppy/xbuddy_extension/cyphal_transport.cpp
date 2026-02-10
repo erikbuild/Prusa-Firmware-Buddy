@@ -64,8 +64,17 @@ public:
 
     [[noreturn]] void run() {
         for (;;) {
+            constexpr uint8_t max_steps_in_row = 10;
+            static uint8_t busy_counter = max_steps_in_row;
             if (!step()) {
                 freertos::delay(1);
+                busy_counter = max_steps_in_row;
+            } else {
+                if (--busy_counter == 0) {
+                    // If we have been busy for a while, yield to other tasks to prevent starvation.
+                    freertos::delay(1);
+                    busy_counter = max_steps_in_row;
+                }
             }
         }
     }
