@@ -433,8 +433,10 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
                                            axis_home_max_diff(B_AXIS) - axis_home_min_diff(B_AXIS))
             * std::numbers::sqrt2_v<float>,
         measure_bump_max_err_mm);
-    const int32_t measure_eps_steps = static_cast<int32_t>(home_max_diff_mm / planner.mm_per_step[axis]
+    const int32_t measure_eps_steps_min = static_cast<int32_t>(home_max_diff_mm / planner.mm_per_step[axis]
         + phase_cycle_steps(axis) * 2 + measure_bump_max_err_steps);
+    // up to 1*cycle due to (constant) axis flex we can ignore
+    const int32_t measure_eps_steps_max = measure_eps_steps_min + phase_cycle_steps(axis);
     const int32_t measure_acc_steps = static_cast<int32_t>(travel_accel_distance(fr_mm_s)
         * std::numbers::sqrt2_v<float> / planner.mm_per_step[axis]);
 
@@ -450,7 +452,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
 
         // measure distance B-/B+
         for (uint8_t dir = 0; dir != 2;) {
-            int32_t dist_steps = (exp_dist_steps[dir] + measure_eps_steps + measure_acc_steps) * (dir ? measure_dir : -measure_dir);
+            int32_t dist_steps = (exp_dist_steps[dir] + measure_eps_steps_max + measure_acc_steps) * (dir ? measure_dir : -measure_dir);
             if (!measure_axis_distance(axis, origin_steps, dist_steps, p_steps[slot][dir], p_dist[slot][dir], fr_mm_s)) {
                 // we can't possibly reach the endstop by retrying, abort
                 SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": not reached");
@@ -462,14 +464,18 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
             p_steps[slot][dir] = abs(p_steps[slot][dir]);
             p_dist[slot][dir] = abs(p_dist[slot][dir]);
 
-            if (p_steps[slot][dir] >= (exp_dist_steps[dir] + measure_eps_steps)) {
+            // pushing in the first direction, which moves us away from the endstop, can also cause
+            // the gantry to flex. allow this constant deflection to pass through
+            int32_t exp_dir_steps_max = exp_dist_steps[dir]
+                + (dir ? measure_eps_steps_min : measure_eps_steps_max);
+            if (p_steps[slot][dir] >= exp_dir_steps_max) {
                 // calculated travel ends within deceleration, wrong position or short travel
                 SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": travel too short");
                 ui.status_printf_P(0, "Endstop not reached");
                 return false;
             }
 
-            if (p_steps[slot][dir] < (exp_dist_steps[dir] - measure_eps_steps)) {
+            if (p_steps[slot][dir] < (exp_dist_steps[dir] - measure_eps_steps_min)) {
                 // early trigger, retry the probe in the same direction
                 SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": early trigger");
                 ui.status_printf_P(0, "Endstop early trigger");
