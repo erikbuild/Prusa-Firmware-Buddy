@@ -130,9 +130,9 @@ void TargetTemperatureChanged(uint32_t heatbedletIndex, float temperatureDegrees
     if (pHBInfo->IsTempSensorOK() && pHBInfo->IsHeaterOK()) {
         if (temperatureDegreesC <= 0) {
             SetState(heatbedletIndex, HeatbedletState::Inactive);
-        } else if (temperatureDegreesC > pHBInfo->m_MeasuredTemperature) {
+        } else if (temperatureDegreesC > pHBInfo->m_MeasuredTemperature + TEMPERATURE_STABILIZED_TOLERANCE_DEGREES) {
             SetState(heatbedletIndex, HeatbedletState::Heating);
-        } else if (temperatureDegreesC < pHBInfo->m_MeasuredTemperature) {
+        } else if (temperatureDegreesC < pHBInfo->m_MeasuredTemperature - TEMPERATURE_STABILIZED_TOLERANCE_DEGREES) {
             SetState(heatbedletIndex, HeatbedletState::Cooling);
         }
     }
