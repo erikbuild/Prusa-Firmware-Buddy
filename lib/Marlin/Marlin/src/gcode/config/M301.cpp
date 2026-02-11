@@ -24,8 +24,9 @@
 
 #if ENABLED(PIDTEMP)
 
-#include "../gcode.h"
-#include "../../module/temperature.h"
+    #include "../gcode.h"
+    #include "../../module/temperature.h"
+    #include <gcode/gcode_parser.hpp>
 
 /** \addtogroup G-Codes
  * @{
@@ -36,10 +37,11 @@
  *
  *#### Usage
  *
- *    M301 [ P | I | D | C ]
+ *    M301 [ E | P | I | D | C ]
  *
  *#### Parameters
  *
+ * -`E` - What tool to set the parameters to (default 0)
  * -`P` - Kp term
  * -`I` - Ki term
  * -`D` - Kd term
@@ -48,35 +50,47 @@
  * Without parameters prints the current PID parameters
  */
 void GcodeSuite::M301() {
+    GCodeParser2 p;
+    if (!p.parse_marlin_command()) {
+        return;
+    }
 
-  // multi-extruder PID patch: M301 updates or prints a single extruder's PID values
-  // default behavior (omitting E parameter) is to update for extruder 0 only
-  const uint8_t e = parser.byteval('E'); // extruder being updated
+    // default behavior (omitting E parameter) is to update for extruder 0 only
+    const auto e = p.option<uint8_t>('E').value_or(0); // extruder being updated
+    if (e >= PhysicalToolIndex::count) {
+        SERIAL_ERROR_MSG(MSG_INVALID_EXTRUDER);
+        return;
+    }
 
-  if (e < HOTENDS) { // catch bad input value
-    if (parser.seen('P')) PID_PARAM(Kp, e) = parser.value_float();
-    if (parser.seen('I')) PID_PARAM(Ki, e) = scalePID_i(parser.value_float());
-    if (parser.seen('D')) PID_PARAM(Kd, e) = scalePID_d(parser.value_float());
+    const auto tool = PhysicalToolIndex::from_raw(e);
+    Hotend &hotend = Hotend::for_tool(tool);
+
+    HotendPIDConfig pid = hotend.nozzle_pid_config();
+    p.store_option_if_present('P', pid.Kp);
+    if (auto val = p.option<float>('I')) {
+        pid.Ki = scalePID_i(*val);
+    }
+    if (auto val = p.option<float>('D')) {
+        pid.Kd = scalePID_d(*val);
+    }
     #if ENABLED(PID_EXTRUSION_SCALING)
-      if (parser.seen('C')) PID_PARAM(Kc, e) = parser.value_float();
+    p.store_option_if_present('C', pid.Kc);
     #endif
 
-    thermalManager.updatePID();
+    hotend.set_nozzle_pid_config(pid);
+
     SERIAL_ECHO_START();
     #if ENABLED(PID_PARAMS_PER_HOTEND)
-      SERIAL_ECHOPAIR(" e:", e); // specify extruder in serial output
+    SERIAL_ECHOPAIR(" e:", e); // specify extruder in serial output
     #endif // PID_PARAMS_PER_HOTEND
-    SERIAL_ECHOPAIR(" p:", PID_PARAM(Kp, e),
-                    " i:", unscalePID_i(PID_PARAM(Ki, e)),
-                    " d:", unscalePID_d(PID_PARAM(Kd, e)));
+    SERIAL_ECHOPAIR(" p:", pid.Kp,
+        " i:", unscalePID_i(pid.Ki),
+        " d:", unscalePID_d(pid.Kd));
     #if ENABLED(PID_EXTRUSION_SCALING)
-      //Kc does not have scaling applied above, or in resetting defaults
-      SERIAL_ECHOPAIR(" c:", PID_PARAM(Kc, e));
+    // Kc does not have scaling applied above, or in resetting defaults
+    SERIAL_ECHOPAIR(" c:", pid.Kc);
     #endif
     SERIAL_EOL();
-  }
-  else
-    SERIAL_ERROR_MSG(MSG_INVALID_EXTRUDER);
 }
 
 /** @}*/
