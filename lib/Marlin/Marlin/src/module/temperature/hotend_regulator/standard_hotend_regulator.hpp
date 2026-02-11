@@ -13,7 +13,7 @@ public:
     HotendRegulatorResult get_pid_output_hotend(const HotendRegulatorArgs &args);
 
 private:
-    hotend_pid_t work_pid;
+    HotendPIDConfig work_pid;
     float temp_iState = 0;
     float temp_dState = 0;
     bool pid_reset = false;

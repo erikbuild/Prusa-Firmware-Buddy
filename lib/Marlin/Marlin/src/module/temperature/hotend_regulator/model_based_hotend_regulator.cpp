@@ -81,8 +81,6 @@ float ModelBasedHotendRegulator::get_model_output_hotend(const HotendRegulatorAr
 }
 
 HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
-    const uint8_t ee = args.hotend_index;
-
     float pid_output;
     float feed_forward = 0;
 
@@ -100,13 +98,13 @@ HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const Hot
         feed_forward = get_model_output_hotend(args);
 
         const float pid_error = expected_temp - args.current_temp;
-        work_pid.Kd = work_pid.Kd + PID_K2 * (PID_PARAM(Kd, ee) * (pid_error - temp_dState) - work_pid.Kd);
-        work_pid.Kp = PID_PARAM(Kp, ee) * pid_error;
+        work_pid.Kd = work_pid.Kd + PID_K2 * (args.pid.Kd * (pid_error - temp_dState) - work_pid.Kd);
+        work_pid.Kp = args.pid.Kp * pid_error;
 
         pid_output = feed_forward + work_pid.Kp + work_pid.Kd + float(MIN_POWER);
 
 #if ENABLED(PID_EXTRUSION_SCALING)
-        work_pid.Kc = args.e_volume_delta * (args.target_temp - ambient_temp) * PID_PARAM(Kc, ee);
+        work_pid.Kc = args.e_volume_delta * (args.target_temp - ambient_temp) * args.pid.Kc;
         pid_output += work_pid.Kc;
     #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
         feed_forward += work_pid.Kc;
@@ -118,7 +116,7 @@ HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const Hot
                 || (((pid_output + work_pid.Ki) > PID_MAX) && (pid_error > 0)))) {
             temp_iState += pid_error;
         }
-        work_pid.Ki = PID_PARAM(Ki, ee) * temp_iState;
+        work_pid.Ki = args.pid.Ki * temp_iState;
         pid_output += work_pid.Ki;
 
         temp_dState = pid_error;
@@ -126,10 +124,10 @@ HotendRegulatorResult ModelBasedHotendRegulator::get_pid_output_hotend(const Hot
     }
 
 #if ENABLED(PID_DEBUG)
-    if (ee == active_extruder) {
+    if (args.hotend_index == active_extruder) {
         SERIAL_ECHO_START();
         SERIAL_ECHOPAIR(
-            MSG_PID_DEBUG, ee,
+            MSG_PID_DEBUG, args.hotend_index,
             MSG_PID_DEBUG_INPUT, args.current_temp,
             MSG_PID_DEBUG_OUTPUT, pid_output);
         SERIAL_ECHOPAIR(

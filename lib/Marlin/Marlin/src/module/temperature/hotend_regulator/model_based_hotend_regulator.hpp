@@ -34,7 +34,7 @@ private:
     int delay = transport_delay_cycles;
     Ramp state = Ramp::None;
 
-    hotend_pid_t work_pid;
+    HotendPIDConfig work_pid;
     float temp_iState = 0;
     float temp_dState = 0;
     bool pid_reset = false;

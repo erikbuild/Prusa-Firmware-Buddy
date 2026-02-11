@@ -4,8 +4,28 @@
 #include <cstdint>
 
 #include <inc/MarlinConfig.h>
+#include <module/temperature/temp_defines.hpp>
+
+static_assert(ENABLED(PIDTEMP));
+static_assert(HAS_PID_HEATING);
+
+struct HotendPIDConfig {
+    float Kp = DEFAULT_Kp;
+
+    /// The value is PRE-SCALED by scalePID_i
+    float Ki = scalePID_i(DEFAULT_Ki);
+
+    /// The value is PRE-SCALED by scalePID_d
+    float Kd = scalePID_d(DEFAULT_Kd);
+
+#if ENABLED(PID_EXTRUSION_SCALING)
+    float Kc = DEFAULT_Kc;
+#endif
+};
 
 struct HotendRegulatorArgs {
+    const HotendPIDConfig &pid;
+
     /// Hotend index
     uint8_t hotend_index;
 

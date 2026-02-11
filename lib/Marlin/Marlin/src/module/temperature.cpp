@@ -49,6 +49,7 @@
 #include <module/temperature/temperature_declares.hpp>
 #include <module/temperature/heater_watch.hpp>
 #include <module/temperature/marlin_temptable.hpp>
+#include <module/temperature/heater_watch.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()

@@ -8,8 +8,6 @@ static_assert(ENABLED(PIDTEMP), "Not supported anymore");
 static_assert(DISABLED(PID_OPENLOOP), "Not supported anymore");
 
 HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const HotendRegulatorArgs &args) {
-    const uint8_t ee = args.hotend_index;
-
     const float pid_error = args.target_temp - args.current_temp;
 
     float pid_output;
@@ -29,8 +27,8 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
             pid_reset = false;
         }
 #if FAN_COUNT > 0
-        work_pid.Kd = work_pid.Kd + PID_K2 * (PID_PARAM(Kd, ee) * (pid_error - temp_dState) - work_pid.Kd);
-        work_pid.Kp = PID_PARAM(Kp, ee) * pid_error;
+        work_pid.Kd = work_pid.Kd + PID_K2 * (args.pid.Kd * (pid_error - temp_dState) - work_pid.Kd);
+        work_pid.Kp = args.pid.Kp * pid_error;
         pid_output = work_pid.Kp + float(MIN_POWER);
 
     #if ENABLED(STEADY_STATE_HOTEND)
@@ -41,7 +39,7 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
 #endif
 
 #if ENABLED(PID_EXTRUSION_SCALING)
-        work_pid.Kc = args.e_volume_delta * (args.current_temp - ambient_temp) * PID_PARAM(Kc, ee);
+        work_pid.Kc = args.e_volume_delta * (args.current_temp - ambient_temp) * args.pid.Kc;
         pid_output += work_pid.Kc;
 #endif // PID_EXTRUSION_SCALING
 
@@ -50,7 +48,7 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
                 || (((pid_output + work_pid.Ki) > PID_MAX) && (pid_error > 0)))) {
             temp_iState += pid_error;
         }
-        work_pid.Ki = PID_PARAM(Ki, ee) * temp_iState;
+        work_pid.Ki = args.pid.Ki * temp_iState;
         pid_output += work_pid.Ki + work_pid.Kd;
 
         LIMIT(pid_output, 0, PID_MAX);
@@ -58,10 +56,10 @@ HotendRegulatorResult StandardHotendRegulator::get_pid_output_hotend(const Hoten
     temp_dState = pid_error;
 
 #if ENABLED(PID_DEBUG)
-    if (ee == active_extruder) {
+    if (args.hotend_index == active_extruder) {
         SERIAL_ECHO_START();
         SERIAL_ECHOPAIR(
-            MSG_PID_DEBUG, ee,
+            MSG_PID_DEBUG, args.hotend_index,
             MSG_PID_DEBUG_INPUT, args.current_temp,
             MSG_PID_DEBUG_OUTPUT, pid_output);
         SERIAL_ECHOPAIR(

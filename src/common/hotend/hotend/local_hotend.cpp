@@ -53,6 +53,7 @@ void LocalHotend::manage() {
         if (nozzle_temp() > base_config_.min_nozzle_temp && nozzle_temp() < base_config_.max_nozzle_temp) {
             static_assert(PhysicalToolIndex::count == 1);
             regulation_result = nozzle_regulator_.get_pid_output_hotend(HotendRegulatorArgs {
+                .pid = t.temp_hotend[tool_].pid,
                 .hotend_index = tool_.to_raw(),
                 .fan_speed = t.fan_speed[0], // FIXME: Bit of a cockup if we have multiple hotends.
                     .current_temp = nozzle_temp(),

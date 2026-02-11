@@ -43,6 +43,7 @@
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
 #include <module/temperature/temp_defines.hpp>
+#include <module/temperature/hotend_regulator/hotend_regulator.hpp>
 #include <module/temperature/thermal_runaway.hpp>
 #include <hotend/hotend.hpp>
 
@@ -66,58 +67,9 @@
 
 #define PID_PARAM(F,H) _PID_##F(H)
 
-/**
- * States for ADC reading in the ISR
- */
-enum ADCSensorState : char {
-  StartSampling,
-  #if HAS_TEMP_ADC_0
-    PrepareTemp_0, MeasureTemp_0,
-  #endif
-  #if HAS_LOCAL_BED()
-    PrepareTemp_BED, MeasureTemp_BED,
-  #endif
-  #if HAS_TEMP_HEATBREAK
-    PrepareTemp_HEATBREAK, MeasureTemp_HEATBREAK,
-  #endif
-  #if HAS_TEMP_BOARD
-    PrepareTemp_BOARD, MeasureTemp_BOARD,
-  #endif
-  #if PRINTER_IS_PRUSA_iX()
-    PrepareTemp_PSU, MeasureTemp_PSU,
-    PrepareTemp_AMBIENT, MeasureTemp_AMBIENT,
-  #endif
-  #if HAS_TEMP_ADC_1
-    PrepareTemp_1, MeasureTemp_1,
-  #endif
-  #if HAS_TEMP_ADC_2
-    PrepareTemp_2, MeasureTemp_2,
-  #endif
-  #if HAS_TEMP_ADC_3
-    PrepareTemp_3, MeasureTemp_3,
-  #endif
-  #if HAS_TEMP_ADC_4
-    PrepareTemp_4, MeasureTemp_4,
-  #endif
-  #if HAS_TEMP_ADC_5
-    PrepareTemp_5, MeasureTemp_5,
-  #endif
-  SensorsReady, // Temperatures ready. Delay the next round of readings to let ADC pins settle.
-  StartupDelay  // Startup, delay initial temp reading a tiny bit so the hardware can settle
-};
-
-#define ACTUAL_ADC_SAMPLES _MAX(int(MIN_ADC_ISR_LOOPS), int(SensorsReady))
-
 #if HAS_PID_HEATING
-  #define PID_K2 (1-float(PID_K1))
+  #define PID_K2           (1 - float(PID_K1))
   #define HEATBREAK_PID_K2 (1-float(HEATBREAK_PID_K1))
-  #define PID_dT ((OVERSAMPLENR * float(ACTUAL_ADC_SAMPLES)) / TEMP_TIMER_FREQUENCY)
-
-  // Apply the scale factors to the PID values
-  #define scalePID_i(i)   ( float(i) * PID_dT )
-  #define unscalePID_i(i) ( float(i) / PID_dT )
-  #define scalePID_d(d)   ( float(d) / PID_dT )
-  #define unscalePID_d(d) ( float(d) * PID_dT )
 #endif
 
 // A temperature sensor
@@ -156,7 +108,7 @@ struct hotend_info_t {
   inline void sample(const uint16_t s) { acc += s; }
 
   static_assert(ENABLED(PIDTEMP));
-  hotend_pid_t pid;  // Initialized by settings.load()
+  HotendPIDConfig pid;  // Initialized by settings.load()
   
   // target moved to Hotend
   uint8_t soft_pwm_amount;
