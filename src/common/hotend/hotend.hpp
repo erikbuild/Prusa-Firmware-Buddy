@@ -4,6 +4,7 @@
 #include <tool_index.hpp>
 #include <utils/uncopyable.hpp>
 #include <utils/variant_utils.hpp>
+#include <module/temperature/hotend_regulator/hotend_regulator.hpp>
 
 /// Class representing a hotend
 /// This is an abstract class, hotend implementations differ
@@ -48,6 +49,11 @@ public:
     }
 
     virtual void set_nozzle_target_temp(TargetTemperature set) = 0;
+
+    // TODO: Will be de-virtualized in the next commit
+    virtual const HotendPIDConfig &nozzle_pid_config() const = 0;
+
+    virtual void set_nozzle_pid_config(const HotendPIDConfig &set) = 0;
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
     bool is_thermal_model_protection_ok() const {

@@ -12,7 +12,9 @@ public:
         : BaseHotend(tool, config) {}
 
 public:
-    virtual void set_nozzle_target_temp(TargetTemperature set) override;
+    void set_nozzle_target_temp(TargetTemperature set) override;
+
+    void set_nozzle_pid_config(const HotendPIDConfig &set) override;
 
 protected:
     virtual void manage() override;

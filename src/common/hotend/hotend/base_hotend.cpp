@@ -56,6 +56,14 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 #endif
 }
 
+const HotendPIDConfig &BaseHotend::nozzle_pid_config() const {
+    return thermalManager.temp_hotend[tool_].pid;
+}
+
+void BaseHotend::set_nozzle_pid_config(const HotendPIDConfig &set) {
+    thermalManager.temp_hotend[tool_].pid = set;
+}
+
 void BaseHotend::manage() {
     // Note: Checks in BaseHotend meansthat we're checking them twice on remote hotends if the remote hotend also uses this API (once on the master board, once on the remote tool board)
     // But better safe than sorry

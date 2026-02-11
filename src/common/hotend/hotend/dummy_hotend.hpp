@@ -12,6 +12,13 @@ public:
 
     void set_nozzle_target_temp([[maybe_unused]] TargetTemperature set) override {}
 
+    const HotendPIDConfig &nozzle_pid_config() const override {
+        static constexpr HotendPIDConfig dummy;
+        return dummy;
+    }
+
+    void set_nozzle_pid_config([[maybe_unused]] const HotendPIDConfig &set) override {}
+
 protected:
     virtual void manage() override {}
 };

@@ -1889,6 +1889,7 @@ void Temperature::setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME
 
 #if ENABLED(PIDTEMP)
 void Temperature::updatePID() {
+  // TODO: Migrate this fully to Hotends
   #if HAS_TOOLCHANGER()
     // Set PID parameters to all dwarves
     for (auto tool : PhysicalToolIndex::all()) {
