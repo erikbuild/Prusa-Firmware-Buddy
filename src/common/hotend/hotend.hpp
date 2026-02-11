@@ -52,6 +52,6 @@ protected:
     virtual void manage() = 0;
 
 protected:
-    Temperature nozzle_temp_ = 0;
+    Temperature nozzle_temp_ = temperature_uninitialized;
     TargetTemperature nozzle_target_temp_ = 0;
 };
