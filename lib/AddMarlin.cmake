@@ -233,8 +233,10 @@ if(BOARD_IS_MASTER_BOARD)
 
   if(HAS_CONTACTLESS_OFFSET)
     target_sources(
-      Marlin PRIVATE Marlin/Marlin/src/feature/contactless_offset/config.cpp
-                     Marlin/Marlin/src/feature/contactless_offset/contactless_offset.cpp
+      Marlin
+      PRIVATE Marlin/Marlin/src/feature/contactless_offset/config.cpp
+              Marlin/Marlin/src/feature/contactless_offset/contactless_offset.cpp
+              Marlin/Marlin/src/gcode/feature/tool_offset/G426.cpp
       )
     target_link_libraries(Marlin PRIVATE contactless_offset signal_processing)
   endif()

@@ -383,6 +383,10 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 425: G425(); break;                                  // G425: Perform calibration with calibration cube
       #endif
 
+      #if HAS_CONTACTLESS_OFFSET()
+        case 426: G426(); break;                                  // G426: Measure tool offset contactlessly
+      #endif
+
       #if ENABLED(DEBUG_GCODE_PARSER)
         // #error dead code found by automatic analyses (see BFW-5461)
         case 800: parser.debug(); break;                          // G800: GCode Parser Test for G
