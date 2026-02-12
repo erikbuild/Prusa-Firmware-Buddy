@@ -107,6 +107,12 @@ elseif(BOARD STREQUAL "ANFC")
   add_subdirectory(puppy/honeybee_shared)
   add_subdirectory(can)
 
+elseif(BOARD STREQUAL "INDX_TOOL_OFFSET")
+  add_subdirectory(freertos)
+  add_subdirectory(puppy/indx_tool_offset)
+  add_subdirectory(puppy/honeybee_shared)
+  add_subdirectory(can)
+
 elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
   target_include_directories(firmware PRIVATE .)
 

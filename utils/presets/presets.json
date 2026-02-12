@@ -380,6 +380,15 @@
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
             }
+        },
+        {
+            "name": "indx_tool_offset",
+            "description": "Firmware for indx_tool_offset",
+            "cacheVariables": {
+                "PRINTER": "NONE",
+                "BOARD": "INDX_TOOL_OFFSET",
+                "CAN_BUS_TYPE": "PUB6"
+            }
         }
     ]
 }

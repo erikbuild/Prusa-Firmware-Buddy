@@ -39,6 +39,7 @@
 #define BOARD_XL_DEV_KIT_XLB()   6
 #define BOARD_XBUDDY_EXTENSION() 7
 #define BOARD_ANFC()             8
+#define BOARD_INDX_TOOL_OFFSET() 9
 
 #if !defined(BOARD)
     #error Please define the BOARD macro
@@ -59,6 +60,8 @@
     #define BOARD_IS_XBUDDY_EXTENSION() 1
 #elif BOARD() == BOARD_ANFC()
     #define BOARD_IS_ANFC() 1
+#elif BOARD() == BOARD_INDX_TOOL_OFFSET()
+    #define BOARD_IS_INDX_TOOL_OFFSET() 1
 #else
     #error BOARD is something weird
 #endif
@@ -93,4 +96,8 @@
 
 #ifndef BOARD_IS_ANFC
     #define BOARD_IS_ANFC() 0
+#endif
+
+#ifndef BOARD_IS_INDX_TOOL_OFFSET
+    #define BOARD_IS_INDX_TOOL_OFFSET() 0
 #endif

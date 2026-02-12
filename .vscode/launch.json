@@ -335,6 +335,65 @@
             "preLaunchTask": "Wait 1", // this is needed when starting all puppies at once, because there is some issue when all of them start at once
         },
         {
+            // Ensure OpenOCD does support STM32C092 devices - use specific OpenOCD https://github.com/ivous/OpenOCD/tree/C092"
+            // see /util/debug/README_STM32C0.md
+            "name": "Launch INDX_TOOL_OFFSET",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build-vscode-indx-tool-offset/firmware",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "gdbPath": "gdb-multiarch",
+            "postLaunchCommands": [
+                "set $pc = &Reset_Handler"
+            ],
+            "configFiles": [
+                "${workspaceRoot}/utils/debug/indx_tool_offset.cfg",
+            ],
+            "toolchainPrefix": "arm-none-eabi",
+            "device": "STM32C092RC",
+            "svdFile": "${workspaceRoot}/.dependencies/cmsis-svd-c0-ce4b873ae4a471cf28d7a7c9c69ded252d949672/STM32C092.svd",
+            "rtos": "FreeRTOS",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "searchSize": 16,
+                "searchId": "SEGGER RTT",
+                "clearSearch": true,
+                "polling_interval": 10,
+                "decoders": [
+                    {
+                        "label": "Logging",
+                        "port": 0,
+                        "noprompt": true,
+                        "type": "console"
+                    }
+                ]
+            },
+        },
+        {
+            // Ensure OpenOCD does support STM32C092 devices - use specific OpenOCD https://github.com/ivous/OpenOCD/tree/C092"
+            // see /util/debug/README_STM32C0.md
+            "name": "Attach INDX_TOOL_OFFSET",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build-vscode-indx-tool-offset/firmware",
+            "request": "attach",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "gdbPath": "gdb-multiarch",
+            "configFiles": [
+                "${workspaceRoot}/utils/debug/indx_tool_offset.cfg",
+            ],
+            "toolchainPrefix": "arm-none-eabi",
+            "device": "STM32C092RC",
+            "svdFile": "${workspaceRoot}/.dependencies/cmsis-svd-c0-ce4b873ae4a471cf28d7a7c9c69ded252d949672/STM32C092.svd",
+            "rtos": "FreeRTOS",
+                        "liveWatch": {
+                "enabled": true,
+            },
+            "preLaunchTask": "Wait 1", // this is needed when starting all puppies at once, because there is some issue when all of them start at once
+        },
+        {
             "name": "Launch Simulator Scripted",
             // This is the same as "Launch Simulator", but it also opens TCP port to control hardware
             // Use 'telnet localhost 50001' immediatelly after launching this
