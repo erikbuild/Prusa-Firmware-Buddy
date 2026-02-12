@@ -245,6 +245,7 @@ static void resources_update() {
 // Initializes static variables of singletons which are accessed from ISRs (requires locking a mutex)
 static void init_isr_statics() {
     EMotorStallDetector::Instance();
+    Hotend::for_tool(PhysicalToolIndex::from_raw(0));
     Fans::print(PhysicalToolIndex::from_raw(0));
     Fans::heat_break(PhysicalToolIndex::from_raw(0));
 #if XL_ENCLOSURE_SUPPORT()
