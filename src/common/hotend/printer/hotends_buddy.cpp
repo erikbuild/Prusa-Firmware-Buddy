@@ -11,6 +11,11 @@ Hotend &Hotend::for_tool(PhysicalToolIndex) {
             .max_nozzle_temp = HEATER_0_MAXTEMP,
         },
         .nozzle_temp_table = TT_NAME(THERMISTOR_HEATER_0),
+        .nozzle_heater_marlin_pin = MARLIN_PIN(HEAT0),
+
+        // Note: This was true before the hotends refactoring,
+        // but Mini actually has HW PWM support for the heater
+        .nozzle_heater_soft_pwm = false,
     };
     static LocalHotend hotend { PhysicalToolIndex::from_raw(0), &hotend_config };
     static_assert(PhysicalToolIndex::count == 1);

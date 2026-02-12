@@ -122,8 +122,6 @@ static_assert(BOARD_IS_BUDDY() || BOARD_IS_XBUDDY());
 // Heaters / Fans
 //
 
-#define HEATER_0_PIN           MARLIN_PIN(HEAT0)
-
 #define FAN_PIN                MARLIN_PIN(FAN)
 #if BOARD_IS_XBUDDY()
   #if (TEMP_SENSOR_HEATBREAK > 0)

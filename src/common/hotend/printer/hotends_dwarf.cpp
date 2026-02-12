@@ -12,6 +12,10 @@ Hotend &Hotend::for_tool(PhysicalToolIndex) {
             .max_nozzle_temp = HEATER_0_MAXTEMP,
         },
         .nozzle_temp_table = TT_NAME(THERMISTOR_HEATER_0),
+        .nozzle_heater_marlin_pin = MARLIN_PIN(HEAT0),
+
+        // TODO: Set up HW PWM here? This is the only board that does not have it
+        .nozzle_heater_soft_pwm = true,
     };
     static LocalHotend hotend { PhysicalToolIndex::from_raw(0), &hotend_config };
     static_assert(PhysicalToolIndex::count == 1);

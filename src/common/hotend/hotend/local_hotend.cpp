@@ -16,6 +16,24 @@ LocalHotend::LocalHotend(PhysicalToolIndex tool, const Config *config)
     , local_config_(*config)
     , nozzle_raw_temp_range_ { MarlinTemptableRawMinMax::compute(local_config_.nozzle_temp_table, base_config_.min_nozzle_temp, base_config_.max_nozzle_temp) } //
 {
+    // Do not call pinMode - it does nothing
+    // pinMode(local_config_.nozzle_heater_marlin_pin, OUTPUT);
+
+    // Do NOT call digitalWrite. We're in init_isr_statics where digitalWrite is not yet initialized
+    // - Safe state should be off anyway
+    // - Should get off anyway in the first manage() call from within Temperature::init()
+    // digitalWrite(local_config_.nozzle_heater_marlin_pin, false);
+}
+
+void LocalHotend::set_nozzle_target_temp(TargetTemperature set) {
+    BaseHotend::set_nozzle_target_temp(set);
+
+    // If turning off the hotend, set the hotend off immediately
+    // This shortcut was originally in Temperature::disable_heaters
+    if (set <= 0) {
+        thermalManager.temp_hotend[tool_].soft_pwm_amount = 0;
+        digitalWrite(local_config_.nozzle_heater_marlin_pin, false);
+    }
 }
 
 void LocalHotend::manage() {
@@ -70,6 +88,11 @@ void LocalHotend::manage() {
         thermal_model_protection_ok_ = thermal_model_protection_.is_ok();
 #endif
     }
+
+    // Write to the output, if we can. soft pwm is handled through isr_soft_pwm
+    if (!local_config_.nozzle_heater_soft_pwm) {
+        analogWrite(local_config_.nozzle_heater_marlin_pin, thermalManager.temp_hotend[tool_].soft_pwm_amount);
+    }
 }
 
 void LocalHotend::isr_on_readings_ready() {
@@ -87,4 +110,11 @@ void LocalHotend::isr_on_readings_ready() {
     );
 
     nozzle_raw_temp_range_.check_temperror(nozzle_raw_temp_, (heater_ind_t)tool_.to_raw(), heater_on);
+}
+
+void LocalHotend::isr_soft_pwm(PWM255 phase) {
+    if (local_config_.nozzle_heater_soft_pwm) {
+        const auto pwm = thermalManager.temp_hotend[tool_].soft_pwm_amount;
+        digitalWrite(local_config_.nozzle_heater_marlin_pin, pwm > 0 && phase.value <= pwm);
+    }
 }

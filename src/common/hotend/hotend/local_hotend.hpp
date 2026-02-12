@@ -29,18 +29,34 @@ public:
 
     struct Config {
         BaseHotend::Config base_config;
+
         /// Temperature table for mapping raw temperature readouts
         TempTable nozzle_temp_table;
+
+        /// "Marlin pin" controlling the nozzle heater
+        /// Gets then passed through analogWrite/digitalWrite from Arduino.h,
+        /// Which gets eventually mapped to the actual HAL calls in hwio_XX.cpp
+        /// One day, it would be nice to untangle this mess.
+        uint32_t nozzle_heater_marlin_pin;
+
+        /// Whether the nozzle heater should use software bitbanged PWM
+        /// If true, the pin is actually controlled by digitalWrite() in Temperature::isr
+        /// Otherwise, analogWrite() is used
+        bool nozzle_heater_soft_pwm : 1;
     };
 
 public:
     /// !!! Careful, the config pointer is stored, so make sure the config is persistent!
     explicit LocalHotend(PhysicalToolIndex tool, const Config *config);
 
+    void set_nozzle_target_temp(TargetTemperature set) override;
+
 protected:
     virtual void manage() override;
 
     virtual void isr_on_readings_ready() override;
+
+    virtual void isr_soft_pwm(PWM255 phase) override;
 
 protected:
     const Config &local_config_;

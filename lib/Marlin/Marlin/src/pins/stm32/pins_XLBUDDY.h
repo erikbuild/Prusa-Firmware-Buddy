@@ -103,13 +103,6 @@ static_assert(BOARD_IS_XLBUDDY());
 // Heaters / Fans
 //
 
-#define HEATER_0_PIN           MARLIN_PIN(HEAT0) // Dummy, measured by puppy
-#define HEATER_1_PIN           MARLIN_PIN(HEAT0) // Dummy, measured by puppy
-#define HEATER_2_PIN           MARLIN_PIN(HEAT0) // Dummy, measured by puppy
-#define HEATER_3_PIN           MARLIN_PIN(HEAT0) // Dummy, measured by puppy
-#define HEATER_4_PIN           MARLIN_PIN(HEAT0) // Dummy, measured by puppy
-#define HEATER_5_PIN           MARLIN_PIN(HEAT0) // Dummy, measured by puppy
-
 #define FAN_PIN                MARLIN_PIN(FAN)
 
 #undef E0_AUTO_FAN_PIN         // no auto fan pin - handled by dwarf

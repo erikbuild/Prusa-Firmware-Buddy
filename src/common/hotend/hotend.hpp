@@ -5,6 +5,7 @@
 #include <utils/uncopyable.hpp>
 #include <utils/variant_utils.hpp>
 #include <module/temperature/hotend_regulator/hotend_regulator.hpp>
+#include <pwm_utils.hpp>
 
 /// Class representing a hotend
 /// This is an abstract class, hotend implementations differ
@@ -82,6 +83,10 @@ protected:
     /// It is supposed to pass the accumulated values to the defaultTask
     /// And reset the accumulators
     virtual void isr_on_readings_ready() {};
+
+    /// Called from TemperatureISR to control bitbanged PWMs, if the hotend needs it.
+    /// @param phase deterines the current value of the soft PWM counter. Pins should output high if phase <= pin_pwm_target
+    virtual void isr_soft_pwm(PWM255 phase) { (void)phase; }
 
 protected:
     HotendPIDConfig nozzle_pid_config_;

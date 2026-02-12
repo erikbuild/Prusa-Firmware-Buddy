@@ -71,8 +71,6 @@ static_assert(BOARD_IS_DWARF());
 // Heaters / Fans
 //
 
-#define HEATER_0_PIN             MARLIN_PIN(HEAT0)
-
 #define FAN_PIN                MARLIN_PIN(FAN)
 
 #define HEATER_HEATBREAK_PIN   MARLIN_PIN(FAN1)

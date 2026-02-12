@@ -628,12 +628,6 @@
 #define HAS_TEMP_HEATBREAK_CONTROL (HAS_TEMP_HEATBREAK && PIN_EXISTS(HEATER_HEATBREAK))  // For future use to control heatbreak temperature
 
 // Heaters
-#define HAS_HEATER_0 (PIN_EXISTS(HEATER_0))
-#define HAS_HEATER_1 (PIN_EXISTS(HEATER_1))
-#define HAS_HEATER_2 (PIN_EXISTS(HEATER_2))
-#define HAS_HEATER_3 (PIN_EXISTS(HEATER_3))
-#define HAS_HEATER_4 (PIN_EXISTS(HEATER_4))
-#define HAS_HEATER_5 (PIN_EXISTS(HEATER_5))
 #define HAS_HEATER_HEATBREAK (PIN_EXISTS(HEATER_HEATBREAK))
 
 // Shorthand for common combinations
@@ -714,60 +708,6 @@
  */
 #ifndef EXTRUDE_MINTEMP
   #define EXTRUDE_MINTEMP 170
-#endif
-
-/**
- * Heater signal inversion defaults
- */
-
-#if HAS_HEATER_0 && !defined(HEATER_0_INVERTING)
-  #define HEATER_0_INVERTING false
-#endif
-
-#if HAS_HEATER_1 && !defined(HEATER_1_INVERTING)
-  #define HEATER_1_INVERTING false
-#endif
-
-#if HAS_HEATER_2 && !defined(HEATER_2_INVERTING)
-  #define HEATER_2_INVERTING false
-#endif
-
-#if HAS_HEATER_3 && !defined(HEATER_3_INVERTING)
-  #define HEATER_3_INVERTING false
-#endif
-
-#if HAS_HEATER_4 && !defined(HEATER_4_INVERTING)
-  #define HEATER_4_INVERTING false
-#endif
-
-#if HAS_HEATER_5 && !defined(HEATER_5_INVERTING)
-  #define HEATER_5_INVERTING false
-#endif
-
-/**
- * Helper Macros for heaters and extruder fan
- */
-
-#define WRITE_HEATER_0P(v) WRITE(HEATER_0_PIN, (v) ^ HEATER_0_INVERTING)
-#if HOTENDS > 1 || ENABLED(HEATERS_PARALLEL)
-  #define WRITE_HEATER_1(v) WRITE(HEATER_1_PIN, (v) ^ HEATER_1_INVERTING)
-  #if HOTENDS > 2
-    #define WRITE_HEATER_2(v) WRITE(HEATER_2_PIN, (v) ^ HEATER_2_INVERTING)
-    #if HOTENDS > 3
-      #define WRITE_HEATER_3(v) WRITE(HEATER_3_PIN, (v) ^ HEATER_3_INVERTING)
-      #if HOTENDS > 4
-        #define WRITE_HEATER_4(v) WRITE(HEATER_4_PIN, (v) ^ HEATER_4_INVERTING)
-        #if HOTENDS > 5
-          #define WRITE_HEATER_5(v) WRITE(HEATER_5_PIN, (v) ^ HEATER_5_INVERTING)
-        #endif // HOTENDS > 5
-      #endif // HOTENDS > 4
-    #endif // HOTENDS > 3
-  #endif // HOTENDS > 2
-#endif // HOTENDS > 1
-#if ENABLED(HEATERS_PARALLEL)
-  #define WRITE_HEATER_0(v) { WRITE_HEATER_0P(v); WRITE_HEATER_1(v); }
-#else
-  #define WRITE_HEATER_0(v) WRITE_HEATER_0P(v)
 #endif
 
 #ifndef MIN_POWER

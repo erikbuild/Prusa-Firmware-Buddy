@@ -737,9 +737,7 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 /**
  * Test Heater, Temp Sensor, and Extruder Pins; Sensor Type must also be set.
  */
-#if !HAS_HEATER_0
-  #error "HEATER_0_PIN not defined for this board."
-#elif !ANY_PIN(TEMP_0)
+#if !ANY_PIN(TEMP_0)
   #error "TEMP_0_PIN not defined for this board."
 #elif ((defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)) && !PINS_EXIST(E0_STEP, E0_DIR))
   #error "E0_STEP_PIN or E0_DIR_PIN not defined for this board."
@@ -747,85 +745,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #error "E0_STEP_PIN, E0_DIR_PIN, or E0_ENABLE_PIN not defined for this board."
 #elif EXTRUDERS && TEMP_SENSOR_0 == 0
   #error "TEMP_SENSOR_0 is required with any extruders."
-#endif
-
-// Pins are required for heaters
-#if (HOTENDS > 1 || ENABLED(HEATERS_PARALLEL)) && !HAS_HEATER_1
-  #error "HEATER_1_PIN not defined for this board."
-#endif
-
-#if HOTENDS > 1
-  #if TEMP_SENSOR_1 == 0
-    #error "TEMP_SENSOR_1 is required with 2 or more HOTENDS."
-  #elif !ANY_PIN(TEMP_1)
-    #error "TEMP_1_PIN not defined for this board."
-  #endif
-  #if HOTENDS > 2
-    #if TEMP_SENSOR_2 == 0
-      #error "TEMP_SENSOR_2 is required with 3 or more HOTENDS."
-    #elif !HAS_HEATER_2
-      #error "HEATER_2_PIN not defined for this board."
-    #elif !PIN_EXISTS(TEMP_2)
-      #error "TEMP_2_PIN not defined for this board."
-    #endif
-    #if HOTENDS > 3
-      #if TEMP_SENSOR_3 == 0
-        #error "TEMP_SENSOR_3 is required with 4 or more HOTENDS."
-      #elif !HAS_HEATER_3
-        #error "HEATER_3_PIN not defined for this board."
-      #elif !PIN_EXISTS(TEMP_3)
-        #error "TEMP_3_PIN not defined for this board."
-      #endif
-      #if HOTENDS > 4
-        #if TEMP_SENSOR_4 == 0
-          #error "TEMP_SENSOR_4 is required with 5 or more HOTENDS."
-        #elif !HAS_HEATER_4
-          #error "HEATER_4_PIN not defined for this board."
-        #elif !PIN_EXISTS(TEMP_4)
-          #error "TEMP_4_PIN not defined for this board."
-        #endif
-        #if HOTENDS > 5
-          #if TEMP_SENSOR_5 == 0
-            #error "TEMP_SENSOR_5 is required with 6 HOTENDS."
-          #elif !HAS_HEATER_5
-            #error "HEATER_5_PIN not defined for this board."
-          #elif !PIN_EXISTS(TEMP_5)
-            #error "TEMP_5_PIN not defined for this board."
-          #endif
-        #elif TEMP_SENSOR_5 != 0
-          #error "TEMP_SENSOR_5 shouldn't be set with only 5 HOTENDS."
-        #endif
-      #elif TEMP_SENSOR_4 != 0
-        #error "TEMP_SENSOR_4 shouldn't be set with only 4 HOTENDS."
-      #elif TEMP_SENSOR_5 != 0
-        #error "TEMP_SENSOR_5 shouldn't be set with only 4 HOTENDS."
-      #endif
-    #elif TEMP_SENSOR_3 != 0
-      #error "TEMP_SENSOR_3 shouldn't be set with only 3 HOTENDS."
-    #elif TEMP_SENSOR_4 != 0
-      #error "TEMP_SENSOR_4 shouldn't be set with only 3 HOTENDS."
-    #elif TEMP_SENSOR_5 != 0
-      #error "TEMP_SENSOR_5 shouldn't be set with only 3 HOTENDS."
-    #endif
-  #elif TEMP_SENSOR_2 != 0
-    #error "TEMP_SENSOR_2 shouldn't be set with only 2 HOTENDS."
-  #elif TEMP_SENSOR_3 != 0
-    #error "TEMP_SENSOR_3 shouldn't be set with only 2 HOTENDS."
-  #elif TEMP_SENSOR_4 != 0
-    #error "TEMP_SENSOR_4 shouldn't be set with only 2 HOTENDS."
-  #elif TEMP_SENSOR_5 != 0
-    #error "TEMP_SENSOR_5 shouldn't be set with only 2 HOTENDS."
-  #endif
-#elif TEMP_SENSOR_1 != 0
-  #error "TEMP_SENSOR_1 shouldn't be set with only 1 HOTEND."
-#elif TEMP_SENSOR_2 != 0
-  #error "TEMP_SENSOR_2 shouldn't be set with only 1 HOTEND."
-#elif TEMP_SENSOR_3 != 0
-  #error "TEMP_SENSOR_3 shouldn't be set with only 1 HOTEND."
-#elif TEMP_SENSOR_4 != 0
-  #error "TEMP_SENSOR_4 shouldn't be set with only 1 HOTEND."
-#elif TEMP_SENSOR_5 != 0
-  #error "TEMP_SENSOR_5 shouldn't be set with only 1 HOTEND."
 #endif
 
   #if E_STEPPERS

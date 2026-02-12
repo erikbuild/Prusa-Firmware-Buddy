@@ -643,11 +643,6 @@ void Temperature::manage_heater() {
 
   UNUSED(ms);
   #if ENABLED(HW_PWM_HEATERS)
-    #if HOTENDS == 1
-      analogWrite(HEATER_0_PIN, temp_hotend[0].soft_pwm_amount);
-    #elif HOTENDS
-      #error "This is made for one hotend!"
-    #endif /* HOTENDS */
     #if HAS_LOCAL_BED()
       analogWrite_HEATER_BED(temp_bed.soft_pwm_amount);
     #endif
@@ -919,26 +914,6 @@ void Temperature::init() {
     inited = true;
   #endif
 
-  #if HAS_HEATER_0
-    OUT_WRITE(HEATER_0_PIN, HEATER_0_INVERTING);
-  #endif
-
-  #if HAS_HEATER_1
-    OUT_WRITE(HEATER_1_PIN, HEATER_1_INVERTING);
-  #endif
-  #if HAS_HEATER_2
-    OUT_WRITE(HEATER_2_PIN, HEATER_2_INVERTING);
-  #endif
-  #if HAS_HEATER_3
-    OUT_WRITE(HEATER_3_PIN, HEATER_3_INVERTING);
-  #endif
-  #if HAS_HEATER_4
-    OUT_WRITE(HEATER_4_PIN, HEATER_4_INVERTING);
-  #endif
-  #if HAS_HEATER_5
-    OUT_WRITE(HEATER_5_PIN, HEATER_5_INVERTING);
-  #endif
-
   #if HAS_LOCAL_BED()
     WRITE_HEATER_BED(LOW);
   #endif
@@ -1058,8 +1033,8 @@ void Temperature::disable_local_heaters() {
 }
 
 void Temperature::disable_heaters(Temperature::disable_bed_t disable_bed) {
-  for (auto tool : PhysicalToolIndex::all()) {
-    setTargetHotend(0, tool);
+  for(auto tool : PhysicalToolIndex::all()) {
+    Hotend::for_tool(tool).set_nozzle_target_temp(0);
   }
 
   #if HAS_HEATED_BED
@@ -1070,31 +1045,6 @@ void Temperature::disable_heaters(Temperature::disable_bed_t disable_bed) {
       WRITE_HEATER_BED(LOW);
       #endif
     }
-  #endif
-
-  #define DISABLE_HEATER(NR) { \
-    setTargetHotend(0, NR); \
-    temp_hotend[NR].soft_pwm_amount = 0; \
-    WRITE_HEATER_ ##NR (LOW); \
-  }
-
-  #if HAS_TEMP_HOTEND
-    DISABLE_HEATER(0);
-    #if HOTENDS > 1
-      DISABLE_HEATER(1);
-      #if HOTENDS > 2
-        DISABLE_HEATER(2);
-        #if HOTENDS > 3
-          DISABLE_HEATER(3);
-          #if HOTENDS > 4
-            DISABLE_HEATER(4);
-            #if HOTENDS > 5
-              DISABLE_HEATER(5);
-            #endif // HOTENDS > 5
-          #endif // HOTENDS > 4
-        #endif // HOTENDS > 3
-      #endif // HOTENDS > 2
-    #endif // HOTENDS > 1
   #endif
 }
 
@@ -1213,73 +1163,23 @@ void Temperature::isr() {
   static int8_t temp_count = -1;
   static ADCSensorState adc_sensor_state = StartupDelay;
 
-  #if DISABLED(HW_PWM_HEATERS)
+  {
     static uint8_t pwm_count = 1;
+    
     // avoid multiple loads of pwm_count
     uint8_t pwm_count_tmp = pwm_count;
 
-      #define _PWM_MOD(N,T) do{                           \
-        const bool on = T.soft_pwm_amount > 0; \
-        WRITE_HEATER_##N(on);                               \
-      }while(0)
+    // Note: +2 to keep the "original" PWM frequency from before this change was made
+    pwm_count = pwm_count_tmp + 2;
 
-      // Note: +2 to keep the "original" PWM frequency from before this change was made
-      pwm_count = pwm_count_tmp + 2;
+    for(auto tool : PhysicalToolIndex::all()) {
+      Hotend::for_tool(tool).isr_soft_pwm(PWM255(pwm_count_tmp));
+    }
 
-      /**
-       * Standard heater PWM modulation
-       */
-      if (pwm_count < pwm_count_tmp) {
-        // PWM overflow
-
-        #define _PWM_MOD_E(N) _PWM_MOD(N,temp_hotend[N])
-        _PWM_MOD_E(0);
-        #if HOTENDS > 1
-          _PWM_MOD_E(1);
-          #if HOTENDS > 2
-            _PWM_MOD_E(2);
-            #if HOTENDS > 3
-              _PWM_MOD_E(3);
-              #if HOTENDS > 4
-                _PWM_MOD_E(4);
-                #if HOTENDS > 5
-                  _PWM_MOD_E(5);
-                #endif // HOTENDS > 5
-              #endif // HOTENDS > 4
-            #endif // HOTENDS > 3
-          #endif // HOTENDS > 2
-        #endif // HOTENDS > 1
-
-        #if HAS_LOCAL_BED()
-          _PWM_MOD(BED,temp_bed);
-        #endif
-      }
-      else {
-        #define _PWM_LOW(N,T) do{ if (T.soft_pwm_amount <= pwm_count_tmp) WRITE_HEATER_##N(LOW); }while(0)
-        #define _PWM_LOW_E(N) _PWM_LOW(N, temp_hotend[N])
-        _PWM_LOW_E(0);
-        #if HOTENDS > 1
-          _PWM_LOW_E(1);
-          #if HOTENDS > 2
-            _PWM_LOW_E(2);
-            #if HOTENDS > 3
-              _PWM_LOW_E(3);
-              #if HOTENDS > 4
-                _PWM_LOW_E(4);
-                #if HOTENDS > 5
-                  _PWM_LOW_E(5);
-                #endif // HOTENDS > 5
-              #endif // HOTENDS > 4
-            #endif // HOTENDS > 3
-          #endif // HOTENDS > 2
-        #endif // HOTENDS > 1
-
-        #if HAS_LOCAL_BED()
-          _PWM_LOW(BED, temp_bed);
-        #endif
-      }
-
-  #endif // HW_PWM_HEATERS
+    #if HAS_LOCAL_BED() && DISABLED(HW_PWM_HEATERS)
+      WRITE_HEATER_BED(temp_bed.soft_pwm_amount > 0 && pwm_count_tmp <= temp_bed.soft_pwm_amount);
+    #endif
+  }
 
 
   /**
