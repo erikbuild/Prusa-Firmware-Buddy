@@ -124,8 +124,6 @@
   #include "feature/prusa/MMU2/mmu2_mk4.h"
 #endif
 
-bool Running = true;
-
 // For M109 and M190, this flag may be cleared (by M108) to exit the wait loop
 bool wait_for_heatup = true;
 
@@ -382,24 +380,6 @@ void idle(bool waiting) {
   #endif
 
   if (waiting) delay(1);
-}
-
-/**
- * Turn off heaters and stop the print in progress
- * After a stop the machine may be resumed with M999
- */
-void stop() {
-  thermalManager.disable_all_heaters(); // 'unpause' taken care of in here
-  print_job_timer.stop();
-
-  if (IsRunning()) {
-    queue.stop();
-    buddy::cork::tracker.clear();
-    SERIAL_ERROR_MSG(MSG_ERR_STOPPED);
-    LCD_MESSAGEPGM(MSG_STOPPED);
-    safe_delay(350);       // allow enough time for messages to get out before stopping
-    Running = false;
-  }
 }
 
 /**

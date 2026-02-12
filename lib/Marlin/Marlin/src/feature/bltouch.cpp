@@ -32,8 +32,6 @@ bool BLTouch::last_written_mode; // Initialized by settings.load, 0 = Open Drain
 
 #include "../module/servo.h"
 
-void stop();
-
 bool BLTouch::command(const BLTCommand cmd, const millis_t &ms) {
   if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPAIR("BLTouch Command :", cmd);
   MOVE_SERVO(Z_PROBE_SERVO_NR, cmd);
@@ -106,8 +104,8 @@ bool BLTouch::deploy_proc() {
       // The deploy might have failed or the probe is actually triggered (nozzle too low?) again
 
       SERIAL_ERROR_MSG(MSG_STOP_BLTOUCH);  // Tell the user something is wrong, needs action
-      stop();                              // but it's not too bad, no need to kill, allow restart
-
+      // Previously called stop() for soft-error recovery. That mechanism has been removed.
+      static_assert(false, "BLTOUCH needs rework: stop() was removed");
       return true;                         // Tell our caller we goofed in case he cares to know
     }
   }
@@ -143,8 +141,8 @@ bool BLTouch::stow_proc() {
     if (_stow_query_alarm()) {             // so if there is now STILL an ALARM condition:
 
       SERIAL_ERROR_MSG(MSG_STOP_BLTOUCH);  // Tell the user something is wrong, needs action
-      stop();                              // but it's not too bad, no need to kill, allow restart
-
+      // Previously called stop() for soft-error recovery. That mechanism has been removed.
+      static_assert(false, "BLTOUCH needs rework: stop() was removed");
       return true;                         // Tell our caller we goofed in case he cares to know
     }
   }

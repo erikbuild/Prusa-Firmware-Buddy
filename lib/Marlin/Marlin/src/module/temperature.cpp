@@ -402,19 +402,16 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
 //
 
 inline void loud_kill(PGM_P const lcd_msg, const heater_ind_t heater) {
-  Running = false;
   kill(lcd_msg, HEATER_PSTR(heater));
 }
 
 void Temperature::_temp_error(const heater_ind_t heater, PGM_P const serial_msg, PGM_P const lcd_msg) {
-  if (IsRunning()) {
-    SERIAL_ERROR_START();
-    serialprintPGM(serial_msg);
-    SERIAL_ECHOPGM(MSG_STOPPED_HEATER);
-    if (heater >= 0) SERIAL_ECHO((int)heater);
-    else SERIAL_ECHOPGM(MSG_HEATER_BED);
-    SERIAL_EOL();
-  }
+  SERIAL_ERROR_START();
+  serialprintPGM(serial_msg);
+  SERIAL_ECHOPGM(MSG_STOPPED_HEATER);
+  if (heater >= 0) SERIAL_ECHO((int)heater);
+  else SERIAL_ECHOPGM(MSG_HEATER_BED);
+  SERIAL_EOL();
 
   // Disable only the local heaters. We are in ISR, so we can't afford any kind
   // of interprocessor communication and it would not finish anyway before we

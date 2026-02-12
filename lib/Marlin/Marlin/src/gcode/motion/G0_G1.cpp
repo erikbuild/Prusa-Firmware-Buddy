@@ -23,8 +23,6 @@
 #include "../gcode.h"
 #include "../../module/motion.h"
 
-#include "../../MarlinCore.h"
-
 #if ENABLED(NANODLP_Z_SYNC)
   #include "../../module/planner.h"
 #endif
@@ -60,8 +58,6 @@ extern xyze_pos_t destination;
  *  - `F` - The feedrate per minute of the move between the starting point and ending point (if supplied)
  */
 void GcodeSuite::G0_G1(TERN_(HAS_FAST_MOVES, const bool fast_move/*=false*/)) {
-  if (!IsRunning()) return;
-
   TERN_(FULL_REPORT_TO_HOST_FEATURE, set_and_report_grblstate(M_RUNNING));
 
   #if ENABLED(CRASH_RECOVERY)

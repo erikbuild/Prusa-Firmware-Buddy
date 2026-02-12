@@ -44,7 +44,7 @@
 #include "../gcode/gcode.h"
 #include "../lcd/ultralcd.h"
 
-#include "../Marlin.h" // for stop(), disable_e_steppers, wait_for_user
+#include "../Marlin.h" // for disable_e_steppers, wait_for_user
 
 #if HAS_LEVELING
   #include "../feature/bedlevel/bedlevel.h"
@@ -348,9 +348,8 @@ bool set_probe_deployed(const bool deploy) {
         _BV(X_AXIS)
       #endif
     )) {
-      SERIAL_ERROR_MSG(MSG_STOP_UNHOMED);
-      stop();
-      return true;
+      // Previously called stop() for soft-error recovery. That mechanism has been removed.
+      static_assert(false, "Z_PROBE_SLED/Z_PROBE_ALLEN_KEY needs rework: stop() was removed");
     }
   #endif
 

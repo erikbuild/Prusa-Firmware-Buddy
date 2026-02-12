@@ -413,27 +413,6 @@ void GCodeQueue::get_serial_commands() {
           last_N = gcode_N;
         }
 
-        // Movement commands alert when stopped
-        if (IsStopped()) {
-          char* gpos = strchr(command, 'G');
-          if (gpos) {
-            switch (strtol(gpos + 1, nullptr, 10)) {
-              case 0:
-              case 1:
-              #if ENABLED(ARC_SUPPORT)
-                case 2:
-                case 3:
-              #endif
-              #if ENABLED(BEZIER_CURVE_SUPPORT)
-                case 5:
-              #endif
-                SERIAL_ECHOLNPGM(MSG_ERR_STOPPED);
-                LCD_MESSAGEPGM(MSG_STOPPED);
-                break;
-            }
-          }
-        }
-
         #if DISABLED(EMERGENCY_PARSER)
           // Process critical commands early
           if (strcmp(command, "M108") == 0) {

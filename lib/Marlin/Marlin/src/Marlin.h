@@ -31,7 +31,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void stop();
 void idle(bool waiting);
 void manage_inactivity();
 
@@ -56,10 +55,6 @@ void kill(PGM_P const lcd_error, PGM_P const lcd_component=nullptr, const bool s
 #endif
 
 void quickstop_stepper();
-
-extern bool Running;
-inline bool IsRunning() { return  Running; }
-inline bool IsStopped() { return !Running; }
 
 bool printingIsActive();
 bool printingIsPaused();
