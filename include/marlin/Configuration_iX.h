@@ -824,12 +824,12 @@
 #define Z_SIZE 175
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
-#define X_MIN_POS -14
-#define Y_MIN_POS -2
+#define X_MIN_POS -12.5f
+#define Y_MIN_POS -1
 #define Z_MIN_POS 0
-#define X_MAX_POS (X_MIN_POS + 286.5f)
+#define X_MAX_POS 274
 #define Y_MAX_PRINT_POS (Y_BED_SIZE) // maximal print area Y position
-#define Y_MAX_POS (Y_MIN_POS + 308)
+#define Y_MAX_POS 307
 #ifdef USE_PRUSA_EEPROM_AS_SOURCE_OF_DEFAULT_VALUES
     #define DEFAULT_Z_MAX_POS Z_SIZE
     #define Z_MIN_LEN_LIMIT 1
