@@ -120,8 +120,7 @@ static consteval HeaterConfig_t make_nozzle_config(const char *name) {
         .heater_load_stable_ms = 1000,
         .heater_full_load_min_W = 20, // 35 W +- 43%
         .heater_full_load_max_W = 50,
-        .pwm_100percent_equivalent_value = 127,
-        .min_pwm_to_measure = 127 // Check power only when fully on
+        .min_pwm_to_measure = 255 // Check power only when fully on
     };
 }
 
@@ -154,7 +153,6 @@ static constexpr HeaterConfig_t Config_HeaterBed = {
     .heater_load_stable_ms = 3000,
     .heater_full_load_min_W = 268,
     .heater_full_load_max_W = 499,
-    .pwm_100percent_equivalent_value = 127,
     .min_pwm_to_measure = 26
 };
 

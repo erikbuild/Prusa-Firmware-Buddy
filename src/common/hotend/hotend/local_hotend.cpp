@@ -64,7 +64,7 @@ void LocalHotend::manage() {
             });
         }
 
-        t.temp_hotend[tool_].soft_pwm_amount = static_cast<int>(regulation_result.pid_output) >> soft_pwm_bit_shift;
+        t.temp_hotend[tool_].soft_pwm_amount = static_cast<int>(regulation_result.pid_output);
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
         thermal_model_protection_.step(regulation_result.pid_output, regulation_result.feed_forward);
         thermal_model_protection_ok_ = thermal_model_protection_.is_ok();

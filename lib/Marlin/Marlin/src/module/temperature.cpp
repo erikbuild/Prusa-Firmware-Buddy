@@ -570,11 +570,11 @@ void Temperature::manage_heater() {
 
       {
         #if ENABLED(PIDTEMPBED)
-          temp_bed.soft_pwm_amount = WITHIN(temp_bed.celsius, BED_MINTEMP, BED_MAXTEMP) ? (int)get_pid_output_bed() >> soft_pwm_bit_shift : 0;
+          temp_bed.soft_pwm_amount = WITHIN(temp_bed.celsius, BED_MINTEMP, BED_MAXTEMP) ? (int)get_pid_output_bed() : 0;
         #else
           // Check if temperature is within the correct band
           if (WITHIN(temp_bed.celsius, BED_MINTEMP, BED_MAXTEMP)) {
-              temp_bed.soft_pwm_amount = temp_bed.celsius < temp_bed.target ? MAX_BED_POWER >> 1 : 0;
+              temp_bed.soft_pwm_amount = temp_bed.celsius < temp_bed.target ? MAX_BED_POWER : 0;
           }
           else {
             temp_bed.soft_pwm_amount = 0;
@@ -1223,11 +1223,14 @@ void Temperature::isr() {
         WRITE_HEATER_##N(on);                               \
       }while(0)
 
+      // Note: +2 to keep the "original" PWM frequency from before this change was made
+      pwm_count = pwm_count_tmp + 2;
+
       /**
        * Standard heater PWM modulation
        */
-      if (pwm_count_tmp >= 127) {
-        pwm_count_tmp -= 127;
+      if (pwm_count < pwm_count_tmp) {
+        // PWM overflow
 
         #define _PWM_MOD_E(N) _PWM_MOD(N,temp_hotend[N])
         _PWM_MOD_E(0);
@@ -1275,8 +1278,6 @@ void Temperature::isr() {
           _PWM_LOW(BED, temp_bed);
         #endif
       }
-
-      pwm_count = pwm_count_tmp + 1;
 
   #endif // HW_PWM_HEATERS
 

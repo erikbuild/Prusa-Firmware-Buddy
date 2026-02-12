@@ -59,7 +59,6 @@ struct HeaterConfig_t {
     static constexpr int32_t heater_load_stable_difference { 3 };
     float heater_full_load_min_W { 0 };
     float heater_full_load_max_W { 0 };
-    uint32_t pwm_100percent_equivalent_value { 0 };
     uint32_t min_pwm_to_measure { 0 };
 };
 

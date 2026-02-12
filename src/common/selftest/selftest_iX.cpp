@@ -117,7 +117,6 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
         .heater_load_stable_ms = 200,
         .heater_full_load_min_W = 20,
         .heater_full_load_max_W = 50,
-        .pwm_100percent_equivalent_value = 127,
         .min_pwm_to_measure = 26,
     }
 };
@@ -143,7 +142,6 @@ static constexpr HeaterConfig_t Config_HeaterBed = {
     .heater_load_stable_ms = 3000,
     .heater_full_load_min_W = 150,
     .heater_full_load_max_W = 285,
-    .pwm_100percent_equivalent_value = 127,
     .min_pwm_to_measure = 26
 };
 
