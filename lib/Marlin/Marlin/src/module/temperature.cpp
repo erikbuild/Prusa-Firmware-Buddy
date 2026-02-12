@@ -46,7 +46,7 @@
 #include "../../../../src/common/adc.hpp"
 #include "../marlin_stubs/skippable_gcode.hpp"
 #include <module/temperature/steady_state_hotend.hpp>
-#include <module/temperature/temperature_declares.hpp>
+#include <module/temperature/temp_defines.hpp>
 #include <module/temperature/heater_watch.hpp>
 #include <module/temperature/marlin_temptable.hpp>
 #include <module/temperature/heater_watch.hpp>

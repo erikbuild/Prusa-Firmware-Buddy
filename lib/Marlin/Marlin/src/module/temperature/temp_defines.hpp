@@ -98,3 +98,9 @@ enum ADCSensorState : char {
 #define unscalePID_i(i) (float(i) / PID_dT)
 #define scalePID_d(d)   (float(d) / PID_dT)
 #define unscalePID_d(d) (float(d) * PID_dT)
+
+#if ENABLED(HW_PWM_HEATERS)
+static constexpr uint8_t soft_pwm_bit_shift = 0;
+#else
+static constexpr uint8_t soft_pwm_bit_shift = 1;
+#endif

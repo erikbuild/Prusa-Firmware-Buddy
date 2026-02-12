@@ -3,7 +3,7 @@
 
 #include <module/thermistor/thermistors.h>
 #include <module/temperature.h>
-#include <module/temperature/temperature_declares.hpp>
+#include <module/temperature/temp_defines.hpp>
 
 #include <option/has_planner.h>
 #if HAS_PLANNER()
