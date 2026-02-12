@@ -520,11 +520,6 @@ class Planner {
        */
       static void apply_leveling(xyz_pos_t &raw);
       static void unapply_leveling(xyz_pos_t &raw);
-      FORCE_INLINE static void force_unapply_leveling(xyz_pos_t &raw) {
-        leveling_active = true;
-        unapply_leveling(raw);
-        leveling_active = false;
-      }
     #endif
 
     #if HAS_POSITION_MODIFIERS
