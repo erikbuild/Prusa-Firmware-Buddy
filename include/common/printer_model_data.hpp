@@ -152,6 +152,15 @@ inline constexpr std::array printer_model_info {
         .gcode_check_code = 370,
         .id_str = "COREONEL-INDX",
     },
+    PrinterModelInfo {
+        .model = PrinterModel::coreone_oak,
+        .compatibility_group = PrinterModelCompatibilityGroup::coreone,
+        .version = { 7, 2, 0 },
+        .help_url = "core-one",
+        .usb_pid = 38,
+        .gcode_check_code = 380,
+        .id_str = "COREONEOAK",
+    },
 };
 
 inline constexpr std::array printer_model_mmu_variant {
@@ -204,6 +213,13 @@ inline constexpr std::array printer_model_mmu_variant {
         .model = PrinterModel::coreonel,
         .gcode_check_code = 30350,
         .id_str = "COREONELMMU3",
+    },
+    // Oak shares PRINTER=COREONE so it inherits HAS_MMU2. This entry exists only
+    // to satisfy the static_assert in printer_model.cpp — MMU is not expected on Oak.
+    PrinterModelMMUVariant {
+        .model = PrinterModel::coreone_oak,
+        .gcode_check_code = 30380,
+        .id_str = "COREONEOAKMMU3",
     },
 };
 

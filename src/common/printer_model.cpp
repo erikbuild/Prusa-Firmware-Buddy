@@ -2,14 +2,21 @@
 
 #include <option/has_mmu2.h>
 #include <option/has_gcode_compatibility.h>
+#include <option/signature_oak.h>
 
 #include <common/printer_model.hpp>
 #include <common/printer_model_data.hpp>
 #include <common/extended_printer_type.hpp>
 
+// Oak shares build-level printer version 7.1.0 with Core One to avoid bootloader changes.
+// Return coreone to prevent firmware reset.
+#if SIGNATURE_OAK()
+static constexpr const PrinterModelInfo &firmware_base_constexpr = printer_model_info[std::to_underlying(PrinterModel::coreone)];
+#else
 static constexpr const PrinterModelInfo &firmware_base_constexpr = *std::find_if(printer_model_info.begin(), printer_model_info.end(), [](const PrinterModelInfo &info) {
     return info.version == PrinterVersion { PRINTER_TYPE, PRINTER_VERSION, PRINTER_SUBVERSION };
 });
+#endif
 
 static_assert(firmware_base_constexpr.version.type == PRINTER_TYPE, "Mismatch printer version");
 
@@ -29,7 +36,8 @@ static_assert(
         && std::to_underlying(PrinterModel::coreone) == 12
         && std::to_underlying(PrinterModel::coreonel) == 13
         && std::to_underlying(PrinterModel::coreone_indx) == 14
-        && std::to_underlying(PrinterModel::coreonel_indx) == 15,
+        && std::to_underlying(PrinterModel::coreonel_indx) == 15
+        && std::to_underlying(PrinterModel::coreone_oak) == 16,
     "Order should not change, it will create a discrepancy in stored EEPROM values");
 
 // Some checks about the printer data
@@ -75,7 +83,9 @@ const PrinterModelInfo &PrinterModelInfo::get(PrinterModel model) {
 }
 
 const PrinterModelInfo &PrinterModelInfo::current() {
-#if HAS_EXTENDED_PRINTER_TYPE()
+#if SIGNATURE_OAK()
+    return get_constexpr(PrinterModel::coreone_oak);
+#elif HAS_EXTENDED_PRINTER_TYPE()
     const auto model_index = config_store().extended_printer_type.get();
     if (model_index >= extended_printer_type_model.size()) {
         return firmware_base_constexpr;

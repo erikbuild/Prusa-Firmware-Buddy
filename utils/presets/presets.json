@@ -6,6 +6,21 @@
             "description": "Original Prusa CORE One",
             "cacheVariables": {
                 "PRINTER": "COREONE",
+                "SIGNATURE_OAK": "OFF",
+                "BOARD": "XBUDDY",
+                "XBUDDY_EXTENSION_VARIANT": "STANDARD",
+                "XBUDDY_EXTENSION_BINARY_DIR": {
+                    "type": "FILEPATH",
+                    "value": "build-vscode-xbuddy-extension"
+                }
+            }
+        },
+        {
+            "name": "coreone_oak",
+            "description": "Original Prusa CORE One Signature Oak Edition",
+            "cacheVariables": {
+                "PRINTER": "COREONE",
+                "SIGNATURE_OAK": "ON",
                 "BOARD": "XBUDDY",
                 "XBUDDY_EXTENSION_VARIANT": "STANDARD",
                 "XBUDDY_EXTENSION_BINARY_DIR": {
@@ -23,6 +38,7 @@
             "description": "Original Prusa CORE One with INDX",
             "cacheVariables": {
                 "PRINTER": "COREONE_INDX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY",
                 "XBUDDY_EXTENSION_VARIANT": "STANDARD",
                 "XBUDDY_EXTENSION_BINARY_DIR": {
@@ -36,6 +52,7 @@
             "description": "Original Prusa CORE One L",
             "cacheVariables": {
                 "PRINTER": "COREONEL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY",
                 "XBUDDY_EXTENSION_VARIANT": "STANDARD",
                 "XBUDDY_EXTENSION_BINARY_DIR": {
@@ -53,6 +70,7 @@
             "description": "Original Prusa CORE One L",
             "cacheVariables": {
                 "PRINTER": "COREONEL_INDX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY",
                 "XBUDDY_EXTENSION_VARIANT": "STANDARD",
                 "XBUDDY_EXTENSION_BINARY_DIR": {
@@ -70,6 +88,7 @@
             "description": "Original Prusa MINI",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY"
             }
         },
@@ -78,6 +97,7 @@
             "description": "Original Prusa MINI (EN & CS translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "cs"
             }
@@ -87,6 +107,7 @@
             "description": "Original Prusa MINI (EN & DE translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "de"
             }
@@ -96,6 +117,7 @@
             "description": "Original Prusa MINI (EN & ES translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "es"
             }
@@ -105,6 +127,7 @@
             "description": "Original Prusa MINI (EN & FR translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "fr"
             }
@@ -114,6 +137,7 @@
             "description": "Original Prusa MINI (EN & IT translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "it"
             }
@@ -123,6 +147,7 @@
             "description": "Original Prusa MINI (EN & PL translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "pl"
             }
@@ -132,6 +157,7 @@
             "description": "Original Prusa MINI (EN & JA translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "ja"
             }
@@ -141,6 +167,7 @@
             "description": "Original Prusa MINI (EN & UK translation)",
             "cacheVariables": {
                 "PRINTER": "MINI",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "BUDDY",
                 "TRANSLATIONS_LIST": "uk"
             }
@@ -150,6 +177,7 @@
             "description": "Original Prusa MK4 with xBuddy 0.2.7c or newer fw compatible, 400-step motors and planetary gearbox",
             "cacheVariables": {
                 "PRINTER": "MK4",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY"
             }
         },
@@ -158,6 +186,7 @@
             "description": "Original Prusa MK4 with xBuddy 0.2.7c or newer fw compatible, 400-step motors and planetary gearbox",
             "cacheVariables": {
                 "PRINTER": "MK4",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY",
                 "ENABLE_BURST":true
             }
@@ -167,6 +196,7 @@
             "description": "Original Prusa MK3.5 with xBuddy 0.2.7c or newer fw compatible, 200-step motors and MK3 extruder",
             "cacheVariables": {
                 "PRINTER": "MK3.5",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY"
             }
         },
@@ -175,6 +205,7 @@
             "description": "Original Prusa iX",
             "cacheVariables": {
                 "PRINTER": "iX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY",
                 "XBUDDY_EXTENSION_VARIANT": "iX",
                 "MODULARBED_BINARY_DIR": {
@@ -188,6 +219,7 @@
             "description": "Original Prusa XL",
             "cacheVariables": {
                 "PRINTER": "XL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XLBUDDY",
                 "DWARF_BINARY_DIR": {
                     "type": "FILEPATH",
@@ -204,6 +236,7 @@
             "description": "Original Prusa XL with Burst Stepping",
             "cacheVariables": {
                 "PRINTER": "XL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XLBUDDY",
                 "DWARF_BINARY_DIR": {
                     "type": "FILEPATH",
@@ -221,6 +254,7 @@
             "description": "Original Prusa XL with optional features removed",
             "cacheVariables": {
                 "PRINTER": "XL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XLBUDDY",
                 "DWARF_BINARY_DIR": {
                     "type": "FILEPATH",
@@ -245,6 +279,7 @@
             "description": "Original Prusa xl_dev_kit",
             "cacheVariables": {
                 "PRINTER": "XL_DEV_KIT",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XL_DEV_KIT_XLB"
             }
         },
@@ -253,6 +288,7 @@
             "description": "Original Prusa XL's Dwarf (the extruder puppy)",
             "cacheVariables": {
                 "PRINTER": "XL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "DWARF"
             }
         },
@@ -261,6 +297,7 @@
             "description": "Original Prusa XL's Modular Bed",
             "cacheVariables": {
                 "PRINTER": "XL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "MODULARBED"
             }
         },
@@ -269,6 +306,7 @@
             "description": "Original Prusa iX's Modular Bed",
             "cacheVariables": {
                 "PRINTER": "iX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "MODULARBED"
             }
         },
@@ -277,6 +315,7 @@
             "description": "Original Prusa iX Extension Board",
             "cacheVariables": {
                 "PRINTER": "iX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY_EXTENSION"
             }
         },
@@ -285,6 +324,7 @@
             "description": "Original Prusa CORE One Extension Board",
             "cacheVariables": {
                 "PRINTER": "COREONE",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY_EXTENSION"
             }
         },
@@ -293,6 +333,7 @@
             "description": "Original Prusa CORE One INDX Extension Board",
             "cacheVariables": {
                 "PRINTER": "COREONE_INDX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY_EXTENSION"
             }
         },
@@ -301,6 +342,7 @@
             "description": "Original Prusa CORE One L Extension Board",
             "cacheVariables": {
                 "PRINTER": "COREONEL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY_EXTENSION"
             }
         },
@@ -309,6 +351,7 @@
             "description": "Original Prusa CORE One L INDX Extension Board",
             "cacheVariables": {
                 "PRINTER": "COREONEL_INDX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "XBUDDY_EXTENSION"
             }
         },
@@ -317,6 +360,7 @@
             "description": "Firmware for NFC addon (dev-kit)",
             "cacheVariables": {
                 "PRINTER": "NONE",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_BOARD_HAS_LEFT_RIGHT_DETECTION_PIN": "YES",
@@ -328,6 +372,7 @@
             "description": "Firmware for NFC addon (with UART-CAN bridge)",
             "cacheVariables": {
                 "PRINTER": "NONE",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "UART"
             }
@@ -337,6 +382,7 @@
             "description": "Firmware for NFC addon for SLX printer",
             "cacheVariables": {
                 "PRINTER": "NONE",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "SLX"
             }
@@ -346,6 +392,7 @@
             "description": "Firmware for NFC addon for CoreOne printer",
             "cacheVariables": {
                 "PRINTER": "COREONE",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
@@ -356,6 +403,7 @@
             "description": "Firmware for NFC addon for CoreOne printer with INDX",
             "cacheVariables": {
                 "PRINTER": "COREONE_INDX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
@@ -366,6 +414,7 @@
             "description": "Firmware for NFC addon for CoreOneL printer",
             "cacheVariables": {
                 "PRINTER": "COREONEL",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
@@ -376,6 +425,7 @@
             "description": "Firmware for NFC addon for CoreOneL printer with INDX",
             "cacheVariables": {
                 "PRINTER": "COREONE_INDX",
+                "SIGNATURE_OAK": "OFF",
                 "BOARD": "ANFC",
                 "CAN_BUS_TYPE": "PUB6",
                 "NFC_ST25R3919B_ENABLED_ANTENNAS": "ANTENNA_2"
