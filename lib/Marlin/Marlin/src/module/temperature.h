@@ -436,26 +436,13 @@ class Temperature {
      * The software PWM power for a heater
      */
     static int16_t getHeaterPower(const heater_ind_t heater);
-
-private:
-    enum class disable_bed_t : bool {no, yes};
-    /**
-     * used by disable_all_heaters and disable_hotend
-     */
-    static void disable_heaters(disable_bed_t disable_bed);
     
 public:
     /**
      * Switch off all heaters, set all target temperatures to 0
      */
     static void disable_all_heaters();
-    /**
-     * Like above, but disables only heaters on local CPU.
-     *
-     * The ones run by a separate CPU is left intact. Can be used in
-     * interrupts, as this avoids interprocessor communication.
-     */
-    static void disable_local_heaters();
+    
     /**
      * Switch off all hotends, set all hotend target temperatures to 0
      */

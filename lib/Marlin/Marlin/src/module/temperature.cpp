@@ -304,10 +304,8 @@ void Temperature::_temp_error(const heater_ind_t heater, PGM_P const serial_msg,
   else SERIAL_ECHOPGM(MSG_HEATER_BED);
   SERIAL_EOL();
 
-  // Disable only the local heaters. We are in ISR, so we can't afford any kind
-  // of interprocessor communication and it would not finish anyway before we
-  // kill it.
-  disable_local_heaters(); // always disable (even for bogus temp)
+  // Disable the local heaters in an ISR-safe way
+  buddy_disable_heaters();
 
   loud_kill(lcd_msg, heater);
 }
@@ -893,44 +891,22 @@ void Temperature::init() {
 #endif // HAS_THERMAL_PROTECTION
 
 void Temperature::disable_all_heaters() {
-    disable_heaters(disable_bed_t::yes);
+  disable_hotend();
+
+  #if HAS_HEATED_BED
+    setTargetBed(0);
+    temp_bed.soft_pwm_amount = 0;
+    #if HAS_LOCAL_BED()
+    analogWrite_HEATER_BED(0);
+    #endif
+  #endif
+
 }
 
 void Temperature::disable_hotend() {
-    disable_heaters(disable_bed_t::no);
-
-}
-
-void Temperature::disable_local_heaters() {
-#if HAS_DWARF() && HAS_REMOTE_BED() && !HAS_LOCAL_BED()
-    // No local heater present
-#elif !HAS_DWARF() && HAS_REMOTE_BED() && !HAS_LOCAL_BED()
-    disable_hotend();
-#elif !HAS_DWARF() && !HAS_REMOTE_BED() && HAS_LOCAL_BED()
-    disable_all_heaters();
-#else
-#if BOARD_IS_DWARF()
-  disable_all_heaters();
-#else
-  #error
-#endif
-#endif
-}
-
-void Temperature::disable_heaters(Temperature::disable_bed_t disable_bed) {
   for(auto tool : PhysicalToolIndex::all()) {
     Hotend::for_tool(tool).set_nozzle_target_temp(0);
   }
-
-  #if HAS_HEATED_BED
-    if (disable_bed == disable_bed_t::yes){
-      setTargetBed(0);
-      temp_bed.soft_pwm_amount = 0;
-      #if HAS_LOCAL_BED()
-      analogWrite_HEATER_BED(0);
-      #endif
-    }
-  #endif
 }
 
 /**

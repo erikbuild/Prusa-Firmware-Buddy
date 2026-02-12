@@ -120,6 +120,13 @@ void ac_fault_task_main() {
     // suspend until resumed by the fault isr
     vTaskSuspend(NULL);
 
+    // heaters are *already* disabled via HW, but stop temperature and fan regulation too
+    thermalManager.disable_all_heaters();
+    thermalManager.zero_fan_speeds();
+#if !HAS_DWARF() && !XBUDDY_EXTENSION_VARIANT_IS_iX() && HAS_TEMP_HEATBREAK && HAS_TEMP_HEATBREAK_CONTROL
+    thermalManager.suspend_heatbreak_fan(2000);
+#endif
+
     // stop & disable endstops
     marlin_server::print_quick_stop_powerpanic();
 #if HAS_REMOTE_BED()
@@ -990,12 +997,6 @@ void ac_fault_isr() {
         == true);
     state_buf.planner.marlin_debug_flags = marlin_debug_flags;
 
-    // heaters are *already* disabled via HW, but stop temperature and fan regulation too
-    thermalManager.disable_local_heaters();
-    thermalManager.zero_fan_speeds();
-#if !HAS_DWARF() && !XBUDDY_EXTENSION_VARIANT_IS_iX() && HAS_TEMP_HEATBREAK && HAS_TEMP_HEATBREAK_CONTROL
-    thermalManager.suspend_heatbreak_fan(2000);
-#endif
     // will continue in the main loop
     xTaskResumeFromISR(ac_fault_task);
 }
