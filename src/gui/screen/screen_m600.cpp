@@ -12,6 +12,7 @@
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
     #include <Marlin/src/module/prusa/toolchanger.h>
+    #include <gui/dialogs/dialog_tool_select.hpp>
 #endif
 
 namespace {
@@ -37,64 +38,6 @@ bool inject(const uint8_t tool) {
     return true;
 };
 
-#if HAS_TOOLCHANGER()
-// for available toolheads
-class MI_M600_SUBMENU : public IWindowMenuItem {
-public:
-    MI_M600_SUBMENU(const uint8_t tool)
-        : IWindowMenuItem({}, nullptr, is_enabled_t::yes,
-            prusa_toolchanger.is_tool_enabled(tool) ? is_hidden_t::no : is_hidden_t::yes)
-        , tool(tool) {
-        StringBuilder sb(label_buffer_);
-        sb.append_string_view(_("Tool"));
-        sb.append_printf(" %d", tool + 1);
-        SetLabel(string_view_utf8::MakeRAM(label_buffer_.data()));
-    }
-
-    void click([[maybe_unused]] IWindowMenu &window_menu) override {
-        if (inject(tool)) {
-            Screens::Access()->Close();
-        }
-    }
-
-private:
-    std::array<char, 32> label_buffer_;
-    const uint8_t tool;
-};
-
-class MI_M600_SUBMENU_ACTIVE : public IWindowMenuItem {
-public:
-    MI_M600_SUBMENU_ACTIVE()
-        : IWindowMenuItem(_("Active Tool"), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
-
-    void click([[maybe_unused]] IWindowMenu &window_menu) override {
-        match(
-            marlin_vars().active_extruder.get(),
-            [](VirtualToolIndex virtual_tool) {
-                if (inject(virtual_tool.to_raw())) {
-                    Screens::Access()->Close();
-                }
-            },
-            [](NoTool) { assert(false); });
-    }
-};
-template <typename I>
-struct MenuBase_;
-
-template <size_t... i>
-struct MenuBase_<std::index_sequence<i...>> {
-    using T = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
-        MI_M600_SUBMENU_ACTIVE,
-        WithConstructorArgs<MI_M600_SUBMENU, i>...>;
-};
-using MenuBase = MenuBase_<std::make_index_sequence<HOTENDS>>::T;
-
-class M600_SUBMENU final : public MenuBase {
-public:
-    M600_SUBMENU()
-        : MenuBase(_("CHANGE FILAMENT")) {};
-};
-#endif
 } // namespace
 
 MI_M600::MI_M600()
@@ -109,7 +52,12 @@ MI_M600::MI_M600()
 void MI_M600::click([[maybe_unused]] IWindowMenu &window_menu) {
 #if HAS_TOOLCHANGER()
     if (prusa_toolchanger.is_toolchanger_enabled()) {
-        Screens::Access()->Open(ScreenFactory::Screen<M600_SUBMENU>);
+        const auto tool = select_tool_dialog({
+            .allow_return = true,
+        });
+        if (tool.has_value() && inject(tool->to_raw())) {
+            Screens::Access()->Close();
+        }
         return;
     }
 #endif
