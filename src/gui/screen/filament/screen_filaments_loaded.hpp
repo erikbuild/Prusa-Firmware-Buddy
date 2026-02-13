@@ -42,7 +42,7 @@ struct ScreenLoadedFilaments_<std::index_sequence<i...>> {
     using T = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN, WithConstructorArgs<MI_LOADED_FILAMENT, MI_LOADED_FILAMENT::DisplayFormat::slot_number, i>...>;
 };
 
-class ScreenLoadedFilaments : public ScreenLoadedFilaments_<std::make_index_sequence<EXTRUDERS>>::T {
+class ScreenLoadedFilaments : public ScreenLoadedFilaments_<std::make_index_sequence<VirtualToolIndex::count>>::T {
 public:
     ScreenLoadedFilaments();
 };
