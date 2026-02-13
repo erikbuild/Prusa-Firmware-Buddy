@@ -192,14 +192,13 @@ void Chamber::reset() {
 }
 
 #if HAS_CHAMBER_VENTS()
-void Chamber::manage_ventilation_state() {
+void Chamber::manage_ventilation_state(std::optional<Temperature> fil_target) {
 
     const auto control_state = config_store().get_vent_control();
     if (control_state == VentControl::off) {
         return;
     }
 
-    const auto fil_target = config_store().get_filament_type(0).parameters().chamber_target_temperature;
     constexpr uint8_t temp_limit = 45; // Limit for closed grills is chamber max temperature of PETG
 
     auto open = [&]() {

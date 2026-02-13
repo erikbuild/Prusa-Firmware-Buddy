@@ -329,8 +329,12 @@ void filament_gcodes::M1700_preheat(const M1700Args &args) {
 #if HAS_CHAMBER_API()
     if (args.preheat_chamber) {
         buddy::chamber().set_target_temperature(fil_cnf.chamber_target_temperature);
+    #if HAS_CHAMBER_VENTS()
+        buddy::chamber().manage_ventilation_state(fil_cnf.chamber_target_temperature);
+    #endif
     }
 #endif
+
     // cooldown pressed
     if (filament == FilamentType::none) {
         thermalManager.set_fan_speed(0, 0);

@@ -2255,7 +2255,7 @@ static void _server_print_loop(void) {
             }
         }
 #if HAS_CHAMBER_VENTS()
-        buddy::chamber().manage_ventilation_state();
+        buddy::chamber().manage_ventilation_state(config_store().get_filament_type(0).parameters().chamber_target_temperature);
 #endif
 #if HAS_CHAMBER_FILTRATION_API()
         buddy::chamber_filtration().check_filter_expiration();
