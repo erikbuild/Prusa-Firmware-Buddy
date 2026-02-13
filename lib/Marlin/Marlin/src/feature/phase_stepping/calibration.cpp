@@ -1382,6 +1382,17 @@ static void debug_dump_param_search(int harmonic, const SweepParams &params, int
 // error message if the calibration failed.
 static std::expected<stdext::inplace_vector<HarmonicT<float>, opts::CORRECTION_HARMONICS>, CalibrateAxisError>
 measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibration_config, AbortFun should_abort) {
+    if (calibration_config.speed_override.has_value()) {
+        // We have an override. Just provide that and skip all the rest.
+        stdext::inplace_vector<HarmonicT<float>, opts::CORRECTION_HARMONICS> result;
+        for (size_t harmonic = 1; harmonic <= opts::CORRECTION_HARMONICS; harmonic++) {
+            if (calibration_config.enabled_harmonics[harmonic - 1]) {
+                result.emplace_back(harmonic, *calibration_config.speed_override / harmonic);
+            }
+        }
+        return result;
+    }
+
     auto move_characteristics = characterize_speed_sweep(calibration_config);
     auto [start_speed, end_speed] = calibration_config.speed_range;
 
