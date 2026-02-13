@@ -184,6 +184,7 @@ pipeline {
                         values 'all,coreonel_indx,release,yesboot',
                             'all,coreone_indx,release,yesboot',
                             'all,coreone,release,yesboot',
+                            'all,coreone_oak,release,yesboot',
                             'all,coreonel,release,yesboot',
                             'all,mini-en-cs,release,yesboot', // Always build for testing
                             'main,mini-en-de,release,yesboot',
