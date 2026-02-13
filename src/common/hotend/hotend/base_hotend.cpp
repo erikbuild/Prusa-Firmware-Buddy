@@ -10,8 +10,10 @@
     #include <feature/safety_timer/safety_timer.hpp>
 #endif
 
-BaseHotend::BaseHotend(PhysicalToolIndex tool)
-    : tool_(tool) {}
+BaseHotend::BaseHotend(PhysicalToolIndex tool, const Config *config)
+    : base_config_(*config)
+    , tool_(tool) {
+}
 
 void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 #if BOARD_IS_MASTER_BOARD()
@@ -21,7 +23,7 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 
     auto &t = thermalManager;
 
-    const int16_t new_temp = std::min<int16_t>(set, temp_range[tool_].maxtemp - HEATER_MAXTEMP_SAFETY_MARGIN);
+    const int16_t new_temp = std::min<int16_t>(set, base_config_.max_nozzle_temp - HEATER_MAXTEMP_SAFETY_MARGIN);
 
 #if ENABLED(AUTO_POWER_CONTROL)
     if (set) {

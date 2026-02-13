@@ -7,8 +7,9 @@
 class DwarfHotend final : public BaseHotend {
 
 public:
-    explicit DwarfHotend(PhysicalToolIndex tool)
-        : BaseHotend(tool) {}
+    /// !!! Careful, the config pointer is stored, so make sure the config is persistent!
+    explicit DwarfHotend(PhysicalToolIndex tool, const Config *config)
+        : BaseHotend(tool, config) {}
 
 public:
     virtual void set_nozzle_target_temp(TargetTemperature set) override;
