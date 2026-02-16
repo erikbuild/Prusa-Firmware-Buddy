@@ -347,29 +347,39 @@ void Task::rx_loop() {
     auto subers_lock = RAIIRecursiveLock(subers_mutex);
     assert(subers_lock.is_locked());
 
-    auto element = rx_queue.dequeue();
+    {
+        // Get reference to the queue without copying, we will drop it later
+        std::optional<RAIIElement> element;
+        element.emplace(rx_queue.peek(),
+            [&]() {
+                rx_queue.drop();
 
-    // Try to clear frames from driver
-    rx_to_queue();
+                // Try to clear frames from driver
+                rx_to_queue();
+            });
 
-    // Put to libcanard
-    CanardRxTransfer transfer = {};
-    CanardRxSubscription *subscription = nullptr;
-    const int8_t canard_result = canardRxAccept(&canard_instance, element.timestamp_us, &element.frame, 0, &transfer, &subscription);
-    if (canard_result > 0) {
-        if (!is_anonymous() // Allow only if we are not in anonymous mode
-            || (pnp_suber != nullptr && subscription == &pnp_suber->get_raw())) { // Or PnP subscription
+        // Put to libcanard
+        CanardRxTransfer transfer = {};
+        CanardRxSubscription *subscription = nullptr;
+        const int8_t canard_result = canardRxAccept(&canard_instance, element->e.timestamp_us, &element->e.frame, 0, &transfer, &subscription);
+        if (canard_result > 0) {
+            if (!is_anonymous() // Allow only if we are not in anonymous mode
+                || (pnp_suber != nullptr && subscription == &pnp_suber->get_raw())) { // Or PnP subscription
 
-            ProtoSuber::static_callback(subscription, transfer, rx_buffer); // Call subscription callback
+                element.reset(); // Advance the queue output, to make more space
+
+                ProtoSuber::static_callback(subscription, transfer, rx_buffer); // Call subscription callback
+            }
+            canard_instance.memory_free(&canard_instance, (void *)transfer.payload);
+        } else if (canard_result != 0) { // Some error occurred
+            log_error(can, "Canard Rx accept error %d", canard_result);
+            if (error_callback) {
+                error_callback(Driver::Notification::RxLost);
+            }
         }
-        canard_instance.memory_free(&canard_instance, (void *)transfer.payload);
-    } else if (canard_result != 0) { // Some error occurred
-        log_error(can, "Canard Rx accept error %d", canard_result);
-        if (error_callback) {
-            error_callback(Driver::Notification::RxLost);
-        }
-    }
-    // else The frame did not complete a transfer so there is nothing to do
+        // else The frame did not complete a transfer so there is nothing to do
+
+    } // Drop the buffer reference if not already
 
     if (tx_buffer_reserved.load()) { // Nobody used the reserved buffer
         assert(tx_buffer_used == false); // Buffer should not be used

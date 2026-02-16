@@ -26,6 +26,14 @@ struct TaskRxBufferElement {
     CanardFrame frame = {}; ///< Incoming CAN frame
     std::array<uint8_t, CANARD_MTU_CAN_FD> payload = {}; ///< Storage for payload data (needs to be linked into frame)
     CanardMicrosecond timestamp_us = 0; ///< Timestamp when the transfer was received
+
+    TaskRxBufferElement() = default;
+
+    /// @note We don't want to copy this thing. It would be slow and we would have to modify frame.payload.
+    TaskRxBufferElement(TaskRxBufferElement &&) = delete;
+    TaskRxBufferElement &operator=(TaskRxBufferElement &&) = delete;
+    TaskRxBufferElement(const TaskRxBufferElement &) = delete;
+    TaskRxBufferElement &operator=(const TaskRxBufferElement &) = delete;
 };
 
 class Task {
@@ -62,6 +70,27 @@ class Task {
 
     AtomicCircularQueueSizeless<TaskRxBufferElement, size_t> &rx_queue; ///< Buffer for received Cyphal transfers
     std::atomic<bool> rx_queue_used = false; ///< True if rx_queue is being used by thread and is blocked for interrupt
+
+    class RAIIElement {
+        stdext::inplace_function<void(void)> drop_callback;
+
+    public:
+        const TaskRxBufferElement &e;
+
+        /**
+         * @brief Take one element from rx_queue without copying and drop it from the queue when finished.
+         * @param element_ peek the element `rx_queue.peek()`
+         * @param drop_callback_ drop the element `rx_queue.drop()` and do other stuff, called in destructor
+         */
+        RAIIElement(const TaskRxBufferElement &element_, stdext::inplace_function<void(void)> drop_callback_)
+            : drop_callback(drop_callback_)
+            , e(element_) {}
+
+        ~RAIIElement() { drop_callback(); }
+
+        RAIIElement(const RAIIElement &) = delete;
+        RAIIElement &operator=(const RAIIElement &) = delete;
+    };
 
 public:
     struct TimeSync {
