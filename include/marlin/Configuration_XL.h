@@ -1162,7 +1162,9 @@
 
     #define XYZ_NOZZLE_PARK_POINT_ON_PRINT_END XYZ_NOZZLE_PARK_POINT
 
-    #define XYZ_LOADCELL_SELFTEST_POINT XYZ_NOZZLE_PARK_POINT
+    // Other printers use XYZ_NOZZLE_PARK_POINT but on XL this point is too far from user
+    #define XYZ_LOADCELL_SELFTEST_POINT \
+        {50.f, 50.f, Z_NOZZLE_PARK_POINT}
 
     // Filament exchange in the front of XL
     #define X_NOZZLE_PARK_POINT_M600    (X_MIN_POS + 50)
