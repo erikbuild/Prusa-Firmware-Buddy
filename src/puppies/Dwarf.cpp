@@ -359,10 +359,7 @@ bool Dwarf::is_tmc_enabled() {
 }
 
 float Dwarf::get_hotend_temp() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
+    Lock guard(*mutex);
 
     // Sent as int16 in uint16 modbus register
     return static_cast<int16_t>(RegisterGeneralStatus.value.HotendMeasuredTemperature);
