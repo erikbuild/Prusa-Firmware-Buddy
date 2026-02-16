@@ -83,12 +83,7 @@ LoopResult CSelftestPart_Loadcell::stateParking() {
         planner.synchronize();
     }
 
-#if PRINTER_IS_PRUSA_iX()
-    mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::park_positions[mapi::ParkPosition::load]);
-#else
-    mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::park_positions[mapi::ParkPosition::park]);
-#endif
-
+    mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::park_positions[mapi::ParkPosition::loadcell_selftest]);
     return LoopResult::RunNext;
 }
 
@@ -152,7 +147,10 @@ LoopResult CSelftestPart_Loadcell::stateToolSelectInit() {
 
         // go to some reasonable position
         // Use reasonable feedrate as it was likely set by previous Z move
-        marlin_server::enqueue_gcode_printf("G0 X50 Y50 F%d", XY_PROBE_SPEED_INITIAL);
+        float pos[] = XYZ_LOADCELL_SELFTEST_POINT;
+        auto x = static_cast<int>(pos[0]);
+        auto y = static_cast<int>(pos[1]);
+        marlin_server::enqueue_gcode_printf("G0 X%d Y%d F%d", x, y, XY_PROBE_SPEED_INITIAL);
     }
     return LoopResult::RunNext;
 }

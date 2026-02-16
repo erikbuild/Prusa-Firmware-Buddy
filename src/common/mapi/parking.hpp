@@ -23,6 +23,7 @@ enum class ParkPosition : uint8_t {
     park,
     purge,
     load,
+    loadcell_selftest,
     _cnt,
 };
 
@@ -84,6 +85,7 @@ static constexpr EnumArray<ParkPosition, ParkingPosition, ParkPosition::_cnt> pa
 
 #endif
         { ParkPosition::load, ParkingPosition { X_AXIS_LOAD_POS, Y_AXIS_LOAD_POS, Z_AXIS_LOAD_POS } },
+        { ParkPosition::loadcell_selftest, ParkingPosition(XYZ_LOADCELL_SELFTEST_POINT) },
 };
 
 #if HAS_NOZZLE_CLEANER()
