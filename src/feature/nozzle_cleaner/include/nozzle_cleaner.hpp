@@ -5,15 +5,12 @@
 namespace nozzle_cleaner {
 
 extern ConstexprString clean_sequence;
-extern ConstexprString unload_sequence;
 extern ConstexprString vblade_cut_sequence;
 
 extern ConstexprString clean_filename;
-extern ConstexprString unload_filename;
 extern ConstexprString vblade_cut_filename;
 
 void load_clean_gcode();
-void load_unload_gcode();
 void load_vblade_cut_gcode();
 
 bool is_loader_idle();

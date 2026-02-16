@@ -29,12 +29,6 @@ ConstexprString clean_sequence = "G1 X254 Y285 F5000\n"
                                  "G1 X247 Y284 F3000\n"
                                  "G1 X229 Y306 F3000";
 
-ConstexprString unload_sequence = "G1 X267.4 Y284.75 F3000\n"
-                                  "G1 X253.4 Y284.75 F3000\n"
-                                  "G1 X267.4 Y284.75 F3000\n"
-                                  "G1 X253.4 Y284.75 F3000\n"
-                                  "G27";
-
 ConstexprString vblade_cut_sequence = "G1 X267.4 Y284.75 F3000\n"
                                       "G1 X253.4 Y284.75 F3000\n"
                                       "G1 X267.4 Y284.75 F3000\n"
@@ -42,7 +36,6 @@ ConstexprString vblade_cut_sequence = "G1 X267.4 Y284.75 F3000\n"
                                       "G1 X253.4 Y305.0 F3000";
 
 ConstexprString clean_filename = "nozzle_cleaner_clean";
-ConstexprString unload_filename = "nozzle_cleaner_unload";
 ConstexprString vblade_cut_filename = "nozzle_cleaner_vblade_cut";
 
 static GCodeLoader &nozzle_cleaner_gcode_loader_instance() {
@@ -52,10 +45,6 @@ static GCodeLoader &nozzle_cleaner_gcode_loader_instance() {
 
 void load_clean_gcode() {
     nozzle_cleaner_gcode_loader_instance().load_gcode(clean_filename, clean_sequence);
-}
-
-void load_unload_gcode() {
-    nozzle_cleaner_gcode_loader_instance().load_gcode(unload_filename, unload_sequence);
 }
 
 void load_vblade_cut_gcode() {

@@ -1118,7 +1118,7 @@ void Pause::unload_process([[maybe_unused]] Response response) {
     case LoadType::filament_stuck:
 #if HAS_NOZZLE_CLEANER()
         if (needs_cleaning) {
-            nozzle_cleaner::load_unload_gcode();
+            nozzle_cleaner::load_clean_gcode();
             set(LoadState::unload_nozzle_clean);
             return;
         }
