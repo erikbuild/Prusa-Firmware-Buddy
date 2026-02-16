@@ -443,11 +443,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * Options only for EXTRUDERS > 1
  */
 #if EXTRUDERS > 1
-
-  #if EXTRUDERS > 6
-    #error "Marlin supports a maximum of 6 EXTRUDERS."
-  #endif
-
   #if ENABLED(HEATERS_PARALLEL)
     #error "EXTRUDERS must be 1 with HEATERS_PARALLEL."
   #endif
