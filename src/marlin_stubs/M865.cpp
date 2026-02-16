@@ -5,6 +5,7 @@
 #include <filament.hpp>
 #include <temperature.hpp>
 #include <utils/string_builder.hpp>
+#include <tool_index.hpp>
 
 /** \addtogroup G-Codes
  * @{
@@ -50,7 +51,7 @@ void PrusaGcodeSuite::M865() {
 
     FilamentType filament_type;
 
-    if (const auto slot = p.option<uint8_t>('I', static_cast<uint8_t>(0), static_cast<uint8_t>(EXTRUDERS - 1))) {
+    if (const auto slot = p.option<uint8_t, uint8_t, uint8_t>('I', 0, VirtualToolIndex::count - 1)) {
         filament_type = config_store().get_filament_type(*slot);
 
     } else if (p.option<bool>('X').value_or(false)) {
@@ -107,7 +108,7 @@ void PrusaGcodeSuite::M865() {
         filament_type.set_parameters(params);
     }
 
-    if (auto load = p.option<uint8_t>('L', static_cast<uint8_t>(0), static_cast<uint8_t>(EXTRUDERS - 1))) {
+    if (auto load = p.option<uint8_t, uint8_t, uint8_t>('L', 0, VirtualToolIndex::count - 1)) {
         config_store().set_filament_type(*load, filament_type);
     }
 
