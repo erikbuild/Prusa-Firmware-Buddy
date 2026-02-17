@@ -187,29 +187,43 @@ int8_t GcodeSuite::get_target_e_stepper_from_command() {
  *  - Set the feedrate, if included
  */
 void GcodeSuite::get_destination_from_command() {
-  const bool skip_move = TERN0(HAS_CANCEL_OBJECT(), buddy::cancel_object().is_current_object_cancelled());
+  if (parser.linearval('F') > 0) {
+    feedrate_mm_s = parser.value_feedrate();
+  }
 
-  xyze_bool_t seen = { false, false, false, false };
+#if HAS_CANCEL_OBJECT()
+  if (buddy::cancel_object().is_current_object_cancelled()) {
+    return;
+  }
+#endif
+
+  xyze_pos_t logical;
   LOOP_XYZE(i) {
-    if ( (seen[i] = parser.seenval(axis_codes[i])) ) {
-      const float v = parser.value_axis_units((AxisEnum)i);
-      if (skip_move)
-        destination[i] = current_position[i];
-      else
-        destination[i] = axis_is_relative(AxisEnum(i)) ? current_position[i] + v : (i == E_AXIS) ? v : LOGICAL_TO_NATIVE(v, i);
-    }
-    else
-      destination[i] = current_position[i];
-
-    if (i <= Z_AXIS) {
-      Odometer_s::instance().add_axis(Odometer_s::axis_t(i), destination[i] - current_position[i]);
+    if (parser.seenval(axis_codes[i])) {
+      logical[i] = parser.value_axis_units((AxisEnum)i);
     } else {
-      Odometer_s::instance().add_extruded(active_extruder, destination[i] - current_position[i]);
+      logical[i] = NAN;
     }
   }
 
-  if (parser.linearval('F') > 0)
-    feedrate_mm_s = parser.value_feedrate();
+  const xyze_pos_t native = logical.asNative();
+
+  LOOP_XYZE(i) {
+    if (std::isnan(logical[i])) {
+      destination[i] = current_position[i];
+
+    } else if (axis_is_relative(AxisEnum(i))) {
+      destination[i] = current_position[i] + logical[i];
+
+    } else {
+      destination[i] = native[i];
+    }
+  }
+
+  LOOP_XYZ(i) {
+    Odometer_s::instance().add_axis(Odometer_s::axis_t(i), destination[i] - current_position[i]);
+  }
+  Odometer_s::instance().add_extruded(active_extruder, destination.e - current_position.e);
 }
 
 /**
