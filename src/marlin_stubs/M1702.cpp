@@ -486,7 +486,7 @@ namespace {
  */
 
 /**
- *### M1702: Prevent filament autoload during whole ColdPull workflow
+ *### M1702: Cold pull
  *
  * Internal GCode
  *
