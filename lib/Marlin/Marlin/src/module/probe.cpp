@@ -951,15 +951,17 @@ float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE
       if (STOW_PROBE()) measured_z = NAN;
   }
 
+  const auto logical = pos.asLogical();
+
   if (verbose_level > 2) {
-    SERIAL_ECHOPAIR_F("Bed X: ", LOGICAL_X_POSITION(pos.x), 3);
-    SERIAL_ECHOPAIR_F(" Y: ", LOGICAL_Y_POSITION(pos.y), 3);
+    SERIAL_ECHOPAIR_F("Bed X: ", logical.x, 3);
+    SERIAL_ECHOPAIR_F(" Y: ", logical.y, 3);
     SERIAL_ECHOLNPAIR_F(" Z: ", measured_z, 3);
   }
 
   {
-      int logical_x = static_cast<int>(LOGICAL_X_POSITION(pos.x));
-      int logical_y = static_cast<int>(LOGICAL_Y_POSITION(pos.y));
+      int logical_x = static_cast<int>(logical.x);
+      int logical_y = static_cast<int>(logical.y);
       metric_record_custom(&metric_probe_z, " x=%i,y=%i,v=%.3f", logical_x, logical_y, (double)measured_z);
   }
 

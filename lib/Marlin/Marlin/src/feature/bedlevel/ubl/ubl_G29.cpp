@@ -1336,7 +1336,9 @@
 
       SERIAL_ECHOPGM("X-Axis Mesh Points at: ");
       for (uint8_t i = 0; i < GRID_MAX_POINTS_X; i++) {
-        SERIAL_ECHO_F(LOGICAL_X_POSITION(mesh_index_to_xpos(i)), 3);
+        xyz_pos_t pos { 0, 0, 0 };
+        pos.x = mesh_index_to_xpos(i);
+        SERIAL_ECHO_F(pos.asLogical().x, 3);
         SERIAL_ECHOPGM("  ");
         serial_delay(25);
       }
@@ -1344,7 +1346,9 @@
 
       SERIAL_ECHOPGM("Y-Axis Mesh Points at: ");
       for (uint8_t i = 0; i < GRID_MAX_POINTS_Y; i++) {
-        SERIAL_ECHO_F(LOGICAL_Y_POSITION(mesh_index_to_ypos(i)), 3);
+        xyz_pos_t pos { 0, 0, 0 };
+        pos.y = mesh_index_to_ypos(i);
+        SERIAL_ECHO_F(pos.asLogical().y, 3);
         SERIAL_ECHOPGM("  ");
         serial_delay(25);
       }

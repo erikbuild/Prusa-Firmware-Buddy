@@ -84,10 +84,20 @@ void GcodeSuite::G92() {
   switch (subcode_G92) {
     default: break;
     case 0: {
+      xyze_pos_t logical;
       LOOP_XYZE(i) {
         if (parser.seenval(axis_codes[i])) {
-          const float l = parser.value_axis_units((AxisEnum)i),
-                      v = i == E_AXIS ? l : LOGICAL_TO_NATIVE(l, i),
+          logical[i] = parser.value_axis_units((AxisEnum)i);
+        } else {
+          logical[i] = NAN;
+        }
+      }
+
+      const auto native = logical.asNative();
+      
+      LOOP_XYZE(i) {
+        if (!std::isnan(logical[i])) {
+          const float v = native[i],
                       d = v - current_position[i];
           if (!NEAR_ZERO(d)) {
             #if !HAS_POSITION_SHIFT

@@ -156,19 +156,22 @@ void M600_manual(const GCodeParser2 &p) {
     }
     auto target_tool = VirtualToolIndex::from_raw(target_extruder);
 
-    xyz_pos_t park_point = XYZ_NOZZLE_PARK_POINT_M600;
+    xyz_pos_t logical_park_point { NAN, NAN, NAN };
 
     // Lift Z axis
-    if (p.store_option_if_present('Z', park_point.z)) {
-        park_point.z = LOGICAL_TO_NATIVE(park_point.z, Z_AXIS);
-    }
+    p.store_option_if_present('Z', logical_park_point.z);
 
     // Move XY axes to filament change position or given position
-    if (p.store_option_if_present('X', park_point.x)) {
-        park_point.x = LOGICAL_TO_NATIVE(park_point.x, X_AXIS);
-    }
-    if (p.store_option_if_present('Y', park_point.y)) {
-        park_point.y = LOGICAL_TO_NATIVE(park_point.y, Y_AXIS);
+    p.store_option_if_present('X', logical_park_point.x);
+    p.store_option_if_present('Y', logical_park_point.y);
+
+    auto park_point = logical_park_point.asNative();
+
+    LOOP_XYZ(i) {
+        if (std::isnan(park_point[i])) {
+            static constexpr xyz_pos_t default_park_point = XYZ_NOZZLE_PARK_POINT_M600;
+            park_point[i] = default_park_point[i];
+        }
     }
 
 #if HAS_HOTEND_OFFSET && !HAS_TOOLCHANGER()

@@ -14,6 +14,8 @@ static workspace_xyz_t disable_workspace(bool do_x, bool do_y, bool do_z) {
     bool changed = false;
     workspace_xyz_t res;
 
+    const auto native = current_position.asNative();
+
     LOOP_XYZ(axis) {
         if (!((do_x && axis == X_AXIS) || (do_y && axis == Y_AXIS) || (do_z && axis == Z_AXIS))) {
             res.position_shift.pos[axis] = NAN;
@@ -21,7 +23,7 @@ static workspace_xyz_t disable_workspace(bool do_x, bool do_y, bool do_z) {
             continue;
         }
 
-        current_position.pos[axis] = LOGICAL_TO_NATIVE(current_position.pos[axis], axis);
+        current_position.pos[axis] = native[axis];
         res.position_shift.pos[axis] = position_shift.pos[axis];
         position_shift.pos[axis] = 0;
         res.home_offset.pos[axis] = home_offset.pos[axis];

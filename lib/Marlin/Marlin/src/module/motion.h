@@ -406,8 +406,6 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
     #define _WS position_shift
   #endif
   #if !HAS_TOOLCHANGER()
-    #define NATIVE_TO_LOGICAL(POS, AXIS) ((POS) + _WS[AXIS])
-    #define LOGICAL_TO_NATIVE(POS, AXIS) ((POS) - _WS[AXIS])
     FORCE_INLINE void toLogical(xy_pos_t &raw)   { raw += _WS; }
     FORCE_INLINE void toLogical(xyz_pos_t &raw)  { raw += _WS; }
     FORCE_INLINE void toLogical(xyze_pos_t &raw) { raw += _WS; }
@@ -415,8 +413,6 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
     FORCE_INLINE void toNative(xyz_pos_t &raw)   { raw -= _WS; }
     FORCE_INLINE void toNative(xyze_pos_t &raw)  { raw -= _WS; }
   #else
-    #define NATIVE_TO_LOGICAL(POS, AXIS) ((AXIS <= Z_AXIS) ? ((POS) + _WS[AXIS] + hotend_currently_applied_offset[AXIS]) : (POS))
-    #define LOGICAL_TO_NATIVE(POS, AXIS) ((AXIS <= Z_AXIS) ? ((POS) - _WS[AXIS] - hotend_currently_applied_offset[AXIS]) : (POS))
     FORCE_INLINE void toLogical(xy_pos_t &raw)   { raw += _WS + hotend_currently_applied_offset; }
     FORCE_INLINE void toLogical(xyz_pos_t &raw)  { raw += _WS + hotend_currently_applied_offset; }
     FORCE_INLINE void toLogical(xyze_pos_t &raw) { raw += _WS + hotend_currently_applied_offset; }
@@ -425,8 +421,6 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
     FORCE_INLINE void toNative(xyze_pos_t &raw)  { raw -= _WS + hotend_currently_applied_offset; }
   #endif
 #else
-  #define NATIVE_TO_LOGICAL(POS, AXIS) (POS)
-  #define LOGICAL_TO_NATIVE(POS, AXIS) (POS)
   FORCE_INLINE void toLogical(xy_pos_t&)   {}
   FORCE_INLINE void toLogical(xyz_pos_t&)  {}
   FORCE_INLINE void toLogical(xyze_pos_t&) {}
@@ -434,12 +428,6 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
   FORCE_INLINE void toNative(xyz_pos_t&)   {}
   FORCE_INLINE void toNative(xyze_pos_t&)  {}
 #endif
-#define LOGICAL_X_POSITION(POS) NATIVE_TO_LOGICAL(POS, X_AXIS)
-#define LOGICAL_Y_POSITION(POS) NATIVE_TO_LOGICAL(POS, Y_AXIS)
-#define LOGICAL_Z_POSITION(POS) NATIVE_TO_LOGICAL(POS, Z_AXIS)
-#define RAW_X_POSITION(POS)     LOGICAL_TO_NATIVE(POS, X_AXIS)
-#define RAW_Y_POSITION(POS)     LOGICAL_TO_NATIVE(POS, Y_AXIS)
-#define RAW_Z_POSITION(POS)     LOGICAL_TO_NATIVE(POS, Z_AXIS)
 
 /**
  * position_is_reachable family of functions
