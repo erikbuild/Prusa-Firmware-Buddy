@@ -2,7 +2,6 @@
 #include "app.hpp"
 
 #include "cyphal_application.hpp"
-#include "extension_variant.h"
 #include "hal.hpp"
 #include "hal_mmu.hpp"
 #include "hal_rs485.hpp"
@@ -369,16 +368,10 @@ void app::run() {
     alignas(uint16_t) std::byte response_buffer[256];
     hal::rs485::start_receiving();
     for (;;) {
-#if EXTENSION_IS_STANDARD()
         const auto request = hal::rs485::receive_timeout(1);
-#else
-        const auto request = hal::rs485::receive();
-#endif
 
         if (request.empty()) {
-#if EXTENSION_IS_STANDARD()
             cyphal::run_for_a_while();
-#endif
         } else {
             const auto response = modbus::handle_transaction(modbus_dispatch, request, response_buffer);
             if (response.size()) {
