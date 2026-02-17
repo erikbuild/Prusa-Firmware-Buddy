@@ -125,16 +125,12 @@ static_assert(BOARD_IS_BUDDY() || BOARD_IS_XBUDDY());
 #define FAN_PIN                MARLIN_PIN(FAN)
 #if BOARD_IS_XBUDDY()
   #if (TEMP_SENSOR_HEATBREAK > 0)
+    // Everything except MK3.5
     #define HEATER_HEATBREAK_PIN   MARLIN_PIN(FAN1)
     #define FAN1_PIN               MARLIN_PIN(FAN1)
-
-  #elif (TEMP_SENSOR_HEATBREAK == 0)
-    // MK3.5
-    #define E0_AUTO_FAN_PIN        MARLIN_PIN(FAN1)
   #endif
   
 #elif BOARD_IS_BUDDY()
-  #define E0_AUTO_FAN_PIN        MARLIN_PIN(FAN1)
 
 #else
   #error

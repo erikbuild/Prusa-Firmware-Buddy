@@ -330,7 +330,12 @@ void digitalWrite(uint32_t marlinPin, uint32_t ulVal) {
     case MARLIN_PIN(HEAT0):
         analogWrite_HEATER_0(ulVal ? _pwm_analogWrite_max : 0);
         return;
+
+#if ENABLED(HAS_HOTEND_AUTO_FAN)
+    case MARLIN_PIN(AUTOFAN):
+#else
     case MARLIN_PIN(FAN1):
+#endif
 #if PRINTER_IS_PRUSA_MK3_5()
         // PWM value of 80 roughly translates to 4k RPM, further testing my find better value, thus far this seems precise enough plus it is the value used by MINI which uses the same fans
         Fans::heat_break(PhysicalToolIndex::from_raw(0)).set_pwm(ulVal ? (config_store().has_alt_fans.get() ? 80 : _pwm_analogWrite_max) : 0);
@@ -338,6 +343,7 @@ void digitalWrite(uint32_t marlinPin, uint32_t ulVal) {
         Fans::heat_break(PhysicalToolIndex::from_raw(0)).set_pwm(ulVal ? 80 : 0);
 #endif
         return;
+
     case MARLIN_PIN(FAN):
         Fans::print(PhysicalToolIndex::from_raw(0)).set_pwm(ulVal ? 255 : 0);
         return;
@@ -391,7 +397,11 @@ uint32_t analogRead(uint32_t ulPin) {
 void analogWrite(uint32_t ulPin, uint32_t ulValue) {
     if (HAL_PWM_Initialized) {
         switch (ulPin) {
+#if ENABLED(HAS_HOTEND_AUTO_FAN) // MINI & MK3.5
+        case MARLIN_PIN(AUTOFAN):
+#else
         case MARLIN_PIN(FAN1):
+#endif
             Fans::heat_break(PhysicalToolIndex::from_raw(0)).set_pwm(ulValue);
             return;
         case MARLIN_PIN(FAN):

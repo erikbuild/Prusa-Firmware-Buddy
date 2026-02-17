@@ -203,10 +203,6 @@ class Temperature {
       static millis_t next_heatbreak_check_ms;
     #endif
 
-    #if HAS_AUTO_FAN
-      static millis_t next_auto_fan_check_ms;
-    #endif
-
   public:
     #if ENABLED(PID_EXTRUSION_SCALING)
       static int16_t lpq_len;
@@ -486,8 +482,6 @@ public:
   private:
     static void set_current_temp_raw();
     static void updateTemperaturesFromRawValues();
-
-    static void checkExtruderAutoFans();
 
     #if ENABLED(PIDTEMPBED)
       static float get_pid_output_bed();

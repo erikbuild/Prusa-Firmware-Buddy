@@ -141,8 +141,8 @@
  * Multiple extruders can be assigned to the same pin in which case
  * the fan will turn on when any selected extruder is above the threshold.
  */
+#define HAS_HOTEND_AUTO_FAN
 #define EXTRUDER_AUTO_FAN_TEMPERATURE 45
-#define EXTRUDER_AUTO_FAN_SPEED 255 // 255 == full speed
 
 /**
  * M355 Case Light on-off / brightness

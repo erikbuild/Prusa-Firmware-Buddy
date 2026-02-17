@@ -39,6 +39,12 @@ public:
         /// One day, it would be nice to untangle this mess.
         uint32_t nozzle_heater_marlin_pin;
 
+#if ENABLED(HAS_HOTEND_AUTO_FAN)
+        /// "Marlin pin" for controlling the autofan
+        /// Autofan is a fan that is tied to the nozzle temperature (on if temp > EXTRUDER_AUTO_FAN_TEMPERATURE)
+        uint32_t auto_fan_pin;
+#endif
+
         /// Whether the nozzle heater should use software bitbanged PWM
         /// If true, the pin is actually controlled by digitalWrite() in Temperature::isr
         /// Otherwise, analogWrite() is used
@@ -76,4 +82,8 @@ protected:
     /// Written from the Temperature ISR, read from the defaultTask
     /// !!! Contains a sum of OVERSAMPLENR samples
     std::atomic<uint16_t> nozzle_raw_temp_;
+
+#if ENABLED(HAS_HOTEND_AUTO_FAN)
+    bool auto_fan_out_ : 1 = false;
+#endif
 };

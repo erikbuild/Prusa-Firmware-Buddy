@@ -254,10 +254,6 @@ volatile bool Temperature::temp_meas_ready = false;
   bool Temperature::extrusion_scaling_enabled = true;
 #endif
 
-#if HAS_AUTO_FAN
-  millis_t Temperature::next_auto_fan_check_ms = 0;
-#endif
-
 // public:
 
 /**
@@ -291,74 +287,6 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
 
   return 0;
 }
-
-#define _EFANOVERLAP(A,B) _FANOVERLAP(E##A,B)
-
-#if HAS_AUTO_FAN
-
-  void Temperature::checkExtruderAutoFans() {
-    #define _EFAN(A,B) _EFANOVERLAP(A,B) ? B :
-    static const uint8_t fanBit[] PROGMEM = {
-      0
-      #if HOTENDS > 1
-        , _EFAN(1,0) 1
-      #endif
-      #if HOTENDS > 2
-        , _EFAN(2,0) _EFAN(2,1) 2
-      #endif
-      #if HOTENDS > 3
-        , _EFAN(3,0) _EFAN(3,1) _EFAN(3,2) 3
-      #endif
-      #if HOTENDS > 4
-        , _EFAN(4,0) _EFAN(4,1) _EFAN(4,2) _EFAN(4,3) 4
-      #endif
-      #if HOTENDS > 5
-        , _EFAN(5,0) _EFAN(5,1) _EFAN(5,2) _EFAN(5,3) _EFAN(5,4) 5
-      #endif
-    };
-    uint8_t fanState = 0;
-
-    for (int8_t e = 0; e < HOTENDS; e++)
-      if (Hotend::for_tool(e).nozzle_temp() >= EXTRUDER_AUTO_FAN_TEMPERATURE)
-        SBI(fanState, pgm_read_byte(&fanBit[e]));
-
-    #define _UPDATE_AUTO_FAN(P,D,A) do{                  \
-      if (PWM_PIN(P##_AUTO_FAN_PIN) && A < 255)          \
-        analogWrite(pin_t(P##_AUTO_FAN_PIN), D ? A : 0); \
-      else                                               \
-        WRITE(P##_AUTO_FAN_PIN, D);                      \
-    }while(0)
-
-    uint8_t fanDone = 0;
-    for (uint8_t f = 0; f < COUNT(fanBit); f++) {
-      const uint8_t realFan = pgm_read_byte(&fanBit[f]);
-      if (TEST(fanDone, realFan)) continue;
-      const bool fan_on = TEST(fanState, realFan);
-      switch (f) {
-        #if HAS_AUTO_FAN_0
-          case 0: _UPDATE_AUTO_FAN(E0, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-        #if HAS_AUTO_FAN_1
-          case 1: _UPDATE_AUTO_FAN(E1, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-        #if HAS_AUTO_FAN_2
-          case 2: _UPDATE_AUTO_FAN(E2, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-        #if HAS_AUTO_FAN_3
-          case 3: _UPDATE_AUTO_FAN(E3, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-        #if HAS_AUTO_FAN_4
-          case 4: _UPDATE_AUTO_FAN(E4, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-        #if HAS_AUTO_FAN_5
-          case 5: _UPDATE_AUTO_FAN(E5, fan_on, EXTRUDER_AUTO_FAN_SPEED); break;
-        #endif
-      }
-      SBI(fanDone, realFan);
-    }
-  }
-
-#endif // HAS_AUTO_FAN
 
 //
 // Temperature Error Handlers
@@ -528,13 +456,6 @@ void Temperature::manage_heater() {
   for (auto tool : PhysicalToolIndex::all()) {
     Hotend::for_tool(tool).manage();
   }
-
-  #if HAS_AUTO_FAN
-    if (ELAPSED(ms, next_auto_fan_check_ms)) { // only need to check fan state very infrequently
-      checkExtruderAutoFans();
-      next_auto_fan_check_ms = ms + 2500UL;
-    }
-  #endif
 
   #if HAS_HEATED_BED
 
@@ -884,11 +805,6 @@ void Temperature::updateTemperaturesFromRawValues() {
 
 #define _INIT_SOFT_FAN(P) OUT_WRITE(P, FAN_INVERTING ? LOW : HIGH)
 #define INIT_FAN_PIN(P) do{ if (PWM_PIN(P)) SET_PWM(P); else _INIT_SOFT_FAN(P); }while(0)
-#if EXTRUDER_AUTO_FAN_SPEED != 255
-  #define INIT_E_AUTO_FAN_PIN(P) do{ if (P == FAN1_PIN || P == FAN2_PIN) { SET_PWM(P); } else SET_OUTPUT(P); }while(0)
-#else
-  #define INIT_E_AUTO_FAN_PIN(P) SET_OUTPUT(P)
-#endif
 
 /**
  * Initialize the temperature manager
@@ -946,25 +862,6 @@ void Temperature::init() {
 
   HAL_timer_start(TEMP_TIMER_NUM, TEMP_TIMER_FREQUENCY);
   ENABLE_TEMPERATURE_INTERRUPT();
-
-  #if HAS_AUTO_FAN_0
-    INIT_E_AUTO_FAN_PIN(E0_AUTO_FAN_PIN);
-  #endif
-  #if HAS_AUTO_FAN_1 && !_EFANOVERLAP(1,0)
-    INIT_E_AUTO_FAN_PIN(E1_AUTO_FAN_PIN);
-  #endif
-  #if HAS_AUTO_FAN_2 && !(_EFANOVERLAP(2,0) || _EFANOVERLAP(2,1))
-    INIT_E_AUTO_FAN_PIN(E2_AUTO_FAN_PIN);
-  #endif
-  #if HAS_AUTO_FAN_3 && !(_EFANOVERLAP(3,0) || _EFANOVERLAP(3,1) || _EFANOVERLAP(3,2))
-    INIT_E_AUTO_FAN_PIN(E3_AUTO_FAN_PIN);
-  #endif
-  #if HAS_AUTO_FAN_4 && !(_EFANOVERLAP(4,0) || _EFANOVERLAP(4,1) || _EFANOVERLAP(4,2) || _EFANOVERLAP(4,3))
-    INIT_E_AUTO_FAN_PIN(E4_AUTO_FAN_PIN);
-  #endif
-  #if HAS_AUTO_FAN_5 && !(_EFANOVERLAP(5,0) || _EFANOVERLAP(5,1) || _EFANOVERLAP(5,2) || _EFANOVERLAP(5,3) || _EFANOVERLAP(5,4))
-    INIT_E_AUTO_FAN_PIN(E5_AUTO_FAN_PIN);
-  #endif
 
   // Wait for the temperature readings to become available
   for(uint8_t retry = 0; !temp_meas_ready; retry++) {

@@ -145,7 +145,6 @@
  * the fan will turn on when any selected extruder is above the threshold.
  */
 #define EXTRUDER_AUTO_FAN_TEMPERATURE 50
-#define EXTRUDER_AUTO_FAN_SPEED 255 // 255 == full speed
 
 /**
  * M355 Case Light on-off / brightness

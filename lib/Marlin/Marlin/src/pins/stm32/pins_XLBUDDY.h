@@ -104,5 +104,3 @@ static_assert(BOARD_IS_XLBUDDY());
 //
 
 #define FAN_PIN                MARLIN_PIN(FAN)
-
-#undef E0_AUTO_FAN_PIN         // no auto fan pin - handled by dwarf

@@ -23,6 +23,8 @@ LocalHotend::LocalHotend(PhysicalToolIndex tool, const Config *config)
     // - Safe state should be off anyway
     // - Should get off anyway in the first manage() call from within Temperature::init()
     // digitalWrite(local_config_.nozzle_heater_marlin_pin, false);
+
+    // Same with autofan
 }
 
 void LocalHotend::set_nozzle_target_temp(TargetTemperature set) {
@@ -93,6 +95,14 @@ void LocalHotend::manage() {
     if (!local_config_.nozzle_heater_soft_pwm) {
         analogWrite(local_config_.nozzle_heater_marlin_pin, nozzle_heater_pwm_);
     }
+
+#if ENABLED(HAS_HOTEND_AUTO_FAN)
+    auto_fan_out_ = (nozzle_temp() >= EXTRUDER_AUTO_FAN_TEMPERATURE)
+        // Give the auto fan a bit of hysteresis
+        || (auto_fan_out_ && nozzle_temp() >= EXTRUDER_AUTO_FAN_TEMPERATURE - 5);
+
+    digitalWrite(local_config_.auto_fan_pin, auto_fan_out_);
+#endif
 }
 
 void LocalHotend::isr_on_readings_ready() {
