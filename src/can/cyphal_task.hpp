@@ -8,6 +8,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <task.h>
+#include <utils/uncopyable.hpp>
 
 #include <device/multi_watchdog.hpp>
 
@@ -21,19 +22,16 @@
 
 namespace can::cyphal {
 
-/// Element stored in Rx queue
-struct TaskRxBufferElement {
+/**
+ * @brief Element stored in Rx queue.
+ * @note We don't want to copy this thing. It would be slow and we would have to modify frame.payload.
+ */
+struct TaskRxBufferElement : public Uncopyable {
     CanardFrame frame = {}; ///< Incoming CAN frame
     std::array<uint8_t, CANARD_MTU_CAN_FD> payload = {}; ///< Storage for payload data (needs to be linked into frame)
     CanardMicrosecond timestamp_us = 0; ///< Timestamp when the transfer was received
 
     TaskRxBufferElement() = default;
-
-    /// @note We don't want to copy this thing. It would be slow and we would have to modify frame.payload.
-    TaskRxBufferElement(TaskRxBufferElement &&) = delete;
-    TaskRxBufferElement &operator=(TaskRxBufferElement &&) = delete;
-    TaskRxBufferElement(const TaskRxBufferElement &) = delete;
-    TaskRxBufferElement &operator=(const TaskRxBufferElement &) = delete;
 };
 
 class Task {
@@ -71,7 +69,7 @@ class Task {
     AtomicCircularQueueSizeless<TaskRxBufferElement, size_t> &rx_queue; ///< Buffer for received Cyphal transfers
     std::atomic<bool> rx_queue_used = false; ///< True if rx_queue is being used by thread and is blocked for interrupt
 
-    class RAIIElement {
+    class RAIIElement : public Uncopyable {
         stdext::inplace_function<void(void)> drop_callback;
 
     public:
@@ -87,9 +85,6 @@ class Task {
             , e(element_) {}
 
         ~RAIIElement() { drop_callback(); }
-
-        RAIIElement(const RAIIElement &) = delete;
-        RAIIElement &operator=(const RAIIElement &) = delete;
     };
 
 public:
