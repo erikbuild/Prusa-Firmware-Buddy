@@ -226,7 +226,7 @@ void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool, xyze_float
         tool_change(target_tool, tool_return_t::no_return, tool_change_lift_t::mbl_only_lift, true);
 
         resume_point = logical_resume.asNative(); // Convert original resume point to the new native coordinates
-        resume_point = prusa_toolchanger.get_tool_dock_position(physical_target_tool); // Sets only x, y coordinates
+        resume_point.set(prusa_toolchanger.get_tool_dock_position(physical_target_tool)); // Sets only x, y coordinates
 
         // Sets the target temperature based on the current filament type
         // M600 generally should not set target temperature, this is an exception for specific scenario where user wants to change filament on currently unused toolhead during print
@@ -280,10 +280,10 @@ void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool, xyze_float
         if (std::isfinite(change_data.original_resume_point.x) && std::isfinite(change_data.original_resume_point.y) && std::isfinite(change_data.original_resume_point.z)) {
             destination = change_data.original_resume_point.asNative();
         } else {
-            destination = match(
+            destination.set(match(
                 change_data.original_extruder,
                 [](VirtualToolIndex virtual_tool) { return prusa_toolchanger.get_tool_dock_position(virtual_tool.to_physical()); },
-                [](NoTool) -> xy_float_t { return current_position; });
+                [](NoTool) -> xy_float_t { return xy_float_t(current_position); }));
         }
         tool_change(stdext::to_variant(change_data.original_extruder), tool_return_t::to_destination, tool_change_lift_t::mbl_only_lift, true);
         report_current_position();

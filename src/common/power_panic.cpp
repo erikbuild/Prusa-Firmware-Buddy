@@ -893,7 +893,8 @@ void ac_fault_isr() {
 #if HAS_TOOLCHANGER()
         if (crash_s.is_toolchange_event()) {
             // Panic during toolchange, use the intended destination for replay
-            state_buf.crash.start_current_position = prusa_toolchanger.get_precrash().return_pos;
+            // !! We're losing E somewhere?!
+            state_buf.crash.start_current_position = xyze_pos_t(prusa_toolchanger.get_precrash().return_pos);
             toNative(state_buf.crash.start_current_position); // return_pos is in logical coordinates, needs to be modified in place
         } else
 #endif

@@ -438,7 +438,7 @@ float probe_z(const xyz_pos_t position, float uncertainty, const int num_measure
         }
 
         // Move to the position where we probe
-        current_position = xy_pos_t(position) + offset;
+        current_position.set(xy_pos_t(position) + offset);
         current_position.z = top_expected_position + uncertainty;
         calibration_move();
 
@@ -697,7 +697,7 @@ inline bool calibrate_all_simple() {
 
     // Zero hotend offsets
     reset_hotend_offsets();
-    hotend_currently_applied_offset = 0.f;
+    hotend_currently_applied_offset = xyz_pos_t { 0, 0, 0 };
 
     bool failed = false;
     // Measure centers

@@ -67,7 +67,7 @@ class TemporaryBedLevelingState {
   struct mesh_index_pair {
     xy_int8_t pos;
     float distance;   // When populated, the distance from the search location
-    void invalidate() { pos = -1; }
+    void invalidate() { pos = xy_int8_t{ -1, -1 }; }
     bool valid() const { return pos.x >= 0 && pos.y >= 0; }
     #if ENABLED(AUTO_BED_LEVELING_UBL)
       xy_pos_t meshpos() {

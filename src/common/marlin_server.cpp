@@ -1154,7 +1154,7 @@ extern void move_axis(float pos, float feedrate, size_t axis) {
 }
 
 void move_xyz_axes_to(xyz_float_t position, float feedrate) {
-    current_position = position;
+    current_position.set(position);
     line_to_current_position(feedrate);
 }
 

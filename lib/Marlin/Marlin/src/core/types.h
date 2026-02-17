@@ -375,9 +375,12 @@ struct XYval {
   FI const T&  operator[](const int n)            const { return pos[n]; }
 
   // Assignment operator overrides do the expected thing
-  FI XYval& operator= (const T v)                    { set(v,    v   ); return *this; }
-  FI XYval& operator= (const XYZval  &rs)         { set(rs.x, rs.y); return *this; }
-  FI XYval& operator= (const XYZEval &rs)         { set(rs.x, rs.y); return *this; }
+  FI XYval& operator=(const XYval&) = default;
+
+  // Don't use these, they are dangerous. Always retype explicitly.
+  FI XYval& operator= (const T v) = delete;
+  FI XYval& operator= (const XYZval  &rs) = delete;
+  FI XYval& operator= (const XYZEval &rs) = delete;
 
   // Override other operators to get intuitive behaviors
   FI XYval  operator+ (const XYval   &rs)   const { XYval ls = *this; ls.x += rs.x; ls.y += rs.y; return ls; }
@@ -532,9 +535,12 @@ struct XYZval {
   FI const T&   operator[](const int n)          const { return pos[n]; }
 
   // Assignment operator overrides do the expected thing
-  FI XYZval& operator= (const T v)                  { set(ARRAY_N_1(NUM_AXES, v)); return *this; }
-  FI XYZval& operator= (const XYval   &rs)       { set(rs.x, rs.y      ); return *this; }
-  FI XYZval& operator= (const XYZEval &rs)       { set(NUM_AXIS_ELEM(rs)); return *this; }
+  FI XYZval& operator=(const XYZval&) = default;
+
+  // Don't use these, they are dangerous. Always retype explicitly.
+  FI XYZval& operator= (const T v) = delete;
+  FI XYZval& operator= (const XYval   &rs) = delete;
+  FI XYZval& operator= (const XYZEval &rs) = delete;
 
   // Override other operators to get intuitive behaviors
   FI XYZval  operator+ (const XYval   &rs) const { XYZval ls = *this; NUM_AXIS_CODE(ls.x += rs.x, ls.y += rs.y, NOOP        , NOOP        , NOOP        , NOOP        , NOOP        , NOOP        , NOOP        ); return ls; }
@@ -689,9 +695,12 @@ struct XYZEval {
   FI const T&    operator[](const int n)            const { return pos[n]; }
 
   // Assignment operator overrides do the expected thing
-  FI XYZEval& operator= (const T v)                    { set(LOGICAL_AXIS_LIST_1(v)); return *this; }
-  FI XYZEval& operator= (const XYval   &rs)         { set(rs.x, rs.y); return *this; }
-  FI XYZEval& operator= (const XYZval  &rs)         { set(NUM_AXIS_ELEM(rs)); return *this; }
+  FI XYZEval &operator=(const XYZEval &) = default;
+
+  // Don't use these, they are dangerous. Always retype explicitly.
+  FI XYZEval& operator= (const T v) = delete;
+  FI XYZEval& operator= (const XYval   &rs) = delete;
+  FI XYZEval& operator= (const XYZval  &rs) = delete;
 
   // Override other operators to get intuitive behaviors
   FI XYZEval  operator+ (const XYval   &rs)   const { XYZEval ls = *this; ls.x += rs.x; ls.y += rs.y; return ls; }

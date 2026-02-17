@@ -192,7 +192,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
 
     // Check where we should return to
     if (return_type == tool_return_t::to_destination || return_type == tool_return_t::purge_and_to_destination) {
-        return_position = destination;
+        return_position = xyz_pos_t(destination);
     }
 
     // if we don't know position of all axes, do not return to current position
