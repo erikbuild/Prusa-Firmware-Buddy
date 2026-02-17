@@ -201,6 +201,10 @@ void disable_e_stepper(const uint8_t e) {
   disable_E(e);
 }
 
+void disable_xy_steppers() {
+  disable_XY();
+}
+
 void disable_all_steppers() {
   disable_XY();
   disable_Z();

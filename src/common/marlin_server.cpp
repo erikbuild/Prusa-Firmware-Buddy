@@ -972,6 +972,9 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
     mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
 #endif
 
+    disable_e_steppers();
+    disable_xy_steppers();
+
     return true;
 }
 
