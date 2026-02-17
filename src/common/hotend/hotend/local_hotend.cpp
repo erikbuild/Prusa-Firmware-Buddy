@@ -169,13 +169,7 @@ void LocalHotend::manage_heatbreak() {
     #endif
 
     if (WITHIN(temp.celsius, HEATBREAK_MINTEMP, heatbreak_maxtemp)) {
-    #if ENABLED(HEATBREAK_LIMIT_SWITCHING)
-        if (temp.celsius >= temp.target + TEMP_HEATBREAK_HYSTERESIS) {
-            temp.soft_pwm_amount = 0;
-        } else if (temp.celsius <= temp.target - (TEMP_HEATBREAK_HYSTERESIS)) {
-            temp.soft_pwm_amount = MAX_HEATBREAK_POWER >> 1;
-        }
-    #elif ENABLED(PIDTEMPHEATBREAK)
+    #if ENABLED(PIDTEMPHEATBREAK)
         temp.soft_pwm_amount = (int)heatbreak_fan_regulator_.step(HeatbreakRegulator::Args {
             .current_temp = temp.celsius,
             .target_temp = temp.target,
