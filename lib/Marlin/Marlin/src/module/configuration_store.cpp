@@ -349,14 +349,6 @@ void MarlinSettings::reset() {
     thermalManager.temp_bed.pid.Kd = scalePID_d(DEFAULT_bedKd);
   #endif
 
-  #if ENABLED(PIDTEMPHEATBREAK)
-    for (auto tool : PhysicalToolIndex::all()) {
-      thermalManager.temp_heatbreak[tool].pid.Kp = DEFAULT_heatbreakKp;
-      thermalManager.temp_heatbreak[tool].pid.Ki = scalePID_i(DEFAULT_heatbreakKi);
-      thermalManager.temp_heatbreak[tool].pid.Kd = scalePID_d(DEFAULT_heatbreakKd);
-    }
-  #endif
-
   //
   // Volumetric & Filament Size
   //

@@ -8,11 +8,16 @@
 // TODO: Somehow move this to CMAKE?
 #if ENABLED(PIDTEMPHEATBREAK)
 
+struct HeatbreakPIDConfig {
+    float Kp = DEFAULT_heatbreakKp;
+    float Ki = scalePID_i(DEFAULT_heatbreakKi);
+    float Kd = scalePID_d(DEFAULT_heatbreakKd);
+};
+
+static constexpr HeatbreakPIDConfig pid;
+
 float HeatbreakRegulator::step(const Args &args) {
     static_assert(HOTENDS <= 1, "Not implemented for more hotends.");
-
-    // TODO: Rethink where the PID config is stored
-    const auto &pid = thermalManager.temp_heatbreak[0].pid;
 
     #if DISABLED(PID_OPENLOOP)
     float pid_output = 0;
