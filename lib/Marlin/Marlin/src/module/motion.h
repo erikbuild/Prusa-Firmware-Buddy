@@ -405,29 +405,30 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
   #else
     #define _WS position_shift
   #endif
-  #if !HAS_TOOLCHANGER()
-    FORCE_INLINE void toLogical(xy_pos_t &raw)   { raw += _WS; }
-    FORCE_INLINE void toLogical(xyz_pos_t &raw)  { raw += _WS; }
-    FORCE_INLINE void toLogical(xyze_pos_t &raw) { raw += _WS; }
-    FORCE_INLINE void toNative(xy_pos_t &raw)    { raw -= _WS; }
-    FORCE_INLINE void toNative(xyz_pos_t &raw)   { raw -= _WS; }
-    FORCE_INLINE void toNative(xyze_pos_t &raw)  { raw -= _WS; }
-  #else
-    FORCE_INLINE void toLogical(xy_pos_t &raw)   { raw += _WS + hotend_currently_applied_offset; }
-    FORCE_INLINE void toLogical(xyz_pos_t &raw)  { raw += _WS + hotend_currently_applied_offset; }
-    FORCE_INLINE void toLogical(xyze_pos_t &raw) { raw += _WS + hotend_currently_applied_offset; }
-    FORCE_INLINE void toNative(xy_pos_t &raw)    { raw -= _WS + hotend_currently_applied_offset; }
-    FORCE_INLINE void toNative(xyz_pos_t &raw)   { raw -= _WS + hotend_currently_applied_offset; }
-    FORCE_INLINE void toNative(xyze_pos_t &raw)  { raw -= _WS + hotend_currently_applied_offset; }
-  #endif
-#else
-  FORCE_INLINE void toLogical(xy_pos_t&)   {}
-  FORCE_INLINE void toLogical(xyz_pos_t&)  {}
-  FORCE_INLINE void toLogical(xyze_pos_t&) {}
-  FORCE_INLINE void toNative(xy_pos_t&)    {}
-  FORCE_INLINE void toNative(xyz_pos_t&)   {}
-  FORCE_INLINE void toNative(xyze_pos_t&)  {}
 #endif
+
+inline xyz_pos_t native_logical_offset() {
+  xyz_pos_t result { 0, 0, 0 };
+#if HAS_HOME_OFFSET || HAS_POSITION_SHIFT
+  result += _WS;
+#endif
+#if HAS_TOOLCHANGER()
+  result += hotend_currently_applied_offset;
+#endif
+  return result;
+}
+
+template<typename V>
+void toLogical(V &v) {
+  v += native_logical_offset();
+}
+
+template<typename V>
+void toNative(V &v) {
+  v -= native_logical_offset();
+}
+
+#undef _WS
 
 /**
  * position_is_reachable family of functions

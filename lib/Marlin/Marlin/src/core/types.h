@@ -299,12 +299,11 @@ typedef abc_float_t abc_pos_t;
 typedef abce_float_t abce_pos_t;
 
 // External conversion methods
-void toLogical(xy_pos_t &raw);
-void toLogical(xyz_pos_t &raw);
-void toLogical(xyze_pos_t &raw);
-void toNative(xy_pos_t &raw);
-void toNative(xyz_pos_t &raw);
-void toNative(xyze_pos_t &raw);
+template<typename V>
+void toLogical(V &v);
+
+template<typename V>
+void toNative(V &v);
 
 //
 // Paired XY coordinates, counters, flags, etc.
