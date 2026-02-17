@@ -281,11 +281,7 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
   #endif
   if (heater_id >= H_NOZZLE_FIRST && heater_id <= H_NOZZLE_LAST) {
     const uint8_t tool_id = heater_id - (uint8_t)H_NOZZLE_FIRST;
-    #if HAS_TOOLCHANGER()
-      return prusa_toolchanger.getTool(tool_id).get_heater_pwm();
-    #else
-      return temp_hotend[tool_id].soft_pwm_amount;
-    #endif
+    return Hotend::for_tool(tool_id).nozzle_heater_pwm().value;
   }
   #if HAS_TEMP_HEATBREAK
     if (heater_id >= H_HEATBREAK_FIRST && heater_id <= H_HEATBREAK_LAST) {
@@ -1122,11 +1118,7 @@ void Temperature::readings_ready() {
         Hotend &hotend = Hotend::for_tool(tool);
 
         //const bool chamber_on = (temp_chamber.target > 0);
-        const bool heater_on = (hotend.nozzle_target_temp() > 0
-                                #if ENABLED(PIDTEMP)
-                                || temp_hotend[tool].soft_pwm_amount > 0
-                                #endif
-        );
+        const bool heater_on = (hotend.nozzle_target_temp() > 0 || hotend.nozzle_heater_pwm() > PWM255(0));
         minmaxtemp_raw_HEATBREAK.check_temperror(temp_heatbreak[tool].raw, H_HEATBREAK_FIRST + tool.to_raw(), heater_on);
     }
     #endif

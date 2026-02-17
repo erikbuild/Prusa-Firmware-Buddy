@@ -86,9 +86,6 @@ struct ModularBedHeater: public HeaterInfo {
 struct hotend_info_t {
   uint16_t acc;
   inline void sample(const uint16_t s) { acc += s; }
-  
-  // target moved to Hotend
-  uint8_t soft_pwm_amount;
 };
 
 #if HAS_HEATED_BED

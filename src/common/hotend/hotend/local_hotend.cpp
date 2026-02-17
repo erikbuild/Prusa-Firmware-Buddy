@@ -31,7 +31,7 @@ void LocalHotend::set_nozzle_target_temp(TargetTemperature set) {
     // If turning off the hotend, set the hotend off immediately
     // This shortcut was originally in Temperature::disable_heaters
     if (set <= 0) {
-        thermalManager.temp_hotend[tool_].soft_pwm_amount = 0;
+        nozzle_heater_pwm_ = 0;
         digitalWrite(local_config_.nozzle_heater_marlin_pin, false);
     }
 }
@@ -82,7 +82,7 @@ void LocalHotend::manage() {
             });
         }
 
-        t.temp_hotend[tool_].soft_pwm_amount = static_cast<int>(regulation_result.pid_output);
+        nozzle_heater_pwm_ = static_cast<uint8_t>(std::clamp<float>(std::round(regulation_result.pid_output), 0, 255));
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
         thermal_model_protection_.step(regulation_result.pid_output, regulation_result.feed_forward);
         thermal_model_protection_ok_ = thermal_model_protection_.is_ok();
@@ -91,30 +91,26 @@ void LocalHotend::manage() {
 
     // Write to the output, if we can. soft pwm is handled through isr_soft_pwm
     if (!local_config_.nozzle_heater_soft_pwm) {
-        analogWrite(local_config_.nozzle_heater_marlin_pin, thermalManager.temp_hotend[tool_].soft_pwm_amount);
+        analogWrite(local_config_.nozzle_heater_marlin_pin, nozzle_heater_pwm_);
     }
 }
 
 void LocalHotend::isr_on_readings_ready() {
-    auto &th = thermalManager.temp_hotend[tool_.to_raw()];
+    auto &acc = thermalManager.temp_hotend[tool_.to_raw()].acc;
 
     // Note: Before Hotend refactoring, updating the raw value was waiting for temp_meas_ready
     // Now, we are using std::atomic like sane people, so it shouldn't be necessary
-    nozzle_raw_temp_ = th.acc;
-    th.acc = 0;
+    nozzle_raw_temp_ = acc;
+    acc = 0;
 
-    const bool heater_on = (nozzle_target_temp() > 0
-#if ENABLED(PIDTEMP)
-        || th.soft_pwm_amount > 0
-#endif
-    );
+    const bool heater_on = (nozzle_target_temp() > 0 || nozzle_heater_pwm() > PWM255(0));
 
     nozzle_raw_temp_range_.check_temperror(nozzle_raw_temp_, (heater_ind_t)tool_.to_raw(), heater_on);
 }
 
 void LocalHotend::isr_soft_pwm(PWM255 phase) {
     if (local_config_.nozzle_heater_soft_pwm) {
-        const auto pwm = thermalManager.temp_hotend[tool_].soft_pwm_amount;
+        const auto pwm = nozzle_heater_pwm_.load();
         digitalWrite(local_config_.nozzle_heater_marlin_pin, pwm > 0 && phase.value <= pwm);
     }
 }

@@ -6,6 +6,7 @@
 #include <utils/variant_utils.hpp>
 #include <module/temperature/hotend_regulator/hotend_regulator.hpp>
 #include <pwm_utils.hpp>
+#include <atomic>
 
 /// Class representing a hotend
 /// This is an abstract class, hotend implementations differ
@@ -71,6 +72,10 @@ public:
     }
 #endif
 
+    PWM255 nozzle_heater_pwm() const {
+        return PWM255(nozzle_heater_pwm_);
+    }
+
 protected:
     explicit Hotend() = default;
 
@@ -92,6 +97,12 @@ protected:
     HotendPIDConfig nozzle_pid_config_;
     Temperature nozzle_temp_ = temperature_uninitialized;
     TargetTemperature nozzle_target_temp_ = 0;
+
+    /// Output power of the nozzle heater
+    /// For local hotends, this is set in Hotend::manage and potentially used for soft pwm control
+    /// For remote hotends, this is retrieved from the remote board and only used for display/reporting purposes
+    /// Possibly accessed from isr_soft_pwm, thus needs to be atomic
+    std::atomic<uint8_t> nozzle_heater_pwm_ = 0;
 
     bool nozzle_temp_reached_ : 1 = false;
 

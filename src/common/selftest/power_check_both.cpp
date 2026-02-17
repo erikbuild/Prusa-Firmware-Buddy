@@ -27,12 +27,12 @@ void PowerCheckBoth::Callback([[maybe_unused]] CSelftestPart_Heater &part) {
 #if HAS_TOOLCHANGER()
     const float nozzle_current_A = advancedpower.get_nozzle_current(part.m_config.tool_nr);
     const float nozzle_voltage_V = advancedpower.get_nozzle_voltage(part.m_config.tool_nr);
-    const uint32_t nozzle_pwm = advancedpower.get_nozzle_pwm(part.m_config.tool_nr);
+    const uint32_t nozzle_pwm = Hotend::for_tool(part.m_config.tool_nr).nozzle_heater_pwm().value;
     const float nozzle_power_W = nozzle_voltage_V * nozzle_current_A;
 #else
     const float nozzle_current_A = advancedpower.heater_current();
     const float nozzle_voltage_V = advancedpower.heater_voltage();
-    const uint32_t nozzle_pwm = thermalManager.temp_hotend[0].soft_pwm_amount;
+    const uint32_t nozzle_pwm = Hotend::for_tool(0).nozzle_heater_pwm().value;
     const float nozzle_power_W = nozzle_voltage_V * nozzle_current_A;
 #endif
 

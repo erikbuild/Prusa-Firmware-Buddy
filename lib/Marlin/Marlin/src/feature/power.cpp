@@ -75,7 +75,8 @@ bool Power::is_power_needed() {
   ) return true;
 
   for (auto tool : PhysicalToolIndex::all()) {
-    if (thermalManager.degTargetHotend(tool) > 0 || thermalManager.temp_hotend[tool].soft_pwm_amount > 0) {
+    const auto &hotend = Hotend::for_tool(tool);
+    if (hotend.nozzle_target_temp() > 0 || hotend.nozzle_heater_pwm() > PWM255(0)) {
       return true;
     }
   }

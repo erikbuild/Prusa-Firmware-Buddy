@@ -18,7 +18,9 @@ void DwarfHotend::set_nozzle_pid_config(const HotendPIDConfig &set) {
 }
 
 void DwarfHotend::manage() {
-    nozzle_temp_ = prusa_toolchanger.getTool(tool_).get_hotend_temp();
+    auto &tool = prusa_toolchanger.getTool(tool_);
+    nozzle_temp_ = tool.get_hotend_temp();
+    nozzle_heater_pwm_ = static_cast<uint8_t>(tool.get_heater_pwm());
 
     // !!! MUST be called after temps are set properly
     BaseHotend::manage();
