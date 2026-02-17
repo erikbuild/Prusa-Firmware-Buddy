@@ -16,10 +16,23 @@
     #include <power_panic.hpp>
 #endif
 
+#if WATCH_HEATBREAK
+static constexpr HeaterWatch::Config heatbreak_watch_config {
+    .temp_increase = -WATCH_HEATBREAK_TEMP_DECREASE,
+    .period_s = WATCH_HEATBREAK_TEMP_PERIOD,
+    .min_temp_diff = -HEATBREAK_MAXTEMP_OFFSET,
+    .error_code = ErrCode::ERR_TEMPERATURE_HEATBREAK_COOLING_TOO_SLOW,
+    .watch_cooling_instead = true,
+};
+#endif
+
 LocalHotend::LocalHotend(PhysicalToolIndex tool, const Config *config)
     : BaseHotend(tool, &config->base_config)
     , local_config_(*config)
-    , nozzle_raw_temp_range_ { MarlinTemptableRawMinMax::compute(local_config_.nozzle_temp_table, base_config_.min_nozzle_temp, base_config_.max_nozzle_temp) } //
+    , nozzle_raw_temp_range_ { MarlinTemptableRawMinMax::compute(local_config_.nozzle_temp_table, base_config_.min_nozzle_temp, base_config_.max_nozzle_temp) }
+#if HAS_TEMP_HEATBREAK
+    , heatbreak_raw_temp_range_ { MarlinTemptableRawMinMax::compute(local_config_.heatbreak_temp_table, HEATBREAK_MINTEMP, HEATBREAK_MAXTEMP) }
+#endif
 {
     // Do not call pinMode - it does nothing
     // pinMode(local_config_.nozzle_heater_marlin_pin, OUTPUT);
@@ -42,6 +55,16 @@ void LocalHotend::set_nozzle_target_temp(TargetTemperature set) {
         digitalWrite(local_config_.nozzle_heater_marlin_pin, false);
     }
 }
+
+#if HAS_TEMP_HEATBREAK_CONTROL
+void LocalHotend::set_heatbreak_target_temp(TargetTemperature set) {
+    BaseHotend::set_heatbreak_target_temp(set);
+
+    #if WATCH_HEATBREAK
+    heatbreak_watch_.reset(heatbreak_watch_config, heatbreak_temp(), heatbreak_target_temp());
+    #endif
+}
+#endif
 
 void LocalHotend::manage() {
     nozzle_temp_ = marlin_temptable_lookup(local_config_.nozzle_temp_table, nozzle_raw_temp_);
@@ -116,16 +139,32 @@ void LocalHotend::manage() {
 
 void LocalHotend::isr_on_readings_ready() {
     static_assert(PhysicalToolIndex::count == 1, "Multiple local hotends are not supported");
-    auto &acc = thermalManager.temp_hotend.acc;
-
-    // Note: Before Hotend refactoring, updating the raw value was waiting for temp_meas_ready
-    // Now, we are using std::atomic like sane people, so it shouldn't be necessary
-    nozzle_raw_temp_ = acc;
-    acc = 0;
 
     const bool heater_on = (nozzle_target_temp() > 0 || nozzle_heater_pwm() > PWM255(0));
 
-    nozzle_raw_temp_range_.check_temperror(nozzle_raw_temp_, (heater_ind_t)tool_.to_raw(), heater_on);
+    {
+        auto &acc = thermalManager.temp_hotend.acc;
+
+        // Note: Before Hotend refactoring, updating the raw value was waiting for temp_meas_ready
+        // Now, we are using std::atomic like sane people, so it shouldn't be necessary
+        nozzle_raw_temp_ = acc;
+        acc = 0;
+
+        nozzle_raw_temp_range_.check_temperror(nozzle_raw_temp_, (heater_ind_t)tool_.to_raw(), heater_on);
+    }
+
+#if HAS_TEMP_HEATBREAK
+    {
+        auto &acc = thermalManager.temp_heatbreak.acc;
+
+        // Note: Before Hotend refactoring, updating the raw value was waiting for temp_meas_ready
+        // Now, we are using std::atomic like sane people, so it shouldn't be necessary
+        heatbreak_raw_temp_ = acc;
+        acc = 0;
+
+        heatbreak_raw_temp_range_.check_temperror(heatbreak_raw_temp_, H_HEATBREAK_FIRST + tool_.to_raw(), heater_on);
+    }
+#endif
 }
 
 void LocalHotend::isr_soft_pwm(PWM255 phase) {
@@ -139,6 +178,11 @@ void LocalHotend::isr_soft_pwm(PWM255 phase) {
 void LocalHotend::manage_heatbreak() {
     // To support these, we would need to rework fans, because there is only single HEATBREAK_FAN_ID
     static_assert(PhysicalToolIndex::count == 1, "Multiple local heatbreaks not currently supported");
+
+    // Things got mangled together, stuff would get screwed up if this didn't apply
+    static_assert(ENABLED(PIDTEMPHEATBREAK));
+
+    heatbreak_temp_ = marlin_temptable_lookup(local_config_.heatbreak_temp_table, heatbreak_raw_temp_);
 
     const auto ms = millis();
     if (!ELAPSED(ms, next_heatbreak_check_ms_)) {
@@ -156,35 +200,33 @@ void LocalHotend::manage_heatbreak() {
     next_heatbreak_check_ms_ = ms + 1000;
 
     #if WATCH_HEATBREAK
-    watch_heatbreak[tool_].check(degHeatbreak(tool_), degTargetHeatbreak(tool_));
+    heatbreak_watch_.check(heatbreak_watch_config, heatbreak_temp(), heatbreak_target_temp());
     #endif
-
-    auto &temp = thermalManager.temp_heatbreak[tool_];
 
     // iX has a non-constant maxtemp for the heatbreak, so we need to explicitly set it
     #if PRINTER_IS_PRUSA_iX()
-    int16_t heatbreak_maxtemp = degTargetHeatbreak(active_extruder) + HEATBREAK_MAXTEMP_OFFSET;
+    int16_t heatbreak_maxtemp = heatbreak_target_temp() + HEATBREAK_MAXTEMP_OFFSET;
     #else
     int16_t heatbreak_maxtemp = HEATBREAK_MAXTEMP;
     #endif
 
-    if (WITHIN(temp.celsius, HEATBREAK_MINTEMP, heatbreak_maxtemp)) {
-    #if ENABLED(PIDTEMPHEATBREAK)
-        temp.soft_pwm_amount = (int)heatbreak_fan_regulator_.step(HeatbreakRegulator::Args {
-            .current_temp = temp.celsius,
-            .target_temp = temp.target,
+    if (WITHIN(heatbreak_temp(), HEATBREAK_MINTEMP, heatbreak_maxtemp)) {
+        const auto regulator_out = heatbreak_fan_regulator_.step(HeatbreakRegulator::Args {
+            .current_temp = heatbreak_temp(),
+            .target_temp = heatbreak_target_temp(),
             .current_hotend_temp = nozzle_temp(),
         });
-        thermalManager.set_fan_speed(HEATBREAK_FAN_ID, temp.soft_pwm_amount);
-    #endif
+        heatbreak_fan_pwm_ = PWM255((uint8_t)std::clamp<float>(std::round(regulator_out), 0, 255));
+
     } else {
     #if WATCH_HEATBREAK
-        if (!thermalManager.watch_heatbreak[tool_].is_running()) { // if we are not watching heatbreak (not in process of cooling down)
+        if (!heatbreak_watch_.is_running()) { // if we are not watching heatbreak (not in process of cooling down)
             fatal_error(ErrCode::ERR_TEMPERATURE_HEATBREAK_MAXTEMP_ERR); // Red screen
         }
     #endif
-        temp.soft_pwm_amount = 255;
-        thermalManager.set_fan_speed(HEATBREAK_FAN_ID, temp.soft_pwm_amount);
+        heatbreak_fan_pwm_ = PWM255(255);
     }
+
+    thermalManager.set_fan_speed(HEATBREAK_FAN_ID, heatbreak_fan_pwm_.value);
 }
 #endif

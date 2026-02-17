@@ -180,26 +180,6 @@ Temperature thermalManager;
 
 #endif // FAN_COUNT > 0
 
-#if HAS_TEMP_HEATBREAK
-  StrongIndexArray<heatbreak_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Temperature::temp_heatbreak;
-
-  static MarlinTemptableRawMinMax minmaxtemp_raw_HEATBREAK;
-
-  #if WATCH_HEATBREAK
-    static constexpr HeaterWatch::Config watch_heatbreak_config {
-      .temp_increase = -WATCH_HEATBREAK_TEMP_DECREASE,
-      .period_s = WATCH_HEATBREAK_TEMP_PERIOD,
-      .min_temp_diff = -HEATBREAK_MAXTEMP_OFFSET,
-      .error_code = ErrCode::ERR_TEMPERATURE_HEATBREAK_COOLING_TOO_SLOW,
-      .watch_cooling_instead = true,
-    };
-
-
-    HeaterWatchWithConfig<watch_heatbreak_config> watch_heatbreak[HOTENDS];
-  #endif
-
-#endif
-
 #if HAS_TEMP_BOARD
   board_info_t Temperature::temp_board; // = { 0 }
 
@@ -274,11 +254,7 @@ int16_t Temperature::getHeaterPower(const heater_ind_t heater_id) {
   #if HAS_TEMP_HEATBREAK
     if (heater_id >= H_HEATBREAK_FIRST && heater_id <= H_HEATBREAK_LAST) {
       const uint8_t tool_id = heater_id - (uint8_t)H_HEATBREAK_FIRST;
-      #if HAS_TOOLCHANGER()
-        return prusa_toolchanger.getTool(tool_id).get_heatbreak_fan_pwr();
-      #else
-        return temp_heatbreak[tool_id].soft_pwm_amount;
-      #endif
+      return Hotend::for_tool(tool_id).heatbreak_fan_pwm().value;
     }
   #endif //HAS_TEMP_HEATBREAK
 
@@ -573,28 +549,6 @@ constexpr float compensate_bed_temperature(float celsius) {
   }
 #endif // HAS_HEATED_BED
 
-#if HAS_TEMP_HEATBREAK
-  MarlinTempTable heatbreak_temptable() {
-    #if (BOARD_IS_XBUDDY())
-        if (buddy::hw::Configuration::Instance().needs_heatbreak_thermistor_table_5()) {
-            return TT_NAME(5);
-        }
-    #endif
-
-    return TT_NAME(TEMP_SENSOR_HEATBREAK);
-  }
-
-  // Derived from RepRap FiveD extruder::getTemperature()
-  // For heatbreak temperature measurement.
-  float Temperature::analog_to_celsius_heatbreak(const int raw) {
-    #if ENABLED(HEATBREAK_USES_THERMISTOR)
-      return marlin_temptable_lookup(heatbreak_temptable(), raw);
-    #else
-      return 0;
-    #endif
-  }
-#endif // HAS_TEMP_HEATBREAK
-
 #if HAS_TEMP_BOARD
   // Derived from RepRap FiveD extruder::getTemperature()
   // For ambient temperature measurement.
@@ -695,17 +649,6 @@ void Temperature::updateTemperaturesFromRawValues() {
     bed_frame_millis = now_millis;
   #endif
 
-  #if HAS_TEMP_HEATBREAK
-    #if HAS_TOOLCHANGER()
-      for (auto tool : PhysicalToolIndex::all()) {
-        temp_heatbreak[tool].celsius = prusa_toolchanger.getTool(tool).get_heatbreak_temp();
-      }
-    #else
-      for (auto tool : PhysicalToolIndex::all()) {
-        temp_heatbreak[tool].celsius = analog_to_celsius_heatbreak(temp_heatbreak[tool].raw);
-      }
-    #endif
-  #endif
   #if HAS_TEMP_BOARD
     temp_board.celsius = analog_to_celsius_board(temp_board.raw);
   #endif
@@ -790,10 +733,6 @@ void Temperature::init() {
     minmaxtemp_raw_BED = MarlinTemptableRawMinMax::compute(TT_NAME(THERMISTORBED), BED_MINTEMP, BED_MAXTEMP);
   #endif // HAS_HEATED_BED
 
-  #if HAS_TEMP_HEATBREAK
-    minmaxtemp_raw_HEATBREAK = MarlinTemptableRawMinMax::compute(heatbreak_temptable(), HEATBREAK_MINTEMP, HEATBREAK_MAXTEMP);
-  #endif
-
   manage_heater();
 }
 
@@ -831,12 +770,6 @@ void Temperature::set_current_temp_raw() {
     temp_bed.update();
   #endif
 
-  #if HAS_TEMP_HEATBREAK
-    for (auto tool : PhysicalToolIndex::all()) {
-      temp_heatbreak[tool].update();
-    }
-  #endif
-
   #if HAS_TEMP_BOARD
     temp_board.update();
   #endif
@@ -862,12 +795,6 @@ void Temperature::readings_ready() {
     temp_bed.reset();
   #endif
 
-  #if HAS_TEMP_HEATBREAK
-    for (auto tool : PhysicalToolIndex::all()) {
-      temp_heatbreak[tool].reset();
-    }
-  #endif
-
   #if HAS_TEMP_BOARD
     temp_board.reset();
   #endif
@@ -888,18 +815,6 @@ void Temperature::readings_ready() {
       #endif
     ;
       minmaxtemp_raw_BED.check_temperror(temp_bed.raw, H_BED, bed_on);
-    #endif
-  #endif
-
-  #if HAS_TEMP_HEATBREAK
-    #if !HAS_TOOLCHANGER()
-    for (auto tool : PhysicalToolIndex::all()) {
-        Hotend &hotend = Hotend::for_tool(tool);
-
-        //const bool chamber_on = (temp_chamber.target > 0);
-        const bool heater_on = (hotend.nozzle_target_temp() > 0 || hotend.nozzle_heater_pwm() > PWM255(0));
-        minmaxtemp_raw_HEATBREAK.check_temperror(temp_heatbreak[tool].raw, H_HEATBREAK_FIRST + tool.to_raw(), heater_on);
-    }
     #endif
   #endif
 }
@@ -1002,7 +917,7 @@ void Temperature::isr() {
 
     #if HAS_TEMP_HEATBREAK
       case PrepareTemp_HEATBREAK: HAL_START_ADC(TEMP_HEATBREAK_PIN); break;
-      case MeasureTemp_HEATBREAK: ACCUMULATE_ADC(temp_heatbreak[0]); break;
+      case MeasureTemp_HEATBREAK: ACCUMULATE_ADC(temp_heatbreak); break;
     #endif
 
     #if HAS_TEMP_BOARD
@@ -1504,23 +1419,5 @@ void Temperature::updateModularBedTemperature(){
         }
       }
       temp_bed.celsius = sum / count;
-}
-#endif
-
-#if HAS_TEMP_HEATBREAK_CONTROL
-void Temperature::setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME) {
-  temp_heatbreak[HOTEND_INDEX].target =
-    #ifdef HEATBREAK_MAXTEMP
-      _MIN(celsius, HEATBREAK_MAXTEMP)
-    #else
-      celsius
-    #endif
-  ;
-  #if HAS_TOOLCHANGER()
-    prusa_toolchanger.getTool(HOTEND_INDEX).set_heatbreak_target_temp(celsius);
-  #endif
-  #if WATCH_HEATBREAK
-    watch_heatbreak[HOTEND_INDEX].reset(degHeatbreak(HOTEND_INDEX), degTargetHeatbreak(HOTEND_INDEX));
-  #endif
 }
 #endif

@@ -56,6 +56,16 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 #endif
 }
 
+#if HAS_TEMP_HEATBREAK_CONTROL
+void BaseHotend::set_heatbreak_target_temp(TargetTemperature set) {
+    #ifdef HEATBREAK_MAXTEMP
+    set = std::min<TargetTemperature>(set, HEATBREAK_MAXTEMP);
+    #endif
+
+    heatbreak_target_temp_ = set;
+}
+#endif
+
 void BaseHotend::manage() {
     // Note: Checks in BaseHotend meansthat we're checking them twice on remote hotends if the remote hotend also uses this API (once on the master board, once on the remote tool board)
     // But better safe than sorry

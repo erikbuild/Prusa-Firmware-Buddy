@@ -12,6 +12,7 @@ Hotend &Hotend::for_tool(PhysicalToolIndex) {
             .max_nozzle_temp = HEATER_0_MAXTEMP,
         },
         .nozzle_temp_table = TT_NAME(THERMISTOR_HEATER_0),
+        .heatbreak_temp_table = TT_NAME(TEMP_SENSOR_HEATBREAK),
         .nozzle_heater_marlin_pin = MARLIN_PIN(HEAT0),
 
         // TODO: Set up HW PWM here? This is the only board that does not have it

@@ -14,6 +14,10 @@ public:
 public:
     void set_nozzle_target_temp(TargetTemperature set) override;
 
+#if HAS_TEMP_HEATBREAK_CONTROL
+    void set_heatbreak_target_temp(TargetTemperature set) override;
+#endif
+
     void set_nozzle_pid_config(const HotendPIDConfig &set) override;
 
 protected:

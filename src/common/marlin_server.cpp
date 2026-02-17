@@ -3273,15 +3273,16 @@ static void _server_update_vars() {
 
     for (auto tool : PhysicalToolIndex::all()) {
         auto &extruder = marlin_vars().hotend(tool);
+        const auto &hotend = Hotend::for_tool(tool);
 
-        extruder.temp_nozzle = thermalManager.degHotend(tool);
-        extruder.target_nozzle = thermalManager.degTargetHotend(tool);
-        extruder.pwm_nozzle = thermalManager.getHeaterPower(static_cast<heater_ind_t>(H_NOZZLE_FIRST + tool.to_raw()));
+        extruder.temp_nozzle = hotend.nozzle_temp();
+        extruder.target_nozzle = hotend.nozzle_target_temp();
+        extruder.pwm_nozzle = hotend.nozzle_heater_pwm().value;
 
-#if (TEMP_SENSOR_HEATBREAK > 0)
+#if HAS_TEMP_HEATBREAK
         // TODO: this should track multiple extruders
-        extruder.temp_heatbreak = thermalManager.temp_heatbreak[tool].celsius;
-        extruder.target_heatbreak = thermalManager.temp_heatbreak[tool].target;
+        extruder.temp_heatbreak = hotend.heatbreak_temp();
+        extruder.target_heatbreak = hotend.heatbreak_target_temp();
 #endif
         // FIXME: flow_percentage should be indexed by VirtualToolIndex
         extruder.flow_factor = static_cast<uint16_t>(planner.flow_percentage[tool.to_raw()]);

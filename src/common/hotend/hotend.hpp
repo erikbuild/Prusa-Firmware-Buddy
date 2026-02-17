@@ -76,6 +76,24 @@ public:
         return PWM255(nozzle_heater_pwm_);
     }
 
+#if HAS_TEMP_HEATBREAK
+    Temperature heatbreak_temp() const {
+        return heatbreak_temp_;
+    }
+#endif
+
+#if HAS_TEMP_HEATBREAK_CONTROL
+    TargetTemperature heatbreak_target_temp() const {
+        return heatbreak_target_temp_;
+    }
+
+    virtual void set_heatbreak_target_temp(TargetTemperature set) = 0;
+
+    PWM255 heatbreak_fan_pwm() const {
+        return heatbreak_fan_pwm_;
+    }
+#endif
+
 protected:
     explicit Hotend() = default;
 
@@ -96,13 +114,26 @@ protected:
 protected:
     HotendPIDConfig nozzle_pid_config_;
     Temperature nozzle_temp_ = temperature_uninitialized;
+
+#if HAS_TEMP_HEATBREAK
+    Temperature heatbreak_temp_ = temperature_uninitialized;
+#endif
+
     TargetTemperature nozzle_target_temp_ = 0;
+
+#if HAS_TEMP_HEATBREAK_CONTROL
+    TargetTemperature heatbreak_target_temp_ = 0;
+#endif
 
     /// Output power of the nozzle heater
     /// For local hotends, this is set in Hotend::manage and potentially used for soft pwm control
     /// For remote hotends, this is retrieved from the remote board and only used for display/reporting purposes
     /// Possibly accessed from isr_soft_pwm, thus needs to be atomic
     std::atomic<uint8_t> nozzle_heater_pwm_ = 0;
+
+#if HAS_TEMP_HEATBREAK
+    PWM255 heatbreak_fan_pwm_;
+#endif
 
     bool nozzle_temp_reached_ : 1 = false;
 

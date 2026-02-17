@@ -22,6 +22,10 @@ using HotendRegulator = ModelBasedHotendRegulator;
 using HotendRegulator = StandardHotendRegulator;
 #endif
 
+#if WATCH_HEATBREAK
+    #include <module/temperature/heater_watch.hpp>
+#endif
+
 /// Represents a hotend that is controlled on the current processor (not on a dwarf)
 class LocalHotend final : public BaseHotend {
 
@@ -33,6 +37,10 @@ public:
 
         /// Temperature table for mapping raw temperature readouts
         TempTable nozzle_temp_table;
+
+#if HAS_TEMP_HEATBREAK
+        TempTable heatbreak_temp_table;
+#endif
 
         /// "Marlin pin" controlling the nozzle heater
         /// Gets then passed through analogWrite/digitalWrite from Arduino.h,
@@ -58,6 +66,10 @@ public:
 
     void set_nozzle_target_temp(TargetTemperature set) override;
 
+#if HAS_TEMP_HEATBREAK_CONTROL
+    void set_heatbreak_target_temp(TargetTemperature set) override;
+#endif
+
 protected:
     virtual void manage() override;
 
@@ -75,10 +87,18 @@ protected:
 
     MarlinTemptableRawMinMax nozzle_raw_temp_range_;
 
+#if HAS_TEMP_HEATBREAK
+    MarlinTemptableRawMinMax heatbreak_raw_temp_range_;
+#endif
+
     HotendRegulator nozzle_regulator_;
 
 #if ENABLED(PIDTEMPHEATBREAK)
     HeatbreakRegulator heatbreak_fan_regulator_;
+#endif
+
+#if WATCH_HEATBREAK
+    HeaterWatch heatbreak_watch_;
 #endif
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
@@ -96,6 +116,10 @@ protected:
     /// Written from the Temperature ISR, read from the defaultTask
     /// !!! Contains a sum of OVERSAMPLENR samples
     std::atomic<uint16_t> nozzle_raw_temp_;
+
+#if HAS_TEMP_HEATBREAK
+    std::atomic<uint16_t> heatbreak_raw_temp_;
+#endif
 
 #if ENABLED(HAS_HOTEND_AUTO_FAN)
     bool auto_fan_out_ : 1 = false;

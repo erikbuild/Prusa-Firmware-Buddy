@@ -100,17 +100,6 @@ struct TemperatureADCAccumulator {
   #endif
 #endif
 
-#if HAS_TEMP_HEATBREAK
-  #if ENABLED(PIDTEMPHEATBREAK)
-    typedef struct PIDHeaterInfo<PID_t> heatbreak_info_t;
-  #elif HAS_TEMP_HEATBREAK_CONTROL
-    typedef heater_info_t heatbreak_info_t;
-  #else
-    typedef temp_info_t heatbreak_info_t;
-  #endif
-
-#endif
-
 #if HAS_TEMP_BOARD
   typedef temp_info_t board_info_t;
 #endif
@@ -148,8 +137,13 @@ class Temperature {
     #endif
 
     #if HAS_TEMP_HEATBREAK
+      // While valid, we're marlin currently doesn't discern between local and remote hotends
+      // So this static assert is failing on the XL
+      // There's another one inside LocalHotend however, so things should still be safe
+      // static_assert(PhysicalToolIndex::count == 1, "Multiple local hotends are not supported");
+
       // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-      static StrongIndexArray<heatbreak_info_t, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> temp_heatbreak;
+      static inline TemperatureADCAccumulator temp_heatbreak;
     #endif
 
     #if PRINTER_IS_PRUSA_iX()
@@ -224,10 +218,6 @@ class Temperature {
     #endif
     #if HAS_TEMP_BOARD
       static float analog_to_celsius_board(const int raw);
-    #endif
-
-    #if HAS_TEMP_HEATBREAK
-      static float analog_to_celsius_heatbreak(const int raw);
     #endif
 
     #if FAN_COUNT > 0
@@ -395,7 +385,7 @@ class Temperature {
 
     #if HAS_TEMP_HEATBREAK
       [[deprecated("Use the ToolIndex overload")]]
-      FORCE_INLINE static float degHeatbreak(const uint8_t E_NAME)            { return temp_heatbreak[HOTEND_INDEX].celsius; }
+      FORCE_INLINE static float degHeatbreak(const uint8_t E_NAME)            { return Hotend::for_tool(HOTEND_INDEX).heatbreak_temp(); }
       
       inline static float degHeatbreak(PhysicalToolIndex tool) {
         return degHeatbreak(tool.to_raw());
@@ -403,20 +393,19 @@ class Temperature {
 
       #if HAS_TEMP_HEATBREAK_CONTROL
         [[deprecated("Use the ToolIndex overload")]]
-        FORCE_INLINE static int16_t degTargetHeatbreak(const uint8_t E_NAME)  { return temp_heatbreak[HOTEND_INDEX].target; }
+        FORCE_INLINE static int16_t degTargetHeatbreak(const uint8_t E_NAME)  { return Hotend::for_tool(HOTEND_INDEX).heatbreak_target_temp(); }
 
         inline static int16_t degTargetHeatbreak(PhysicalToolIndex tool) {
           return degTargetHeatbreak(tool.to_raw());
         }
-
-        FORCE_INLINE static bool isHeatingHeatbreak(const uint8_t E_NAME)     { return temp_heatbreak[HOTEND_INDEX].target > temp_heatbreak[HOTEND_INDEX].celsius; }
-        FORCE_INLINE static bool isCoolingHeatbreak(const uint8_t E_NAME)     { return temp_heatbreak[HOTEND_INDEX].target < temp_heatbreak[HOTEND_INDEX].celsius; }
       #endif
     #endif // HAS_TEMP_HEATBREAK
 
     #if HAS_TEMP_HEATBREAK_CONTROL
       [[deprecated("Use the ToolIndex overload")]]
-      static void setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME);
+      static void setTargetHeatbreak(const int16_t celsius, const uint8_t E_NAME) {
+        Hotend::for_tool(HOTEND_INDEX).set_heatbreak_target_temp(celsius);
+      }
 
       inline static void setTargetHeatbreak(int16_t celsius, PhysicalToolIndex tool) {
         setTargetHeatbreak(celsius, tool.to_raw());
