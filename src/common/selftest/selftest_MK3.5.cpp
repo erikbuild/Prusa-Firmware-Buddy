@@ -169,7 +169,7 @@ protected:
     selftest::IPartHandler *pXAxis;
     selftest::IPartHandler *pYAxis;
     selftest::IPartHandler *pZAxis;
-    std::array<selftest::IPartHandler *, HOTENDS> pNozzles;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pNozzles;
     selftest::IPartHandler *pBed;
     selftest::IPartHandler *pHotendSpecify;
     selftest::IPartHandler *pFirstLayer;

@@ -165,9 +165,9 @@ protected:
     selftest::IPartHandler *pXAxis;
     selftest::IPartHandler *pYAxis;
     selftest::IPartHandler *pZAxis;
-    std::array<selftest::IPartHandler *, HOTENDS> pNozzles;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> pNozzles;
     selftest::IPartHandler *pBed;
-    std::array<selftest::IPartHandler *, HOTENDS> m_pLoadcell;
+    std::array<selftest::IPartHandler *, PhysicalToolIndex::count> m_pLoadcell;
 
     SelftestResult m_result;
 };
