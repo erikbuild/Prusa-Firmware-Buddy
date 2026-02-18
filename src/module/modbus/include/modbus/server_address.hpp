@@ -12,6 +12,7 @@ enum class ServerAddress : uint8_t {
     anfc1 = 222,
     invalid = 255,
     mmu = 220,
+    tool_offset_sensor = 223,
     xbuddy_extension = 0x1a + 7,
 };
 

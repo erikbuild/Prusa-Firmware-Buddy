@@ -28,6 +28,8 @@ static const char *get_file_path(FileId file_id) {
         return "/internal/res/puppies/fw-ac_controller.bin";
     case FileId::firmware_anfc:
         return "/internal/res/puppies/fw-anfc.bin";
+    case FileId::firmware_tool_offset_sensor:
+        return "/internal/res/puppies/fw-tool_offset_sensor.bin";
     }
     bsod_unreachable();
 }

@@ -18,8 +18,13 @@
 #include <modbus/traits.hpp>
 #include <option/has_ac_controller.h>
 #include <option/has_anfc.h>
+#include <option/has_tool_offset_sensor.h>
 #include <option/has_mmu2.h>
 #include <xbuddy_extension/modbus.hpp>
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    #include <tool_offset_sensor/modbus.hpp>
+#endif
 
 #if HAS_MMU2()
     #include "mmu.hpp"
@@ -93,7 +98,7 @@ bool write_register_file_callback(const xbuddy_extension::modbus::Chunk &chunk) 
 void read_register_file_callback(ac_controller::modbus::Status &modbus_status) {
     xbuddy_extension::NodeState node_state;
     ac_controller::Status status;
-    cyphal::application().request(node_state, status);
+    cyphal::application().request_ac_controller(node_state, status);
 
     modbus_status.mcu_temp = static_cast<uint16_t>(status.mcu_temp * 10);
     modbus_status.bed_temp = static_cast<uint16_t>(status.bed_temp * 10);
@@ -176,6 +181,17 @@ bool write_register_file_callback(const ac_controller::modbus::LedConfig &modbus
 
 #endif
 
+#if HAS_TOOL_OFFSET_SENSOR()
+
+void read_register_file_callback(tool_offset_sensor::modbus::Status &modbus_status) {
+    xbuddy_extension::NodeState node_state;
+    cyphal::application().request_tool_offset_sensor(node_state);
+    modbus_status.node_state = static_cast<uint16_t>(node_state);
+    // TODO BFW-8356 populate LDC data once the application firmware reports it
+}
+
+#endif
+
 #if HAS_ANFC()
 
 void read_register_file_callback(anfc::modbus::Event &event, anfc::Device device) {
@@ -247,6 +263,22 @@ public:
 };
 #endif
 
+#if HAS_TOOL_OFFSET_SENSOR()
+
+class ToolOffsetSensor final : public modbus::Callbacks {
+public:
+    modbus::ServerAddress server_address() const final { return modbus::ServerAddress::tool_offset_sensor; }
+
+    Status read_registers(uint16_t address, std::span<uint16_t> out) final {
+        return read_register_file<tool_offset_sensor::modbus::Status>(address, out);
+    }
+
+    Status write_registers(uint16_t /*address*/, std::span<const uint16_t> /*in*/) final {
+        return Status::IllegalAddress; // Read-only device for now
+    }
+};
+#endif
+
 #if HAS_ANFC()
 
 class ANfc final : public modbus::Callbacks {
@@ -305,6 +337,9 @@ void app::run() {
 #if HAS_AC_CONTROLLER()
     AcController ac_controller;
 #endif
+#if HAS_TOOL_OFFSET_SENSOR()
+    ToolOffsetSensor tool_offset_sensor;
+#endif
 #if HAS_ANFC()
     ANfc anfc0 { anfc::Device::anfc0 };
     ANfc anfc1 { anfc::Device::anfc1 };
@@ -317,6 +352,9 @@ void app::run() {
         &logic,
 #if HAS_AC_CONTROLLER()
             &ac_controller,
+#endif
+#if HAS_TOOL_OFFSET_SENSOR()
+            &tool_offset_sensor,
 #endif
 #if HAS_ANFC()
             &anfc0,

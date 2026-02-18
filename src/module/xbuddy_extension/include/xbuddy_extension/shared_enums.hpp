@@ -33,6 +33,7 @@ enum class FileId {
     none = 0,
     firmware_ac_controller,
     firmware_anfc,
+    firmware_tool_offset_sensor
 };
 
 } // namespace xbuddy_extension

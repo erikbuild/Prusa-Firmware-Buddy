@@ -292,6 +292,12 @@ ScreenSplash::ScreenSplash()
                 { BootstrapStage::ac_controller_flash, 10 },
                 { BootstrapStage::ac_controller_ready, 1 },
     #endif
+    #if HAS_TOOL_OFFSET_SENSOR()
+                { BootstrapStage::tool_offset_sensor_unknown, 1 },
+                { BootstrapStage::tool_offset_sensor_verify, 1 },
+                { BootstrapStage::tool_offset_sensor_flash, 10 },
+                { BootstrapStage::tool_offset_sensor_ready, 1 },
+    #endif
     #if HAS_INDX_HEAD()
                 { BootstrapStage::flashing_indx_head, 10 },
                 { BootstrapStage::verifying_indx_head, 1 },
@@ -363,6 +369,16 @@ static const char *message(BootstrapStage stage) {
         return "AC controller: flashing";
     case BootstrapStage::ac_controller_ready:
         return "AC controller: ready";
+    #endif
+    #if HAS_TOOL_OFFSET_SENSOR()
+    case BootstrapStage::tool_offset_sensor_unknown:
+        return "Tool offset sensor: unknown";
+    case BootstrapStage::tool_offset_sensor_verify:
+        return "Tool offset sensor: verifying";
+    case BootstrapStage::tool_offset_sensor_flash:
+        return "Tool offset sensor: flashing";
+    case BootstrapStage::tool_offset_sensor_ready:
+        return "Tool offset sensor: ready";
     #endif
     #if HAS_INDX_HEAD()
     case BootstrapStage::flashing_indx_head:

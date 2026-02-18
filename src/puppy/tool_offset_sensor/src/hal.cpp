@@ -2,7 +2,6 @@
 #include "bsod.h"
 #include <device/peripherals.h>
 #include <device/hal.h>
-#include <option/can_bus_type.h>
 
 extern "C" {
 #include <FreeRTOSConfig.h>

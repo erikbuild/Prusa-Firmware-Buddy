@@ -53,6 +53,7 @@ target_link_libraries(
           ac_controller
           anfc
           modbus
+          tool_offset_sensor
   )
 
 if(HAS_MMU2)

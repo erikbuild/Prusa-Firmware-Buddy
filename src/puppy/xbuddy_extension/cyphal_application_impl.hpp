@@ -55,6 +55,8 @@ inline FirmwareFile get_firmware_file_for_node_name(NodeName node_name) {
         return FirmwareFile::firmware_ac_controller;
     case NodeName::cz_prusa3d_honeybee_nfc:
         return FirmwareFile::firmware_anfc;
+    case NodeName::cz_prusa3d_honeybee_tool_offset_sensor:
+        return FirmwareFile::firmware_tool_offset_sensor;
     }
     return FirmwareFile::none;
 }
@@ -168,6 +170,12 @@ private:
     };
     AcController ac_controller;
 
+    struct ToolOffsetSensor {
+        tool_offset_sensor::Status status;
+        bool seen_status = false;
+    };
+    ToolOffsetSensor tool_offset_sensor;
+
     using NfcNodes = std::array<std::pair<anfc::Device, NfcNode>, anfc::device_count>;
     NfcNodes nfc_nodes { {
         { anfc::Device::anfc0, {} },
@@ -240,6 +248,13 @@ private:
                 ac_controller->seen_status = false;
             }
         };
+        struct ToolOffsetSensorAlive {
+            ToolOffsetSensor *tool_offset_sensor = nullptr;
+            ~ToolOffsetSensorAlive() {
+                tool_offset_sensor->seen_status = false;
+            }
+        };
+
         struct NfcAlive {
             anfc::Device device;
         };
@@ -296,6 +311,9 @@ private:
                         };
                     case NodeName::cz_prusa3d_honeybee_nfc:
                         return application->allocate_nfc_device();
+                    case NodeName::cz_prusa3d_honeybee_tool_offset_sensor:
+                        // TODO BFW-8356 Cyphal task is not implemented yet, just repeat flashing for testing now.
+                        return Flash {};
                     }
                     // We passed verification, but don't know what to do about the node, so...
                     return Inert {};
@@ -829,6 +847,9 @@ public:
                 [](const ApplicationImpl::Node::AcControllerAlive &alive) {
                     return alive.ac_controller->seen_status ? NodeState::ready : NodeState::verify;
                 },
+                [](const ApplicationImpl::Node::ToolOffsetSensorAlive &alive) {
+                    return alive.tool_offset_sensor->seen_status ? NodeState::ready : NodeState::verify;
+                },
                 [](const ApplicationImpl::Node::NfcAlive &) { return NodeState::ready; },
                 [](const ApplicationImpl::Node::Inert &) { return NodeState::unknown; });
             if (state != NodeState::unknown) {
@@ -899,9 +920,13 @@ public:
         return true;
     }
 
-    void request(xbuddy_extension::NodeState &node_state, ac_controller::Status &status) final {
+    void request_ac_controller(xbuddy_extension::NodeState &node_state, ac_controller::Status &status) final {
         node_state = get_node_state(NodeName::cz_prusa3d_honeybee_ac_controller);
         status = ac_controller.status;
+    }
+
+    void request_tool_offset_sensor(xbuddy_extension::NodeState &node_state) final {
+        node_state = get_node_state(NodeName::cz_prusa3d_honeybee_tool_offset_sensor);
     }
 
     void receive_ac_controller_status(const ac_controller::Config &config, const ac_controller::Status &status) final {

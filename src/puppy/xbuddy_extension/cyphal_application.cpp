@@ -16,6 +16,9 @@ NodeName parse_node_name(Bytes raw) {
     if (equal(raw, "cz.prusa3d.honeybee.nfc"sv)) {
         return NodeName::cz_prusa3d_honeybee_nfc;
     }
+    if (equal(raw, "cz.prusa3d.honeybee.tool_offset_sensor"sv)) {
+        return NodeName::cz_prusa3d_honeybee_tool_offset_sensor;
+    }
     return NodeName::none;
 }
 

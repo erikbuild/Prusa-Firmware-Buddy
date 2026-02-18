@@ -25,6 +25,11 @@
     #include <puppies/ac_controller.hpp>
 #endif
 
+#include <option/has_tool_offset_sensor.h>
+#if HAS_TOOL_OFFSET_SENSOR()
+    #include <puppies/tool_offset_sensor.hpp>
+#endif
+
 #include <option/has_anfc.h>
 #if HAS_ANFC()
     #include <anfc/modbus.hpp>
@@ -286,6 +291,16 @@ static void puppy_task_loop(PuppyModbus &bus) {
                 worked |= status == CommunicationStatus::OK;
             }
 #endif
+#if HAS_TOOL_OFFSET_SENSOR()
+            {
+                CommunicationStatus status = tool_offset_sensor.refresh(bus);
+                if (status == CommunicationStatus::ERROR) {
+                    return;
+                }
+
+                worked |= status == CommunicationStatus::OK;
+            }
+#endif
 #if HAS_MMU2()
             {
                 CommunicationStatus status = mmu.refresh(bus);
@@ -345,6 +360,13 @@ static bool puppy_initial_scan(PuppyModbus &bus) {
         return false;
     }
 #endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    if (tool_offset_sensor.initial_scan(bus) == CommunicationStatus::ERROR) {
+        return false;
+    }
+#endif
+
     return true;
 }
 
@@ -378,6 +400,43 @@ static bool puppy_initial_scan(PuppyModbus &bus) {
             break;
         case NodeState::ready:
             bootstrap_state_set(0, BootstrapStage::ac_controller_ready);
+            return true;
+        }
+    }
+}
+#endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+[[nodiscard]] static bool wait_for_tool_offset_sensor(PuppyModbus &bus) {
+    // Tool offset sensor is vital part of the printer, there is no upper limit
+    // on how long we are willing to wait for the bootstrap.
+    for (;;) {
+        // At this point, puppy_task_loop() is not yet running, so we must
+        // manually call refresh() on puppies. Without this, XBE can't make
+        // progress while flashing/veryfing TOOL_OFFSET_SENSOR. It would also stop sending
+        // healthy heartbeats which would in turn put TOOL_OFFSET_SENSOR into safe state.
+        // We should run this as often as possible to minimize time when
+        // XBE is waiting for firmware chunk.
+        if (xbuddy_extension.refresh(bus) == CommunicationStatus::ERROR) {
+            return false;
+        }
+        if (tool_offset_sensor.refresh(bus) == CommunicationStatus::ERROR) {
+            return false;
+        }
+
+        using xbuddy_extension::NodeState;
+        switch (tool_offset_sensor.get_node_state()) {
+        case NodeState::unknown:
+            bootstrap_state_set(0, BootstrapStage::tool_offset_sensor_unknown);
+            break;
+        case NodeState::verify:
+            bootstrap_state_set(0, BootstrapStage::tool_offset_sensor_verify);
+            break;
+        case NodeState::flash:
+            bootstrap_state_set(xbuddy_extension.get_flash_progress_percent(), BootstrapStage::tool_offset_sensor_flash);
+            break;
+        case NodeState::ready:
+            bootstrap_state_set(0, BootstrapStage::tool_offset_sensor_ready);
             return true;
         }
     }
@@ -455,6 +514,12 @@ void run() {
 
 #if HAS_AC_CONTROLLER()
             if (!wait_for_ac_controller(bus)) {
+                break; // go to puppy recovery
+            }
+#endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+            if (!wait_for_tool_offset_sensor(bus)) {
                 break; // go to puppy recovery
             }
 #endif

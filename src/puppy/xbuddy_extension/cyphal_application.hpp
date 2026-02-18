@@ -13,6 +13,7 @@
 #include <xbuddy_extension/shared_enums.hpp>
 #include <xbuddy_extension/modbus.hpp>
 #include <ac_controller/types.hpp>
+#include <tool_offset_sensor/types.hpp>
 
 namespace cyphal {
 
@@ -25,6 +26,7 @@ enum class NodeName : uint8_t {
     none = 0,
     cz_prusa3d_honeybee_ac_controller,
     cz_prusa3d_honeybee_nfc,
+    cz_prusa3d_honeybee_tool_offset_sensor,
 };
 
 /// Parse raw node name.
@@ -79,7 +81,8 @@ public:
     [[nodiscard]] virtual bool receive(const ac_controller::Config &) = 0;
     [[nodiscard]] virtual bool receive(const ac_controller::LedConfig &) = 0;
     virtual const ModbusRequest &request() = 0;
-    virtual void request(xbuddy_extension::NodeState &, ac_controller::Status &) = 0;
+    virtual void request_ac_controller(xbuddy_extension::NodeState &, ac_controller::Status &) = 0;
+    virtual void request_tool_offset_sensor(xbuddy_extension::NodeState &) = 0;
 
     [[nodiscard]] virtual NfcNode &get_nfc(anfc::Device) = 0;
 

@@ -18,7 +18,12 @@ target_include_directories(
                                                     ${CMAKE_SOURCE_DIR}/src/puppy/xbuddy_extension
   )
 target_link_libraries(
-  xbuddy_extension_cyphal_application_tests ac_controller anfc freertos_tests buddy_utils
+  xbuddy_extension_cyphal_application_tests
+  ac_controller
+  anfc
+  buddy_utils
+  freertos_tests
+  tool_offset_sensor
   xbuddy_extension
   )
 add_catch_test(xbuddy_extension_cyphal_application_tests)

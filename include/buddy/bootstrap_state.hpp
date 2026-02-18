@@ -6,6 +6,7 @@
 #include <option/has_ac_controller.h>
 #include <option/has_dwarf.h>
 #include <option/has_esp.h>
+#include <option/has_tool_offset_sensor.h>
 #include <option/has_puppies.h>
 #include <option/has_puppy_modularbed.h>
 #include <option/has_xbuddy_extension.h>
@@ -53,6 +54,12 @@ enum class BootstrapStage : uint8_t {
     ac_controller_verify,
     ac_controller_flash,
     ac_controller_ready,
+    #endif
+    #if HAS_TOOL_OFFSET_SENSOR()
+    tool_offset_sensor_unknown,
+    tool_offset_sensor_verify,
+    tool_offset_sensor_flash,
+    tool_offset_sensor_ready,
     #endif
     #if HAS_INDX_HEAD()
     flashing_indx_head,

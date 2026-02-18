@@ -18,6 +18,7 @@ xbuddy_extension::FileId xbuddy_extension::modbus::parse_file_id(uint16_t file_i
     case FileId::none:
     case FileId::firmware_ac_controller:
     case FileId::firmware_anfc:
+    case FileId::firmware_tool_offset_sensor:
         return value;
     }
     return FileId::none;

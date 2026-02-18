@@ -30,6 +30,11 @@ if(HAS_AC_CONTROLLER)
   target_link_libraries(firmware PUBLIC ac_controller)
 endif()
 
+if(HAS_TOOL_OFFSET_SENSOR)
+  target_sources(firmware PUBLIC tool_offset_sensor.cpp)
+  target_link_libraries(firmware PUBLIC tool_offset_sensor)
+endif()
+
 if(HAS_MMU2)
   target_sources(firmware PUBLIC mmu.cpp)
 endif()

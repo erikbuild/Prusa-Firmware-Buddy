@@ -1,0 +1,3 @@
+add_library(tool_offset_sensor STATIC src/tool_offset_sensor/modbus.cpp)
+target_link_libraries(tool_offset_sensor PUBLIC modbus)
+target_include_directories(tool_offset_sensor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

@@ -123,6 +123,9 @@ if(PUPPY_FLASH_FW)
   if(HAS_ANFC)
     add_resource("${ANFC_BINARY_PATH}" "/puppies/fw-anfc.bin")
   endif()
+  if(HAS_TOOL_OFFSET_SENSOR)
+    add_resource("${TOOL_OFFSET_SENSOR_BINARY_PATH}" "/puppies/fw-tool_offset_sensor.bin")
+  endif()
 endif()
 
 # /web directory
