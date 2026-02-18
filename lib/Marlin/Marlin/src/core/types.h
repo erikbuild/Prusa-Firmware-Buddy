@@ -365,8 +365,8 @@ struct XYval {
   FI XYval<float, Tag>   asNative()                    const { auto o = asFloat(); toNative(o);  return o; }
 
   // Cast to a type with more fields by making a new object
-  FI operator XYZval()                         const { return NUM_AXIS_ARRAY(x, y, 0, 0, 0, 0, 0, 0, 0); }
-  FI operator XYZEval()                        const { return LOGICAL_AXIS_ARRAY(0, x, y, 0, 0, 0, 0, 0, 0, 0); }
+  explicit FI operator XYZval()                         const { return NUM_AXIS_ARRAY(x, y, 0, 0, 0, 0, 0, 0, 0); }
+  explicit FI operator XYZEval()                        const { return LOGICAL_AXIS_ARRAY(0, x, y, 0, 0, 0, 0, 0, 0, 0); }
 
   // Accessor via an AxisEnum (or any integer) [index]
   FI       T&  operator[](const int n)                  { return pos[n]; }

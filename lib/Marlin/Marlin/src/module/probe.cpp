@@ -887,7 +887,7 @@ float probe_here(float expected_trigger_z)
  * - Return the probed Z position
  */
 float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE_PT_NONE*/, const uint8_t verbose_level/*=0*/, const bool probe_relative/*=true*/) {
-  xyz_pos_t npos = pos;
+  xyz_pos_t npos = xyz_pos_t(pos);
   if (probe_relative) {
     if (!position_is_reachable_by_probe(npos)) {
       #if ENABLED(HALT_ON_PROBING_ERROR)

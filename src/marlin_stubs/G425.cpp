@@ -522,7 +522,7 @@ const std::optional<xyz_pos_t> get_single_xyz_center(const xyz_pos_t initial, co
     for (uint hit_no = 0; xy_pos_t & hit : hits) {
         hit = probe_xy_verify(start, 2 * std::numbers::pi_v<float> / hits.size() * hit_no++, PROBE_XY_UNCERTAIN_DIST_MM, tool, phase);
     }
-    xyz_pos_t center = approximate_center(hits);
+    xyz_pos_t center = xyz_pos_t(approximate_center(hits));
     center.z = start.z;
 
     if (phase == Phase::final) {
