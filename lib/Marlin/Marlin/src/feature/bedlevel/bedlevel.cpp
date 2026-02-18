@@ -49,30 +49,25 @@ bool leveling_is_valid() {
  * Turn bed leveling on or off, fixing the current
  * position as-needed.
  *
- * Disable: Current position = physical position
- *  Enable: Current position = "unleveled" physical position
+ * Updates current_position to match the machine position given according to the modifiers change
  */
 void set_bed_leveling_enabled(const bool enable/*=true*/) {
-
-  constexpr bool can_change = true;
-
-  if (can_change && enable != planner.leveling_active) {
-
-    planner.synchronize();
-
-    if (planner.leveling_active) {      // leveling from on to off
-      // change unleveled current_position to physical current_position without moving steppers.
-      planner.apply_leveling(current_position);
-      planner.leveling_active = false;  // disable only AFTER calling apply_leveling
-    }
-    else {                              // leveling from off to on
-      planner.leveling_active = true;   // enable BEFORE calling unapply_leveling, otherwise ignored
-      // change physical current_position to unleveled current_position without moving steppers.
-      planner.unapply_leveling(current_position);
-    }
-
-    sync_plan_position();
+  if(enable == planner.leveling_active) {
+    return;
   }
+
+  planner.synchronize();
+
+  const auto orig_machine_position = current_machine_position();
+
+  planner.leveling_active = enable;
+
+  // When changing MBL enable, the actual machine position stays the same, because the printer does not move
+  // So we have to update the current_position to match the machine position
+  set_current_position(to_native_pos(orig_machine_position));
+
+  /// Update planner::machine_position as well to get rid of any imprecisions
+  sync_plan_position();
 }
 
 TemporaryBedLevelingState::TemporaryBedLevelingState(const bool enable) : saved(planner.leveling_active) {
