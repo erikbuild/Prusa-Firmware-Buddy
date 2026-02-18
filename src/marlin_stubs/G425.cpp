@@ -269,7 +269,7 @@ void go_to_initial(const xyz_pos_t center, const float angle, const float radius
 
     if (current != initial) {
         feedrate_mm_s = INTERPROBE_FEEDRATE_MMS;
-        plan_arc(initial, { { { .x = center.x - current.x, .y = center.y - current.y } } }, false, 0);
+        plan_arc(xyze_pos_t(initial), { { { .x = center.x - current.x, .y = center.y - current.y } } }, false, 0);
     }
     planner.synchronize();
 
