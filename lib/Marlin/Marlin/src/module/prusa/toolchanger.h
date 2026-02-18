@@ -39,7 +39,7 @@ public:
          * Linked to return_type.
          * @warning This is logical position! Use return_pos = toLogical(current_position).
          */
-        xyz_pos_t return_pos;
+        XYZval<float, LogicalPosTag> return_pos;
     };
 
     /**

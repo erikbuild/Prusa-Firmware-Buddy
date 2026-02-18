@@ -45,7 +45,7 @@
  * Without parameters prints the current software endstops
  */
 void GcodeSuite::M211() {
-  const xyz_pos_t l_soft_min = soft_endstop.min.asLogical(),
+  const auto l_soft_min = soft_endstop.min.asLogical(),
                   l_soft_max = soft_endstop.max.asLogical();
   SERIAL_ECHO_START();
   SERIAL_ECHOPGM(MSG_SOFT_ENDSTOPS);

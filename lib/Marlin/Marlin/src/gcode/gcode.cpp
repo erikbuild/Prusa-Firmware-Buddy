@@ -197,7 +197,7 @@ void GcodeSuite::get_destination_from_command() {
   }
 #endif
 
-  xyze_pos_t logical;
+  XYZEval<float, LogicalPosTag> logical;
   LOOP_XYZE(i) {
     if (parser.seenval(axis_codes[i])) {
       logical[i] = parser.value_axis_units((AxisEnum)i);

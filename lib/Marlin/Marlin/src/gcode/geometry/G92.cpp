@@ -84,7 +84,7 @@ void GcodeSuite::G92() {
   switch (subcode_G92) {
     default: break;
     case 0: {
-      xyze_pos_t logical;
+      XYZEval<float, LogicalPosTag> logical;
       LOOP_XYZE(i) {
         if (parser.seenval(axis_codes[i])) {
           logical[i] = parser.value_axis_units((AxisEnum)i);

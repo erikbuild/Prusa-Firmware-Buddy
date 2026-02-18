@@ -156,7 +156,7 @@ void M600_manual(const GCodeParser2 &p) {
     }
     auto target_tool = VirtualToolIndex::from_raw(target_extruder);
 
-    xyz_pos_t logical_park_point { NAN, NAN, NAN };
+    XYZval<float, LogicalPosTag> logical_park_point { NAN, NAN, NAN };
 
     // Lift Z axis
     p.store_option_if_present('Z', logical_park_point.z);
@@ -209,7 +209,7 @@ void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool, xyze_float
 
 #if HAS_TOOLCHANGER()
     struct ToolChangeData {
-        xyze_float_t original_resume_point;
+        XYZEval<float, LogicalPosTag> original_resume_point;
         int16_t target_extruder_original_temperature;
         std::variant<VirtualToolIndex, NoTool> original_extruder;
     };

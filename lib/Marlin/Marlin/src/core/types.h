@@ -222,10 +222,21 @@ typedef float celsius_float_t;
 #define _RS(N)  (N = (T)(uint32_t(N) >> v))
 #define FI FORCE_INLINE
 
+/// Tag for logical position strong types.
+/// Logical vectors are used only on the G-Code level - those are XYZE coordinates BEFORE hotend offseds (and workspace offset) are applied
+struct LogicalPosTag {};
+
+/// Tag for native position strong types.
+/// Native positions are AFTER hotend offsets applied, but BEFORE modifiers (MBL, skew, ...) applied.
+/// Vast majority of the firmware works with native coordinates
+struct NativePosTag {};
+
+// TODO struct MachinePosTag for positions after MBL (will be added in later PR)
+
 // Forward declarations
-template<typename T, typename Tag = void> struct XYval;
-template<typename T, typename Tag = void> struct XYZval;
-template<typename T, typename Tag = void> struct XYZEval;
+template<typename T, typename Tag = NativePosTag> struct XYval;
+template<typename T, typename Tag = NativePosTag> struct XYZval;
+template<typename T, typename Tag = NativePosTag> struct XYZEval;
 
 typedef struct XYval<bool>          xy_bool_t;
 typedef struct XYZval<bool>        xyz_bool_t;
@@ -299,11 +310,11 @@ typedef abc_float_t abc_pos_t;
 typedef abce_float_t abce_pos_t;
 
 // External conversion methods
-template<typename V>
-[[nodiscard]] V toLogical(const V &v);
+template<template <typename T, typename Tag> typename V, typename T>
+[[nodiscard]] V<T, LogicalPosTag> toLogical(const V<T, NativePosTag> &v);
 
-template<typename V>
-[[nodiscard]] V toNative(const V &v);
+template<template <typename T, typename Tag> typename V, typename T>
+[[nodiscard]] V<T, NativePosTag> toNative(const V<T, LogicalPosTag> &v);
 
 //
 // Paired XY coordinates, counters, flags, etc.
@@ -359,9 +370,14 @@ struct XYval {
   FI XYval<float, Tag>    asFloat()                    const { return { static_cast<float>(x), static_cast<float>(y) }; }
   FI XYval<float, Tag> reciprocal()                    const { return {  _RECIP(x),  _RECIP(y) }; }
 
+  /// Basically a reinterpret_cast for the vectors. Only use when you know what you're doing
+  template<typename NewTag>
+  [[deprecated("UNSAFE. Only use when you know what you're doing")]]
+  FI XYval<T, NewTag> to_tag()                    const { return { x, y }; }
+
   // Marlin workspace shifting is done with G92 and M206
-  FI XYval  asLogical()                    const { return toLogical(*this); }
-  FI XYval   asNative()                    const { return toNative(*this); }
+  FI auto  asLogical() const requires(std::is_same_v<Tag, NativePosTag>) { return toLogical(*this); }
+  FI auto   asNative() const requires(std::is_same_v<Tag, LogicalPosTag>) { return toNative(*this); }
 
   // Cast to a type with more fields by making a new object
   explicit FI operator XYZval()                         const { return NUM_AXIS_ARRAY(x, y, 0, 0, 0, 0, 0, 0, 0); }
@@ -494,9 +510,14 @@ struct XYZval {
   FI XYZval<float, Tag>   asFloat()                   const { return NUM_AXIS_ARRAY(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(i), static_cast<float>(j), static_cast<float>(k), static_cast<float>(u), static_cast<float>(v), static_cast<float>(w)); }
   FI XYZval<float, Tag> reciprocal()                  const { return NUM_AXIS_ARRAY(_RECIP(x),  _RECIP(y),  _RECIP(z),  _RECIP(i),  _RECIP(j),  _RECIP(k),  _RECIP(u),  _RECIP(v),  _RECIP(w)); }
 
+  /// Basically a reinterpret_cast for the vectors. Only use when you know what you're doing
+  template<typename NewTag>
+  [[deprecated("UNSAFE. Only use when you know what you're doing")]]
+  FI XYZval<T, NewTag> to_tag()                    const { return NUM_AXIS_ARRAY(x, y, z, i, j, k, u, v, w); }
+
   // Marlin workspace shifting is done with G92 and M206
-  FI XYZval  asLogical()                    const { return toLogical(*this); }
-  FI XYZval   asNative()                    const { return toNative(*this); }
+  FI auto  asLogical() const requires(std::is_same_v<Tag, NativePosTag>) { return toLogical(*this); }
+  FI auto   asNative() const requires(std::is_same_v<Tag, LogicalPosTag>) { return toNative(*this); }
 
   // In-place cast to types having fewer fields
   FI operator XYval()                         const { return XYval{x, y}; }
@@ -634,9 +655,14 @@ struct XYZEval {
   FI XYZEval<float, Tag>   asFloat()  const { return LOGICAL_AXIS_ARRAY(static_cast<float>(e), static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(i), static_cast<float>(j), static_cast<float>(k), static_cast<float>(u), static_cast<float>(v), static_cast<float>(w)); }
   FI XYZEval<float, Tag> reciprocal() const { return LOGICAL_AXIS_ARRAY(_RECIP(e),  _RECIP(x),  _RECIP(y),  _RECIP(z),  _RECIP(i),  _RECIP(j),  _RECIP(k),  _RECIP(u),  _RECIP(v),  _RECIP(w)); }
 
+  /// Basically a reinterpret_cast for the vectors. Only use when you know what you're doing
+  template<typename NewTag>
+  [[deprecated("UNSAFE. Only use when you know what you're doing")]]
+  FI XYZEval<T, NewTag> to_tag()                    const { return LOGICAL_AXIS_ARRAY(e, x, y, z, i, j, k, u, v, w); }
+
   // Marlin workspace shifting is done with G92 and M206
-  FI XYZEval  asLogical()                    const { return toLogical(*this); }
-  FI XYZEval   asNative()                    const { return toNative(*this); }
+  FI auto  asLogical() const requires(std::is_same_v<Tag, NativePosTag>) { return toLogical(*this); }
+  FI auto   asNative() const requires(std::is_same_v<Tag, LogicalPosTag>) { return toNative(*this); }
 
   // In-place cast to types having fewer fields
   FI operator       XYval&()        { return *(XYval*)this; }

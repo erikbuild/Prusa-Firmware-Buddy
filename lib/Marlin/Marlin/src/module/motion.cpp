@@ -193,7 +193,7 @@ float homing_bump_divisor[] = HOMING_BUMP_DIVISOR;
  * Output the current position to serial
  */
 void report_current_position() {
-  const xyz_pos_t lpos = current_position.asLogical();
+  const auto lpos = current_position.asLogical();
   SERIAL_ECHOPAIR("X:", lpos.x, " Y:", lpos.y, " Z:", lpos.z, " E:", current_position.e);
 
   stepper.report_positions();
