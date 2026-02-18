@@ -258,11 +258,6 @@ void CSelftest::Loop() {
     case stsZcalib: {
         // calib_Z(true) requires picked tool, which at this time may not be
         calib_Z(false);
-
-        // Store Z aligned
-        m_result = config_store().selftest_result.get();
-        m_result.zalign = TestResult_Passed;
-        config_store().selftest_result.set(m_result);
         break;
     }
     case stsEnsureZAway: {

@@ -310,11 +310,6 @@ void CSelftest::Loop() {
     case stsZcalib: {
         // calib_Z(true) requires picked tool, which at this time may not be
         calib_Z(false);
-
-        // Store Z aligned
-        m_result = config_store().selftest_result.get();
-        m_result.zalign = TestResult_Passed;
-        config_store().selftest_result.set(m_result);
         break;
     }
     case stsEnsureZAway: {
@@ -440,12 +435,6 @@ void CSelftest::phaseSelftestStart() {
         // no need to preheat nozzle, it heats up much faster than bed
         thermalManager.disable_hotend();
     }
-
-    m_result = config_store().selftest_result.get(); // read previous result
-    if (m_Mask & stmZcalib) {
-        m_result.zalign = TestResult_Unknown;
-    }
-    config_store().selftest_result.set(m_result); // reset status for all selftest parts in eeprom
 }
 
 void CSelftest::restoreAfterSelftest() {

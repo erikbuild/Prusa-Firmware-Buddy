@@ -270,11 +270,6 @@ void CSelftest::Loop() {
         // it would be better to call calib_Z(false)
         // and just measure Z length on the way down
         calib_Z(true);
-
-        // Store Z aligned
-        m_result = config_store().selftest_result.get();
-        m_result.zalign = TestResult_Passed;
-        config_store().selftest_result.set(m_result);
         break;
     }
     case stsXAxis: {
@@ -437,12 +432,6 @@ void CSelftest::phaseSelftestStart() {
         // no need to preheat nozzle, it heats up much faster than bed
         thermalManager.setTargetHotend(0, 0);
     }
-
-    m_result = config_store().selftest_result.get(); // read previous result
-    if (m_Mask & stmZcalib) {
-        m_result.zalign = TestResult_Unknown;
-    }
-    config_store().selftest_result.set(m_result); // reset status for all selftest parts in eeprom
 }
 
 void CSelftest::restoreAfterSelftest() {

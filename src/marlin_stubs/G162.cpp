@@ -39,6 +39,11 @@ void selftest::calib_Z([[maybe_unused]] bool move_down_after) {
         return; // This can happen only during print, homing recovery should follow
     }
 
+    // mark test as failed (so it will be failed after reset - disconnected cables can cause rsod)
+    auto result = config_store().selftest_result.get();
+    result.zalign = TestResult_Failed;
+    config_store().selftest_result.set(result);
+
     // Move the nozzle up and away from the bed
     do_homing_move(Z_AXIS, Z_CALIB_EXTRA_HIGHT, HOMING_FEEDRATE_INVERTED_Z, false, false);
     current_position.z = 0;
@@ -76,6 +81,10 @@ void selftest::calib_Z([[maybe_unused]] bool move_down_after) {
 
     // Finally mark the axis as unknown
     set_axis_is_not_at_home(Z_AXIS);
+
+    // Store Z aligned
+    result.zalign = TestResult_Passed;
+    config_store().selftest_result.set(result);
 }
 #else
 static constexpr float AFTER_Z_CALIB_Z_POS = 50;
@@ -109,6 +118,11 @@ static void safe_move_down() {
 }
 
 void selftest::calib_Z(bool move_down_after) {
+    // mark test as failed (so it will be failed after reset - disconnected cables can cause rsod)
+    auto result = config_store().selftest_result.get();
+    result.zalign = TestResult_Failed;
+    config_store().selftest_result.set(result);
+
     // backup original acceleration/feedrates and reset defaults for calibration
     static constexpr float def_feedrate[] = DEFAULT_MAX_FEEDRATE;
     static constexpr float def_accel[] = DEFAULT_MAX_ACCELERATION;
@@ -146,6 +160,10 @@ void selftest::calib_Z(bool move_down_after) {
     // restore original values
     planner.set_max_feedrate(Z_AXIS, orig_max_feedrate);
     planner.set_max_acceleration(Z_AXIS, orig_max_accel);
+
+    // Store Z aligned
+    result.zalign = TestResult_Passed;
+    config_store().selftest_result.set(result);
 }
 #endif
 
