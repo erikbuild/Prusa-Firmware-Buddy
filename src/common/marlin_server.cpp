@@ -2719,8 +2719,8 @@ static void _server_print_loop(void) {
             xyz_pos_t return_pos = current_position; //                              return Z to current Z
             if (crash_s.get_state() == Crash_s::REPEAT_WAIT) {
                 // After toolcrash, return to what was requested before the crash
-                return_pos = prusa_toolchanger.get_precrash().return_pos;
-                toNative(return_pos); // Needs to be modified in place, stored in logical coordinates
+                // return_pos is stored in logical coordinates
+                return_pos = prusa_toolchanger.get_precrash().return_pos.asNative();
                 return_type = prusa_toolchanger.get_precrash().return_type;
             }
             if (!prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw_notool(prusa_toolchanger.get_precrash().tool_nr),
@@ -3251,20 +3251,24 @@ static void _server_update_vars() {
     marlin_vars().is_processing = is_processing();
 
     // Get native position
-    xyze_pos_t pos_mm, curr_pos_mm;
-    planner.get_axis_position_mm(pos_mm);
-    curr_pos_mm = current_position;
-    LOOP_XYZE(i) {
-        marlin_vars().native_pos[i] = pos_mm[i];
-        marlin_vars().native_curr_pos[i] = curr_pos_mm[i];
-    }
-    // Convert to logical position
-    planner.unapply_leveling(pos_mm);
-    toLogical(pos_mm);
-    toLogical(curr_pos_mm);
-    LOOP_XYZE(i) {
-        marlin_vars().logical_pos[i] = pos_mm[i];
-        marlin_vars().logical_curr_pos[i] = curr_pos_mm[i];
+    {
+        xyze_pos_t pos_mm, curr_pos_mm;
+        planner.get_axis_position_mm(pos_mm);
+        curr_pos_mm = current_position;
+        LOOP_XYZE(i) {
+            marlin_vars().native_pos[i] = pos_mm[i];
+            marlin_vars().native_curr_pos[i] = curr_pos_mm[i];
+        }
+
+        // Convert to logical position
+        planner.unapply_leveling(pos_mm);
+
+        const auto logical_pos_mm = pos_mm.asLogical();
+        const auto logical_curr_pos_mm = curr_pos_mm.asLogical();
+        LOOP_XYZE(i) {
+            marlin_vars().logical_pos[i] = logical_pos_mm[i];
+            marlin_vars().logical_curr_pos[i] = logical_curr_pos_mm[i];
+        }
     }
 
     for (auto tool : PhysicalToolIndex::all()) {
