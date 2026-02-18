@@ -225,17 +225,11 @@ typedef struct {
 } skew_factor_t;
 
 #if ENABLED(ARC_SUPPORT)
-  #define HINTS_CURVE_RADIUS
 // @hejllukas: Disabled because it contains a significant issue causing that the entry speed is calculated incorrectly.
 // #define HINTS_SAFE_EXIT_SPEED
 #endif
 
 struct PlannerHints {
-  #if ENABLED(HINTS_CURVE_RADIUS)
-    float curve_radius = 0.0;         // Radius of curvature of the motion path - to calculate cornering speed
-  #else
-    static constexpr float curve_radius = 0.0;
-  #endif
   #if ENABLED(HINTS_SAFE_EXIT_SPEED)
     float safe_exit_speed_sqr = 0.0;  // Square of the speed considered "safe" at the end of the segment
                                       // i.e., at or below the exit speed of the segment that the planner

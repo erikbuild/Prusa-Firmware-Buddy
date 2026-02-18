@@ -363,8 +363,6 @@ void plan_arc(
 
       if (!planner.buffer_line(raw, scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints))
         break;
-
-      hints.curve_radius = radius;
     }
   }
 
@@ -377,7 +375,6 @@ void plan_arc(
     planner.apply_leveling(raw);
   #endif
 
-  hints.curve_radius = 0;
   #if ENABLED(HINTS_SAFE_EXIT_SPEED)
     hints.safe_exit_speed_sqr = 0.0f;
   #endif
