@@ -34,7 +34,7 @@ static_assert(sizeof(FilamentTypeParameters_EEPROM3) == 1);
 
 static_assert(preset_filament_type_count <= max_preset_filament_type_count);
 static_assert(user_filament_type_count <= max_user_filament_type_count);
-static_assert(EXTRUDERS <= adhoc_filament_type_count);
+static_assert(VirtualToolIndex::count <= adhoc_filament_type_count);
 
 // We're storing the bed temperature in uint8_t, so make sure the bed cannot go higher
 static_assert(BED_MAXTEMP <= 255);

@@ -14,6 +14,7 @@
 
 #include <option/has_chamber_api.h>
 #include <option/has_filament_heatbreak_param.h>
+#include <tool_index.hpp>
 
 class StringBuilder;
 
@@ -33,9 +34,8 @@ constexpr size_t max_total_filament_count = max_user_filament_type_count + max_p
 /// Actually defined user filament type count
 constexpr size_t user_filament_type_count = 8;
 
-/// Should match extruder count (or be higher), one for each extruder
-/// Hardcoded to prevent dependency pollution
-constexpr size_t adhoc_filament_type_count = 6;
+/// Should match virtual tool count (or be higher), one for each virtual tool
+constexpr size_t adhoc_filament_type_count = VirtualToolIndex::count;
 
 struct FilamentTypeParameters {
 
