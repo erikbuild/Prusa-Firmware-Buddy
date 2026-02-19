@@ -38,6 +38,8 @@
 }
 
 bool sys_debugger_attached() {
+    // NOTE: After disconnecting debugger, do power cycle because
+    // software reset does not seem to clear DHCSR.C_DEBUGEN!
     return CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk;
 }
 
