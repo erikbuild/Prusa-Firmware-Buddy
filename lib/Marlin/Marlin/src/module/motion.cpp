@@ -234,11 +234,7 @@ void set_current_from_steppers_for_axis(const AxisEnum axis) {
   planner.get_axis_position_mm(cartes);
 
   #if HAS_POSITION_MODIFIERS
-    planner.unapply_modifiers(cartes
-      #if HAS_LEVELING
-        , true
-      #endif
-    );
+    planner.unapply_leveling(cartes);
   #endif
   
   if (axis == ALL_AXES_ENUM)
@@ -903,7 +899,7 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
   const auto buffer_move = [&](xyze_pos_t target) {
     #if HAS_POSITION_MODIFIERS
     if(hints.apply_modifiers) {
-      planner.apply_modifiers(target, true);
+      planner.apply_leveling(target);
     }
     #endif
     planner.buffer_segment(target, fr_mm_s, PhysicalToolIndex::currently_selected(), planner_hints);

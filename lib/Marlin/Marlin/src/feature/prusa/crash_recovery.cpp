@@ -99,12 +99,7 @@ void Crash_s::stop_and_save() {
     planner.get_axis_position_mm(crash_current_position);
 
     #if HAS_POSITION_MODIFIERS
-    planner.unapply_modifiers(crash_current_position
-        #if HAS_LEVELING
-        ,
-        true
-        #endif
-    );
+    planner.unapply_leveling(crash_current_position);
     #endif /*HAS_POSITION_MODIFIERS*/
 }
 

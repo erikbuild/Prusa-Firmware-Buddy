@@ -2351,13 +2351,11 @@ bool Planner::buffer_raw_segment(const abce_pos_t &abce, const float acceleratio
  */
 bool Planner::buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
   xyze_pos_t machine = cart;
-  TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine));
   return buffer_segment(machine, fr_mm_s, tool, hints);
 } // buffer_line()
 
 bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
     xyze_pos_t machine = cart;
-    TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine));
     return buffer_raw_segment(machine, acceleration, nominal_speed, entry_speed, exit_speed, tool);
 } // buffer_raw_line()
 
@@ -2403,7 +2401,7 @@ void Planner::set_machine_position_mm(const abce_pos_t &abce) {
 
 void Planner::set_position_mm(const xyze_pos_t &xyze) {
   xyze_pos_t machine = xyze;
-  TERN_(HAS_POSITION_MODIFIERS, apply_modifiers(machine, true));
+  TERN_(HAS_POSITION_MODIFIERS, apply_leveling(machine));
   set_machine_position_mm(machine);
 }
 

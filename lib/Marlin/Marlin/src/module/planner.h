@@ -468,27 +468,6 @@ class Planner {
       static void unapply_leveling(xyz_pos_t &raw);
     #endif
 
-    #if HAS_POSITION_MODIFIERS
-      FORCE_INLINE static void apply_modifiers(xyze_pos_t &pos
-        #if HAS_LEVELING
-          , bool leveling = false
-        #endif
-      ) {
-        #if HAS_LEVELING
-          if (leveling) apply_leveling(pos);
-        #endif
-      }
-
-      FORCE_INLINE static void unapply_modifiers(xyze_pos_t &pos
-        #if HAS_LEVELING
-          , bool leveling = false
-        #endif
-      ) {
-        #if HAS_LEVELING
-          if (leveling) unapply_leveling(pos);
-        #endif
-      }
-    #endif // HAS_POSITION_MODIFIERS
 
     // Number of moves currently in the planner including the busy block, if any
     FORCE_INLINE static uint8_t movesplanned() { return BLOCK_MOD(block_buffer_head - block_buffer_tail); }

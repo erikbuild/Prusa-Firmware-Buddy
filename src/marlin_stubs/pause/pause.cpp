@@ -983,13 +983,8 @@ void Pause::stop_process([[maybe_unused]] Response response) {
     xyze_pos_t real_current_position;
     planner.get_axis_position_mm(static_cast<xyz_pos_t &>(real_current_position));
     real_current_position[E_AXIS] = 0;
-#if HAS_POSITION_MODIFIERS
-    planner.unapply_modifiers(real_current_position
-    #if HAS_LEVELING
-        ,
-        true
-    #endif
-    );
+#if HAS_LEVELING
+    planner.unapply_leveling(real_current_position);
 #endif
 
     // Lose homing only if we interrupted XYZ movement. quick_stop on extruder movement is fine
