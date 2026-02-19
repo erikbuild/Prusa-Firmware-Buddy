@@ -716,10 +716,6 @@ private:
     static void M851();
   #endif
 
-  #if ENABLED(SKEW_CORRECTION_GCODE)
-    static void M852();
-  #endif
-
   // Linear Advance / Pressure Advance compatibility
   static void M900();
 

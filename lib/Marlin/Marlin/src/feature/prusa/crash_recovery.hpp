@@ -14,10 +14,6 @@
         #error "Sensorless homing must be enabled (SENSORLESS_HOMING)."
     #endif
 
-    #if ENABLED(SKEW_CORRECTION_FOR_Z)
-        #error "SKEW_CORRECTION_FOR_Z is not currently handled during recovery"
-    #endif
-
 static_assert(CRASH_COUNTER_MAX > 1, "Too few crash occurrences. (CRASH_COUNTER_MAX)");
 static_assert(CRASH_COUNTER_MAX - 1 <= 256, "More crash occurrences is possible but uint8_t is not enough. (CRASH_COUNTER_MAX)");
 

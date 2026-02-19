@@ -779,43 +779,6 @@
 #endif
 
 /**
- * XYZ Bed Skew Correction
- */
-#if ENABLED(SKEW_CORRECTION)
-  #define SKEW_FACTOR_MIN -1
-  #define SKEW_FACTOR_MAX 1
-
-  #define _GET_SIDE(a,b,c) (SQRT(2*sq(a)+2*sq(b)-4*sq(c))*0.5)
-  #define _SKEW_SIDE(a,b,c) tan(M_PI*0.5-acos((sq(a)-sq(b)-sq(c))/(2*c*b)))
-  #define _SKEW_FACTOR(a,b,c) _SKEW_SIDE(float(a),_GET_SIDE(float(a),float(b),float(c)),float(c))
-
-  #ifndef XY_SKEW_FACTOR
-    #if defined(XY_DIAG_AC) && defined(XY_DIAG_BD) && defined(XY_SIDE_AD)
-      #define XY_SKEW_FACTOR _SKEW_FACTOR(XY_DIAG_AC, XY_DIAG_BD, XY_SIDE_AD)
-    #else
-      #define XY_SKEW_FACTOR 0.0
-    #endif
-  #endif
-  #ifndef XZ_SKEW_FACTOR
-    #if defined(XY_SIDE_AD) && !defined(XZ_SIDE_AD)
-      #define XZ_SIDE_AD XY_SIDE_AD
-    #endif
-    #if defined(XZ_DIAG_AC) && defined(XZ_DIAG_BD) && defined(XZ_SIDE_AD)
-      #define XZ_SKEW_FACTOR _SKEW_FACTOR(XZ_DIAG_AC, XZ_DIAG_BD, XZ_SIDE_AD)
-    #else
-      #define XZ_SKEW_FACTOR 0.0
-    #endif
-  #endif
-  #ifndef YZ_SKEW_FACTOR
-    #if defined(YZ_DIAG_AC) && defined(YZ_DIAG_BD) && defined(YZ_SIDE_AD)
-      #define YZ_SKEW_FACTOR _SKEW_FACTOR(YZ_DIAG_AC, YZ_DIAG_BD, YZ_SIDE_AD)
-    #else
-      #define YZ_SKEW_FACTOR 0.0
-    #endif
-  #endif
-#endif // SKEW_CORRECTION
-
-/**
  * Set granular options based on the specific type of leveling
  */
 #define UBL_SEGMENTED   (ENABLED(AUTO_BED_LEVELING_UBL) && ANY(SEGMENT_LEVELED_MOVES))
@@ -825,7 +788,7 @@
 #define HAS_AUTOLEVEL   (ENABLED(AUTO_BED_LEVELING_UBL) && DISABLED(PROBE_MANUALLY))
 #define HAS_MESH        ENABLED(AUTO_BED_LEVELING_UBL)
 #define HAS_PROBING_PROCEDURE (ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(Z_MIN_PROBE_REPEATABILITY_TEST))
-#if (HAS_LEVELING || ENABLED(SKEW_CORRECTION))
+#if HAS_LEVELING
 #define HAS_POSITION_MODIFIERS 1
 #endif
 

@@ -253,8 +253,6 @@ StrongIndexArray<float, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_st
   constexpr bool Planner::leveling_active;
 #endif
 
-skew_factor_t Planner::skew_factor; // Initialized by settings.load()
-
 // private:
 
 xyze_long_t Planner::position{0};
@@ -965,10 +963,6 @@ void Planner::check_axes_activity() {
 
       #endif
     }
-
-    #if ENABLED(SKEW_CORRECTION)
-      unskew(raw);
-    #endif
   }
 
 #endif // HAS_LEVELING

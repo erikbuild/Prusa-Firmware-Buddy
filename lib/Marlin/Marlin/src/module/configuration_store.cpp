@@ -386,19 +386,7 @@ void MarlinSettings::reset() {
   #endif /* HAS_PLANNER() */
 
   reset_stepper_drivers();
-
-  //
-  // Skew Correction
-  //
-
-  #if ENABLED(SKEW_CORRECTION_GCODE)
-    planner.skew_factor.xy = XY_SKEW_FACTOR;
-    #if ENABLED(SKEW_CORRECTION_FOR_Z)
-      planner.skew_factor.xz = XZ_SKEW_FACTOR;
-      planner.skew_factor.yz = YZ_SKEW_FACTOR;
-    #endif
-  #endif
-
+  
   //
   // Advanced Pause filament load & unload lengths
   //
@@ -711,21 +699,6 @@ void MarlinSettings::reset() {
       SERIAL_ECHOLNPAIR("  M851 X", LINEAR_UNIT(probe_offset.x),
                               " Y", LINEAR_UNIT(probe_offset.y),
                               " Z", LINEAR_UNIT(probe_offset.z));
-    #endif
-
-    /**
-     * Bed Skew Correction
-     */
-    #if ENABLED(SKEW_CORRECTION_GCODE)
-      CONFIG_ECHO_HEADING("Skew Factor: ");
-      CONFIG_ECHO_START();
-      #if ENABLED(SKEW_CORRECTION_FOR_Z)
-        SERIAL_ECHOPAIR_F("  M852 I", LINEAR_UNIT(planner.skew_factor.xy), 6);
-        SERIAL_ECHOPAIR_F(" J", LINEAR_UNIT(planner.skew_factor.xz), 6);
-        SERIAL_ECHOLNPAIR_F(" K", LINEAR_UNIT(planner.skew_factor.yz), 6);
-      #else
-        SERIAL_ECHOLNPAIR_F("  M852 S", LINEAR_UNIT(planner.skew_factor.xy), 6);
-      #endif
     #endif
 
     #if HAS_TRINAMIC

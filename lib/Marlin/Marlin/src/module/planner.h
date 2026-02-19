@@ -204,26 +204,6 @@ typedef struct {
   #endif
 } motion_parameters_t;
 
-#if DISABLED(SKEW_CORRECTION)
-  #define XY_SKEW_FACTOR 0
-  #define XZ_SKEW_FACTOR 0
-  #define YZ_SKEW_FACTOR 0
-#endif
-
-typedef struct {
-  #if ENABLED(SKEW_CORRECTION_GCODE)
-    float xy;
-    #if ENABLED(SKEW_CORRECTION_FOR_Z)
-      float xz, yz;
-    #else
-      const float xz = XZ_SKEW_FACTOR, yz = YZ_SKEW_FACTOR;
-    #endif
-  #else
-    const float xy = XY_SKEW_FACTOR,
-                xz = XZ_SKEW_FACTOR, yz = YZ_SKEW_FACTOR;
-  #endif
-} skew_factor_t;
-
 #if ENABLED(ARC_SUPPORT)
 // @hejllukas: Disabled because it contains a significant issue causing that the entry speed is calculated incorrectly.
 // #define HINTS_SAFE_EXIT_SPEED
@@ -324,8 +304,6 @@ class Planner {
 
     /// Maximum Z position at which we printed so far for
     static float max_printed_z;
-
-    static skew_factor_t skew_factor;
 
     #if ENABLED(SD_ABORT_ON_ENDSTOP_HIT)
       static bool abort_on_endstop_hit;
@@ -481,32 +459,6 @@ class Planner {
 
     #endif
 
-    #if ENABLED(SKEW_CORRECTION)
-
-      FORCE_INLINE static void skew(float &cx, float &cy, const float cz) {
-        if (WITHIN(cx, X_MIN_POS + 1, X_MAX_POS) && WITHIN(cy, Y_MIN_POS + 1, Y_MAX_POS)) {
-          const float sx = cx - cy * skew_factor.xy - cz * (skew_factor.xz - (skew_factor.xy * skew_factor.yz)),
-                      sy = cy - cz * skew_factor.yz;
-          if (WITHIN(sx, X_MIN_POS, X_MAX_POS) && WITHIN(sy, Y_MIN_POS, Y_MAX_POS)) {
-            cx = sx; cy = sy;
-          }
-        }
-      }
-      FORCE_INLINE static void skew(xyz_pos_t &raw) { skew(raw.x, raw.y, raw.z); }
-
-      FORCE_INLINE static void unskew(float &cx, float &cy, const float cz) {
-        if (WITHIN(cx, X_MIN_POS, X_MAX_POS) && WITHIN(cy, Y_MIN_POS, Y_MAX_POS)) {
-          const float sx = cx + cy * skew_factor.xy + cz * skew_factor.xz,
-                      sy = cy + cz * skew_factor.yz;
-          if (WITHIN(sx, X_MIN_POS, X_MAX_POS) && WITHIN(sy, Y_MIN_POS, Y_MAX_POS)) {
-            cx = sx; cy = sy;
-          }
-        }
-      }
-      FORCE_INLINE static void unskew(xyz_pos_t &raw) { unskew(raw.x, raw.y, raw.z); }
-
-    #endif // SKEW_CORRECTION
-
     #if HAS_LEVELING
       /**
        * Apply leveling to transform a cartesian position
@@ -522,9 +474,6 @@ class Planner {
           , bool leveling = false
         #endif
       ) {
-        #if ENABLED(SKEW_CORRECTION)
-          skew(pos);
-        #endif
         #if HAS_LEVELING
           if (leveling) apply_leveling(pos);
         #endif
@@ -537,9 +486,6 @@ class Planner {
       ) {
         #if HAS_LEVELING
           if (leveling) unapply_leveling(pos);
-        #endif
-        #if ENABLED(SKEW_CORRECTION)
-          unskew(pos);
         #endif
       }
     #endif // HAS_POSITION_MODIFIERS

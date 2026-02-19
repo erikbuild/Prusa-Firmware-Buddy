@@ -757,9 +757,6 @@ void panic_loop() {
             // In order to conserve power and keep Y disabled, set the chopper off time via SPI instead.
             stepperY.toff(0);
 #endif
-#if ENABLED(SKEW_CORRECTION)
-            planner.skew_factor.xy = 0; // avoid triggering Y due to XY skew correction
-#endif
             destination = current_position;
             const PrintArea::rect_t print_rect = print_area.get_bounding_rect(); // We need to get out of print area
 #if HAS_TOOLCHANGER()

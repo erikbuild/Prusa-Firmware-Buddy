@@ -53,11 +53,6 @@ bool disable_modifiers_if(bool condition, bool do_z) {
     set_bed_leveling_enabled(false);
 #endif
 
-    // Already done by set_bed_leveling_enabled(false)
-    // #if ENABLED(SKEW_CORRECTION)
-    //   unskew(current_position);
-    // #endif
-
     sync_plan_position();
     return leveling_was_active;
 }
@@ -66,10 +61,6 @@ void enable_modifiers_if(bool condition, bool restore_leveling) {
     if (!condition) {
         return;
     }
-
-#if ENABLED(SKEW_CORRECTION)
-    skew(current_position);
-#endif
 
 #if HAS_LEVELING
     if (restore_leveling) {
