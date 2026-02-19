@@ -107,9 +107,9 @@ elseif(BOARD STREQUAL "ANFC")
   add_subdirectory(puppy/honeybee_shared)
   add_subdirectory(can)
 
-elseif(BOARD STREQUAL "INDX_TOOL_OFFSET")
+elseif(BOARD STREQUAL "TOOL_OFFSET_SENSOR")
   add_subdirectory(freertos)
-  add_subdirectory(puppy/indx_tool_offset)
+  add_subdirectory(puppy/tool_offset_sensor)
   add_subdirectory(puppy/honeybee_shared)
   add_subdirectory(can)
 

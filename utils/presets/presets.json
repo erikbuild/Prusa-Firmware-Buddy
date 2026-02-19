@@ -432,11 +432,11 @@
             }
         },
         {
-            "name": "indx_tool_offset",
-            "description": "Firmware for indx_tool_offset",
+            "name": "tool_offset_sensor",
+            "description": "Firmware for tool_offset_sensor",
             "cacheVariables": {
                 "PRINTER": "NONE",
-                "BOARD": "INDX_TOOL_OFFSET",
+                "BOARD": "TOOL_OFFSET_SENSOR",
                 "CAN_BUS_TYPE": "PUB6"
             }
         }

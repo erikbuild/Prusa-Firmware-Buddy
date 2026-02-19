@@ -31,15 +31,15 @@
 /// BOARD (e.g. BUDDY_BOARD)
 ///
 
-#define BOARD_BUDDY()            1
-#define BOARD_XBUDDY()           2
-#define BOARD_XLBUDDY()          3
-#define BOARD_DWARF()            4
-#define BOARD_MODULARBED()       5
-#define BOARD_XL_DEV_KIT_XLB()   6
-#define BOARD_XBUDDY_EXTENSION() 7
-#define BOARD_ANFC()             8
-#define BOARD_INDX_TOOL_OFFSET() 9
+#define BOARD_BUDDY()              1
+#define BOARD_XBUDDY()             2
+#define BOARD_XLBUDDY()            3
+#define BOARD_DWARF()              4
+#define BOARD_MODULARBED()         5
+#define BOARD_XL_DEV_KIT_XLB()     6
+#define BOARD_XBUDDY_EXTENSION()   7
+#define BOARD_ANFC()               8
+#define BOARD_TOOL_OFFSET_SENSOR() 9
 
 #if !defined(BOARD)
     #error Please define the BOARD macro
@@ -60,8 +60,8 @@
     #define BOARD_IS_XBUDDY_EXTENSION() 1
 #elif BOARD() == BOARD_ANFC()
     #define BOARD_IS_ANFC() 1
-#elif BOARD() == BOARD_INDX_TOOL_OFFSET()
-    #define BOARD_IS_INDX_TOOL_OFFSET() 1
+#elif BOARD() == BOARD_TOOL_OFFSET_SENSOR()
+    #define BOARD_IS_TOOL_OFFSET_SENSOR() 1
 #else
     #error BOARD is something weird
 #endif
@@ -98,6 +98,6 @@
     #define BOARD_IS_ANFC() 0
 #endif
 
-#ifndef BOARD_IS_INDX_TOOL_OFFSET
-    #define BOARD_IS_INDX_TOOL_OFFSET() 0
+#ifndef BOARD_IS_TOOL_OFFSET_SENSOR
+    #define BOARD_IS_TOOL_OFFSET_SENSOR() 0
 #endif

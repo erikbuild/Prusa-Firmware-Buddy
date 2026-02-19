@@ -8387,9 +8387,9 @@
             }
         },
         {
-            "name": "indx_tool_offset_debug_boot",
+            "name": "tool_offset_sensor_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-indx-tool-offset",
+            "binaryDir": "build-vscode-tool-offset-sensor",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8401,7 +8401,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "INDX_TOOL_OFFSET"
+                    "value": "TOOL_OFFSET_SENSOR"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -8438,9 +8438,9 @@
             }
         },
         {
-            "name": "indx_tool_offset_debug_noboot",
+            "name": "tool_offset_sensor_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-indx-tool-offset",
+            "binaryDir": "build-vscode-tool-offset-sensor",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8452,7 +8452,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "INDX_TOOL_OFFSET"
+                    "value": "TOOL_OFFSET_SENSOR"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -8489,9 +8489,9 @@
             }
         },
         {
-            "name": "indx_tool_offset_release_boot",
+            "name": "tool_offset_sensor_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-indx-tool-offset",
+            "binaryDir": "build-vscode-tool-offset-sensor",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8503,7 +8503,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "INDX_TOOL_OFFSET"
+                    "value": "TOOL_OFFSET_SENSOR"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",
@@ -8540,9 +8540,9 @@
             }
         },
         {
-            "name": "indx_tool_offset_release_noboot",
+            "name": "tool_offset_sensor_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-indx-tool-offset",
+            "binaryDir": "build-vscode-tool-offset-sensor",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8554,7 +8554,7 @@
                 },
                 "BOARD": {
                     "type": "STRING",
-                    "value": "INDX_TOOL_OFFSET"
+                    "value": "TOOL_OFFSET_SENSOR"
                 },
                 "CAN_BUS_TYPE": {
                     "type": "STRING",

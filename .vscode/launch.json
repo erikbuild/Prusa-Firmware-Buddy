@@ -337,9 +337,9 @@
         {
             // Ensure OpenOCD does support STM32C092 devices - use specific OpenOCD https://github.com/ivous/OpenOCD/tree/C092"
             // see /util/debug/README_STM32C0.md
-            "name": "Launch INDX_TOOL_OFFSET",
+            "name": "Launch TOOL_OFFSET_SENSOR",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-indx-tool-offset/firmware",
+            "executable": "${workspaceRoot}/build-vscode-tool-offset-sensor/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -348,7 +348,7 @@
                 "set $pc = &Reset_Handler"
             ],
             "configFiles": [
-                "${workspaceRoot}/utils/debug/indx_tool_offset.cfg",
+                "${workspaceRoot}/utils/debug/tool_offset_sensor.cfg",
             ],
             "toolchainPrefix": "arm-none-eabi",
             "device": "STM32C092RC",
@@ -374,15 +374,15 @@
         {
             // Ensure OpenOCD does support STM32C092 devices - use specific OpenOCD https://github.com/ivous/OpenOCD/tree/C092"
             // see /util/debug/README_STM32C0.md
-            "name": "Attach INDX_TOOL_OFFSET",
+            "name": "Attach TOOL_OFFSET_SENSOR",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-indx-tool-offset/firmware",
+            "executable": "${workspaceRoot}/build-vscode-tool-offset-sensor/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
             "gdbPath": "gdb-multiarch",
             "configFiles": [
-                "${workspaceRoot}/utils/debug/indx_tool_offset.cfg",
+                "${workspaceRoot}/utils/debug/tool_offset_sensor.cfg",
             ],
             "toolchainPrefix": "arm-none-eabi",
             "device": "STM32C092RC",

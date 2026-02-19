@@ -1,5 +1,5 @@
-if(NOT BOARD STREQUAL "INDX_TOOL_OFFSET")
-  message(FATAL_ERROR "Unsupported INDX Tool Offset board: ${BOARD}")
+if(NOT BOARD STREQUAL "TOOL_OFFSET_SENSOR")
+  message(FATAL_ERROR "Unsupported Tool Offset Sensor board: ${BOARD}")
 endif()
 
 target_link_options(firmware PUBLIC "-L" "${CMAKE_CURRENT_SOURCE_DIR}/link")

@@ -26,7 +26,7 @@ endif()
 # FIXME: Find a better place for this dispatch.
 if(BOARD STREQUAL "XBUDDY_EXTENSION"
    OR BOARD STREQUAL "ANFC"
-   OR BOARD STREQUAL "INDX_TOOL_OFFSET"
+   OR BOARD STREQUAL "TOOL_OFFSET_SENSOR"
    )
   target_compile_definitions(freertos PUBLIC FREERTOS_INTERNAL_STORAGE_SIZE=72)
   target_sources(freertos PRIVATE stream_buffer.cpp)

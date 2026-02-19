@@ -30,7 +30,7 @@ set(BOARD_VALID_OPTS
     "XL_DEV_KIT_XLB"
     "XBUDDY_EXTENSION"
     "ANFC"
-    "INDX_TOOL_OFFSET"
+    "TOOL_OFFSET_SENSOR"
     )
 set(MCU_VALID_OPTS
     "<default>"
@@ -187,7 +187,7 @@ if(${MCU} STREQUAL "<default>")
     set(MCU "STM32H503CBU7")
   elseif(${BOARD} STREQUAL "ANFC")
     set(MCU "STM32C092KCUX")
-  elseif(${BOARD} STREQUAL "INDX_TOOL_OFFSET")
+  elseif(${BOARD} STREQUAL "TOOL_OFFSET_SENSOR")
     set(MCU "STM32C092KCUX")
   else()
     message(FATAL_ERROR "Don't know what MCU to set as default for this board/version")
@@ -203,7 +203,7 @@ if(${BOARD} STREQUAL "DWARF"
    OR ${BOARD} STREQUAL "XBUDDY_EXTENSION"
    OR ${BOARD} STREQUAL "ANFC"
    OR ${BOARD} STREQUAL "XL_DEV_KIT_XLB"
-   OR ${BOARD} STREQUAL "INDX_TOOL_OFFSET"
+   OR ${BOARD} STREQUAL "TOOL_OFFSET_SENSOR"
    )
   set(CONNECT
       "NO"
@@ -722,7 +722,7 @@ set_feature_for_printers_master_board(
 set_feature_for_printers_master_board(HAS_BED_FAN "COREONEL" "COREONEL_INDX")
 set_feature_for_printers_master_board(HAS_PSU_FAN "COREONEL" "COREONEL_INDX")
 set_feature_for_printers(HAS_AC_CONTROLLER "COREONEL" "COREONEL_INDX")
-set_feature_for_printers(HAS_INDX_TOOL_OFFSET "COREONE_INDX" "COREONEL_INDX")
+set_feature_for_printers(HAS_TOOL_OFFSET_SENSOR "COREONE_INDX" "COREONEL_INDX")
 set_feature_for_printers(HAS_ANFC "COREONE" "COREONEL") # TODO: Add INDX once HAS_FILAMENT_TRACKER
                                                         # is sorted out
 set_feature_for_printers(HAS_HEATBED_SCREWS_DURING_TRANSPORT "COREONEL" "COREONEL_INDX")
@@ -939,7 +939,7 @@ if(HAS_DWARF
    OR HAS_PUPPY_MODULARBED
    OR HAS_XBUDDY_EXTENSION
    OR HAS_ANFC
-   OR HAS_INDX_TOOL_OFFSET
+   OR HAS_TOOL_OFFSET_SENSOR
    )
   set(HAS_PUPPIES YES)
 else()
@@ -1068,14 +1068,14 @@ if(ENABLE_PUPPY_BOOTLOAD)
         )
   endif()
 
-  if(NOT INDX_TOOL_OFFSET_BINARY_PATH)
-    set(INDX_TOOL_OFFSET_SOURCE_DIR
+  if(NOT TOOL_OFFSET_SENSOR_BINARY_PATH)
+    set(TOOL_OFFSET_SENSOR_SOURCE_DIR
         "${CMAKE_SOURCE_DIR}"
-        CACHE PATH "From which source directory to build the INDX tool offset firmware."
+        CACHE PATH "From which source directory to build the tool offset sensor firmware."
         )
-    set(INDX_TOOL_OFFSET_BINARY_DIR
-        "${CMAKE_BINARY_DIR}/indx_tool_offset-build"
-        CACHE PATH "Where to have build directory for the INDX tool offset firmware."
+    set(TOOL_OFFSET_SENSOR_BINARY_DIR
+        "${CMAKE_BINARY_DIR}/tool_offset_sensor-build"
+        CACHE PATH "Where to have build directory for the tool offset sensor firmware."
         )
   endif()
 endif()

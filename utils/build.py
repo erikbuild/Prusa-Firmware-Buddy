@@ -185,7 +185,7 @@ class FirmwareBuildConfiguration(BuildConfiguration):
                 'MODULARBED_BINARY_DIR',
                 'DWARF_BINARY_DIR',
                 'XBUDDY_EXTENSION_BINARY_DIR',
-                'INDX_TOOL_OFFSET_BINARY_DIR',
+                'TOOL_OFFSET_SENSOR_BINARY_DIR',
             ]
             if self.build_layout == BuildLayout.COMMON_BUILD_DIR and name in ignore:
                 continue
@@ -523,8 +523,8 @@ class CMakePresetsGenerator:
                 return 'build-vscode-xbuddy-extension'
             elif 'anfc' in configuration.preset.name:
                 return 'build-vscode-anfc'
-            elif 'indx_tool_offset' in configuration.preset.name:
-                return 'build-vscode-indx-tool-offset'
+            elif 'tool_offset_sensor' in configuration.preset.name:
+                return 'build-vscode-tool-offset-sensor'
             else:
                 return 'build-vscode-buddy'
         else:
