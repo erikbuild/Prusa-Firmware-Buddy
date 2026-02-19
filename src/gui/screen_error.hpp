@@ -17,7 +17,7 @@ public:
 
 private:
     std::array<char, 42> fw_version_buff;
-    std::array<char, PRINTER_CODE_SIZE + 1> pcode_buff;
+    std::array<char, 42> pcode_buff;
     std::array<char, crash_dump::MSG_TITLE_MAX_LEN> err_title_buff;
     std::array<char, crash_dump::MSG_MAX_LEN> err_msg_buff;
     std::array<char, 30> debug_info_buff;

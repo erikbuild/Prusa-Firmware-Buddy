@@ -25,7 +25,7 @@ using namespace bsod_details;
 
 static const constexpr Rect16 QR_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(350, 85, 100, 100) : Rect16(150, 190, 80, 80);
 static const constexpr Rect16 link_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 270, 200, 20) : Rect16(10, 225, 130, 13);
-static const constexpr Rect16 printer_code_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(320, 270, 130, 20) : Rect16(10, 267, 60, 13);
+static const constexpr Rect16 printer_code_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(210, 270, 240, 20) : Rect16(10, 267, 220, 13);
 static const constexpr Rect16 help_txt_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 250, 170, 20) : Rect16(10, 210, 160, 13);
 static const constexpr Rect16 title_line_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(30, 70, 420, 1) : Rect16(10, 44, 220, 1);
 static const constexpr Rect16 fw_version_rect = GuiDefaults::EnableDialogBigLayout ? Rect16(210, 250, 240, 20) : Rect16(10, 300, 220, 13);
@@ -75,14 +75,18 @@ ScreenError::ScreenError()
     txt_fw_version.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Right() : Align_t::Left());
     txt_printer_code.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Right() : Align_t::Left());
     txt_debug_info.SetAlignment(GuiDefaults::EnableDialogBigLayout ? Align_t::Right() : Align_t::Left());
+    txt_bsod_msg.set_check_overflow(false);
+    txt_fw_version.set_check_overflow(false); // versions with git tag will probably fail the asserts
 
     const char *signed_str = signature_exist() ? " [S]" : "";
     const char *apendix_str = appendix_exist() ? " [A]" : "";
-    StringBuilder(fw_version_buff).append_printf("%s %s%s%s", PrinterModelInfo::current().id_str, version::project_version_full, signed_str, apendix_str);
+    StringBuilder(fw_version_buff).append_printf("%s%s%s", version::project_version_full, signed_str, apendix_str);
     txt_fw_version.SetText(string_view_utf8::MakeRAM(fw_version_buff.data()));
 
     if (config_store().devhash_in_qr.get()) {
-        printerCode(pcode_buff.data());
+        std::array<char, PRINTER_CODE_SIZE + 1> code;
+        printerCode(code.data());
+        StringBuilder(pcode_buff).append_printf("%s %s", PrinterModelInfo::current().id_str, code.data());
         txt_printer_code.SetText(string_view_utf8::MakeRAM(pcode_buff.data()));
     } else {
         txt_printer_code.Hide();
