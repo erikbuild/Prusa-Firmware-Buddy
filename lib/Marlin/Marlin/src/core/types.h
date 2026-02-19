@@ -231,7 +231,11 @@ struct LogicalPosTag {};
 /// Vast majority of the firmware works with native coordinates
 struct NativePosTag {};
 
-// TODO struct MachinePosTag for positions after MBL (will be added in later PR)
+/// Tag for machine position strong types.
+/// Machine positions are AFTER everything applied (hotend offsets, MBL, skew, ...).
+/// This is what planner works with.
+/// REMOVEME: For now, make it just an alias for NativePosTag so that we can migrate gradually.
+using MachinePosTag = NativePosTag;
 
 // Forward declarations
 template<typename T, typename Tag = NativePosTag> struct XYval;
@@ -308,6 +312,10 @@ typedef xyze_float_t abce_float_t;
 typedef ab_float_t ab_pos_t;
 typedef abc_float_t abc_pos_t;
 typedef abce_float_t abce_pos_t;
+
+using MachinePosXY = XYval<float, MachinePosTag>;
+using MachinePosXYZ = XYZval<float, MachinePosTag>;
+using MachinePosXYZE = XYZEval<float, MachinePosTag>;
 
 // External conversion methods
 template<template <typename T, typename Tag> typename V, typename T>
