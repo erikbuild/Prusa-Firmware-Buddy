@@ -453,7 +453,24 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
         // measure distance B-/B+
         for (uint8_t dir = 0; dir != 2;) {
             const int32_t dist_steps = (exp_dist_steps[dir] + measure_eps_steps_max + measure_acc_steps) * (dir ? measure_dir : -measure_dir);
-            if (!measure_axis_distance(axis, origin_steps, dist_steps, p_steps[slot][dir], p_dist[slot][dir], fr_mm_s)) {
+            const bool hit = measure_axis_distance(axis, origin_steps, dist_steps, p_steps[slot][dir], p_dist[slot][dir], fr_mm_s);
+
+            // pushing in the first direction, which moves us away from the endstop, can also cause
+            // the gantry to flex. allow this constant deflection to pass through
+            const int32_t exp_dir_steps_max = exp_dist_steps[dir]
+                + (dir ? measure_eps_steps_min : measure_eps_steps_max);
+            const int32_t exp_dir_steps_min = exp_dist_steps[dir] - measure_eps_steps_min;
+
+            // record all probe metric data, split due to maximum size requirements
+            const uint32_t ts = ticks_us();
+            metric_record_custom_at_time(&metric_phxy_probe, ts, ",ax=%u,a=%ld,b=%ld p=%u,r=%u,h=%d",
+                axis, static_cast<long>(ab_off[0]), static_cast<long>(ab_off[1]),
+                internal::probe_id, idx, hit);
+            metric_record_custom_at_time(&metric_phxy_probe, ts, ",ax=%u,a=%ld,b=%ld min=%ld,max=%ld,dist=%ld",
+                axis, static_cast<long>(ab_off[0]), static_cast<long>(ab_off[1]),
+                static_cast<long>(exp_dir_steps_min), static_cast<long>(exp_dir_steps_max), static_cast<long>(p_steps[slot][dir]));
+
+            if (!hit) {
                 // we can't possibly reach the endstop by retrying, abort
                 SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": not reached");
                 ui.status_printf_P(0, "Endstop not reached");
@@ -464,20 +481,18 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
             p_steps[slot][dir] = abs(p_steps[slot][dir]);
             p_dist[slot][dir] = abs(p_dist[slot][dir]);
 
-            // pushing in the first direction, which moves us away from the endstop, can also cause
-            // the gantry to flex. allow this constant deflection to pass through
-            const int32_t exp_dir_steps_max = exp_dist_steps[dir]
-                + (dir ? measure_eps_steps_min : measure_eps_steps_max);
-            if (p_steps[slot][dir] >= exp_dir_steps_max) {
+            if (p_steps[slot][dir] > exp_dir_steps_max) {
                 // calculated travel ends within deceleration, wrong position or short travel
-                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": travel too short");
+                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": planned travel too short",
+                    p_steps[slot][dir], ">", exp_dir_steps_max);
                 ui.status_printf_P(0, "Endstop not reached");
                 return false;
             }
 
-            if (p_steps[slot][dir] < (exp_dist_steps[dir] - measure_eps_steps_min)) {
+            if (p_steps[slot][dir] < exp_dir_steps_min) {
                 // early trigger, retry the probe in the same direction
-                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": early trigger");
+                SERIAL_ECHOLNPAIR("endstop ", (dir == 0 ? '-' : '+'), ": early trigger ",
+                    p_steps[slot][dir], "<", exp_dir_steps_min);
                 ui.status_printf_P(0, "Endstop early trigger");
                 if (++retries <= XY_HOMING_ORIGIN_BUMP_RETRIES) {
                     continue;
@@ -499,9 +514,6 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
                 }
             }
         }
-
-        metric_record_custom(&metric_phxy_probe, ",a=%u p=%u,r=%u,d0=%.3f,d1=%.3f",
-            axis, internal::probe_id, retries, (double)p_diff[0], (double)p_diff[1]);
 
         if (idx >= probe_n) {
             if (p_diff[0] < measure_bump_max_err_mm && p_diff[1] < measure_bump_max_err_mm) {
