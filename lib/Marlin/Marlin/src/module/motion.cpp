@@ -292,18 +292,18 @@ void plan_park_move_to(const float rx, const float ry, const float rz, const fee
   if (current_position.z < rz) {
     destination = current_position;
     destination.z = rz;
-    prepare_internal_move_to_destination(fr_z, { .apply_modifiers = true, .do_segment = segmented == Segmented::yes });
+    prepare_internal_move_to_destination(fr_z, { .do_segment = segmented == Segmented::yes });
   }
 
   destination = current_position;
   destination.set(rx, ry);
-  prepare_internal_move_to_destination(fr_xy, { .apply_modifiers = false /*XY move doesn't need MBL*/, .do_segment = segmented == Segmented::yes });
+  prepare_internal_move_to_destination(fr_xy, { .do_segment = segmented == Segmented::yes });
 
   // If Z needs to lower, do it after moving XY
   if (current_position.z > rz) {
     destination = current_position;
     destination.z = rz;
-    prepare_internal_move_to_destination(fr_z, { .apply_modifiers = true, .do_segment = segmented == Segmented::yes });
+    prepare_internal_move_to_destination(fr_z, { .do_segment = segmented == Segmented::yes });
   }
 }
 

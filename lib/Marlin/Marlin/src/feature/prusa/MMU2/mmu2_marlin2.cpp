@@ -101,21 +101,7 @@ void motion_do_blocking_move_to_xy(float rx, float ry, float feedRate_mm_s) {
 }
 
 void motion_do_blocking_move_to_z(float z, float feedRate_mm_s) {
-    xyze_pos_t target_pos = current_position;
-    target_pos.z = z;
-
-#if HAS_LEVELING
-    // Gotta apply leveling, otherwise the move would move to non-leveled coordinates
-    // (and potentially crash into model)
-    planner.apply_leveling(target_pos);
-#endif
-
-    do_blocking_move_to(target_pos, feedRate_mm_s);
-
-    // But since the plan_park_move_to overrides the current position values (which are by default in
-    // native (without MBL) coordinates and we apply MBL to them) we need to reset the z height to
-    // make all the future moves correct.
-    current_position.z = z;
+    do_blocking_move_to_z(z, feedRate_mm_s);
 }
 
 void nozzle_park() {

@@ -1467,21 +1467,10 @@ void Pause::unpark_nozzle_and_notify() {
 
     // Move Z_AXIS to saved position, scope for PauseFsmNotifier
     {
-        auto resume_pos_adj = settings.resume_pos;
+        PauseFsmExplicitProgressNotifier N(*this, current_position.z, settings.resume_pos.z, parkMoveXYPercent(Z_len, XY_len), 100, marlin_vars().native_pos[MARLIN_VAR_INDEX_Z]); // from XY% to 100%
 
-        // Gotta apply leveling, otherwise the move would move the axes to non-leveled coordinates
-        // (because do_blocking_move_to->plan_park_move_to->buffer_line doesn't apply the leveling :/)
-#if HAS_LEVELING
-        planner.apply_leveling(resume_pos_adj);
-#endif
-
-        PauseFsmExplicitProgressNotifier N(*this, current_position.z, resume_pos_adj.z, parkMoveXYPercent(Z_len, XY_len), 100, marlin_vars().native_pos[MARLIN_VAR_INDEX_Z]); // from XY% to 100%
         // FIXME: use a beter movement api when available
-        do_blocking_move_to_z(resume_pos_adj.z, feedRate_t(NOZZLE_PARK_Z_FEEDRATE), Segmented::yes);
-        // But since the plan_park_move_to overrides the current position values (which are by default in
-        // native (without MBL) coordinates and we apply MBL to them) we need to reset the z height to
-        // make all the future moves correct.
-        current_position.z = settings.resume_pos.z;
+        do_blocking_move_to_z(settings.resume_pos.z, feedRate_t(NOZZLE_PARK_Z_FEEDRATE), Segmented::yes);
     }
 
     // Unretract
