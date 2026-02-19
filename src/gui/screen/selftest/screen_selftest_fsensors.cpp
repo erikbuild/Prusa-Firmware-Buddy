@@ -43,10 +43,12 @@ public:
     FrameBase(window_frame_t *parent, Phase phase)
         : radio(parent, WizardDefaults::RectRadioButton(1), phase)
         , footer(parent, 0,
+              footer::Item::f_s_value
 #if HAS_SIDE_FSENSOR()
-              footer::Item::f_s_value_side,
+              ,
+              footer::Item::f_s_value_side
 #endif
-              footer::Item::f_s_value) {
+          ) {
 
         parent->CaptureNormalWindow(radio);
     }
