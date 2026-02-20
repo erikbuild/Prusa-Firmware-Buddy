@@ -179,7 +179,7 @@ window_text_t make_right_phys_text(size_t idx, window_t *parent,
 
     print_right_tool_into_buffer(idx, text_buffers, drawing_nozzles);
     window_text_t wtxt { parent, get_right_phys_rect(idx), is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeRAM(text_buffers[idx].data()) };
-    if (!is_tool_enabled(idx)) {
+    if (!VirtualToolIndex::from_raw(idx).is_enabled()) {
         wtxt.Hide();
     }
     return wtxt;
@@ -372,7 +372,7 @@ ToolsMappingBody::ToolsMappingBody(window_t *parent, GCodeInfo &gcode_info)
     for (int right_idx = 0; right_idx < get_num_of_enabled_tools(); ++right_idx) {
         for (size_t current_real = right_phys_idx_to_real[right_idx]; current_real < std::min<size_t>(max_item_rows, VirtualToolIndex::count); ++current_real) {
             // loop until we find a valid physical tool
-            if (is_tool_enabled(current_real)) {
+            if (VirtualToolIndex::from_raw(current_real).is_enabled()) {
                 // increment by 1 from this offset to the rest of the array
                 std::iota(std::begin(right_phys_idx_to_real) + right_idx, std::begin(right_phys_idx_to_real) + get_num_of_enabled_tools(), current_real);
                 break; // go to fill the next physical tool
@@ -477,7 +477,7 @@ void ToolsMappingBody::Show() {
     }
 
     for (size_t i = 0; i < std::size(right_phys_texts); ++i) {
-        if (is_tool_enabled(i)) {
+        if (VirtualToolIndex::from_raw(i).is_enabled()) {
             right_phys_texts[i].Show();
         }
     }

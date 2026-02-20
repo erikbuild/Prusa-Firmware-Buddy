@@ -44,7 +44,7 @@ void SpoolJoin::reset() {
 
 bool SpoolJoin::add_join(uint8_t spool_1, uint8_t spool_2) {
     std::unique_lock lock(mutex);
-    if (num_joins >= joins.size() || !is_tool_enabled(spool_1) || !is_tool_enabled(spool_2) || spool_1 == spool_2) {
+    if (num_joins >= joins.size() || spool_1 >= VirtualToolIndex::count || !VirtualToolIndex::from_raw(spool_1).is_enabled() || spool_2 >= VirtualToolIndex::count || !VirtualToolIndex::from_raw(spool_2).is_enabled() || spool_1 == spool_2) {
         return false;
     }
     // join will be added at the end of existing joins, so when for example
