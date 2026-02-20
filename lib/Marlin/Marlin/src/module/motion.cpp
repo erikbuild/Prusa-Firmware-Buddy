@@ -1222,10 +1222,10 @@ float homeaxis_single_run(const HomeAxisSingleRunArgs &args) {
   for(uint8_t i = 0; i < bump_count; i++) {
 
     // Move away from the endstop by the axis HOME_BUMP_MM
-    if(do_homing_move(axis, -bump, real_fr_mm_s)) {
-      // Hitting an endstop during move away should never happen, fail in this case.
-      return NAN;
-    }
+    // We CANNOT use a stallguarded move here - it somehow manages to screw up results of the homing sensitivity calibration on cartesian printers
+    // BFW-8396
+    current_position[axis] -= bump;
+    planner.buffer_segment(current_position, real_fr_mm_s, PhysicalToolIndex::currently_selected());
 
     // Slow move towards endstop until triggered
 
