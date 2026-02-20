@@ -991,6 +991,11 @@ RefineResult corexy_calibrate_homing_during_G28(float xy_mm_s, const G28Flags &f
     }
   }
 
+  // If recalibration was attempted and failed, clear the old (now known-invalid) calibration data.
+  // This mostly just removes the green tickmark in calibration menu - even
+  // if we kept the data, it would try to recalibrate next time anyway.
+  corexy_clear_homing_calibration();
+
   return RefineResult::refine_fail;
 }
 
