@@ -170,12 +170,8 @@ void FilamentSensors::task_cycle() {
 }
 
 void FilamentSensors::reconfigure_sensors_if_needed(bool force) {
-    const uint8_t new_tool_index =
-#if HAS_TOOLCHANGER()
-        prusa_toolchanger.get_active_tool_nr();
-#else
-        0;
-#endif
+    const auto new_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    const auto new_tool_index = new_tool ? new_tool->to_raw() : PhysicalToolIndex::count;
 
     const bool new_has_mmu =
 #if HAS_MMU2()
@@ -200,8 +196,8 @@ void FilamentSensors::reconfigure_sensors_if_needed(bool force) {
     using LFS = LogicalFilamentSensor;
     auto &ls = logical_sensors_;
 
-    const auto extruder_fs = GetExtruderFSensor(tool_index);
-    const auto side_fs = GetSideFSensor(tool_index);
+    const auto extruder_fs = new_tool ? GetExtruderFSensor(*new_tool) : nullptr;
+    const auto side_fs = new_tool ? GetSideFSensor(*new_tool) : nullptr;
 
     const bool side_fs_enabled = side_fs && side_fs->is_enabled();
 
@@ -287,7 +283,7 @@ void FilamentSensors::process_events() {
     } else {
         // During MMU standard operation, there is no filament loaded to the nozzle when not printing.
         // So it's not a good idea to reset what filament types we have stored.
-        if (!has_mmu && no_filament_surely(LogicalFilamentSensor::extruder)) {
+        if (!has_mmu && no_filament_surely(LogicalFilamentSensor::extruder) && tool_index < PhysicalToolIndex::count) {
             config_store().set_filament_type(tool_index, FilamentType::none);
         }
 
