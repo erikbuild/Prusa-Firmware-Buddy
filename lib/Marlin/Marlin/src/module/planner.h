@@ -699,7 +699,7 @@ class Planner {
      */
     static void set_position_mm(const xyze_pos_t &xyze);
 
-    static void set_e_position_mm(const float e);
+    static void set_e_position_mm(const float e, std::optional<uint8_t> e_axis_index = std::nullopt);
 
     /// Resets machine position to values from stepper
     static void reset_position();

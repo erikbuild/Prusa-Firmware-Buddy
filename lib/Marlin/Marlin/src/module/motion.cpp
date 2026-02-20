@@ -211,9 +211,9 @@ void sync_plan_position() {
   }
 }
 
-void sync_plan_position_e() {
+void sync_plan_position_e(std::optional<uint8_t> e_axis_index) {
   if (!planner.draining()) {
-    planner.set_e_position_mm(current_position.e);
+    planner.set_e_position_mm(current_position.e, e_axis_index);
   }
 }
 

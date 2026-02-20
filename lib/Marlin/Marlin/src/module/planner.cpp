@@ -2410,24 +2410,30 @@ void Planner::set_position_mm(const xyze_pos_t &xyze) {
 
 /**
  * Setters for planner position (also setting stepper position).
+ * @param e_axis_index  When provided, skips tool lookup and uses this axis index directly.
+ *                      Use for service moves (e.g. INDX lever) that operate without an active tool.
  */
-void Planner::set_e_position_mm(const float e) {
-  const auto virtual_notool = VirtualToolIndex::currently_selected();
-  if (std::holds_alternative<NoTool>(virtual_notool)) {
-    return;
+void Planner::set_e_position_mm(const float e, std::optional<uint8_t> e_axis_index) {
+  if(!e_axis_index.has_value()) {
+      const auto current_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+      if (!current_tool.has_value()) {
+        // You should not be trying to set e_position without an active tool
+        assert(false);
+        return;
+      }
+      e_axis_index = E_AXIS_N(*current_tool);
   }
-  [[maybe_unused]] auto virtual_tool = std::get<VirtualToolIndex>(virtual_notool);
 
   #if ENABLED(DISTINCT_E_FACTORS)
     last_extruder = active_extruder;
   #endif
-  position.e = LROUND(settings.axis_msteps_per_mm[E_AXIS_N(virtual_tool.to_raw())] * e);
+  position.e = LROUND(settings.axis_msteps_per_mm[*e_axis_index] * e);
   position_float.e = e;
 
   if (processing())
     buffer_sync_block();
   else
-    stepper.set_axis_position(E_AXIS, LROUND(settings.axis_steps_per_mm[E_AXIS_N(virtual_tool.to_raw())] * e));
+    stepper.set_axis_position(E_AXIS, LROUND(settings.axis_steps_per_mm[*e_axis_index] * e));
 }
 
 void Planner::reset_position() {

@@ -32,6 +32,7 @@
 
 #include <inplace_function.hpp>
 #include <array>
+#include <optional>
 #include <span>
 #include <atomic>
 
@@ -258,7 +259,9 @@ void set_current_from_steppers();
  * no kinematic translation. Used for homing axes and cartesian/core syncing.
  */
 void sync_plan_position();
-void sync_plan_position_e();
+/// @param e_axis_index Explicit E stepper index — use for service moves (e.g. INDX lever)
+///                      that must sync E regardless of tool state.
+void sync_plan_position_e(std::optional<uint8_t> e_axis_index = std::nullopt);
 
 /**
  * Move the planner to the current position from wherever it last moved
