@@ -42,9 +42,8 @@ struct HeaterConfig_t {
     uint8_t tool_nr { 0 }; // when type=Nozzle, this will contain related nozzle number
     temp_getter getTemp;
     temp_setter setTargetTemp;
-    float &refKp;
-    float &refKi;
-    float &refKd;
+    PID_t (*get_pid)();
+    void (*set_pid)(const PID_t &);
     FanCtlFnc heatbreak_fan_fnc;
     FanCtlFnc print_fan_fnc;
     uint32_t heat_time_ms;

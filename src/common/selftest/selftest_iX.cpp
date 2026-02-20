@@ -102,9 +102,8 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
         .type = heater_type_t::Nozzle,
         .getTemp = []() { return Hotend::for_tool(0).nozzle_temp(); },
         .setTargetTemp = [](int target_temp) { thermalManager.setTargetHotend(target_temp, 0); },
-        .refKp = Temperature::temp_hotend[0].pid.Kp,
-        .refKi = Temperature::temp_hotend[0].pid.Ki,
-        .refKd = Temperature::temp_hotend[0].pid.Kd,
+        .get_pid = []() { return Hotend::for_tool(0).nozzle_pid_config_compat(); },
+        .set_pid = [](const PID_t &pid) { Hotend::for_tool(0).set_nozzle_pid_config_compat(pid); },
         .heatbreak_fan_fnc = Fans::heat_break,
         .print_fan_fnc = Fans::print,
         .heat_time_ms = 42000,
@@ -123,17 +122,14 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
     }
 };
 
-static float bed_fake_pid_constant = 0.0;
-
 static constexpr HeaterConfig_t Config_HeaterBed = {
     .partname = "Bed",
     .type = heater_type_t::Bed,
     .tool_nr = 0,
     .getTemp = []() { return thermalManager.temp_bed.celsius; },
     .setTargetTemp = [](int target_temp) { thermalManager.setTargetBed(target_temp); },
-    .refKp = bed_fake_pid_constant,
-    .refKi = bed_fake_pid_constant,
-    .refKd = bed_fake_pid_constant,
+    .get_pid = []() { return PID_t {}; },
+    .set_pid = [](const PID_t &) {},
     .heatbreak_fan_fnc = Fans::heat_break,
     .print_fan_fnc = Fans::print,
     .heat_time_ms = 65000,

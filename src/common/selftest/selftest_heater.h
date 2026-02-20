@@ -20,9 +20,7 @@ public:
 
 private:
     SelftestHeater_t &rResult;
-    float storedKp;
-    float storedKi;
-    float storedKd;
+    PID_t original_pid;
     uint32_t m_StartTime;
     uint32_t m_EndTime;
     uint32_t m_MeasureStartTime;

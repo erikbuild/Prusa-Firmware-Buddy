@@ -31,9 +31,7 @@ CSelftestPart_Heater::CSelftestPart_Heater(IPartHandler &state_machine, const He
     : state_machine(state_machine)
     , m_config(config)
     , rResult(result)
-    , storedKp(config.refKp)
-    , storedKi(config.refKi)
-    , storedKd(config.refKd)
+    , original_pid { config.get_pid() }
     , last_progress(0)
     , log(2000)
     , check_log(3000) {}
@@ -43,10 +41,7 @@ CSelftestPart_Heater::~CSelftestPart_Heater() {
         static_cast<int>(m_config.target_temp), static_cast<double>(m_config.getTemp()));
     m_config.setTargetTemp(0);
 
-    m_config.refKp = storedKp;
-    m_config.refKi = storedKi;
-    m_config.refKd = storedKd;
-    thermalManager.updatePID();
+    m_config.set_pid(original_pid);
     log_info(Selftest, "%s heater PID regulator restored", m_config.partname);
 }
 
@@ -103,10 +98,12 @@ LoopResult CSelftestPart_Heater::stateSetup() {
 
     // looked into marlin and it seems all PID values are used as numerator
     // switch regulator into on/off mode
-    m_config.refKp = 1000000;
-    m_config.refKi = 0;
-    m_config.refKd = 0;
-    thermalManager.updatePID();
+    m_config.set_pid(PID_t {
+        .Kp = 1000000,
+        .Ki = 0,
+        .Kd = 0,
+    });
+
     log_info(Selftest, "%s Started", m_config.partname);
     log_info(Selftest, "%s target: %d current: %f", m_config.partname,
         static_cast<int>(m_config.target_temp), static_cast<double>(m_config.getTemp()));

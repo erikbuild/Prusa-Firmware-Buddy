@@ -101,9 +101,8 @@ static consteval HeaterConfig_t make_nozzle_config(const char *name) {
         .tool_nr = index,
         .getTemp = []() { return Hotend::for_tool(index).nozzle_temp(); },
         .setTargetTemp = [](int target_temp) { thermalManager.setTargetHotend(target_temp, index); },
-        .refKp = Temperature::temp_hotend[index].pid.Kp,
-        .refKi = Temperature::temp_hotend[index].pid.Ki,
-        .refKd = Temperature::temp_hotend[index].pid.Kd,
+        .get_pid = []() { return Hotend::for_tool(index).nozzle_pid_config_compat(); },
+        .set_pid = [](const PID_t &pid) { Hotend::for_tool(index).set_nozzle_pid_config_compat(pid); },
         .heatbreak_fan_fnc = Fans::heat_break,
         .print_fan_fnc = Fans::print,
         .heat_time_ms = 42000,
@@ -134,17 +133,14 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
     make_nozzle_config<4>("Nozzle 5")
 };
 
-static float bed_fake_pid_constant = 0.0; // No PID change support for XL's bed (for now)
-
 static constexpr HeaterConfig_t Config_HeaterBed = {
     .partname = "Bed",
     .type = heater_type_t::Bed,
     .tool_nr = 0,
     .getTemp = []() { return thermalManager.temp_bed.celsius; },
     .setTargetTemp = [](int target_temp) { thermalManager.setTargetBed(target_temp); },
-    .refKp = bed_fake_pid_constant,
-    .refKi = bed_fake_pid_constant,
-    .refKd = bed_fake_pid_constant,
+    .get_pid = []() { return PID_t {}; },
+    .set_pid = [](const PID_t &) {},
     .heatbreak_fan_fnc = Fans::heat_break,
     .print_fan_fnc = Fans::print,
     .heat_time_ms = 65000,

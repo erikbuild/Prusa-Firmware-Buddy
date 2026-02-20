@@ -55,6 +55,12 @@ public:
 
     virtual void set_nozzle_pid_config(const HotendPIDConfig &set) = 0;
 
+    /// Compatibility function for heater selftests
+    PID_t nozzle_pid_config_compat() const;
+
+    /// Compatibility function for heater selftests
+    void set_nozzle_pid_config_compat(const PID_t &set);
+
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
     bool is_thermal_model_protection_ok() const {
         return thermal_model_protection_ok_;
