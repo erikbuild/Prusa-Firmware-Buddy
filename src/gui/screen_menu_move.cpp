@@ -77,7 +77,6 @@ ScreenMenuMove::ScreenMenuMove()
         for (auto tool : PhysicalToolIndex::all()) {
             marlin_client::set_target_nozzle(0, tool);
         }
-        marlin_client::set_display_nozzle(0);
         marlin_client::set_target_bed(0);
     };
 

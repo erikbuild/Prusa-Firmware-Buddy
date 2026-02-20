@@ -155,7 +155,6 @@ void MenuMultiFilamentChange::carry_out_changes() {
 
         const uint16_t temperature = max(config.new_filament.parameters().nozzle_temperature, config.old_filament.parameters().nozzle_temperature);
         marlin_client::set_target_nozzle(temperature, tool.to_physical());
-        marlin_client::set_display_nozzle(temperature, tool.to_physical());
     }
 
     // Lift Z to prevent unparking and parking of each tool

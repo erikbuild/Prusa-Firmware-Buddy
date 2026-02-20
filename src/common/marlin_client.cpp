@@ -482,9 +482,6 @@ void marlin_set_variable(MarlinVariable<T> &variable, T value) {
 void set_target_nozzle(int16_t val, uint8_t hotend) {
     return marlin_set_variable(marlin_vars().hotend(hotend).target_nozzle, val);
 }
-void set_display_nozzle(float val, uint8_t hotend) {
-    return marlin_set_variable(marlin_vars().hotend(hotend).display_nozzle, val);
-}
 void set_target_bed(int16_t val) {
     return marlin_set_variable(marlin_vars().target_bed, val);
 }

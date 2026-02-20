@@ -39,7 +39,6 @@ MI_NOZZLE_ABSTRACT::MI_NOZZLE_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] const c
 
 void MI_NOZZLE_ABSTRACT::OnClick() {
     marlin_client::set_target_nozzle(static_cast<int16_t>(value()), tool_nr);
-    marlin_client::set_display_nozzle(value(), tool_nr);
 }
 
 /*****************************************************************************/

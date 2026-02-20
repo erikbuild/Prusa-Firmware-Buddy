@@ -85,13 +85,6 @@ inline void set_target_nozzle(int16_t val, PhysicalToolIndex tool) {
     set_target_nozzle(val, tool.to_raw());
 }
 
-[[deprecated("Use the ToolIndex overload")]]
-void set_display_nozzle(float val, uint8_t hotend = marlin_server::CURRENT_TOOL);
-
-inline void set_display_nozzle(float val, PhysicalToolIndex tool) {
-    set_display_nozzle(val, tool.to_raw());
-}
-
 void set_target_bed(int16_t val);
 void set_fan_speed(uint8_t val);
 void set_print_speed(uint16_t val);

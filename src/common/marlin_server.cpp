@@ -3581,9 +3581,6 @@ static void _server_set_var(const Request &request) {
             planner.flow_percentage[e] = (int16_t)extruder.flow_factor;
             planner.refresh_e_factor(e);
             return;
-        } else if (reinterpret_cast<uintptr_t>(&extruder.display_nozzle) == variable_identifier) {
-            extruder.display_nozzle = request.set_variable.float_value;
-            return;
         }
     }
 
