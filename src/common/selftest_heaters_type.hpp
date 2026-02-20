@@ -58,7 +58,7 @@ public:
         bed = 2,
     };
 
-    SelftestHeater_t noz[HOTENDS];
+    SelftestHeater_t noz[PhysicalToolIndex::count];
     SelftestHeater_t bed;
 
     std::underlying_type_t<TestedParts> tested_parts { 0 };

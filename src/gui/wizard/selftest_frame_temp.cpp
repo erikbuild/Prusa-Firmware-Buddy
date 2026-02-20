@@ -16,7 +16,7 @@ constexpr size_t text_w = WizardDefaults::status_text_w;
 constexpr size_t col_0 = WizardDefaults::MarginLeft;
 constexpr size_t col_1 = WizardDefaults::status_icon_X_pos;
 
-constexpr int16_t tool_icons_x = int16_t(col_1 - HOTENDS * WindowIconOkNgArray::icon_space_width);
+constexpr int16_t tool_icons_x = int16_t(col_1 - PhysicalToolIndex::count * WindowIconOkNgArray::icon_space_width);
 
 constexpr size_t txt_h = WizardDefaults::txt_h;
 constexpr size_t row_h = WizardDefaults::row_h;
@@ -99,10 +99,10 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
     , text_info(&test_frame, info_text_rect, is_multiline::yes)
     , text_dialog(this, GetRect() + Rect16::X_t(WizardDefaults::MarginLeft) + Rect16::Y_t(GuiDefaults::FramePadding) - Rect16::H_t(80) - Rect16::W_t(2 * WizardDefaults::MarginLeft), is_multiline::yes, is_closed_on_click_t::no, {})
     // results
-    , icons_noz_prep(&test_frame, { .x = tool_icons_x, .y = row_noz_2 }, HOTENDS)
-    , icons_noz_heat(&test_frame, { .x = tool_icons_x, .y = row_noz_3 }, HOTENDS)
+    , icons_noz_prep(&test_frame, { .x = tool_icons_x, .y = row_noz_2 }, PhysicalToolIndex::count)
+    , icons_noz_heat(&test_frame, { .x = tool_icons_x, .y = row_noz_3 }, PhysicalToolIndex::count)
 #if HAS_HEATBREAK_TEMP()
-    , icons_heatbreak(&test_frame, { .x = tool_icons_x, .y = row_heatbreak }, HOTENDS)
+    , icons_heatbreak(&test_frame, { .x = tool_icons_x, .y = row_heatbreak }, PhysicalToolIndex::count)
 #endif
 {
 
@@ -256,18 +256,14 @@ void ScreenSelftestTemp::change() {
 
                 uint8_t progress = std::numeric_limits<decltype(progress)>::max();
 
-                for (size_t i = 0; i < HOTENDS; i++) {
-#if HAS_TOOLCHANGER()
-                    if (prusa_toolchanger.is_tool_enabled(i))
-#endif
-                    {
-                        icons_noz_prep.SetState(dt.noz[i].prep_state, i);
-                        icons_noz_heat.SetState(dt.noz[i].heat_state, i);
+                for (const auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+                    const auto i = tool.to_raw();
+                    icons_noz_prep.SetState(dt.noz[i].prep_state, i);
+                    icons_noz_heat.SetState(dt.noz[i].heat_state, i);
 #if HAS_HEATBREAK_TEMP()
-                        icons_heatbreak.SetState(dt.noz[i].heatbreak_error ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, i);
+                    icons_heatbreak.SetState(dt.noz[i].heatbreak_error ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, i);
 #endif
-                        progress = std::min(progress, dt.noz[i].progress);
-                    }
+                    progress = std::min(progress, dt.noz[i].progress);
                 }
                 progress_noz.set_progress_percent(progress);
             }

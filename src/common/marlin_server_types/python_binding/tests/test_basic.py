@@ -119,7 +119,7 @@ def test_selftest_types():
 
 
 def test_heaters_result():
-    data = bytearray(29)
+    data = bytearray(25)
     data[0] = 55  # progress
     data[1] = 0  # heatbreak_error
     # prep_state
