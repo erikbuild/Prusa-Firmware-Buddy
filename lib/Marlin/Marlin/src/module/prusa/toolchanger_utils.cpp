@@ -174,21 +174,6 @@ bool PrusaToolChangerUtils::update(PuppyModbus &bus) {
     return true;
 }
 
-uint8_t PrusaToolChangerUtils::get_active_tool_nr() const {
-    return match(
-        PhysicalToolIndex::currently_selected(),
-        [](PhysicalToolIndex physical_tool) { return physical_tool.to_raw(); },
-        [](NoTool) { return PhysicalToolIndex::count; });
-}
-
-bool PrusaToolChangerUtils::is_any_tool_active() const {
-    return std::holds_alternative<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
-}
-
-bool PrusaToolChangerUtils::is_tool_active(uint8_t idx) const {
-    return PhysicalToolIndex::currently_selected() == PhysicalToolIndex::from_raw_notool(idx);
-}
-
 uint8_t PrusaToolChangerUtils::get_num_enabled_tools() const {
     return std::ranges::count_if(dwarfs, [](const auto &dwarf) { return dwarf.is_enabled(); });
 }

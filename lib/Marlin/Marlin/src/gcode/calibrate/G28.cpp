@@ -427,7 +427,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 #if HAS_TOOLCHANGER()
   // For Z homing, we need a tool pick. That means that we need precise homing for the toolchange.
   // !! This one is a MUST - without this, the toolchange would trigger a nested G28 internally, which would break things
-  if(should_home_at_all(Z_AXIS) && !prusa_toolchanger.is_any_tool_active()) {
+  if(should_home_at_all(Z_AXIS) && std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
     static constexpr AxisHomingRequirement req {
       .required_level = AxisHomeLevel::full,
     };

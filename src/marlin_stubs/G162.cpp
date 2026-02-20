@@ -48,12 +48,8 @@ void selftest::calib_Z([[maybe_unused]] bool move_down_after) {
     line_to_current_position();
     planner.synchronize();
 
-    const bool z_probe =
-    #if HAS_TOOLCHANGER()
-        prusa_toolchanger.is_any_tool_active(); // Use loadcell probe as well as stall if there is a tool picked
-    #else
-        true;
-    #endif
+    // Use loadcell probe as well as stall if there is a tool picked
+    const bool z_probe = std::holds_alternative<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
 
     // Home the axis
     endstops.enable(true); // Stall endstops need to be enabled manually as in G28

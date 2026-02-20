@@ -2,6 +2,7 @@
 #include <inc/MarlinConfigPre.h>
 #include <option/has_toolchanger.h>
 #include <tool_index.hpp>
+#include <utils/variant_utils.hpp>
 
 #if HAS_TOOLCHANGER()
     #include "toolchanger_utils.h"
@@ -111,11 +112,13 @@ public:
      * @brief Reenable loop() with automatic toolchange and toolfall detection.
      */
     void toolcheck_enable() {
+        const auto selected_tool = PhysicalToolIndex::currently_selected();
+
         // Revert selected to active tool
-        for (uint8_t i = 0; i < HOTENDS; ++i) {
+        for (auto tool : PhysicalToolIndex::all()) {
             /// TODO do not access puppyModbus outside of puppy task
             /// BFW-8185
-            getTool(i).set_selected(buddy::puppies::puppyModbus, is_tool_enabled(i) && i == get_active_tool_nr());
+            getTool(tool).set_selected(buddy::puppies::puppyModbus, is_tool_enabled(tool) && stdext::holds_value(selected_tool, tool));
         }
 
         if (!block_tool_check.exchange(false)) { // Test if was blocked

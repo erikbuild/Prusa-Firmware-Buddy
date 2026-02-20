@@ -233,7 +233,10 @@ namespace {
         // Note: 0 means no active tool, indexing from 1
         params.active_slot = MMU2::mmu2.get_current_tool() == MMU2::FILAMENT_UNKNOWN ? 0 : MMU2::mmu2.get_current_tool() + 1;
 #elif HAS_TOOLCHANGER()
-        params.active_slot = prusa_toolchanger.is_any_tool_active() ? prusa_toolchanger.get_active_tool_nr() + 1 : 0;
+        params.active_slot = match(
+            PhysicalToolIndex::currently_selected(),
+            [](PhysicalToolIndex physical_tool) { return physical_tool.to_raw() + 1; },
+            [](NoTool) { return 0; });
         // For XL, it is possible to have "holes" in the enabled tools.
         // Therefore, we need to enable all slots and skip particular ones, not
         // do 1..n.

@@ -141,14 +141,6 @@ public:
         return is_tool_enabled(tool.to_raw());
     }
 
-    inline bool has_tool() const {
-        return get_active_tool_nr() != MARLIN_NO_TOOL_PICKED;
-    }
-
-    [[nodiscard]] uint8_t get_active_tool_nr() const;
-
-    [[nodiscard]] bool is_any_tool_active() const;
-    [[nodiscard]] bool is_tool_active(uint8_t idx) const;
     [[nodiscard]] uint8_t get_num_enabled_tools() const;
 
     void load_tool_info();
