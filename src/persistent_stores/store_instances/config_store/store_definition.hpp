@@ -423,7 +423,17 @@ struct CurrentStore
     }
 #endif
 
+    /// In case the loaded_filament_is_previous flag (for the given tool) is
+    /// false, holds the type of the currently loaded filament. If the
+    /// loaded_filament_is_previous flag is true, holds the type of the
+    /// filament that was loaded previously.
     StoreItemArray<EncodedFilamentType, EncodedFilamentType {}, ItemFlag::printer_state, journal::hash("Loaded Filament"), 16, EXTRUDERS> loaded_filament_type;
+
+    /// Flags indicating whether the value of loaded_filament_type (for the
+    /// given tool) holds the currently loaded filament (false) or the filament
+    /// that was loaded previously and that there is currenly no loaded
+    /// filament (true).
+    StoreItem<std::bitset<16>, 0, ItemFlag::printer_state, journal::hash("Loaded filament is previous")> loaded_filament_is_previous;
 
     /// User-defined filament ordering. Does not need to contain all the filaments - the rest will be appended to the back using the standard rules
     StoreItem<std::array<FilamentType, max_total_filament_count>, NoFilamentType {}, ItemFlag::user_presets, journal::hash("Filament Order")> filament_order;
@@ -463,6 +473,8 @@ struct CurrentStore
     inline void set_filament_type(VirtualToolIndex tool, FilamentType value) {
         set_filament_type(tool.to_raw(), value);
     }
+
+    FilamentType get_previous_filament_type(VirtualToolIndex tool);
 
     // Note: hash is kept for backwards compatibility
     StoreItem<bool, false, ItemFlag::features, journal::hash("Heatup Bed")> filament_change_preheat_all;

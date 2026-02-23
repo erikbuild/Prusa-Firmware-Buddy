@@ -195,6 +195,9 @@ void CurrentStore::set_side_fs_ref_ins_value(uint8_t index, int32_t value) {
 #endif
 
 FilamentType CurrentStore::get_filament_type([[maybe_unused]] uint8_t index) {
+    if (loaded_filament_is_previous.get()[index]) {
+        return FilamentType::none;
+    }
     return loaded_filament_type.get(index);
 }
 
@@ -215,9 +218,24 @@ void CurrentStore::set_filament_type(uint8_t index, FilamentType value) {
         // On filament removal, it invalidates retracted distance
         buddy::auto_retract().set_retracted_distance(HAS_TOOLCHANGER() ? index : 0, std::nullopt);
 #endif
-    }
 
-    loaded_filament_type.set(index, value);
+        loaded_filament_is_previous.apply([&](auto &item) {
+            item.set(index, true);
+        });
+    } else {
+        loaded_filament_type.set(index, value);
+        loaded_filament_is_previous.apply([&](auto &item) {
+            item.set(index, false);
+        });
+    }
+}
+
+FilamentType CurrentStore::get_previous_filament_type(VirtualToolIndex tool) {
+    if (loaded_filament_is_previous.get()[tool.to_raw()]) {
+        return loaded_filament_type.get(tool.to_raw());
+    } else {
+        return FilamentType::none;
+    }
 }
 
 float CurrentStore::get_nozzle_diameter([[maybe_unused]] uint8_t index) {
