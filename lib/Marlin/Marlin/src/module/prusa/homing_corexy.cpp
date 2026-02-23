@@ -438,6 +438,11 @@ static float travel_accel_distance(const float fr_mm_s) {
     return SQR(fr_mm_s) / (2.f * planner.settings.travel_acceleration);
 }
 
+/// Maximum allowed homing distance difference per axis (max - min)
+static constexpr float axis_home_max_abs_diff(const AxisEnum axis) {
+    return axis_home_max_diff(axis) - axis_home_min_diff(axis);
+}
+
 /**
  * @brief Part of precise homing.
  * @param axis Physical axis to measure
@@ -469,8 +474,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, x
     // - maximum diagonal shift of classic homing (maximum relative difference or absolute bump tolerance)
     // - 1*cycle due to the maximum outwards A+B phase alignment
     // - bump tolerance allowed by the new measurement
-    const float home_max_diff_mm = max(max(axis_home_max_diff(A_AXIS) - axis_home_min_diff(A_AXIS),
-                                           axis_home_max_diff(B_AXIS) - axis_home_min_diff(B_AXIS))
+    const float home_max_diff_mm = max(max(axis_home_max_abs_diff(A_AXIS), axis_home_max_abs_diff(B_AXIS))
             * std::numbers::sqrt2_v<float>,
         measure_bump_max_err_mm);
     const int32_t measure_eps_steps = static_cast<int32_t>(home_max_diff_mm / planner.mm_per_step[axis]
