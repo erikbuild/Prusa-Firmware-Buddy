@@ -35,9 +35,13 @@ struct SelftestTool {
     TestResult heatBreakFan : 2;
     TestResult fansSwitched : 2; // encapsuling with HAS_SWITCHED_FAN_TEST macro would introduce problems since selftest_result is saved on eeprom as a whole structure
     TestResult nozzle : 2;
-    TestResult fsensor : 2;
+    // BFW-8374: fsensor and sideFsensor are no longer used. Selftest results
+    // are derived directly from existence of calibration data, not from
+    // separate flags. Do not reuse, or we get confusion on upgrades/downgrades.
+    TestResult deprecated_fsensor : 2;
     TestResult loadcell : 2;
-    TestResult sideFsensor : 2;
+    // Same as above.
+    TestResult deprecated_sideFsensor : 2;
     TestResult dockoffset : 2;
     TestResult tooloffset : 2;
     TestResult gears : 2;

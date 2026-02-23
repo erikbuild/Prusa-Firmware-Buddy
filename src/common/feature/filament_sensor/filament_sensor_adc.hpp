@@ -38,6 +38,8 @@ protected:
 public:
     FSensorADC(FilamentSensorID id);
 
+    bool is_calibrated() const override;
+
     FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage) final;
 
     void load_settings();

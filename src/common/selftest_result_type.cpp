@@ -7,6 +7,7 @@
     #include <Marlin/src/module/prusa/toolchanger.h>
 #endif
 #include <logging/log.hpp>
+#include <selftest_result_evaluation.hpp>
 
 LOG_COMPONENT_REF(Selftest);
 
@@ -24,10 +25,8 @@ void SelftestResult_Log(const SelftestResult &results) {
         log_info(Selftest, "Fans switched %u result is %s", tool.to_raw(), ToString(results.tools[tool].fansSwitched));
 #endif /* HAS_SWITCHED_FAN_TEST() */
         log_info(Selftest, "Nozzle heater %u result is %s", tool.to_raw(), ToString(results.tools[tool].nozzle));
-#if FILAMENT_SENSOR_IS_ADC()
-        log_info(Selftest, "Filament sensor %u result is %s", tool.to_raw(), ToString(results.tools[tool].fsensor));
-        log_info(Selftest, "Side filament sensor %u result is %s", tool.to_raw(), ToString(results.tools[tool].sideFsensor));
-#endif /*FILAMENT_SENSOR_IS_ADC()*/
+        log_info(Selftest, "Filament sensor %u result is %s", tool.to_raw(), ToString(SelftestSnake::map_fsensor_calibration_result(GetExtruderFSensor(tool.to_raw()))));
+        log_info(Selftest, "Side filament sensor %u result is %s", tool.to_raw(), ToString(SelftestSnake::map_fsensor_calibration_result(GetSideFSensor(tool.to_raw()))));
 #if HAS_LOADCELL()
         log_info(Selftest, "Loadcell result %u is %s", tool.to_raw(), ToString(results.tools[tool].loadcell));
 #endif /*HAS_LOADCELL()*/

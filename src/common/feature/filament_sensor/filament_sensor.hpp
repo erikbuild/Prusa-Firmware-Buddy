@@ -50,6 +50,10 @@ public:
      */
     virtual int32_t GetFilteredValue() const { return 0; };
 
+    /// Whether this sensor has valid calibration data.
+    /// Non-ADC sensors don't store calibration data and are always calibrated.
+    virtual bool is_calibrated() const { return true; }
+
     /// Instantiates a class within the \param storage that handles the sensor calibration
     /// !!! Can return nullptr if the filament sensor cannot be checked in any way
     virtual FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage);

@@ -137,9 +137,6 @@ private:
 SelftestFSensorsResult SelftestFSensors::run() {
 #if PRINTER_IS_PRUSA_MINI()
     if (!ask_mini_has_fsensor()) {
-        config_store().selftest_result.apply([&](SelftestResult &r) {
-            r.tools[0].fsensor = TestResult::TestResult_Skipped;
-        });
         marlin_server::fsm_destroy(ClientFSM::SelftestFSensors);
         return Result::success;
     }
@@ -583,11 +580,6 @@ SelftestFSensorsResult SelftestFSensors::process_and_present_results(bool aborte
     while (FSensors_instance().is_enable_state_update_processing() && !planner.draining()) {
         idle(true);
     }
-
-    // Store selftest result
-    config_store().selftest_result.apply([&](SelftestResult &r) {
-        r.tools[params_.tool].fsensor = success ? TestResult_Passed : TestResult_Failed;
-    });
 
     const auto phase = success ? Phase::success : Phase::failed;
     marlin_server::fsm_change(phase);

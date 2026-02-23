@@ -33,7 +33,7 @@ TestResult get_test_result(Action action, Tool tool) {
         }));
     case Action::FilamentSensorCalibration:
         return merge_hotends(tool, [&](const int8_t e) {
-            return evaluate_results(sr.tools[e].fsensor);
+            return get_fsensor_calibration_result(e);
         });
     case Action::Gears:
         return merge_hotends(tool, [&](const int8_t e) {

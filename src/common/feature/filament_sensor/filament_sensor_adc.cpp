@@ -41,6 +41,11 @@ void FSensorADC::set_filtered_value_from_IRQ(Value filtered_value) {
     fs_filtered_value.store(filtered_value);
 }
 
+bool FSensorADC::is_calibrated() const {
+    return FSensorADCEval::within_limits(fs_ref_ins_value)
+        && FSensorADCEval::within_limits(fs_ref_nins_value);
+}
+
 FSensorADC::FSensorADC(FilamentSensorID id)
     : IFSensor(id) {
     load_settings();

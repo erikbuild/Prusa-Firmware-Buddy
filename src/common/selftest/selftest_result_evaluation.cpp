@@ -69,10 +69,9 @@ bool is_selftest_successfully_completed() {
         }
 #endif /* HAS_GEARBOX_ALIGNMENT */
 
-        if (
-            sr.tools[tool].fsensor == TestResult_Failed
-            // For the Mini, the filament sensor is optional
-            && !(PRINTER_IS_PRUSA_MINI() && sr.tools[0].fsensor == TestResult_Skipped)) {
+        // Skipped means the sensor is disabled by the user, which is acceptable.
+        const auto fs_result = SelftestSnake::get_fsensor_calibration_result(tool.to_raw());
+        if (fs_result != TestResult_Passed && fs_result != TestResult_Skipped) {
             return false;
         }
 

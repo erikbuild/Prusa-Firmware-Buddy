@@ -2,6 +2,7 @@
 #include <selftest_snake_config.hpp>
 #include <inc/Conditionals_LCD.h>
 #include <printers.h>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -38,6 +39,27 @@ constexpr TestResult merge_hotends(Tool tool, stdext::inplace_function<TestResul
     } else {
         return evaluate(std::to_underlying(tool));
     }
+}
+
+/// Map a filament sensor's calibration status to a TestResult.
+inline TestResult map_fsensor_calibration_result(IFSensor *sensor) {
+    if (sensor == nullptr) {
+        return TestResult_Passed;
+    } else if (sensor->is_calibrated()) {
+        return TestResult_Passed;
+    } else if (!should_enable(sensor->id())) {
+        return TestResult_Skipped;
+    } else {
+        return TestResult_Unknown;
+    }
+}
+
+/// Map live filament sensor state to a TestResult for calibration checkmark display.
+/// Checks both extruder and side sensor (if present) for the given tool index.
+inline TestResult get_fsensor_calibration_result(int8_t tool_index) {
+    return evaluate_results(
+        map_fsensor_calibration_result(GetExtruderFSensor(tool_index)),
+        map_fsensor_calibration_result(GetSideFSensor(tool_index)));
 }
 
 }; // namespace SelftestSnake

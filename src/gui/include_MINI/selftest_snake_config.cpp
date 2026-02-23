@@ -27,7 +27,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
         return SteelSheets::IsSheetCalibrated(config_store().active_sheet.get()) ? TestResult_Passed : TestResult_Unknown;
     case Action::FilamentSensorCalibration:
         return merge_hotends(tool, [&](const int8_t e) {
-            return evaluate_results(sr.tools[e].fsensor);
+            return get_fsensor_calibration_result(e);
         });
     case Action::_count:
         break;

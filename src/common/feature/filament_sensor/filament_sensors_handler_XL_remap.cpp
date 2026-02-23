@@ -66,28 +66,18 @@ uint32_t ask_to_remap() {
         set_mapping(new_mapping);
 
         uint32_t remapped = 0; ///< Mask of remapped tools
-#if HAS_SELFTEST()
-        // Reset selftest state and fsensor calibration for remapped sensors
-        SelftestResult eeres = config_store().selftest_result.get();
         for (uint8_t e = 0; e < std::size(current_mapping); ++e) {
             if (current_mapping[e] != new_mapping[e]) {
-                eeres.tools[e].fsensor = TestResult_Unknown;
+#if HAS_SELFTEST()
                 if (auto side = GetSideFSensor(e); side) {
                     // Invalidate the sensor calibration
                     FilamentSensorCalibrator::Storage storage;
                     side->create_calibrator(storage)->finish();
                 }
-                remapped |= 1 << e;
-            }
-        }
-        config_store().selftest_result.set(eeres);
-#else
-        for (uint8_t e = 0; e < std::size(current_mapping); ++e) {
-            if (current_mapping[e] != new_mapping[e]) {
-                remapped |= 1 << e;
-            }
-        }
 #endif
+                remapped |= 1 << e;
+            }
+        }
 
         return remapped;
     }

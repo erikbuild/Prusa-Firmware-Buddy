@@ -297,20 +297,12 @@ void FilamentSensors::process_enable_state_update() {
     enable_state_update_processing = true;
     enable_state_update_pending = false;
 
-    const bool global_enable = config_store().fsensor_enabled.get();
-    const uint8_t extruder_enable_bits = config_store().fsensor_extruder_enabled_bits.get();
-    const uint8_t side_enable_bits = config_store().fsensor_side_enabled_bits.get();
-
     for (int8_t e = 0; e < HOTENDS; e++) {
         if (IFSensor *s = GetExtruderFSensor(e)) {
-            s->set_enabled(global_enable && (extruder_enable_bits & (1 << e)));
+            s->set_enabled(should_enable(s->id()));
         }
         if (IFSensor *s = GetSideFSensor(e)) {
-            // FSensorMMU (FINDA) must be enabled when MMU is active and filament sensing is enabled (global_enable).
-            // The sideFS enable setting only applies to physical side sensors, not to MMU's FINDA.
-            // This ensures FINDA is used for runout detection in MMU mode even if user disabled sideFS.
-            // FSensor modes without the MMU are not affected: has_mmu is false in such a case.
-            s->set_enabled(global_enable && (has_mmu || (side_enable_bits & (1 << e))));
+            s->set_enabled(should_enable(s->id()));
         }
     }
 
@@ -378,4 +370,24 @@ bool hasActiveFilamentSensor(uint8_t index) {
     const auto ext_ok = ext_sensor && is_fsensor_working_state(ext_sensor->get_state());
 
     return side_ok || ext_ok;
+}
+
+bool should_enable(FilamentSensorID id) {
+#if HAS_MMU2()
+    /// MMU override: when MMU is active, both extruder and side sensors
+    /// are required regardless of per-sensor enable bits.
+    if (config_store().mmu2_enabled.get()) {
+        return true;
+    }
+#endif
+
+    if (!config_store().fsensor_enabled.get()) {
+        return false;
+    }
+
+    if (id.position == FilamentSensorID::Position::side) {
+        return config_store().fsensor_side_enabled_bits.get() & (1 << id.index);
+    } else {
+        return config_store().fsensor_extruder_enabled_bits.get() & (1 << id.index);
+    }
 }
