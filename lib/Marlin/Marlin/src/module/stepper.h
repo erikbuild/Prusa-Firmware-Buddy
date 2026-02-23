@@ -58,9 +58,12 @@ private:
     static uint8_t last_direction_bits; // The next stepping-bits to be output
     static uint8_t axis_did_move; // Last Movement in the given direction is not null, as computed when the last movement was fetched from planner
 
-    //
-    // Exact steps at which an endstop was triggered
-    //
+    /**
+     * @brief Step positions at which an endstop was triggered
+     * @see endstop_triggered() to stop after an endstop trigger
+     * @see triggered_position() to retrieve the triggered position
+     * The position is kept logical (cartesian), relative to home
+     **/
     static xyz_long_t endstops_trigsteps;
 
     //

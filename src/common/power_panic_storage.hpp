@@ -120,7 +120,7 @@ struct state_crash_t {
     uint32_t sdpos; /// sdpos of the gcode instruction being aborted
     xyze_pos_t start_current_position; /// absolute logical starting XYZE position of the gcode instruction
     xyze_pos_t crash_current_position; /// absolute logical XYZE position of the crash location
-    abce_pos_t crash_position; /// absolute physical ABCE position of the crash location
+    xyze_pos_t crash_position; /// absolute physical XYZE position of the crash location
     uint16_t segments_finished = 0;
     uint8_t leveling_active; /// state of MBL before crashing
     AxesHomeLevel axes_home_level; /// axis state before crashing

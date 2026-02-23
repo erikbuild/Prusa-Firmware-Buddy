@@ -130,8 +130,8 @@ typedef struct PlannerBlock {
         acceleration;                       // acceleration mm/sec^2
 
   union {
-    abce_ulong_t msteps {};                    // Mini-step count along each axis
-    abce_long_t sync_step_position;         // Absolute step counts to set when this sync block is executed
+    xyze_ulong_t msteps {};                    // Mini-step count along each axis
+    xyze_long_t sync_step_position;         // Absolute step counts to set when this sync block is executed
   };
   uint32_t mstep_event_count;               // The number of mini-step events required to complete this block
 
@@ -521,7 +521,7 @@ class Planner {
       , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
     );
 
-    static bool populate_raw_block(block_t *const block, const abce_long_t &target,
+    static bool populate_raw_block(block_t *const block, const xyze_long_t &target,
         const xyze_pos_t &target_float, float acceleration, float nominal_speed,
         float entry_speed, float exit_speed, uint8_t extruder);
 
@@ -538,14 +538,14 @@ class Planner {
      *
      * Leveling and kinematics should be applied ahead of calling this.
      *
-     *  a,b,c,e     - target positions in mm and/or degrees
+     *  x,y,z,e     - target positions in mm and/or degrees
      *  fr_mm_s     - (target) speed of the move
      *  extruder    - target extruder
      *  hints       - optional parameters to aid planner calculations
      */
-    static bool buffer_segment(const abce_pos_t &abce, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
+    static bool buffer_segment(const xyze_pos_t &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
 
-    static bool buffer_raw_segment(const abce_pos_t &abce, float acceleration, float nominal_speed, float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
+    static bool buffer_raw_segment(const xyze_pos_t &xyze, float acceleration, float nominal_speed, float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
 
   public:
 
@@ -589,7 +589,7 @@ class Planner {
      * The supplied position is in machine space, and no additional
      * conversions are applied.
      */
-    static void set_machine_position_mm(const abce_pos_t &abce);
+    static void set_machine_position_mm(const xyze_pos_t &xyze);
 
     /**
      * Get an axis position according to stepper position(s)
@@ -601,16 +601,16 @@ class Planner {
      *   - can return incoherent values when axes are moving
      */
     static float get_axis_position_mm(const AxisEnum axis);
-    static void get_axis_position_mm(ab_pos_t& pos);
-    static void get_axis_position_mm(abc_pos_t& pos);
-    static void get_axis_position_mm(abce_pos_t& pos);
+    static void get_axis_position_mm(xy_pos_t& pos);
+    static void get_axis_position_mm(xyz_pos_t& pos);
+    static void get_axis_position_mm(xyze_pos_t& pos);
 
     /// Returns target position of the last queued move in MACHINE coordinates (after MBL - see MachinePosTag)
     /// It should generally apply that to_machine_pos(current_position) == get_machine_position_mm()
     /// !!! BUT the planner CAN discard a some very small moves (see MIN_MSTEPS_PER_SEGMENT),
     /// !!! in which case the current_position will get updated but the machine position will not
     /// So for motion planning, you usually want to use current_machine_position() instead
-    static abce_pos_t get_machine_position_mm() { return position_float; }
+    static xyze_pos_t get_machine_position_mm() { return position_float; }
 
     [[deprecated("Use gcode_exceptions().throw_unhandled()")]]
     static void quick_stop();
