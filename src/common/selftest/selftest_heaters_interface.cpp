@@ -161,8 +161,8 @@ void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed)
 // we could loose some events, so we must be sending entire state of both parts
 bool phaseHeaters(std::array<IPartHandler *, PhysicalToolIndex::count> &pNozzles, IPartHandler **pBed) {
     // true when nozzle just finished test
-    bool just_finished_noz[HOTENDS] {};
-    for (size_t i = 0; i < HOTENDS; i++) {
+    std::bitset<PhysicalToolIndex::count> just_finished_noz;
+    for (size_t i = 0; i < PhysicalToolIndex::count; i++) {
         if (pNozzles[i]) {
             just_finished_noz[i] = !pNozzles[i]->Loop();
         }
@@ -175,13 +175,13 @@ bool phaseHeaters(std::array<IPartHandler *, PhysicalToolIndex::count> &pNozzles
     marlin_server::fsm_change_extended(IPartHandler::GetFsmPhase(), resultHeaters);
 
     // Continue below only if some of the tests just finished, if not, just run this again until some finishes
-    if (!just_finished_bed && !std::ranges::any_of(just_finished_noz, [](bool val) { return val; })) {
+    if (!just_finished_bed && !just_finished_noz.any()) {
         return true;
     }
 
     // just finished noz or bed, it is extremely unlikely they would finish both at same time
     SelftestResult eeres = config_store().selftest_result.get();
-    for (int8_t e = 0; e < HOTENDS; e++) {
+    for (int8_t e = 0; e < PhysicalToolIndex::count; e++) {
         if (just_finished_noz[e]) {
             eeres.tools[e].nozzle = pNozzles[e]->GetResult();
         }
@@ -192,7 +192,7 @@ bool phaseHeaters(std::array<IPartHandler *, PhysicalToolIndex::count> &pNozzles
     }
     config_store().selftest_result.set(eeres);
 
-    for (size_t i = 0; i < HOTENDS; i++) {
+    for (size_t i = 0; i < PhysicalToolIndex::count; i++) {
         if (just_finished_noz[i]) {
 #if HAS_SELFTEST_POWER_CHECK_BOTH()
             PowerCheckBoth::Instance().UnBindNozzle();
