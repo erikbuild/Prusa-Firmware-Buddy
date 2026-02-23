@@ -52,7 +52,7 @@
 #define ARC_LIJKUVW_CODE(L,I,J,K,U,V,W)    CODE_N(SUB2(NUM_AXES),L,I,J,K,U,V,W)
 #define ARC_LIJKUVWE_CODE(L,I,J,K,U,V,W,E) ARC_LIJKUVW_CODE(L,I,J,K,U,V,W); CODE_ITEM_E(E)
 
-void plan_arc(const xyze_pos_t &cart, const ab_float_t &offset,
+void plan_arc(const xyze_pos_t &cart, const xy_float_t &offset,
   const bool clockwise, const uint8_t circles, bool last_segment) {
 
   #if ENABLED(CNC_WORKSPACE_PLANES)
@@ -68,11 +68,11 @@ void plan_arc(const xyze_pos_t &cart, const ab_float_t &offset,
   #endif
 
   // Radius vector from center to current location
-  ab_float_t rvec = -offset;
+  xy_float_t rvec = -offset;
 
-  const float radius = HYPOT(rvec.a, rvec.b),
-              center_P = current_position[axis_p] - rvec.a,
-              center_Q = current_position[axis_q] - rvec.b,
+  const float radius = HYPOT(rvec.x, rvec.y),
+              center_P = current_position[axis_p] - rvec.x,
+              center_Q = current_position[axis_q] - rvec.y,
               rt_X = cart[axis_p] - center_P,
               rt_Y = cart[axis_q] - center_Q;
 
@@ -98,7 +98,7 @@ void plan_arc(const xyze_pos_t &cart, const ab_float_t &offset,
   }
   else {
     // Calculate the angle
-    angular_travel = ATAN2(rvec.a * rt_Y - rvec.b * rt_X, rvec.a * rt_X + rvec.b * rt_Y);
+    angular_travel = ATAN2(rvec.x * rt_Y - rvec.y * rt_X, rvec.x * rt_X + rvec.y * rt_Y);
 
     // Angular travel too small to detect? Just return.
     if (!angular_travel) return;
@@ -441,7 +441,7 @@ void GcodeSuite::G2_G3(const bool clockwise) {
 
   TERN_(SF_ARC_FIX, relative_mode = relative_mode_backup);
 
-  ab_float_t arc_offset = { 0, 0 };
+  xy_float_t arc_offset = { 0, 0 };
   if (parser.seenval('R')) {
     const float r = parser.value_linear_units();
     if (r) {

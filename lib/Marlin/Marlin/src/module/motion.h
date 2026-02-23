@@ -522,7 +522,7 @@ FORCE_INLINE bool position_is_reachable_by_probe(const xy_pos_t &pos) { return p
    */
   void plan_arc(
     const xyze_pos_t &cart,   // Destination position
-    const ab_float_t &offset, // Center of rotation relative to current_position
+    const xy_float_t &offset, // Center of rotation relative to current_position
     const bool clockwise,     // Clockwise?
     const uint8_t circles,    // Number of full circles to perform
     bool last_segment=false   // Mark last segment of the arc as terminating
