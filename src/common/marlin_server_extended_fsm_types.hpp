@@ -4,6 +4,8 @@
 class FSMExtendedData {
 public:
     FSMExtendedData() = default;
+
+    constexpr bool operator==(const FSMExtendedData &) const = default;
 };
 
 /// concept used to check if item is subclass of FSMExtendedData

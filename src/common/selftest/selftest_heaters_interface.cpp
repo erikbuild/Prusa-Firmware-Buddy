@@ -37,7 +37,7 @@ static void HeatbreakCorrelation(CSelftestPart_Heater &h) {
     const uint8_t tool_nr = h.m_config.tool_nr;
     const float temp = thermalManager.degHeatbreak(tool_nr);
     if ((temp > h.m_config.heatbreak_max_temp) || (temp < h.m_config.heatbreak_min_temp)) {
-        resultHeaters.noz[tool_nr].heatbreak_error = true;
+        resultHeaters.noz[PhysicalToolIndex::from_raw(tool_nr)].heatbreak_error = true;
         h.state_machine.Fail();
     }
 }
@@ -62,7 +62,7 @@ void phaseHeaters_noz_ena(std::array<IPartHandler *, PhysicalToolIndex::count> &
 
     for (size_t i = 0; i < config_nozzle.size(); i++) {
         // reset result
-        resultHeaters.noz[i] = SelftestHeater_t(0, SelftestSubtestState_t::undef, SelftestSubtestState_t::undef);
+        resultHeaters.noz[PhysicalToolIndex::from_raw(i)] = SelftestHeater_t(0, SelftestSubtestState_t::undef, SelftestSubtestState_t::undef);
 
         if (pNozzles[i] == nullptr) {
 #if HAS_TOOLCHANGER()
@@ -72,7 +72,7 @@ void phaseHeaters_noz_ena(std::array<IPartHandler *, PhysicalToolIndex::count> &
 #endif
 
             auto pNoz = selftest::Factory::CreateDynamical<CSelftestPart_Heater>(config_nozzle[i],
-                resultHeaters.noz[i],
+                resultHeaters.noz[PhysicalToolIndex::from_raw(i)],
                 &CSelftestPart_Heater::stateCheckHbrPassed,
                 &CSelftestPart_Heater::stateShowSkippedDialog,
                 &CSelftestPart_Heater::stateSetup,

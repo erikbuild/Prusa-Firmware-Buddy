@@ -258,12 +258,14 @@ void ScreenSelftestTemp::change() {
 
                 for (const auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
                     const auto i = tool.to_raw();
-                    icons_noz_prep.SetState(dt.noz[i].prep_state, i);
-                    icons_noz_heat.SetState(dt.noz[i].heat_state, i);
+                    const auto &noz = dt.noz[tool];
+
+                    icons_noz_prep.SetState(noz.prep_state, i);
+                    icons_noz_heat.SetState(noz.heat_state, i);
 #if HAS_HEATBREAK_TEMP()
-                    icons_heatbreak.SetState(dt.noz[i].heatbreak_error ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, i);
+                    icons_heatbreak.SetState(noz.heatbreak_error ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, i);
 #endif
-                    progress = std::min(progress, dt.noz[i].progress);
+                    progress = std::min(progress, noz.progress);
                 }
                 progress_noz.set_progress_percent(progress);
             }

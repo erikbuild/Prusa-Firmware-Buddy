@@ -48,6 +48,11 @@ void export_phase_responses(::nanobind::module_ &m, char const *name) {
     m.attr(name) = responses_map;
 }
 
+void _bsod(const char *fmt, const char *file_name, int line_number, ...) {
+    (void)file_name, (void)line_number;
+    throw std::runtime_error(fmt);
+}
+
 #if HAS_SELFTEST()
 SelftestHeaters_t deserialize(nb::bytes &data) {
     if (data.size() != sizeof(SelftestHeaters_t)) {
@@ -71,7 +76,7 @@ void export_selftest_heaters_result(::nanobind::module_ &m) {
                                 .def(nb::init<>())
                                 .def_static("deserialize", &deserialize)
                                 .def("noz", [](const SelftestHeaters_t &selftest_heaters, int index) -> SelftestHeater_t {
-                                    return selftest_heaters.noz[index];
+                                    return selftest_heaters.noz[PhysicalToolIndex::from_raw(index)];
                                 })
                                 .def_rw("bed", &SelftestHeaters_t::bed);
 }

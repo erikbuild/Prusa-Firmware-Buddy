@@ -26,14 +26,9 @@ struct __attribute__((packed)) SelftestHeater_t {
         , prep_state(prep_state)
         , heat_state(heat_state) {}
 
-    constexpr bool operator==(const SelftestHeater_t &other) const {
-        return (progress == other.progress) && (prep_state == other.prep_state)
-            && (heat_state == other.heat_state) && (heatbreak_error == other.heatbreak_error);
-    }
+    constexpr bool operator==(const SelftestHeater_t &other) const = default;
+    constexpr bool operator!=(const SelftestHeater_t &other) const = default;
 
-    constexpr bool operator!=(const SelftestHeater_t &other) const {
-        return !((*this) == other);
-    }
     void Pass() {
         heat_state = SelftestSubtestState_t::ok;
         prep_state = SelftestSubtestState_t::ok;
@@ -50,7 +45,7 @@ struct __attribute__((packed)) SelftestHeater_t {
     void Abort() {} // currently not needed
 };
 
-struct __attribute__((packed)) SelftestHeaters_t : public FSMExtendedData {
+struct SelftestHeaters_t : public FSMExtendedData {
 public:
     // class to be converted to one_hot coding
     enum class TestedParts : uint8_t {
@@ -58,16 +53,14 @@ public:
         bed = 2,
     };
 
-    SelftestHeater_t noz[PhysicalToolIndex::count];
+    StrongIndexArray<SelftestHeater_t, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> noz;
     SelftestHeater_t bed;
 
     std::underlying_type_t<TestedParts> tested_parts { 0 };
 
     constexpr SelftestHeaters_t() {}
 
-    bool operator==(SelftestHeaters_t const &other) const {
-        return std::equal(std::begin(noz), std::end(noz), std::begin(other.noz)) && bed == other.bed && tested_parts == other.tested_parts;
-    }
+    bool operator==(SelftestHeaters_t const &) const = default;
 };
 
 constexpr std::underlying_type_t<SelftestHeaters_t::TestedParts> to_one_hot(SelftestHeaters_t::TestedParts p) {
