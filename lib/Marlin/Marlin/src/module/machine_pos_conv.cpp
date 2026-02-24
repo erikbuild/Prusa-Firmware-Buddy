@@ -11,12 +11,7 @@ MachinePosXYZ to_machine_pos(const xyz_pos_t &pos) {
 
 #if HAS_MESH
     if (planner.leveling_active) {
-    #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
         const float fade_scaling_factor = planner.fade_scaling_factor_for_z(pos.z);
-    #else
-        constexpr float fade_scaling_factor = 1.0;
-    #endif
-
         result.z += fade_scaling_factor * ubl.get_z_correction(result);
     }
 #endif
@@ -29,16 +24,11 @@ xyz_pos_t to_native_pos(const MachinePosXYZ &pos) {
 
 #if HAS_MESH
     if (planner.leveling_active) {
-    #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
         // !!! This is WRONG. We are taking the scaling factor from the wrong Z.
         // We should be takking it from the original Z, but we can't because we don't know it,
         // otherwise we wouldn't be calling this function to compute it.
         // This logic is principially flawed, I don't have a better solution at hand though.
         const float fade_scaling_factor = planner.fade_scaling_factor_for_z(pos.z);
-    #else
-        constexpr float fade_scaling_factor = 1.0;
-    #endif
-
         result.z -= fade_scaling_factor * ubl.get_z_correction(result);
     }
 #endif
