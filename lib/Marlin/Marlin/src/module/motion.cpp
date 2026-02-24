@@ -554,6 +554,8 @@ feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
      * Set sensorless homing if the axis has it, accounting for Core Kinematics.
      */
     sensorless_t start_sensorless_homing_per_axis(const AxisEnum axis) {
+      planner.synchronize();
+      
       sensorless_t stealth_states { false };
 
       switch (axis) {
@@ -736,6 +738,8 @@ void do_homing_move_axis_rel(const AxisEnum axis, const float distance, const fe
  * @return endstop trigger state at the end of the move
  */
 uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate_t fr_mm_s, [[maybe_unused]] bool can_move_back_before_homing, [[maybe_unused]] bool homing_z_with_probe) {
+  planner.synchronize();
+
   #if HAS_CEILING_CLEARANCE()
     // The homing move is doing all sorts of voodoo with the positions and was triggering false ceiling clearance events
     buddy::CeilingClearanceCheckDisabler ccd;
