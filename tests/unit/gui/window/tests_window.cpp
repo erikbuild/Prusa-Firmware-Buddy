@@ -93,6 +93,176 @@ TEST_CASE("Window registration tests", "[window]") {
     REQUIRE(screen.GetCapturedWindow() == &screen);
 }
 
+// Helper: send a KNOB event to a screen's captured window, return whether accepted
+static bool send_knob(screen_t &screen, int diff) {
+    window_t *capture = screen.GetCapturedWindow();
+    if (!capture) {
+        return false;
+    }
+    GuiEventContext ctx { gui_event::KnobEvent { .diff = diff } };
+    capture->WindowEvent(capture, GUI_event_t::KNOB, &ctx);
+    return ctx.is_accepted();
+}
+
+TEST_CASE("Frame KNOB step-by-step focus rotation", "[window][knob]") {
+    MockScreen screen;
+    Screens::Access()->Set(&screen);
+
+    // Enable children so they participate in focus navigation
+    screen.w0.Enable();
+    screen.w1.Enable();
+    screen.w2.Enable();
+    screen.w3.Enable();
+
+    // Set initial focus on w0
+    screen.w0.SetFocus();
+    REQUIRE(window_t::GetFocusedWindow() == &screen.w0);
+
+    SECTION("basic focus rotation forward") {
+        bool accepted = send_knob(screen, 2);
+        REQUIRE(accepted);
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w2);
+    }
+
+    SECTION("basic focus rotation backward") {
+        screen.w3.SetFocus();
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w3);
+
+        bool accepted = send_knob(screen, -2);
+        REQUIRE(accepted);
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w1);
+    }
+
+    SECTION("boundary clamp — diff exceeds available children") {
+        bool accepted = send_knob(screen, 20);
+        REQUIRE(accepted);
+        // Should move to last enabled child, not overshoot
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w3);
+    }
+
+    SECTION("no movement at forward boundary") {
+        screen.w3.SetFocus();
+        bool accepted = send_knob(screen, 1);
+        // w3 is the last enabled child (w_last is not enabled), nothing to move to
+        REQUIRE_FALSE(accepted);
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w3);
+    }
+
+    SECTION("no movement at backward boundary") {
+        // w_first is not enabled, so w0 is the first enabled child
+        bool accepted = send_knob(screen, -1);
+        REQUIRE_FALSE(accepted);
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w0);
+    }
+
+    SECTION("diff = 1 moves exactly one step") {
+        bool accepted = send_knob(screen, 1);
+        REQUIRE(accepted);
+        REQUIRE(window_t::GetFocusedWindow() == &screen.w1);
+    }
+}
+
+TEST_CASE("Frame KNOB with children that accept steps", "[window][knob]") {
+    // Create a screen-like frame with MockKnobAcceptor children
+    // We need to use MockScreen as the base and add our own children
+    MockScreen screen;
+    Screens::Access()->Set(&screen);
+
+    // Sub frame with children that limit amount of used knob events (eg.
+    // something like two menus side by side, each with limited amount of
+    // items).
+    window_frame_t frame(nullptr, GuiDefaults::RectScreen);
+
+    MockKnobAcceptor child_a(&frame, Rect16(10, 10, 10, 10));
+    child_a.Enable();
+    MockKnobAcceptor child_b(&frame, Rect16(10, 30, 10, 10));
+    child_b.Enable();
+
+    child_a.SetFocus();
+    REQUIRE(window_t::GetFocusedWindow() == &child_a);
+
+    SECTION("child consumes all steps") {
+        child_a.remaining_accepts = 5;
+
+        GuiEventContext ctx { gui_event::KnobEvent { .diff = 3 } };
+        frame.WindowEvent(&frame, GUI_event_t::KNOB, &ctx);
+
+        REQUIRE(ctx.is_accepted());
+        REQUIRE(child_a.total_accepted == 3);
+        REQUIRE(child_a.remaining_accepts == 2);
+        // Focus stays on child_a since it consumed everything
+        REQUIRE(window_t::GetFocusedWindow() == &child_a);
+    }
+
+    SECTION("child partially consumes, then focus transfers") {
+        child_a.remaining_accepts = 2; // accepts 2, rejects 3rd
+        child_b.remaining_accepts = 5;
+
+        GuiEventContext ctx { gui_event::KnobEvent { .diff = 5 } };
+        frame.WindowEvent(&frame, GUI_event_t::KNOB, &ctx);
+
+        REQUIRE(ctx.is_accepted());
+        // child_a consumed 2, then rejected
+        REQUIRE(child_a.total_accepted == 2);
+        // 1 step used for focus change to child_b
+        // remaining 2 steps consumed by child_b
+        REQUIRE(child_b.total_accepted == 2);
+        REQUIRE(window_t::GetFocusedWindow() == &child_b);
+    }
+
+    SECTION("child rejects immediately, focus transfers") {
+        child_a.remaining_accepts = 0;
+        child_b.remaining_accepts = 5;
+
+        GuiEventContext ctx { gui_event::KnobEvent { .diff = 3 } };
+        frame.WindowEvent(&frame, GUI_event_t::KNOB, &ctx);
+
+        REQUIRE(ctx.is_accepted());
+        REQUIRE(child_a.total_accepted == 0);
+        // 1 step for focus change, 2 consumed by child_b
+        REQUIRE(child_b.total_accepted == 2);
+        REQUIRE(window_t::GetFocusedWindow() == &child_b);
+    }
+
+    SECTION("both children reject — single child at boundary") {
+        child_a.remaining_accepts = 0;
+        child_b.remaining_accepts = 0;
+
+        GuiEventContext ctx { gui_event::KnobEvent { .diff = 3 } };
+        frame.WindowEvent(&frame, GUI_event_t::KNOB, &ctx);
+
+        // child_a rejects → focus changes to child_b (1 consumed)
+        // child_b rejects → no more siblings → stop
+        REQUIRE(ctx.is_accepted()); // focus did change
+        REQUIRE(window_t::GetFocusedWindow() == &child_b);
+    }
+
+    SECTION("no focused child") {
+        window_t::ResetFocusedWindow();
+
+        GuiEventContext ctx { gui_event::KnobEvent { .diff = 3 } };
+        frame.WindowEvent(&frame, GUI_event_t::KNOB, &ctx);
+
+        REQUIRE_FALSE(ctx.is_accepted());
+    }
+
+    SECTION("negative diff — backward focus transfer") {
+        child_b.SetFocus();
+        child_b.remaining_accepts = 1;
+        child_a.remaining_accepts = 5;
+
+        GuiEventContext ctx { gui_event::KnobEvent { .diff = -4 } };
+        frame.WindowEvent(&frame, GUI_event_t::KNOB, &ctx);
+
+        REQUIRE(ctx.is_accepted());
+        REQUIRE(child_b.total_accepted == 1); // consumed 1 backward
+        // 1 step for focus change to child_a
+        // 2 remaining consumed by child_a
+        REQUIRE(child_a.total_accepted == 2);
+        REQUIRE(window_t::GetFocusedWindow() == &child_a);
+    }
+}
+
 TEST_CASE("Capturable test, all combinations", "[window]") {
     BasicWindow win(nullptr, Rect16(20, 20, 10, 10));
 

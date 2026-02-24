@@ -11,6 +11,28 @@
 #include "IDialog.hpp"
 #include "DialogTimed.hpp"
 #include "guitypes.hpp"
+#include <gui/event/knob_event.hpp>
+
+/// Test helper: a window that accepts KNOB events up to a configurable limit.
+/// Used to simulate widgets that consume encoder steps (like menus at boundary).
+struct MockKnobAcceptor : public window_t {
+    int remaining_accepts = 0;
+    int total_accepted = 0;
+
+    using window_t::window_t;
+
+    void windowEvent(window_t *, GUI_event_t event, void *param) override {
+        if (event == GUI_event_t::KNOB && remaining_accepts > 0) {
+            auto &ctx = *static_cast<GuiEventContext *>(param);
+            auto &ev = ctx.event.value<gui_event::KnobEvent>();
+            // The frame should decompose into unit steps — verify this invariant
+            REQUIRE(std::abs(ev.diff) == 1);
+            ctx.accept();
+            remaining_accepts--;
+            total_accepted++;
+        }
+    }
+};
 
 struct MockFrame_VisibilityNotifycations : public window_frame_t {
     BasicWindow win;

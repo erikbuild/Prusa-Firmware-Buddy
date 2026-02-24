@@ -251,32 +251,54 @@ void window_frame_t::windowEvent([[maybe_unused]] window_t *sender, GUI_event_t 
 
     case GUI_event_t::KNOB: {
         auto &ctx = *static_cast<GuiEventContext *>(param);
-
-        // First give the child the opportunity to handle the knob event
-        if (pWin) {
-            pWin->WindowEvent(sender, event, param);
-            if (ctx.is_accepted()) {
-                break;
-            }
-        }
-
-        // If the child didn't accept the event, interpret the rotation as focus change
         auto &ev = ctx.event.value<gui_event::KnobEvent>();
         int diff = ev.diff;
 
-        while (pWin && diff != 0) {
-            if (diff > 0) {
-                pWin = GetNextEnabledSubWin(pWin);
-                diff--;
-            } else {
-                pWin = GetPrevEnabledSubWin(pWin);
-                diff++;
+        bool any_consumed = false;
+
+        // Consume the diff one by one. Handles scenarios similar to:
+        //
+        // * We get a large diff (let's say 5)
+        // * The child only consumes 2 (because it was near the end/edge of the
+        //   menu, for example).
+        // * Then we have a focus change to the next one.
+        // * And then the other child consumes the rest.
+        //
+        // Much simpler compared to the alternative of offering the whole diff
+        // and the child signalling back how much it used up.
+        while (diff != 0) {
+            const int step = (diff > 0) ? 1 : -1;
+
+            // Offer single step to current child
+            if (pWin) {
+                GuiEventContext step_ctx { gui_event::KnobEvent { .diff = step } };
+                pWin->WindowEvent(sender, event, &step_ctx);
+
+                if (step_ctx.is_accepted()) {
+                    diff -= step;
+                    any_consumed = true;
+                    continue;
+                }
             }
+
+            // Child rejected (at boundary) or no child - use the step as focus
+            // change instead.
+            window_t *pNext = (step > 0)
+                ? GetNextEnabledSubWin(pWin)
+                : GetPrevEnabledSubWin(pWin);
+
+            if (!pNext) {
+                break; // No more siblings, stop
+            }
+
+            pWin = pNext;
+            pWin->SetFocus();
+            diff -= step;
+            any_consumed = true;
+            sound::play(SoundType::encoder_move);
         }
 
-        if (pWin) {
-            pWin->SetFocus();
-            sound::play(SoundType::encoder_move);
+        if (any_consumed) {
             ctx.accept();
         }
         break;
