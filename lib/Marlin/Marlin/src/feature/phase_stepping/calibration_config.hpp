@@ -13,7 +13,6 @@ struct AxisCalibrationConfig {
 
     float max_movement_revs = 5.f;
     float fine_movement_duration = 2.f;
-    float coarse_movement_duration = 5.f;
 
     float peak_speed_shift = 0.9f;
     /// If set, skips the speed sweep and uses this as the speed.

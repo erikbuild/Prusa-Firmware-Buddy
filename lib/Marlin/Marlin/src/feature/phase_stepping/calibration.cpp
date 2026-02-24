@@ -1589,60 +1589,6 @@ static std::expected<float, CalibrateAxisError> find_approx_mag(AxisEnum axis,
     }
 }
 
-// Estimate the approximate magnitude of a harmonic at a given speed. The
-// function returns the magnitude of the harmonic or an error message if the
-// estimation failed.
-[[maybe_unused]] static std::expected<float, CalibrateAxisError> find_approx_mag_fast(AxisEnum axis,
-    const AxisCalibrationConfig &calib_config, int harmonic, float nominal_calib_speed,
-    AbortFun should_abort) {
-    // Magnitude is estimated by performing simultaneous phase sweeps with
-    // magnitude sweep. We don't hit the precise minimum, but we can get a good
-    // approximation with just a single movement.
-    WithCorrectionDisabled disabler(axis, harmonic);
-
-    const float speed = nominal_calib_speed * calib_config.peak_speed_shift;
-    const float duration = calib_config.coarse_movement_duration;
-
-    MotionCharacteristics move_characteristics = characterize_param_sweep(speed, duration);
-
-    move_to_measurement_start(axis, move_characteristics);
-
-    static const int PHA_CYCLES = 9;
-    static const float PHA_START = 0.f;
-    static const float PHA_END = PHA_CYCLES * 2 * std::numbers::pi_v<float> + 1.f;
-
-    SignalContainer samples;
-    samples.reserve(static_cast<size_t>(MAX_ACC_SAMPLING_RATE * SAMPLE_BUFFER_MARGIN * duration));
-
-    SweepParams params {
-        .pha_start = PHA_START,
-        .pha_end = PHA_END,
-        .mag_start = calib_config.min_magnitude,
-        .mag_end = calib_config.max_magnitude
-    };
-
-    auto annotation = capture_param_sweep_samples(axis, speed,
-        calib_config.fine_movement_duration * speed, harmonic, params, [&](AccelerometerSample sample) {
-            samples.push_back(sample);
-        });
-    if (!annotation.movement_ok || annotation.accel_error != PrusaAccelerometer::Error::none) {
-        log_error(PhaseStepping, "Param sweep movement failed: acc_error %u, movement_ok %d",
-            static_cast<unsigned>(annotation.accel_error), annotation.movement_ok);
-        return std::unexpected(CalibrateAxisError::param_sweep_movement_failed);
-    }
-    ABORT_CHECK();
-    auto signal = locate_signal(annotation, samples);
-    auto analysis = motor_harmonic_dft_sweep(signal, annotation.sampling_freq,
-        speed, get_motor_steps(axis), harmonic, calib_config.analysis_window_periods, 1);
-    debug_dump_magnitude_search(harmonic, params.mag_end, analysis.samples);
-
-    auto min_it = std::min_element(analysis.samples.begin(), analysis.samples.end());
-    int min_index = std::distance(analysis.samples.begin(), min_it);
-    float min_magnitude = params.mag_start + min_index * (params.mag_end - params.mag_start) / analysis.samples.size();
-
-    return min_magnitude;
-}
-
 // Perform a parametric sweep in both directions and collect a response. There
 // are 4 moves in total: 2 movement and 2 sweep directions. The function returns
 // a combined response for each movement direction or an error message if the
