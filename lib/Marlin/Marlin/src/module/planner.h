@@ -537,7 +537,7 @@ class Planner {
      *
      * Add a new linear movement to the buffer in axis units.
      *
-     * Leveling and kinematics should be applied ahead of calling this.
+     * Leveling should usually be applied ahead of calling this.
      *
      *  x,y,z,e     - target positions in mm and/or degrees
      *  fr_mm_s     - (target) speed of the move
@@ -552,7 +552,6 @@ class Planner {
 
     /**
      * Add a new linear movement to the buffer.
-     * The target is cartesian.
      *
      *  cart         - target position in mm or degrees
      *  fr_mm_s      - (target) speed of the move (mm/s)

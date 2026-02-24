@@ -1236,14 +1236,7 @@ bool Planner::_populate_block(block_t * const block,
   // default non-h-bot planning
   block->msteps = xyze_msteps_t{.a = ABS(da), .b = ABS(db), .c = ABS(dc), ._e = e_msteps};
 
-  /**
-   * This part of the code calculates the total length of the movement.
-   * For cartesian bots, the X_AXIS is the real X movement and same for Y_AXIS.
-   * But for corexy bots, that is not true. The "X_AXIS" and "Y_AXIS" motors (that should be named to A_AXIS
-   * and B_AXIS) cannot be used for X and Y length, because A=X+Y and B=X-Y.
-   * So we need to create other 2 "AXIS", named X_HEAD and Y_HEAD, meaning the real displacement of the Head.
-   * Having the real displacement of the head, we can calculate the total movement length and apply the desired speed.
-   */
+  // Calculates the total length of the movement
   xyze_float_t delta_mm;
   delta_mm.x = da * mm_per_mstep[X_AXIS];
   delta_mm.y = db * mm_per_mstep[Y_AXIS];
@@ -1838,14 +1831,7 @@ bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &targ
         return false;
     }
 
-    /**
-   * This part of the code calculates the total length of the movement.
-   * For cartesian bots, the X_AXIS is the real X movement and same for Y_AXIS.
-   * But for corexy bots, that is not true. The "X_AXIS" and "Y_AXIS" motors (that should be named to A_AXIS
-   * and B_AXIS) cannot be used for X and Y length, because A=X+Y and B=X-Y.
-   * So we need to create other 2 "AXIS", named X_HEAD and Y_HEAD, meaning the real displacement of the Head.
-   * Having the real displacement of the head, we can calculate the total movement length and apply the desired speed.
-     */
+    // Calculates the total length of the movement
     xyze_float_t delta_mm;
     delta_mm.x = float(da) * mm_per_mstep[X_AXIS];
     delta_mm.y = float(db) * mm_per_mstep[Y_AXIS];
@@ -2335,10 +2321,8 @@ bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, 
 } // buffer_raw_line()
 
 /**
- * Directly set the planner ABC position (and stepper positions)
- * converting mm into mini-steps.
- *
- * The provided ABC position is in machine units.
+ * Directly set the planner XYZE position (and underlying stepper positions)
+ * by converting mm into mini-steps.
  */
 
 void Planner::set_machine_position_mm(const xyze_pos_t &xyze) {
