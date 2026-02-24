@@ -204,7 +204,7 @@ void do_snake(Action action, Tool tool = Tool::_first) {
     }
 
     if (has_submenu(action)) {
-        const auto tool_mask = (tool < Tool::_count) ? ToolMask { AllTools {} } : PhysicalToolIndex::from_raw(std::to_underlying(tool));
+        const auto tool_mask = (tool < Tool::_count) ? PhysicalToolIndex::from_raw(std::to_underlying(tool)) : ToolMask { AllTools {} };
         marlin_client::test_start_with_data(get_test_mask(action), tool_mask);
     } else {
         marlin_client::test_start(get_test_mask(action));
