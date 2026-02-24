@@ -47,14 +47,18 @@ using std::pair;
 
 #pragma GCC diagnostic warning "-Wdouble-promotion"
 
-namespace internal {
 namespace {
+// AB phase grid type for type checking
+struct PhaseGridTag {};
+using ab_grid_t = XYval<int32_t, PhaseGridTag>;
+
+namespace internal {
     bool home_unstable = false; ///< Last homing stability state
     uint8_t probe_id = 0; ///< Probe id for metric cross-referencing
     uint8_t refine_id = 0; ///< Refine count for metric cross-referencing
     uint8_t cal_id = 0; ///< Calibration count for metric cross-referencing
-} // namespace
 } // namespace internal
+} // namespace
 
 METRIC_DEF(metric_phxy_meas, "phxy_meas", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
 METRIC_DEF(metric_phxy_probe, "phxy_probe", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
@@ -409,7 +413,7 @@ static float travel_accel_distance(const float fr_mm_s) {
  * @param fr_mm_s Service move feedrate
  * @return True on success
  */
-static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
+static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
     xy_pos_t &c_dist, xy_pos_t &m_dist, const float fr_mm_s) {
     // prepare for repeated measurements
     const AxisEnum other_axis = (axis == B_AXIS ? A_AXIS : B_AXIS);
@@ -570,11 +574,11 @@ static bool point_is_unstable(const xy_pos_t &c_dist, const xy_pos_t &origin) {
 }
 
 /// Translate fractional cycle distance by origin and round to final AB grid
-static xy_long_t cdist_translate(const xy_pos_t &c_dist, const xy_pos_t &origin) {
-    xy_long_t c_ab;
+static ab_grid_t cdist_translate(const xy_pos_t &c_dist, const xy_pos_t &origin) {
+    ab_grid_t c_ab;
     LOOP_XY(axis) {
-        long o_int = long(roundf(origin[axis]));
-        c_ab[axis] = long(roundf(c_dist[axis] - origin[axis])) + o_int;
+        int32_t o_int = int32_t(roundf(origin[axis]));
+        c_ab[axis] = int32_t(roundf(c_dist[axis] - origin[axis])) + o_int;
     }
     return c_ab;
 }
@@ -584,9 +588,9 @@ static xy_long_t cdist_translate(const xy_pos_t &c_dist, const xy_pos_t &origin)
  * @param ab_off full AB cycles away from homing corner
  * @return new step position
  */
-static ab_steps_t plan_corexy_abgrid_move(const ab_steps_t &origin_steps, const xy_long_t &ab_off, const float fr_mm_s) {
-    const long a = ab_off[X_HOME_DIR == Y_HOME_DIR ? A_AXIS : B_AXIS] * -Y_HOME_DIR;
-    const long b = ab_off[X_HOME_DIR == Y_HOME_DIR ? B_AXIS : A_AXIS] * -X_HOME_DIR;
+static ab_steps_t plan_corexy_abgrid_move(const ab_steps_t &origin_steps, const ab_grid_t &ab_off, const float fr_mm_s) {
+    const int32_t a = ab_off[X_HOME_DIR == Y_HOME_DIR ? A_AXIS : B_AXIS] * -Y_HOME_DIR;
+    const int32_t b = ab_off[X_HOME_DIR == Y_HOME_DIR ? B_AXIS : A_AXIS] * -X_HOME_DIR;
 
     ab_steps_t point_steps = {
         origin_steps[A_AXIS] + phase_cycle_steps(A_AXIS) * a,
@@ -601,7 +605,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
     xy_pos_t &origin, xy_pos_t &distance, const float fr_mm_s) {
     // scramble probing sequence to improve belt redistribution when estimating the centroid
     // unit is full AB cycles away from homing corner as given to plan_corexy_abgrid_move()
-    static constexpr xy_long_t point_sequence[] = {
+    static constexpr ab_grid_t point_sequence[] = {
         { 1, 0 },
         { -1, 0 },
         { 0, 1 },
@@ -664,13 +668,13 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
             axis, internal::cal_id, (double)distance[0], (double)distance[1]);
 
         // verify each probed point with the current centroid
-        xy_long_t o_int = { long(roundf(origin[A_AXIS])), long(roundf(origin[B_AXIS])) };
+        ab_grid_t o_int = { int32_t(roundf(origin[A_AXIS])), int32_t(roundf(origin[B_AXIS])) };
         for (size_t i = 0; i != std::size(point_sequence); ++i) {
             const auto &seq = point_sequence[i];
             auto &data = points[i];
 
-            const xy_long_t c_ab = cdist_translate(data.c_dist, origin);
-            const xy_long_t c_diff = c_ab - seq - o_int;
+            const ab_grid_t c_ab = cdist_translate(data.c_dist, origin);
+            const ab_grid_t c_diff = c_ab - seq - o_int;
             const bool c_unstable = point_is_unstable(data.c_dist, origin);
             const bool c_invalid = c_diff[A_AXIS] || c_diff[B_AXIS];
 
@@ -845,9 +849,9 @@ static bool measure_calibrate_walk(float &score, AxisEnum measured_axis,
         int32_t p_steps;
 
         for (size_t probe = 0; probe != measure_probes; ++probe) {
-            const long cycle = probe / walk_period + (a_dir >= 0 ? 0 : 1);
-            const long n = probe % walk_period;
-            const long d = -long(walk_cycles) + (cycle % 2 ? walk_period - n : n);
+            const int32_t cycle = probe / walk_period + (a_dir >= 0 ? 0 : 1);
+            const int32_t n = probe % walk_period;
+            const int32_t d = -int32_t(walk_cycles) + (cycle % 2 ? walk_period - n : n);
 
             const ab_steps_t temp_origin = plan_corexy_abgrid_move(origin_steps, { d * a_dir, d }, fr_mm_s);
             if (planner.draining()) {
@@ -1062,12 +1066,12 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
         SERIAL_ECHOLNPAIR("home point is unstable");
     }
 
-    const xy_long_t c_ab = cdist_translate(c_dist, calibrated_origin_xy);
+    const ab_grid_t c_ab = cdist_translate(c_dist, calibrated_origin_xy);
     metric_record_custom(&metric_phxy_home, ",t=\"h\" h=%u,c0=%.3f,c1=%.3f,s=%u",
         internal::refine_id, (double)c_ab[0], (double)c_ab[1], home_unstable);
 
     // validate from another point in the AB grid
-    const xy_long_t v_ab_off = { -1, 3 };
+    const ab_grid_t v_ab_off = { -1, 3 };
     plan_corexy_abgrid_move(origin_steps, v_ab_off, fr_mm_s);
     if (planner.draining()) {
         return false;
@@ -1077,8 +1081,8 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
         return false;
     }
 
-    const xy_long_t v_c_ab = cdist_translate(v_c_dist, calibrated_origin_xy);
-    const xy_long_t v_c_diff = v_c_ab - v_ab_off;
+    const ab_grid_t v_c_ab = cdist_translate(v_c_dist, calibrated_origin_xy);
+    const ab_grid_t v_c_diff = v_c_ab - v_ab_off;
     const bool v_home_unstable = point_is_unstable(v_c_dist, calibrated_origin_xy);
     const bool v_c_invalid = v_c_diff != c_ab;
 
