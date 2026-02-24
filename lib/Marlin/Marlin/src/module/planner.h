@@ -130,7 +130,7 @@ typedef struct PlannerBlock {
         acceleration;                       // acceleration mm/sec^2
 
   union {
-    abce_ulong_t msteps;                    // Mini-step count along each axis
+    abce_ulong_t msteps {};                    // Mini-step count along each axis
     abce_long_t sync_step_position;         // Absolute step counts to set when this sync block is executed
   };
   uint32_t mstep_event_count;               // The number of mini-step events required to complete this block

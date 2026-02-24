@@ -1265,7 +1265,7 @@ bool Planner::_populate_block(block_t * const block,
 
   // Number of mini-steps for each axis
   // default non-h-bot planning
-  block->msteps.set(ABS(da), ABS(db), ABS(dc));
+  block->msteps = abce_ulong_t{.a = (uint32_t)ABS(da), .b = (uint32_t)ABS(db), .c = (uint32_t)ABS(dc), ._e = e_msteps};
 
   /**
    * This part of the code calculates the total length of the movement.
@@ -1280,7 +1280,6 @@ bool Planner::_populate_block(block_t * const block,
   delta_mm.b = db * mm_per_mstep[B_AXIS];
   delta_mm.c = dc * mm_per_mstep[C_AXIS];
   delta_mm.e = e_msteps_float * mm_per_mstep[E_AXIS_N(extruder)];
-  block->msteps.e = e_msteps;
   block->mstep_event_count = _MAX(block->msteps.a, block->msteps.b, block->msteps.c, e_msteps);
 
   // Always calculate the block length if we are going to keep it

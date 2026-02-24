@@ -326,7 +326,7 @@ struct XYval {
   using XYZEval = ::XYZEval<T, Tag>;
 
   union {
-    struct { T x, y; };
+    struct { T x = 0, y = 0; };
     struct { T a, b; };
     T pos[2];
   };
@@ -446,7 +446,7 @@ struct XYZval {
   using XYZEval = ::XYZEval<T, Tag>;
 
   union {
-    struct { T NUM_AXIS_ARGS(); };
+    struct { T NUM_AXIS_DEFS(,0); };
     struct { T NUM_AXIS_LIST(a, b, c, _i, _j, _k, _u, _v, _w); };
     T pos[NUM_AXES];
   };
@@ -593,7 +593,7 @@ struct XYZEval {
   using XYZval = ::XYZval<T, Tag>;
 
   union {
-    struct { T LOGICAL_AXIS_ARGS(); };
+    struct { T LOGICAL_AXIS_DECL(,0); };
     struct { T LOGICAL_AXIS_LIST(_e, a, b, c, _i, _j, _k, _u, _v, _w); };
     T pos[LOGICAL_AXES];
   };
