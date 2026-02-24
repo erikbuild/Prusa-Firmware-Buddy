@@ -300,7 +300,7 @@ def get_dependency_directory(dependency) -> Path:
 
 def switch_to_venv_if_nedded():
     if not running_in_venv and os.environ.get('BUDDY_NO_VIRTUALENV') != '1':
-        prepare_venv_if_needed()
+        prepare_venv_if_needed(include_integration=False)
         print('Switching to Buddy\'s virtual environment.', file=sys.stderr)
         print(
             'You can disable this by setting the BUDDY_NO_VIRTUALENV=1 env. variable.',
@@ -309,11 +309,11 @@ def switch_to_venv_if_nedded():
                  [str(venv_bin_dir / 'python')] + sys.argv)
 
 
-def prepare_venv_if_needed():
+def prepare_venv_if_needed(include_integration):
     if venv_dir.exists():
         return
     venv.create(venv_dir, with_pip=True, prompt='buddy')
-    install_pip_packages()
+    install_pip_packages(include_integration)
 
 
 def pip_install(*args):
@@ -337,7 +337,7 @@ def pip_install(*args):
         sys.exit(process.returncode)
 
 
-def install_pip_packages():
+def install_pip_packages(include_integration):
     requirements_path = project_root_dir / 'requirements.txt'
     # find required pip and install it first
     with open(requirements_path, 'r') as f:
@@ -350,8 +350,12 @@ def install_pip_packages():
     # install everything else from requirements.txt
     pip_install('-r', str(requirements_path))
 
+    if include_integration:
+        integration_requirements_path = project_root_dir / 'integration-test-requirements.txt'
+        pip_install('-r', str(integration_requirements_path))
 
-def bootstrap():
+
+def bootstrap(include_integration):
     # create dependency directory if not exists
     if not os.path.exists(dependencies_dir):
         os.makedirs(dependencies_dir)
@@ -361,8 +365,8 @@ def bootstrap():
             continue
         install_dependency(dependency)
 
-    prepare_venv_if_needed()
-    install_pip_packages()
+    prepare_venv_if_needed(include_integration)
+    install_pip_packages(include_integration)
 
     # also, install openocd config meant for customization
     install_openocd_config_template()
@@ -377,6 +381,9 @@ def main() -> int:
     parser.add_argument(
         '--print-dependency-directory', type=str,
         help='Prints installation directory of given dependency and exits.')
+    parser.add_argument(
+        '--include-integration', action='store_true',
+        help='Also install integration test dependencies (easyocr, etc.).')
     args = parser.parse_args(sys.argv[1:])
     # yapf: enable
 
@@ -397,7 +404,7 @@ def main() -> int:
             return 1
 
     # if no argument present, check and install dependencies
-    bootstrap()
+    bootstrap(include_integration=args.include_integration)
 
     return 0
 
