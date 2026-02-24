@@ -2,6 +2,7 @@
 
 #include "i_selftest_part.hpp"
 #include "selftest_dock_config.hpp"
+#include "Marlin/src/core/mtypes.hpp"
 #include "Marlin/src/module/planner.h"
 #include "module/prusa/toolchanger.h"
 
@@ -52,7 +53,7 @@ private:
     const DockConfig_t &config;
     SelftestDock_t &result;
     bool needs_manual_park;
-    xy_long_t position_before_measure;
+    ab_steps_t position_before_measure;
     PrusaToolInfo old_tool_calibration;
     uint8_t remaining_park_unpark_cycles = NUM_PARK_PICK_CYCLES;
     buddy::puppies::Dwarf &dwarf; ///< Reference to the dwarf whose dock is to be calibrated

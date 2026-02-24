@@ -26,7 +26,6 @@
 
 #include "inc/MarlinConfigPre.h"
 
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 //
@@ -188,7 +187,6 @@ typedef IF<(NUM_AXIS_ENUMS > 8), uint16_t, uint8_t>::type axis_bits_t;
 //
 // Loop over axes
 //
-#define LOOP_ABC(VAR) LOOP_S_LE_N(VAR, A_AXIS, C_AXIS)
 #define LOOP_NUM_AXES(VAR) LOOP_S_L_N(VAR, X_AXIS, NUM_AXES)
 #define LOOP_LOGICAL_AXES(VAR) LOOP_S_L_N(VAR, X_AXIS, LOGICAL_AXES)
 #define LOOP_DISTINCT_AXES(VAR) LOOP_S_L_N(VAR, X_AXIS, DISTINCT_AXES)
@@ -296,22 +294,9 @@ typedef xy_uint8_t xy_byte_t;
 typedef xyz_uint8_t xyz_byte_t;
 typedef xyze_uint8_t xyze_byte_t;
 
-typedef xyz_long_t abc_long_t;
-typedef xyze_long_t abce_long_t;
-typedef xyz_ulong_t abc_ulong_t;
-typedef xyze_ulong_t abce_ulong_t;
-
 typedef xy_float_t xy_pos_t;
 typedef xyz_float_t xyz_pos_t;
 typedef xyze_float_t xyze_pos_t;
-
-typedef xy_float_t ab_float_t;
-typedef xyz_float_t abc_float_t;
-typedef xyze_float_t abce_float_t;
-
-typedef ab_float_t ab_pos_t;
-typedef abc_float_t abc_pos_t;
-typedef abce_float_t abce_pos_t;
 
 using MachinePosXY = XYval<float, MachinePosTag>;
 using MachinePosXYZ = XYZval<float, MachinePosTag>;
@@ -733,6 +718,5 @@ struct XYZEval {
 #define LOOP_XYZ(VAR) LOOP_S_LE_N(VAR, X_AXIS, Z_AXIS)
 #define LOOP_XYZE(VAR) LOOP_S_LE_N(VAR, X_AXIS, E_AXIS)
 #define LOOP_XYZE_N(VAR) LOOP_S_L_N(VAR, X_AXIS, XYZE_N)
-#define LOOP_ABCE(VAR) LOOP_S_LE_N(VAR, A_AXIS, E_AXIS)
 
 #pragma GCC diagnostic pop

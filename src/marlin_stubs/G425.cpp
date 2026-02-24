@@ -324,8 +324,7 @@ xy_pos_t probe_xy(const xyz_pos_t center, const float angle, const uint8_t tool,
     // Get hit position
     endstops.hit_on_purpose();
     planner.reset_position();
-    xyze_long_t hit_steps = { { { stepper.position(A_AXIS), stepper.position(B_AXIS),
-        stepper.position(C_AXIS), stepper.position(E_AXIS) } } };
+    ab_steps_t hit_steps = { stepper.position(A_AXIS), stepper.position(B_AXIS) };
     xyze_pos_t hit_mm;
     corexy_ab_to_xyze(hit_steps, hit_mm);
 

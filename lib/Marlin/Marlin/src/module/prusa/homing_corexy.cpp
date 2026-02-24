@@ -63,7 +63,7 @@ METRIC_DEF(metric_phxy_home, "phxy_home", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED
 METRIC_DEF(metric_phxy_orig, "phxy_orig", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
 
 /// Convert raw AB steps to XY mm
-void corexy_ab_to_xy(const xy_long_t &steps, xy_pos_t &mm) {
+void corexy_ab_to_xy(const ab_steps_t &steps, xy_pos_t &mm) {
     const float x = static_cast<float>(steps.a + steps.b) / 2.f;
     const float y = static_cast<float>(CORESIGN(steps.a - steps.b)) / 2.f;
     mm.x = x * planner.mm_per_step[X_AXIS];
@@ -71,7 +71,7 @@ void corexy_ab_to_xy(const xy_long_t &steps, xy_pos_t &mm) {
 }
 
 /// Convert raw AB steps to XY mm and position in mini-steps
-static void corexy_ab_to_xy(const xy_long_t &steps, xy_pos_t &mm, xy_long_t &pos_msteps) {
+static void corexy_ab_to_xy(const ab_steps_t &steps, xy_pos_t &mm, xy_long_t &pos_msteps) {
     const float x = static_cast<float>(steps.a + steps.b) / 2.f;
     const float y = static_cast<float>(CORESIGN(steps.a - steps.b)) / 2.f;
     mm.x = x * planner.mm_per_step[X_AXIS];
@@ -81,7 +81,7 @@ static void corexy_ab_to_xy(const xy_long_t &steps, xy_pos_t &mm, xy_long_t &pos
 }
 
 /// Convert raw AB steps to XY mm, filling others from current state
-void corexy_ab_to_xyze(const xy_long_t &steps, xyze_pos_t &mm) {
+void corexy_ab_to_xyze(const ab_steps_t &steps, xyze_pos_t &mm) {
     corexy_ab_to_xy(steps, mm);
     LOOP_S_L_N(i, C_AXIS, XYZE_N) {
         mm[i] = planner.get_axis_position_mm((AxisEnum)i);
@@ -89,7 +89,7 @@ void corexy_ab_to_xyze(const xy_long_t &steps, xyze_pos_t &mm) {
 }
 
 /// Convert raw AB steps to XY mm and position in mini-steps, filling others from current state
-static void corexy_ab_to_xyze(const xy_long_t &steps, xyze_pos_t &mm, xyze_long_t &pos_msteps) {
+static void corexy_ab_to_xyze(const ab_steps_t &steps, xyze_pos_t &mm, xyze_long_t &pos_msteps) {
     pos_msteps = planner.get_position_msteps();
     corexy_ab_to_xy(steps, mm, pos_msteps);
     LOOP_S_L_N(i, C_AXIS, XYZE_N) {
@@ -102,7 +102,7 @@ static void plan_raw_move(const xyze_pos_t target_mm, const xyze_long_t target_p
     planner.synchronize();
 }
 
-static void plan_corexy_raw_move(const xy_long_t &target_steps_ab, const feedRate_t fr_mm_s) {
+static void plan_corexy_raw_move(const ab_steps_t &target_steps_ab, const feedRate_t fr_mm_s) {
     // reconstruct full final position
     xyze_pos_t target_mm;
     xyze_long_t target_pos_msteps;
@@ -232,15 +232,15 @@ struct measure_axis_params {
  * @param params Measured axis/stepper parameters
  * @return Endstop hit state (true when hit)
  */
-static bool measure_axis_distance(const AxisEnum axis, const xy_long_t origin_steps, const int32_t dist,
+static bool measure_axis_distance(const AxisEnum axis, const ab_steps_t origin_steps, const int32_t dist,
     int32_t &m_steps, float &m_dist, const float fr_mm_s, const measure_axis_params &params) {
     // full initial position
-    const xyze_long_t initial_steps = { origin_steps.a, origin_steps.b, stepper.position(C_AXIS), stepper.position(E_AXIS) };
+    const abce_steps_t initial_steps = { origin_steps.a, origin_steps.b, stepper.position(C_AXIS), stepper.position(E_AXIS) };
     xyze_pos_t initial_mm;
     corexy_ab_to_xyze(initial_steps, initial_mm);
 
     // full target position
-    xyze_long_t target_steps = initial_steps;
+    abce_steps_t target_steps = initial_steps;
     target_steps[axis] += dist;
 
     xyze_pos_t target_mm;
@@ -278,7 +278,7 @@ static bool measure_axis_distance(const AxisEnum axis, const xy_long_t origin_st
     const uint8_t hit = endstops.trigger_state();
     endstops.not_homing();
 
-    xyze_long_t hit_steps;
+    abce_steps_t hit_steps;
     xyze_pos_t hit_mm;
     if (hit) {
         // resync position from steppers to get hit position
@@ -346,7 +346,7 @@ static measure_axis_params measure_axis_defaults(const AxisEnum axis) {
  * @brief Call measure_axis_distance() with calibrated parameters
  * @see measure_axis_distance() for parameter documentation
  **/
-static bool measure_axis_distance(const AxisEnum axis, const xy_long_t origin_steps, const int32_t dist,
+static bool measure_axis_distance(const AxisEnum axis, const ab_steps_t origin_steps, const int32_t dist,
     int32_t &m_steps, float &m_dist, const float fr_mm_s) {
     measure_axis_params params;
 
@@ -417,7 +417,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
     const float measure_bump_max_err_mm = planner.mm_per_step[axis] * measure_bump_max_err_steps;
 
     const int32_t measure_dir = (axis == B_AXIS ? -X_HOME_DIR : -Y_HOME_DIR);
-    const xy_long_t origin_steps = { stepper.position(A_AXIS), stepper.position(B_AXIS) };
+    const ab_steps_t origin_steps = { stepper.position(A_AXIS), stepper.position(B_AXIS) };
 
     // expected exact corner distances given current offset
     const int32_t exp_d = static_cast<int32_t>(XY_HOMING_ORIGIN_OFFSET * 2 / planner.mm_per_step[axis]
@@ -442,7 +442,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const xy_long_t &ab_off,
 
     // keep the average of at least n values having less than max_err of separation between each
     constexpr int probe_n = 2;
-    xy_long_t p_steps[probe_n];
+    ab_steps_t p_steps[probe_n];
     xy_pos_t p_dist[probe_n];
 
     // keep sampling *while* cycling on retries (we don't know which probes are good yet)
@@ -580,11 +580,11 @@ static xy_long_t cdist_translate(const xy_pos_t &c_dist, const xy_pos_t &origin)
  * @param ab_off full AB cycles away from homing corner
  * @return new step position
  */
-static xy_long_t plan_corexy_abgrid_move(const xy_long_t &origin_steps, const xy_long_t &ab_off, const float fr_mm_s) {
+static ab_steps_t plan_corexy_abgrid_move(const ab_steps_t &origin_steps, const xy_long_t &ab_off, const float fr_mm_s) {
     const long a = ab_off[X_HOME_DIR == Y_HOME_DIR ? A_AXIS : B_AXIS] * -Y_HOME_DIR;
     const long b = ab_off[X_HOME_DIR == Y_HOME_DIR ? B_AXIS : A_AXIS] * -X_HOME_DIR;
 
-    xy_long_t point_steps = {
+    ab_steps_t point_steps = {
         origin_steps[A_AXIS] + phase_cycle_steps(A_AXIS) * a,
         origin_steps[B_AXIS] + phase_cycle_steps(B_AXIS) * b
     };
@@ -593,7 +593,7 @@ static xy_long_t plan_corexy_abgrid_move(const xy_long_t &origin_steps, const xy
     return point_steps;
 }
 
-static bool measure_origin_multipoint(AxisEnum axis, const xy_long_t &origin_steps,
+static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_steps,
     xy_pos_t &origin, xy_pos_t &distance, const float fr_mm_s) {
     // scramble probing sequence to improve belt redistribution when estimating the centroid
     // unit is full AB cycles away from homing corner as given to plan_corexy_abgrid_move()
@@ -746,7 +746,7 @@ bool corexy_rehome_xy(float fr_mm_s) {
  * @param fr_mm_s Service move feedrate
  * @param rehome If true, also perform initial home
  */
-static bool corexy_rehome_and_phase(xyze_pos_t &origin_pos, xy_long_t &origin_steps, float fr_mm_s, bool rehome) {
+static bool corexy_rehome_and_phase(xyze_pos_t &origin_pos, ab_steps_t &origin_steps, float fr_mm_s, bool rehome) {
     // ignore starting position if requested, otherwise assume to be already homed
     if (rehome) {
         corexy_rehome_xy(fr_mm_s);
@@ -775,7 +775,7 @@ static bool corexy_rehome_and_phase(xyze_pos_t &origin_pos, xy_long_t &origin_st
     // calculation issues which will show up elsewhere and are NOT just mechanical issues. We need
     // step-accuracy while homing! ask @wavexx when in doubt regarding these
     plan_corexy_raw_move(origin_steps, fr_mm_s);
-    const xy_long_t raw_move_diff = {
+    const ab_steps_t raw_move_diff = {
         stepper.position(A_AXIS) - origin_steps[A_AXIS],
         stepper.position(B_AXIS) - origin_steps[B_AXIS]
     };
@@ -803,7 +803,7 @@ static bool corexy_rehome_and_phase(xyze_pos_t &origin_pos, xy_long_t &origin_st
 
 #if HAS_TRINAMIC && defined(XY_HOMING_MEASURE_SENS_MIN)
 static bool measure_calibrate_walk(float &score, AxisEnum measured_axis,
-    const xy_long_t origin_steps, const float fr_mm_s, const measure_axis_params &params) {
+    const ab_steps_t origin_steps, const float fr_mm_s, const measure_axis_params &params) {
     // prepare for repeated measurements
     const AxisEnum other_axis = (measured_axis == B_AXIS ? A_AXIS : B_AXIS);
     MeasurementGuard setup_guard(other_axis);
@@ -845,7 +845,7 @@ static bool measure_calibrate_walk(float &score, AxisEnum measured_axis,
             const long n = probe % walk_period;
             const long d = -long(walk_cycles) + (cycle % 2 ? walk_period - n : n);
 
-            const xy_long_t temp_origin = plan_corexy_abgrid_move(origin_steps, { d * a_dir, d }, fr_mm_s);
+            const ab_steps_t temp_origin = plan_corexy_abgrid_move(origin_steps, { d * a_dir, d }, fr_mm_s);
             if (planner.draining()) {
                 return false;
             }
@@ -896,7 +896,7 @@ static bool measure_calibrate_sens(CoreXYHomeTMCSens &calibrated_sens,
 
     for (int8_t sens = XY_HOMING_MEASURE_SENS_MIN; sens <= XY_HOMING_MEASURE_SENS_MAX; ++sens) {
         xyze_pos_t origin_pos;
-        xy_long_t origin_steps;
+        ab_steps_t origin_steps;
 
         // reposition parallel to the origin to our probing point
         if (!corexy_rehome_and_phase(origin_pos, origin_steps, fr_mm_s, rehome)) {
@@ -1004,7 +1004,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
 
     // reposition parallel to the origin to our probing point
     xyze_pos_t origin_pos;
-    xy_long_t origin_steps;
+    ab_steps_t origin_steps;
     if (!corexy_rehome_and_phase(origin_pos, origin_steps, fr_mm_s, false)) {
         return false;
     }
@@ -1101,7 +1101,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
     }
 
     // set machine origin
-    const xy_long_t c_ab_steps = {
+    const ab_steps_t c_ab_steps = {
         c_ab[X_HOME_DIR == Y_HOME_DIR ? A_AXIS : B_AXIS] * phase_cycle_steps(A_AXIS) * -Y_HOME_DIR,
         c_ab[X_HOME_DIR == Y_HOME_DIR ? B_AXIS : A_AXIS] * phase_cycle_steps(B_AXIS) * -X_HOME_DIR
     };

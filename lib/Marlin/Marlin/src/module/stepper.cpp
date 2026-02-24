@@ -152,7 +152,7 @@ float Stepper::segment_progress() {
         return NAN;
     }
 
-    abce_ulong_t planned_msteps = current_block->msteps;
+    xyze_ulong_t planned_msteps = current_block->msteps;
     xyze_long_t done_msteps = (count_position - count_position_last_block) * PLANNER_STEPS_MULTIPLIER;
 
     float planned;
@@ -385,16 +385,15 @@ void Stepper::_set_position(const int32_t &a, const int32_t &b, const int32_t &c
 void Stepper::endstop_triggered(const AxisEnum axis) {
     PreciseStepping::quick_stop();
 
-    endstops_trigsteps[axis] = (
 #if IS_CORE
-        (axis == CORE_AXIS_2
-                ? CORESIGN(count_position[CORE_AXIS_1] - count_position[CORE_AXIS_2])
-                : count_position[CORE_AXIS_1] + count_position[CORE_AXIS_2])
-        / 2
+    ab_steps_t pos = { position(A_AXIS), position(B_AXIS) };
+    endstops_trigsteps[A_AXIS] = pos.a + pos.b;
+    endstops_trigsteps[B_AXIS] = CORESIGN(pos.a - pos.b);
 #else // !IS_CORE
-        count_position[axis]
+    endstops_trigsteps[A_AXIS] = position(A_AXIS);
+    endstops_trigsteps[B_AXIS] = position(B_AXIS);
 #endif
-    );
+    endstops_trigsteps[C_AXIS] = position(C_AXIS);
 }
 
 void Stepper::report_positions() {

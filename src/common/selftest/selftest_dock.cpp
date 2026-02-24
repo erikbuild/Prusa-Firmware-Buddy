@@ -205,10 +205,10 @@ LoopResult CSelftestPart_Dock::state_measure() {
     sync_plan_position();
 
     // Remember initial stepper position
-    position_before_measure = xy_long_t({ { {
-        .x = stepper.position_from_startup(AxisEnum::A_AXIS),
-        .y = stepper.position_from_startup(AxisEnum::B_AXIS),
-    } } }); // GCC bug? (should be .a = ..., .b = ...) works with GCC 12.2.1
+    position_before_measure = ab_steps_t {
+        stepper.position_from_startup(AxisEnum::A_AXIS),
+        stepper.position_from_startup(AxisEnum::B_AXIS),
+    };
 
     // Relative positioning
     marlin_server::enqueue_gcode("G91");
@@ -236,10 +236,10 @@ LoopResult CSelftestPart_Dock::state_measure() {
 
 LoopResult CSelftestPart_Dock::state_compute_position() {
     // Calculate x,y distance between home and dock position
-    xy_long_t after = { { {
-        .x = stepper.position_from_startup(AxisEnum::A_AXIS),
-        .y = stepper.position_from_startup(AxisEnum::B_AXIS),
-    } } }; // GCC bug? (should be .a = ..., .b = ...) works with GCC 12.2.1
+    ab_steps_t after = {
+        stepper.position_from_startup(AxisEnum::A_AXIS),
+        stepper.position_from_startup(AxisEnum::B_AXIS),
+    };
 
     xy_pos_t diff;
     corexy_ab_to_xy(position_before_measure - after, diff);
