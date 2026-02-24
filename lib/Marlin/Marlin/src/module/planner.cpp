@@ -246,8 +246,7 @@ StrongIndexArray<float, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_st
   bool Planner::leveling_active = false; // Flag that auto bed leveling is enabled
   #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
     float Planner::z_fade_height,      // Initialized by settings.load()
-          Planner::inverse_z_fade_height,
-          Planner::last_fade_z;
+          Planner::inverse_z_fade_height;
   #endif
 #else
   constexpr bool Planner::leveling_active;

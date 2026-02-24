@@ -331,10 +331,6 @@ class Planner {
      */
     static uint32_t cutoff_long;
 
-    #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
-      static float last_fade_z;
-    #endif
-
     /**
      * Counters to manage disabling inactive extruders
      */
@@ -429,22 +425,14 @@ class Planner {
        *  Returns 0.0 if Z is past the specified 'Fade Height'.
        */
       static inline float fade_scaling_factor_for_z(const float rz) {
-        static float z_fade_factor = 1;
         if (!z_fade_height) return 1;
         if (rz >= z_fade_height) return 0;
-        if (last_fade_z != rz) {
-          last_fade_z = rz;
-          z_fade_factor = 1 - rz * inverse_z_fade_height;
-        }
-        return z_fade_factor;
+        return 1 - rz * inverse_z_fade_height;
       }
-
-      FORCE_INLINE static void force_fade_recalc() { last_fade_z = -999.999f; }
 
       FORCE_INLINE static void set_z_fade_height(const float zfh) {
         z_fade_height = zfh > 0 ? zfh : 0;
         inverse_z_fade_height = RECIPROCAL(z_fade_height);
-        force_fade_recalc();
       }
 
       FORCE_INLINE static bool leveling_active_at_z(const float rz) {
