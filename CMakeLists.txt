@@ -288,25 +288,7 @@ add_compile_options(-g)
 
 # optimizations
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if(MCU MATCHES "STM32F40"
-     OR MCU MATCHES "STM32G0"
-     OR MCU MATCHES "STM32H5"
-     OR MCU MATCHES "STM32C0"
-     OR PRINTER STREQUAL "MK4"
-     OR PRINTER STREQUAL "MK3.5"
-     OR PRINTER STREQUAL "XL"
-     OR PRINTER STREQUAL "iX"
-     OR PRINTER STREQUAL "COREONE"
-     OR PRINTER STREQUAL "COREONE_INDX"
-     OR PRINTER STREQUAL "COREONEL"
-     OR PRINTER STREQUAL "COREONEL_INDX"
-     )
-    add_compile_options(-Og -ggdb3)
-  else()
-    # O0 should be compiled with -fomit-frame-pointer to make sure there is enough registers for asm
-    # functions
-    add_compile_options(-O0 -fomit-frame-pointer)
-  endif()
+  add_compile_options(-Og -ggdb3)
 else()
   add_compile_options(-Os)
 endif()
