@@ -8,6 +8,8 @@
     #include <feature/bedlevel/bedlevel.h>
 #endif
 
+// This unit has UNITTESTS in machine_pos_conv_tests.cpp
+
 MachinePosXYZ to_machine_pos(const xyz_pos_t &pos) {
     MachinePosXYZ result = pos.to_tag<MachinePosTag>();
 

@@ -7,3 +7,12 @@ target_include_directories(
   marlin_temptable_tests PRIVATE stub_include_temptable ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src
   )
 add_catch_test(marlin_temptable_tests)
+
+add_executable(
+  machine_pos_conv_tests ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src/module/machine_pos_conv.cpp
+                         machine_pos_conv_tests.cpp
+  )
+target_include_directories(
+  machine_pos_conv_tests PRIVATE stub_include_pos_conv ${CMAKE_SOURCE_DIR}/lib/Marlin/Marlin/src
+  )
+add_catch_test(machine_pos_conv_tests)
