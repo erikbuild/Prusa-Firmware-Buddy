@@ -605,9 +605,11 @@ class Planner {
     static void get_axis_position_mm(abc_pos_t& pos);
     static void get_axis_position_mm(abce_pos_t& pos);
 
-    /**
-     * Get planner's axis position in mm
-     */
+    /// Returns target position of the last queued move in MACHINE coordinates (after MBL - see MachinePosTag)
+    /// It should generally apply that to_machine_pos(current_position) == get_machine_position_mm()
+    /// !!! BUT the planner CAN discard a some very small moves (see MIN_MSTEPS_PER_SEGMENT),
+    /// !!! in which case the current_position will get updated but the machine position will not
+    /// So for motion planning, you usually want to use current_machine_position() instead
     static abce_pos_t get_machine_position_mm() { return position_float; }
 
     [[deprecated("Use gcode_exceptions().throw_unhandled()")]]

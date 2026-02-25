@@ -138,8 +138,29 @@ constexpr float slop = 0.0001f;
 
 extern bool relative_mode;
 
-extern xyze_pos_t current_position,  // High-level current tool position
-                  destination;       // Destination for a move
+/**
+ * Cartesian Current Position
+ *   SHOULD be target position of the last queued move in NATIVE coordinates (after hotend offset, before MBL - NativePosTag)
+ *   However it is up to the discretion of every caller right now, so it's rather wobbly. Not good.
+ *
+ *   Use current_machine_position if you want to get current machine position.
+ *   Use planner.get_machine_position_mm if you want to get true machine position
+ *
+ *   Used by 'line_to_current_position' to do a move after changing it.
+ *   Used by 'sync_plan_position' to update 'planner.position'.
+ */
+extern xyze_pos_t current_position;
+
+/// SHOULD be target position of the last queued move in MACHINE coordinates (after MBL)
+/// SHOULD be ALMOST equal to planner.get_machine_position_mm.
+/// There is an exception when a move shorter than MIN_MSTEPS_PER_SEGMENT gets planned.
+/// In that case the planner actually does nothing, but current_machine_position changes
+/// Also there might be small imprecisions due to to_machine_pos and to_native_pos reversibility
+MachinePosXYZE current_machine_position();
+
+// TODO: Get rid of this completely.
+[[deprecated("EVIL. DO NOT USE. Use prepare_move_to or any other function that does not rely on static variables.")]]
+extern xyze_pos_t destination;       // Destination for a move
 
 #if defined(XY_PROBE_SPEED_INITIAL)
   #define XY_PROBE_FEEDRATE_MM_S MMM_TO_MMS(XY_PROBE_SPEED_INITIAL)

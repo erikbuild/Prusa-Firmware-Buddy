@@ -110,14 +110,11 @@ AxesHomeLevel axes_home_level = AxesHomeLevel::no_axes_homed;
 // Relative Mode. Enable with G91, disable with G90.
 bool relative_mode; // = false;
 
-/**
- * Cartesian Current Position
- *   Planned position. Printer is heading to this position or is at this position.
- *   Used to track the native machine position as moves are queued.
- *   Used by 'line_to_current_position' to do a move after changing it.
- *   Used by 'sync_plan_position' to update 'planner.position'.
- */
 xyze_pos_t current_position = { X_HOME_POS, Y_HOME_POS, Z_HOME_POS };
+
+MachinePosXYZE current_machine_position() {
+  return to_machine_pos(current_position);
+}
 
 /**
  * Cartesian Destination
