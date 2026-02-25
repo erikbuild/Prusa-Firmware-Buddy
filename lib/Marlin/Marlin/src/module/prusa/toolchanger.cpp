@@ -17,6 +17,7 @@
     #include <odometer.hpp>
     #include <pause_stubbed.hpp>
     #include "module/temperature.h" // for fan control
+    #include <mapi/motion.hpp>
 
     #if ENABLED(CRASH_RECOVERY)
         #include "../../feature/prusa/crash_recovery.hpp"
@@ -488,12 +489,12 @@ bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
 
     // extrude some filament, park&pick it again, to wipe it
     auto orig_e_pos = current_position.e;
+
     // extrude
-    current_position.e += ADVANCED_PAUSE_PURGE_LENGTH / planner.e_factor[active_extruder];
-    line_to_current_position(ADVANCED_PAUSE_PURGE_FEEDRATE);
+    mapi::extruder_move(ADVANCED_PAUSE_PURGE_LENGTH, ADVANCED_PAUSE_PURGE_FEEDRATE);
+
     // retract
-    current_position.e -= PAUSE_PARK_RETRACT_LENGTH;
-    line_to_current_position(PAUSE_PARK_RETRACT_FEEDRATE);
+    mapi::extruder_move(-PAUSE_PARK_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 
     planner.synchronize();
 

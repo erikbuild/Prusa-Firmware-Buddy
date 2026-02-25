@@ -13,6 +13,7 @@
 #include <raii/auto_restore.hpp>
 #include <mapi/cold_extrude.hpp>
 #include <utils/variant_utils.hpp>
+#include <mapi/motion.hpp>
 
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
@@ -391,7 +392,7 @@ namespace {
     #if ENABLED(PREVENT_COLD_EXTRUSION)
             mapi::ColdExtrudeGuard cold_extrude_guard;
     #endif
-            plan_move_by(50, 0, 0, 0, -std::min(300, EXTRUDE_MAXLENGTH));
+            mapi::extruder_move(-std::min(300, EXTRUDE_MAXLENGTH), 50);
             planner.synchronize();
 
             // mark filament unloaded

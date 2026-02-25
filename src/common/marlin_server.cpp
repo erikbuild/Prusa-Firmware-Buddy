@@ -42,6 +42,7 @@
 #include <utils/mutex_atomic.hpp>
 #include <feature/safety_timer/safety_timer.hpp>
 #include <feature/stepper_timeout/stepper_timeout.hpp>
+#include <mapi/motion.hpp>
 
 #include "../Marlin/src/lcd/extensible_ui/ui_api.h"
 #include "../Marlin/src/gcode/queue.h"
@@ -3043,8 +3044,7 @@ static void retract() {
 
 // server.motion_param.save_reset();  // TODO: currently disabled (see Crash_s::save_parameters())
 #if HAS_PAUSE()
-    float mm = PAUSE_PARK_RETRACT_LENGTH / planner.e_factor[active_extruder];
-    plan_move_by(PAUSE_PARK_RETRACT_FEEDRATE, 0, 0, 0, -mm);
+    mapi::extruder_move(-PAUSE_PARK_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 #endif
 }
 
@@ -3141,7 +3141,7 @@ void unpark_head_ZE(void) {
 
 #if HAS_PAUSE()
     // Undo E retract
-    plan_move_by(PAUSE_PARK_RETRACT_FEEDRATE, 0, 0, 0, server.resume.pos.e - current_position.e);
+    mapi::extruder_move(server.resume.pos.e - current_position.e, PAUSE_PARK_RETRACT_FEEDRATE);
 #endif
 }
 

@@ -70,6 +70,7 @@
 #include "timing.h"
 #include "odometer.hpp"
 #include "marlin_vars.hpp"
+#include <mapi/motion.hpp>
 
 // print progress
 #include "M73_PE.h"
@@ -439,7 +440,7 @@ void resume_loop() {
         }
 
         // always unretract
-        plan_move_by(PAUSE_PARK_RETRACT_FEEDRATE, 0, 0, 0, PAUSE_PARK_RETRACT_LENGTH / planner.e_factor[active_extruder]);
+        mapi::extruder_move(PAUSE_PARK_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 
         resume_state = ResumeState::Finish;
         break;
@@ -651,7 +652,7 @@ void panic_loop() {
         if (!runtime_state.nested_fault && !state_buf.planner.was_paused && !state_buf.planner.was_crashed && all_axes_homed()) {
 #if !HAS_DWARF()
             // retract if we were printing
-            plan_move_by(PAUSE_PARK_RETRACT_FEEDRATE, 0, 0, 0, -PAUSE_PARK_RETRACT_LENGTH / planner.e_factor[active_extruder]);
+            mapi::extruder_move(-PAUSE_PARK_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
             planner.start_moving();
 #endif
 
