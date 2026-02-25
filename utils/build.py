@@ -795,8 +795,8 @@ def main():
         sys.exit(0)
 
     if not args.skip_bootstrap:
-        # check all dependencis are installed
-        bootstrap.bootstrap()
+        # check all dependencies are installed (excluding dependencies for integration tests)
+        bootstrap.bootstrap(include_integration=False)
 
     # build everything
     results: Dict[BuildConfiguration, BuildResult] = dict()
