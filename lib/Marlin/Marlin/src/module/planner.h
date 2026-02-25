@@ -298,12 +298,13 @@ class Planner {
     #endif
 
     /// Current planned machine position, in millimeters
-    static xyze_pos_t position_float;
+    static MachinePosXYZE position_float;
 
     /// Currently planned machine position, in msteps
     xyze_msteps_t get_position_msteps() const { return position; };
 
     /// Maximum Z position at which we printed so far for
+    /// MACHINE position
     static float max_printed_z;
 
     #if ENABLED(SD_ABORT_ON_ENDSTOP_HIT)
@@ -505,11 +506,11 @@ class Planner {
      *
      * Returns true if movement was buffered, false otherwise
      */
-    static bool _buffer_msteps(const xyze_msteps_t &target, const xyze_pos_t &target_float
+    static bool _buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &target_float
       , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
     );
 
-    static bool buffer_raw_block(const xyze_msteps_t &target, const xyze_pos_t &target_float,
+    static bool buffer_raw_block(const xyze_msteps_t &target, const MachinePosXYZE &target_float,
         float acceleration, float nominal_speed, float entry_speed, float exit_speed, uint8_t extruder);
 
     /**
@@ -528,12 +529,12 @@ class Planner {
      * @return  true if movement is acceptable, false otherwise
      */
     static bool _populate_block(block_t * const block,
-        const xyze_msteps_t &target, const xyze_pos_t &target_float
+        const xyze_msteps_t &target, const MachinePosXYZE &target_float
       , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
     );
 
     static bool populate_raw_block(block_t *const block, const xyze_msteps_t &target,
-        const xyze_pos_t &target_float, float acceleration, float nominal_speed,
+        const MachinePosXYZE &target_float, float acceleration, float nominal_speed,
         float entry_speed, float exit_speed, uint8_t extruder);
 
     /**
@@ -554,9 +555,9 @@ class Planner {
      *  extruder    - target extruder
      *  hints       - optional parameters to aid planner calculations
      */
-    static bool buffer_segment(const xyze_pos_t &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
+    static bool buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
 
-    static bool buffer_raw_segment(const xyze_pos_t &xyze, float acceleration, float nominal_speed, float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
+    static bool buffer_raw_segment(const MachinePosXYZE &xyze, float acceleration, float nominal_speed, float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
 
   public:
 
@@ -568,9 +569,9 @@ class Planner {
      *  extruder     - target extruder
      *  hints        - optional parameters to aid planner calculations
      */
-    static bool buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
+    static bool buffer_line(const MachinePosXYZE &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
 
-    static bool buffer_raw_line(const xyze_pos_t &cart, float acceleration, float nominal_speed,
+    static bool buffer_raw_line(const MachinePosXYZE &cart, float acceleration, float nominal_speed,
         float entry_speed, float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool);
 
     /**
@@ -599,7 +600,7 @@ class Planner {
      * The supplied position is in machine space, and no additional
      * conversions are applied.
      */
-    static void set_machine_position_mm(const xyze_pos_t &xyze);
+    static void set_machine_position_mm(const MachinePosXYZE &xyze);
 
     /**
      * Get an axis position according to stepper position(s)
@@ -611,16 +612,16 @@ class Planner {
      *   - can return incoherent values when axes are moving
      */
     static float get_axis_position_mm(const AxisEnum axis);
-    static void get_axis_position_mm(xy_pos_t& pos);
-    static void get_axis_position_mm(xyz_pos_t& pos);
-    static void get_axis_position_mm(xyze_pos_t& pos);
+    static void get_axis_position_mm(MachinePosXY& pos);
+    static void get_axis_position_mm(MachinePosXYZ& pos);
+    static void get_axis_position_mm(MachinePosXYZE& pos);
 
     /// Returns target position of the last queued move in MACHINE coordinates (after MBL - see MachinePosTag)
     /// It should generally apply that to_machine_pos(current_position) == get_machine_position_mm()
     /// !!! BUT the planner CAN discard a some very small moves (see MIN_MSTEPS_PER_SEGMENT),
     /// !!! in which case the current_position will get updated but the machine position will not
     /// So for motion planning, you usually want to use current_machine_position() instead
-    static xyze_pos_t get_machine_position_mm() { return position_float; }
+    static MachinePosXYZE get_machine_position_mm() { return position_float; }
 
     [[deprecated("Use gcode_exceptions().throw_unhandled()")]]
     static void quick_stop();
@@ -859,13 +860,13 @@ class Planner {
 
     #if DISABLED(CLASSIC_JERK)
 
-      FORCE_INLINE static void normalize_junction_vector(xyze_float_t &vector) {
+      FORCE_INLINE static void normalize_junction_vector(MachinePosXYZE &vector) {
         float magnitude_sq = 0;
         LOOP_XYZE(idx) if (vector[idx]) magnitude_sq += sq(vector[idx]);
         vector *= RSQRT(magnitude_sq);
       }
 
-      FORCE_INLINE static float limit_value_by_axis_maximum(const float max_value, xyze_float_t &unit_vec) {
+      FORCE_INLINE static float limit_value_by_axis_maximum(const float max_value, MachinePosXYZE &unit_vec) {
         float limit_value = max_value;
         LOOP_XYZE(idx) if (unit_vec[idx]) // Avoid divide by zero
           NOMORE(limit_value, ABS(settings.max_acceleration_mm_per_s2[idx] / unit_vec[idx]));

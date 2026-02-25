@@ -270,7 +270,7 @@ uint8_t Planner::g_uc_extruder_last_move[EXTRUDERS] = { 0 };
   xy_ulong_t Planner::axis_segment_time_us[3] = { { MAX_FREQ_TIME_US + 1, MAX_FREQ_TIME_US + 1 } };
 #endif
 
-xyze_pos_t Planner::position_float; // Needed for accurate maths. Steps cannot be used!
+MachinePosXYZE Planner::position_float; // Needed for accurate maths. Steps cannot be used!
 
 float Planner::max_printed_z = 0;
 
@@ -1059,15 +1059,15 @@ static void get_multi_axis_position_mm(float* pos, const uint8_t cnt) {
     pos[i] = axis_steps[i] * Planner::mm_per_step[i];
 }
 
-void Planner::get_axis_position_mm(xy_pos_t& pos) {
+void Planner::get_axis_position_mm(MachinePosXY& pos) {
   get_multi_axis_position_mm(pos.pos, 2);
 }
 
-void Planner::get_axis_position_mm(xyz_pos_t& pos) {
+void Planner::get_axis_position_mm(MachinePosXYZ& pos) {
   get_multi_axis_position_mm(pos.pos, NUM_AXES);
 }
 
-void Planner::get_axis_position_mm(xyze_pos_t& pos) {
+void Planner::get_axis_position_mm(MachinePosXYZE& pos) {
   get_multi_axis_position_mm(pos.pos, LOGICAL_AXES);
 }
 
@@ -1081,7 +1081,7 @@ float Planner::get_axis_position_mm(const AxisEnum axis) {
     #if CORE_IS_XY
       // Requesting one of the "core" axes?
       if (axis == A_AXIS || axis == B_AXIS) {
-        xy_pos_t pos;
+        MachinePosXY pos;
         get_axis_position_mm(pos);
         return pos[axis];
       }
@@ -1124,7 +1124,7 @@ void Planner::synchronize() {
  *
  * Returns true if movement was properly queued, false otherwise
  */
-bool Planner::_buffer_msteps(const xyze_msteps_t &target, const xyze_pos_t &target_float
+bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &target_float
   , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
 ) {
   assert(fr_mm_s > 0);
@@ -1192,7 +1192,7 @@ void Planner::manage_extruders(uint8_t extruder) {
  * @return  true if movement is acceptable, false otherwise
  */
 bool Planner::_populate_block(block_t * const block,
-  const xyze_msteps_t &target, const xyze_pos_t &target_float
+  const xyze_msteps_t &target, const MachinePosXYZE &target_float
   , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
 ) {
   assert(fr_mm_s > 0);
@@ -1561,8 +1561,8 @@ bool Planner::_populate_block(block_t * const block,
             already calculated in a different place. */
 
       // Unit vector of previous path line segment
-      static xyze_float_t prev_unit_vec;
-      xyze_float_t unit_vec = target_float - position_float;
+      static MachinePosXYZE prev_unit_vec;
+      MachinePosXYZE unit_vec = target_float - position_float;
 
       /**
        * On CoreXY the length of the vector [A,B] is SQRT(2) times the length of the head movement vector [X,Y].
@@ -1594,7 +1594,7 @@ bool Planner::_populate_block(block_t * const block,
           NOLESS(junction_cos_theta, -0.999999f); // Check for numerical round-off to avoid divide by zero.
 
           // Convert delta vector to unit vector
-          xyze_float_t junction_unit_vec = unit_vec - prev_unit_vec;
+          MachinePosXYZE junction_unit_vec = unit_vec - prev_unit_vec;
           normalize_junction_vector(junction_unit_vec);
 
           const float junction_acceleration = limit_value_by_axis_maximum(block->acceleration, junction_unit_vec),
@@ -1789,7 +1789,7 @@ bool Planner::_populate_block(block_t * const block,
   return true;
 } // _populate_block()
 
-bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &target, const xyze_pos_t &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
+bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &target, const MachinePosXYZE &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
     const int32_t da = target.a - position.a,
                   db = target.b - position.b,
                   dc = target.c - position.c;
@@ -1967,7 +1967,7 @@ bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &targ
     return true;
 } // populate_raw_block()
 
-bool Planner::buffer_raw_block(const xyze_msteps_t &target, const xyze_pos_t &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
+bool Planner::buffer_raw_block(const xyze_msteps_t &target, const MachinePosXYZE &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
     // Wait for the next available block
     uint8_t next_buffer_head;
     block_t *const block = get_next_free_block(next_buffer_head);
@@ -2038,7 +2038,7 @@ void Planner::buffer_sync_block() {
  * @param extruder      target extruder
  * @param hints         optional parameters to aid planner calculations
  */
-bool Planner::buffer_segment(const xyze_pos_t &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
+bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
 #if defined(Z_CEILING_CLEARANCE) != HAS_CEILING_CLEARANCE()
   #error Z_CEILING_CLEARANCE must be defined only if HAS_CEILING_CLEARANCE()
 #endif
@@ -2238,7 +2238,7 @@ bool Planner::buffer_segment(const xyze_pos_t &xyze, const feedRate_t fr_mm_s, s
   return true;
 } // buffer_segment()
 
-bool Planner::buffer_raw_segment(const xyze_pos_t &xyze, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
+bool Planner::buffer_raw_segment(const MachinePosXYZE &xyze, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
     const uint8_t extruder = PlannerMoveTools{tool}.extruder;
 
     // If we are aborting, do not accept queuing of movements
@@ -2310,14 +2310,12 @@ bool Planner::buffer_raw_segment(const xyze_pos_t &xyze, const float acceleratio
  *  extruder        - target extruder
  *  hints           - optional parameters to aid planner calculations
  */
-bool Planner::buffer_line(const xyze_pos_t &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
-  xyze_pos_t machine = cart;
-  return buffer_segment(machine, fr_mm_s, tool, hints);
+bool Planner::buffer_line(const MachinePosXYZE &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
+  return buffer_segment(cart, fr_mm_s, tool, hints);
 } // buffer_line()
 
-bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
-    xyze_pos_t machine = cart;
-    return buffer_raw_segment(machine, acceleration, nominal_speed, entry_speed, exit_speed, tool);
+bool Planner::buffer_raw_line(const MachinePosXYZE &cart, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
+    return buffer_raw_segment(cart, acceleration, nominal_speed, entry_speed, exit_speed, tool);
 } // buffer_raw_line()
 
 /**
@@ -2325,7 +2323,7 @@ bool Planner::buffer_raw_line(const xyze_pos_t &cart, const float acceleration, 
  * by converting mm into mini-steps.
  */
 
-void Planner::set_machine_position_mm(const xyze_pos_t &xyze) {
+void Planner::set_machine_position_mm(const MachinePosXYZE &xyze) {
   #if ENABLED(DISTINCT_E_FACTORS)
     last_extruder = active_extruder;
   #endif
