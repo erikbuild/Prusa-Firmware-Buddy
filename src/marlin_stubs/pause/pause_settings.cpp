@@ -44,7 +44,7 @@ float Settings::GetDefaultUnloadLength() {
 
 float Settings::GetDefaultPurgeLength(uint8_t extruder) {
     // Double the purge length for HF nozzles
-    return ADVANCED_PAUSE_PURGE_LENGTH * (config_store().nozzle_is_high_flow.get().test(ENABLED(SINGLENOZZLE) ? 0 : extruder) ? 2 : 1);
+    return ADVANCED_PAUSE_PURGE_LENGTH * (config_store().get_nozzle_is_high_flow(ENABLED(SINGLENOZZLE) ? 0 : extruder) ? 2 : 1);
 }
 
 float Settings::GetDefaultRetractLength() {

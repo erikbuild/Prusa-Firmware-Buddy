@@ -344,7 +344,7 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
         // Slicing for a HF nozzle without having it leads to extruder skipping.
         // Note: Always checking first bit in the config store, since nozzle_is_high_flow is set per toolhead and MMU always uses first one.
         if (extruder_info.requires_high_flow_nozzle == Tristate::yes
-            && !config_store().nozzle_is_high_flow.get().test(0)
+            && !config_store().get_nozzle_is_high_flow(0)
             && !gcode_info.is_singletool_gcode()
             && mmu_enabled) {
             failed_virtual_tool_checks[base_virtual_tool].set(VirtualToolCheck::nozzle_not_high_flow);
@@ -370,10 +370,10 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
             if (auto dia = extruder_info.nozzle_diameter; dia.has_value() && std::abs(*dia - config_store().get_nozzle_diameter(physical_tool.to_raw())) > 0.001f) {
                 virtual_tool_fails.set(VirtualToolCheck::nozzle_diameter);
             }
-            if (extruder_info.requires_hardened_nozzle == Tristate::yes && !config_store().nozzle_is_hardened.get()[physical_tool.to_raw()]) {
+            if (extruder_info.requires_hardened_nozzle == Tristate::yes && !config_store().get_nozzle_is_hardened(physical_tool)) {
                 virtual_tool_fails.set(VirtualToolCheck::nozzle_hardened);
             }
-            if (extruder_info.requires_high_flow_nozzle == Tristate::yes && !config_store().nozzle_is_high_flow.get()[physical_tool.to_raw()]) {
+            if (extruder_info.requires_high_flow_nozzle == Tristate::yes && !config_store().get_nozzle_is_high_flow(physical_tool)) {
                 virtual_tool_fails.set(VirtualToolCheck::nozzle_high_flow);
             }
 

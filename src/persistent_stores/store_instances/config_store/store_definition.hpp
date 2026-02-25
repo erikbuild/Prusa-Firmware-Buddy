@@ -476,6 +476,8 @@ struct CurrentStore
 
     FilamentType get_previous_filament_type(VirtualToolIndex tool);
 
+    void clear_previous_filament_type(uint8_t index);
+
     // Note: hash is kept for backwards compatibility
     StoreItem<bool, false, ItemFlag::features, journal::hash("Heatup Bed")> filament_change_preheat_all;
 
@@ -520,8 +522,36 @@ struct CurrentStore
     /// Stores whether a nozzle is hardened (resistant to abrasive filament) or not. One bit per each hotend
     StoreItem<std::bitset<16>, defaults::nozzle_is_hardened, ItemFlag::hw_config, journal::hash("Nozzle is Hardened")> nozzle_is_hardened;
 
+    [[deprecated("Use the ToolIndex overload")]]
+    bool get_nozzle_is_hardened(uint8_t index);
+
+    inline bool get_nozzle_is_hardened(PhysicalToolIndex tool) {
+        return get_nozzle_is_hardened(tool.to_raw());
+    }
+
+    [[deprecated("Use the ToolIndex overload")]]
+    void set_nozzle_is_hardened(uint8_t index, bool value);
+
+    inline void set_nozzle_is_hardened(PhysicalToolIndex tool, bool value) {
+        set_nozzle_is_hardened(tool.to_raw(), value);
+    }
+
     /// Stores whether a nozzle is high-flow (supports high-flow print profile) or not. One bit per each hotend
     StoreItem<std::bitset<16>, defaults::nozzle_is_high_flow, ItemFlag::hw_config, journal::hash("Nozzle is High-Flow")> nozzle_is_high_flow;
+
+    [[deprecated("Use the ToolIndex overload")]]
+    bool get_nozzle_is_high_flow(uint8_t index);
+
+    inline bool get_nozzle_is_high_flow(PhysicalToolIndex tool) {
+        return get_nozzle_is_high_flow(tool.to_raw());
+    }
+
+    [[deprecated("Use the ToolIndex overload")]]
+    void set_nozzle_is_high_flow(uint8_t index, bool value);
+
+    inline void set_nozzle_is_high_flow(PhysicalToolIndex tool, bool value) {
+        set_nozzle_is_high_flow(tool.to_raw(), value);
+    }
 
     StoreItem<float, 0.0f, ItemFlag::calibrations, journal::hash("Homing Bump Divisor X")> homing_bump_divisor_x;
     StoreItem<float, 0.0f, ItemFlag::calibrations, journal::hash("Homing Bump Divisor Y")> homing_bump_divisor_y;

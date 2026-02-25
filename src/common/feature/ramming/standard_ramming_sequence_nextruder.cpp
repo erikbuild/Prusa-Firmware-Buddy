@@ -6,7 +6,7 @@ using namespace buddy;
 
 const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence seq, uint8_t hotend) {
     // TODO different sequence for HF nozzle
-    [[maybe_unused]] const bool is_high_flow_nozzle = config_store().nozzle_is_high_flow.get()[hotend];
+    [[maybe_unused]] const bool is_high_flow_nozzle = config_store().get_nozzle_is_high_flow(hotend);
 
     switch (seq) {
 

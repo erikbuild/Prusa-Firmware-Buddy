@@ -186,13 +186,11 @@ MI_NOZZLE_HARDENED::MI_NOZZLE_HARDENED(Toolhead toolhead)
 }
 
 bool MI_NOZZLE_HARDENED::read_value_impl(PhysicalToolIndex ix) {
-    return config_store().nozzle_is_hardened.get().test(ix.to_raw());
+    return config_store().get_nozzle_is_hardened(ix);
 }
 
 void MI_NOZZLE_HARDENED::store_value_impl(PhysicalToolIndex ix, bool set) {
-    config_store().nozzle_is_hardened.apply([&](auto &item) {
-        item.set(ix.to_raw(), set);
-    });
+    config_store().set_nozzle_is_hardened(ix, set);
 }
 
 // * MI_NOZZLE_HIGH_FLOW
@@ -203,13 +201,11 @@ MI_NOZZLE_HIGH_FLOW::MI_NOZZLE_HIGH_FLOW(Toolhead toolhead)
 }
 
 bool MI_NOZZLE_HIGH_FLOW::read_value_impl(PhysicalToolIndex ix) {
-    return config_store().nozzle_is_high_flow.get().test(ix.to_raw());
+    return config_store().get_nozzle_is_high_flow(ix);
 }
 
 void MI_NOZZLE_HIGH_FLOW::store_value_impl(PhysicalToolIndex ix, bool set) {
-    config_store().nozzle_is_high_flow.apply([&](auto &item) {
-        item.set(ix.to_raw(), set);
-    });
+    config_store().set_nozzle_is_high_flow(ix, set);
 }
 
 #if HAS_TOOLCHANGER()

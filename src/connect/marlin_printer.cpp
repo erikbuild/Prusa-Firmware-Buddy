@@ -253,8 +253,8 @@ namespace {
             slot.print_fan_rpm = hotend.print_fan_rpm;
             slot.heatbreak_fan_rpm = hotend.heatbreak_fan_rpm;
             slot.nozzle_diameter = config_store().get_nozzle_diameter(pt);
-            slot.hardened = config_store().nozzle_is_hardened.get().test(pt.to_raw());
-            slot.high_flow = config_store().nozzle_is_high_flow.get().test(pt.to_raw());
+            slot.hardened = config_store().get_nozzle_is_hardened(pt.to_raw());
+            slot.high_flow = config_store().get_nozzle_is_high_flow(pt.to_raw());
         }
     }
 } // namespace
@@ -655,15 +655,8 @@ std::optional<MarlinPrinter::FinishedJobResult> MarlinPrinter::get_prior_job_res
 void MarlinPrinter::set_slot_info(VirtualToolIndex vt, const SlotInfo &info) {
     const auto pt = vt.to_physical();
     config_store().set_nozzle_diameter(pt, info.nozzle_diameter);
-    const uint8_t i = pt.to_raw();
-    config_store().nozzle_is_hardened.transform([&](auto hard) {
-        hard[i] = info.hardened;
-        return hard;
-    });
-    config_store().nozzle_is_high_flow.transform([&](auto high) {
-        high[i] = info.high_flow;
-        return high;
-    });
+    config_store().set_nozzle_is_hardened(pt, info.hardened);
+    config_store().set_nozzle_is_high_flow(pt, info.high_flow);
 }
 
 } // namespace connect_client

@@ -385,7 +385,7 @@ ScreenPreheat::~ScreenPreheat() {
 bool ScreenPreheat::handle_filament_selection(FilamentType filament_type, PreheatData::ToolIndex tool) {
     const auto filament = filament_type.parameters();
 
-    if (filament.is_abrasive && std::holds_alternative<VirtualToolIndex>(tool) && !config_store().nozzle_is_hardened.get().test(std::get<VirtualToolIndex>(tool).to_raw())) {
+    if (filament.is_abrasive && std::holds_alternative<VirtualToolIndex>(tool) && !config_store().get_nozzle_is_hardened(std::get<VirtualToolIndex>(tool).to_physical())) {
         StringViewUtf8Parameters<filament_name_buffer_size + 1> params;
         if (MsgBoxWarning(_("Filament '%s' is abrasive, but you don't have a hardened nozzle installed. Do you really want to continue?").formatted(params, filament.name.data()), Responses_YesNo) != Response::Yes) {
             return false;
