@@ -688,7 +688,8 @@ void panic_loop() {
                 bool already_lifted = z_dist >= planner.mm_per_qsteps(Z_AXIS, POWER_PANIC_Z_LIFT_CYCLES);
                 uint8_t cycles = (already_lifted ? 1 : POWER_PANIC_Z_LIFT_CYCLES);
                 float z_shift = distance_to_reset_point(Z_AXIS, cycles);
-                plan_move_by(POWER_PANIC_Z_FEEDRATE, 0, 0, z_shift);
+                planner.buffer_line(planner.position_float + MachinePosXYZE { .z = z_shift }, POWER_PANIC_Z_FEEDRATE, PhysicalToolIndex::currently_selected());
+                set_current_position(to_native_pos(planner.get_machine_position_mm()));
                 planner.start_moving();
 
                 // continue powering off devices

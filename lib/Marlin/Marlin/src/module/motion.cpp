@@ -496,21 +496,6 @@ void restore_feedrate_and_scaling() {
 
 #endif // HAS_SOFTWARE_ENDSTOPS
 
-void plan_move_by(const feedRate_t fr, const float dx, const float dy, const float dz, const float de){
-  current_position.x += dx;
-  current_position.y += dy;
-  current_position.z += dz;
-  current_position.e += de;
-
-  // Machine position could be different to current_position thanks to MBL - adjust both positions separately
-  auto target = planner.get_machine_position_mm();
-  target.x += dx;
-  target.y += dy;
-  target.z += dz;
-  target.e += de;
-  planner.buffer_segment(target, fr, PhysicalToolIndex::currently_selected());
-}
-
 uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level) {
   uint8_t result = 0;
   for(uint8_t i = 0; i < axes_home_level.size(); i++) {
