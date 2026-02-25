@@ -44,6 +44,7 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
     // target changed, reset time when it reached target
     nozzle_temp_residency_start_ms_ = 0;
 
+    nozzle_temp_reached_ = false;
     nozzle_target_temp_ = new_temp;
 
 #if BOARD_IS_MASTER_BOARD()
