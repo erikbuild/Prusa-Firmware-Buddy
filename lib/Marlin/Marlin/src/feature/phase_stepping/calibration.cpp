@@ -940,12 +940,12 @@ static float plan_no_movement_block(AxisEnum physical_axis, int direction, float
     float block_speed = sqrt(speed_x * speed_x + speed_y * speed_y);
     float block_accel = sqrt(accel_x * accel_x + accel_y * accel_y);
 
-    auto target = current_position;
+    auto target = planner.get_machine_position_mm();
     target.x += d_x;
     target.y += d_y;
 
     Planner::buffer_raw_line(target, block_accel, block_speed, 0, 0, PhysicalToolIndex::currently_selected());
-    current_position = target;
+    set_current_position(to_native_pos(target));
 
     return duration;
 }
@@ -971,12 +971,12 @@ static float plan_constant_movement_block(AxisEnum physical_axis, int direction,
     float speed_y_mm = rev_to_mm(AxisEnum::Y_AXIS, speed_y);
     float block_speed = sqrt(speed_x_mm * speed_x_mm + speed_y_mm * speed_y_mm);
 
-    auto target = current_position;
+    auto target = planner.get_machine_position_mm();
     target.x += rev_to_mm(AxisEnum::X_AXIS, x_revs);
     target.y += rev_to_mm(AxisEnum::Y_AXIS, y_revs);
 
     Planner::buffer_raw_line(target, DUMMY_ACCEL, block_speed, block_speed, block_speed, PhysicalToolIndex::currently_selected());
-    current_position = target;
+    set_current_position(to_native_pos(target));
 
     return duration;
 }
@@ -1021,12 +1021,12 @@ static float plan_accel_block(AxisEnum physical_axis, int direction, float start
     float accel_y_mm = rev_to_mm(AxisEnum::Y_AXIS, accel_y);
     float block_accel = sqrt(accel_x_mm * accel_x_mm + accel_y_mm * accel_y_mm);
 
-    auto target = current_position;
+    auto target = planner.get_machine_position_mm();
     target.x += rev_to_mm(AxisEnum::X_AXIS, revs_x);
     target.y += rev_to_mm(AxisEnum::Y_AXIS, revs_y);
 
     Planner::buffer_raw_line(target, block_accel, block_nominal_speed, block_start_speed, block_end_speed, PhysicalToolIndex::currently_selected());
-    current_position = target;
+    set_current_position(to_native_pos(target));
 
     return duration;
 }
@@ -1072,12 +1072,12 @@ static float plan_accel_over_dist_block(AxisEnum physical_axis, int direction,
     float accel_y_mm = rev_to_mm(AxisEnum::Y_AXIS, accel_y);
     float block_accel = sqrt(accel_x_mm * accel_x_mm + accel_y_mm * accel_y_mm);
 
-    auto target = current_position;
+    auto target = planner.get_machine_position_mm();
     target.x += rev_to_mm(AxisEnum::X_AXIS, revs_x);
     target.y += rev_to_mm(AxisEnum::Y_AXIS, revs_y);
 
     Planner::buffer_raw_line(target, block_accel, block_nominal_speed, block_start_speed, block_end_speed, PhysicalToolIndex::currently_selected());
-    current_position = target;
+    set_current_position(to_native_pos(target));
 
     return 2 * revs / (start_speed + end_speed);
 }
