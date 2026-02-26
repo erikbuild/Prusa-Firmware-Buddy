@@ -462,7 +462,7 @@ extern "C" void main_cpp(void) {
     HAL_SPI_Initialized = 1;
 
     config_store_ns::InitResult status = config_store_init_result();
-    if (status == config_store_ns::InitResult::cold_start || status == config_store_ns::InitResult::migrated_from_old) {
+    if (status == config_store_ns::InitResult::cold_start) {
         // this means we are either starting from defaults or after a FW upgrade -> invalidate the
         // XFLASH dump and power-panic data, since it is not relevant anymore
         dump_reset();

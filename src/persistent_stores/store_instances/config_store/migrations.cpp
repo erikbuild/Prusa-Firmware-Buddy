@@ -36,35 +36,18 @@ namespace migrations {
     }
 #endif
 
-#if PRINTER_IS_PRUSA_XL() and HAS_GUI() // MINI goes directly from old eeprom to multiple footer items, MK4 gets its footer reset
-    void footer_setting_v1(journal::Backend &backend) {
-        // See selftest_result_pre_23 (above) for in-depth commentary
-        using FooterSettingsV1 = decltype(DeprecatedStore::footer_setting_v1);
-        FooterSettingsV1::value_type footer_setting_v1 { FooterSettingsV1::default_val };
+    void selftest_result_pre_gears(journal::Backend &backend) {
+        using SelftestResultPreGearsT = decltype(DeprecatedStore::selftest_result_pre_gears);
+        SelftestResultPreGearsT::value_type sr_pre_gears { SelftestResultPreGearsT::default_val };
         auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
-            if (header.id == FooterSettingsV1::hashed_id) {
-                memcpy(&footer_setting_v1, buffer.data(), header.len);
+            if (header.id == SelftestResultPreGearsT::hashed_id) {
+                memcpy(&sr_pre_gears, buffer.data(), header.len);
             }
         };
         backend.read_items_for_migrations(callback);
-
-        auto decoded_rec { footer::eeprom::decode_from_old_eeprom_v22(footer_setting_v1) };
-
-        backend.save_migration_item<footer::Item>(journal::hash("Footer Setting 0"), decoded_rec[0]);
-    #if FOOTER_ITEMS_PER_LINE__ > 1
-        backend.save_migration_item<footer::Item>(journal::hash("Footer Setting 1"), decoded_rec[1]);
-    #endif
-    #if FOOTER_ITEMS_PER_LINE__ > 2
-        backend.save_migration_item<footer::Item>(journal::hash("Footer Setting 2"), decoded_rec[2]);
-    #endif
-    #if FOOTER_ITEMS_PER_LINE__ > 3
-        backend.save_migration_item<footer::Item>(journal::hash("Footer Setting 3"), decoded_rec[3]);
-    #endif
-    #if FOOTER_ITEMS_PER_LINE__ > 4
-        backend.save_migration_item<footer::Item>(journal::hash("Footer Setting 4"), decoded_rec[4]);
-    #endif
+        SelftestResult new_selftest_result { sr_pre_gears };
+        backend.save_migration_item<SelftestResult>(journal::hash("Selftest Result Gears"), new_selftest_result);
     }
-#endif
 
     void footer_setting_v2(journal::Backend &backend) {
         struct MigrationItem {
@@ -120,25 +103,8 @@ namespace migrations {
         }
     }
 
-#if HAS_SELFTEST()
-    void selftest_result_pre_gears(journal::Backend &backend) {
-        // See selftest_result_pre_23 (above) for in-depth commentary
-        using SelftestResultPreGearsT = decltype(DeprecatedStore::selftest_result_pre_gears);
-        SelftestResultPreGearsT::value_type sr_pre_gears { SelftestResultPreGearsT::default_val };
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
-            if (header.id == SelftestResultPreGearsT::hashed_id) {
-                memcpy(&sr_pre_gears, buffer.data(), header.len);
-            }
-        };
-        backend.read_items_for_migrations(callback);
-        SelftestResult new_selftest_result { sr_pre_gears };
-        backend.save_migration_item<SelftestResult>(journal::hash("Selftest Result Gears"), new_selftest_result);
-    }
-#endif
-
 #if PRINTER_IS_PRUSA_MK4()
     void extended_printer_type(journal::Backend &backend) {
-        // See selftest_result_pre_23 (above) for in-depth commentary
         using OldItem = decltype(DeprecatedStore::xy_motors_400_step);
         bool has_400_motors = true;
 
@@ -156,7 +122,6 @@ namespace migrations {
 #endif
 
     void hostname(journal::Backend &backend) {
-        // See selftest_result_pre_23 (above) for in-depth commentary
         using NewItem = decltype(CurrentStore::hostname);
         NewItem::value_type hostname { 0 };
 

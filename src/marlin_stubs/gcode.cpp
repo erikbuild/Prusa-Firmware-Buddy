@@ -155,9 +155,6 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
         case 340:
             PrusaGcodeSuite::M340();
             break;
-        // case 505: // deprecated
-        //     PrusaGcodeSuite::M505();
-        //     break;
         case 591:
             PrusaGcodeSuite::M591();
             break;

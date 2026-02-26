@@ -76,7 +76,7 @@ void M268(); //< IO Expander: Read register
 #endif // HAS_I2C_EXPANDER()
 
 void M300(); //< Beep
-// void M505(); //< set eeprom variable // deprecated
+void M505() = delete; //< set eeprom variable
 
 /// @name MMU G-CODES
 /// @{

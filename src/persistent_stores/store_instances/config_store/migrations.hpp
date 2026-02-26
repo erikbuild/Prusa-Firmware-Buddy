@@ -15,9 +15,6 @@ namespace deprecated_ids {
     inline constexpr uint16_t selftest_result_pre_23[] {
         journal::hash("Selftest Result"),
     };
-    inline constexpr uint16_t footer_setting_v1[] {
-        journal::hash("Footer Setting"),
-    };
     inline constexpr uint16_t footer_setting_v2[] {
         decltype(DeprecatedStore::footer_setting_0_v2)::hashed_id,
 #if FOOTER_ITEMS_PER_LINE__ > 1
@@ -159,12 +156,10 @@ namespace deprecated_ids {
 } // namespace deprecated_ids
 
 namespace migrations {
-    // Commented thoroughly to be used as an example for more migrations.
+#if HAS_SELFTEST()
     void selftest_result_pre_23(journal::Backend &backend);
-
-#if PRINTER_IS_PRUSA_XL() // MINI goes directly from old eeprom to multiple footer items, MK4 gets its footer reset
-    void footer_setting_v1(journal::Backend &backend);
 #endif
+
     void footer_setting_v2(journal::Backend &backend);
 
     void selftest_result_pre_gears(journal::Backend &backend);
@@ -211,9 +206,6 @@ namespace migrations {
 inline constexpr journal::Backend::MigrationFunction migration_functions[] {
 #if HAS_SELFTEST()
     { migrations::selftest_result_pre_23, deprecated_ids::selftest_result_pre_23 },
-#endif
-#if PRINTER_IS_PRUSA_XL() && HAS_GUI() // MINI goes directly from old eeprom to multiple footer items, MK4 gets its footer reset
-        { migrations::footer_setting_v1, deprecated_ids::footer_setting_v1 },
 #endif
 #if HAS_SELFTEST()
         { migrations::selftest_result_pre_gears, deprecated_ids::selftest_result_pre_gears },

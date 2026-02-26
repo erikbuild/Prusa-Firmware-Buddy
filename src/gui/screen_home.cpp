@@ -399,12 +399,12 @@ int ini_handler(void *user, const char *section, const char *name, const char *v
     size_t len = strlen(value);
 
     if (strcmp(name, "ssid") == 0) {
-        char buffer[config_store_ns::old_eeprom::WIFI_MAX_SSID_LEN];
+        char buffer[config_store_ns::wifi_max_ssid_len];
         if (len <= sizeof(buffer)) {
             config->ssid_status = strncmp(value, config_store().wifi_ap_ssid.get_c_str(), sizeof(buffer)) ? Config::Status::not_equal : Config::Status::equal;
         }
     } else if (strcmp(name, "psk") == 0) {
-        char buffer[config_store_ns::old_eeprom::WIFI_MAX_PASSWD_LEN];
+        char buffer[config_store_ns::wifi_max_passwd_len];
         if (len <= sizeof(buffer)) {
             config->psk_status = strncmp(value, config_store().wifi_ap_password.get_c_str(), sizeof(buffer)) ? Config::Status::not_equal : Config::Status::equal;
         }

@@ -12,7 +12,6 @@
 namespace config_store_ns {
 
 enum class InitResult {
-    migrated_from_old,
     cold_start,
     normal,
     not_yet_init
