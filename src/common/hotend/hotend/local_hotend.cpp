@@ -220,8 +220,9 @@ void LocalHotend::manage_heatbreak() {
 
     } else {
     #if WATCH_HEATBREAK
-        if (!heatbreak_watch_.is_running()) { // if we are not watching heatbreak (not in process of cooling down)
-            fatal_error(ErrCode::ERR_TEMPERATURE_HEATBREAK_MAXTEMP_ERR); // Red screen
+        // if we are not watching heatbreak (not in process of cooling down), red screen
+        if (!heatbreak_watch_.is_running() && heatbreak_target_temp() > 0) {
+            fatal_error(ErrCode::ERR_TEMPERATURE_HEATBREAK_MAXTEMP_ERR);
         }
     #endif
         heatbreak_fan_pwm_ = PWM255(255);
