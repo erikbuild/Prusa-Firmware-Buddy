@@ -434,8 +434,8 @@ json::JsonResult get_job_v1(size_t resume_point, json::JsonOutput &output) {
         JSON_FIELD_INT("time_printing", marlin_vars().print_duration) JSON_COMMA;
         JSON_FIELD_OBJ("file");
             JSON_FIELD_OBJ("refs");
-                JSON_CUSTOM("\"icon\":\"/thumb/s%s\",", sfn_path_escaped);
-                JSON_CUSTOM("\"thumbnail\":\"/thumb/l%s\",", sfn_path_escaped);
+                JSON_CUSTOM("\"icon\":\"/thumb/s%.*s\",", (int)sfn_path_escaped.size(), sfn_path_escaped.data());
+                JSON_CUSTOM("\"thumbnail\":\"/thumb/l%.*s\",", (int)sfn_path_escaped.size(), sfn_path_escaped.data());
                 JSON_FIELD_STR("download", sfn_path);
             JSON_OBJ_END JSON_COMMA;
             JSON_FIELD_STR("name", basename_b(sfn_path)) JSON_COMMA;

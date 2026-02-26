@@ -248,8 +248,8 @@ JsonResult FileInfo::FileRenderer::renderStateV1(size_t resume_point, JsonOutput
         if (strcmp(type, "FOLDER") != 0) {
             JSON_FIELD_OBJ("refs");
                 if (filename_is_printable(filename)) {
-                    JSON_CUSTOM("\"icon\":\"/thumb/s%s\",", filename_escaped);
-                    JSON_CUSTOM("\"thumbnail\":\"/thumb/l%s\",", filename_escaped);
+                    JSON_CUSTOM("\"icon\":\"/thumb/s%.*s\",", (int)filename_escaped.size(), filename_escaped.data());
+                    JSON_CUSTOM("\"thumbnail\":\"/thumb/l%.*s\",", (int)filename_escaped.size(), filename_escaped.data());
                 }
                 JSON_FIELD_STR("download", filename);
             JSON_OBJ_END JSON_COMMA;
@@ -275,9 +275,9 @@ JsonResult FileInfo::FileRenderer::renderStateOctoprint(size_t resume_point, Jso
         JSON_FIELD_STR("origin", "local") JSON_COMMA;
         JSON_FIELD_INT("size", state.size) JSON_COMMA;
         JSON_FIELD_OBJ("refs");
-            JSON_CUSTOM("\"resource\":\"/api/files%s\",", filename_escaped);
-            JSON_CUSTOM("\"thumbnailSmall\":\"/thumb/s%s\",", filename_escaped);
-            JSON_CUSTOM("\"thumbnailBig\":\"/thumb/l%s\",", filename_escaped);
+            JSON_CUSTOM("\"resource\":\"/api/files%.*s\",", (int)filename_escaped.size(), filename_escaped.data());
+            JSON_CUSTOM("\"thumbnailSmall\":\"/thumb/s%.*s\",", (int)filename_escaped.size(), filename_escaped.data());
+            JSON_CUSTOM("\"thumbnailBig\":\"/thumb/l%.*s\",", (int)filename_escaped.size(), filename_escaped.data());
             JSON_FIELD_STR("download", filename);
         JSON_OBJ_END;
     JSON_OBJ_END;
