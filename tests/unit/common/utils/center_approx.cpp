@@ -1,7 +1,7 @@
 #include <array>
 #include <span>
 #include <catch2/catch_test_macros.hpp>
-#include <types.h>
+#include <core/types.h>
 
 #include <center_approx.hpp>
 

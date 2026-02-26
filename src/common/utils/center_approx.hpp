@@ -2,17 +2,18 @@
 
 #include <span>
 #include <math.h>
+#include <core/types.h>
 
 /// Approx center using iterative least square fit
 template <size_t ITERATIONS = 10>
-const xy_pos_t approximate_center(std::span<const xy_pos_t> points) {
+MachinePosXY approximate_center(std::span<const MachinePosXY> points) {
     // Smallest distance / error to deal with
     // Should be safe to div by without precision loss
     static constexpr float NOTHING_MM { 0.000001f };
 
     // Guess center as centroid
-    xy_pos_t center = { { { .x = 0, .y = 0 } } };
-    for (const xy_pos_t &p : points) {
+    MachinePosXY center = { { { .x = 0, .y = 0 } } };
+    for (const MachinePosXY &p : points) {
         center += p;
     }
     center.x /= points.size();
@@ -22,14 +23,14 @@ const xy_pos_t approximate_center(std::span<const xy_pos_t> points) {
     for (unsigned int i = 0; i < ITERATIONS; ++i) {
         // Update radius
         float radius = 0;
-        for (const xy_pos_t &p : points) {
+        for (const MachinePosXY &p : points) {
             radius += (p - center).magnitude() / points.size();
         }
 
         // Compute correction
-        xy_pos_t correction = { { { .x = 0, .y = 0 } } };
+        MachinePosXY correction = { { { .x = 0, .y = 0 } } };
         float residual_square_sum = 0; // Sum of residual squares = weights
-        for (const xy_pos_t &point : points) {
+        for (const MachinePosXY &point : points) {
             const float d = (point - center).magnitude(); // Point distance to center
             const float R = d - radius; // Point error
             const float Rs = R * R; // Point error square

@@ -119,8 +119,8 @@ METRIC_DEF(metric_xy_dev, "g425_xy_dev", METRIC_VALUE_FLOAT, 100, METRIC_ENABLED
 
 constexpr xyz_float_t dimensions { { CALIBRATION_OBJECT_DIMENSIONS } };
 constexpr xy_float_t nod = { { { CALIBRATION_NOZZLE_OUTER_DIAMETER, CALIBRATION_NOZZLE_OUTER_DIAMETER } } };
-constexpr xyz_pos_t true_center { { CALIBRATION_OBJECT_CENTER } };
-constexpr xyz_pos_t true_top_center = { { { .x = true_center.x,
+constexpr MachinePosXYZ true_center { { CALIBRATION_OBJECT_CENTER } };
+constexpr MachinePosXYZ true_top_center = { { { .x = true_center.x,
     .y = true_center.y,
     .z = dimensions.z } } };
 
@@ -143,7 +143,7 @@ constexpr auto MIN_TRAVELED_DISTANCE_MM { 0.1f };
 constexpr auto MAX_DEVIATION_MM { 0.2f };
 
 struct measurements_t {
-    xyz_pos_t obj_center = true_top_center; // Non-static must be assigned from xyz_pos_t
+    MachinePosXYZ obj_center = true_top_center; // Non-static must be assigned from MachinePosXYZ
     xyz_float_t pos_error;
     xy_float_t nozzle_outer_dimension = nod;
 };
@@ -192,10 +192,6 @@ private:
     const float previous_x, previous_y;
 };
 
-inline void calibration_move() {
-    do_blocking_move_to(current_position, MMM_TO_MMS(CALIBRATION_FEEDRATE_TRAVEL));
-}
-
 inline void wait_ms(const uint32_t duration_ms) {
     const uint32_t point = ticks_ms();
     while (ticks_ms() - point < duration_ms) {
@@ -222,7 +218,7 @@ inline void normalize_hotend_offsets() {
 #endif
 
 /// Return one of evenly distributed position on circle
-xy_pos_t pos_on_circle(float radius, int idx, int total_points) {
+MachinePosXY pos_on_circle(float radius, int idx, int total_points) {
     float goniom_dist = (static_cast<float>(idx) / static_cast<float>(total_points)) * 2 * static_cast<float>(M_PI);
     return { { { std::cos(goniom_dist) * radius, std::sin(goniom_dist) * radius } } };
 }
@@ -234,59 +230,71 @@ inline void report_hotend_offsets() {
     }
 }
 
-xy_pos_t closest_point_on_circle(const xy_pos_t point, const xy_pos_t center, const float radius) {
+MachinePosXY closest_point_on_circle(const MachinePosXY &point, const MachinePosXY &center, const float radius) {
     const float distance_factor = std::hypot(point.x - center.x, point.y - center.y);
 
     if (distance_factor == 0) {
-        return { { { .x = center.x + radius,
-            .y = center.y } } };
+        return {
+            .x = center.x + radius,
+            .y = center.y,
+        };
     }
 
-    return { { { .x = center.x + radius * (point.x - center.x) / distance_factor,
-        .y = center.y + radius * (point.y - center.y) / distance_factor } } };
+    return {
+        .x = center.x + radius * (point.x - center.x) / distance_factor,
+        .y = center.y + radius * (point.y - center.y) / distance_factor,
+    };
 }
 
 void go_to_safe_height() {
-    current_position.z = true_top_center.z + PROBE_Z_UNCERTAIN_DIST_MM;
-    line_to_current_position(INTERPROBE_FEEDRATE_MMS);
+    auto target = current_machine_position();
+    target.z = true_top_center.z + PROBE_Z_UNCERTAIN_DIST_MM;
+    line_to_machine_pos(target, INTERPROBE_FEEDRATE_MMS);
     planner.synchronize();
 }
 
-void go_to_safety_circle(const xyz_pos_t center, const float radius) {
-    current_position.set(closest_point_on_circle(current_position.xy(), center.xy(), radius));
-    line_to_current_position(INTERPROBE_FEEDRATE_MMS);
+void go_to_safety_circle(const MachinePosXY &center, const float radius) {
+    auto target = current_machine_position();
+    target.set(closest_point_on_circle(target.xy(), center, radius));
+    line_to_machine_pos(target, INTERPROBE_FEEDRATE_MMS);
     planner.synchronize();
 }
 
-xyz_pos_t initial_position(const xyz_pos_t center, const float angle, const float radius) {
-    return { { { .x = center.x + cos(angle) * radius,
+MachinePosXYZ initial_position(const MachinePosXYZ &center, const float angle, const float radius) {
+    return {
+        .x = center.x + cos(angle) * radius,
         .y = center.y + sin(angle) * radius,
-        .z = center.z - PROBE_Z_BORE_MM } } };
+        .z = center.z - PROBE_Z_BORE_MM,
+    };
 }
 
-void go_to_initial(const xyz_pos_t center, const float angle, const float radius) {
-    const xyz_pos_t initial = initial_position(center, angle, radius);
-    const xy_pos_t current = current_position.xy();
+void go_to_initial(const MachinePosXYZ &center, const float angle, const float radius) {
+    MachinePosXYZE initial = current_machine_position();
+    initial.set(initial_position(center, angle, radius));
+
+    const MachinePosXY current = current_machine_position().xy();
 
     if (current != initial.xy()) {
         feedrate_mm_s = INTERPROBE_FEEDRATE_MMS;
-        plan_arc(xyze_pos_t(initial), { { { .x = center.x - current.x, .y = center.y - current.y } } }, false, 0);
+        plan_arc(to_native_pos(initial), { { { .x = center.x - current.x, .y = center.y - current.y } } }, false, 0);
     }
     planner.synchronize();
 
-    current_position.z = initial.z;
-    line_to_current_position(INTERPROBE_FEEDRATE_MMS);
+    auto target = current_machine_position();
+    target.z = initial.z;
+    line_to_machine_pos(target, INTERPROBE_FEEDRATE_MMS);
     planner.synchronize();
 }
 
-xy_pos_t probe_xy(const xyz_pos_t center, const float angle, const uint8_t tool, const Phase phase) {
+MachinePosXY probe_xy(const MachinePosXYZ &center, const float angle, const uint8_t tool, const Phase phase) {
+    const auto initial_mm = current_machine_position();
+
     // As we perform measurements, we need to ensure the current position has been reached first
-    planner.buffer_line(current_position, PROBE_FEEDRATE_MMS, PhysicalToolIndex::currently_selected(), { .raw_block = true });
+    planner.buffer_line(initial_mm, PROBE_FEEDRATE_MMS, PhysicalToolIndex::currently_selected(), { .raw_block = true });
     planner.synchronize();
 
     // Mark initial position
     xyze_msteps_t initial_pos_msteps = planner.get_position_msteps();
-    xyze_pos_t initial_mm = current_position;
 
     // Setup probe for XY endstop
     loadcell.set_xy_endstop(true);
@@ -309,7 +317,12 @@ xy_pos_t probe_xy(const xyz_pos_t center, const float angle, const uint8_t tool,
 #endif
 
     // Go to center
-    do_blocking_move_to_xy(center.x, center.y, PROBE_FEEDRATE_MMS);
+    {
+        auto target = initial_mm;
+        target.set(center.xy());
+        line_to_machine_pos(target, PROBE_FEEDRATE_MMS);
+        planner.synchronize();
+    }
 
     // No longer expecting pin hit
     const bool reached = endstops.trigger_state();
@@ -339,7 +352,7 @@ xy_pos_t probe_xy(const xyz_pos_t center, const float angle, const uint8_t tool,
     // Return to initial
     planner._buffer_msteps(initial_pos_msteps, initial_mm, INTERPROBE_FEEDRATE_MMS, active_extruder, { .raw_block = true });
     planner.synchronize();
-    current_position = initial_mm;
+    set_current_position(to_native_pos(initial_mm));
 
     metric_record_custom(
         &metric_xy_raw_hit,
@@ -353,24 +366,24 @@ xy_pos_t probe_xy(const xyz_pos_t center, const float angle, const uint8_t tool,
     return hit_mm.xy();
 }
 
-xy_pos_t synthetic_probe(const xyz_pos_t center, const float angle) {
+MachinePosXY synthetic_probe(const MachinePosXYZ &center, const float angle) {
     return { { { .x = center.x + (PIN_DIAMETER_MM / 2 + PROBE_Z_BORE_MM) * cos(angle),
         .y = center.y + (PIN_DIAMETER_MM / 2 + PROBE_Z_BORE_MM) * sin(angle) } } };
 }
 
-xy_pos_t probe_xy_verify(const xyz_pos_t center, const float angle, const float probe_distance, const uint8_t tool, const Phase phase) {
-    go_to_safety_circle(center, probe_distance);
+MachinePosXY probe_xy_verify(const MachinePosXYZ &center, const float angle, const float probe_distance, const uint8_t tool, const Phase phase) {
+    go_to_safety_circle(center.xy(), probe_distance);
     go_to_initial(center, angle, probe_distance);
 
     // Take all samples
-    std::array<xy_pos_t, NUM_PROBE_SAMPLES> hits;
+    std::array<MachinePosXY, NUM_PROBE_SAMPLES> hits;
     for (auto &hit : hits) {
         hit = probe_xy(center, angle, tool, phase);
     }
 
     for (uint i = 0; i < NUM_PROBE_TRIES; ++i) {
         // Compute position from hits
-        xy_pos_t pos {};
+        MachinePosXY pos {};
         for (auto &hit : hits) {
             pos += hit;
         }
@@ -419,7 +432,7 @@ xy_pos_t probe_xy_verify(const xyz_pos_t center, const float angle, const float 
 }
 
 /// Probe in Z, first in the middle then it does circle around center of the pin, just to distribute the probes over larger area to minimize errors
-float probe_z(const xyz_pos_t position, float uncertainty, const int num_measurements, const uint8_t tool, const Phase phase) {
+float probe_z(const MachinePosXYZ &position, float uncertainty, const int num_measurements, const uint8_t tool, const Phase phase) {
     constexpr xyz_float_t dimensions = { { CALIBRATION_OBJECT_DIMENSIONS } };
 
     // radius of circle that we are probing around for more variety
@@ -427,20 +440,29 @@ float probe_z(const xyz_pos_t position, float uncertainty, const int num_measure
 
     // Move to safe clearance above calibration object first
     float top_expected_position = position.z;
-    current_position.z = top_expected_position + uncertainty;
-    calibration_move();
+
+    {
+        auto target = current_machine_position();
+        target.z = top_expected_position + uncertainty;
+        line_to_machine_pos(target, MMM_TO_MMS(CALIBRATION_FEEDRATE_TRAVEL));
+        planner.synchronize();
+    }
 
     float sum = 0;
     for (int i = 0; i < num_measurements; i++) {
-        xy_pos_t offset = { { { 0, 0 } } };
+        MachinePosXY offset = { { { 0, 0 } } };
         if (i > 0) {
             offset = pos_on_circle(circle_radius, i - 1, num_measurements - 1);
         }
 
         // Move to the position where we probe
-        current_position.set(position.xy() + offset);
-        current_position.z = top_expected_position + uncertainty;
-        calibration_move();
+        {
+            auto target = current_machine_position();
+            target.set(position.xy() + offset);
+            target.z = top_expected_position + uncertainty;
+            line_to_machine_pos(target, MMM_TO_MMS(CALIBRATION_FEEDRATE_TRAVEL));
+            planner.synchronize();
+        }
 
         float measurement = probe_here(top_expected_position);
         if (std::isnan(measurement)) {
@@ -481,17 +503,17 @@ float probe_z(const xyz_pos_t position, float uncertainty, const int num_measure
 }
 
 /// Issue a warning if a point deviates too much from the circle
-bool check_deviation(const xy_pos_t &center, std::span<const xy_pos_t> points) {
+bool check_deviation(const MachinePosXY &center, std::span<const MachinePosXY> points) {
     // Compute average radius
     float radius = 0;
-    for (const xy_pos_t &p : points) {
+    for (const MachinePosXY &p : points) {
         radius += (center - p).magnitude();
     }
     radius /= points.size();
 
     // Compute maximum deviation of point-center distance from average radius
     float max_dev = 0;
-    for (const xy_pos_t &p : points) {
+    for (const MachinePosXY &p : points) {
         max_dev = max(max_dev, (center - p).magnitude() - radius);
     }
 
@@ -503,11 +525,11 @@ bool check_deviation(const xy_pos_t &center, std::span<const xy_pos_t> points) {
     return true;
 }
 
-const std::optional<xyz_pos_t> get_single_xyz_center(const xyz_pos_t initial, const uint8_t tool, const Phase phase) {
+const std::optional<MachinePosXYZ> get_single_xyz_center(const MachinePosXYZ &initial, const uint8_t tool, const Phase phase) {
     static constexpr uint8_t PHASE_XY_HITS[std::to_underlying(Phase::_count)] = { 3, 3, 12 };
     static constexpr uint8_t PHASE_Z_HITS[std::to_underlying(Phase::_count)] = { 1, 0, NUM_Z_MEASUREMENTS };
     static constexpr float PHASE_Z_UNCERTAINTY[std::to_underlying(Phase::_count)] = { PROBE_XY_UNCERTAIN_DIST_MM, PROBE_Z_UNCERTAIN_DIST_MM, PROBE_Z_CERTAIN_DIST_MM };
-    xyz_pos_t start = initial;
+    MachinePosXYZ start = initial;
 
     // Get Z
     if (PHASE_Z_HITS[std::to_underlying(phase)]) {
@@ -517,12 +539,12 @@ const std::optional<xyz_pos_t> get_single_xyz_center(const xyz_pos_t initial, co
     // Get XY
     AccelerationLimiter al(XY_ACCELERATION_MMSS);
     static constexpr uint8_t MAX_HITS = *std::max_element(std::begin(PHASE_XY_HITS), std::end(PHASE_XY_HITS));
-    std::array<xy_pos_t, MAX_HITS> max_hits;
-    std::span<xy_pos_t> hits(max_hits.begin(), PHASE_XY_HITS[std::to_underlying(phase)]);
-    for (uint hit_no = 0; xy_pos_t & hit : hits) {
+    std::array<MachinePosXY, MAX_HITS> max_hits;
+    std::span<MachinePosXY> hits(max_hits.begin(), PHASE_XY_HITS[std::to_underlying(phase)]);
+    for (uint hit_no = 0; MachinePosXY & hit : hits) {
         hit = probe_xy_verify(start, 2 * std::numbers::pi_v<float> / hits.size() * hit_no++, PROBE_XY_UNCERTAIN_DIST_MM, tool, phase);
     }
-    xyz_pos_t center = xyz_pos_t(approximate_center(hits));
+    MachinePosXYZ center = MachinePosXYZ(approximate_center(hits));
     center.z = start.z;
 
     if (phase == Phase::final) {
@@ -534,12 +556,12 @@ const std::optional<xyz_pos_t> get_single_xyz_center(const xyz_pos_t initial, co
     return center;
 }
 
-const std::optional<xyz_pos_t> get_xyz_center(const uint8_t tool) {
+const std::optional<MachinePosXYZ> get_xyz_center(const uint8_t tool) {
 
     // Enable loadcell high precision across the entire procedure to prime the noise filters
     auto loadcellPrecisionEnabler = Loadcell::HighPrecisionEnabler(loadcell);
 
-    std::optional<xyz_pos_t> center = true_top_center;
+    std::optional<MachinePosXYZ> center = true_top_center;
     for (Phase phase = Phase::first; phase != Phase::_count; phase = Phase(std::to_underlying(phase) + 1)) {
         if (!center.has_value()) {
             return std::nullopt;
@@ -584,7 +606,7 @@ inline bool calibrate_toolhead(measurements_t &m, const uint8_t extruder) {
     UNUSED(extruder);
 #endif
 
-    const std::optional<xyz_pos_t> center = get_xyz_center(extruder);
+    const std::optional<MachinePosXYZ> center = get_xyz_center(extruder);
     if (!center.has_value()) {
         // TODO:
         SERIAL_ECHOLNPAIR("G425: Tool ", extruder, " center not found.");
@@ -694,14 +716,14 @@ inline bool calibrate_all_simple() {
 
     // Zero hotend offsets
     reset_hotend_offsets();
-    hotend_currently_applied_offset = xyz_pos_t { 0, 0, 0 };
+    hotend_currently_applied_offset = xyz_pos_t {};
 
     bool failed = false;
     // Measure centers
-    StrongIndexArray<xyz_pos_t, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> centers;
+    StrongIndexArray<MachinePosXYZ, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> centers;
     for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
         tool_change(tool, tool_return_t::no_return);
-        std::optional<xyz_pos_t> center = get_xyz_center(tool.to_raw());
+        std::optional<MachinePosXYZ> center = get_xyz_center(tool.to_raw());
         if (!center.has_value()) {
             SERIAL_ECHOLNPAIR("G425: Tool ", tool.to_raw(), " center not found.");
             failed = true;
@@ -733,7 +755,8 @@ inline bool calibrate_all_simple() {
         }
         // One might ask why the "-" in front of the centers[e].
         // Remember, when tool is bend +x it will find the object at the position -x.
-        hotend_offset[tool] = -centers[tool];
+        // hotend_offset is tag-ambiguous, so it needs a bit of a whack to fit
+        hotend_offset[tool] = -centers[tool].to_tag<NativePosTag>();
     }
     normalize_hotend_offsets();
 
