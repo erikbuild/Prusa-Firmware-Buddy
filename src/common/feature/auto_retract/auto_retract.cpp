@@ -70,10 +70,15 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
         return;
     }
 
-    const auto hotend = marlin_vars().active_hotend_id();
+    const auto maybe_tool = VirtualToolIndex::currently_selected();
+    if (std::holds_alternative<NoTool>(maybe_tool)) {
+        return;
+    }
+    const auto virtual_tool = std::get<VirtualToolIndex>(maybe_tool);
+    const auto physical_tool = virtual_tool.to_physical();
 
     // Is already retracted -> exit
-    if (is_safely_retracted_for_unload(hotend)) {
+    if (is_safely_retracted_for_unload(physical_tool)) {
         return;
     }
 
@@ -83,7 +88,7 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
     }
 
     // Do not auto retract specific filaments (for example TPU might get tangled up in the extruder - BFW-6953)
-    if (config_store().get_filament_type(hotend).parameters().do_not_auto_retract) {
+    if (config_store().get_filament_type(virtual_tool).parameters().do_not_auto_retract) {
         return;
     }
 
@@ -91,20 +96,20 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
     psm_guard.update<PrintStatusMessage::Type::auto_retracting>({});
 
     // restore actual target temperature after autorectract
-    const auto original_temp = Hotend::for_tool(hotend).nozzle_target_temp();
+    const auto original_temp = Hotend::for_tool(physical_tool).nozzle_target_temp();
     ScopeGuard temp_restorer([&]() {
-        Hotend::for_tool(hotend).set_nozzle_target_temp(original_temp);
+        Hotend::for_tool(physical_tool).set_nozzle_target_temp(original_temp);
     });
 
     // heat up the nozzle (especially important for INDX where nozzle can cool down before autoretract is finished)
-    const auto filament_temp = config_store().get_filament_type(hotend).parameters().nozzle_temperature;
+    const auto filament_temp = config_store().get_filament_type(virtual_tool).parameters().nozzle_temperature;
     if (original_temp < filament_temp) {
         const M109Flags flags = {
             .target_temp = filament_temp,
             .wait_heat = true,
             .wait_heat_or_cool = false,
         };
-        M109_no_parser(hotend, flags);
+        M109_no_parser(physical_tool.to_raw(), flags);
     }
 
 #if HAS_NOZZLE_CLEANER()
@@ -118,7 +123,7 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
     // We might be retracted a bit, deretract to make sure the ramming sequence runs proper
     maybe_deretract_to_nozzle();
 
-    const auto &sequence = standard_ramming_sequence(StandardRammingSequence::auto_retract, hotend);
+    const auto &sequence = standard_ramming_sequence(StandardRammingSequence::auto_retract, physical_tool.to_raw());
     {
         // No estall detection during the ramming; we may do so too fast sometimes
         // to the point where the motor skips, but we don't care, as it doesn't
@@ -146,7 +151,7 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
     }
 
     assert(sequence.retracted_distance() >= minimum_auto_retract_distance);
-    set_retracted_distance(hotend, sequence.retracted_distance());
+    set_retracted_distance(physical_tool.to_raw(), sequence.retracted_distance());
 }
 
 void AutoRetract::maybe_deretract_to_nozzle() {
