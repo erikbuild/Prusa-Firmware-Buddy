@@ -251,7 +251,7 @@ void plan_arc(const xyze_pos_t &cart, const xy_float_t &offset,
    * This is important when there are successive arc motions.
    */
 
-  xyze_pos_t raw;
+  xyze_pos_t segment_target;
 
   // do not calculate rotation parameters for trivial single-segment arcs
   if (segments > 1) {
@@ -273,14 +273,14 @@ void plan_arc(const xyze_pos_t &cart, const xy_float_t &offset,
 
     // Initialize all linear axes and E
     ARC_LIJKUVWE_CODE(
-      raw[axis_l] = start_L,
-      raw.i       = start_I,
-      raw.j       = start_J,
-      raw.k       = start_K,
-      raw.u       = start_U,
-      raw.v       = start_V,
-      raw.w       = start_W,
-      raw.e       = start_E
+      segment_target[axis_l] = start_L,
+      segment_target.i       = start_I,
+      segment_target.j       = start_J,
+      segment_target.k       = start_K,
+      segment_target.u       = start_U,
+      segment_target.v       = start_V,
+      segment_target.w       = start_W,
+      segment_target.e       = start_E
     );
 
     millis_t next_idle_ms = millis() + 200UL;
@@ -334,25 +334,21 @@ void plan_arc(const xyze_pos_t &cart, const xy_float_t &offset,
         rvec.b = -offset[0] * sin_Ti - offset[1] * cos_Ti;
       }
 
-      // Update raw location
-      raw[axis_p] = center_P + rvec.a;
-      raw[axis_q] = center_Q + rvec.b;
+      // Update segment_target location
+      segment_target[axis_p] = center_P + rvec.a;
+      segment_target[axis_q] = center_Q + rvec.b;
       ARC_LIJKUVWE_CODE(
-        raw[axis_l] = start_L + per_segment_L * i,
-        raw.i       = start_I + per_segment_I * i,
-        raw.j       = start_J + per_segment_J * i,
-        raw.k       = start_K + per_segment_K * i,
-        raw.u       = start_U + per_segment_U * i,
-        raw.v       = start_V + per_segment_V * i,
-        raw.w       = start_W + per_segment_W * i,
-        raw.e       = start_E + per_segment_E * i
+        segment_target[axis_l] = start_L + per_segment_L * i,
+        segment_target.i       = start_I + per_segment_I * i,
+        segment_target.j       = start_J + per_segment_J * i,
+        segment_target.k       = start_K + per_segment_K * i,
+        segment_target.u       = start_U + per_segment_U * i,
+        segment_target.v       = start_V + per_segment_V * i,
+        segment_target.w       = start_W + per_segment_W * i,
+        segment_target.e       = start_E + per_segment_E * i
       );
 
-      apply_motion_limits(raw);
-
-      #if HAS_LEVELING
-        planner.apply_leveling(raw);
-      #endif
+      apply_motion_limits(segment_target);
 
       #if ENABLED(HINTS_SAFE_EXIT_SPEED)
         // #error dead code found by automatic analyses (see BFW-5461)
@@ -361,28 +357,24 @@ void plan_arc(const xyze_pos_t &cart, const xy_float_t &offset,
         hints.safe_exit_speed_sqr = _MIN(limiting_speed_sqr, 2 * limiting_accel * arc_mm_remaining);
       #endif
 
-      if (!planner.buffer_line(raw, scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints))
+      if (!planner.buffer_line(to_machine_pos(segment_target), scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints))
         break;
+
+      set_current_position(segment_target);
     }
   }
 
   // Ensure last segment arrives at target location.
-  raw = cart;
-
-  apply_motion_limits(raw);
-
-  #if HAS_LEVELING
-    planner.apply_leveling(raw);
-  #endif
+  segment_target = cart;
+  apply_motion_limits(segment_target);
 
   #if ENABLED(HINTS_SAFE_EXIT_SPEED)
     // #error dead code found by automatic analyses (see BFW-5461)
     hints.safe_exit_speed_sqr = 0.0f;
   #endif
 
-  planner.buffer_line(raw, scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints);
-
-  current_position = cart;
+  planner.buffer_line(to_machine_pos(segment_target), scaled_fr_mm_s, PhysicalToolIndex::currently_selected(), hints);
+  set_current_position(segment_target);
 
 } // plan_arc
 
