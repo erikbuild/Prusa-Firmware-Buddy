@@ -263,6 +263,17 @@ void line_to_current_position(const feedRate_t &fr_mm_s/*=feedrate_mm_s*/) {
   planner.buffer_line(current_position, fr_mm_s, PhysicalToolIndex::currently_selected());
 }
 
+void line_to_machine_pos(const MachinePosXYZE &target, feedRate_t fr_mm_s) {
+    planner.buffer_line(target, fr_mm_s, PhysicalToolIndex::currently_selected());
+    set_current_position(to_native_pos(target));
+}
+
+void line_to_machine_pos(const MachinePosXYZ &target, feedRate_t fr_mm_s) {
+    auto target_xyze = current_machine_position();
+    target_xyze.set(target);
+    return line_to_machine_pos(target_xyze, fr_mm_s);
+}
+
 void prepare_internal_move_to_destination(const feedRate_t &fr_mm_s/*=0.0f*/, const PrepareMoveHints & hints) {
   const uint16_t old_pct = feedrate_percentage;
   feedrate_percentage = 100;
