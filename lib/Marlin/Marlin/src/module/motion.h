@@ -148,8 +148,12 @@ extern bool relative_mode;
  *
  *   Used by 'line_to_current_position' to do a move after changing it.
  *   Used by 'sync_plan_position' to update 'planner.position'.
+ * 
+ * TODO Migrate all writes to set_current_position and make read-only
  */
 extern xyze_pos_t current_position;
+
+void set_current_position(const xyze_pos_t &native);
 
 /// SHOULD be target position of the last queued move in MACHINE coordinates (after MBL)
 /// SHOULD be ALMOST equal to planner.get_machine_position_mm.

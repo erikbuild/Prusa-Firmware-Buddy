@@ -112,6 +112,10 @@ bool relative_mode; // = false;
 
 xyze_pos_t current_position = { X_HOME_POS, Y_HOME_POS, Z_HOME_POS };
 
+void set_current_position(const xyze_pos_t &native) {
+  current_position = native;
+}
+
 MachinePosXYZE current_machine_position() {
   return to_machine_pos(current_position);
 }
@@ -893,8 +897,9 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
     .move = hints.move,
   };
 
-  const auto buffer_move = [&](xyze_pos_t target) {
+  const auto buffer_move = [&](const xyze_pos_t &target) {
     planner.buffer_segment(to_machine_pos(target), fr_mm_s, PhysicalToolIndex::currently_selected(), planner_hints);
+    set_current_position(target);
   };
 
   while (--segment_count) {
@@ -902,8 +907,6 @@ void prepare_move_to(xyze_pos_t target, feedRate_t fr_mm_s, PrepareMoveHints hin
     buffer_move(segment_pos);
   }
   buffer_move(target);
-
-  current_position = target;
 }
 
 /**
