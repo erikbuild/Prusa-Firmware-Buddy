@@ -82,6 +82,13 @@ private:
     std::span<Callbacks *> devices;
 };
 
+/// Computes the CRC based on modbus.
+///
+/// Used internally by handle_transaction() and exposed publicly for unit testing.
+uint16_t compute_crc(std::span<const std::byte> bytes);
+
+using ComputeCRC = uint16_t(std::span<const std::byte>);
+
 /**
  * Handle MODBUS transaction.
  * @param callbacks Callbacks to call while handling transaction
@@ -90,17 +97,14 @@ private:
  *   Note: This function uses it as a scratch buffer too and will modify the buffer, even though it is "input".
  * @param response_buffer Buffer for constructing response ADU, must be large enough
  *   Note: Needs to be aligned to uint16_t.
+ * @param compute_crc_fn Function to compute CRC. Passed as callback to enable more efficient hardware-based implementations.
  * @return Response ADU, which is a view into response_buffer, possibly empty
  */
 std::span<std::byte> handle_transaction(
     Dispatch &dispatch,
     std::span<std::byte> request,
-    std::span<std::byte> response_buffer);
-
-/// Computes the CRC based on modbus.
-///
-/// Used internally by handle_transaction() and exposed publicly for unit testing.
-uint16_t compute_crc(std::span<const std::byte> bytes);
+    std::span<std::byte> response_buffer,
+    ComputeCRC compute_crc_fn = compute_crc);
 
 /// Interface to be used to reduce dependencies when you don't need to directly
 /// depend on specific modbus implementation.

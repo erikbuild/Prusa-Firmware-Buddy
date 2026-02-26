@@ -41,9 +41,10 @@ uint16_t compute_crc(std::span<const std::byte> bytes) {
 std::span<std::byte> handle_transaction(
     Dispatch &dispatch,
     std::span<std::byte> request,
-    std::span<std::byte> response_buffer) {
+    std::span<std::byte> response_buffer,
+    ComputeCRC compute_crc_fn) {
 
-    if (request.size() < 4 || modbus::compute_crc(request) != 0) {
+    if (request.size() < 4 || compute_crc_fn(request) != 0) {
         return {};
     }
 
@@ -251,7 +252,7 @@ std::span<std::byte> handle_transaction(
         resp(std::byte { static_cast<uint8_t>(status) });
     }
 
-    uint16_t crc = compute_crc(std::span { response_buffer.begin(), response });
+    uint16_t crc = compute_crc_fn(std::span { response_buffer.begin(), response });
     resp(modbus_byte_lo(crc));
     resp(modbus_byte_hi(crc));
     return { response_buffer.begin(), response };
