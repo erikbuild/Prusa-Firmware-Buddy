@@ -102,6 +102,10 @@ if(HAS_ESP)
   target_sources(firmware PRIVATE M1703.cpp)
 endif()
 
+if(HAS_AUTO_RETRACT)
+  target_sources(firmware PRIVATE M1705.cpp)
+endif()
+
 if(HAS_CHAMBER_VENTS)
   target_sources(firmware PRIVATE M870.cpp)
 endif()

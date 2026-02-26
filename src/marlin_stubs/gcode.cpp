@@ -283,6 +283,13 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M1703();
             break;
 #endif
+
+#if HAS_AUTO_RETRACT()
+        case 1705:
+            PrusaGcodeSuite::M1705();
+            break;
+#endif
+
 #if HAS_INPUT_SHAPER_CALIBRATION()
         case 1959:
             PrusaGcodeSuite::M1959();

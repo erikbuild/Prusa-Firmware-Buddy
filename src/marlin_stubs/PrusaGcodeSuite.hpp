@@ -148,6 +148,10 @@ void M1702(); //< Coldpull. Prusa platform specific
 void M1703(); //< Wi-fi setup. Prusa platform specific
 #endif
 
+#if HAS_AUTO_RETRACT()
+void M1705(); //< Autoretract
+#endif
+
 void M1978(); //< Fan Selftest
 #if HAS_DOOR_SENSOR_CALIBRATION()
 void M1980(); //< Door sensor calibration
