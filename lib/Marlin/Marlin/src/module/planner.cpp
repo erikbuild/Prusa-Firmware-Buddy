@@ -1060,15 +1060,15 @@ static void get_multi_axis_position_mm(float* pos, const uint8_t cnt) {
 }
 
 void Planner::get_axis_position_mm(ab_pos_t& pos) {
-  get_multi_axis_position_mm(pos, 2);
+  get_multi_axis_position_mm(pos.pos, 2);
 }
 
 void Planner::get_axis_position_mm(abc_pos_t& pos) {
-  get_multi_axis_position_mm(pos, NUM_AXES);
+  get_multi_axis_position_mm(pos.pos, NUM_AXES);
 }
 
 void Planner::get_axis_position_mm(abce_pos_t& pos) {
-  get_multi_axis_position_mm(pos, LOGICAL_AXES);
+  get_multi_axis_position_mm(pos.pos, LOGICAL_AXES);
 }
 
 /**

@@ -360,10 +360,6 @@ struct XYval {
 
   // Length reduced to one dimension
   FI T magnitude()                                const { return (T)sqrtf(x*x + y*y); }
-  // Pointer to the data as a simple array
-  FI operator T* ()                                     { return pos; }
-  // If any element is true then it's true
-  FI operator bool()                                    { return x || y; }
 
   // Explicit copy and copies with conversion
   FI XYval           copy()                    const { return *this; }
@@ -500,10 +496,6 @@ struct XYZval {
 
   // Length reduced to one dimension
   FI T magnitude()                               const { return (T)sqrtf(NUM_AXIS_GANG(x*x, + y*y, + z*z, + i*i, + j*j, + k*k, + u*u, + v*v, + w*w)); }
-  // Pointer to the data as a simple array
-  FI operator T* ()                                    { return pos; }
-  // If any element is true then it's true
-  FI operator bool()                                   { return NUM_AXIS_GANG(x, || y, || z, || i, || j, || k, || u, || v, || w); }
 
   // Explicit copy and copies with conversion
   FI XYZval          copy()                   const { XYZval o = *this; return o; }
@@ -645,11 +637,6 @@ struct XYZEval {
 
   // Length reduced to one dimension
   FI T magnitude()                                 const { return (T)sqrtf(LOGICAL_AXIS_GANG(+ e*e, + x*x, + y*y, + z*z, + i*i, + j*j, + k*k, + u*u, + v*v, + w*w)); }
-  // Pointer to the data as a simple array
-  FI operator T* ()                                      { return pos; }
-  // If any element is true then it's true
-  FI operator bool()                                     { return 0 LOGICAL_AXIS_GANG(|| e, || x, || y, || z, || i, || j, || k, || u, || v, || w); }
-
   // Explicit copy and copies with conversion
   FI XYZEval          copy()  const { XYZEval v = *this; return v; }
   FI XYZEval           ABS()  const { return LOGICAL_AXIS_ARRAY(T(_ABS(e)), T(_ABS(x)), T(_ABS(y)), T(_ABS(z)), T(_ABS(i)), T(_ABS(j)), T(_ABS(k)), T(_ABS(u)), T(_ABS(v)), T(_ABS(w))); }

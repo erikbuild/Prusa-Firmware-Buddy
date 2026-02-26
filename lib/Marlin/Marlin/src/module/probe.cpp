@@ -599,7 +599,7 @@ float run_z_probe(const RunZProbeParams& params) {
         }
 
         SERIAL_ECHO_START();
-        SERIAL_ECHOLNPAIR_F("Starting probe at ", center_pos);
+        SERIAL_ECHOLNPAIR("Starting probe at ", center_pos.x, " ", center_pos.y);
 
         METRIC_DEF(probe_start, "probe_start", METRIC_VALUE_EVENT, 0, METRIC_ENABLED);
         metric_record_event(&probe_start);

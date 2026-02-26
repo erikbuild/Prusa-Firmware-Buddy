@@ -479,7 +479,7 @@
               crash_s.set_gcode_replay_flags(Crash_s::RECOVER_AXIS_STATE);
             #endif
 
-            const auto probe_area = (xy_seen && g29_size_seen) ?
+            const auto probe_area = ((xy_seen.x || xy_seen.y) && g29_size_seen) ?
               PrintArea::rect_t(g29_pos, g29_pos + g29_size) :
               // probe area is print area enlarged by one major point
               print_area.get_bounding_rect().inset(-MESH_X_DIST * GRID_MAJOR_STEP,
@@ -573,7 +573,7 @@
 
         #if ENABLED(NOZZLE_LOAD_CELL) && ENABLED(PROBE_CLEANUP_SUPPORT)
           case 9: {
-            if (g29_size_seen && xy_seen) {
+            if (g29_size_seen && (xy_seen.x || xy_seen.y)) {
               #if ENABLED(CRASH_RECOVERY)
                 // we're going to move to an absolute position: inhibit XYZ repositioning
                 crash_s.set_gcode_replay_flags(Crash_s::RECOVER_AXIS_STATE);

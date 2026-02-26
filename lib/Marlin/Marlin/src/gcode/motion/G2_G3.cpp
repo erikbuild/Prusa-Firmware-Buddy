@@ -482,7 +482,7 @@ void GcodeSuite::G2_G3(const bool clockwise) {
 
   if (TERN0(HAS_CANCEL_OBJECT(), buddy::cancel_object().is_current_object_cancelled())) {
     // Canceling an object, skip arc move
-  } else if (arc_offset) {
+  } else if (arc_offset != xy_pos_t{0, 0}) {
 
     #if ENABLED(ARC_P_CIRCLES)
       // P indicates number of circles to do
