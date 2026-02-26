@@ -118,12 +118,16 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
 #if ENABLED(QUICK_HOME)
 
   static void quick_home_xy() {
-
-    // Pretend the current position is 0,0
     axes_home_level[X_AXIS] = AxisHomeLevel::not_homed;
     axes_home_level[Y_AXIS] = AxisHomeLevel::not_homed;
-    current_position.set(0.0, 0.0);
-    sync_plan_position();
+
+    {
+        // Pretend the current position is 0,0
+        auto target = current_position;
+        target.set(0, 0);
+        set_current_position(target);
+        sync_plan_position();
+    }
 
     const int x_axis_home_dir = X_HOME_DIR;
 
@@ -163,8 +167,13 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags);
 
     endstops.validate_homing_move();
 
-    current_position.set(0.0, 0.0);
-    sync_plan_position();
+    {
+        // Pretend the current position is 0,0
+        auto target = current_position;
+        target.set(0, 0);
+        set_current_position(target);
+        sync_plan_position();
+    }
 
     #if ENABLED(SENSORLESS_HOMING)
       #if ANY(ENDSTOPS_ALWAYS_ON_DEFAULT, CRASH_RECOVERY)
@@ -809,8 +818,11 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
                 // Move the bed to the bottom to give space for the user to insert the sheet
                 // Do this asynchronously so that we can process the response while moving
-                current_position.z = DETECT_PRINT_SHEET_Z_AFTER_FAILURE;
-                line_to_current_position(homing_feedrate(Z_AXIS));
+                {
+                  MachinePosXYZE target = current_machine_position();
+                  target.z = DETECT_PRINT_SHEET_Z_AFTER_FAILURE;
+                  line_to_machine_pos(target, homing_feedrate(Z_AXIS));
+                }
 
                 // Continue after the user puts the print sheet on
                 const Response response = marlin_server::wait_for_response(warning_type_phase(warning_type));

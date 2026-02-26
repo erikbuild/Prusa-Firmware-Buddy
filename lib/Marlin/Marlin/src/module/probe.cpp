@@ -701,8 +701,12 @@ float run_z_probe(const RunZProbeParams& params) {
 
         // Return slowly back. Ensure this move is not optimized even when small
         float move_back = 0.09f;
-        current_position.z += move_back;
-        planner.buffer_line(current_position, MMM_TO_MMS(Z_PROBE_SPEED_BACK_MOVE), PhysicalToolIndex::currently_selected(), { .raw_block = true });
+
+        auto target = current_machine_position();
+        target.z += move_back;
+        planner.buffer_line(target, MMM_TO_MMS(Z_PROBE_SPEED_BACK_MOVE), PhysicalToolIndex::currently_selected(), { .raw_block = true });
+        set_current_position(to_native_pos(target));
+
         planner.synchronize();
         if (planner.draining())
           return NAN;
