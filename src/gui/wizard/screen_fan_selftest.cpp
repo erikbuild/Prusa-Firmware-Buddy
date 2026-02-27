@@ -220,15 +220,15 @@ namespace frame {
             , heatbreak_label { parent, Rect16(col_texts, row_3, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_hotend_fan) }
             , heatbreak_label_icon { parent, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_3 }) }
             , info { parent, Rect16(col_texts, row_8, col_texts_w, WizardDefaults::row_h * 4), is_multiline::yes, is_closed_on_click_t::no }
-            , print_icons { make_fan_icon_array(parent, row_2, HOTENDS) }
-            , heatbreak_icons { make_fan_icon_array(parent, row_3, HOTENDS) }
+            , print_icons { make_fan_icon_array(parent, row_2, PhysicalToolIndex::count) }
+            , heatbreak_icons { make_fan_icon_array(parent, row_3, PhysicalToolIndex::count) }
 #if HAS_CHAMBER_API()
             , enclosure_label { parent, Rect16(col_texts, row_4, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_enclosure_fan) }
             , enclosure_label_icon { parent, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_4 }) }
             , enclosure_icons { make_fan_icon_array(parent, row_4, 1) }
 #endif
 #if HAS_SWITCHED_FAN_TEST()
-            , switched_fan_icons { make_fan_icon_array(parent, row_5, HOTENDS) }
+            , switched_fan_icons { make_fan_icon_array(parent, row_5, PhysicalToolIndex::count) }
             , switched_fan_label { parent, Rect16(col_texts, row_5, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_fans_switched) }
 #endif
 #if HAS_BED_FAN()

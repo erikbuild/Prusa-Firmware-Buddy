@@ -16,7 +16,6 @@ namespace config_store_ns {
 inline constexpr size_t sheets_num { 8 };
 inline constexpr float z_offset_uncalibrated { std::numeric_limits<float>::max() };
 
-inline constexpr size_t max_tool_count { 6 };
 inline constexpr size_t lan_hostname_max_len { 20 };
 inline constexpr size_t connect_host_size { 20 };
 inline constexpr size_t connect_proxy_size { 30 };

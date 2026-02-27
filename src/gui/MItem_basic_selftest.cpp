@@ -35,10 +35,10 @@ void MI_RESTORE_CALIBRATION_FROM_USB::click([[maybe_unused]] IWindowMenu &window
 
     #if HAS_SELFTEST()
     SelftestResult res = config_store().selftest_result.get();
-    for (int i = 0; i < std::min<int>(config_store_ns::max_tool_count, buddy::puppies::DWARF_MAX_COUNT); i++) {
+    for (int i = 0; i < std::min<int>(SelftestResult::tools_count, buddy::puppies::DWARF_MAX_COUNT); i++) {
         res.tools[i].dockoffset = prusa_toolchanger.is_tool_info_valid(buddy::puppies::dwarfs[i]) ? TestResult_Passed : TestResult_Failed;
     }
-    for (int i = 0; i < std::min<int>(config_store_ns::max_tool_count, buddy::puppies::DWARF_MAX_COUNT); i++) {
+    for (int i = 0; i < std::min<int>(SelftestResult::tools_count, buddy::puppies::DWARF_MAX_COUNT); i++) {
         auto tool_offset = config_store().get_tool_offset(i);
         bool looks_fine = tool_offset.x != 0 && tool_offset.y != 0 && tool_offset.z != 0;
         res.tools[i].tooloffset = looks_fine ? TestResult_Passed : TestResult_Failed;

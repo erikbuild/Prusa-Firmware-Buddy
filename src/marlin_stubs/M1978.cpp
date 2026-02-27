@@ -384,7 +384,7 @@ private:
     std::span<FanHandler *> fans;
 #if HAS_SWITCHED_FAN_TEST()
     std::span<std::pair<FanHandler *, FanHandler *>> switched_fan_pairs;
-    std::bitset<config_store_ns::max_tool_count> fans_switched {};
+    std::bitset<PhysicalToolIndex::count> fans_switched {};
 #endif
     uint8_t progress_percentage { 0 };
 };

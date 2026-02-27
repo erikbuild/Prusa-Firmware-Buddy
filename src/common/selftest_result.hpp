@@ -58,6 +58,8 @@ static_assert(sizeof(SelftestTool) == 3);
  * @brief Test results compacted in eeprom. Added gearbox alignment result to eeprom for snake selftest compatibility
  */
 struct SelftestResult {
+    static constexpr size_t tools_count = 6; ///< Number of tool slots in stored layout. Do not change without config store migration.
+
     SelftestResult() = default;
     TestResult xaxis : 2 {};
     TestResult yaxis : 2 {};
@@ -70,8 +72,7 @@ struct SelftestResult {
     // It was replaced by a result supporting more than one toolhead, that can
     // be found in SelftTool class
     TestResult deprecated_gears : 2 {};
-    // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-    StrongIndexArray<SelftestTool, config_store_ns::max_tool_count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> tools {};
+    StrongIndexArray<SelftestTool, tools_count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> tools {};
 
     bool operator==(const SelftestResult &) const = default;
 };

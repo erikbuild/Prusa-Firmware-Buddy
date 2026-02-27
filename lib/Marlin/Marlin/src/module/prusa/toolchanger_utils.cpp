@@ -255,7 +255,7 @@ buddy::puppies::Dwarf &PrusaToolChangerUtils::getTool(uint8_t tool_index) {
 
 void PrusaToolChangerUtils::load_tool_info() {
     for (unsigned int i = 0; i < tool_info.size(); ++i) {
-        if (i < config_store_ns::max_tool_count) {
+        if (i < PhysicalToolIndex::count) {
             DockPosition position = config_store().get_dock_position(i);
             tool_info[i].dock_x = position.x;
             tool_info[i].dock_y = position.y;
@@ -267,27 +267,23 @@ void PrusaToolChangerUtils::load_tool_info() {
 }
 
 void PrusaToolChangerUtils::save_tool_info() {
-    for (size_t i = 0; i < std::min<size_t>(tool_info.size(), config_store_ns::max_tool_count); ++i) {
+    for (size_t i = 0; i < PhysicalToolIndex::count; ++i) {
         config_store().set_dock_position(i, { .x = tool_info[i].dock_x, .y = tool_info[i].dock_y });
     }
 }
 
 void PrusaToolChangerUtils::save_tool_offsets() {
-    for (int8_t e = 0; e < std::min<int8_t>(HOTENDS, config_store_ns::max_tool_count); e++) {
+    for (size_t e = 0; e < PhysicalToolIndex::count; e++) {
         config_store().set_tool_offset(e, { .x = hotend_offset[e].x, .y = hotend_offset[e].y, .z = hotend_offset[e].z });
     }
 }
 
 void PrusaToolChangerUtils::load_tool_offsets() {
     for (auto tool : PhysicalToolIndex::all()) {
-        if (tool.to_raw() < static_cast<int8_t>(config_store_ns::max_tool_count)) {
-            ToolOffset offset = config_store().get_tool_offset(tool);
-            hotend_offset[tool].x = offset.x;
-            hotend_offset[tool].y = offset.y;
-            hotend_offset[tool].z = offset.z;
-        } else {
-            hotend_offset[tool].reset();
-        }
+        ToolOffset offset = config_store().get_tool_offset(tool);
+        hotend_offset[tool].x = offset.x;
+        hotend_offset[tool].y = offset.y;
+        hotend_offset[tool].z = offset.z;
     }
 }
 

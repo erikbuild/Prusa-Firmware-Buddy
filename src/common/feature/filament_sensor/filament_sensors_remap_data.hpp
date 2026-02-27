@@ -1,16 +1,21 @@
 #pragma once
 
 #include <array>
-#include <config_store/constants.hpp>
+#include <cstdint>
+#include <tool_index.hpp>
 
 namespace side_fsensor_remap {
+
+/// Maximum number of sensor mapping slots. Do not change without config store migration.
+inline constexpr size_t max_sensor_mapping_count = 6;
+static_assert(PhysicalToolIndex::count <= max_sensor_mapping_count);
 
 /**
  * @note Mapping of tools to sensor positions.
  *   mapping[extruder] = sensor_position
- * @warning This type is used in config store and must not be changed.
+ * @warning This type is used in config store. Changing its size requires a config store migration.
  */
-using Mapping = std::array<uint8_t, config_store_ns::max_tool_count>;
+using Mapping = std::array<uint8_t, max_sensor_mapping_count>;
 
 namespace preset {
     template <size_t... Is>

@@ -372,12 +372,12 @@ void CurrentStore::set_odometer_toolpicks(PhysicalToolIndex tool, uint32_t value
 
 #if HAS_SELFTEST()
 SelftestTool CurrentStore::get_selftest_result_tool(uint8_t index) {
-    assert(index < config_store_ns::max_tool_count);
+    assert(index < SelftestResult::tools_count);
     return selftest_result.get().tools[index];
 }
 
 void CurrentStore::set_selftest_result_tool(uint8_t index, SelftestTool value) {
-    assert(index < config_store_ns::max_tool_count);
+    assert(index < SelftestResult::tools_count);
     auto tmp = selftest_result.get();
     tmp.tools[index] = value;
     selftest_result.set(tmp);
@@ -552,7 +552,6 @@ void CurrentStore::set_phase_stepping_enabled(AxisEnum axis, bool new_state) {
 #if HAS_AUTO_RETRACT()
 
 void CurrentStore::set_filament_retracted_distance(uint8_t tool_idx, std::optional<float> dist) {
-    assert(tool_idx < max_tool_count);
     if (!dist.has_value()) {
         filament_retracted_distances.set(tool_idx, invalid_retracted_distance);
         return;
@@ -565,8 +564,6 @@ void CurrentStore::set_filament_retracted_distance(uint8_t tool_idx, std::option
 }
 
 std::optional<float> CurrentStore::get_filament_retracted_distance(uint8_t tool_idx) {
-    assert(tool_idx < max_tool_count);
-
     const auto distance = filament_retracted_distances.get(tool_idx);
     if (distance == invalid_retracted_distance) {
         return std::nullopt;

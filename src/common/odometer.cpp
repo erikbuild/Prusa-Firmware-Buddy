@@ -5,8 +5,6 @@
 #include "cmath_ext.h"
 #include <config_store/store_instance.hpp>
 
-static_assert(HOTENDS <= config_store_ns::max_tool_count, "Too many hotends");
-
 Odometer_s Odometer_s::instance_;
 
 bool Odometer_s::changed() {

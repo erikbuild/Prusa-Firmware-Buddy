@@ -45,17 +45,14 @@ TestReturn phaseToolOffsets([[maybe_unused]] const ToolMask tool_mask, IPartHand
     }
 
     SelftestResult eeres = config_store().selftest_result.get();
-    for (size_t i = 0; i < config_store_ns::max_tool_count; ++i) {
-        if (!prusa_toolchanger.is_tool_enabled(i)) {
-            continue; // Tool is not enabled
-        }
+    for (const auto physical_tool : PhysicalToolIndex::all().skip_all_disabled()) {
 
         if (pToolOffsets->GetResult() == TestResult_Skipped) {
             continue; // Test was aborted, do not regress
         }
 
         // Store tool calibration state
-        eeres.tools[i].tooloffset = pToolOffsets->GetResult();
+        eeres.tools[physical_tool].tooloffset = pToolOffsets->GetResult();
     }
     config_store().selftest_result.set(eeres);
 
