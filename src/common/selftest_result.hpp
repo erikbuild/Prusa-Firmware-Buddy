@@ -29,23 +29,6 @@ typedef enum {
 
 /**
  * @brief Results for selftests of one tool.
- * Old version without fansSwitched and gears, used for config store migration.
- */
-struct SelftestTool_pre_23 {
-    TestResult printFan : 2;
-    TestResult heatBreakFan : 2;
-    TestResult nozzle : 2;
-    TestResult fsensor : 2;
-    TestResult loadcell : 2;
-    TestResult sideFsensor : 2;
-    TestResult dockoffset : 2;
-    TestResult tooloffset : 2;
-
-    bool operator==(const SelftestTool_pre_23 &rhs) const = default;
-};
-
-/**
- * @brief Results for selftests of one tool.
  */
 struct SelftestTool {
     TestResult printFan : 2;
@@ -68,47 +51,10 @@ struct SelftestTool {
 static_assert(sizeof(SelftestTool) == 3);
 
 /**
- * @brief Test results compacted in eeprom.
- * Old version used for config store migration.
- */
-struct SelftestResult_pre_23 {
-    TestResult xaxis : 2;
-    TestResult yaxis : 2;
-    TestResult zaxis : 2;
-    TestResult bed : 2;
-    TestResultNet eth : 3;
-    TestResultNet wifi : 3;
-    TestResult zalign : 2;
-    SelftestTool_pre_23 tools[config_store_ns::max_tool_count];
-
-    bool operator==(const SelftestResult_pre_23 &rhs) const = default;
-};
-
-/**
- * @brief Test results compacted in eeprom.
- * Version before adding gears result, used for config store migration.
- */
-struct SelftestResult_pre_gears {
-    SelftestResult_pre_gears() = default;
-    SelftestResult_pre_gears(const SelftestResult_pre_23 &sr_pre23);
-    TestResult xaxis : 2 {};
-    TestResult yaxis : 2 {};
-    TestResult zaxis : 2 {};
-    TestResult bed : 2 {};
-    TestResultNet eth : 3 {};
-    TestResultNet wifi : 3 {};
-    TestResult zalign : 2 {};
-    SelftestTool tools[config_store_ns::max_tool_count] {};
-
-    bool operator==(const SelftestResult_pre_gears &rhs) const = default;
-};
-
-/**
  * @brief Test results compacted in eeprom. Added gearbox alignment result to eeprom for snake selftest compatibility
  */
 struct SelftestResult {
     SelftestResult() = default;
-    SelftestResult(const SelftestResult_pre_gears &sr_pre_gears);
     TestResult xaxis : 2 {};
     TestResult yaxis : 2 {};
     TestResult zaxis : 2 {};

@@ -767,10 +767,9 @@ struct DeprecatedStore
     : public journal::DeprecatedStoreConfig<journal::Backend>
 #endif
 {
-    // There was a ConfigStore version already before last eeprom version of SelftestResult was made, so it doesn't have old eeprom predecessor
-    StoreItem<SelftestResult_pre_23, defaults::selftest_result_pre_23, journal::hash("Selftest Result")> selftest_result_pre_23;
-    // Selftest Result version before adding Gearbox Alignment result to EEPROM
-    StoreItem<SelftestResult_pre_gears, defaults::selftest_result_pre_gears, journal::hash("Selftest Result V23")> selftest_result_pre_gears;
+    // Types removed — keeping hashes for collision prevention
+    // StoreItem<SelftestResult_pre_23, defaults::selftest_result_pre_23, journal::hash("Selftest Result")> selftest_result_pre_23;
+    // StoreItem<SelftestResult_pre_gears, defaults::selftest_result_pre_gears, journal::hash("Selftest Result V23")> selftest_result_pre_gears;
 
     // An item was added to the middle of the footer enum and it caused eeprom corruption. This store footer item  was deleted and a new one is created without migration so as to force default footer value onto everyone, which is better than 'random values' (especially on mini where it could cause duplicated items shown). Default value was removed since we no longer need to keep it
     StoreItem<uint32_t, 0, journal::hash("Footer Setting")> footer_setting_v1;

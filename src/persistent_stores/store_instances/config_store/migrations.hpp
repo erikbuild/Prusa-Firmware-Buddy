@@ -2,8 +2,6 @@
 
 #include "store_definition.hpp"
 #include <printers.h>
-#include <option/has_selftest.h>
-#include <option/has_gui.h>
 #include <option/has_side_leds.h>
 #include <option/has_chamber_filtration_api.h>
 #include <option/xl_enclosure_support.h>
@@ -12,9 +10,6 @@
 
 namespace config_store_ns {
 namespace deprecated_ids {
-    inline constexpr uint16_t selftest_result_pre_23[] {
-        journal::hash("Selftest Result"),
-    };
     inline constexpr uint16_t footer_setting_v2[] {
         decltype(DeprecatedStore::footer_setting_0_v2)::hashed_id,
 #if FOOTER_ITEMS_PER_LINE__ > 1
@@ -29,9 +24,6 @@ namespace deprecated_ids {
 #if FOOTER_ITEMS_PER_LINE__ > 4
             decltype(DeprecatedStore::footer_setting_4_v2)::hashed_id,
 #endif
-    };
-    inline constexpr uint16_t selftest_result_pre_gears[] {
-        journal::hash("Selftest Result V23"),
     };
 #if PRINTER_IS_PRUSA_MK4()
     inline constexpr uint16_t extended_printer_type[] {
@@ -156,13 +148,8 @@ namespace deprecated_ids {
 } // namespace deprecated_ids
 
 namespace migrations {
-#if HAS_SELFTEST()
-    void selftest_result_pre_23(journal::Backend &backend);
-#endif
 
     void footer_setting_v2(journal::Backend &backend);
-
-    void selftest_result_pre_gears(journal::Backend &backend);
 
 #if PRINTER_IS_PRUSA_MK4()
     void extended_printer_type(journal::Backend &backend);
@@ -204,13 +191,7 @@ namespace migrations {
  *
  */
 inline constexpr journal::Backend::MigrationFunction migration_functions[] {
-#if HAS_SELFTEST()
-    { migrations::selftest_result_pre_23, deprecated_ids::selftest_result_pre_23 },
-#endif
-#if HAS_SELFTEST()
-        { migrations::selftest_result_pre_gears, deprecated_ids::selftest_result_pre_gears },
-#endif
-        { migrations::footer_setting_v2, deprecated_ids::footer_setting_v2 },
+    { migrations::footer_setting_v2, deprecated_ids::footer_setting_v2 },
 
 #if PRINTER_IS_PRUSA_MK4()
         { migrations::extended_printer_type, deprecated_ids::extended_printer_type },
