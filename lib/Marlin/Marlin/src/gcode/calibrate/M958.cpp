@@ -15,6 +15,7 @@
 #include "../../module/planner.h"
 #include "../../Marlin.h"
 #include <feature/motordriver_util.h>
+#include <feature/precise_stepping/manual.hpp>
 #include "../../module/prusa/accelerometer.h"
 #include "../../module/prusa/fourier_series.h"
 #include "../../feature/input_shaper/input_shaper.hpp"
@@ -193,28 +194,9 @@ private:
 };
 } // anonymous namespace
 
-static bool is_full() {
-    buddy::InterruptDisabler _;
-    return PreciseStepping::is_step_event_queue_full();
-}
-
 static void print_accelerometer_error(const char *error) {
     SERIAL_ERROR_START();
     SERIAL_ECHOLN(error);
-}
-
-static void enqueue_step(int step_us, bool dir, StepEventFlag_t axis_flags) {
-    assert(step_us <= STEP_TIMER_MAX_TICKS_LIMIT);
-    uint16_t next_queue_head = 0;
-
-    buddy::InterruptDisabler _;
-    step_event_u16_t *step_event = PreciseStepping::get_next_free_step_event(next_queue_head);
-    step_event->time_ticks = step_us;
-    step_event->flags = axis_flags;
-    if (dir) {
-        step_event->flags ^= STEP_EVENT_FLAG_DIR_MASK;
-    }
-    PreciseStepping::step_event_queue.head = next_queue_head;
 }
 
 /**
@@ -412,10 +394,10 @@ void Vibrate::step() {
 
     while (step_nr < steps_to_do) {
         const StepDir::RetVal step_dir = stepDir.get();
-        while (is_full()) {
+        while (precise_stepping::manual::is_full()) {
             idle(true);
         }
-        enqueue_step(step_dir.step_us, step_dir.dir, axis_flag);
+        precise_stepping::manual::enqueue_step(step_dir.step_us, step_dir.dir, axis_flag);
         ++step_nr;
     }
 }
@@ -540,7 +522,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
         // stepDir.get is relatively expensive, so do it first and then check if the buffer is still full
         const StepDir::RetVal step_dir = stepDir.get();
 
-        while (is_full()) {
+        while (precise_stepping::manual::is_full()) {
             if (do_once) {
                 // Accelerometer::clear() is not instant so it should be called only with full
                 // stepper buffer to avoid possible movement stall.
@@ -583,7 +565,7 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
             }
         }
 
-        enqueue_step(step_dir.step_us, step_dir.dir, args.axis_flag);
+        precise_stepping::manual::enqueue_step(step_dir.step_us, step_dir.dir, args.axis_flag);
         ++step_nr;
 
         if (step_nr > steps_to_do_max) {
@@ -595,14 +577,8 @@ std::optional<VibrateMeasureResult> vibrate_measure(const VibrateMeasureParams &
 
     // Possible delayed measurement
     if (do_delayed_measurement) {
-        const auto has_steps = []() {
-            // Cannot use freertos::CriticalSection here - steppers have higher priority than RTOS-aware interrupts
-            buddy::InterruptDisabler _;
-            return PreciseStepping::has_step_events_queued();
-        };
-
         // Wait till all the movement is executed
-        while (has_steps()) {
+        while (precise_stepping::manual::has_steps()) {
             accelerometer.clear();
             idle(true);
         }
@@ -1300,12 +1276,7 @@ MicrostepRestorer::MicrostepRestorer() {
     }
 }
 MicrostepRestorer::~MicrostepRestorer() {
-    const auto has_steps = []() {
-        // Cannot use freertos::CriticalSection here - steppers have higher priority than RTOS-aware interrupts
-        buddy::InterruptDisabler _;
-        return PreciseStepping::has_step_events_queued();
-    };
-    while (has_steps()) {
+    while (precise_stepping::manual::has_steps()) {
         idle(true);
     }
     LOOP_XYZ(i) {
