@@ -1,0 +1,23 @@
+# High-frequency data broadcasted by tool offset sensor
+
+# This message usually packs 30 samples into one FD CAN frame.
+# FD CAN overhead is ~20% so at 125kbps we have effective bitrate ~100kbps.
+# Theoretical maximum is therefore ~200 full frames of 30 samples each,
+# giving us ~6kHz worth of samples. In reality the bus is contended,
+# but we should expect to safely transport ~1kHz samples required.
+# This is a trade-off between latency and throughput.
+
+# Sequence number is used to detect missing frames when receiving
+# and to signal errors when transmitting. If all goes well, this
+# starts at zero, gets incremented after transmission and wraps over.
+uint8 sequence
+
+# First sample in the batch.
+int24 sample
+
+# Rest of the samples are delta-compressed, relative to previous sample.
+# If the delta exceeds 16 bits, another frame is transmitted.
+int16[<=29] deltas
+
+@sealed
+@assert _offset_.max <= 63 * 8 # One FD CAN frame max

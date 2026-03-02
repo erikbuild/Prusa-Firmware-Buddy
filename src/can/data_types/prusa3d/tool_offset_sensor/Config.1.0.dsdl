@@ -1,0 +1,6 @@
+# Configuration service for tool offset sensor
+
+bool enable_streaming
+@sealed
+---
+@sealed

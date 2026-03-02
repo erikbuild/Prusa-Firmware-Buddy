@@ -16,6 +16,9 @@
 # Services
 #
 
+# Tool offset sensor (PUB6)
+uint16 SRV_TOOL_OFFSET_SENSOR_CONFIG = 90
+
 #
 # Messages
 #
@@ -23,5 +26,9 @@
 # Common
 uint16 MSG_COMMON_METRICS = 500
 uint16 MSG_COMMON_STATS = 501 # CAN measurements, uses raw data, see CyphalStats
+
+# Tool offset sensor (PUB6)
+uint16 MSG_TOOL_OFFSET_SENSOR_DATA = 900
+uint16 MSG_TOOL_OFFSET_SENSOR_STATUS = 901
 
 @sealed

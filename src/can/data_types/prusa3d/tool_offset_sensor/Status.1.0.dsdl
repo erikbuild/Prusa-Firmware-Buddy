@@ -1,0 +1,5 @@
+# Low-frequency status broadcasted by tool offset sensor
+
+prusa3d.common.SharedFault.1.0 faults
+
+@sealed
