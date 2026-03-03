@@ -14,8 +14,6 @@
 IWindowMenu::IWindowMenu(window_t *parent, Rect16 rect)
     : window_t(parent, rect) {
     Enable();
-
-    assert(height(GuiDefaults::FontMenuItems) == font_h_);
     update_sized_data();
 }
 
@@ -238,6 +236,11 @@ void IWindowMenu::restore_state(screen_init_variant::menu_t state) {
     move_focus_to_index(persistent_index_to_item_index(state.persistent_focused_index));
     set_scroll_offset(persistent_index_to_item_index(state.persistent_scroll_offset).value_or(0));
     ensure_item_on_screen(focused_item_index());
+}
+
+void IWindowMenu::set_item_height(uint16_t set) {
+    item_height_ = set;
+    update_sized_data();
 }
 
 /**

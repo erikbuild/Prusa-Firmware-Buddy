@@ -9,8 +9,6 @@
 class WindowMenuVirtualBase : public IWindowMenu {
 
 public:
-    static constexpr int item_buffer_size = GuiDefaults::ScreenHeight / IWindowMenu::item_height();
-
     /// Whether we should close the screen as return behavior (on swipe left/right)
     enum class CloseScreenReturnBehavior {
         /// No - The window will handle the SWIPE_LEFT/RIGHT differently
@@ -20,10 +18,13 @@ public:
         yes,
     };
 
+    static constexpr uint8_t default_item_buffer_size = GuiDefaults::ScreenHeight / IWindowMenu::default_item_height;
+
 public:
-    WindowMenuVirtualBase(window_t *parent, Rect16 rect, CloseScreenReturnBehavior close_screen_return_behavior)
+    WindowMenuVirtualBase(window_t *parent, Rect16 rect, CloseScreenReturnBehavior close_screen_return_behavior, uint8_t item_buffer_size)
         : IWindowMenu(parent, rect)
-        , close_screen_return_behavior_(close_screen_return_behavior) {}
+        , close_screen_return_behavior_(close_screen_return_behavior)
+        , item_buffer_size(item_buffer_size) {}
 
 public:
     IWindowMenuItem *item_at(int index) final;
@@ -54,6 +55,8 @@ private:
 private:
     CloseScreenReturnBehavior close_screen_return_behavior_;
 
+    const uint8_t item_buffer_size;
+
     /// Whether \p setup_items() was ever called
     bool items_set_up_ = false;
 };
@@ -62,15 +65,17 @@ private:
 /// This allows dynamically sized menus (for example file or wi-fi list).
 /// \p ItemVariants specifies what IWindowMenu subtypes the menu uses and can spawn.
 /// User of this class only needs to override \p item_count and \p setup_item functions.
-template <typename... ItemVariants>
-class WindowMenuVirtual : public WindowMenuVirtualBase {
+template <uint8_t item_buffer_size_, typename... ItemVariants>
+class WindowMenuVirtualSized : public WindowMenuVirtualBase {
 
 public:
     using ItemVariant = std::variant<std::monostate, ItemVariants...>;
+    static constexpr auto item_buffer_size = item_buffer_size_;
 
 public:
-    // Use parent constructor
-    using WindowMenuVirtualBase::WindowMenuVirtualBase;
+    WindowMenuVirtualSized(window_t *parent, Rect16 rect, CloseScreenReturnBehavior close_screen_return_behavior)
+        : WindowMenuVirtualBase(parent, rect, close_screen_return_behavior, item_buffer_size) {
+    }
 
 protected:
     /// Sets up the provided item for a given index:
@@ -111,4 +116,12 @@ protected:
 
 private:
     std::array<ItemVariant, item_buffer_size> item_buffer_;
+};
+
+template <typename... ItemVariants>
+class WindowMenuVirtual : public WindowMenuVirtualSized<WindowMenuVirtualBase::default_item_buffer_size, ItemVariants...> {
+
+public:
+    // Use parent constructor
+    using WindowMenuVirtualSized<WindowMenuVirtualBase::default_item_buffer_size, ItemVariants...>::WindowMenuVirtualSized;
 };

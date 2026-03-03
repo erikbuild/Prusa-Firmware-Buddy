@@ -14,15 +14,13 @@ class IWindowMenuItem;
 
 class IWindowMenu : public window_t {
 
-protected:
-    static constexpr uint8_t font_h_ = height(Font::normal);
-    static constexpr uint16_t item_height_ = font_h_ + GuiDefaults::MenuPaddingItems.top + GuiDefaults::MenuPaddingItems.bottom;
-
 public:
     enum class PageScrollDirection {
         up,
         down
     };
+
+    static constexpr uint16_t default_item_height = height(Font::normal) + GuiDefaults::MenuPaddingItems.top + GuiDefaults::MenuPaddingItems.bottom;
 
 public:
     /// Total item count in the menu
@@ -45,7 +43,7 @@ public:
     }
 
     /// \returns height of a single item (in pixels)
-    static constexpr inline uint16_t item_height() {
+    inline uint16_t item_height() const {
         return item_height_;
     }
 
@@ -138,6 +136,10 @@ public:
 protected:
     IWindowMenu(window_t *parent, Rect16 rect);
 
+    /// Changes item height
+    /// !!! To be called only before first setup_items/item manipulation
+    void set_item_height(uint16_t set);
+
 protected:
     virtual void draw() override;
     virtual void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
@@ -148,7 +150,9 @@ private:
     void update_sized_data();
 
 private:
-    int max_items_on_screen_count_;
+    uint16_t item_height_ = default_item_height;
+
+    int max_items_on_screen_count_ = 0;
 
     /// How many items we've scrolled down by
     /// Formwrly known as index_of_first

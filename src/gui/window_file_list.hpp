@@ -48,8 +48,7 @@ class window_file_list_t : public WindowMenuVirtual<WindowMenuItem, MI_RETURN> {
 
 public:
     static constexpr const char *root = "/usb";
-    static constexpr int max_max_items_on_screen = GuiDefaults::FileBrowserRect.Height() / item_height();
-    using LDV = LazyDirView<max_max_items_on_screen>;
+    using LDV = LazyDirView<item_buffer_size>;
 
 public:
     inline int item_count() const final {
