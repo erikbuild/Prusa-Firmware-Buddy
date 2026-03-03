@@ -18,6 +18,8 @@
 #include <uavcan/node/Heartbeat_1_0.h>
 #include <uavcan/pnp/NodeIDAllocationData_2_0.h>
 
+#include <prusa3d/common/PortIds_0_1.h>
+
 #if HAS_AC_CONTROLLER()
     #include <prusa3d/ac_controller/Config_1_0.h>
     #include <prusa3d/ac_controller/Status_1_0.h>
@@ -73,14 +75,14 @@ struct NunavutTraits;
 #define uavcan_node_GetInfo_Request_1_0_FIXED_PORT_ID_         uavcan_node_GetInfo_1_0_FIXED_PORT_ID_
 #define uavcan_node_GetInfo_Response_1_0_FIXED_PORT_ID_        uavcan_node_GetInfo_1_0_FIXED_PORT_ID_
 #if HAS_AC_CONTROLLER()
-    #define prusa3d_ac_controller_Config_Request_1_0_FIXED_PORT_ID_ 21
-    #define prusa3d_ac_controller_Status_1_0_FIXED_PORT_ID_         600
-    #define prusa3d_common_leds_Config_1_0_FIXED_PORT_ID_           601
+    #define prusa3d_ac_controller_Config_Request_1_0_FIXED_PORT_ID_ prusa3d_common_PortIds_0_1_SRV_AC_CONTROLLER_SET_CONFIG
+    #define prusa3d_ac_controller_Status_1_0_FIXED_PORT_ID_         prusa3d_common_PortIds_0_1_MSG_AC_CONTROLLER_STATUS
+    #define prusa3d_common_leds_Config_1_0_FIXED_PORT_ID_           prusa3d_common_PortIds_0_1_MSG_AC_CONTROLLER_LEDS
 #endif
 #if HAS_ANFC()
-    #define prusa3d_nfc_command_AcceptEvent_Request_1_0_FIXED_PORT_ID_ 100
-    #define prusa3d_nfc_command_Request_Request_1_0_FIXED_PORT_ID_     101
-    #define prusa3d_nfc_event_Event_1_0_FIXED_PORT_ID_                 1000
+    #define prusa3d_nfc_command_AcceptEvent_Request_1_0_FIXED_PORT_ID_ prusa3d_common_PortIds_0_1_SRV_NFC_ACCEPT_EVENT
+    #define prusa3d_nfc_command_Request_Request_1_0_FIXED_PORT_ID_     prusa3d_common_PortIds_0_1_SRV_NFC_REQUEST
+    #define prusa3d_nfc_event_Event_1_0_FIXED_PORT_ID_                 prusa3d_common_PortIds_0_1_MSG_NFC_EVENT
 #endif
 
 // Define traits for all transfers we are using.

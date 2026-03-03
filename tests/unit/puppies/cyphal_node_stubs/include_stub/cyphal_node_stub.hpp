@@ -2,7 +2,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <prusa3d/nfc/PortIDs_1_0.h>
+#include <prusa3d/common/PortIds_0_1.h>
 #include <prusa3d/nfc/SetConfig_1_0.h>
 #include <prusa3d/nfc/Status_1_0.h>
 
@@ -11,8 +11,8 @@
 enum Fault {};
 
 using NodeParent = can::cyphal::Node<
-    prusa3d_nfc_Status_1_0_Traits, prusa3d_nfc_PortIDs_1_0_MSG_Status,
-    prusa3d_nfc_SetConfig_1_0_Traits, prusa3d_nfc_PortIDs_1_0_SRV_SetConfig,
+    prusa3d_nfc_Status_1_0_Traits, prusa3d_common_PortIds_0_1_MSG_NFC_STATUS,
+    prusa3d_nfc_SetConfig_1_0_Traits, prusa3d_common_PortIds_0_1_SRV_NFC_SET_CONFIG,
     Fault>;
 
 static constexpr uint8_t uid[sizeof(uavcan_node_GetInfo_Response_1_0::unique_id)] {};

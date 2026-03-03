@@ -10,7 +10,7 @@
 #include <prusa3d/nfc/event/EventID_1_0.h>
 #include <prusa3d/nfc/command/AcceptEvent_1_0.h>
 #include <prusa3d/nfc/event/Event_1_0.h>
-#include <prusa3d/nfc/PortIDs_1_0.h>
+#include <prusa3d/common/PortIds_0_1.h>
 
 #pragma GCC pop_options
 
@@ -88,9 +88,9 @@ private:
 
     /// Periodically sends the latest event
     /// Work with raw data - we are already getting the events
-    can::cyphal::SenderDataTraited<can::RawDataTraits<prusa3d_nfc_event_Event_1_0_Traits>, prusa3d_nfc_PortIDs_1_0_MSG_Event> sender;
+    can::cyphal::SenderDataTraited<can::RawDataTraits<prusa3d_nfc_event_Event_1_0_Traits>, prusa3d_common_PortIds_0_1_MSG_NFC_EVENT> sender;
 
-    can::cyphal::ServerTraited<prusa3d_nfc_command_AcceptEvent_1_0_Traits, prusa3d_nfc_PortIDs_1_0_SRV_AcceptEvent> accept_server;
+    can::cyphal::ServerTraited<prusa3d_nfc_command_AcceptEvent_1_0_Traits, prusa3d_common_PortIds_0_1_SRV_NFC_ACCEPT_EVENT> accept_server;
 };
 
 } // namespace anfc::cyphal

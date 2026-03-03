@@ -1,6 +1,7 @@
 import pycyphal.application
 import uavcan.node
 import uavcan.pnp
+import prusa3d.common
 import prusa3d.nfc.event
 import prusa3d.nfc.command
 import prusa3d.nfc.request
@@ -50,17 +51,17 @@ async def main():
     accept_event_client = node.make_client(
         prusa3d.nfc.command.AcceptEvent_1,
         nfc_node_id,
-        prusa3d.nfc.PortIDs_1_0.SRV_AcceptEvent,
+        prusa3d.common.PortIds_0_1.SRV_NFC_ACCEPT_EVENT,
     )
 
     request = node.make_client(
         prusa3d.nfc.command.Request_1_0,
         nfc_node_id,
-        prusa3d.nfc.PortIDs_1_0.SRV_Request,
+        prusa3d.common.PortIds_0_1.SRV_NFC_REQUEST,
     )
 
     event_sub = node.make_subscriber(prusa3d.nfc.event.Event_1,
-                                     prusa3d.nfc.PortIDs_1_0.MSG_Event)
+                                     prusa3d.common.PortIds_0_1.MSG_NFC_EVENT)
 
     def req_id():
         global req_counter
