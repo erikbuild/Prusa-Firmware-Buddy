@@ -98,9 +98,6 @@ public:
     static void update_indicators();
   #endif
 
-  static void init();
-  static void update();
-
   #if HAS_GUI()
 
     static void set_alert_status_P(PGM_P const message);
@@ -111,7 +108,6 @@ public:
     static uint8_t alert_level; // Higher levels block lower levels
     static inline void reset_alert_level() { alert_level = 0; }
 
-    static bool get_blink();
     static void set_status(const char* const message, const bool persist=false);
     static void set_status_P(PGM_P const message, const int8_t level=0);
     static void status_printf_P(const uint8_t level, PGM_P const fmt, ...);

@@ -3695,9 +3695,6 @@ namespace ExtUI {
 
 using namespace marlin_server;
 
-void onStartup() {
-}
-
 void onIdle() {
     idle();
 

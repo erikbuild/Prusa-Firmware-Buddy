@@ -42,6 +42,7 @@
 
 #include "core/utility.h"
 #include "lcd/ultralcd.h"
+#include <lcd/extensible_ui/ui_api.h>
 
 #include <option/has_planner.h>
 #if HAS_PLANNER()
@@ -343,7 +344,7 @@ void idle(bool waiting) {
   #endif
 
   #if ENABLED(EXTENSIBLE_UI)
-    ui.update();
+    ExtUI::onIdle();
   #endif
 
   #if ENABLED(HOST_KEEPALIVE_FEATURE)
@@ -475,7 +476,6 @@ void setup() {
   // (because EEPROM code calls the UI).
 
   #if ENABLED(EXTENSIBLE_UI)
-    ui.init();
     ui.reset_status();
   #endif
 

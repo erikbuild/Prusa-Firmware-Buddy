@@ -14,7 +14,6 @@ add_library(
   Marlin/Marlin/src/HAL/HAL_STM32_F4_F7/STM32F4/timers.cpp
   Marlin/Marlin/src/HAL/HAL_STM32_F4_F7/STM32F7/timers.cpp
   Marlin/Marlin/src/HAL/HAL_STM32_F4_F7/STM32G0/timers.cpp
-  Marlin/Marlin/src/lcd/extensible_ui/ui_api.cpp
   Marlin/Marlin/src/lcd/ultralcd.cpp
   Marlin/Marlin/src/libs/stopwatch.cpp
   Marlin/Marlin/src/Marlin.cpp

@@ -349,7 +349,6 @@ uint8_t GCodeQueue::length = 0;
 
 #include "Marlin/src/lcd/extensible_ui/ui_api.h"
 
-void ExtUI::onStartup() {}
 void ExtUI::onIdle() {}
 void ExtUI::onFactoryReset() {}
 

@@ -72,7 +72,6 @@ namespace ExtUI {
    *
    * Should be declared by EXTENSIBLE_UI and will be called by Marlin
    */
-  void onStartup();
   void onIdle();
   void onPlayTone(const uint16_t frequency, const uint16_t duration);
   void onPrintTimerStarted();
