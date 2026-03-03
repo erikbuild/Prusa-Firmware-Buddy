@@ -2,6 +2,7 @@
 #include <buddy/door_sensor.hpp>
 #include <config_store/store_c_api.h>
 #include <common/power_panic.hpp>
+#include <module/planner.h>
 #include <module/stepper.h>
 #include <module/endstops.h>
 #include <marlin_server.hpp>
@@ -133,10 +134,19 @@ void EmergencyStop::maybe_block() {
     }
 
     // Don't park:
-    // * If parking would mean we have to home first (which'll look bad, but also move in Z, which'd do Bad Things).
-    // * If we are not actually printing.
-    // * If we are in/around pause (it was behaving a bit confused).
-    const bool do_move = all_axes_homed() && !marlin_server::printer_idle() && !marlin_server::printer_paused_extended();
+    const bool do_move =
+        // If parking would mean we have to home first (which'll look bad, but also move in Z, which'd do Bad Things).
+        all_axes_homed()
+
+        //  If we are not actually printing.
+        && !marlin_server::printer_idle()
+
+        // If we are in/around pause (it was behaving a bit confused).
+        && !marlin_server::printer_paused_extended()
+
+        // If we are below max_printed_z, to prevent crashing during sequential printing
+        && (planner.get_machine_position_mm().z >= planner.max_printed_z);
+
     // We are manipulating the moves "under the hands" of other stuff, and "in
     // the middle" of other stuff.
     //
