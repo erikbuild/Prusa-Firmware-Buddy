@@ -67,9 +67,14 @@ void IRadioButton::windowEvent(window_t *sender, GUI_event_t event, void *param)
     case GUI_event_t::KNOB: {
         auto &ctx = *static_cast<GuiEventContext *>(param);
         auto &ev = ctx.event.value<gui_event::KnobEvent>();
-        const int new_index = GetBtnIndex() + ev.diff;
+        const int new_index = std::clamp(GetBtnIndex() + ev.diff, 0, static_cast<int>(GetBtnCount()) - 1);
 
-        if (isIndexValid(new_index)) {
+        // isIndexValid still needed after clamp - we can have "holes".
+        // Bug: Is there a way to "skip" the hole? How?
+        //   Fortunately, we don't have any dialogs that would have a hole in
+        //   the middle, we always have holes on the right side. Still, keeping
+        //   the check as a defensive measure.
+        if (isIndexValid(new_index) && new_index != GetBtnIndex()) {
             SetBtnIndex(new_index);
             sound::play(SoundType::encoder_move);
 

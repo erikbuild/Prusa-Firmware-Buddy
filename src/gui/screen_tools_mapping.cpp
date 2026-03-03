@@ -17,6 +17,7 @@
 #include <buddy/unreachable.hpp>
 #include <option/has_mmu2.h>
 #include <utils/variant_utils.hpp>
+#include <algorithm>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -849,16 +850,25 @@ void ToolsMappingBody::update_middle_connectors() {
 void ToolsMappingBody::adjust_index(int difference) {
     // we're indexing from top to bottom, left to right, +1 means going 'one lower (or right)'
 
-    size_t previous_index { current_idx };
-    // add difference to current_idx only if we're not at the respective min/max
-    if ((difference > 0
-            && ((state == State::left && current_idx + 1 < static_cast<uint8_t>(gcode.UsedExtrudersCount() + responses_count - 1)) // no print
-                || (state == State::right && current_idx + 1 < static_cast<uint8_t>(get_num_of_enabled_tools() + responses_count - 1)) // no print
-                || (state == State::done && current_idx + 1 < static_cast<uint8_t>(gcode.UsedExtrudersCount() + responses_count))))
-        || (difference < 0
-            && current_idx > 0)) {
-        current_idx += difference;
-    } else {
+    const uint8_t previous_index = current_idx;
+
+    // Max valid index depends on current state
+    int max_idx;
+    switch (state) {
+    case State::left:
+        max_idx = gcode.UsedExtrudersCount() + responses_count - 2; // no print
+        break;
+    case State::right:
+        max_idx = get_num_of_enabled_tools() + responses_count - 2; // no print
+        break;
+    case State::done:
+        max_idx = gcode.UsedExtrudersCount() + responses_count - 1;
+        break;
+    }
+
+    current_idx = static_cast<uint8_t>(std::clamp(static_cast<int>(current_idx) + difference, 0, max_idx));
+
+    if (current_idx == previous_index) {
         return; // nothing changed, no need to issue redraw
     }
 
