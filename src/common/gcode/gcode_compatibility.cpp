@@ -397,6 +397,8 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
 #if HAS_SPOOL_JOIN()
             // Spooljoin related checks
             if (previous_virtual_tool.has_value()) {
+                does_spool_join = true;
+
                 const auto previous_physical_tool = previous_virtual_tool->to_physical();
                 if (!is_fsensor_working_state(GetExtruderFSensor(previous_physical_tool)->get_state()) && !is_fsensor_working_state(GetSideFSensor(previous_physical_tool)->get_state())) {
                     virtual_tool_fails.set(VirtualToolCheck::can_spool_join);
@@ -444,6 +446,12 @@ bool CompatibilityReport::gui_confirm_all_incompatibilities() const {
         // Special case for the filament loaded check - continuing that one requires disabling the filament sensors
         else if (check.meta == &ChecksTraits<VirtualToolCheck>::metadata[VirtualToolCheck::filament_loaded]) {
             if (MsgBoxWarning(_(check.meta->description), { Response::Abort, Response::FS_disable }) == Response::FS_disable) {
+#if HAS_SPOOL_JOIN()
+                if (does_spool_join) {
+                    MsgBoxError(_("Cannot disable filament sensors, because they are required for spool join."), { Response::Abort });
+                    return false;
+                }
+#endif
                 FSensors_instance().set_enabled_global(false);
                 return true;
             } else {

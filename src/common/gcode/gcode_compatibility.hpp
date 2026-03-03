@@ -200,6 +200,11 @@ struct CompatibilityReport {
     StrongIndexArray<ChecksTraits<VirtualToolCheck>::Bitset, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> failed_virtual_tool_checks;
     StrongIndexArray<ChecksTraits<GCodeToolCheck>::Bitset, GcodeToolIndex::count, GcodeToolIndex, GcodeToolIndex::to_raw_static> failed_gcode_tool_checks;
 
+#if HAS_SPOOL_JOIN()
+    /// True if the set up does a spool join
+    bool does_spool_join : 1 = false;
+#endif
+
     struct FailedCheck {
         using Tool = std::variant<VirtualToolIndex, GcodeToolIndex, NoTool>;
 
