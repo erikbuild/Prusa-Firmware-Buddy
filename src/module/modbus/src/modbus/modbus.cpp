@@ -210,6 +210,7 @@ std::span<std::byte> handle_transaction(
             resp(modbus_byte_lo(data));
         }
         break;
+    case modbus::fc::read_discrete_inputs:
     case modbus::fc::read_coils:
         if (request.size() != 4) {
             return {};

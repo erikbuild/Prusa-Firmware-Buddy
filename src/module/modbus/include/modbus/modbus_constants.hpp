@@ -5,6 +5,7 @@ namespace modbus::fc {
 
 // Please, keep this sorted by numerical value.
 constexpr std::byte read_coils { 0x01 };
+constexpr std::byte read_discrete_inputs { 0x02 };
 constexpr std::byte read_holding_registers { 0x03 };
 constexpr std::byte read_input_registers { 0x04 };
 constexpr std::byte write_coil { 0x05 };
