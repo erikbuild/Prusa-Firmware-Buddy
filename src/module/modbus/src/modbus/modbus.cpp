@@ -236,8 +236,13 @@ std::span<std::byte> handle_transaction(
             response += bytes;
         }
         break;
-    default:
-        status = Status::IllegalFunction;
+    default: {
+        std::span<std::byte> out { response_buffer.data() + (response - response_buffer.begin()), static_cast<size_t>(response_buffer.end() - response) };
+        status = device_callbacks->custom_function(static_cast<uint8_t>(function), request, out);
+        if (status == Status::Ok) {
+            response += out.size();
+        }
+    } break;
     }
 
     switch (status) {
@@ -264,6 +269,10 @@ Status Callbacks::read_coils(uint16_t, uint16_t, std::span<std::byte>) {
 }
 
 Status Callbacks::write_coils(uint16_t, uint16_t, std::span<const std::byte>) {
+    return Status::IllegalFunction;
+}
+
+Status Callbacks::custom_function([[maybe_unused]] uint8_t func_code, [[maybe_unused]] std::span<const std::byte> in, [[maybe_unused]] std::span<std::byte> &out) {
     return Status::IllegalFunction;
 }
 

@@ -70,6 +70,7 @@ public:
     virtual Status write_registers(uint16_t first_address, std::span<const uint16_t> in) = 0;
     virtual Status read_coils(uint16_t first_address, uint16_t count, std::span<std::byte> out);
     virtual Status write_coils(uint16_t first_address, uint16_t count, std::span<const std::byte> in);
+    virtual Status custom_function(uint8_t func_code, std::span<const std::byte> in, std::span<std::byte> &out);
 };
 
 class Dispatch {
