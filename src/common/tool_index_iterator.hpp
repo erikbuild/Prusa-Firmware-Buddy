@@ -78,9 +78,6 @@ public:
     constexpr Index operator*() const {
         return index();
     }
-    constexpr Index operator->() const {
-        return index();
-    }
 
     constexpr inline bool operator==(const ToolIndexIterator &) const = default;
     constexpr inline bool operator!=(const ToolIndexIterator &) const = default;
