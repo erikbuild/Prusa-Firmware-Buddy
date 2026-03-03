@@ -145,6 +145,8 @@ template <size_t array_size_>
 class ArrayStringBuilder : public StringBuilder {
 
 public:
+    static constexpr size_t array_size = array_size_;
+
     inline ArrayStringBuilder()
         : StringBuilder(array) {}
 
