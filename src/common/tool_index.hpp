@@ -129,6 +129,9 @@ public:
     /// @returns display name of the tool - something like "Slot 1" or "Tool 1"
     string_view_utf8 display_name(StringViewUtf8ParamBase &params) const;
 
+    /// @returns compact display name of the tool - something like "S1" or "T1"
+    string_view_utf8 compact_display_name(StringViewUtf8ParamBase &params) const;
+
     /// Allow simpler conversion to integer when using StrongIndexArray
     /// @note pass-by-reference is needed to avoid circular dependencies
     static inline constexpr std::size_t to_raw_static(const ToolIndex &tool_index) {
