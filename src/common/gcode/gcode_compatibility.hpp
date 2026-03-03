@@ -108,6 +108,11 @@ enum class VirtualToolCheck : uint8_t {
     /// Filament type in gcodeinfo matches the filamenttype loaded to the tool
     filament_type,
 
+#if HAS_SPOOL_JOIN()
+    /// Fails if the spool join is not possible
+    can_spool_join,
+#endif
+
     _cnt
 };
 

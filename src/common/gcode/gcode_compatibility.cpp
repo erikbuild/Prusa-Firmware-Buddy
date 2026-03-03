@@ -101,54 +101,64 @@ constinit const ChecksTraits<VirtualToolCheck>::Metadata ChecksTraits<VirtualToo
             .description = N_("Tool is disabled or of a different type."),
         },
     },
-    {
-        VirtualToolCheck::nozzle_diameter,
-        CheckMetadata {
-            .severity = HWCheckType::nozzle,
-            .title = N_("Wrong nozzle diameter"),
-            .description = N_("G-Code is sliced for a different tool diameter."),
+        {
+            VirtualToolCheck::nozzle_diameter,
+            CheckMetadata {
+                .severity = HWCheckType::nozzle,
+                .title = N_("Wrong nozzle diameter"),
+                .description = N_("G-Code is sliced for a different tool diameter."),
+            },
         },
-    },
-    {
-        VirtualToolCheck::nozzle_hardened,
-        CheckMetadata {
-            .severity = HWCheckType::nozzle,
-            .title = N_("Nozzle not hardened"),
-            .description = N_("G-Code is sliced for a hardened nozzle. Non-hardened nozzles can get damaged due to material abrasivity."),
+        {
+            VirtualToolCheck::nozzle_hardened,
+            CheckMetadata {
+                .severity = HWCheckType::nozzle,
+                .title = N_("Nozzle not hardened"),
+                .description = N_("G-Code is sliced for a hardened nozzle. Non-hardened nozzles can get damaged due to material abrasivity."),
+            },
         },
-    },
-    {
-        VirtualToolCheck::nozzle_high_flow,
-        CheckMetadata {
-            .severity = HWCheckType::nozzle,
-            .title = N_("Nozzle not high-flow"),
-            .description = N_("G-Code is sliced for a high-flow nozzle. Printing with standard nozzle can lead to underextrusion and extruder skipping."),
+        {
+            VirtualToolCheck::nozzle_high_flow,
+            CheckMetadata {
+                .severity = HWCheckType::nozzle,
+                .title = N_("Nozzle not high-flow"),
+                .description = N_("G-Code is sliced for a high-flow nozzle. Printing with standard nozzle can lead to underextrusion and extruder skipping."),
+            },
         },
-    },
-    {
-        VirtualToolCheck::nozzle_not_high_flow,
-        CheckMetadata {
-            .severity = HWCheckType::nozzle,
-            .title = N_("Nozzle high-flow mismatch"),
-            .description = N_("G-Code is sliced for a non-high flow nozzle. High-flow nozzles require more purging, so printing a MMU print with a high-flow nozzle can result in a color creep."),
+        {
+            VirtualToolCheck::nozzle_not_high_flow,
+            CheckMetadata {
+                .severity = HWCheckType::nozzle,
+                .title = N_("Nozzle high-flow mismatch"),
+                .description = N_("G-Code is sliced for a non-high flow nozzle. High-flow nozzles require more purging, so printing a MMU print with a high-flow nozzle can result in a color creep."),
+            },
         },
-    },
-    {
-        VirtualToolCheck::filament_loaded,
-        CheckMetadata {
-            .severity = HWCheckSeverity::Warning,
-            .title = N_("Filament not loaded"),
-            .description = N_("One of the used tools does not have a filament loaded. Filament sensors need to be disabled for the print."),
+        {
+            VirtualToolCheck::filament_loaded,
+            CheckMetadata {
+                .severity = HWCheckSeverity::Warning,
+                .title = N_("Filament not loaded"),
+                .description = N_("One of the used tools does not have a filament loaded. Filament sensors need to be disabled for the print."),
+            },
         },
-    },
-    {
-        VirtualToolCheck::filament_type,
-        CheckMetadata {
-            .severity = HWCheckSeverity::Warning,
-            .title = N_("Wrong filament type"),
-            .description = N_("G-Code is sliced for a different filament type than what is currently loaded in the assigned tool."),
+        {
+            VirtualToolCheck::filament_type,
+            CheckMetadata {
+                .severity = HWCheckSeverity::Warning,
+                .title = N_("Wrong filament type"),
+                .description = N_("G-Code is sliced for a different filament type than what is currently loaded in the assigned tool."),
+            },
         },
-    },
+#if HAS_SPOOL_JOIN()
+        {
+            VirtualToolCheck::can_spool_join,
+            CheckMetadata {
+                .severity = HWCheckSeverity::Abort,
+                .title = N_("Spool join sensor not ready"),
+                .description = N_("Filament sensor required to trigger the spool join is either disabled or not calibrated."),
+            },
+        },
+#endif
 };
 
 template <>
@@ -335,7 +345,7 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
         float remaining_filament_g = 0;
 #endif
 
-        const auto virtual_tool_check = [&](VirtualToolIndex virtual_tool) {
+        const auto virtual_tool_check = [&](VirtualToolIndex virtual_tool, [[maybe_unused]] std::optional<VirtualToolIndex> previous_virtual_tool) {
             auto &virtual_tool_fails = failed_virtual_tool_checks[virtual_tool];
 
             const PhysicalToolIndex physical_tool = virtual_tool.to_physical();
@@ -383,14 +393,29 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
                 remaining_filament_g = NAN;
             }
 #endif
+
+#if HAS_SPOOL_JOIN()
+            // Spooljoin related checks
+            if (previous_virtual_tool.has_value()) {
+                const auto previous_physical_tool = previous_virtual_tool->to_physical();
+                if (!is_fsensor_working_state(GetExtruderFSensor(previous_physical_tool)->get_state()) && !is_fsensor_working_state(GetSideFSensor(previous_physical_tool)->get_state())) {
+                    virtual_tool_fails.set(VirtualToolCheck::can_spool_join);
+                }
+            }
+#endif
         };
 
 #if HAS_SPOOL_JOIN()
-        for (std::optional<VirtualToolIndex> tool = base_virtual_tool; tool.has_value(); tool = args.spool_join.get_spool_2(*tool)) {
-            virtual_tool_check(*tool);
+        {
+            std::optional<VirtualToolIndex> previous_tool;
+            for (std::optional<VirtualToolIndex> tool = base_virtual_tool; tool.has_value();) {
+                virtual_tool_check(*tool, previous_tool);
+                previous_tool = tool;
+                tool = args.spool_join.get_spool_2(*tool);
+            }
         }
 #else
-        virtual_tool_check(base_virtual_tool);
+        virtual_tool_check(base_virtual_tool, std::nullopt);
 #endif
 
 #if HAS_ANFC()
