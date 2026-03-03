@@ -262,7 +262,7 @@ namespace puppies {
 
         uint8_t *write_buffer; ///< Buffer to transmit data
 
-        static constexpr uint32_t MAX_FLASH_TOTAL_LENGTH = ((128 * 1024) - 8192);
+        static constexpr uint32_t MAX_FLASH_TOTAL_LENGTH = ((256 * 1024) - 8192);
 
         static constexpr uint32_t READ_TIMEOUT_RESPONSE_DEFAULT = 100; // Default time to wait until response starts coming
         static constexpr uint32_t READ_TIMEOUT_PER_CHAR = 1; // Timeout for each byte that will be received
