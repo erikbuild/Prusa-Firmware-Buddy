@@ -336,7 +336,7 @@ bool Pause::ensureSafeTemperatureNotifyProgress() {
 
     // Wait until temperature is close
     while (!is_tempreature_reached()) {
-        if (check_user_stop(getResponse())) {
+        if (check_user_stop(getResponse()) || gcode_exceptions().is_unwinding()) {
             return false;
         }
         idle(true);

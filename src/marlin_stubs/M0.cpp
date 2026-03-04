@@ -2,6 +2,7 @@
 #include "marlin_server.hpp"
 #include "PrusaGcodeSuite.hpp"
 #include <feature/safety_timer/safety_timer.hpp>
+#include <feature/gcode_exception/gcode_exception.hpp>
 #include "../../module/stepper.h"
 #include "Marlin/src/gcode/gcode.h"
 #include "client_response.hpp"
@@ -27,7 +28,7 @@ void PrusaGcodeSuite::M0() {
     marlin_server::FSM_Holder holder { PhasesQuickPause::QuickPaused, data };
     planner.synchronize();
 
-    while (marlin_server::get_response_from_phase(PhasesQuickPause::QuickPaused) == Response::_none) {
+    while (marlin_server::get_response_from_phase(PhasesQuickPause::QuickPaused) == Response::_none && !gcode_exceptions().is_unwinding()) {
         idle(true);
     }
 }
