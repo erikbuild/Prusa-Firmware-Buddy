@@ -659,6 +659,11 @@ void panic_loop() {
             shutdown_loop_checked();
         }
 
+        // If we didn't prepare (why?), do so in parallel to retracting E, to save some time.
+        if (runtime_state.orig_state != PPState::Prepared) {
+            prepare();
+        }
+
         log_info(PowerPanic, "powerpanic triggered");
         power_panic_state = PPState::Retracting;
         break;
@@ -696,10 +701,6 @@ void panic_loop() {
     case PPState::SaveState: {
         if (shutdown_loop_checked()) {
             break;
-        }
-
-        if (!runtime_state.nested_fault) {
-            marlin_vars().media_SFN_path.copy_to(runtime_state.media_SFN_path, sizeof(runtime_state.media_SFN_path));
         }
 
         // Z axis is now aligned
@@ -745,11 +746,6 @@ void panic_loop() {
 #endif
 
         log_info(PowerPanic, "powerpanic saving");
-        if (runtime_state.orig_state != PPState::Prepared) {
-            // no prepare was performed for this print yet, prepare the flash now
-            erase();
-            fixed_t::save();
-        }
         state_t::save();
 
         // commit odometer trip values
