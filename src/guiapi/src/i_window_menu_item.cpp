@@ -30,10 +30,6 @@ constexpr const IWindowMenuItem::ColorScheme IWindowMenuItem::color_scheme_defau
         .focused = GuiDefaults::MenuColorFocusedBack,
         .unfocused = GuiDefaults::MenuColorBack,
     },
-    .rop {
-        .focused { .swap_bw = has_swapped_bw::yes },
-        .unfocused {},
-    },
 };
 constexpr const IWindowMenuItem::ColorScheme IWindowMenuItem::color_scheme_default_disabled {
     .text {
@@ -43,10 +39,6 @@ constexpr const IWindowMenuItem::ColorScheme IWindowMenuItem::color_scheme_defau
     .back {
         .focused = GuiDefaults::MenuColorDisabled,
         .unfocused = GuiDefaults::MenuColorBack,
-    },
-    .rop {
-        .focused { .swap_bw = has_swapped_bw::yes },
-        .unfocused {},
     },
 };
 
@@ -58,10 +50,6 @@ constexpr const IWindowMenuItem::ColorScheme IWindowMenuItem::color_scheme_dev_i
     .back {
         .focused = GuiDefaults::MenuColorFocusedBack,
         .unfocused = GuiDefaults::MenuColorBack,
-    },
-    .rop {
-        .focused { .swap_bw = has_swapped_bw::yes },
-        .unfocused {},
     },
 };
 

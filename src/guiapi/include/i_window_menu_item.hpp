@@ -72,7 +72,8 @@ public:
             .unfocused = GuiDefaults::MenuColorBack,
         };
         ROpPair rop {
-
+            .focused { .swap_bw = has_swapped_bw::yes },
+            .unfocused {},
         };
     };
 
