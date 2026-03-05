@@ -219,8 +219,6 @@ void CSelftest::Loop() {
     case stsStart:
         phaseStart();
         break;
-    case stsSelftestStart:
-        break;
     case stsLoadcell:
         if (selftest::phaseLoadcell(AllTools {}, m_pLoadcell, Config_Loadcell)) {
             return;

@@ -256,7 +256,6 @@ bool CSelftest::Start(const uint64_t test_mask, const selftest::TestData test_da
     if (m_Mask & stmLoadcell) {
         m_Mask = (SelftestMask_t)(m_Mask | uint64_t(stmWait_loadcell));
     }
-    m_Mask = (SelftestMask_t)(m_Mask | uint64_t(stmSelftestStart)); // any selftest state will trigger selftest additional init
     m_Mask = (SelftestMask_t)(m_Mask | uint64_t(stmSelftestStop)); // any selftest state will trigger selftest additional deinit
 
     if (std::holds_alternative<ToolMask>(test_data)) {
@@ -282,8 +281,6 @@ void CSelftest::Loop() {
         return;
     case stsStart:
         phaseStart();
-        break;
-    case stsSelftestStart:
         break;
     case stsDocks:
         if (prusa_toolchanger.is_toolchanger_enabled() && (ret = selftest::phaseDocks(tool_mask, pDocks, Config_Docks))) {
