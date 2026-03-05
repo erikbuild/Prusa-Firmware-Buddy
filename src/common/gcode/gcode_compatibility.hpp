@@ -216,8 +216,17 @@ struct CompatibilityReport {
     /// @returns false if the iteration should stop
     using FailedCheckVisitor = stdext::inplace_function<bool(const FailedCheck &)>;
 
+    enum class AggregateTools {
+        no,
+
+        /// If selected, the visitor will aggregate all tools failed checks into one
+        /// Failed checks will not repeat.
+        /// FailedCheck will always have .tool = NoTool{}
+        yes
+    };
+
     /// @returns false if the iteration stopped by visitor returning false
-    bool visit_failed_checks(const FailedCheckVisitor &visitor) const;
+    bool visit_failed_checks(const FailedCheckVisitor &visitor, AggregateTools aggregate_tools = AggregateTools::no) const;
 
     /// @returns (first) failed check of the highest severity
     /// @param check_filter if provided, only considers check for the specified tool

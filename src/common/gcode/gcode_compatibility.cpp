@@ -191,39 +191,51 @@ HWCheckSeverity CheckMetadata::evaluate_severity() const {
     );
 }
 
-bool CompatibilityReport::visit_failed_checks(const FailedCheckVisitor &visitor) const {
-    {
+bool CompatibilityReport::visit_failed_checks(const FailedCheckVisitor &visitor, AggregateTools aggregate_tools) const {
+    const auto visit_bitset = [&]<typename Check>(const ChecksTraits<Check>::Bitset &bitset, FailedCheck::Tool tool) {
         const auto v = [&](const CheckMetadata &meta) {
             return visitor(FailedCheck {
                 .meta = &meta,
-                .tool = NoTool {},
+                .tool = tool,
             });
         };
-        if (!ChecksTraits<GeneralCheck>::visit_set_bits(failed_general_checks, v)) {
-            return false;
-        }
+        return ChecksTraits<Check>::visit_set_bits(bitset, v);
+    };
+
+    if (!visit_bitset.operator()<GeneralCheck>(failed_general_checks, NoTool {})) {
+        return false;
     }
 
-    for (VirtualToolIndex tool : VirtualToolIndex::all()) {
-        const auto v = [&](const CheckMetadata &meta) {
-            return visitor(FailedCheck {
-                .meta = &meta,
-                .tool = tool,
-            });
-        };
-        if (!ChecksTraits<VirtualToolCheck>::visit_set_bits(failed_virtual_tool_checks[tool], v)) {
-            return false;
+    if (aggregate_tools == AggregateTools::yes) {
+        {
+            ChecksTraits<VirtualToolCheck>::Bitset failed_bits {};
+            for (VirtualToolIndex tool : VirtualToolIndex::all()) {
+                failed_bits |= failed_virtual_tool_checks[tool];
+            }
+            if (!visit_bitset.operator()<VirtualToolCheck>(failed_bits, NoTool {})) {
+                return false;
+            }
         }
-    }
-    for (GcodeToolIndex tool : GcodeToolIndex::all()) {
-        const auto v = [&](const CheckMetadata &meta) {
-            return visitor(FailedCheck {
-                .meta = &meta,
-                .tool = tool,
-            });
-        };
-        if (!ChecksTraits<GCodeToolCheck>::visit_set_bits(failed_gcode_tool_checks[tool], v)) {
-            return false;
+        {
+            ChecksTraits<GCodeToolCheck>::Bitset failed_bits {};
+            for (GcodeToolIndex tool : GcodeToolIndex::all()) {
+                failed_bits |= failed_gcode_tool_checks[tool];
+            }
+            if (!visit_bitset.operator()<GCodeToolCheck>(failed_bits, NoTool {})) {
+                return false;
+            }
+        }
+
+    } else {
+        for (VirtualToolIndex tool : VirtualToolIndex::all()) {
+            if (!visit_bitset.operator()<VirtualToolCheck>(failed_virtual_tool_checks[tool], tool)) {
+                return false;
+            }
+        }
+        for (GcodeToolIndex tool : GcodeToolIndex::all()) {
+            if (!visit_bitset.operator()<GCodeToolCheck>(failed_gcode_tool_checks[tool], tool)) {
+                return false;
+            }
         }
     }
 
@@ -462,7 +474,8 @@ bool CompatibilityReport::gui_confirm_all_incompatibilities(Response abort_respo
         else {
             return MsgBoxWarning(_(check.meta->description), { abort_response, Response::Ignore }) == Response::Ignore;
         }
-    });
+    },
+        AggregateTools::yes);
 }
 
 } // namespace buddy::gcode_compatibility
