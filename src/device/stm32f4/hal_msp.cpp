@@ -801,6 +801,8 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi) {
         HAL_GPIO_DeInit(GPIOC, GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
 
         /* SPI3 DMA DeInit */
+        HAL_DMA_Abort(hspi->hdmarx);
+        HAL_DMA_Abort(hspi->hdmatx);
         HAL_DMA_DeInit(hspi->hdmarx);
         HAL_DMA_DeInit(hspi->hdmatx);
 
@@ -837,6 +839,9 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi) {
     PG14     ------> SPI6_MOSI
     */
         HAL_GPIO_DeInit(GPIOG, GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14);
+
+        HAL_DMA_Abort(hspi->hdmatx);
+        HAL_DMA_Abort(hspi->hdmarx);
         HAL_DMA_DeInit(hspi->hdmatx);
         HAL_DMA_DeInit(hspi->hdmarx);
     }
@@ -858,6 +863,8 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi) {
         HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10);
 
         /* SPI2 DMA DeInit */
+        HAL_DMA_Abort(hspi->hdmatx);
+        HAL_DMA_Abort(hspi->hdmarx);
         HAL_DMA_DeInit(hspi->hdmatx);
         HAL_DMA_DeInit(hspi->hdmarx);
     } else if (hspi->Instance == SPI3) {
