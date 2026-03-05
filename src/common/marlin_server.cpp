@@ -1096,7 +1096,17 @@ static void check_crash() {
 
 void loop() {
     ::idle(false); // Do an idle first so boot is slightly faster
-    queue.advance();
+#if HAS_POWER_PANIC()
+    if (!power_panic::ac_fault_triggered) {
+#else
+    {
+#endif
+        // On power panic, avoid:
+        // * a 1ms sleep
+        // * a risk someone might inject a command in between (filament runout,
+        //   estall, ...)
+        queue.advance();
+    }
 
 #if HAS_SELFTEST()
     if (SelftestInstance().IsInProgress()) {
