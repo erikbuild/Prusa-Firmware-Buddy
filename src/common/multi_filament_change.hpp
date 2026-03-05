@@ -5,6 +5,7 @@
 
 #include <filament.hpp>
 #include <tool_index.hpp>
+#include <color.hpp>
 
 namespace multi_filament_change {
 
@@ -25,7 +26,7 @@ struct ConfigItem {
     std::optional<Color> color;
 };
 
-using Config = std::array<ConfigItem, VirtualToolIndex::count>;
+using Config = StrongIndexArray<ConfigItem, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes>;
 
 } // namespace multi_filament_change
 
