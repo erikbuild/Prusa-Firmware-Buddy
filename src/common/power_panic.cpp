@@ -120,8 +120,8 @@ void ac_fault_task_main() {
     // suspend until resumed by the fault isr
     vTaskSuspend(NULL);
 
-    // heaters are *already* disabled via HW, but stop temperature and fan regulation too
-    thermalManager.disable_all_heaters();
+    // Heater's power cut in ISR, the proper way needs to be done in the Marlin
+    // task (currently in manage_heater).
 
     // Set all fanSpeeds to zero
     thermalManager.zero_fan_speeds();
@@ -868,6 +868,8 @@ void ac_fault_isr() {
     // power off devices in order of power draw
     runtime_state.orig_axes_home_level = axes_home_level;
     disable_XY();
+    // Cuts power to heaters "the hard way". Proper one is in manage_heater.
+    buddy_disable_heaters();
     buddy::hw::hsUSBEnable.write(buddy::hw::Pin::State::high);
 #if HAS_EMBEDDED_ESP32()
     buddy::hw::espPower.reset();

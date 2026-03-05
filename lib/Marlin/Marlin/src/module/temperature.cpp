@@ -50,6 +50,10 @@
 #include <module/temperature/heater_watch.hpp>
 #include <module/temperature/marlin_temptable.hpp>
 #include <module/temperature/heater_watch.hpp>
+#include <option/has_power_panic.h>
+#if HAS_POWER_PANIC()
+  #include <power_panic.hpp>
+#endif
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -404,6 +408,12 @@ void Temperature::manage_heater() {
 
   #if ENABLED(EMERGENCY_PARSER)
     if (emergency_parser.killed_by_M112) kill();
+  #endif
+
+  #if HAS_POWER_PANIC()
+    if (power_panic::ac_fault_triggered) {
+      disable_all_heaters();
+    }
   #endif
 
   // !!! This is SURPRISINGLY EXTREMELY IMPORTANT
