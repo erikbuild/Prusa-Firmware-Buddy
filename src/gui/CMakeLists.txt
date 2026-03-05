@@ -101,10 +101,7 @@ if(HAS_XLCD_TOUCH_DRIVER)
 endif()
 
 if(HAS_TOOLCHANGER)
-  target_sources(
-    firmware PRIVATE screen_menu_filament_changeall.cpp screen_menu_tools.cpp
-                     screen_tools_mapping.cpp
-    )
+  target_sources(firmware PRIVATE screen_menu_filament_changeall.cpp screen_menu_tools.cpp)
 endif()
 
 if(HAS_MODULAR_BED)
@@ -146,7 +143,6 @@ if(HAS_MMU2)
             screen_menu_mmu_eject_filament.cpp
             screen_menu_mmu_load_test_filament.cpp
             screen_menu_mmu_load_to_nozzle.cpp
-            screen_tools_mapping.cpp
     )
 endif()
 
