@@ -68,7 +68,8 @@ PT_t PrintTime::update_loop(PT_t screen_format, window_text_t *out_print_end, [[
 void PrintTime::print_formatted_duration(uint32_t duration, std::span<char> buffer, bool parse_seconds) {
     // standard would be:
     // strftime(array.data(), array.size(), "%jd %Hh", timeinfo);
-    format_duration(buffer, duration, parse_seconds);
+    StringBuilder sb(buffer);
+    format_duration(sb, duration, parse_seconds);
 }
 
 void PrintTime::generate_countdown_string(const uint32_t time_to_end) {

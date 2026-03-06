@@ -95,5 +95,6 @@ void window_numb_t::PrintAsTime() {
 }
 
 void window_numb_t::PrintTime(char *buffer) {
-    format_duration(std::span<char> { buffer, WINDOW_NUMB_MAX_TEXT }, static_cast<uint32_t>(value));
+    StringBuilder sb(std::span<char> { buffer, WINDOW_NUMB_MAX_TEXT });
+    format_duration(sb, static_cast<uint32_t>(value));
 }

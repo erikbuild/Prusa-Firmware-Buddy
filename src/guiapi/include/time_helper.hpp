@@ -1,6 +1,8 @@
 #include <span>
 #include <cstdint>
 
+#include <utils/string_builder.hpp>
+
 /**
  * Generic helper function that formats unix timestamp as time duration into given buffer
  *
@@ -11,4 +13,4 @@
  *  * %id %ih
  * Where s is seconds, m minutes, h hours and d days.
  */
-void format_duration(std::span<char> buffer, std::uint32_t duration, bool display_seconds = true);
+void format_duration(StringBuilder &sb, std::uint32_t duration, bool display_seconds = true);

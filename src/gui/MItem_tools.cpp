@@ -602,7 +602,8 @@ MI_ODOMETER_MMU_CHANGES::MI_ODOMETER_MMU_CHANGES()
 
 MI_ODOMETER_TIME::MI_ODOMETER_TIME()
     : WI_FORMATABLE_LABEL_t<uint32_t>(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no, 0, [&](const std::span<char> &buffer) {
-        format_duration(buffer, value());
+        StringBuilder sb(buffer);
+        format_duration(sb, value());
     }) {}
 
 #if BOARD_IS_XBUDDY()
