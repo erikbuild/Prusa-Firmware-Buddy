@@ -67,7 +67,7 @@ METRIC_DEF(metric_phxy_home, "phxy_home", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED
 METRIC_DEF(metric_phxy_orig, "phxy_orig", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
 
 /// Convert raw AB steps to XY mm
-void corexy_ab_to_xy(const ab_steps_t &steps, xy_pos_t &mm) {
+void corexy_ab_to_xy(const ab_steps_t &steps, MachinePosXY &mm) {
     const float x = static_cast<float>(steps.a + steps.b) / 2.f;
     const float y = static_cast<float>(CORESIGN(steps.a - steps.b)) / 2.f;
     mm.x = x * planner.mm_per_step[X_AXIS];
@@ -75,7 +75,7 @@ void corexy_ab_to_xy(const ab_steps_t &steps, xy_pos_t &mm) {
 }
 
 /// Convert raw AB steps to XY mm and position in mini-steps
-static void corexy_ab_to_xy(const ab_steps_t &steps, xy_pos_t &mm, xy_msteps_t &pos_msteps) {
+static void corexy_ab_to_xy(const ab_steps_t &steps, MachinePosXY &mm, xy_msteps_t &pos_msteps) {
     const float x = static_cast<float>(steps.a + steps.b) / 2.f;
     const float y = static_cast<float>(CORESIGN(steps.a - steps.b)) / 2.f;
     mm.x = x * planner.mm_per_step[X_AXIS];
@@ -85,9 +85,9 @@ static void corexy_ab_to_xy(const ab_steps_t &steps, xy_pos_t &mm, xy_msteps_t &
 }
 
 /// Convert raw AB steps to XY mm, filling others from current state
-void corexy_ab_to_xyze(const ab_steps_t &steps, xyze_pos_t &mm) {
+void corexy_ab_to_xyze(const ab_steps_t &steps, MachinePosXYZE &mm) {
     {
-        xy_pos_t xy;
+        MachinePosXY xy;
         corexy_ab_to_xy(steps, xy);
         mm.set(xy);
     }
@@ -97,10 +97,10 @@ void corexy_ab_to_xyze(const ab_steps_t &steps, xyze_pos_t &mm) {
 }
 
 /// Convert raw AB steps to XY mm and position in mini-steps, filling others from current state
-static void corexy_ab_to_xyze(const ab_steps_t &steps, xyze_pos_t &mm, xyze_msteps_t &pos_msteps) {
+static void corexy_ab_to_xyze(const ab_steps_t &steps, MachinePosXYZE &mm, xyze_msteps_t &pos_msteps) {
     pos_msteps = planner.get_position_msteps();
     {
-        xy_pos_t xy;
+        MachinePosXY xy;
         xy_msteps_t xy_msteps;
         corexy_ab_to_xy(steps, xy, xy_msteps);
         mm.set(xy);
@@ -111,14 +111,14 @@ static void corexy_ab_to_xyze(const ab_steps_t &steps, xyze_pos_t &mm, xyze_mste
     }
 }
 
-static void plan_raw_move(const xyze_pos_t target_mm, const xyze_msteps_t target_pos, const feedRate_t fr_mm_s) {
+static void plan_raw_move(const MachinePosXYZE target_mm, const xyze_msteps_t target_pos, const feedRate_t fr_mm_s) {
     planner._buffer_msteps(target_pos, target_mm, fr_mm_s, active_extruder, { .raw_block = true });
     planner.synchronize();
 }
 
 static void plan_corexy_raw_move(const ab_steps_t &target_steps_ab, const feedRate_t fr_mm_s) {
     // reconstruct full final position
-    xyze_pos_t target_mm;
+    MachinePosXYZE target_mm;
     xyze_msteps_t target_pos_msteps;
     corexy_ab_to_xyze(target_steps_ab, target_mm, target_pos_msteps);
 
@@ -251,17 +251,17 @@ static bool measure_axis_distance(const AxisEnum axis, const ab_steps_t origin_s
     const AxisEnum fixed_axis = (axis == B_AXIS ? A_AXIS : B_AXIS);
 
     // full initial position
-    const abce_steps_t initial_steps = { origin_steps.a, origin_steps.b, stepper.position(C_AXIS), stepper.position(E_AXIS) };
-    xyze_pos_t initial_mm;
+    const abce_steps_t initial_steps { origin_steps.a, origin_steps.b, stepper.position(C_AXIS), stepper.position(E_AXIS) };
+    MachinePosXYZE initial_mm;
     corexy_ab_to_xyze(initial_steps.xy(), initial_mm);
 
     // full target position
     abce_steps_t target_steps = initial_steps;
     target_steps[axis] += dist;
 
-    xyze_pos_t target_mm;
+    MachinePosXYZE target_mm;
     {
-        xy_pos_t target_xy_mm;
+        MachinePosXY target_xy_mm;
         corexy_ab_to_xy(target_steps.xy(), target_xy_mm);
         target_mm.set(target_xy_mm);
     }
@@ -307,7 +307,7 @@ static bool measure_axis_distance(const AxisEnum axis, const ab_steps_t origin_s
     endstops.not_homing();
 
     abce_steps_t hit_steps;
-    xyze_pos_t hit_mm;
+    MachinePosXYZE hit_mm;
     if (hit) {
         // resync position from steppers to get hit position
         endstops.hit_on_purpose();
@@ -773,17 +773,20 @@ bool corexy_rehome_xy(float fr_mm_s) {
  * @param fr_mm_s Service move feedrate
  * @param rehome If true, also perform initial home
  */
-static bool corexy_rehome_and_phase(xyze_pos_t &origin_pos, ab_steps_t &origin_steps, float fr_mm_s, bool rehome) {
+static bool corexy_rehome_and_phase(MachinePosXYZE &origin_pos, ab_steps_t &origin_steps, float fr_mm_s, bool rehome) {
     // ignore starting position if requested, otherwise assume to be already homed
     if (rehome) {
         corexy_rehome_xy(fr_mm_s);
     }
 
     // reposition parallel to the origin
-    current_position[X_AXIS] = (base_home_pos(X_AXIS) - XY_HOMING_ORIGIN_OFFSET * X_HOME_DIR);
-    current_position[Y_AXIS] = (base_home_pos(Y_AXIS) - XY_HOMING_ORIGIN_OFFSET * Y_HOME_DIR);
-    planner.buffer_line(current_position, fr_mm_s, PhysicalToolIndex::currently_selected());
-    planner.synchronize();
+    {
+        auto pos = current_machine_position();
+        pos.x = (base_home_pos(X_AXIS) - XY_HOMING_ORIGIN_OFFSET * X_HOME_DIR);
+        pos.y = (base_home_pos(Y_AXIS) - XY_HOMING_ORIGIN_OFFSET * Y_HOME_DIR);
+        line_to_machine_pos(pos, fr_mm_s);
+        planner.synchronize();
+    }
 
     // this position will become our reference for the rest of the home, and might not be exact or
     // actually reached (due to the above move being discarded or optimized). We don't care however,
@@ -922,7 +925,7 @@ static bool measure_calibrate_sens(CoreXYHomeTMCSens &calibrated_sens,
     size_t score_cnt = 0;
 
     for (int8_t sens = XY_HOMING_MEASURE_SENS_MIN; sens <= XY_HOMING_MEASURE_SENS_MAX; ++sens) {
-        xyze_pos_t origin_pos;
+        MachinePosXYZE origin_pos;
         ab_steps_t origin_steps;
 
         // reposition parallel to the origin to our probing point
@@ -1030,7 +1033,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
     ++internal::refine_id;
 
     // reposition parallel to the origin to our probing point
-    xyze_pos_t origin_pos;
+    MachinePosXYZE origin_pos;
     ab_steps_t origin_steps;
     if (!corexy_rehome_and_phase(origin_pos, origin_steps, fr_mm_s, false)) {
         return false;
@@ -1128,15 +1131,21 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
     }
 
     // set machine origin
-    const ab_steps_t c_ab_steps = {
+    const ab_steps_t c_ab_steps {
         c_ab[X_HOME_DIR == Y_HOME_DIR ? A_AXIS : B_AXIS] * phase_cycle_steps(A_AXIS) * -Y_HOME_DIR,
         c_ab[X_HOME_DIR == Y_HOME_DIR ? B_AXIS : A_AXIS] * phase_cycle_steps(B_AXIS) * -X_HOME_DIR
     };
-    xy_pos_t c_mm;
+
+    MachinePosXY c_mm;
     corexy_ab_to_xy(c_ab_steps, c_mm);
-    current_position.x = c_mm[X_AXIS] + origin_pos[X_AXIS] + XY_HOMING_ORIGIN_OFFSET * X_HOME_DIR;
-    current_position.y = c_mm[Y_AXIS] + origin_pos[Y_AXIS] + XY_HOMING_ORIGIN_OFFSET * Y_HOME_DIR;
-    planner.set_machine_position_mm(current_position);
+
+    {
+        auto target = planner.get_machine_position_mm();
+        target.x = c_mm[X_AXIS] + origin_pos[X_AXIS] + XY_HOMING_ORIGIN_OFFSET * X_HOME_DIR;
+        target.y = c_mm[Y_AXIS] + origin_pos[Y_AXIS] + XY_HOMING_ORIGIN_OFFSET * Y_HOME_DIR;
+        planner.set_machine_position_mm(target);
+        set_current_position(to_native_pos(target));
+    }
 
     SERIAL_ECHOLNPAIR("calibrated home cycle A:", c_ab[A_AXIS], " B:", c_ab[B_AXIS]);
     return true;
