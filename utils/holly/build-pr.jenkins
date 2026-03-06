@@ -184,7 +184,7 @@ pipeline {
                         values 'all,coreonel_indx,release,yesboot',
                             'all,coreone_indx,release,yesboot',
                             'all,coreone,release,yesboot',
-                            'all,coreone_oak,release,yesboot',
+                            'main,coreone_oak,release,yesboot',
                             'all,coreonel,release,yesboot',
                             'all,mini-en-cs,release,yesboot', // Always build for testing
                             'main,mini-en-de,release,yesboot',
@@ -196,16 +196,14 @@ pipeline {
                             'all,mini-en-pl,release,yesboot', // Always build due to largest memory requirement
                             'all,mk3.5,release,yesboot',
                             'all,mk4,release,yesboot',
-                            'all,mk4,release,noboot', // Needed for integration tests, please don't delete
+                            // No integration tests anymore, kek 'all,mk4,release,noboot', // Needed for integration tests, please don't delete
                             'all,xl,release,yesboot',
                             'main,xl-burst,release,yesboot',
                             'main,xl-minimal,release,yesboot', // Test optional features on the most complex target
                             'all,ix,release,yesboot',
-                            'all,slx-anfc,release,noboot',
-                            'all,anfc,release,noboot',
                             'all,slx-anfc,release,yesboot',
-                            'all,anfc,release,yesboot',
-                            'all,anfc-uart,release,noboot'
+                            'all,anfc-uart,release,noboot',
+                            'all,anfc,release,yesboot'
                     }
                 }
                 stages {
