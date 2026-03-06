@@ -376,18 +376,14 @@ void I_MI_STS::click(IWindowMenu &) {
 
 void I_MI_STS::Loop() {
     SetIconId(get_icon(action, Tool::_all_tools));
-    if (is_multitool()) {
-        set_icon_position(IconPosition::right);
-    } else {
-        set_icon_position(IconPosition::replaces_extends);
-    }
+    set_icon_position(IconPosition::before_extension);
 }
 
 I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, Tool tool)
     : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, get_subitem_hidden_state(tool))
     , action(action)
     , tool(tool) {
-    set_icon_position(IconPosition::right);
+    set_icon_position(IconPosition::before_extension);
 }
 
 void I_MI_STS_SUBMENU::click(IWindowMenu &) {

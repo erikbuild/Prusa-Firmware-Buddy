@@ -214,35 +214,53 @@ Font IWindowMenuItem::getLabelFont() const {
 // rectangles
 
 Rect16 IWindowMenuItem::getIconRect(Rect16 rect) const {
-    if (icon_position == IconPosition::right) {
-        rect = Rect16::Left_t { static_cast<int16_t>(rect.EndPoint().x - (icon_width * 3 - icon_width / 2)) };
-    } else if (icon_position == IconPosition::replaces_extends) {
-        rect = Rect16::Left_t { static_cast<int16_t>(rect.EndPoint().x - (icon_width * 2 - icon_width / 2)) };
+    auto result = Rect16::fromLTWH(rect.Left(), rect.Top(), icon_width, rect.Height());
+
+    switch (icon_position) {
+
+    case IconPosition::left:
+        break;
+
+    case IconPosition::before_extension:
+        result = Rect16::Left_t(rect.EndPoint().x - icon_width - extension_width - icon_extension_spacing);
+        break;
+
+    case IconPosition::after_extension:
+        result = Rect16::Left_t(rect.EndPoint().x - icon_width);
+        break;
     }
-    rect = icon_width;
-    return rect;
+    return result;
 }
 
 Rect16 IWindowMenuItem::getLabelRect(Rect16 rect) const {
-    if (icon_position == IconPosition::right) {
-        rect -= Rect16::Width_t { icon_width * 4 - icon_width / 2 };
-    } else if (icon_position == IconPosition::replaces_extends) {
-        rect -= Rect16::Width_t { icon_width * 3 - icon_width / 2 };
-    } else {
-        rect -= icon_width;
-    }
+    const auto bottom_right = rect.EndPoint();
+    switch (icon_position) {
 
-    if (icon_position != IconPosition::replaces_extends) {
-        rect -= Rect16::Width_t(extension_width);
+    case IconPosition::left:
+        return Rect16::fromLTRB(rect.Left() + icon_width, rect.Top(), bottom_right.x - extension_width, bottom_right.y);
+
+    case IconPosition::before_extension:
+    case IconPosition::after_extension:
+        // Offset by icon_width from the left as well, we want all labels to be aligned
+        return Rect16::fromLTRB(rect.Left() + icon_width, rect.Top(), bottom_right.x - extension_width - icon_width - icon_extension_spacing, bottom_right.y);
     }
-    rect += Rect16::Left_t(icon_width);
-    return rect;
+    bsod_unreachable();
 }
 
 Rect16 IWindowMenuItem::getExtensionRect(Rect16 rect) const {
-    rect += Rect16::Left_t(rect.Width() - extension_width);
-    rect = Rect16::Width_t(extension_width);
-    return rect;
+    auto result = Rect16::fromLTWH(rect.EndPoint().x - extension_width, rect.Top(), extension_width, rect.Height());
+    switch (icon_position) {
+
+    case IconPosition::left:
+    case IconPosition::before_extension:
+        break;
+
+    case IconPosition::after_extension:
+        result -= Rect16::Left_t(icon_width + icon_extension_spacing);
+        break;
+    }
+
+    return result;
 }
 
 bool IWindowMenuItem::is_touch_in_extension_rect(IWindowMenu &window_menu, point_ui16_t relative_touch_point) const {
@@ -291,9 +309,10 @@ void IWindowMenuItem::Print(Rect16 rect) {
         }
     }
 
-    if (IsExtensionInvalid() && extension_width && icon_position != IconPosition::replaces_extends && (IsEnabled() || DoesShowDisabledExtension())) {
-        render_rect(getExtensionRect(rect), mi_color_back);
-        printExtension(getExtensionRect(rect), mi_color_text, mi_color_back, raster_op);
+    if (IsExtensionInvalid() && extension_width && (IsEnabled() || DoesShowDisabledExtension())) {
+        const auto extension_rect = getExtensionRect(rect);
+        render_rect(extension_rect, mi_color_back);
+        printExtension(extension_rect, mi_color_text, mi_color_back, raster_op);
     }
 
     Validate();

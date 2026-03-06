@@ -46,7 +46,7 @@ MI_M600::MI_M600()
         (prusa_toolchanger.is_toolchanger_enabled()) ? expands_t::yes :
 #endif
                                                      expands_t::no) {
-    set_icon_position(IconPosition::right);
+    set_icon_position(IconPosition::before_extension);
 }
 
 void MI_M600::click([[maybe_unused]] IWindowMenu &window_menu) {

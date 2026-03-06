@@ -85,9 +85,12 @@ public:
     static constinit const ColorScheme color_scheme_title;
 
     enum class IconPosition : uint8_t {
+        /// icon, label, extension
         left,
-        right,
-        replaces_extends,
+        /// label, icon, extension
+        before_extension,
+        /// label, extension, icon
+        after_extension,
     };
 
     /// Minimum width of the item extension touch rect
@@ -140,6 +143,9 @@ protected:
     // could me moved to gui defaults
     static constexpr Rect16::Width_t expand_icon_width = 16;
     static constexpr Rect16::Width_t icon_width = 16;
+
+    /// Spacing between the extension and icon when the icon position is not on the left
+    static constexpr int16_t icon_extension_spacing = 8;
 
 private:
     Font label_font = GuiDefaults::FontMenuItems;
