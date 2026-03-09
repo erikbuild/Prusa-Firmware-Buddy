@@ -4,8 +4,6 @@
 #include <filament_list.hpp>
 #include <screen_menu.hpp>
 
-#include <MItem_tools.hpp>
-
 namespace screen_filament_management_list {
 
 class MI_FILAMENT final : public IWindowMenuItem {

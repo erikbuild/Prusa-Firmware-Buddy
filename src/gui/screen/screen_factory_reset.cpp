@@ -2,7 +2,9 @@
 
 #include <array>
 
+#include <WindowMenuItems.hpp>
 #include <version/version.hpp>
+#include <window_menu_callback_item.hpp>
 #include <common/utils/dynamic_index_mapping.hpp>
 #include <img_resources.hpp>
 #include <ScreenHandler.hpp>

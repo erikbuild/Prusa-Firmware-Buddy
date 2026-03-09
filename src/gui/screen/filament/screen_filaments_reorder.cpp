@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <dynamic_index_mapping.hpp>
 
+#include <WindowMenuItems.hpp>
 #include <filament_gui.hpp>
+#include <window_menu_callback_item.hpp>
 #include <gui/event/focus_event.hpp>
 
 using namespace screen_filaments_reorder;

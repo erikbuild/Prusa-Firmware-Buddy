@@ -2,8 +2,6 @@
 
 #include <screen_menu.hpp>
 #include <window_menu_virtual.hpp>
-#include <WindowMenuItems.hpp>
-#include <window_menu_callback_item.hpp>
 
 namespace screen_factory_reset {
 

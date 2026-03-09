@@ -1,5 +1,6 @@
 #include "frame_gcode_incompatible.hpp"
 
+#include <window_menu_callback_item.hpp>
 #include <gcode_compatibility.hpp>
 #include <tools_mapping.hpp>
 #include <client_response_texts.hpp>

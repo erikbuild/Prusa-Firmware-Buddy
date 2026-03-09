@@ -1,6 +1,7 @@
 #include "screen_filament_management_list.hpp"
 #include "screen_filament_detail.hpp"
 
+#include <WindowMenuItems.hpp>
 #include <dynamic_index_mapping.hpp>
 #include <ScreenHandler.hpp>
 #include <algorithm_extensions.hpp>

@@ -3,9 +3,7 @@
 #include <window_menu_virtual.hpp>
 #include <filament_list.hpp>
 
-#include <MItem_tools.hpp>
 #include <screen_menu.hpp>
-#include <window_menu_callback_item.hpp>
 
 namespace screen_filaments_reorder {
 

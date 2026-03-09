@@ -7,6 +7,7 @@
  */
 #include <algorithm>
 #include "window_file_list.hpp"
+#include "WindowMenuItems.hpp"
 #include "gui.hpp"
 #include "config.h"
 #include "sound.hpp"

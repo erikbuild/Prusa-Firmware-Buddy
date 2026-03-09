@@ -1,6 +1,7 @@
 /// @file
 #include "screen_menu_mmu_preload_all.hpp"
 
+#include <WindowMenuItems.hpp>
 #include <ScreenHandler.hpp>
 #include <filament_list.hpp>
 #include <filament_gui.hpp>

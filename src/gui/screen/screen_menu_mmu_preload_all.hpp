@@ -6,8 +6,6 @@
 #include <filament_list.hpp>
 #include <screen_menu.hpp>
 
-#include <MItem_tools.hpp>
-
 namespace screen_mmu_preload_all {
 
 class MI_FILAMENT final : public IWindowMenuItem {

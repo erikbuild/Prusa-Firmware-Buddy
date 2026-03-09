@@ -1,6 +1,7 @@
 #include "screen_opt_info.hpp"
 #include "screen_opt_info_private.hpp"
 
+#include <window_menu_callback_item.hpp>
 #include <window_msgbox.hpp>
 #include <ScreenHandler.hpp>
 #include <feature/openprinttag/requests_read_multi.hpp>

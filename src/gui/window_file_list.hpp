@@ -15,7 +15,6 @@
 #include "display_helper.h"
 #include "lazyfilelist.hpp"
 #include "text_roll.hpp"
-#include "WindowMenuItems.hpp"
 #include <window_menu_virtual.hpp>
 #include <guiconfig/GuiDefaults.hpp>
 #include <array>
