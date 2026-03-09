@@ -98,40 +98,47 @@ bool IWindowMenu::move_focus_to_index(std::optional<int> index_opt, gui_event::F
     }
     int index = *index_opt;
 
-    using Reason = gui_event::FocusInEvent::Reason;
-    switch (reason) {
+    const auto count = this->item_count();
 
-    case Reason::unspecified:
-        break;
+    // Find the nearest focusable item
+    while (true) {
+        if (index < 0 || index >= count) {
+            return false;
+        }
 
-    case Reason::forward_focus_chain: {
-        const auto count = this->item_count();
-        while (index < count && !is_item_focusable(index)) {
+        if (is_item_focusable(index)) {
+            // Found a focusable item -> exit loop
+            break;
+        }
+
+        using Reason = gui_event::FocusInEvent::Reason;
+        switch (reason) {
+
+        case Reason::unspecified:
+            // We don't know which way to go - fail
+            return false;
+
+        case Reason::forward_focus_chain: {
             index++;
+            break;
         }
-        break;
-    }
 
-    case Reason::reverse_focus_chain: {
-        while (index >= 0 && !is_item_focusable(index)) {
+        case Reason::reverse_focus_chain: {
             index--;
+            break;
         }
-        break;
-    }
-    }
-
-    if (!is_item_focusable(index)) {
-        return false;
+        }
     }
 
     ensure_item_on_screen(index);
 
-    if (auto item = item_at(index)) {
-        item->move_focus();
-        return true;
+    auto item = item_at(index);
+    if (!item) {
+        return false;
     }
 
-    return false;
+    item->move_focus();
+    return true;
 }
 
 bool IWindowMenu::move_focus_by(int amount) {
