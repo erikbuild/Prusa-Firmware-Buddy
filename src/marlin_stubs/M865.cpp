@@ -4,7 +4,6 @@
 
 #include <filament.hpp>
 #include <temperature.hpp>
-#include <utils/string_builder.hpp>
 #include <tool_index.hpp>
 
 /** \addtogroup G-Codes
@@ -94,15 +93,12 @@ void PrusaGcodeSuite::M865() {
 
     std::array<char, filament_name_buffer_size - 1> name_buf;
     if (const auto opt = p.option<std::string_view>('N', name_buf)) {
-        ArrayStringBuilder<filament_name_buffer_size> b;
-        b.append_std_string_view(*opt);
-
-        if (const auto r = filament_type.can_be_renamed_to(b.str_nocheck()); !r) {
+        if (const auto r = filament_type.can_be_renamed_to(*opt); !r) {
             SERIAL_ERROR_START();
             SERIAL_ECHOLN(r.error());
             return;
         }
-        params.name = b.str_nocheck();
+        params.name = *opt;
     }
 
     if (filament_type.is_customizable()) {
