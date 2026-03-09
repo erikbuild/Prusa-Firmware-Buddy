@@ -15,6 +15,7 @@
 #include <printers.h>
 #include <common/hw_check.hpp>
 #include <filament_eeprom.hpp>
+#include <tristate.hpp>
 
 #include "constants.hpp"
 
@@ -276,6 +277,12 @@ namespace defaults {
 
 #else
     #error
+#endif
+
+#if PRINTER_IS_PRUSA_iX()
+    inline constexpr Tristate auto_recalibrate_precise_homing = Tristate::yes;
+#else
+    inline constexpr Tristate auto_recalibrate_precise_homing = Tristate::other;
 #endif
 
     inline constexpr bool heat_entire_bed = PRINTER_IS_PRUSA_iX();
