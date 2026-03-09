@@ -176,7 +176,7 @@ private:
     const bool needs_password_;
 };
 
-class WindowMenuWifiScan : public WindowMenuVirtual<MI_SCAN_RETURN, MI_WIFI, WindowMenuItem> {
+class WindowMenuWifiScan : public WindowMenuVirtual {
 
 public:
     WindowMenuWifiScan(window_t *parent, Rect16 rect)

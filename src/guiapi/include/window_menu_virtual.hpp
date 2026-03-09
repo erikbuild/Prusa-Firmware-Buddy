@@ -104,10 +104,4 @@ private:
     std::array<ItemVariant, item_buffer_size> item_buffer_;
 };
 
-template <typename... ItemVariants>
-class WindowMenuVirtual : public WindowMenuVirtualSized<WindowMenuVirtualBase::default_item_buffer_size, 160> {
-
-public:
-    // Use parent constructor
-    using WindowMenuVirtualSized<WindowMenuVirtualBase::default_item_buffer_size, 160>::WindowMenuVirtualSized;
-};
+using WindowMenuVirtual = WindowMenuVirtualSized<WindowMenuVirtualBase::default_item_buffer_size, 160>;

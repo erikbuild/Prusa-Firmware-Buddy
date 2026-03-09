@@ -99,7 +99,7 @@ static constexpr auto detail_items = std::to_array<DynamicIndexMappingRecord<Det
 constexpr DynamicIndexMapping<detail_items> detail_index_mapping;
 
 /// Menu with selection of which items to keep and which to reset
-class WindowMenuFactoryResetDetail final : public WindowMenuVirtual<MI_RETURN, MenuItemFactoryResetDetailItem, WindowMenuCallbackItem> {
+class WindowMenuFactoryResetDetail final : public WindowMenuVirtual {
 public:
     WindowMenuFactoryResetDetail(window_t *parent, Rect16 rect)
         : WindowMenuVirtual(parent, rect, CloseScreenReturnBehavior::yes) {

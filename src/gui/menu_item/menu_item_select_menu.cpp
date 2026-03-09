@@ -19,7 +19,7 @@ private:
     std::array<char, MenuItemSelectMenu::value_buffer_size> label_ { '\0' };
 };
 
-class DialogMenu final : public WindowMenuVirtual<MI_RETURN, DialogItem> {
+class DialogMenu final : public WindowMenuVirtual {
 
 public:
     DialogMenu(window_t *parent, Rect16 rect, MenuItemSelectMenu &menu);

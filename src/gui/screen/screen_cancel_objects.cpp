@@ -104,7 +104,7 @@ private:
     bool link_to_current_object_ = false;
 };
 
-class WindowMenuCancelObject final : public WindowMenuVirtual<MI_RETURN, MI_CANCEL_OBJECT> {
+class WindowMenuCancelObject final : public WindowMenuVirtual {
 public:
     WindowMenuCancelObject(window_t *parent, Rect16 rect)
         : WindowMenuVirtual(parent, rect, CloseScreenReturnBehavior::yes) //

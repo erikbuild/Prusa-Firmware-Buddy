@@ -20,7 +20,7 @@ private:
     metric_t *const metric_;
 };
 
-class WindowMenuMetricsList final : public WindowMenuVirtual<MI_RETURN, MI_METRIC> {
+class WindowMenuMetricsList final : public WindowMenuVirtual {
 
 public:
     WindowMenuMetricsList(window_t *parent, Rect16 rect);

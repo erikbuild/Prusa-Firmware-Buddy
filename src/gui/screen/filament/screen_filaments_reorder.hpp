@@ -27,7 +27,7 @@ private:
     FilamentTypeParameters::Name filament_name;
 };
 
-class WindowMenuFilamentsReorder final : public WindowMenuVirtual<WindowMenuCallbackItem, MI_RETURN, MI_FILAMENT> {
+class WindowMenuFilamentsReorder final : public WindowMenuVirtual {
     friend class MI_FILAMENT;
 
 public:

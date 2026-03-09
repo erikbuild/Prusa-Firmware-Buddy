@@ -112,7 +112,7 @@ private:
     StringViewUtf8Parameters<4> title_params_;
 };
 
-class WindowMenuStatDetail final : public WindowMenuVirtual<MI_RETURN, MenuItemStatDetail> {
+class WindowMenuStatDetail final : public WindowMenuVirtual {
 public:
     WindowMenuStatDetail(window_t *parent, Rect16 rect)
         : WindowMenuVirtual(parent, rect, CloseScreenReturnBehavior::yes) {
@@ -173,7 +173,7 @@ private:
     const Stat &stat_;
 };
 
-class WindowMenuStats final : public WindowMenuVirtual<MI_RETURN, MI_FAIL_STAT, MenuItemStats> {
+class WindowMenuStats final : public WindowMenuVirtual {
 public:
     WindowMenuStats(window_t *parent, Rect16 rect)
         : WindowMenuVirtual(parent, rect, CloseScreenReturnBehavior::yes) {

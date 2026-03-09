@@ -95,7 +95,7 @@ static constexpr auto index_mapping_items = std::to_array<DynamicIndexMappingRec
     { Item::tool, DynamicIndexMappingType::dynamic_section },
 });
 
-class MenuToolPickPark : public WindowMenuVirtual<MI_RETURN, MenuItemTool> {
+class MenuToolPickPark : public WindowMenuVirtual {
 
 public:
     MenuToolPickPark(window_frame_t *parent, Rect16 rect)

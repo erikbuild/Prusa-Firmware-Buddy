@@ -47,14 +47,7 @@ public:
 
 #endif
 
-using WindowMenuPreheatBase = WindowMenuVirtual<
-    WindowMenuCallbackItem,
-#if HAS_ANFC()
-    MI_FROM_OPENPRINTTAG,
-#endif
-    MI_FILAMENT>;
-
-class WindowMenuPreheat : public WindowMenuPreheatBase {
+class WindowMenuPreheat : public WindowMenuVirtual {
 
 public:
     WindowMenuPreheat(window_t *parent, const Rect16 &rect);

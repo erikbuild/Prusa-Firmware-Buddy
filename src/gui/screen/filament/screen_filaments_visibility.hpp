@@ -21,7 +21,7 @@ private:
     const FilamentTypeParameters::Name filament_name;
 };
 
-class WindowMenuFilamentsVisibility final : public WindowMenuVirtual<MI_RETURN, MI_FILAMENT> {
+class WindowMenuFilamentsVisibility final : public WindowMenuVirtual {
 
 public:
     WindowMenuFilamentsVisibility(window_t *parent, Rect16 rect);

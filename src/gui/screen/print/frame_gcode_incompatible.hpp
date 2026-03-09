@@ -13,7 +13,7 @@
 
 namespace screen_print_preview {
 
-class WindowMenuGCodeIncompatible final : public WindowMenuVirtual<WindowMenuCallbackItem> {
+class WindowMenuGCodeIncompatible final : public WindowMenuVirtual {
 public:
     WindowMenuGCodeIncompatible(window_t *parent, Rect16 rect, PhasesPrintPreview phase);
 

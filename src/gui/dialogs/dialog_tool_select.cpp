@@ -57,7 +57,7 @@ private:
     StringViewUtf8Parameters<8> label_params_;
 };
 
-class SelectToolMenu : public WindowMenuVirtual<MI_RETURN, MI_TOOL> {
+class SelectToolMenu : public WindowMenuVirtual {
     friend class MI_TOOL;
 
 public:

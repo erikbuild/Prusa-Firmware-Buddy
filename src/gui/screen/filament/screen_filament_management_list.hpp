@@ -20,7 +20,7 @@ private:
     const FilamentTypeParameters::Name filament_name;
 };
 
-class WindowMenuFilamentManagementList final : public WindowMenuVirtual<MI_RETURN, MI_FILAMENT> {
+class WindowMenuFilamentManagementList final : public WindowMenuVirtual {
 public:
     WindowMenuFilamentManagementList(window_t *parent, Rect16 rect);
 

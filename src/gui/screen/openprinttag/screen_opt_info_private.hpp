@@ -56,7 +56,7 @@ namespace {
     /// A bit longer than standard WI_Info_t - it was awkward that "PLA Prusa Galaxy Blac" was cropped
     using MenuItemInfo = WiInfo<32>;
 
-    class WindowMenuOPTInfo final : public WindowMenuVirtual<MI_RETURN, MenuItemInfo, MenuItemFilamentTracking, WindowMenuCallbackItem> {
+    class WindowMenuOPTInfo final : public WindowMenuVirtual {
         friend class ScreenOPTInfo;
 
     public:

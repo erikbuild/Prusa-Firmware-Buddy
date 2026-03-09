@@ -22,7 +22,7 @@ private:
     const FilamentTypeParameters::Name filament_name;
 };
 
-class WindowMenuMMUPreloadAll final : public WindowMenuVirtual<MI_RETURN, MI_FILAMENT> {
+class WindowMenuMMUPreloadAll final : public WindowMenuVirtual {
 public:
     WindowMenuMMUPreloadAll(window_t *parent, Rect16 rect);
 

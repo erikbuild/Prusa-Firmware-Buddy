@@ -7,7 +7,7 @@
 
 namespace screen_factory_reset {
 
-class WindowMenuFactoryReset final : public WindowMenuVirtual<MI_RETURN, WindowMenuCallbackItem> {
+class WindowMenuFactoryReset final : public WindowMenuVirtual {
 public:
     WindowMenuFactoryReset(window_t *parent, Rect16 rect);
 

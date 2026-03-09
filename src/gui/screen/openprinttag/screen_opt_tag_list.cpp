@@ -51,7 +51,7 @@ namespace {
     };
 
 } // namespace
-class WindowMenuOPTTagList final : public WindowMenuVirtual<MI_RETURN, MI_OPT_TOOL_TAG> {
+class WindowMenuOPTTagList final : public WindowMenuVirtual {
 
 public:
     WindowMenuOPTTagList(window_t *parent, Rect16 rect)
