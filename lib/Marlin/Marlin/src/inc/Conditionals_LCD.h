@@ -68,8 +68,6 @@
 #if ENABLED(SINGLENOZZLE)           // One hotend, one thermistor, no XY offset
   #undef HOTENDS
   #define HOTENDS       1
-  #undef HOTEND_OFFSET_X
-  #undef HOTEND_OFFSET_Y
 #endif
 
 #ifndef HOTENDS

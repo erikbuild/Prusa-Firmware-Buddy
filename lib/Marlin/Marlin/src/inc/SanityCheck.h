@@ -87,7 +87,9 @@
 #elif defined(DISABLE_MAX_ENDSTOPS) || defined(DISABLE_MIN_ENDSTOPS)
   #error "DISABLE_MAX_ENDSTOPS and DISABLE_MIN_ENDSTOPS deprecated. Use individual USE_*_PLUG options instead."
 #elif defined(EXTRUDER_OFFSET_X) || defined(EXTRUDER_OFFSET_Y)
-  #error "EXTRUDER_OFFSET_[XY] is deprecated. Use HOTEND_OFFSET_[XY] instead."
+  #error "EXTRUDER_OFFSET_[XY] is deprecated."
+#elif defined(HOTEND_OFFSET_X) || defined(HOTEND_OFFSET_Y) || defined(HOTEND_OFFSET_Z)
+  #error "HOTEND_OFFSET_[XYZ] is deprecated."
 #elif defined(EXTRUDER_WATTS) || defined(BED_WATTS)
   #error "EXTRUDER_WATTS and BED_WATTS are deprecated. Remove them from your configuration."
 #elif defined(SERVO_ENDSTOP_ANGLES)
