@@ -213,8 +213,7 @@ void enqueue_gcode(const char *gcode) {
 }
 
 void marlin_resetE() {
-    current_position.e = 0;
-    sync_plan_position_e();
+    sync_e_position_to(0);
 }
 
 } // namespace MMU2

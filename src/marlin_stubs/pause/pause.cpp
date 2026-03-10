@@ -1523,7 +1523,8 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
 
     // Now all extrusion positions are resumed and ready to be confirmed
     // Set extruder to saved position
-    planner.set_e_position_mm((destination.e = current_position.e = settings.resume_pos.e));
+    sync_e_position_to(settings.resume_pos.e);
+    destination.e = settings.resume_pos.e;
 
     --did_pause_print;
 

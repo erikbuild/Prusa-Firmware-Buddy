@@ -215,6 +215,14 @@ void sync_plan_position_e(std::optional<uint8_t> e_axis_index) {
   }
 }
 
+void sync_e_position_to(float e) {
+  xyze_pos_t target = current_position;
+  target.e = e;
+  set_current_position(target);
+  
+  sync_plan_position_e();
+}
+
 /**
  * Set the current_position for an axis based on
  * the stepper positions, removing any leveling that

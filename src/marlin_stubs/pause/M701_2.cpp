@@ -101,7 +101,7 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     park_position.z = std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE });
 
     settings.SetParkPoint(park_position);
-    xyze_pos_t current_position_tmp = current_position;
+    const xyze_pos_t current_position_tmp = current_position;
 
     // Pick the right tool
     if (!Pause::Instance().tool_change(virtual_tool, Pause::LoadType::load, settings)) {
@@ -122,7 +122,10 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     } else {
         M70X_process_user_response(PreheatStatus::Result::DidNotFinish, virtual_tool);
     }
-    planner.set_e_position_mm((destination.e = current_position.e = current_position_tmp.e));
+
+    // Pretend like we haven't moved the extruder at all
+    sync_e_position_to(current_position_tmp.e);
+    destination.e = current_position_tmp.e;
 
     if (do_resume_print) {
         marlin_server::print_resume();
@@ -172,7 +175,8 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
     // Unload
     load_unload(ask_unloaded ? Pause::LoadType::unload_confirm : Pause::LoadType::unload, settings);
     M70X_process_user_response(PreheatStatus::Result::CooledDown, virtual_tool);
-    planner.set_e_position_mm((destination.e = current_position.e = current_position_tmp.e));
+    sync_e_position_to(current_position_tmp.e);
+    destination.e = current_position_tmp.e;
 }
 
 namespace PreheatStatus {
@@ -300,7 +304,8 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
             return;
         }
     }
-    planner.set_e_position_mm((destination.e = current_position.e = e_pos_to_restore));
+    sync_e_position_to(e_pos_to_restore);
+    destination.e = e_pos_to_restore;
 
     // at this point autoload is considered successful so fail guard is not to be triggered and we report DoneHasFilament as status
     fail_guard.disarm();

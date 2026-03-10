@@ -499,8 +499,7 @@ bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
     planner.synchronize();
 
     // reset position back, like purge never happened
-    current_position.e = orig_e_pos;
-    sync_plan_position_e();
+    sync_e_position_to(orig_e_pos);
 
     // wait a while to let the sopel cool down
     (void)wait([]() { return false; }, 5000);

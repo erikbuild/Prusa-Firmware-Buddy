@@ -298,6 +298,9 @@ void sync_plan_position_e(std::optional<uint8_t> e_axis_index = std::nullopt);
 [[deprecated("EVIL! DOES NOT APPLY MBL, EVEN THOUGH IT WORKS WITH CURRENT_POSITION! Use line_to_machine_pos instead")]]
 void line_to_current_position(const feedRate_t &fr_mm_s=feedrate_mm_s);
 
+/// Sets @param e as the current extruder position on all layers
+void sync_e_position_to(float e);
+
 /// Plans a move to the specified machine coordinates
 /// Updates current_position to match the machine position
 void line_to_machine_pos(const MachinePosXYZE &target, feedRate_t fr_mm_s);

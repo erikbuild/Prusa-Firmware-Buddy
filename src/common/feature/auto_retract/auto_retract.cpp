@@ -176,8 +176,7 @@ void AutoRetract::maybe_deretract_to_nozzle() {
         return;
     }
 
-    const auto orig_e_position = planner.position_float.e;
-    const auto orig_current_e_position = current_position.e;
+    const auto orig_e_position = current_position.e;
 
     {
         // No estall detection during the ramming; we may do so too fast sometimes
@@ -190,8 +189,7 @@ void AutoRetract::maybe_deretract_to_nozzle() {
 
     // "Fake" original extruder position - we are interrupting various movements by this function,
     // firmware gets very confused if the current position changes while it is planning a move
-    planner.set_e_position_mm(orig_e_position);
-    current_position.e = orig_current_e_position;
+    sync_e_position_to(orig_e_position);
 
     set_retracted_distance(hotend, 0.0f);
 }
