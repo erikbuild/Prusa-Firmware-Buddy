@@ -199,6 +199,17 @@ SECTIONS
     libgcc.a ( * )
   }
 
+  /* Fill remaining FLASH with 0xFF (matches erased flash state) so that the
+     fingerprint computed over the binary matches what the bootloader reads
+     from flash, regardless of whether flashing was done via debugger or Cyphal
+  */
+  .flash_fill :
+  {
+    FILL(0xFFFFFFFF);
+    . = ORIGIN(FLASH) + LENGTH(FLASH) - 1;
+    BYTE(0xFF)
+  } > FLASH
+
   .fw_descriptor :
   {
     . = ALIGN(4);
