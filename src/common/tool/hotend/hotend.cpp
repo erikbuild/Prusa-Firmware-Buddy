@@ -2,6 +2,7 @@
 #include "hotend.hpp"
 
 #include <module/temperature.h>
+#include <tool/physical_tool.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -14,20 +15,14 @@ Hotend &Hotend::for_tool(uint8_t tool) {
     return for_tool(PhysicalToolIndex::from_raw_notool(tool));
 }
 
-Hotend &Hotend::for_tool(std::variant<PhysicalToolIndex, NoTool> tool) {
-    return match(
-        tool, //
-        [](PhysicalToolIndex t) -> Hotend & { return for_tool(t); }, //
-        [](NoTool) -> Hotend & {
-#if HAS_TOOLCHANGER()
-            static DummyHotend dummy;
-            return dummy;
-#else
-            bsod("notool hotend");
-#endif
-        } //
-    );
+Hotend &Hotend::for_tool(PhysicalToolIndex tool) {
+    return PhysicalTool::for_index(tool).hotend();
 }
+
+Hotend &Hotend::for_tool(std::variant<PhysicalToolIndex, NoTool> tool) {
+    return PhysicalTool::for_index(tool).hotend();
+}
+
 PID_t Hotend::nozzle_pid_config_compat() const {
     const auto &pid = nozzle_pid_config();
     return PID_t {

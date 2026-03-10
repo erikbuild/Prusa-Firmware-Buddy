@@ -1,9 +1,10 @@
 /// @file
 
 #include <tool/hotend/hotend/local_hotend.hpp>
+#include <tool/tool/standard_fff_physical_tool.hpp>
 #include <utils/storage/strong_index_array.hpp>
 
-Hotend &Hotend::for_tool(PhysicalToolIndex) {
+PhysicalTool &PhysicalTool::for_index(PhysicalToolIndex) {
     static constexpr LocalHotend::Config hotend_config {
         .base_config {
             // TODO: Get rid of the macros, put the values directly into this file
@@ -18,8 +19,8 @@ Hotend &Hotend::for_tool(PhysicalToolIndex) {
         // but Mini actually has HW PWM support for the heater
         .nozzle_heater_soft_pwm = false,
     };
-    static LocalHotend hotend { PhysicalToolIndex::from_raw(0), &hotend_config };
+    static StandardFFFPhysicalTool<LocalHotend> tool { PhysicalToolIndex::from_raw(0), &hotend_config };
     static_assert(PhysicalToolIndex::count == 1);
 
-    return hotend;
+    return tool;
 }

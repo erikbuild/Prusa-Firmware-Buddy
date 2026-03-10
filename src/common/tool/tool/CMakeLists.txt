@@ -1,1 +1,0 @@
-target_sources(firmware PRIVATE dummy_physical_tool.cpp standard_fff_physical_tool.cpp)

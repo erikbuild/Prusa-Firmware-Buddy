@@ -26,8 +26,6 @@ public:
 
 public:
     /// @returns Hotend of the tool
-    /// There should be a 1:1 mapping
-    /// Implemented differently for each printer in in hotends_XX.cpp
     /// !!! To be accessed only from the marlin task
     static Hotend &for_tool(PhysicalToolIndex tool);
 
