@@ -275,10 +275,6 @@ void MarlinSettings::reset() {
     #endif
   #endif
 
-  #if ENABLED(EXTENSIBLE_UI)
-    ExtUI::onFactoryReset();
-  #endif
-
   //
   // Global Leveling
   //
@@ -411,10 +407,6 @@ void MarlinSettings::reset() {
   #endif
 
   postprocess();
-
-  #if ENABLED(EXTENSIBLE_UI)
-    ExtUI::onFactoryReset();
-  #endif
 }
 
 #if DISABLED(DISABLE_M503)

@@ -3729,26 +3729,6 @@ void onPrintTimerStopped() {
     log_info(MarlinServer, "ExtUI: onPrintTimerStopped");
 }
 
-void onFactoryReset() {
-    log_info(MarlinServer, "ExtUI: onFactoryReset");
-}
-
-void onLoadSettings(char const *) {
-    log_info(MarlinServer, "ExtUI: onLoadSettings");
-}
-
-void onStoreSettings(char *) {
-    log_info(MarlinServer, "ExtUI: onStoreSettings");
-}
-
-void onConfigurationStoreWritten([[maybe_unused]] bool success) {
-    log_info(MarlinServer, "ExtUI: onConfigurationStoreWritten");
-}
-
-void onConfigurationStoreRead([[maybe_unused]] bool success) {
-    log_info(MarlinServer, "ExtUI: onConfigurationStoreRead");
-}
-
 void onMeshUpdate([[maybe_unused]] const uint8_t xpos, [[maybe_unused]] const uint8_t ypos, [[maybe_unused]] const float zval) {
     log_debug(MarlinServer, "ExtUI: onMeshUpdate x: %u, y: %u, z: %.2f", xpos, ypos, (double)zval);
 }
