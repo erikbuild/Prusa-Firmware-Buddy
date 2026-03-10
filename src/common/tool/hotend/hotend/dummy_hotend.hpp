@@ -1,7 +1,7 @@
 /// @file
 #pragma once
 
-#include <hotend/hotend.hpp>
+#include <tool/hotend/hotend.hpp>
 
 /// Represents a hotend that does nothing at all
 /// Used for NoTool hotends

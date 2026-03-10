@@ -45,7 +45,7 @@
 #include <module/temperature/temp_defines.hpp>
 #include <module/temperature/hotend_regulator/hotend_regulator.hpp>
 #include <module/temperature/thermal_runaway.hpp>
-#include <hotend/hotend.hpp>
+#include <tool/hotend/hotend.hpp>
 
 #if HAS_PID_HEATING
   #define PID_K2           (1 - float(PID_K1))

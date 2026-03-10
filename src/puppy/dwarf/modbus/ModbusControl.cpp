@@ -15,7 +15,7 @@
 #include "utility_extensions.hpp"
 #include "advanced_power.hpp"
 #include "accelerometer.hpp"
-#include <hotend/hotend.hpp>
+#include <tool/hotend/hotend.hpp>
 
 namespace dwarf::ModbusControl {
 

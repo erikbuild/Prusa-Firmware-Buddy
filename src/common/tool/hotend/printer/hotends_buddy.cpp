@@ -1,6 +1,6 @@
 /// @file
 
-#include <hotend/hotend/local_hotend.hpp>
+#include <tool/hotend/hotend/local_hotend.hpp>
 #include <utils/storage/strong_index_array.hpp>
 
 Hotend &Hotend::for_tool(PhysicalToolIndex) {

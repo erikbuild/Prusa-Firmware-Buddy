@@ -221,7 +221,7 @@ if(BOARD_IS_MASTER_BOARD)
 endif()
 
 if(BOARD_IS_MASTER_BOARD OR (BOARD STREQUAL "DWARF"))
-  add_subdirectory(hotend)
+  add_subdirectory(tool)
 endif()
 
 add_subdirectory(utils)

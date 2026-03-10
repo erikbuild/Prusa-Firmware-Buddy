@@ -112,7 +112,7 @@
 #include <option/has_modular_bed.h>
 #include <utils/serial_logging_disabler.hpp>
 #include <raii/scope_guard.hpp>
-#include <hotend/hotend.hpp>
+#include <tool/hotend/hotend.hpp>
 
 #if HAS_AC_CONTROLLER()
     #include <puppies/ac_controller.hpp>

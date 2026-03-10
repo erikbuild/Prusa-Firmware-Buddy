@@ -1,7 +1,7 @@
 /// @file
 #pragma once
 
-#include <hotend/hotend.hpp>
+#include <tool/hotend/hotend.hpp>
 #include <module/temperature/thermal_runaway.hpp>
 #include <module/temperature/heater_watch.hpp>
 
