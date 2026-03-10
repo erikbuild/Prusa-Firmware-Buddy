@@ -3,40 +3,29 @@
  */
 
 #include <stdint.h>
-#include <device/board.h>
-#include "printers.h"
-#include "MarlinPin.h"
 #include "CFanCtl3Wire.hpp"
-#include <device/hal.h>
-#include "cmsis_os.h"
-#include "gpio.h"
 #include <stdlib.h>
 #include <random/random.h>
 #include <random_sw/random_sw.h>
 #include <algorithm>
 
-#if (BOARD_IS_XBUDDY())
-    #include "hw_configuration.hpp"
-#endif
-
-using namespace buddy::hw;
-
 //------------------------------------------------------------------------------
 // CFanCtlPWM implementation
 
-CFanCtlPWM::CFanCtlPWM(const OutputPin &pinOut, uint8_t pwm_min, uint8_t pwm_max, uint8_t phase_shift_threshold)
-    : m_pin(pinOut)
-    , min_value(pwm_min)
-    , max_value(pwm_max)
+CFanCtlPWM::CFanCtlPWM(const WritePinFunc &pin_write_func, const PWMParams &pwm_params)
+    : pin_write(pin_write_func)
+    , min_value(pwm_params.pwm_min)
+    , max_value(pwm_params.pwm_max)
     , pha_ena(false)
     , pwm(0)
     , cnt(0)
     , val(0)
     , pha(0)
     , pha_mode(random)
-    , pha_thr(phase_shift_threshold)
+    , pha_thr(pwm_params.phase_shift_threshold)
     , pha_max(0)
-    , pha_stp(0) {}
+    , pha_stp(0)
+    , has_inverted_pwm(pwm_params.has_inverted_pwm) {}
 
 int8_t CFanCtlPWM::tick() {
     int8_t pwm_on = cnt - pha; // calculate on time (number of ticks after 0-1 pwm transition)
@@ -80,16 +69,8 @@ int8_t CFanCtlPWM::tick() {
             }
         }
     }
-#if (BOARD_IS_XBUDDY())
-    // set output pin
-    if (buddy::hw::Configuration::Instance().has_inverted_fans()) {
-        m_pin.write(static_cast<Pin::State>(!o));
-    } else {
-        m_pin.write(static_cast<Pin::State>(o));
-    }
-#else
-    m_pin.write(static_cast<Pin::State>(o)); // set output pin
-#endif
+    pin_write(o ^ has_inverted_pwm);
+
     return pwm_on;
 }
 
@@ -99,22 +80,14 @@ void CFanCtlPWM::set_PWM(uint8_t new_pwm) {
 
 void CFanCtlPWM::safeState() {
     set_PWM(max_value);
-#if (BOARD_IS_XBUDDY())
-    if (buddy::hw::Configuration::Instance().has_inverted_fans()) {
-        m_pin.write(Pin::State::low);
-    } else {
-        m_pin.write(Pin::State::high);
-    }
-#else
-    m_pin.write(Pin::State::high);
-#endif
+    pin_write(!has_inverted_pwm);
 }
 
 //------------------------------------------------------------------------------
 // CFanCtlTach implementation
 
-CFanCtlTach::CFanCtlTach(const InputPin &inputPin)
-    : m_pin(inputPin) {
+CFanCtlTach::CFanCtlTach(const ReadPinFunc &read_pin_func)
+    : pin_read(read_pin_func) {
     input_state = false;
     tick_count = 0;
     ticks_per_second = 1000;
@@ -125,7 +98,7 @@ CFanCtlTach::CFanCtlTach(const InputPin &inputPin)
 }
 
 bool CFanCtlTach::tick(int8_t pwm_on) {
-    bool tach = static_cast<bool>(m_pin.read()); // sample tach input pin
+    bool tach = pin_read(); // sample tach input pin
     bool edge = ((tach ^ input_state) && (pwm_on >= 2)); // detect edge inside pwm pulse, ignore first two sub-periods after 0-1 pwm transition
     if (edge) {
         edges++;
@@ -152,16 +125,21 @@ bool CFanCtlTach::tick(int8_t pwm_on) {
 //------------------------------------------------------------------------------
 // CFanCtl3Wire implementation
 
-CFanCtl3Wire::CFanCtl3Wire(const OutputPin &pinOut, const InputPin &pinTach,
-    uint8_t minPWM, uint8_t maxPWM, uint16_t minRPM, uint16_t maxRPM, uint8_t thrPWM, is_autofan_t autofan, skip_tacho_t skip_tacho, uint8_t min_pwm_to_measure_rpm)
-    : CFanCtlCommon(minRPM, maxRPM)
+CFanCtl3Wire::CFanCtl3Wire(const CFanCtlPWM::WritePinFunc &write_pin_func, const CFanCtlTach::ReadPinFunc &read_pin_func,
+    const FanParams &fan_params)
+    : CFanCtlCommon(fan_params.min_rpm, fan_params.max_rpm)
     , m_State(idle)
     , m_PWMValue(0)
-    , min_pwm_to_measure_rpm(min_pwm_to_measure_rpm)
-    , is_autofan(autofan)
-    , m_pwm(pinOut, minPWM, maxPWM, thrPWM)
-    , m_tach(pinTach)
-    , m_skip_tacho(skip_tacho) {
+    , min_pwm_to_measure_rpm(fan_params.min_pwm_to_measure_rpm)
+    , is_autofan(fan_params.autofan)
+    , m_pwm(write_pin_func, {
+                                .pwm_min = fan_params.min_pwm,
+                                .pwm_max = fan_params.max_pwm,
+                                .phase_shift_threshold = fan_params.thr_pwm,
+                                .has_inverted_pwm = fan_params.has_inverted_pwm,
+                            })
+    , m_tach(read_pin_func)
+    , m_skip_tacho(fan_params.skip_tacho) {
 }
 
 void CFanCtl3Wire::tick() {

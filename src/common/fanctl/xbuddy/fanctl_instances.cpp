@@ -1,8 +1,11 @@
 
 #include <fanctl.hpp>
 #include "hwio_pindef.h"
-#include "CFanCtl3Wire.hpp"
+#include <CFanCtl3Wire.hpp>
+#include <CFanCtlCommonConsts.hpp>
 #include "CFanCtl3WireDynamic.hpp"
+#include <option/has_love_board.h>
+#include <hw_configuration.hpp>
 
 #if !PRINTER_IS_PRUSA_MK4() && !PRINTER_IS_PRUSA_COREONE() && !PRINTER_IS_PRUSA_COREONEL()
     #error "Dynamic PWM is only for MK4/COREONE/COREONEL, fix your CMakeLists.txt!"
@@ -25,16 +28,29 @@ CFanCtlCommon &Fans::print(size_t index) {
     return instance;
 };
 
+static auto write_heat_pwm = [](bool value) {
+    buddy::hw::fanHeatBreakPwm.writeb(value);
+};
+
+static auto read_heat_tacho = []() {
+    return buddy::hw::fanTach.readb();
+};
+
 CFanCtlCommon &Fans::heat_break(size_t index) {
     static CFanCtl3Wire instance = CFanCtl3Wire(
-        buddy::hw::fanHeatBreakPwm,
-        buddy::hw::fanTach,
-        FANCTLHEATBREAK_PWM_MIN, FANCTLHEATBREAK_PWM_MAX,
-        FANCTLHEATBREAK_RPM_MIN, FANCTLHEATBREAK_RPM_MAX,
-        FANCTLHEATBREAK_PWM_THR,
-        is_autofan_t::yes,
-        skip_tacho_t::no,
-        FANCTLHEATBREAK_MIN_PWM_TO_MEASURE_RPM);
+        write_heat_pwm,
+        read_heat_tacho,
+        {
+            .min_pwm = FANCTLHEATBREAK_PWM_MIN,
+            .max_pwm = FANCTLHEATBREAK_PWM_MAX,
+            .min_rpm = FANCTLHEATBREAK_RPM_MIN,
+            .max_rpm = FANCTLHEATBREAK_RPM_MAX,
+            .thr_pwm = FANCTLHEATBREAK_PWM_THR,
+            .autofan = is_autofan_t::yes,
+            .skip_tacho = skip_tacho_t::no,
+            .min_pwm_to_measure_rpm = FANCTLHEATBREAK_MIN_PWM_TO_MEASURE_RPM,
+            .has_inverted_pwm = buddy::hw::Configuration::Instance().has_inverted_fans(),
+        });
 
     if (index) {
         bsod("Heat break fan %u does not exist", index);

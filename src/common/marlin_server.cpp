@@ -225,6 +225,8 @@
     #include <feature/openprinttag/filament_usage_tracker/filament_usage_tracker.hpp>
 #endif
 
+void record_fanctl_metrics();
+
 using namespace ExtUI;
 
 using ClientQueue = marlin_client::ClientQueue;

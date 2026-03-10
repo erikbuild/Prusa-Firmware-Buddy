@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CFanCtl3Wire.hpp"
+#include <CFanCtl3Wire.hpp>
 
 class CFanCtl3WireDynamic : public CFanCtl3Wire {
 public:

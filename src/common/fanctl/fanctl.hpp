@@ -4,6 +4,7 @@
 #include <device/board.h>
 #include <cstddef>
 #include <tool_index.hpp>
+#include <option/xl_enclosure_support.h>
 
 class Fans {
     Fans() = default;

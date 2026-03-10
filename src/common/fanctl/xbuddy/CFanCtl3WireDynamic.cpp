@@ -1,4 +1,6 @@
 #include "CFanCtl3WireDynamic.hpp"
+#include <option/has_love_board.h>
+#include <hw_configuration.hpp>
 
 CFanCtl3WireDynamic::CFanCtl3WireDynamic(
     const buddy::hw::OutputPin &pinOut,
@@ -12,16 +14,19 @@ CFanCtl3WireDynamic::CFanCtl3WireDynamic(
     skip_tacho_t skip_tacho,
     uint8_t min_pwm_to_measure_rpm)
     : CFanCtl3Wire(
-        pinOut,
-        pinTach,
-        minPWM,
-        maxPWM,
-        minRPM,
-        maxRPM,
-        thrPWM,
-        autofan,
-        skip_tacho,
-        min_pwm_to_measure_rpm) {
+        [&pinOut](bool value) { pinOut.writeb(value); },
+        [&pinTach]() { return pinTach.readb(); },
+        {
+            .min_pwm = minPWM,
+            .max_pwm = maxPWM,
+            .min_rpm = minRPM,
+            .max_rpm = maxRPM,
+            .thr_pwm = thrPWM,
+            .autofan = autofan,
+            .skip_tacho = skip_tacho,
+            .min_pwm_to_measure_rpm = min_pwm_to_measure_rpm,
+            .has_inverted_pwm = buddy::hw::Configuration::Instance().has_inverted_fans(),
+        }) {
     setPhaseShiftMode(CFanCtlPWM::PhaseShiftMode::none);
 }
 

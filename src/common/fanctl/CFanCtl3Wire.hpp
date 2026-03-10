@@ -2,9 +2,9 @@
 #pragma once
 
 #include <stdbool.h>
-#include "Pin.hpp"
+#include <cstdint>
+#include <inplace_function.hpp>
 #include "CFanCtlCommon.hpp"
-#include <option/has_love_board.h>
 
 enum {
     FANCTL_MAX_FANS = 2, // maximum number of fans for C wrapper functions
@@ -32,15 +32,24 @@ struct fanctl_tach_t {
 // class for software pwm control with phase-shifting
 class CFanCtlPWM {
 public:
+    struct PWMParams {
+        uint8_t pwm_min;
+        uint8_t pwm_max;
+        uint8_t phase_shift_threshold;
+        bool has_inverted_pwm;
+    };
+
     enum PhaseShiftMode : uint8_t {
         none, // phase shifting disabled
         triangle, // phase shift follows triangle function
         random, // phase shift is random (using rand)
     };
 
+    using WritePinFunc = stdext::inplace_function<void(bool)>;
+
 public:
     // constructor
-    CFanCtlPWM(const buddy::hw::OutputPin &pinOut, uint8_t pwm_min, uint8_t pwm_max, uint8_t phase_shift_threshold);
+    CFanCtlPWM(const WritePinFunc &write_pin_func, const PWMParams &pwm_params);
 
 public:
     int8_t tick(); // tick callback from timer interrupt
@@ -61,7 +70,7 @@ public:
     void safeState();
 
 private:
-    const buddy::hw::OutputPin &m_pin;
+    const WritePinFunc pin_write;
     uint8_t min_value; // minimum pwm value
     uint8_t max_value; // maximum pwm value
     union {
@@ -78,13 +87,15 @@ private:
     uint8_t pha_thr; // pwm phase shift threshold (shifting will be enabled for pwm <= pha_thr)
     int8_t pha_max; // pwm phase shift maximum (calculated when pwm changed)
     int8_t pha_stp; // pwm phase shift step (calculated when pwm changed)
+    bool has_inverted_pwm;
 };
 
 // class for rpm measurement
 class CFanCtlTach : private fanctl_tach_t {
 public:
+    using ReadPinFunc = stdext::inplace_function<bool()>;
     // constructor
-    CFanCtlTach(const buddy::hw::InputPin &inputPin);
+    CFanCtlTach(const ReadPinFunc &read_pin_func);
 
 public:
     bool tick(int8_t pwm_on); // tick callback from timer interrupt (currently 1kHz), returns true when edge detected
@@ -99,7 +110,7 @@ public:
     inline void setValueReady(bool value_ready) { m_value_ready = value_ready; }
 
 private:
-    const buddy::hw::InputPin &m_pin;
+    const ReadPinFunc pin_read;
 };
 
 enum class is_autofan_t : bool {
@@ -116,9 +127,19 @@ enum class skip_tacho_t : bool {
 class CFanCtl3Wire : public CFanCtlCommon {
 
 public:
+    struct FanParams {
+        uint8_t min_pwm;
+        uint8_t max_pwm;
+        uint16_t min_rpm;
+        uint16_t max_rpm;
+        uint8_t thr_pwm;
+        is_autofan_t autofan;
+        skip_tacho_t skip_tacho;
+        uint8_t min_pwm_to_measure_rpm;
+        bool has_inverted_pwm;
+    };
     // constructor
-    CFanCtl3Wire(const buddy::hw::OutputPin &pinOut, const buddy::hw::InputPin &pinTach, uint8_t minPWM, uint8_t maxPWM,
-        uint16_t minRPM, uint16_t maxRPM, uint8_t thrPWM, is_autofan_t autofan, skip_tacho_t skip_tacho, uint8_t min_pwm_to_measure_rpm);
+    CFanCtl3Wire(const CFanCtlPWM::WritePinFunc &pin_write_func, const CFanCtlTach::ReadPinFunc &read_pin_func, const FanParams &fan_params);
 
     virtual void tick() override; // tick callback from timer interrupt
 
@@ -131,14 +152,13 @@ public:
     { return unscalePWM(m_PWMValue); }
     uint16_t get_actual_rpm() const final // get actual (measured) RPM
     {
-#if HAS_LOVE_BOARD() && !PRINTER_IS_PRUSA_iX()
+        // auto control is true, unless specific udage in G29,
+        // which already handles input from HAS_LOVE_BOARD and IS_PRUSA_IX
+        // so the guard was removed from here.
         if (autocontrol_enabled) {
             return m_tach.getRPM();
         }
         return 8669;
-#else
-        return m_tach.getRPM();
-#endif
     }
     CFanCtlPWM::PhaseShiftMode getPhaseShiftMode() const // get PhaseShiftMode
     { return m_pwm.get_PhaseShiftMode(); }

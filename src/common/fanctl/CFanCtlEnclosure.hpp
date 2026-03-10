@@ -2,7 +2,8 @@
 
 #include <stdbool.h>
 #include "Pin.hpp"
-#include "CFanCtlCommon.hpp"
+#include <fanctl/CFanCtlCommon.hpp>
+#include <CFanCtlCommonConsts.hpp>
 
 /// class for controlling a 4-pin enclosure fan -- it is not very suitable for general 4-pin fan,
 /// if there is ever a need, it would be better to write something with a pid regulator and control it with percentage of rpm instead pwm)
