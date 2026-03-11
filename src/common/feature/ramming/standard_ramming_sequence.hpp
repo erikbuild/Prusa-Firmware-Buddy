@@ -10,8 +10,8 @@ enum class StandardRammingSequence {
 #if HAS_AUTO_RETRACT()
     auto_retract,
 #endif
-
-    // TODO: Migrate other ramming sequences from the Configuration files
+    runout,
+    unload,
 };
 
 const RammingSequence &standard_ramming_sequence(StandardRammingSequence seq, uint8_t hotend);

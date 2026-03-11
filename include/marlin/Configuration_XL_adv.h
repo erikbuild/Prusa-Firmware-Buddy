@@ -691,30 +691,6 @@
  * Requires an LCD display.
  */
 #if HAS_PAUSE()
-   #define FILAMENT_UNLOAD_RAMMING_SEQUENCE \
-            { \
-                { 20, 1500 }, \
-                { -50, 2700 }, \
-                { -5, 50 }, \
-                { -50, 1500 }, \
-            }
-
-    #define FILAMENT_RUNOUT_RAMMING_SEQUENCE \
-           { \
-                { 7, 1500 }, \
-                { -50, 2700 }, \
-                { -5, 50 }, \
-                { -50, 1500 }, \
-            }
-
-    #define FILAMENT_MMU2_RAMMING_SEQUENCE \
-       { \
-            { 7, 1500 }, \
-            { -50, 2700 }, \
-            { -5, 50 }, \
-            { -50, 1500 }, \
-        }
-
     #define PAUSE_PARK_RETRACT_FEEDRATE 10.8f // (mm/s) Initial retract feedrate.
     #define PAUSE_PARK_RETRACT_LENGTH 1 // (mm) Initial retract.
         // This short retract is done immediately, before parking the nozzle.

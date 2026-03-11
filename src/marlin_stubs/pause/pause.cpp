@@ -181,14 +181,6 @@ void unhomed_z_lift(float amount_mm) {
     }
 }
 
-#ifdef FILAMENT_RUNOUT_RAMMING_SEQUENCE
-constexpr RammingSequenceArray runoutRammingSequence(FILAMENT_RUNOUT_RAMMING_SEQUENCE);
-#else
-constexpr RammingSequenceArray runoutRammingSequence(FILAMENT_UNLOAD_RAMMING_SEQUENCE);
-#endif
-
-constexpr RammingSequenceArray unloadRammingSequence(FILAMENT_UNLOAD_RAMMING_SEQUENCE);
-
 /*****************************************************************************/
 // PausePrivatePhase
 
@@ -1557,11 +1549,11 @@ bool Pause::ram_filament() {
     switch (load_type) {
     case LoadType::filament_change:
     case LoadType::filament_stuck:
-        ramming_sequence = &runoutRammingSequence;
+        ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::runout, active_extruder);
         break;
 
     default:
-        ramming_sequence = &unloadRammingSequence;
+        ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::unload, active_extruder);
         break;
     }
 

@@ -679,21 +679,6 @@
  * Requires an LCD display.
  */
 #if HAS_PAUSE()
-    #define FILAMENT_UNLOAD_RAMMING_SEQUENCE \
-        { \
-            { 20, 1500 }, \
-            { -50, 2700 }, \
-            { -5, 50 }, \
-            { -50, 1500 }, \
-        }
-    // TODO remove after mmu is not mandatory for the build
-    #define FILAMENT_MMU2_RAMMING_SEQUENCE \
-       { \
-            { 7, 1500 / 60.F}, \
-            { -50, 2700 / 60.F}, \
-            { -5, 50 / 60.F}, \
-            { -50, 1500 / 60.F}, \
-        }
     #define PAUSE_PARK_RETRACT_FEEDRATE 66 // (mm/s) Initial retract feedrate.
     #define PAUSE_PARK_RETRACT_LENGTH 5 // (mm) Initial retract.
 // This short retract is done immediately, before parking the nozzle.
