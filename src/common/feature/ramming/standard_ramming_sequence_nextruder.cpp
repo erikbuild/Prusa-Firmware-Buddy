@@ -28,27 +28,6 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
     }
 #endif
 
-#if PRINTER_IS_PRUSA_iX()
-    case StandardRammingSequence::runout:
-    case StandardRammingSequence::unload: {
-        // iX is a special boi
-        static constexpr RammingSequenceArray seq({
-            { 20, 1200 },
-            { 2, 2400 },
-            { -72, 2400 },
-            { 40, 700 },
-            { -55, 400 },
-            { 81, 4000 },
-            { 3, 3000 },
-            { -25, 6000 },
-            { -20, 300 },
-            { 20, 300 },
-            { -60, 300 },
-        });
-        return seq;
-    }
-
-#else
     case StandardRammingSequence::runout: {
         // Shorter - we might have last strand of filament left and standard ramming sequence might get it out of the gears.
         // Also, we don't need a nice tip for re-insertion. The remaining filament is very short and will be thrown out.
@@ -78,7 +57,6 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
         });
         return seq;
     }
-#endif
     }
 
     bsod_unreachable();
