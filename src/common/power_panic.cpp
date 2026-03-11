@@ -159,6 +159,9 @@ void ac_fault_task_main() {
     // xTaskAbortDelay is interrupting waiting for mutexes
     freertos::Mutex::power_panic_mode_removeme = true;
 
+    // Keep waking the marlin task from any sleeps()
+    // When the marlin task enters panic_loop, this task gets suspended
+    // and somewhat standard operation is restored
     for (;;) {
         osSignalSet(defaultTaskHandle, ~0UL);
         xTaskAbortDelay(defaultTaskHandle);
