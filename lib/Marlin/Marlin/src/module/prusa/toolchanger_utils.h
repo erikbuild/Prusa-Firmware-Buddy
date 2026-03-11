@@ -148,11 +148,6 @@ public:
     void load_tool_offsets();
     void save_tool_offsets();
 
-    bool load_tool_info_from_usb();
-    bool save_tool_info_to_usb();
-    bool load_tool_offsets_from_usb();
-    bool save_tool_offsets_to_file(const char *filename = "/usb/tooloffsets.txt");
-
     void expand_first_dock_position(); // TODO: Is this still needed/wanted ?
 
     class StepperConfigGuard final {

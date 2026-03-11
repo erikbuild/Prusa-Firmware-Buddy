@@ -2,7 +2,6 @@
 
 #include "screen_menu.hpp"
 #include "MItem_tools.hpp"
-#include "MItem_basic_selftest.hpp"
 #include <utility_extensions.hpp>
 #include <selftest_snake_config.hpp>
 #include <printers.h>

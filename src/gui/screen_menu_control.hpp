@@ -14,7 +14,6 @@
 #include <option/has_coldpull.h>
 #include <option/has_sheet_profiles.h>
 #include <printers.h>
-#include "MItem_basic_selftest.hpp"
 #include "MItem_mmu.hpp"
 #include <device/board.h>
 

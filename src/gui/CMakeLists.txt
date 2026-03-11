@@ -19,7 +19,6 @@ target_sources(
           lazyfilelist.cpp
           logger.cpp
           menu_vars.cpp
-          MItem_basic_selftest.cpp
           MItem_crash.cpp
           MItem_experimental_tools.cpp
           MItem_filament.cpp

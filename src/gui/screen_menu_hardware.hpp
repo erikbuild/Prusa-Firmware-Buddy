@@ -20,7 +20,6 @@
 #include <option/has_auto_retract.h>
 #include <option/has_chamber_vents.h>
 #include <common/extended_printer_type.hpp>
-#include "MItem_basic_selftest.hpp"
 #include "printers.h"
 
 #if HAS_TOOLCHANGER()
@@ -101,10 +100,6 @@ using ScreenMenuHardware__ = ScreenMenu<GuiDefaults::MenuFooter,
 #ifdef HAS_TMC_WAVETABLE
     ,
     MI_WAVETABLE_XYZ
-#endif
-#if (BOARD_IS_XLBUDDY())
-    ,
-    MI_RESTORE_CALIBRATION_FROM_USB, MI_BACKUP_CALIBRATION_TO_USB
 #endif
     >;
 
