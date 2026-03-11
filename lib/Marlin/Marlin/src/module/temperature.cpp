@@ -150,8 +150,8 @@ Temperature thermalManager;
 
 #if FAN_COUNT > 0
 
-  uint8_t Temperature::fan_speed[FAN_COUNT] = {};
-  uint8_t Temperature::applied_fan_speed[FAN_COUNT] = {};
+  std::array<uint8_t, FAN_COUNT> Temperature::fan_speed {};
+  std::array<uint8_t, FAN_COUNT> Temperature::applied_fan_speed {};
 
   uint16_t Temperature::get_fan_speed(const uint8_t target) {
     return target < FAN_COUNT ? fan_speed[target] : 0;
@@ -489,6 +489,13 @@ void Temperature::manage_heater() {
 }
 
 void Temperature::manage_fans() {
+  #if HAS_POWER_PANIC()
+    if(power_panic::ac_fault_triggered) {
+      // Override anything any gcode might have ever set
+      applied_fan_speed.fill(0);
+    }
+  #endif
+
   #if HAS_FAN0
     analogWrite(FAN0_PIN, applied_fan_speed[0]);
   #endif

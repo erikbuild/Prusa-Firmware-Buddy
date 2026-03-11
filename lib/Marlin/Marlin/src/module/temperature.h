@@ -224,8 +224,8 @@ class Temperature {
 
     #if FAN_COUNT > 0
 
-      static uint8_t fan_speed[FAN_COUNT]; ///< Configured fan speed
-      static uint8_t applied_fan_speed[FAN_COUNT]; ///< Actually applied (and scaled) fan speed
+      static std::array<uint8_t, FAN_COUNT> fan_speed; ///< Configured fan speed
+      static std::array<uint8_t, FAN_COUNT> applied_fan_speed; ///< Actually applied (and scaled) fan speed
       /// @note applyScaledFanSpeed() is used to scale and apply the speed from fan_speed to applied_fan_speed.
 
       #define FANS_LOOP(I) LOOP_L_N(I, FAN_COUNT)

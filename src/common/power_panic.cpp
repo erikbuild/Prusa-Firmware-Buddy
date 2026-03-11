@@ -124,13 +124,7 @@ void ac_fault_task_main() {
     // Heater's power cut in ISR, the proper way needs to be done in the Marlin
     // task (currently in manage_heater).
 
-    // Set all fanSpeeds to zero
-    thermalManager.zero_fan_speeds();
-
-    // Apply the fan speeds immediately to appliedFanSpeed (don't wait to go through the planner)
-    thermalManager.applyScaledFanSpeed();
-
-    // Write the appliedFanSpeed to the actual PWM pins
+    // Manage fans detects power panic and enforces fans off
     thermalManager.manage_fans();
 
     // stop & disable endstops
