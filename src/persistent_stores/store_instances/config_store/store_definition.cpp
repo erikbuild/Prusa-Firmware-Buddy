@@ -258,30 +258,26 @@ ToolOffset CurrentStore::get_tool_offset(PhysicalToolIndex tool) {
     bsod_unreachable();
 }
 
-void CurrentStore::set_tool_offset(uint8_t index, ToolOffset value) {
-    switch (index) {
+void CurrentStore::set_tool_offset(PhysicalToolIndex tool, ToolOffset value) {
+    static_assert(PhysicalToolIndex::count <= 5);
+    switch (tool.to_raw()) {
     case 0:
         tool_offset_0.set(value);
-        break;
+        return;
     case 1:
         tool_offset_1.set(value);
-        break;
+        return;
     case 2:
         tool_offset_2.set(value);
-        break;
+        return;
     case 3:
         tool_offset_3.set(value);
-        break;
+        return;
     case 4:
         tool_offset_4.set(value);
-        break;
-    case 5:
-        tool_offset_5.set(value);
-        break;
-    default:
-        assert(false && "invalid index");
         return;
     }
+    bsod_unreachable();
 }
 #endif
 

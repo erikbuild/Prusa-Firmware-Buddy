@@ -348,7 +348,7 @@ struct CurrentStore
 
     ToolOffset get_tool_offset(PhysicalToolIndex tool);
 
-    void set_tool_offset(uint8_t index, ToolOffset value);
+    void set_tool_offset(PhysicalToolIndex tool, ToolOffset value);
 #endif
 
     StoreItemArray<EncodedFilamentType, EncodedFilamentType {}, ItemFlag::printer_state, journal::hash("Loaded Filament"), 16, EXTRUDERS> loaded_filament_type;

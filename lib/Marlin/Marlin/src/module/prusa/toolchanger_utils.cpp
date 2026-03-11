@@ -273,8 +273,9 @@ void PrusaToolChangerUtils::save_tool_info() {
 }
 
 void PrusaToolChangerUtils::save_tool_offsets() {
-    for (size_t e = 0; e < PhysicalToolIndex::count; e++) {
-        config_store().set_tool_offset(e, { .x = hotend_offset[e].x, .y = hotend_offset[e].y, .z = hotend_offset[e].z });
+    for (auto tool : PhysicalToolIndex::all()) {
+        const auto offset = hotend_offset[tool];
+        config_store().set_tool_offset(tool, { .x = offset.x, .y = offset.y, .z = offset.z });
     }
 }
 
