@@ -380,14 +380,26 @@ struct CurrentStore
     StoreItem<bool, false, ItemFlag::user_interface | ItemFlag::hw_config | ItemFlag::common_misconfigurations, journal::hash("Touch Sig Workaround")> touch_sig_workaround;
 
 #if HAS_TOOLCHANGER() // for now not ifdefing per-extruder as well for simplicity
-    StoreItem<DockPosition, defaults::dock_position, ItemFlag::calibrations, journal::hash("Dock Position 0")> dock_position_0;
-    StoreItem<DockPosition, defaults::dock_position, ItemFlag::calibrations, journal::hash("Dock Position 1")> dock_position_1;
-    StoreItem<DockPosition, defaults::dock_position, ItemFlag::calibrations, journal::hash("Dock Position 2")> dock_position_2;
-    StoreItem<DockPosition, defaults::dock_position, ItemFlag::calibrations, journal::hash("Dock Position 3")> dock_position_3;
-    StoreItem<DockPosition, defaults::dock_position, ItemFlag::calibrations, journal::hash("Dock Position 4")> dock_position_4;
+    static constexpr auto dock_position_hashes = stdext::array_sub_copy<PhysicalToolIndex::count>(std::to_array<uint16_t>({
+        // Note: those // at the end are there to make the gen_journal_hashes script work
+        journal::hash("Dock Position 0"), //
+        journal::hash("Dock Position 1"), //
+        journal::hash("Dock Position 2"), //
+        journal::hash("Dock Position 3"), //
+        journal::hash("Dock Position 4"), //
+        journal::hash("Dock Position 5"), //
+        journal::hash("Dock Position 6"), //
+        journal::hash("Dock Position 7"), //
+    }));
+    StoreItemLegacyArray<DockPosition, defaults::dock_position, ItemFlag::calibrations, dock_position_hashes> dock_positions;
 
-    DockPosition get_dock_position(PhysicalToolIndex tool);
-    void set_dock_position(PhysicalToolIndex tool, DockPosition value);
+    inline DockPosition get_dock_position(PhysicalToolIndex tool) {
+        return dock_positions.get(tool.to_raw());
+    }
+
+    inline void set_dock_position(PhysicalToolIndex tool, DockPosition value) {
+        dock_positions.set(tool.to_raw(), value);
+    }
 
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 0")> tool_offset_0;
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 1")> tool_offset_1;
@@ -993,7 +1005,6 @@ struct DeprecatedStore
         StoreItem<float, defaults::pid_bed_d, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed D")> pid_bed_d;
         */
 
-    StoreItem<DockPosition, defaults::dock_position, journal::hash("Dock Position 5")> dock_position_5;
     StoreItem<ToolOffset, defaults::tool_offset, journal::hash("Tool Offset 5")> tool_offset_5;
 };
 

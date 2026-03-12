@@ -195,43 +195,6 @@ void CurrentStore::set_side_fs_ref_ins_value(uint8_t index, int32_t value) {
 #endif
 
 #if HAS_TOOLCHANGER()
-DockPosition CurrentStore::get_dock_position(PhysicalToolIndex tool) {
-    switch (tool.to_raw()) {
-    case 0:
-        return dock_position_0.get();
-    case 1:
-        return dock_position_1.get();
-    case 2:
-        return dock_position_2.get();
-    case 3:
-        return dock_position_3.get();
-    case 4:
-        return dock_position_4.get();
-    }
-    bsod_unreachable();
-}
-
-void CurrentStore::set_dock_position(PhysicalToolIndex tool, DockPosition value) {
-    switch (tool.to_raw()) {
-    case 0:
-        dock_position_0.set(value);
-        return;
-    case 1:
-        dock_position_1.set(value);
-        return;
-    case 2:
-        dock_position_2.set(value);
-        return;
-    case 3:
-        dock_position_3.set(value);
-        return;
-    case 4:
-        dock_position_4.set(value);
-        return;
-    }
-    bsod_unreachable();
-}
-
 ToolOffset CurrentStore::get_tool_offset(PhysicalToolIndex tool) {
     static_assert(PhysicalToolIndex::count <= 5);
     switch (tool.to_raw()) {
