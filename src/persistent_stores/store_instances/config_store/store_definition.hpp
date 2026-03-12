@@ -344,7 +344,6 @@ struct CurrentStore
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 2")> tool_offset_2;
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 3")> tool_offset_3;
     StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 4")> tool_offset_4;
-    StoreItem<ToolOffset, defaults::tool_offset, ItemFlag::calibrations, journal::hash("Tool Offset 5")> tool_offset_5;
 
     ToolOffset get_tool_offset(PhysicalToolIndex tool);
 
@@ -954,6 +953,8 @@ struct DeprecatedStore
         StoreItem<float, defaults::pid_bed_i, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed I")> pid_bed_i;
         StoreItem<float, defaults::pid_bed_d, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("PID Bed D")> pid_bed_d;
         */
+
+    StoreItem<ToolOffset, defaults::tool_offset, journal::hash("Tool Offset 5")> tool_offset_5;
 };
 
 } // namespace config_store_ns
