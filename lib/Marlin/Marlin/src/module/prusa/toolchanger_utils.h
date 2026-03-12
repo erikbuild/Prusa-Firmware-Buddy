@@ -194,7 +194,7 @@ protected:
     std::atomic<bool> picked_update = false; ///< Set true each time picked_dwarf is updated
     std::atomic<buddy::puppies::Dwarf *> active_dwarf = nullptr; ///< what tool is active in puppytask
 
-    std::array<PrusaToolInfo, EXTRUDERS> tool_info;
+    StrongIndexArray<PrusaToolInfo, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> tool_info;
 
     [[nodiscard]] PrusaToolInfo compute_synthetic_tool_info(const buddy::puppies::Dwarf &dwarf) const;
 

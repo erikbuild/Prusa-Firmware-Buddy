@@ -254,21 +254,16 @@ buddy::puppies::Dwarf &PrusaToolChangerUtils::getTool(uint8_t tool_index) {
 }
 
 void PrusaToolChangerUtils::load_tool_info() {
-    for (unsigned int i = 0; i < tool_info.size(); ++i) {
-        if (i < PhysicalToolIndex::count) {
-            DockPosition position = config_store().get_dock_position(i);
-            tool_info[i].dock_x = position.x;
-            tool_info[i].dock_y = position.y;
-        } else {
-            tool_info[i].dock_x = 0;
-            tool_info[i].dock_y = 0;
-        }
+    for (auto tool : PhysicalToolIndex::all()) {
+        DockPosition position = config_store().get_dock_position(tool.to_raw());
+        tool_info[tool].dock_x = position.x;
+        tool_info[tool].dock_y = position.y;
     }
 }
 
 void PrusaToolChangerUtils::save_tool_info() {
-    for (size_t i = 0; i < PhysicalToolIndex::count; ++i) {
-        config_store().set_dock_position(i, { .x = tool_info[i].dock_x, .y = tool_info[i].dock_y });
+    for (auto tool : PhysicalToolIndex::all()) {
+        config_store().set_dock_position(tool.to_raw(), { .x = tool_info[tool].dock_x, .y = tool_info[tool].dock_y });
     }
 }
 
@@ -287,7 +282,6 @@ void PrusaToolChangerUtils::load_tool_offsets() {
 }
 
 const PrusaToolInfo &PrusaToolChangerUtils::get_tool_info(const Dwarf &dwarf, bool check_calibrated) const {
-    assert(dwarf.dwarf_index() < tool_info.size());
     const PrusaToolInfo &info = tool_info[dwarf.dwarf_index()];
 
     if (check_calibrated && (std::isnan(info.dock_x) || std::isnan(info.dock_y) || info.dock_x == 0 || info.dock_y == 0)) {
@@ -309,8 +303,6 @@ bool PrusaToolChangerUtils::is_tool_info_valid(const Dwarf &dwarf, const PrusaTo
 }
 
 void PrusaToolChangerUtils::set_tool_info(const buddy::puppies::Dwarf &dwarf, const PrusaToolInfo &info) {
-    assert(dwarf.dwarf_index() < tool_info.size());
-
     tool_info[dwarf.dwarf_index()] = info;
 }
 
