@@ -853,7 +853,7 @@ void Planner::check_axes_activity() {
   // So we have to ignore sync position blocks because they always have zero fan speeds.
   if (const block_t *block = get_first_move_block(); block != nullptr) {
     #if FAN_COUNT > 0
-      thermalManager.applyScaledFanSpeed(block->fan_speed);
+      thermalManager.apply_fan_speeds(block->fan_speed);
     #endif
 
     #if ANY(DISABLE_X, DISABLE_Y, DISABLE_Z, DISABLE_E)
@@ -867,7 +867,7 @@ void Planner::check_axes_activity() {
   else {
 
     #if FAN_COUNT > 0
-      thermalManager.applyScaledFanSpeed();
+      thermalManager.apply_fan_speeds();
     #endif
   }
 

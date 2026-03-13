@@ -226,27 +226,27 @@ class Temperature {
 
       static std::array<uint8_t, FAN_COUNT> fan_speed; ///< Configured fan speed
       static std::array<uint8_t, FAN_COUNT> applied_fan_speed; ///< Actually applied (and scaled) fan speed
-      /// @note applyScaledFanSpeed() is used to scale and apply the speed from fan_speed to applied_fan_speed.
+      /// @note apply_fan_speeds() is used to apply the speed from fan_speed to applied_fan_speed.
 
       #define FANS_LOOP(I) LOOP_L_N(I, FAN_COUNT)
 
       static uint16_t get_fan_speed(const uint8_t target);
 
       /**
-       * @brief Scale and apply fan speeds to the fans.
+       * @brief Apply fan speeds to the fans.
        */
-      static inline void applyScaledFanSpeed() {
+      static inline void apply_fan_speeds() {
         #if FAN_COUNT > 0
           FANS_LOOP(i) applied_fan_speed[i] = fan_speed[i];
         #endif
       }
 
       /**
-       * @brief Scale and apply fan speeds to the fans.
+       * @brief Apply fan speeds to the fans.
        * This is used with fan speeds sampled from fan_speed by planner and delayed to match planner block processing.
-       * @param delayed_fan_speed fan speeds to scale and apply
+       * @param delayed_fan_speed fan speeds to apply
        */
-      static inline void applyScaledFanSpeed(const uint8_t delayed_fan_speed[FAN_COUNT]) {
+      static inline void apply_fan_speeds(const uint8_t delayed_fan_speed[FAN_COUNT]) {
         #if FAN_COUNT > 0
           FANS_LOOP(i) applied_fan_speed[i] = delayed_fan_speed[i];
         #endif

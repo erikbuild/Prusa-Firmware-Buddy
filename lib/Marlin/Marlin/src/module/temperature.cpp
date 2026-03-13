@@ -158,7 +158,7 @@ Temperature thermalManager;
   }
   /**
    * Set the print fan speed for a target extruder
-   * @note You need to call applyScaledFanSpeed() either from planner or elsewhere to actually use the configured fan speed.
+   * @note You need to call apply_fan_speeds() either from planner or elsewhere to actually use the configured fan speed.
    * Set the print fan speed for a target FAN
    * !!! NOT EXTRUDER !!! THERMAL MANAGER DOES NOT WORK WITH NON-ACTIVE EXTRUDER FANS
    * See BFW-6365
