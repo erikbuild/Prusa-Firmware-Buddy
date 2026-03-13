@@ -256,9 +256,7 @@ class Temperature {
       static constexpr inline uint8_t fanPercent(const uint8_t speed) { return ui8_to_percent(speed); }
 
       static inline uint8_t scaledFanSpeed([[maybe_unused]] const uint8_t target, const uint8_t fs) {
-        return (fs * uint16_t(
-            128
-        )) >> 7;
+        return fs;
       }
 
       static inline uint8_t scaledFanSpeed(const uint8_t target) {
