@@ -406,10 +406,6 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue) {
             buddy::puppies::modular_bed.set_print_fan_active(ulValue > 0);
             return;
 
-        case MARLIN_PIN(FAN1): {
-            // TODO will be removed in the next commit
-            break;
-        }
         default:
             hwio_arduino_error(HWIO_ERR_UNDEF_ANA_WR, ulPin); // error: undefined pin analog write
         }

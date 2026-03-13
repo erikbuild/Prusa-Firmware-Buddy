@@ -297,7 +297,6 @@
     #define HEATBREAK_FAN_KICK_CYCLES -1 // Output at least MIN_START_HEATBREAK_POWER once per cycles, -1 to deliver starting pulse just once
     #define HEATBREAK_FAN_ALWAYS_ON_NOZZLE_TEMPERATURE 45 // Never switch off heatbreak fan when nozzle temperature is over
     #define DEFAULT_HEATBREAK_TEMPERATURE 45
-    #define HEATBREAK_FAN_ID 1  //fan id for autocontroll
     #define HEATBREAK_PID_K1 0.995
     #define DEFAULT_heatbreakKp 25.50
     #define DEFAULT_heatbreakKi 5.00

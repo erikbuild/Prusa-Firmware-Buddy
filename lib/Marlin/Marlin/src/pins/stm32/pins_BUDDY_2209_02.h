@@ -128,9 +128,7 @@ static_assert(BOARD_IS_BUDDY() || BOARD_IS_XBUDDY());
 #if BOARD_IS_XBUDDY()
   #if (TEMP_SENSOR_HEATBREAK > 0)
     // Everything except MK3.5
-    #define HEATER_HEATBREAK_PIN   MARLIN_PIN(FAN1)
     #define HAS_TEMP_HEATBREAK_CONTROL 1
-    #define FAN1_PIN               MARLIN_PIN(FAN1)
   #endif
   
 #elif BOARD_IS_BUDDY()

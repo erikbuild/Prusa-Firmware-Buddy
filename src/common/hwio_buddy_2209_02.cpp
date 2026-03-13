@@ -335,14 +335,6 @@ void digitalWrite(uint32_t marlinPin, uint32_t ulVal) {
         analogWrite_HEATER_0(ulVal ? _pwm_analogWrite_max : 0);
         return;
 
-#if ENABLED(HAS_HOTEND_AUTO_FAN)
-    case MARLIN_PIN(AUTOFAN):
-#else
-    case MARLIN_PIN(FAN1):
-#endif
-        // TODO will be removed in the next commit
-        break;
-
     case MARLIN_PIN(FAN):
         Fans::print(PhysicalToolIndex::from_raw(0)).set_pwm(ulVal ? 255 : 0);
         return;

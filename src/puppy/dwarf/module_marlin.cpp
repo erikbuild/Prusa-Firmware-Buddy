@@ -150,9 +150,6 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue) {
     case MARLIN_PIN(FAN): // print fan
         Fans::print(PhysicalToolIndex::from_raw(0)).set_pwm(ulValue);
         return;
-    case MARLIN_PIN(FAN1): // heatbreak
-        // TODO will be removed in the next commit
-        return;
     default:
         bsod("Write undefined pin");
     }
