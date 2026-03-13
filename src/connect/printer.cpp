@@ -55,20 +55,22 @@ uint32_t Printer::Params::telemetry_fingerprint(bool include_xy_axes) const {
             .add(int(pos[Printer::Y_AXIS_POS]));
     }
 
-    for (size_t i = 0; i < slots.size(); i++) {
-        if (slot_mask & (1 << i)) {
-            crc.add_str(slots[i].material.data())
-                .add(int(slots[i].temp_nozzle))
+    for (VirtualToolIndex vt : VirtualToolIndex::all()) {
+        // Use the list of enabled at the time of snapshot, not current
+        // (that is, the mask, not .skip_all_disabled)
+        if (slot_mask & (1 << vt.to_raw())) {
+            crc.add_str(slots[vt].material.data())
+                .add(int(slots[vt].temp_nozzle))
 #if PRINTER_IS_PRUSA_iX()
-                .add(int(slots[i].temp_heatbreak))
-                .add(slots[i].extruder_fs_state ? std::to_underlying(*slots[i].extruder_fs_state) : -1)
-                .add(slots[i].remote_fs_state ? std::to_underlying(*slots[i].remote_fs_state) : -1)
+                .add(int(slots[vt].temp_heatbreak))
+                .add(slots[vt].extruder_fs_state ? std::to_underlying(*slots[vt].extruder_fs_state) : -1)
+                .add(slots[vt].remote_fs_state ? std::to_underlying(*slots[vt].remote_fs_state) : -1)
 #endif
                 // The RPM values are in thousands and fluctuating a bit, we don't want
                 // that to trigger the send too often, only when it actually really
                 // changes.
-                .add(slots[i].print_fan_rpm / 500)
-                .add(slots[i].heatbreak_fan_rpm / 500);
+                .add(slots[vt].print_fan_rpm / 500)
+                .add(slots[vt].heatbreak_fan_rpm / 500);
         }
     }
 
@@ -138,9 +140,11 @@ uint32_t Printer::info_fingerprint() const {
     const auto creds = net_creds();
     const auto &parameters = params();
 
-    for (size_t i = 0; i < parameters.slots.size(); i++) {
-        if (parameters.slot_mask & (1 << i)) {
-            const auto &slot = parameters.slots[i];
+    for (VirtualToolIndex vt : VirtualToolIndex::all()) {
+        // Use the list of enabled at the time of snapshot, not current
+        // (that is, the mask, not .skip_all_disabled)
+        if (parameters.slot_mask & (1 << vt.to_raw())) {
+            const auto &slot = parameters.slots[vt];
             crc
                 .add(slot.nozzle_diameter)
                 .add(slot.hardened)

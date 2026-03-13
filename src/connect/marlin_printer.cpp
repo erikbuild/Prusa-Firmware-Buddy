@@ -229,12 +229,11 @@ namespace {
 
         params.slot_mask = 0;
         for (VirtualToolIndex vt : VirtualToolIndex::all().skip_all_disabled()) {
-            const uint8_t i = vt.to_raw();
             const PhysicalToolIndex pt = vt.to_physical();
             const auto &hotend = marlin_vars().hotend(pt);
-            params.slot_mask |= (1 << i);
+            params.slot_mask |= (1 << vt.to_raw());
 
-            auto &slot = params.slots[i];
+            auto &slot = params.slots[vt];
             slot.material = config_store().get_filament_type(vt).parameters().name;
             slot.temp_nozzle = hotend.temp_nozzle;
 #if PRINTER_IS_PRUSA_iX()

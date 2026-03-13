@@ -20,6 +20,7 @@
 #include <feature/filament_sensor/filament_sensor_states.hpp>
 
 #include <tool_index.hpp>
+#include <utils/storage/strong_index_array.hpp>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -107,7 +108,7 @@ public:
 
     public:
         Params(const std::optional<BorrowPaths> &paths);
-        std::array<SlotInfo, VirtualToolIndex::count> slots;
+        StrongIndexArray<SlotInfo, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> slots;
 #if XL_ENCLOSURE_SUPPORT()
         EnclosureInfo enclosure_info;
 #endif

@@ -122,7 +122,7 @@ namespace {
         const auto params = state.printer.params();
 
         const optional<Monitor::Status> transfer_status = get_transfer_status(resume_point, state);
-        const auto &preferred = params.slots[params.preferred_slot().to_raw()];
+        const auto &preferred = params.slots[params.preferred_slot()];
         const uint8_t active_slot = match(
             params.active_slot,
             [](VirtualToolIndex vt) -> uint8_t { return vt.to_raw() + 1; },
@@ -193,8 +193,8 @@ namespace {
                 JSON_FIELD_FFIXED("target_bed", params.target_bed, 1) JSON_COMMA;
                 JSON_FIELD_INT("speed", params.print_speed) JSON_COMMA;
                 JSON_FIELD_INT("flow", params.flow_factor) JSON_COMMA;
-                if (!params.slots[params.preferred_slot().to_raw()].material.empty()) {
-                    JSON_FIELD_STR("material", params.slots[params.preferred_slot().to_raw()].material.data()) JSON_COMMA;
+                if (!params.slots[params.preferred_slot()].material.empty()) {
+                    JSON_FIELD_STR("material", params.slots[params.preferred_slot()].material.data()) JSON_COMMA;
                 }
 #if XL_ENCLOSURE_SUPPORT()
                 if (params.enclosure_info.present) {
@@ -344,7 +344,7 @@ namespace {
                     JSON_FIELD_STR("fingerprint", info.fingerprint) JSON_COMMA;
                     // TODO: Deprecated, kept for now for backwards compatibility. Parts of the tools object.
                     // Remove eventually.
-                    JSON_FIELD_FFIXED("nozzle_diameter", params.slots[params.preferred_slot().to_raw()].nozzle_diameter, 2) JSON_COMMA;
+                    JSON_FIELD_FFIXED("nozzle_diameter", params.slots[params.preferred_slot()].nozzle_diameter, 2) JSON_COMMA;
                     JSON_FIELD_BOOL("transfer_paused", !params.can_start_download) JSON_COMMA;
                     if (strlen(creds.pl_password) > 0) {
                         JSON_FIELD_STR("api_key", creds.pl_password) JSON_COMMA;
