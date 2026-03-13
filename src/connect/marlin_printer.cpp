@@ -656,17 +656,15 @@ std::optional<MarlinPrinter::FinishedJobResult> MarlinPrinter::get_prior_job_res
 void MarlinPrinter::set_slot_info(VirtualToolIndex vt, const SlotInfo &info) {
     const auto pt = vt.to_physical();
     config_store().set_nozzle_diameter(pt, info.nozzle_diameter);
-    // The below ones are, technically, a bit racy. That is, if some other
-    // thread does something similar with a different nozzle than us, there's a
-    // change one of the changes may get lost. But we consider such occurence
-    // to be improbable (eg. user setting the nozzle params at the printer and
-    // through Connect at the very same moment).
-    auto hardened = config_store().nozzle_is_hardened.get();
-    hardened[pt.to_raw()] = info.hardened;
-    config_store().nozzle_is_hardened.set(hardened);
-    auto high_flow = config_store().nozzle_is_high_flow.get();
-    high_flow[pt.to_raw()] = info.high_flow;
-    config_store().nozzle_is_high_flow.set(high_flow);
+    const uint8_t i = pt.to_raw();
+    config_store().nozzle_is_hardened.transform([&](auto hard) {
+        hard[i] = info.hardened;
+        return hard;
+    });
+    config_store().nozzle_is_high_flow.transform([&](auto high) {
+        high[i] = info.high_flow;
+        return high;
+    });
 }
 
 } // namespace connect_client
