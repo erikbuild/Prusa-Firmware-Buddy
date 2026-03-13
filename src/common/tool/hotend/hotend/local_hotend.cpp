@@ -4,6 +4,7 @@
 #include <module/thermistor/thermistors.h>
 #include <module/temperature.h>
 #include <module/temperature/temp_defines.hpp>
+#include <fanctl.hpp>
 
 #include <option/has_planner.h>
 #if HAS_PLANNER()
@@ -129,7 +130,15 @@ void LocalHotend::manage() {
         // Give the auto fan a bit of hysteresis
         || (auto_fan_out_ && nozzle_temp() >= EXTRUDER_AUTO_FAN_TEMPERATURE - 5);
 
-    digitalWrite(local_config_.auto_fan_pin, auto_fan_out_);
+    const auto auto_fan_pwm =
+    #if PRINTER_IS_PRUSA_MK3_5()
+        // PWM value of 80 roughly translates to 4k RPM, further testing my find better value, thus far this seems precise enough plus it is the value used by MINI which uses the same fans
+        auto_fan_out_ ? (config_store().has_alt_fans.get() ? 80 : 255) : 0;
+    #else
+        auto_fan_out_ ? 80 : 0;
+    #endif
+
+    Fans::heat_break(tool_).set_pwm(auto_fan_pwm);
 #endif
 
 #if HAS_TEMP_HEATBREAK
@@ -176,9 +185,6 @@ void LocalHotend::isr_soft_pwm(PWM255 phase) {
 
 #if HAS_TEMP_HEATBREAK
 void LocalHotend::manage_heatbreak() {
-    // To support these, we would need to rework fans, because there is only single HEATBREAK_FAN_ID
-    static_assert(PhysicalToolIndex::count == 1, "Multiple local heatbreaks not currently supported");
-
     // Things got mangled together, stuff would get screwed up if this didn't apply
     static_assert(ENABLED(PIDTEMPHEATBREAK));
 
@@ -228,6 +234,6 @@ void LocalHotend::manage_heatbreak() {
         heatbreak_fan_pwm_ = PWM255(255);
     }
 
-    thermalManager.set_fan_speed(HEATBREAK_FAN_ID, heatbreak_fan_pwm_.value);
+    Fans::heat_break(tool_).set_pwm(heatbreak_fan_pwm_.value);
 }
 #endif

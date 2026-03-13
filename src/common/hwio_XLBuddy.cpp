@@ -405,15 +405,10 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue) {
             Fans::print(active_extruder).set_pwm(ulValue);
             buddy::puppies::modular_bed.set_print_fan_active(ulValue > 0);
             return;
+
         case MARLIN_PIN(FAN1): {
-            static_assert(!HAS_FILAMENT_HEATBREAK_PARAM());
-            /**
-             * @note Heatbreak fan.
-             * Writes from Marlin are ignored. The fan is controlled by Dwarf.
-             * The config is sent to Dwarf directly from M106, same as the other special fans.
-             * The heatbreak fan is not synchronized with the planner which is a difference to MK4 and other singletool printers.
-             */
-            return;
+            // TODO will be removed in the next commit
+            break;
         }
         default:
             hwio_arduino_error(HWIO_ERR_UNDEF_ANA_WR, ulPin); // error: undefined pin analog write

@@ -28,9 +28,6 @@ PhysicalTool &PhysicalTool::for_index(PhysicalToolIndex) {
             .heatbreak_temp_table = heatbreak_temptable(),
 #endif
             .nozzle_heater_marlin_pin = MARLIN_PIN(HEAT0),
-#if PRINTER_IS_PRUSA_MK3_5()
-            .auto_fan_pin = MARLIN_PIN(AUTOFAN),
-#endif
             .nozzle_heater_soft_pwm = false,
     };
     static StandardFFFPhysicalTool<LocalHotend> tool { PhysicalToolIndex::from_raw(0), &hotend_config };

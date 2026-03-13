@@ -13,7 +13,6 @@ PhysicalTool &PhysicalTool::for_index(PhysicalToolIndex) {
         },
         .nozzle_temp_table = TT_NAME(THERMISTOR_HEATER_0),
         .nozzle_heater_marlin_pin = MARLIN_PIN(HEAT0),
-        .auto_fan_pin = MARLIN_PIN(AUTOFAN),
 
         // Note: This was true before the hotends refactoring,
         // but Mini actually has HW PWM support for the heater
