@@ -138,7 +138,7 @@ class WindowRoutingBoard : public window_t {
     static constexpr uint16_t routing_board_r = right_menu_l;
     static constexpr uint16_t failed_check_icon_size = 16;
 
-    static constexpr Color line_color = COLOR_GRAY;
+    static constexpr Color line_color = COLOR_LIGHT_GRAY;
 
 public:
     WindowRoutingBoard(FrameToolMapping &frame);
