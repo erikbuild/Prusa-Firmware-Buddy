@@ -490,7 +490,7 @@ PrintPreview::Result PrintPreview::Loop() {
     case State::tools_mapping_wait_user:
         switch (response) {
 
-        case Response::Back:
+        case Response::Abort:
             ChangeState(State::inactive);
             tools_mapping_cleanup();
             return Result::Abort;

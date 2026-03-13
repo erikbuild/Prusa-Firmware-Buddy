@@ -73,8 +73,7 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
 #endif
 #if HAS_TOOL_MAPPING()
         { PhasesPrintPreview::tools_mapping, {
-                                                 Response::Back,
-                                                 Response::Filament,
+                                                 Response::Abort,
                                                  Response::Print,
                                              } },
 #endif
