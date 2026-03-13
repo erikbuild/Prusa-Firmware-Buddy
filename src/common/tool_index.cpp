@@ -122,12 +122,13 @@ std::variant<PhysicalToolIndex, NoTool> PhysicalExtension::currently_selected() 
 #if HAS_TOOLCHANGER()
     static_assert(!HAS_MMU2());
     static_assert(PhysicalToolIndex::count == PrusaToolChanger::MARLIN_NO_TOOL_PICKED);
-    if (active_extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+    const uint8_t extruder = active_extruder.load();
+    if (extruder == PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
         return NoTool {};
     } else {
         // Toolchanger uses active_extruder for determining tools
         static_assert(PhysicalToolIndex::count == VirtualToolIndex::count);
-        return PhysicalToolIndex::from_raw(active_extruder);
+        return PhysicalToolIndex::from_raw(extruder);
     }
 #else
     // Single tool, no toolchanber, cannot unpick it
