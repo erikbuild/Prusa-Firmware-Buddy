@@ -649,9 +649,6 @@
 #define HAS_TEMP_BOARD HAS_TEMP_ADC_BOARD
 #define HAS_TEMP_HEATBREAK_CONTROL (HAS_TEMP_HEATBREAK && PIN_EXISTS(HEATER_HEATBREAK))  // For future use to control heatbreak temperature
 
-// Heaters
-#define HAS_HEATER_HEATBREAK (PIN_EXISTS(HEATER_HEATBREAK))
-
 // Shorthand for common combinations
 #define HAS_HEATED_BED (HAS_LOCAL_BED() || HAS_REMOTE_BED())
 #define HAS_TEMP_SENSOR (HAS_TEMP_HOTEND || HAS_HEATED_BED)
