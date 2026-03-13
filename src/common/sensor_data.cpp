@@ -28,6 +28,8 @@
     #include <Marlin/src/module/prusa/toolchanger.h>
 #endif
 
+#include <fanctl.hpp>
+
 SensorData &sensor_data() {
     static SensorData instance;
     return instance;
@@ -73,8 +75,16 @@ void SensorData::update() {
     door_sensor_detailed_state = buddy::door_sensor().detailed_state();
 #endif
 
-    // Heatbreak fan speed
-    heatbreak_fan_pwm = thermalManager.fan_speed[1];
+    match(
+        PhysicalToolIndex::currently_selected(), //
+        [this](PhysicalToolIndex tool) {
+            heatbreak_fan_pwm = Fans::heat_break(tool).get_pwm();
+            //
+        },
+        [this](NoTool) {
+            heatbreak_fan_pwm = 0;
+            //
+        });
 
 #if BOARD_IS_XBUDDY()
 
