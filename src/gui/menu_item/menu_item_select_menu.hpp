@@ -8,10 +8,26 @@
 class MenuItemSelectMenu : public IWindowMenuItem {
 
 public:
+    enum class Behavior : uint8_t {
+        /// On click, a submenu is opened, listing all available items
+        submenu,
+
+        /// On click, a next item is selected, wrapping around
+        /// !!! Not suitable for menus where there's more than two items
+        /// !!! or where its not obvious what the items are
+        quick_cycle,
+
+        _last = quick_cycle,
+    };
+
     static constexpr size_t value_buffer_size = 32;
     static constexpr Font value_font = GuiDefaults::FontMenuItems;
 
     MenuItemSelectMenu(const string_view_utf8 &label);
+
+    void set_behavior(Behavior set) {
+        behavior_ = set;
+    }
 
     /// \returns currently selected item
     int current_item() const {
@@ -44,4 +60,5 @@ protected:
 private:
     int current_item_ = -1;
     std::array<char, value_buffer_size> value_text_ { '\0' };
+    Behavior behavior_ = Behavior::submenu;
 };

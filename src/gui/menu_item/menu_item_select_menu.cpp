@@ -128,11 +128,18 @@ void MenuItemSelectMenu::printExtension(Rect16 extension_rect, Color color_text,
     if constexpr (GuiDefaults::MenuSwitchHasBrackets) {
         const auto bracket_color = (IsFocused() && IsEnabled()) ? COLOR_DARK_GRAY : COLOR_SILVER;
 
+        // Use different brackets for different behaviors
+        // This is so that the user knows what pressing the item will do before they press it
+        static constexpr EnumArray<Behavior, std::array<const char *, 2>, static_cast<int>(Behavior::_last) + 1> behavior_brackes {
+            { Behavior::submenu, { "[", "]" } },
+            { Behavior::quick_cycle, { "<", ">" } },
+        };
+
         const auto rct1 = Rect16::fromLTWH(extension_rect.Left(), extension_rect.Top(), font_w, extension_rect.Height());
-        render_text_align(rct1, string_view_utf8::MakeCPUFLASH("["), value_font, color_back, bracket_color, {}, Align_t::Center(), false);
+        render_text_align(rct1, string_view_utf8::MakeCPUFLASH(behavior_brackes[behavior_][0]), value_font, color_back, bracket_color, {}, Align_t::Center(), false);
 
         const auto rct2 = Rect16::fromLTWH(extension_rect.Right() - font_w, extension_rect.Top(), font_w, extension_rect.Height());
-        render_text_align(rct2, string_view_utf8::MakeCPUFLASH("]"), value_font, color_back, bracket_color, {}, Align_t::Center(), false);
+        render_text_align(rct2, string_view_utf8::MakeCPUFLASH(behavior_brackes[behavior_][1]), value_font, color_back, bracket_color, {}, Align_t::Center(), false);
 
         extension_rect = Rect16::fromLTRB(extension_rect.Left() + font_w, extension_rect.Top(), extension_rect.EndPoint().x - font_w, extension_rect.EndPoint().y);
     }
@@ -145,15 +152,27 @@ void MenuItemSelectMenu::click(IWindowMenu &menu) {
     const auto prev_focus = menu.focused_item_index();
 
     int new_item;
-    {
-        // The dialog is quite big - keep it on stack as shortly as possible
-        Dialog dlg(*this);
-        Screens::Access()->gui_loop_until_dialog_closed();
-        new_item = dlg.result().value_or(current_item_);
+
+    switch (behavior_) {
+
+    case Behavior::submenu: {
+
+        {
+            // The dialog is quite big - keep it on stack as shortly as possible
+            Dialog dlg(*this);
+            Screens::Access()->gui_loop_until_dialog_closed();
+            new_item = dlg.result().value_or(current_item_);
+        }
+
+        // Opening a dialog with a menu screws up focus for the current menu - we need to restore it
+        menu.move_focus_to_index(prev_focus);
+        break;
     }
 
-    // Opening a dialog with a menu screws up focus for the current menu - we need to restore it
-    menu.move_focus_to_index(prev_focus);
+    case Behavior::quick_cycle:
+        new_item = (current_item_ + 1) % item_count();
+        break;
+    }
 
     if (new_item == current_item_) {
         return;
