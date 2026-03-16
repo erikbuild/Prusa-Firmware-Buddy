@@ -27,7 +27,7 @@ protected:
     virtual void Loop() override;
 
 private:
-    std::array<char, 32> label_buffer_;
+    std::array<char, 48> label_buffer_;
     VirtualToolIndex tool_;
     FilamentType filament_type_;
     DisplayFormat display_format_ : 2;
