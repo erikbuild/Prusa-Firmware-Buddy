@@ -471,6 +471,9 @@ void OPTBackend_NFCV::run_next_discovery() {
         discovery_antenna = config_.enforced_antenna;
     }
 
+    /// Force reset the field. If the current field was already active, some tags might be still quieted from the previous discovery.
+    reader.field_down();
+
     nfcv::FieldGuard field_guard { reader, discovery_antenna };
     if (!field_guard.result) {
         return;

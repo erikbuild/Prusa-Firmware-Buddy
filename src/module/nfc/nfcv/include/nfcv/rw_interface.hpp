@@ -99,9 +99,14 @@ public:
     }
 
     ~FieldGuard() {
-        if (result) {
-            reader.field_down();
-        }
+        // Do NOT put the field down.
+        // Constant field switching introduces problems and RF noise.
+        // Instead, we keep it on and lazily switch it in field_up
+        // BFW-8285
+
+        // if (result) {
+        //    reader.field_down();
+        // }
     }
 
     ReaderWriterInterface &reader;
