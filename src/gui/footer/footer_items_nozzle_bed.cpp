@@ -17,10 +17,6 @@
 #if HAS_MODULAR_BED()
     #include <module/modular_heatbed.h>
 #endif
-#if HAS_TOOLCHANGER()
-    #include <puppies/Dwarf.hpp>
-    #include "Marlin/src/module/prusa/toolchanger.h"
-#endif
 
 FooterItemNozzle::FooterItemNozzle(window_t *parent)
     : FooterItemHeater(parent, &img::nozzle_16x16, static_makeView, static_readValue) {
@@ -40,19 +36,6 @@ FooterItemBed::FooterItemBed(window_t *parent)
     icon.Hide();
 #endif
     updateValue();
-}
-
-FooterItemAllNozzles::FooterItemAllNozzles(window_t *parent)
-    : FooterIconText_IntVal(parent, &img::nozzle_16x16, static_makeView, static_readValue) {
-#if HAS_TOOLCHANGER()
-    icon.Hide();
-#endif
-}
-
-uint FooterItemAllNozzles::nozzle_n = 0;
-
-footer::ItemDrawType FooterItemAllNozzles::GetDrawType() {
-    return footer::eeprom::get_item_draw_type();
 }
 
 void FooterItemBed::unconditionalDraw() {
@@ -123,11 +106,48 @@ changed_t FooterItemBed::updateValue() {
     return ret;
 }
 
+#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
+
+FooterItemAllNozzles::FooterItemAllNozzles(window_t *parent)
+    : FooterIconText_IntVal(parent, &img::nozzle_16x16, static_makeView, static_readValue) {
+    icon.Hide();
+}
+
+uint FooterItemAllNozzles::nozzle_n = 0;
+
+footer::ItemDrawType FooterItemAllNozzles::GetDrawType() {
+    return footer::eeprom::get_item_draw_type();
+}
+
+int FooterItemAllNozzles::static_readValue() {
+    /// Keep displayed value until switch_gui_time, so there is less flicker
+    static uint keep_value = static_cast<uint16_t>(round(marlin_vars().hotend(0).temp_nozzle));
+
+    ///< gui::GetTick() of last change of nozzle_n
+    static uint32_t switch_gui_time = gui::GetTick();
+
+    // Wait for CYCLE_TIME
+    uint32_t now = gui::GetTick();
+    if ((now - switch_gui_time) > CYCLE_TIME) {
+        switch_gui_time = now;
+
+        // To prevent infinite loop if all tools are disabled
+        const auto start = nozzle_n;
+
+        // Switch to next enabled nozzle, will also change icon
+        do {
+            nozzle_n = (nozzle_n + 1) % PhysicalToolIndex::count;
+        } while (!PhysicalToolIndex::from_raw(nozzle_n).is_enabled() && nozzle_n != start);
+
+        // Update shown tool and temperature
+        keep_value = (nozzle_n << 16) | static_cast<uint16_t>(round(marlin_vars().hotend(nozzle_n).temp_nozzle));
+    }
+
+    return keep_value; // Return nozzle number in higher 16 bits and shown temperature in lower 16 bits
+}
+
 void FooterItemAllNozzles::unconditionalDraw() {
     FooterIconText_IntVal::unconditionalDraw();
-
-#if HAS_TOOLCHANGER()
-    static_assert(PhysicalToolIndex::count == 5, "check if this code works for different number of tools");
     const uint16_t column_size = icon.Width() / PhysicalToolIndex::count; // 3 px per nozzle, 2 px column + 1 px space
 
     // White mark above currently shown tool
@@ -136,11 +156,7 @@ void FooterItemAllNozzles::unconditionalDraw() {
         COLOR_WHITE);
 
     // Individual nozzles
-    for (auto tool : PhysicalToolIndex::all()) {
-        if (buddy::puppies::dwarfs[tool].is_enabled() == false) {
-            continue;
-        }
-
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
         // Rectangle as high as temperature (can overwrite the white mark)
         const uint gray_column_max = (static_cast<uint>(COLD) * icon.Height() + (HEATER_XL_HOTEND_MAXTEMP / 2)) / HEATER_XL_HOTEND_MAXTEMP;
         uint column_height = (static_cast<uint>(round(marlin_vars().hotend(tool).temp_nozzle)) * icon.Height() + (HEATER_XL_HOTEND_MAXTEMP / 2)) / HEATER_XL_HOTEND_MAXTEMP;
@@ -158,7 +174,6 @@ void FooterItemAllNozzles::unconditionalDraw() {
                 COLOR_BRAND);
         }
     }
-#endif
 }
 
 changed_t FooterItemAllNozzles::updateValue() {
@@ -171,6 +186,32 @@ changed_t FooterItemAllNozzles::updateValue() {
     }
     return ret;
 }
+
+string_view_utf8 FooterItemAllNozzles::static_makeView(int value) {
+    static constexpr const char *left_aligned_str = "T%u:%u\xC2\xB0\x43"; // degree Celsius
+    static constexpr const char *const_size_str = "T%u:%3u\xC2\xB0\x43";
+
+    static std::array<char, sizeof("T5:333\xC2\xB0\x43")> buff;
+
+    const uint nozzle_n = value >> 16;
+    const uint temperature = std::clamp(int(value & 0xffff), 0, 999);
+
+    const char *const str = (GetDrawType() == footer::ItemDrawType::static_) ? const_size_str : left_aligned_str;
+    int printed_chars = snprintf(buff.data(), buff.size(), str, nozzle_n + 1, temperature);
+
+    if (printed_chars <= 0) {
+        buff[0] = '\0';
+    } else { // Dynamic is not allowed as it changes each second
+        // left_aligned print need to end with spaces ensure fixed size
+        buff.back() = '\0';
+        for (; size_t(printed_chars) < buff.size() - 1; ++printed_chars) {
+            buff[printed_chars] = ' ';
+        }
+    }
+    return string_view_utf8::MakeRAM(buff.data());
+}
+
+#endif
 
 int FooterItemNozzle::static_readValue() {
     static const uint cold = 45;
@@ -207,36 +248,6 @@ int FooterItemBed::static_readValue() {
     HeatState state = getState(current, target, target, COLD); // display == target will disable green blinking preheat
     StateAndTemps temps(state, current, target, false);
     return temps.ToInt();
-}
-
-int FooterItemAllNozzles::static_readValue() {
-#if HAS_TOOLCHANGER()
-    /// Keep displayed value until switch_gui_time, so there is less flicker
-    static uint keep_value = static_cast<uint16_t>(round(marlin_vars().hotend(0).temp_nozzle));
-
-    ///< gui::GetTick() of last change of nozzle_n
-    static uint32_t switch_gui_time = gui::GetTick();
-
-    // Wait for CYCLE_TIME
-    uint32_t now = gui::GetTick();
-    if ((now - switch_gui_time) > CYCLE_TIME) {
-        switch_gui_time = now;
-
-        // Switch to next enabled nozzle, will also change icon
-        do {
-            if (++nozzle_n >= PhysicalToolIndex::count) {
-                nozzle_n = 0;
-            }
-        } while (buddy::puppies::dwarfs[nozzle_n].is_enabled() == false);
-
-        // Update shown tool and temperature
-        keep_value = (nozzle_n << 16) | static_cast<uint16_t>(round(marlin_vars().hotend(nozzle_n).temp_nozzle));
-    }
-
-    return keep_value; // Return nozzle number in higher 16 bits and shown temperature in lower 16 bits
-#else
-    return static_cast<uint16_t>(round(marlin_vars().active_hotend().temp_nozzle)); // Nozzle 0 temperature
-#endif
 }
 
 // This methods cannot be one - need separate buffers
@@ -281,28 +292,4 @@ string_view_utf8 FooterItemNozzlePWM::static_makeView(int value) {
 string_view_utf8 FooterItemBed::static_makeView(int value) {
     static buffer_t buff;
     return static_makeViewIntoBuff(value, buff);
-}
-
-string_view_utf8 FooterItemAllNozzles::static_makeView(int value) {
-    static constexpr const char *left_aligned_str = "T%u:%u\xC2\xB0\x43"; // degree Celsius
-    static constexpr const char *const_size_str = "T%u:%3u\xC2\xB0\x43";
-
-    static std::array<char, sizeof("T5:333\xC2\xB0\x43")> buff;
-
-    const uint nozzle_n = value >> 16;
-    const uint temperature = std::clamp(int(value & 0xffff), 0, 999);
-
-    const char *const str = (GetDrawType() == footer::ItemDrawType::static_) ? const_size_str : left_aligned_str;
-    int printed_chars = snprintf(buff.data(), buff.size(), str, nozzle_n + 1, temperature);
-
-    if (printed_chars <= 0) {
-        buff[0] = '\0';
-    } else { // Dynamic is not allowed as it changes each second
-        // left_aligned print need to end with spaces ensure fixed size
-        buff.back() = '\0';
-        for (; size_t(printed_chars) < buff.size() - 1; ++printed_chars) {
-            buff[printed_chars] = ' ';
-        }
-    }
-    return string_view_utf8::MakeRAM(buff.data());
 }

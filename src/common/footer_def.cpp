@@ -40,7 +40,7 @@ const char *footer::to_string(Item item) {
 #endif
         },
         { Item::all_nozzles,
-#if defined(FOOTER_HAS_TOOL_NR)
+#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
             N_("All nozzles")
 #else
             nullptr

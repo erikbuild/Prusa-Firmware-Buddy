@@ -51,6 +51,7 @@ protected:
     static constexpr uint COLD = 40;
 };
 
+#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
 /**
  * @brief Show all temperatures, cycle all nozzles.
  */
@@ -65,7 +66,7 @@ class FooterItemAllNozzles final : public FooterIconText_IntVal {
     static uint nozzle_n; ///< Cycle through nozzles, 0 is "Tool 1" displayed as "T1"
     static constexpr uint32_t CYCLE_TIME = 2000; ///< Time to cycle nozzles [ms]
     static constexpr uint COLD = 45; ///< Nozzle is cold under this [deg C]
-
 public:
     FooterItemAllNozzles(window_t *parent);
 };
+#endif
