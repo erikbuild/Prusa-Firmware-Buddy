@@ -30,7 +30,7 @@ enum class Dependency : size_t {
     esp_flashed,
 #endif
     networking_ready,
-    usb_temp_gui_ready, ///< Check autoprint and powerpanic state
+    autostart_done, ///< Boot autostart sequence (power panic resume or AUTO.GCO) completed
     gui_display_ready, ///< Display is initialized and ready
     gui_ready, ///< GUI is ready, home screen has been opened
     _count
@@ -63,7 +63,7 @@ namespace Tasks {
         Dependency::puppies_ready,
 #endif
         Dependency::resources_ready);
-    inline constexpr dependency_t connect = make(Dependency::networking_ready);
+    inline constexpr dependency_t connect = make(Dependency::networking_ready, Dependency::autostart_done);
     inline constexpr dependency_t syslog = make(Dependency::networking_ready);
     inline constexpr dependency_t network = make(
 #if HAS_ESP()
