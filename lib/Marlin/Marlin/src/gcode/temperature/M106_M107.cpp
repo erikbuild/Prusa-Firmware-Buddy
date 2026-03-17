@@ -66,14 +66,15 @@
  * @param set_auto true to set auto control
  * @return false to let Marlin process this fan as well, true to eat this G-code
  */
-static bool set_special_fan_speed(uint8_t fan, int8_t tool, uint8_t speed, bool set_auto) {
+static bool set_special_fan_speed(uint8_t fan, int8_t raw_tool, uint8_t speed, bool set_auto) {
     [[maybe_unused]] const auto pwm_or_auto = set_auto ? PWM255OrAuto(pwm_auto) : PWM255OrAuto(speed);
 
     switch (fan) {
     #if HAS_TOOLCHANGER()
     case 1:
         // Heatbreak fan
-        if (tool >= 0 && tool <= buddy::puppies::DWARF_MAX_COUNT) {
+        if (raw_tool >= 0 && raw_tool < PhysicalToolIndex::count) {
+            const auto tool = PhysicalToolIndex::from_raw(raw_tool);
             if (buddy::puppies::dwarfs[tool].is_enabled()) {
                 if (set_auto) {
                     buddy::puppies::dwarfs[tool].set_fan_auto(1);

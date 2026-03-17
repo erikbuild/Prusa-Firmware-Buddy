@@ -47,7 +47,7 @@ bool PrusaToolChangerUtils::init(PuppyModbus &bus, bool first_run) {
         toolchanger_enabled = autodetect_toolchanger_enabled();
 
         if (toolchanger_enabled == false) {
-            if (dwarfs[0].set_selected(bus, true) == CommunicationStatus::ERROR) {
+            if (dwarfs[PhysicalToolIndex::from_raw(0)].set_selected(bus, true) == CommunicationStatus::ERROR) {
                 return false;
             }
         }
@@ -101,9 +101,10 @@ bool PrusaToolChangerUtils::autodetect_toolchanger_enabled() {
 
 void PrusaToolChangerUtils::autodetect_active_tool(PuppyModbus &bus) {
     if (!is_toolchanger_enabled()) { // Ignore on singletool
-        picked_dwarf = &dwarfs[0];
-        if (!dwarfs[0].is_selected()) {
-            dwarfs[0].set_selected(bus, true);
+        auto &first_dwarf = dwarfs[PhysicalToolIndex::from_raw(0)];
+        picked_dwarf = &first_dwarf;
+        if (!first_dwarf.is_selected()) {
+            first_dwarf.set_selected(bus, true);
         }
         return;
     }
@@ -218,25 +219,23 @@ uint8_t PrusaToolChangerUtils::detect_tool_nr() {
 }
 
 uint8_t PrusaToolChangerUtils::get_enabled_mask() {
-    static_assert(DWARF_MAX_COUNT < 8, "Using uint8_t as a mask of dwarves");
+    static_assert(PhysicalToolIndex::count < 8, "Using uint8_t as a mask of dwarves");
     uint8_t mask = 0;
 
-    for (int i = 0; i < DWARF_MAX_COUNT; i++) {
-        if (dwarfs[i].is_enabled()) {
-            mask |= (0x01 << i);
-        }
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+        mask |= (0x01 << tool.to_raw());
     }
 
     return mask;
 }
 
 uint8_t PrusaToolChangerUtils::get_parked_mask() {
-    static_assert(DWARF_MAX_COUNT < 8, "Using uint8_t as a mask of dwarves");
+    static_assert(PhysicalToolIndex::count < 8, "Using uint8_t as a mask of dwarves");
     uint8_t mask = 0;
 
-    for (int i = 0; i < DWARF_MAX_COUNT; i++) {
-        if (dwarfs[i].is_enabled() && (dwarfs[i].is_picked() == false) && dwarfs[i].is_parked()) {
-            mask |= (0x01 << i);
+    for (auto tool : PhysicalToolIndex::all()) {
+        if (dwarfs[tool].is_enabled() && !dwarfs[tool].is_picked() && dwarfs[tool].is_parked()) {
+            mask |= (0x01 << tool.to_raw());
         }
     }
 
@@ -245,7 +244,7 @@ uint8_t PrusaToolChangerUtils::get_parked_mask() {
 
 buddy::puppies::Dwarf &PrusaToolChangerUtils::getActiveToolOrFirst() {
     auto active = active_dwarf.load();
-    return active ? *active : dwarfs[0];
+    return active ? *active : dwarfs[PhysicalToolIndex::from_raw(0)];
 }
 
 buddy::puppies::Dwarf &PrusaToolChangerUtils::getTool(uint8_t tool_index) {
@@ -312,14 +311,14 @@ void PrusaToolChangerUtils::toolchanger_error(const char *message) const {
 
 void PrusaToolChangerUtils::expand_first_dock_position() {
     // Compute dock positions using first dock position
-    const PrusaToolInfo first = get_tool_info(dwarfs[0]);
+    const PrusaToolInfo first = get_tool_info(dwarfs[PhysicalToolIndex::from_raw(0)]);
 
-    for (unsigned int i = 1; i < tool_info.size(); ++i) {
+    for (auto tool : PhysicalToolIndex::all()) {
         const PrusaToolInfo computed = {
-            .dock_x = first.dock_x + i * DOCK_OFFSET_X_MM,
+            .dock_x = first.dock_x + tool.to_raw() * DOCK_OFFSET_X_MM,
             .dock_y = first.dock_y
         };
-        set_tool_info(dwarfs[i], computed);
+        set_tool_info(dwarfs[tool], computed);
     }
 }
 
