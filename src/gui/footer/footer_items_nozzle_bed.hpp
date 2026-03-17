@@ -66,11 +66,6 @@ class FooterItemAllNozzles final : public FooterIconText_IntVal {
     static constexpr uint32_t CYCLE_TIME = 2000; ///< Time to cycle nozzles [ms]
     static constexpr uint COLD = 45; ///< Nozzle is cold under this [deg C]
 
-#if HAS_TOOLCHANGER()
-    static constexpr uint NOZZLES_COUNT = 5; ///< This icon only works for 5 nozzles
-    static_assert(NOZZLES_COUNT <= EXTRUDERS);
-#endif
-
 public:
     FooterItemAllNozzles(window_t *parent);
 };

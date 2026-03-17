@@ -127,7 +127,8 @@ void FooterItemAllNozzles::unconditionalDraw() {
     FooterIconText_IntVal::unconditionalDraw();
 
 #if HAS_TOOLCHANGER()
-    const uint16_t column_size = icon.Width() / NOZZLES_COUNT; // 3 px per nozzle, 2 px column + 1 px space
+    static_assert(PhysicalToolIndex::count == 5, "check if this code works for different number of tools");
+    const uint16_t column_size = icon.Width() / PhysicalToolIndex::count; // 3 px per nozzle, 2 px column + 1 px space
 
     // White mark above currently shown tool
     display::fill_rect(
@@ -135,25 +136,25 @@ void FooterItemAllNozzles::unconditionalDraw() {
         COLOR_WHITE);
 
     // Individual nozzles
-    for (uint nozzle = 0; nozzle < NOZZLES_COUNT; nozzle++) {
-        if (buddy::puppies::dwarfs[nozzle].is_enabled() == false) {
+    for (auto tool : PhysicalToolIndex::all()) {
+        if (buddy::puppies::dwarfs[tool].is_enabled() == false) {
             continue;
         }
 
         // Rectangle as high as temperature (can overwrite the white mark)
         const uint gray_column_max = (static_cast<uint>(COLD) * icon.Height() + (HEATER_XL_HOTEND_MAXTEMP / 2)) / HEATER_XL_HOTEND_MAXTEMP;
-        uint column_height = (static_cast<uint>(round(marlin_vars().hotend(nozzle).temp_nozzle)) * icon.Height() + (HEATER_XL_HOTEND_MAXTEMP / 2)) / HEATER_XL_HOTEND_MAXTEMP;
+        uint column_height = (static_cast<uint>(round(marlin_vars().hotend(tool).temp_nozzle)) * icon.Height() + (HEATER_XL_HOTEND_MAXTEMP / 2)) / HEATER_XL_HOTEND_MAXTEMP;
         column_height = std::clamp<uint>(column_height, 0, icon.Height());
         uint gray_column_height = std::clamp<uint>(column_height, 0, gray_column_max);
 
         // Gray column down
         display::fill_rect(
-            Rect16(icon.Left() + nozzle * column_size + 1, icon.Top() + icon.Height() - gray_column_height, column_size - 1, gray_column_height),
+            Rect16(icon.Left() + tool.to_raw() * column_size + 1, icon.Top() + icon.Height() - gray_column_height, column_size - 1, gray_column_height),
             COLOR_GRAY);
         // Orange column up
         if (column_height > gray_column_max) {
             display::fill_rect(
-                Rect16(icon.Left() + nozzle * column_size + 1, icon.Top() + icon.Height() - column_height, column_size - 1, column_height - gray_column_max),
+                Rect16(icon.Left() + tool.to_raw() * column_size + 1, icon.Top() + icon.Height() - column_height, column_size - 1, column_height - gray_column_max),
                 COLOR_BRAND);
         }
     }
@@ -223,7 +224,7 @@ int FooterItemAllNozzles::static_readValue() {
 
         // Switch to next enabled nozzle, will also change icon
         do {
-            if (++nozzle_n >= NOZZLES_COUNT) {
+            if (++nozzle_n >= PhysicalToolIndex::count) {
                 nozzle_n = 0;
             }
         } while (buddy::puppies::dwarfs[nozzle_n].is_enabled() == false);
