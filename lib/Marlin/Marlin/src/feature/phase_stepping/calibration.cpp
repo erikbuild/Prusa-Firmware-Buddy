@@ -361,6 +361,7 @@ static std::tuple<int, int> locate_signal_markers(const SamplesAnnotation &annot
 // Given a raw captured samples, locate signal markers and return a view of the
 // signal specified by the annotation
 static SignalView locate_signal(const SamplesAnnotation &annot, const SignalContainer &signal) {
+    assert(annot.sampling_freq != 0);
     auto [start_marker_idx, _] = locate_signal_markers(annot, signal);
 
     int signal_start = static_cast<int>((annot.signal_start - annot.start_marker) * annot.sampling_freq);
@@ -514,6 +515,7 @@ static DftSweepResult motor_harmonic_dft_sweep(
 static std::array<DftSweepResult, 2> motor_speed_dft_sweep(SignalView signal,
     float sampling_freq, float start_speed, float top_speed, int motor_steps,
     int harmonic, float window_size, float step_size) {
+    assert(signal.size() != 0);
     // The operation is performed by correlating the signal with an accelerated
     // sin/cos waveform followed by windowed sweep to perform convolution.
     const float sweep_duration = signal.size() / sampling_freq;
@@ -584,6 +586,7 @@ static std::array<DftSweepResult, 2> motor_speed_dft_sweep(SignalView signal,
                 res.samples.push_back(window.get_windowed_power() / speed);
             }
         }
+        assert(!res.samples.empty());
     }
     return result;
 }
@@ -1143,6 +1146,7 @@ static std::tuple<float, bool, PrusaAccelerometer::Error> capture_movement_sampl
     }
 
     float sampling_freq = accelerometer.get_sampling_rate();
+    assert(sampling_freq != 0);
     const PrusaAccelerometer::Error error = accelerometer.get_error();
 
     if (ticks_diff(ticks_ms(), start_ts) >= timeout_ms) {
@@ -1421,6 +1425,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     ABORT_CHECK();
     auto forward_signal = locate_signal(forward_annotation, forward_samples);
     debug_dump_raw_measurement("forward", forward_samples, forward_annotation, forward_signal);
+    assert(forward_signal.size() != 0);
     ABORT_CHECK();
 
     SignalContainer backward_samples;
@@ -1439,6 +1444,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
     ABORT_CHECK();
     auto backward_signal = locate_signal(backward_annotation, backward_samples);
     debug_dump_raw_measurement("backward", backward_samples, backward_annotation, backward_signal);
+    assert(backward_signal.size() != 0);
     ABORT_CHECK();
 
     // Then construct a combined signal for each harmonic from all measurements
@@ -1459,6 +1465,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
             auto [up_analysis, down_analysis] = motor_speed_dft_sweep(
                 signal, annotation.sampling_freq, start_speed, end_speed,
                 get_motor_steps(axis), harmonic, window_size, time_step);
+            assert(!up_analysis.samples.empty());
 
             ABORT_CHECK();
 
@@ -1477,6 +1484,7 @@ measure_calibration_speeds(AxisEnum axis, const AxisCalibrationConfig &calibrati
 
         ABORT_CHECK();
 
+        assert(!combined.empty());
         harmonic_signals.emplace_back(harmonic, std::move(combined));
     }
 
