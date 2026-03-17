@@ -72,8 +72,6 @@ private:
     [[nodiscard]] nfcv::Result<void> turn_on_oscilator();
     void set_output_impedance(st25r39xxb::Impedance target_impedance);
     void set_output_amplitude(st25r39xxb::Amplitude target_amplitude);
-    /// Sets one of the antennas as output (the other will still be able to receive data)
-    void select_antenna(AntennaID target_antenna);
 
     [[nodiscard]] nfcv::Result<void> nfcv_field_up();
     void nfcv_field_down();

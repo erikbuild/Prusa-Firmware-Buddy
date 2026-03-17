@@ -135,15 +135,6 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::turn_on_oscilator() {
     return {};
 }
 
-void st25r39xxb::ST25R39XXB::select_antenna(AntennaID target_antenna) {
-    static constexpr std::byte ANTENNA_CONTROL_MASK { 0b0100'0000 };
-    std::byte value { 0 };
-    if (target_antenna == 1) {
-        value = ANTENNA_CONTROL_MASK;
-    }
-    hw_int.change_register(RegisterA::io_configuration_1, ANTENNA_CONTROL_MASK, value);
-}
-
 nfcv::Result<void> st25r39xxb::ST25R39XXB::nfcv_command(const nfcv::Command &command) {
     // Prepare message
     buffer.clear();
@@ -421,7 +412,9 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller(const st25r39xxb::Mo
 }
 
 nfcv::Result<void> st25r39xxb::ST25R39XXB::field_up(AntennaID antenna) {
-    select_antenna(antenna);
+    // Select antenna
+    static constexpr std::byte ANTENNA_CONTROL_MASK { 0b0100'0000 };
+    hw_int.change_register(RegisterA::io_configuration_1, ANTENNA_CONTROL_MASK, antenna ? ANTENNA_CONTROL_MASK : std::byte { 0 });
 
     hw_int.write_register(RegisterB::nfc_field_on_guard_timer, std::byte { 0 });
     static constexpr std::byte OPER_CONTROL_TX_ENABLE { 0b0000'1000 };
