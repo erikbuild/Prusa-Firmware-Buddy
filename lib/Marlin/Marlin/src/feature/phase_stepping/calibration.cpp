@@ -31,7 +31,7 @@ LOG_COMPONENT_REF(PhaseStepping);
         return std::unexpected(CalibrateAxisError::aborted);
 
 static constexpr std::size_t RETRY_COUNT = 2;
-static constexpr float MAX_ACC_SAMPLING_RATE = 1500;
+static constexpr float MAX_ACC_SAMPLING_RATE = 1600;
 static constexpr float SAMPLE_BUFFER_MARGIN = 1.05f;
 static constexpr float VIBRATION_SETTLE_TIME = 0.2f;
 
