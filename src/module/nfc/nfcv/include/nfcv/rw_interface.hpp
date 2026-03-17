@@ -15,7 +15,7 @@ class ReaderWriterInterface {
 public:
     using AntennaID = uint8_t;
 
-    virtual Result<void> field_up(AntennaID anetnna) = 0;
+    virtual Result<void> field_up(AntennaID antenna) = 0;
     virtual void field_down() = 0;
     virtual AntennaID antenna_count() const = 0;
 
