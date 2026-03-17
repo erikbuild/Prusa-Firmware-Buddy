@@ -412,6 +412,10 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::init_nfcv_poller(const st25r39xxb::Mo
 }
 
 nfcv::Result<void> st25r39xxb::ST25R39XXB::field_up(AntennaID antenna) {
+    if (active_antenna == antenna) {
+        return {};
+    }
+
     // Select antenna
     static constexpr std::byte ANTENNA_CONTROL_MASK { 0b0100'0000 };
     hw_int.change_register(RegisterA::io_configuration_1, ANTENNA_CONTROL_MASK, antenna ? ANTENNA_CONTROL_MASK : std::byte { 0 });
@@ -426,14 +430,22 @@ nfcv::Result<void> st25r39xxb::ST25R39XXB::field_up(AntennaID antenna) {
 
     sys_int.delay(50);
 
+    active_antenna = antenna;
+
     return {};
 }
 
 void st25r39xxb::ST25R39XXB::field_down() {
+    if (!active_antenna.has_value()) {
+        return;
+    }
+
     static constexpr std::byte OPER_CONTROL_TX_ENABLE { 0b0000'1000 };
     static constexpr std::byte OPER_CONTROL_RX_ENABLE { 0b0100'0000 };
     hw_int.register_clear_bits(RegisterA::operation_control, OPER_CONTROL_TX_ENABLE | OPER_CONTROL_RX_ENABLE);
 
     // The next command fails if we do field_down - field_up - command cycle without this delay
     sys_int.delay(30);
+
+    active_antenna = std::nullopt;
 }

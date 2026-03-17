@@ -44,6 +44,9 @@ private:
     SystemInterface &sys_int;
     stdext::inplace_vector<std::byte, constant::FIFO_SIZE> buffer;
 
+    /// Current antenna that has the field_up
+    std::optional<AntennaID> active_antenna;
+
     [[nodiscard]] nfcv::Result<void> nfcv_command_inner(const nfcv::Command &command);
 
     [[nodiscard]] uint16_t get_fifo_len();
