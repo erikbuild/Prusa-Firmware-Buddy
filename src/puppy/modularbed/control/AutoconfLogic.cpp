@@ -125,7 +125,7 @@ void MeasureAndCheckHBResistance_Impl(uint32_t hbIndex) {
             StateLogic::SetHBErrorFlag(hbIndex, HeatbedletError::HeaterDisconnected);
         }
     } else {
-        if (!disconnected) {
+        if (!disconnected && ModbusRegisters::GetBitValue(ModbusRegisters::SystemCoil::enable_bedlet_connected_check)) {
             StateLogic::SetHBErrorFlag(hbIndex, HeatbedletError::HeaterConnected);
         }
     }

@@ -43,6 +43,7 @@ public:
     static constexpr uint16_t RESET_OVECURRENT_FAULT_ADDR { std::to_underlying(SystemCoil::reset_overcurrent_fault) };
     static constexpr uint16_t TEST_HEATING_ADDR { std::to_underlying(SystemCoil::test_hb_heating) };
     static constexpr uint16_t PRINT_FAN_ACTIVE_ADDR { std::to_underlying(SystemCoil::print_fan_active) };
+    static constexpr uint16_t ENABLE_BEDLET_CONNECTED_CHECK_ADDR { std::to_underlying(SystemCoil::enable_bedlet_connected_check) };
     static constexpr uint16_t BEDLET_INPUT_REGISTERS_ADDR { std::to_underlying(HBInputRegister::fault_status) };
     static constexpr uint16_t BEDLET_TARGET_TEMP_ADDR { std::to_underlying(HBHoldingRegister::target_temperature) };
     static constexpr uint16_t BEDLET_MEASURED_MAX_CURRENT_ADDR { std::to_underlying(HBHoldingRegister::measured_max_current) };
@@ -79,6 +80,9 @@ public:
 
     // notify modular bed about activity of print fan (to relax temperature checks)
     void set_print_fan_active(bool active);
+
+    // enable/disable BedletConnected error checking (for heater selftest)
+    void set_enable_bedlet_connected_check(bool enable);
 
     // Combined heater current [A]
     float get_heater_current();
@@ -130,6 +134,7 @@ private:
     ModbusCoil<RESET_OVECURRENT_FAULT_ADDR> reset_overcurrent {};
     ModbusCoil<TEST_HEATING_ADDR> test_heating {};
     ModbusCoil<PRINT_FAN_ACTIVE_ADDR> print_fan_active {};
+    ModbusCoil<ENABLE_BEDLET_CONNECTED_CHECK_ADDR> enable_bedlet_connected_check {};
 
 protected:
     struct cost_and_enable_mask_t {
@@ -162,6 +167,7 @@ private:
     CommunicationStatus write_reset_overcurrent(PuppyModbus &);
     CommunicationStatus write_test_heating(PuppyModbus &);
     CommunicationStatus write_print_fan_active(PuppyModbus &);
+    CommunicationStatus write_enable_bedlet_connected_check(PuppyModbus &);
     CommunicationStatus read_general_status(PuppyModbus &);
     CommunicationStatus read_general_ready(PuppyModbus &);
     CommunicationStatus read_currents(PuppyModbus &);

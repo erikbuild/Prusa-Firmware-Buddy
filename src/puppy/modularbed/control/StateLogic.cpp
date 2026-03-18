@@ -267,8 +267,10 @@ void CheckMinMaxTemperature(uint32_t heatbedletIndex) {
         disconnectedError = true;
     }
     if (!is_used_bedlet(heatbedletIndex) && (pHBInfo->m_MeasuredTemperature >= TEMPERATURE_MIN)) {
-        SetHBErrorFlag(heatbedletIndex, HeatbedletError::HeaterConnected);
-        disconnectedError = true;
+        if (GetBitValue(SystemCoil::enable_bedlet_connected_check)) {
+            SetHBErrorFlag(heatbedletIndex, HeatbedletError::HeaterConnected);
+            disconnectedError = true;
+        }
     }
 
     if (pHBInfo->m_MeasuredTemperature > TEMPERATURE_MAX) {

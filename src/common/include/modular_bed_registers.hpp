@@ -31,6 +31,7 @@ enum class SystemCoil : uint16_t {
     measure_hb_currents = 0x4003,
     calibrate_thermistors = 0x4004,
     print_fan_active = 0x4005,
+    enable_bedlet_connected_check = 0x4006,
 
     _post_last,
     _last = _post_last - 1,

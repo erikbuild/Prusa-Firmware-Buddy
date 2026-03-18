@@ -86,6 +86,7 @@ CommunicationStatus ModularBed::refresh(PuppyModbus &bus) {
         &ModularBed::write_reset_overcurrent,
         &ModularBed::write_test_heating,
         &ModularBed::write_print_fan_active,
+        &ModularBed::write_enable_bedlet_connected_check,
         &ModularBed::read_general_status,
         &ModularBed::read_general_ready,
         &ModularBed::read_currents,
@@ -115,6 +116,10 @@ CommunicationStatus ModularBed::write_test_heating(PuppyModbus &bus) {
 
 CommunicationStatus ModularBed::write_print_fan_active(PuppyModbus &bus) {
     return bus.write(unit, print_fan_active);
+}
+
+CommunicationStatus ModularBed::write_enable_bedlet_connected_check(PuppyModbus &bus) {
+    return bus.write(unit, enable_bedlet_connected_check);
 }
 
 CommunicationStatus ModularBed::read_general_status(PuppyModbus &bus) {
@@ -308,6 +313,12 @@ void ModularBed::set_print_fan_active(bool value) {
     Lock guard(mutex);
     print_fan_active.dirty = true;
     print_fan_active.value = value;
+}
+
+void ModularBed::set_enable_bedlet_connected_check(bool enable) {
+    Lock guard(mutex);
+    enable_bedlet_connected_check.dirty = true;
+    enable_bedlet_connected_check.value = enable;
 }
 
 float ModularBed::get_temp(const uint8_t column, const uint8_t row) {
