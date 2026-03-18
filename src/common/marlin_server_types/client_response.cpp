@@ -1,4 +1,5 @@
 #include "client_response.hpp"
+#include <option/has_serial_print.h>
 #include <option/has_manual_belt_tuning.h>
 #include <fsm/safety_timer_phases.hpp>
 #include <fsm/print_preview_phases.hpp>
@@ -21,7 +22,9 @@
 namespace ClientResponses {
 
 constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM::_count> fsm_phase_responses {
+#if HAS_SERIAL_PRINT()
     { ClientFSM::Serial_printing, {} },
+#endif
         { ClientFSM::Load_unload, LoadUnloadResponses },
         { ClientFSM::Preheat, ClientResponses::preheat_responses },
 #if HAS_SELFTEST()

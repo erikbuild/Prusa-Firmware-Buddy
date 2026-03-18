@@ -33,7 +33,10 @@ GCodeQueue queue;
 #include "../module/planner.h"
 #include "../module/temperature.h"
 #include "../Marlin.h"
-#include "serial_printing.hpp"
+#include <option/has_serial_print.h>
+#if HAS_SERIAL_PRINT()
+    #include "serial_printing.hpp"
+#endif
 #include <gcode/inject_queue.hpp>
 #include <feature/cork/tracker.hpp>
 
@@ -440,8 +443,10 @@ void GCodeQueue::get_serial_commands() {
           last_command_time = ms;
         #endif
 
+#if HAS_SERIAL_PRINT()
         // notify serial printing about command
         SerialPrinting::serial_command_hook(command);
+#endif
 
         // Add the command to the queue
         _enqueue(serial_line_buffer[i], true

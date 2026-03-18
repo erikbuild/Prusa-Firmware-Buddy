@@ -80,8 +80,14 @@ void settings_save();
 // direct call of settings.reset()
 void settings_reset();
 
+#if HAS_SERIAL_PRINT()
 // Start serial print (issue when gcodes start comming via serial line)
 void serial_print_start();
+
+/// Finalize serial print (exit print state and clean up)
+/// this is meant to be gracefull print finish, called when print finishes sucessfully.
+void serial_print_finalize();
+#endif
 
 /**
  * @brief Direct print file with SFN format.
@@ -90,10 +96,6 @@ void serial_print_start();
  * @param skip_preview can be used to skip preview thumbnail or toolmapping screen
  */
 void print_start(const char *filename, const GCodeReaderPosition &resume_pos, marlin_server::PreviewSkipIfAble skip_preview = marlin_server::PreviewSkipIfAble::no);
-
-/// Finalize serial print (exit print state and clean up)
-/// this is meant to be gracefull print finish, called when print finishes sucessfully.
-void serial_print_finalize();
 
 //
 void set_command(uint32_t command);

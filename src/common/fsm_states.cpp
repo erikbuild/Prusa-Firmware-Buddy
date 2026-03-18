@@ -1,6 +1,7 @@
 #include <common/fsm_states.hpp>
 
 #include <option/has_esp.h>
+#include <option/has_serial_print.h>
 #include <option/has_phase_stepping_calibration.h>
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_door_sensor_calibration.h>
@@ -19,7 +20,9 @@ static constexpr uint32_t score(ClientFSM fsm_type) {
     case ClientFSM::Wait:
         return 0;
 
+#if HAS_SERIAL_PRINT()
     case ClientFSM::Serial_printing:
+#endif
     case ClientFSM::Printing:
 #if HAS_SELFTEST()
     case ClientFSM::Selftest:

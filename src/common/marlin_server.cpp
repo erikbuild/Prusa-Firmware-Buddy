@@ -491,7 +491,9 @@ namespace {
             log_debug(MarlinServer, "Paused at %" PRIu32 ", skip %i", media_position(), print_state.skip_gcode);
         }
 
+#if HAS_SERIAL_PRINT()
         SerialPrinting::pause();
+#endif
 
         print_job_timer.pause();
         server.resume.nozzle_temp = buddy::safety_timer().original_hotend_targets();
@@ -987,7 +989,9 @@ void static finalize_print(bool finished) {
     power_panic::reset();
 #endif
 
+#if HAS_SERIAL_PRINT()
     fsm_destroy(ClientFSM::Serial_printing);
+#endif
 
     print_job_timer.stop();
     _server_update_vars();
@@ -1340,10 +1344,12 @@ bool printer_paused_extended() {
     return is_extended_paused_state(server.print_state);
 }
 
+#if HAS_SERIAL_PRINT()
 void serial_print_start() {
     server.print_state = State::SerialPrintInit;
     print_state = {};
 }
+#endif
 
 void print_start(const char *filename, const GCodeReaderPosition &resume_pos, marlin_server::PreviewSkipIfAble skip_preview) {
 #if HAS_SELFTEST()
@@ -1462,6 +1468,7 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, ma
     PrintPreview::Instance().set_skip_if_able(skip_preview);
 }
 
+#if HAS_SERIAL_PRINT()
 void serial_print_finalize(void) {
     switch (server.print_state) {
 
@@ -1469,15 +1476,16 @@ void serial_print_finalize(void) {
     case State::Paused:
     case State::Resuming_Reheating:
     case State::Finishing_WaitIdle:
-#if HAS_TOOLCHANGER()
+    #if HAS_TOOLCHANGER()
     case State::CrashRecovery_Tool_Pickup:
-#endif
+    #endif
         server.print_state = State::Finishing_WaitIdle;
         break;
     default:
         break;
     }
 }
+#endif
 
 void print_abort(void) {
 
@@ -2263,9 +2271,12 @@ static void _server_print_loop(void) {
 
         server.print_state = State::Printing;
 
+#if HAS_SERIAL_PRINT()
         if (server.print_is_serial) {
             fsm_create(PhasesSerialPrinting::active);
-        } else {
+        } else
+#endif
+        {
 
             if (fsm_states.is_active(ClientFSM::PrintPreview)) {
                 fsm_destroy_and_create(ClientFSM::PrintPreview, ClientFSM::Printing, fsm::BaseData());
@@ -2290,9 +2301,12 @@ static void _server_print_loop(void) {
     case State::Printing:
         print_state.resume_pending = false;
 
+#if HAS_SERIAL_PRINT()
         if (server.print_is_serial) {
             SerialPrinting::print_loop();
-        } else {
+        } else
+#endif
+        {
             media_print_loop();
         }
         break;
@@ -2444,7 +2458,9 @@ static void _server_print_loop(void) {
         thermalManager.set_fan_speed(0, server.resume.fan_speed); // restore fan speed
 #endif
         feedrate_percentage = server.resume.print_speed;
+#if HAS_SERIAL_PRINT()
         SerialPrinting::resume();
+#endif
         server.print_state = State::Printing;
         break;
 
@@ -2486,10 +2502,12 @@ static void _server_print_loop(void) {
 
         // allow movements again
         planner.resume_queuing();
+#if HAS_SERIAL_PRINT()
         if (server.print_is_serial) {
             // will enqueue gcode that will send abort to print host
             SerialPrinting::abort();
         }
+#endif
         set_current_from_steppers();
         sync_plan_position();
         // Note technically Z position is also wrong after the quick_stop(),
@@ -2603,9 +2621,11 @@ static void _server_print_loop(void) {
             finalize_print(false);
             fsm_destroy(ClientFSM::Printing);
         }
+#if HAS_SERIAL_PRINT()
         if (fsm_states.is_active(ClientFSM::Serial_printing)) {
             finalize_print(false);
         }
+#endif
 
         media_prefetch.stop();
         server.print_state = State::Idle;

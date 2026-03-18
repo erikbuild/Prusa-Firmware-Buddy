@@ -189,6 +189,7 @@ struct FSMPrintDef {
 
         ScreenFactory::Creator screen;
 
+#if HAS_SERIAL_PRINT()
         if constexpr (fsm == ClientFSM::Serial_printing) {
             screen = ScreenFactory::Screen<screen_printing_serial_data_t>;
             if (Screens::Access()->IsScreenOpened(screen)) {
@@ -198,7 +199,9 @@ struct FSMPrintDef {
 
             Screens::Access()->ClosePrinting();
 
-        } else if constexpr (fsm == ClientFSM::Printing) {
+        } else
+#endif
+            if constexpr (fsm == ClientFSM::Printing) {
             screen = ScreenFactory::Screen<screen_printing_data_t>;
             if (Screens::Access()->IsScreenOpened(screen)) {
                 // Already opened, no need to do anything
@@ -251,7 +254,9 @@ struct FSMDisplayConfigDef {
 using FSMDisplayConfig = FSMDisplayConfigDef<
     FSMDialogDef<ClientFSM::Wait, window_dlg_wait_t>,
     FSMDialogDef<ClientFSM::SafetyTimer, DialogSafetyTimer>,
+#if HAS_SERIAL_PRINT()
     FSMPrintDef<ClientFSM::Serial_printing>,
+#endif
     FSMDialogDef<ClientFSM::Load_unload, DialogLoadUnload>,
     FSMScreenDef<ClientFSM::Preheat, ScreenPreheat>,
 #if HAS_SELFTEST()

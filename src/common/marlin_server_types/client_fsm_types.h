@@ -15,7 +15,7 @@
 #include <option/has_uneven_bed_prompt.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_belt_tuning.h>
-
+#include <option/has_serial_print.h>
 #include <inc/MarlinConfigPre.h>
 
 #include <stdint.h>
@@ -27,7 +27,9 @@
 // Client finite state machines
 // bound to src/client_response.hpp
 enum class ClientFSM : uint8_t {
+    #if HAS_SERIAL_PRINT()
     Serial_printing,
+    #endif
     Load_unload,
     Preheat,
     #if HAS_SELFTEST()

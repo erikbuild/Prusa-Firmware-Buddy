@@ -1,5 +1,6 @@
 #include "printer_state.hpp"
 #include "client_fsm_types.h"
+#include <option/has_serial_print.h>
 #include "custom_uint31_t.hpp"
 
 #include <fsm_states.hpp>
@@ -250,7 +251,9 @@ DeviceState get_state(bool ready) {
 #if HAS_DOOR_SENSOR_CALIBRATION()
     case ClientFSM::DoorSensorCalibration:
 #endif
+#if HAS_SERIAL_PRINT()
     case ClientFSM::Serial_printing:
+#endif
         // FIXME: BFW-3893 Sadly there is no way (without saving state in this function)
         //  to distinguish between preheat from main screen,
         // which would be Idle, and preheat in the middle of filament load/unload,
@@ -437,7 +440,9 @@ StateWithDialog get_state_with_dialog(bool ready) {
     // These have no buttons or phase
     case ClientFSM::Wait:
     case ClientFSM::Printing:
+#if HAS_SERIAL_PRINT()
     case ClientFSM::Serial_printing:
+#endif
         break;
 
 #if HAS_SELFTEST()

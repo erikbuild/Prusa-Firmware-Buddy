@@ -131,7 +131,9 @@ NB_MODULE(marlin_server_types_python_module_impl, m) {
 
     export_enum<PhasesPrinting>(m, "PhasesPrinting");
 
+#if HAS_SERIAL_PRINT()
     export_enum<PhasesSerialPrinting>(m, "PhasesSerialPrinting");
+#endif
 
     export_enum<Response>(m, "FSMResponse");
 

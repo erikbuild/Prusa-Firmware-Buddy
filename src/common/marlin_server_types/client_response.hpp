@@ -420,10 +420,12 @@ enum class PhasesPrinting : PhaseUnderlyingType {
 };
 constexpr inline ClientFSM client_fsm_from_phase(PhasesPrinting) { return ClientFSM::Printing; }
 
+#if HAS_SERIAL_PRINT()
 enum class PhasesSerialPrinting : PhaseUnderlyingType {
     active,
 };
 constexpr inline ClientFSM client_fsm_from_phase(PhasesSerialPrinting) { return ClientFSM::Serial_printing; }
+#endif
 
 #if HAS_GEARBOX_ALIGNMENT()
 enum class PhaseGearboxAlignment : PhaseUnderlyingType {

@@ -66,7 +66,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             safe_state.cpp
             segmented_json.cpp
             sensor_data.cpp
-            serial_printing.cpp
             sound.cpp
             st25dv64k.cpp
             stat_retry.cpp
@@ -101,6 +100,9 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   endif()
   if(HAS_E2EE_SUPPORT)
     add_subdirectory(e2ee)
+  endif()
+  if(HAS_SERIAL_PRINT)
+    target_sources(firmware PRIVATE serial_printing.cpp)
   endif()
 elseif(BOARD STREQUAL "DWARF")
   target_sources(
@@ -147,13 +149,15 @@ elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
             probe_analysis.cpp
             random_sw.cpp
             safe_state.cpp
-            serial_printing.cpp
             sound.cpp
             st25dv64k.cpp # todo: remove
             tasks.cpp
             tools_mapping.cpp
             wdt.cpp
     )
+  if(HAS_SERIAL_PRINT)
+    target_sources(firmware PRIVATE serial_printing.cpp)
+  endif()
 endif()
 
 if(HAS_POWER_PANIC)
