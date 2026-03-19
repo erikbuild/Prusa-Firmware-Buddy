@@ -1,4 +1,6 @@
-target_sources(firmware PRIVATE filament_sensor.cpp filament_sensors_handler.cpp)
+target_sources(
+  firmware PRIVATE filament_sensor.cpp filament_sensor_states.cpp filament_sensors_handler.cpp
+  )
 if(FILAMENT_SENSOR STREQUAL "ADC")
   target_sources(firmware PRIVATE filament_sensor_adc.cpp filament_sensor_adc_eval.cpp)
 else()

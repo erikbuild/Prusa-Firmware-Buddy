@@ -2,6 +2,8 @@
 #pragma once
 #include <stdint.h>
 
+class IFSensor;
+
 enum class FilamentSensorState : uint8_t {
     NotInitialized, // enable enters this state too
     NotCalibrated,
@@ -26,3 +28,5 @@ constexpr inline bool is_fsensor_working_state(FilamentSensorState state) {
 constexpr inline bool is_fsensor_working_or_ncal_state(FilamentSensorState state) {
     return is_fsensor_working_state(state) || state == FilamentSensorState::NotCalibrated;
 }
+
+bool is_fsensor_working_state(IFSensor *sensor);
