@@ -24,8 +24,6 @@ string_view_utf8 physical_tool_item_title(uint8_t item_index, StringViewUtf8Para
 
 struct Stat {
     using FmtF = void (*)(StringBuilder &sb);
-    using ItemFmtF = void (*)(StringBuilder &sb, uint8_t item_index);
-    using ItemTitleF = string_view_utf8 (*)(uint8_t item_index, StringViewUtf8ParamBase &params);
 
     /// Translatable string, label of the menu item
     const char *title;
@@ -33,9 +31,47 @@ struct Stat {
     /// Formatable string to print the value
     FmtF fmt_f;
 
-    uint8_t item_count = 1;
-    ItemFmtF item_fmt_f = nullptr;
-    ItemTitleF item_title_f = physical_tool_item_title;
+    const screen_menu_virtual::Configuration *submenu = nullptr;
+};
+
+struct SubStats {
+    using ItemFmtF = void (*)(StringBuilder &sb, uint8_t item_index);
+    using ItemTitleF = string_view_utf8 (*)(uint8_t item_index, StringViewUtf8ParamBase &params);
+
+    const char *title;
+
+    uint8_t item_count;
+    ItemFmtF item_fmt_f;
+    ItemTitleF item_title_f;
+};
+
+class MenuItemStatDetail final : public WI_INFO_t {
+public:
+    MenuItemStatDetail(const SubStats &config, uint8_t item_index)
+        : WI_INFO_t(string_view_utf8 {}) {
+        SetLabel(config.item_title_f(item_index, title_params_));
+
+        ArrayStringBuilder<GetInfoLen()> sb;
+        config.item_fmt_f(sb, item_index);
+        ChangeInformation(sb.str());
+    }
+
+private:
+    StringViewUtf8Parameters<4> title_params_;
+};
+
+template <const SubStats &substat>
+constexpr screen_menu_virtual::Configuration substat_screen_config {
+    .item_count = []() -> int { return substat.item_count; },
+    .item_constructor = [](WindowMenuVirtual::ItemVariant &variant, int index) {
+        if (index == 0) {
+            variant.emplace<MI_RETURN>();
+        } else {
+            variant.emplace<MenuItemStatDetail>(substat, index - 1);
+        }
+        //
+    },
+    .title = substat.title,
 };
 
 void fmt_distance_mm(StringBuilder &sb, float distance_mm) {
@@ -46,6 +82,22 @@ void fmt_distance_mm(StringBuilder &sb, float distance_mm) {
         sb.append_printf("%.1f m", (double)distance_m);
     }
 };
+
+constexpr SubStats extruded_filament_substat {
+    .title = N_("EXTRUDED FILAMENT"),
+    .item_count = PhysicalToolIndex::count + 1, // +  MI_RETURN
+    .item_fmt_f = [](StringBuilder &sb, uint8_t item_index) { fmt_distance_mm(sb, Odometer_s::instance().get_extruded(PhysicalToolIndex::from_raw(item_index))); },
+    .item_title_f = physical_tool_item_title,
+};
+
+#if HAS_TOOLCHANGER()
+constexpr SubStats toolchanges_substat {
+    .title = N_("TOOLCHANGES"),
+    .item_count = PhysicalToolIndex::count + 1, // +  MI_RETURN
+    .item_fmt_f = [](StringBuilder &sb, uint8_t item_index) { sb.append_printf("%" PRIu32, Odometer_s::instance().get_toolpick(PhysicalToolIndex::from_raw(item_index))); },
+    .item_title_f = physical_tool_item_title,
+};
+#endif
 
 constexpr std::array stats {
     Stat {
@@ -63,8 +115,7 @@ constexpr std::array stats {
         Stat {
             .title = N_("Extruded Filament"),
             .fmt_f = [](StringBuilder &sb) { fmt_distance_mm(sb, Odometer_s::instance().get_extruded_all()); },
-            .item_count = PhysicalToolIndex::count,
-            .item_fmt_f = [](StringBuilder &sb, uint8_t item_index) { fmt_distance_mm(sb, Odometer_s::instance().get_extruded(PhysicalToolIndex::from_raw(item_index))); },
+            .submenu = (PhysicalToolIndex::count > 1) ? &substat_screen_config<extruded_filament_substat> : nullptr,
         },
 #if HAS_MMU2()
         Stat {
@@ -76,8 +127,7 @@ constexpr std::array stats {
         Stat {
             .title = N_("Toolchanges"),
             .fmt_f = [](StringBuilder &sb) { sb.append_printf("%" PRIu32, Odometer_s::instance().get_toolpick_all()); },
-            .item_count = PhysicalToolIndex::count,
-            .item_fmt_f = [](StringBuilder &sb, uint8_t item_index) { sb.append_printf("%" PRIu32, Odometer_s::instance().get_toolpick(PhysicalToolIndex::from_raw(item_index))); },
+            .submenu = &substat_screen_config<extruded_filament_substat>,
         },
 #endif
         Stat {
@@ -98,57 +148,6 @@ constexpr auto stats_mapping_items = std::to_array<DynamicIndexMappingRecord<Sta
 });
 constexpr DynamicIndexMapping<stats_mapping_items> stats_mapping;
 
-class MenuItemStatDetail final : public WI_INFO_t {
-public:
-    MenuItemStatDetail(const Stat &stat, uint8_t item_index)
-        : WI_INFO_t(string_view_utf8 {}) {
-        SetLabel(stat.item_title_f(item_index, title_params_));
-
-        ArrayStringBuilder<GetInfoLen()> sb;
-        stat.item_fmt_f(sb, item_index);
-        ChangeInformation(sb.str());
-    }
-
-private:
-    StringViewUtf8Parameters<4> title_params_;
-};
-
-class WindowMenuStatDetail final : public WindowMenuVirtual {
-public:
-    WindowMenuStatDetail(window_t *parent, Rect16 rect)
-        : WindowMenuVirtual(parent, rect, CloseScreenReturnBehavior::yes) {
-    }
-
-    void set_stat(const Stat *stat) {
-        stat_ = stat;
-        setup_items();
-    }
-
-    int item_count() const override {
-        // + 1 for MI_RETURN
-        return stat_->item_count + 1;
-    }
-
-    void setup_item(ItemVariant &variant, int index) override {
-        if (index == 0) {
-            variant.emplace<MI_RETURN>();
-        } else {
-            variant.emplace<MenuItemStatDetail>(*stat_, index - 1);
-        }
-    }
-
-private:
-    const Stat *stat_ = nullptr;
-};
-
-class ScreenStatDetail final : public ScreenMenuBase<WindowMenuStatDetail> {
-public:
-    ScreenStatDetail(const Stat *stat)
-        : ScreenMenuBase(nullptr, _(stat->title), EFooter::Off) {
-        menu.menu.set_stat(stat);
-    }
-};
-
 class MenuItemStats final : public WI_INFO_t {
 public:
     MenuItemStats(const Stat &stat)
@@ -158,15 +157,15 @@ public:
         stat.fmt_f(sb);
         ChangeInformation(sb.str());
 
-        if (stat.item_count > 1) {
+        if (stat.submenu) {
             SetIconId(&img::arrow_right_10x16);
             set_icon_position(IconPosition::after_extension);
         }
     }
 
     void click(IWindowMenu &) override {
-        if (stat_.item_count > 1) {
-            Screens::Access()->Open(ScreenFactory::ScreenWithArg<ScreenStatDetail>(&stat_));
+        if (stat_.submenu) {
+            Screens::Access()->Open(ScreenFactory::ScreenWithArg<ScreenMenuVirtual>(stat_.submenu));
         }
     }
 
