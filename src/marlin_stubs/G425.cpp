@@ -353,7 +353,7 @@ MachinePosXY probe_xy(const MachinePosXYZ &center, const float angle, const uint
     }
 
     // Return to initial
-    planner._buffer_msteps(initial_pos_msteps, initial_mm, INTERPROBE_FEEDRATE_MMS, active_extruder, { .raw_block = true });
+    planner._buffer_msteps(initial_pos_msteps, initial_mm, INTERPROBE_FEEDRATE_MMS, PhysicalToolIndex::currently_selected(), { .raw_block = true });
     planner.synchronize();
     set_current_position(to_native_pos(initial_mm));
 

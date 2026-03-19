@@ -1133,13 +1133,13 @@ void Planner::synchronize() {
  * @param target        Target position in mini-steps units
  * @param target_float  Target position in direct (mm, degrees) units.
  * @param fr_mm_s       (target) speed of the move
- * @param extruder      target extruder
+ * @param tools         tool indices for the move
  * @param hints         parameters to aid planner calculations
  *
  * Returns true if movement was properly queued, false otherwise
  */
 bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &target_float
-  , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
+  , feedRate_t fr_mm_s, const PlannerMoveTools &tools, const PlannerHints &hints
 ) {
   assert(fr_mm_s > 0);
 
@@ -1149,7 +1149,7 @@ bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &
   if (!block) return false;
 
   // Fill the block with the specified movement
-  if (!_populate_block(block, target, target_float, fr_mm_s, extruder, hints)) {
+  if (!_populate_block(block, target, target_float, fr_mm_s, tools, hints)) {
     // Movement was not queued, probably because it was too short.
     // Simply accept that as movement queued and done
     return true;
@@ -1169,6 +1169,12 @@ bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &
 
   // Movement successfully queued!
   return true;
+}
+
+bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &target_float
+  , feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints
+) {
+  return _buffer_msteps(target, target_float, fr_mm_s, PlannerMoveTools(tool), hints);
 }
 
 void Planner::manage_extruders(uint8_t extruder) {
@@ -1200,14 +1206,14 @@ void Planner::manage_extruders(uint8_t extruder) {
  * @param target        Target position in mini-steps units
  * @param target_float  Target position in native mm
  * @param fr_mm_s       (target) speed of the move
- * @param extruder      target extruder
+ * @param tools         tool indices for the move
  * @param hints         parameters to aid planner calculations
  *
  * @return  true if movement is acceptable, false otherwise
  */
 bool Planner::_populate_block(block_t * const block,
   const xyze_msteps_t &target, const MachinePosXYZE &target_float
-  , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
+  , feedRate_t fr_mm_s, const PlannerMoveTools &tools, const PlannerHints &hints
 ) {
   assert(fr_mm_s > 0);
   
@@ -1233,7 +1239,10 @@ bool Planner::_populate_block(block_t * const block,
   if (dc < 0) SBI(dm, Z_AXIS);
   if (de < 0) SBI(dm, E_AXIS);
 
-  const float e_msteps_float = de * e_factor[extruder];
+  const float e_fac = tools.virtual_tool.has_value()
+    ? e_factor[tools.virtual_tool->to_raw()]
+    : 1.0f;
+  const float e_msteps_float = de * e_fac;
   const int32_t e_msteps = static_cast<int32_t>(std::abs(e_msteps_float) + 0.5f);
 
   // Clear all flags, including the "busy" bit
@@ -1255,7 +1264,7 @@ bool Planner::_populate_block(block_t * const block,
   delta_mm.x = da * mm_per_mstep[X_AXIS];
   delta_mm.y = db * mm_per_mstep[Y_AXIS];
   delta_mm.z = dc * mm_per_mstep[Z_AXIS];
-  delta_mm.e = e_msteps_float * mm_per_mstep[E_AXIS_N(extruder)];
+  delta_mm.e = e_msteps_float * mm_per_mstep[E_AXIS_N(tools.extruder)];
   block->mstep_event_count = _MAX(block->msteps.a, block->msteps.b, block->msteps.c, e_msteps);
 
   // Always calculate the block length if we are going to keep it
@@ -1818,7 +1827,7 @@ bool Planner::_populate_block(block_t * const block,
   return true;
 } // _populate_block()
 
-bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &target, const MachinePosXYZE &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
+bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &target, const MachinePosXYZE &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const PlannerMoveTools &tools) {
     const int32_t da = target.a - position.a,
                   db = target.b - position.b,
                   dc = target.c - position.c;
@@ -1865,7 +1874,7 @@ bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &targ
     delta_mm.x = float(da) * mm_per_mstep[X_AXIS];
     delta_mm.y = float(db) * mm_per_mstep[Y_AXIS];
     delta_mm.z = float(dc) * mm_per_mstep[Z_AXIS];
-    delta_mm.e = float(de) * mm_per_mstep[E_AXIS_N(extruder)];
+    delta_mm.e = float(de) * mm_per_mstep[E_AXIS_N(tools.extruder)];
 
     if (da == 0 && db == 0 && dc == 0) {
         block->millimeters = TERN0(HAS_EXTRUDERS, ABS(delta_mm.e));
@@ -1998,7 +2007,7 @@ bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &targ
     return true;
 } // populate_raw_block()
 
-bool Planner::buffer_raw_block(const xyze_msteps_t &target, const MachinePosXYZE &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const uint8_t extruder) {
+bool Planner::buffer_raw_block(const xyze_msteps_t &target, const MachinePosXYZE &target_float, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, const PlannerMoveTools &tools) {
     // Wait for the next available block
     uint8_t next_buffer_head;
     block_t *const block = get_next_free_block(next_buffer_head);
@@ -2007,7 +2016,7 @@ bool Planner::buffer_raw_block(const xyze_msteps_t &target, const MachinePosXYZE
     }
 
     // Fill the block with the specified movement.
-    if (!Planner::populate_raw_block(block, target, target_float, acceleration, nominal_speed, entry_speed, exit_speed, extruder)) {
+    if (!Planner::populate_raw_block(block, target, target_float, acceleration, nominal_speed, entry_speed, exit_speed, tools)) {
         // Movement was not queued, probably because it was too short.
         // Simply accept that as movement queued and done
         return true;
@@ -2066,7 +2075,7 @@ void Planner::buffer_sync_block() {
  *
  * @param x,y,z,e       Target positions in mm and/or degrees
  * @param fr_mm_s       (target) speed of the move
- * @param extruder      target extruder
+ * @param tool          physical tool for the move
  * @param hints         optional parameters to aid planner calculations
  */
 bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {
@@ -2076,8 +2085,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
 
   assert(fr_mm_s > 0);
 
-  PlannerMoveTools tools { tool };
-  const auto extruder = tools.extruder;
+  PlannerMoveTools tools(tool);
 
   // The target position of the tool in absolute mini-steps
   // Calculate target position in absolute mini-steps
@@ -2085,7 +2093,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
     int32_t(LROUND(xyze.x * settings.axis_msteps_per_mm[X_AXIS])),
     int32_t(LROUND(xyze.y * settings.axis_msteps_per_mm[Y_AXIS])),
     int32_t(LROUND(xyze.z * settings.axis_msteps_per_mm[Z_AXIS])),
-    int32_t(LROUND(xyze.e * settings.axis_msteps_per_mm[E_AXIS_N(extruder)]))
+    int32_t(LROUND(xyze.e * settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)]))
   };
 
 #if HAS_CEILING_CLEARANCE()
@@ -2204,9 +2212,9 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
   // When changing extruders recalculate mini-steps corresponding to the E position
   #if ENABLED(DISTINCT_E_FACTORS)
     // #error dead code found by automatic analyses (see BFW-5461)
-    if (last_extruder != extruder && settings.axis_msteps_per_mm[E_AXIS_N(extruder)] != settings.axis_msteps_per_mm[E_AXIS_N(last_extruder)]) {
-      position.e = LROUND(position.e * settings.axis_msteps_per_mm[E_AXIS_N(extruder)] * mm_per_mstep[E_AXIS_N(last_extruder)]);
-      last_extruder = extruder;
+    if (last_extruder != tools.extruder && settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)] != settings.axis_msteps_per_mm[E_AXIS_N(last_extruder)]) {
+      position.e = LROUND(position.e * settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)] * mm_per_mstep[E_AXIS_N(last_extruder)]);
+      last_extruder = tools.extruder;
     }
   #endif
 
@@ -2226,8 +2234,11 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
         }
       #endif // PREVENT_COLD_EXTRUSION
       #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
-        const float e_msteps = ABS(de * e_factor[extruder]);
-        const float max_e_msteps = settings.axis_msteps_per_mm[E_AXIS_N(extruder)] * (EXTRUDE_MAXLENGTH);
+        const float e_fac = tools.virtual_tool.has_value()
+          ? e_factor[tools.virtual_tool->to_raw()]
+          : 1.0f;
+        const float e_msteps = ABS(de * e_fac);
+        const float max_e_msteps = settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)] * (EXTRUDE_MAXLENGTH);
         if (e_msteps > max_e_msteps) {
           constexpr bool ignore_e = true;
           if (ignore_e) {
@@ -2259,7 +2270,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
 
   // Queue the movement. Return 'false' if the move was not queued.
   if (!_buffer_msteps(target, xyze
-      , fr_mm_s, extruder
+      , fr_mm_s, tools
 #if ENABLED(CRASH_RECOVERY)
       , *segment_hints
 #else
@@ -2272,7 +2283,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
 } // buffer_segment()
 
 bool Planner::buffer_raw_segment(const MachinePosXYZE &xyze, const float acceleration, const float nominal_speed, const float entry_speed, const float exit_speed, std::variant<PhysicalToolIndex, NoTool> tool) {
-    const uint8_t extruder = PlannerMoveTools{tool}.extruder;
+    PlannerMoveTools tools(tool);
 
     // If we are aborting, do not accept queuing of movements
     if (draining() || PreciseStepping::stopping()) {
@@ -2318,7 +2329,7 @@ bool Planner::buffer_raw_segment(const MachinePosXYZE &xyze, const float acceler
       int32_t(LROUND(xyze.x * settings.axis_msteps_per_mm[X_AXIS])),
       int32_t(LROUND(xyze.y * settings.axis_msteps_per_mm[Y_AXIS])),
       int32_t(LROUND(xyze.z * settings.axis_msteps_per_mm[Z_AXIS])),
-      int32_t(LROUND(xyze.e * settings.axis_msteps_per_mm[E_AXIS_N(extruder)]))
+      int32_t(LROUND(xyze.e * settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)]))
     };
 
     // DRYRUN prevents E moves from taking place
@@ -2328,7 +2339,7 @@ bool Planner::buffer_raw_segment(const MachinePosXYZE &xyze, const float acceler
     }
 
     // Queue the movement. Return 'false' if the move was not queued.
-    if (!buffer_raw_block(target, xyze, acceleration, nominal_speed, entry_speed, exit_speed, extruder)) {
+    if (!buffer_raw_block(target, xyze, acceleration, nominal_speed, entry_speed, exit_speed, tools)) {
         return false;
     }
     return true;
@@ -2340,7 +2351,7 @@ bool Planner::buffer_raw_segment(const MachinePosXYZE &xyze, const float acceler
  *
  *  rx,ry,rz,e      - target position in mm or degrees
  *  fr_mm_s         - (target) speed of the move (mm/s)
- *  extruder        - target extruder
+ *  tool            - physical tool for the move
  *  hints           - optional parameters to aid planner calculations
  */
 bool Planner::buffer_line(const MachinePosXYZE &cart, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints/*=PlannerHints()*/) {

@@ -113,7 +113,7 @@ static void corexy_ab_to_xyze(const ab_steps_t &steps, MachinePosXYZE &mm, xyze_
 }
 
 static void plan_raw_move(const MachinePosXYZE target_mm, const xyze_msteps_t target_pos, const feedRate_t fr_mm_s) {
-    planner._buffer_msteps(target_pos, target_mm, fr_mm_s, active_extruder, { .raw_block = true });
+    planner._buffer_msteps(target_pos, target_mm, fr_mm_s, PhysicalToolIndex::currently_selected(), { .raw_block = true });
     planner.synchronize();
 }
 

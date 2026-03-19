@@ -224,6 +224,8 @@ struct PlannerHints {
   MoveHints move = {};
 };
 
+struct PlannerMoveTools;
+
 class Planner {
   public:
 
@@ -511,17 +513,21 @@ class Planner {
      *
      *  target      - target position in mini-steps units
      *  fr_mm_s     - (target) speed of the move
-     *  extruder    - target extruder
+     *  tools       - tool indices for the move
      *  hints       - parameters to aid planner calculations
      *
      * Returns true if movement was buffered, false otherwise
      */
     static bool _buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &target_float
-      , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
+      , feedRate_t fr_mm_s, const PlannerMoveTools &tools, const PlannerHints &hints
+    );
+
+    static bool _buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &target_float
+      , feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints
     );
 
     static bool buffer_raw_block(const xyze_msteps_t &target, const MachinePosXYZE &target_float,
-        float acceleration, float nominal_speed, float entry_speed, float exit_speed, uint8_t extruder);
+        float acceleration, float nominal_speed, float entry_speed, float exit_speed, const PlannerMoveTools &tools);
 
     /**
      * @brief Populate a block in preparation for insertion
@@ -533,19 +539,19 @@ class Planner {
      * @param target        Target position in mini-steps units
      * @param target_float  Target position in native mm
      * @param fr_mm_s       (target) speed of the move
-     * @param extruder      target extruder
+     * @param tools         tool indices for the move
      * @param hints         parameters to aid planner calculations
      *
      * @return  true if movement is acceptable, false otherwise
      */
     static bool _populate_block(block_t * const block,
         const xyze_msteps_t &target, const MachinePosXYZE &target_float
-      , feedRate_t fr_mm_s, const uint8_t extruder, const PlannerHints &hints
+      , feedRate_t fr_mm_s, const PlannerMoveTools &tools, const PlannerHints &hints
     );
 
     static bool populate_raw_block(block_t *const block, const xyze_msteps_t &target,
         const MachinePosXYZE &target_float, float acceleration, float nominal_speed,
-        float entry_speed, float exit_speed, uint8_t extruder);
+        float entry_speed, float exit_speed, const PlannerMoveTools &tools);
 
     /**
      * Planner::buffer_sync_block
@@ -562,7 +568,7 @@ class Planner {
      *
      *  x,y,z,e     - target positions in mm and/or degrees
      *  fr_mm_s     - (target) speed of the move
-     *  extruder    - target extruder
+     *  tool        - physical tool for the move
      *  hints       - optional parameters to aid planner calculations
      */
     static bool buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_s, std::variant<PhysicalToolIndex, NoTool> tool, const PlannerHints &hints=PlannerHints());
