@@ -346,7 +346,7 @@ class Planner {
      * Counters to manage disabling inactive extruders
      */
     static uint8_t g_uc_extruder_last_move[EXTRUDERS];
-    static void manage_extruders(uint8_t extruder);
+    static void manage_extruders(PhysicalToolIndex physical_tool);
 
     #ifdef XY_FREQUENCY_LIMIT
       // #error dead code found by automatic analyses (see BFW-5461)

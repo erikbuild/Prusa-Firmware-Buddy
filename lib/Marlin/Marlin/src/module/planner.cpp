@@ -1177,7 +1177,8 @@ bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &
   return _buffer_msteps(target, target_float, fr_mm_s, PlannerMoveTools(tool), hints);
 }
 
-void Planner::manage_extruders(uint8_t extruder) {
+void Planner::manage_extruders(PhysicalToolIndex physical_tool) {
+  const uint8_t extruder = physical_tool.to_raw();
   for (uint8_t i = 0; i < EXTRUDERS; i++) {
     if (i != extruder) {
       auto &counter = g_uc_extruder_last_move[i];
@@ -1358,7 +1359,9 @@ bool Planner::_populate_block(block_t * const block,
       powerManager.power_on();
     #endif
 
-    Planner::manage_extruders(extruder);
+    if (tools.physical_tool.has_value()) {
+      Planner::manage_extruders(*tools.physical_tool);
+    }
 
     // Perform E pre-move hooks
     motor_prepare_move_e();
@@ -1946,7 +1949,9 @@ bool Planner::populate_raw_block(block_t *const block, const xyze_msteps_t &targ
         Power::power_on();
     #endif
 
-        Planner::manage_extruders(extruder);
+        if (tools.physical_tool.has_value()) {
+            Planner::manage_extruders(*tools.physical_tool);
+        }
     }
 
     block->acceleration = acceleration;
