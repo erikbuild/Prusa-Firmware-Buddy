@@ -31,9 +31,14 @@
 #include <option/has_loadcell.h>
 #include <option/has_gui.h>
 #include <option/has_local_bed.h>
+#include <option/has_puppy_modularbed.h>
 
 #if PRINTER_IS_PRUSA_iX() && HAS_XBUDDY_EXTENSION()
     #include <feature/xbuddy_extension/xbuddy_extension.hpp>
+#endif
+
+#if HAS_PUPPY_MODULARBED()
+    #include <puppies/modular_bed.hpp>
 #endif
 
 #include <Pin.hpp>
@@ -407,6 +412,9 @@ void analogWrite(uint32_t ulPin, uint32_t ulValue) {
             return;
         case MARLIN_PIN(FAN):
             Fans::print(PhysicalToolIndex::from_raw(0)).set_pwm(ulValue);
+#if HAS_PUPPY_MODULARBED()
+            buddy::puppies::modular_bed.set_print_fan_active(ulValue > 0);
+#endif
             return;
         case MARLIN_PIN(HEAT0):
             analogWrite_HEATER_0(ulValue);
