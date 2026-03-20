@@ -2,7 +2,7 @@
 
 #include <gui/auto_layout.hpp>
 #include <find_error.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <guiconfig/GuiDefaults.hpp>
 namespace {
 static constexpr std::array layout_no_footer {

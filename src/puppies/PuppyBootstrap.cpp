@@ -1,15 +1,13 @@
 #include "puppies/PuppyBootstrap.hpp"
 #include "puppies/BootloaderProtocol.hpp"
-#include "bsod.h"
+#include <bsod.h>
 #include <sys/stat.h>
 #include "assert.h"
 #include <logging/log.hpp>
 #include <buddy/bootstrap_state.hpp>
 #include <buddy/digest.hpp>
 #include <buddy/main.h>
-#include <buddy/unreachable.hpp>
 #include "timing.h"
-#include "bsod.h"
 #include <modbus/server_address.hpp>
 #include "otp.hpp"
 #include <option/has_puppies_bootloader.h>
@@ -21,7 +19,6 @@
 #include <option/has_indx_head.h>
 #include <cstring>
 #include <random/random.h>
-#include "bsod.h"
 
 #if HAS_XBUDDY_EXTENSION()
     #include <puppies/xbuddy_extension.hpp>
@@ -56,7 +53,7 @@ static BootstrapStage flashing_stage(PuppyType puppy_type) {
         break;
 #endif
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 static BootstrapStage check_fingerprint_stage(PuppyType puppy_type) {
@@ -80,7 +77,7 @@ static BootstrapStage check_fingerprint_stage(PuppyType puppy_type) {
         break;
 #endif
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 bool PuppyBootstrap::attempt_crash_dump_download(Dock dock, BootloaderProtocol::Address address) {

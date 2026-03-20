@@ -5,7 +5,7 @@
 #include <gcode_info.hpp>
 #include <tools_mapping.hpp>
 #include <config_store/store_definition.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 
 #include <option/has_xbuddy_extension.h>
 #if HAS_XBUDDY_EXTENSION()
@@ -166,7 +166,7 @@ uint32_t ChamberFiltration::filter_lifetime_s() const {
 #endif
     }
 
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 void ChamberFiltration::check_filter_expiration() {
@@ -228,7 +228,7 @@ void ChamberFiltration::handle_filter_expiration_warning(Response response) {
         break;
 
     default:
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 }
 

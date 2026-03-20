@@ -1,4 +1,4 @@
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <device/board.h>
 #include <device/peripherals.h>
 #include <buddy/phase_stepping_opts.h>
@@ -850,7 +850,7 @@ void hw_tim3_init() {
 #elif BOARD_IS_XBUDDY()
     htim3.Init.Prescaler = 11; // 36us, 33.0kHz
 #elif BOARD_IS_XLBUDDY()
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 #else
     // #error dead code found by automatic analyses (see BFW-5461)
     // If there ever is another board, this needs to fail loudly.

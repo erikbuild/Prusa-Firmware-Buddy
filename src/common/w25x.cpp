@@ -1,11 +1,10 @@
 #include <common/w25x.hpp>
 
-#include "buddy/unreachable.hpp"
 #include <common/w25x_communication.hpp>
 #include "timing_precise.hpp"
 #include <logging/log.hpp>
 #include "cmsis_os.h"
-#include "bsod.h"
+#include <bsod.h>
 #include <device/peripherals.h>
 #include <hwio_pindef.h>
 #include <stdlib.h>
@@ -419,7 +418,7 @@ bool w25x_reinit_before_crash_dump() {
 void w25x_init() {
     if (w25x_was_initialized) {
         // must only be called once
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     // BFW-6813
@@ -428,7 +427,7 @@ void w25x_init() {
     communication_mutex = osMutexCreate(osMutex(communication_mutex_resource));
     if (!(erase_mutex && communication_mutex)) {
         // if resource allocation fails, we are severely screwed anyway
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     SPI_INIT(flash);

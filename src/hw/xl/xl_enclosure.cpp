@@ -11,7 +11,7 @@
 #include <ctime>
 #include <tools_mapping.hpp>
 #include <marlin_server.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <option/xl_enclosure_support.h>
 #include <option/has_chamber_filtration_api.h>
 #include <feature/chamber_filtration/chamber_filtration.hpp>
@@ -99,7 +99,7 @@ PWM255 Enclosure::calculatePwm(int32_t MCU_modular_bed_temp) {
         return buddy::chamber_filtration().output_pwm();
     }
 
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 bool Enclosure::isMCUOverheating(int32_t MCU_modular_bed_temp) {

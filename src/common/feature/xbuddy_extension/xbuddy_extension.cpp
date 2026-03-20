@@ -8,7 +8,7 @@
 #include <feature/chamber_filtration/chamber_filtration.hpp>
 #include <marlin_server.hpp>
 #include <leds/side_strip_handler.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <fanctl/CFanCtl3Wire.hpp> // for FANCTL_START_TIMEOUT
 #include <utils/timing/rate_limiter.hpp>
 
@@ -195,7 +195,7 @@ XBuddyExtension::FanPWMOrAuto XBuddyExtension::fan_target_pwm(Fan fan) const {
         return filtration_fan_target_pwm_;
     }
 
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 XBuddyExtension::FanPWM XBuddyExtension::fan_actual_pwm(Fan fan) const {
@@ -210,7 +210,7 @@ XBuddyExtension::FanPWM XBuddyExtension::fan_actual_pwm(Fan fan) const {
         return filtration_fan_actual_pwm_;
     }
 
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 void XBuddyExtension::set_fan_target_pwm(Fan fan, FanPWMOrAuto target) {
@@ -227,7 +227,7 @@ void XBuddyExtension::set_fan_target_pwm(Fan fan, FanPWMOrAuto target) {
         return;
     }
 
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 XBuddyExtension::FanState XBuddyExtension::get_fan12_state() const {

@@ -1,6 +1,6 @@
 #include "chamber.hpp"
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <cmath>
 #include <config_store/store_instance.hpp>
 #include <marlin_server.hpp>
@@ -105,7 +105,7 @@ Chamber::Capabilities Chamber::capabilities_nolock() const {
     case Backend::none:
         return Capabilities {};
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 Chamber::Capabilities Chamber::capabilities() const {

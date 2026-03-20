@@ -19,7 +19,7 @@
 #include "marlin_events.h"
 #include "marlin_print_preview.hpp"
 #include "utils/exponential_backoff.hpp"
-#include "bsod.h"
+#include <bsod.h>
 #include "module/prusa/tool_mapper.hpp"
 #include "print_utils.hpp"
 #include <random/random.h>
@@ -37,7 +37,6 @@
 #include <tools_mapping.hpp>
 #include <raii/auto_restore.hpp>
 #include <inject_queue.hpp>
-#include <buddy/unreachable.hpp>
 #include <utils/string_builder.hpp>
 #include <utils/mutex_atomic.hpp>
 #include <feature/safety_timer/safety_timer.hpp>
@@ -1013,7 +1012,7 @@ void static finalize_print(bool finished) {
                 set_warning(WarningType::MaintenanceWarningFails);
                 break;
             default:
-                BUDDY_UNREACHABLE();
+                bsod_unreachable();
             }
         }
         server.mmu_maintenance_checked = true;

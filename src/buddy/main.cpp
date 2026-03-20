@@ -9,7 +9,7 @@
 #include "cmsis_os.h"
 #include <buddy/fatfs.h>
 #include <buddy/usb_device.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <common/st25dv64k.h>
 #include "usb_host.h"
 #include "buffered_serial.hpp"
@@ -586,7 +586,7 @@ void HAL_SPI_TxRxCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi) {
         return;
     }
 #endif
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 /**

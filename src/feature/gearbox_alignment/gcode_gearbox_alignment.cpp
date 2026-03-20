@@ -1,7 +1,7 @@
 /// @file
 #include "gcode_gearbox_alignment.hpp"
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <raii/auto_restore.hpp>
 #include <config_store/store_instance.hpp>
@@ -58,7 +58,7 @@ private:
         case PhaseGearboxAlignment::finish:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     void fsm_change(PhaseGearboxAlignment phase) {
@@ -132,7 +132,7 @@ private:
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     void filament_loaded_ask_unload() {
@@ -146,7 +146,7 @@ private:
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     void filament_unknown_ask_unload() {
@@ -163,7 +163,7 @@ private:
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     void loosen_screws() {
@@ -177,7 +177,7 @@ private:
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     void alignment() {
@@ -214,7 +214,7 @@ private:
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 };
 }; // namespace

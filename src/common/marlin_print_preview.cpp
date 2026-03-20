@@ -42,7 +42,7 @@
 
 #include <config_store/store_instance.hpp>
 #include "tools_mapping.hpp"
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <module/prusa/tool_mapper.hpp>
 #include <mmu2_toolchanger_common.hpp>
 #include <common/gcode/gcode_info_scan.hpp>
@@ -466,7 +466,7 @@ PrintPreview::Result PrintPreview::Loop() {
             break;
 
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }
         break;
 

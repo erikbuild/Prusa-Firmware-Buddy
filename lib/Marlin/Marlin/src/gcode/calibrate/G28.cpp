@@ -25,7 +25,7 @@
 
 #include "../gcode.h"
 
-#include "bsod.h"
+#include <bsod.h>
 
 #include "../../module/endstops.h"
 #include "../../module/planner.h"
@@ -104,7 +104,6 @@
 #include <marlin_server.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
 #include <config_store/store_instance.hpp>
-#include <buddy/unreachable.hpp>
 
 #include <option/has_ceiling_clearance.h>
 #if HAS_CEILING_CLEARANCE()
@@ -1141,7 +1140,7 @@ bool corexy_refine_during_G28(float fr_mm_s, const G28Flags &flags) {
       return true;
 
     default:
-      BUDDY_UNREACHABLE();
+      bsod_unreachable();
 
     }
   }

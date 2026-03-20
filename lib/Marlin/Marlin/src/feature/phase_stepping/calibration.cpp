@@ -4,7 +4,7 @@
 #include "calibration_config.hpp"
 #include "i18n.h"
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <logging/log.hpp>
 #include <module/planner.h>
 #include <module/motion.h>
@@ -1904,5 +1904,5 @@ const char *phase_stepping::to_string(CalibrateAxisError err) {
     case CalibrateAxisError::magnitude_out_of_bounds:
         return N_("Magnitude out of bounds.");
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }

@@ -20,7 +20,7 @@
 #include <option/has_mmu2.h>
 #include <option/has_toolchanger.h>
 #include <option/has_tool_mapping.h>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <utils/string_builder.hpp>
 #include <gui/event/knob_event.hpp>
 
@@ -361,7 +361,7 @@ void screen_printing_data_t::windowEvent(window_t *sender, GUI_event_t event, vo
                 print_progress.PrintingMode();
                 return;
             }
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }();
 #endif
         break;
@@ -838,7 +838,7 @@ void screen_printing_data_t::change_print_state() {
             // still runs (even though it doesn't show anywhere).
             return printing_state_t::PRINTING;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }();
     if (stop_pressed) {
         st = printing_state_t::ABORTING;

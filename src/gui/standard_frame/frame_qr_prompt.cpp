@@ -3,7 +3,7 @@
 #include <img_resources.hpp>
 #include <guiconfig/wizard_config.hpp>
 #include <find_error.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <auto_layout.hpp>
 
 namespace {

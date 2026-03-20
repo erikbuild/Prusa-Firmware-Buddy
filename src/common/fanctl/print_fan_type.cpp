@@ -2,7 +2,7 @@
 
 #include <config_store/store_definition.hpp>
 #include <algorithm_scale.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 
 PrintFanType get_print_fan_type(size_t extruder_nr) {
     return config_store().print_fan_type.get(extruder_nr);
@@ -35,7 +35,7 @@ uint16_t print_fan_remap_pwm(PrintFanType pft, uint16_t original_pwm) {
         break;
     }
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 #else // PRINTER_IS_PRUSA_XL()

@@ -1,7 +1,7 @@
 #include <marlin_stubs/M1977.hpp>
 
 #include <mapi/parking.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <client_response.hpp>
 #include <common/fsm_base_types.hpp>
 #include <common/marlin_server.hpp>
@@ -107,7 +107,7 @@ PhasesPhaseStepping fail_helper(PhasesPhaseStepping phase) {
         config_store().selftest_result_phase_stepping.set(TestResult::TestResult_Failed);
         return PhasesPhaseStepping::finish;
     default:
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 }
 
@@ -223,7 +223,7 @@ namespace state {
         case Response::Ok:
             return PhasesPhaseStepping::finish;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }
     }
 
@@ -235,7 +235,7 @@ namespace state {
             // No need to invalidate test result here
             return PhasesPhaseStepping::finish;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }
     }
 
@@ -286,7 +286,7 @@ namespace state {
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     PhasesPhaseStepping wait_for_extruder_temperature(Context &) {
@@ -311,10 +311,10 @@ namespace state {
                 }
                 break;
             default:
-                BUDDY_UNREACHABLE();
+                bsod_unreachable();
             }
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     PhasesPhaseStepping attach_to_extruder(Context &) {
@@ -327,7 +327,7 @@ namespace state {
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     PhasesPhaseStepping attach_to_bed(Context &) {
@@ -340,7 +340,7 @@ namespace state {
         default:
             break;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
 #endif
@@ -358,7 +358,7 @@ namespace state {
         case State::aborted:
             return PhasesPhaseStepping::finish;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     PhasesPhaseStepping calib_y(Context &context) {
@@ -374,7 +374,7 @@ namespace state {
         case State::aborted:
             return PhasesPhaseStepping::finish;
         }
-        BUDDY_UNREACHABLE();
+        bsod_unreachable();
     }
 
     PhasesPhaseStepping calib_ok(Context &context) {
@@ -392,7 +392,7 @@ namespace state {
         case Response::Ok:
             return PhasesPhaseStepping::finish;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }
     }
 
@@ -445,7 +445,7 @@ PhasesPhaseStepping get_next_phase(Context &context, const PhasesPhaseStepping p
     case PhasesPhaseStepping::finish:
         return PhasesPhaseStepping::finish;
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 } // namespace

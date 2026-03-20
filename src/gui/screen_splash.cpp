@@ -2,7 +2,6 @@
 #include "ScreenHandler.hpp"
 
 #include <buddy/bootstrap_state.hpp>
-#include <buddy/unreachable.hpp>
 #include "config.h"
 #include "config_features.h"
 #include <version/version.hpp>
@@ -15,7 +14,7 @@
 #include "language_eeprom.hpp"
 #include "screen_menu_languages.hpp"
 #include <pseudo_screen_callback.hpp>
-#include "bsod.h"
+#include <bsod.h>
 #include <guiconfig/guiconfig.h>
 #include <feature/factory_reset/factory_reset.hpp>
 #include <window_msgbox_happy_printing.hpp>
@@ -389,7 +388,7 @@ static const char *message(BootstrapStage stage) {
     #endif
 #endif
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 ScreenSplash::~ScreenSplash() {

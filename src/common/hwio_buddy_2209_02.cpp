@@ -5,7 +5,6 @@
 
 #include <inttypes.h>
 
-#include <buddy/unreachable.hpp>
 #include "hwio.h"
 #include "config.h"
 #include <device/hal.h>
@@ -16,7 +15,7 @@
 #include "loadcell.hpp"
 #include "timer_defaults.h"
 #include "hwio_pindef.h"
-#include "bsod.h"
+#include <bsod.h>
 #include <buddy/main.h>
 #include <stdint.h>
 #include <device/board.h>

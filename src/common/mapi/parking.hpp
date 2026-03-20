@@ -6,7 +6,7 @@
 
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_wastebin.h>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 
 namespace mapi {
 
@@ -69,7 +69,7 @@ struct ParkingPosition {
         case 2:
             return z;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }
     }
 

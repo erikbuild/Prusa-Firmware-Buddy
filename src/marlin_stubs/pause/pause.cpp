@@ -53,7 +53,7 @@ static_assert(HAS_PAUSE());
 #include <feature/ramming/ramming_sequence.hpp>
 #include <feature/ramming/standard_ramming_sequence.hpp>
 #include <utils/progress.hpp>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <sound.hpp>
 #include <feature/safety_timer/safety_timer.hpp>
 #include <mapi/cold_extrude.hpp>

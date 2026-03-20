@@ -9,7 +9,7 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_toolchanger.h>
 #include <option/has_manual_belt_tuning.h>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <window_msgbox_happy_printing.hpp>
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
@@ -250,7 +250,7 @@ void continue_snake() {
                 return;
 
             default:
-                BUDDY_UNREACHABLE();
+                bsod_unreachable();
             }
 
         } else {
@@ -270,7 +270,7 @@ void continue_snake() {
                 return;
 
             default:
-                BUDDY_UNREACHABLE();
+                bsod_unreachable();
             }
         }
     }

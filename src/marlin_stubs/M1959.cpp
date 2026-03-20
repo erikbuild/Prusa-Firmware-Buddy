@@ -1,6 +1,6 @@
 #include "M1959.hpp"
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <common/marlin_server.hpp>
 #include <Marlin/src/gcode/calibrate/M958.hpp>
 #include <Marlin/src/gcode/gcode.h>
@@ -202,7 +202,7 @@ static PhasesInputShaperCalibration connect_to_board(Context &) {
     default:
         break;
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 static PhasesInputShaperCalibration wait_for_extruder_temperature(Context &) {
@@ -227,10 +227,10 @@ static PhasesInputShaperCalibration wait_for_extruder_temperature(Context &) {
             }
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
         }
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 static PhasesInputShaperCalibration attach_to_extruder(Context &) {
@@ -243,7 +243,7 @@ static PhasesInputShaperCalibration attach_to_extruder(Context &) {
     default:
         break;
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 static PhasesInputShaperCalibration attach_to_bed(Context &) {
@@ -256,7 +256,7 @@ static PhasesInputShaperCalibration attach_to_bed(Context &) {
     default:
         break;
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 #endif
@@ -397,7 +397,7 @@ static PhasesInputShaperCalibration measurement_failed(Context &context) {
     default:
         std::terminate();
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 static PhasesInputShaperCalibration check_result(Context &context) {
@@ -479,7 +479,7 @@ static PhasesInputShaperCalibration results(Context &context) {
     default:
         break;
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 static PhasesInputShaperCalibration finish(Context &context) {

@@ -1,6 +1,6 @@
 #include "nfc.hpp"
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <common/st25dv64k.h>
 #include <common/st25dv64k_internal.h>
 
@@ -326,7 +326,7 @@ bool has_nfc_probably() {
     case PrinterModel::_cnt:
         break;
     }
-    BUDDY_UNREACHABLE();
+    bsod_unreachable();
 }
 
 bool has_activity() {

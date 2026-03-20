@@ -4,7 +4,7 @@
 #include <config_store/store_instance.hpp>
 #include <marlin_server.hpp>
 #include <printers.h>
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <config_store/store_instance.hpp>
 #include <buddy/door_sensor.hpp>
 #include <option/has_door_sensor_calibration.h>
@@ -47,7 +47,7 @@ private:
             fsm_change(PhaseDoorSensorCalibration::confirm_closed);
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -65,7 +65,7 @@ private:
             }
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -77,7 +77,7 @@ private:
             check_and_prompt_enable_safety_feature();
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -88,7 +88,7 @@ private:
             fsm_change(last_phase);
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -103,7 +103,7 @@ private:
             fsm_change(last_phase);
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -119,7 +119,7 @@ private:
             fsm_change(PhaseDoorSensorCalibration::warn_disabled_sensor);
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -135,7 +135,7 @@ private:
             fsm_change(PhaseDoorSensorCalibration::ask_enable_safety_features);
             break;
         default:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }
@@ -187,7 +187,7 @@ private:
             done();
             break;
         case PhaseDoorSensorCalibration::finish:
-            BUDDY_UNREACHABLE();
+            bsod_unreachable();
             break;
         }
     }

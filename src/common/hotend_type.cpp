@@ -1,6 +1,6 @@
 #include "hotend_type.hpp"
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 
 #include <option/has_nextruder.h>
 

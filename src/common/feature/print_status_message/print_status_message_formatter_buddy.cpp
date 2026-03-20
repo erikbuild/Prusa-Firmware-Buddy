@@ -9,7 +9,7 @@
 
 #include <option/has_translations.h>
 
-#include <buddy/unreachable.hpp>
+#include <bsod/bsod.h>
 #include <utils/string_builder.hpp>
 
 using Message = PrintStatusMessage;
