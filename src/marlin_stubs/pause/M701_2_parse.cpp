@@ -9,6 +9,7 @@
 #include "pause_stubbed.hpp"
 #include "pause_settings.hpp"
 #include <option/has_mmu2.h>
+#include <utils/variant_utils.hpp>
 
 using namespace filament_gcodes;
 
@@ -112,17 +113,33 @@ void GcodeSuite::M702() {
     const uint8_t preheat = parser.byteval('W', 255);
     const bool ask_unloaded = parser.seen('I');
 
-    const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(GcodeSuite::get_target_virtual_from_command());
-    if (!virtual_tool.has_value()) {
+    GcodeSuite::VirtualToolFromCommand target_result = GcodeSuite::get_target_virtual_from_command();
+
+#if HAS_MMU2()
+    // On MMU, allow unload even with no filament loaded and none specified.
+    //
+    // This allows clearing mismatches between firmware state and physical
+    // reality, partially loaded filaments, etc.
+    //
+    // For that, we just use an arbitrary dummy index.
+    if (std::holds_alternative<NoTool>(target_result)) {
+        // If we have more, we need to think better on which virtual tool we
+        // unload. One of the currently picked physical one would be good.
+        static_assert(PhysicalToolIndex::count == 1);
+        target_result = VirtualToolIndex::from_raw(0);
+    }
+#endif
+
+    const std::optional<VirtualToolIndex> target = stdext::get_optional<VirtualToolIndex>(target_result);
+    if (!target.has_value()) {
         return;
     }
-    const VirtualToolIndex target_tool = *virtual_tool;
 
     std::optional<RetAndCool_t> op_preheat = std::nullopt;
     if (preheat <= uint8_t(RetAndCool_t::last_)) {
         op_preheat = RetAndCool_t(preheat);
     }
 
-    M702_unload(unload_len, min_Z_pos, op_preheat, target_tool, ask_unloaded);
+    M702_unload(unload_len, min_Z_pos, op_preheat, *target, ask_unloaded);
 }
 /** @}*/
