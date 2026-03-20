@@ -43,15 +43,29 @@ public:
     // line, the second loop covers the wrapped part.
     T process(T sample) {
         delay_line[index] = sample;
+        const std::size_t write_pos = index;
+        index = (index + 1) % N;
+
+        // Correlate coefficients with delay line walking backwards from
+        // write_pos (the newest sample, multiplied by coeffs[0]), wrapping
+        // around. For symmetric filters this is equivalent to convolution.        T result = T { 0 };
         T result = T { 0 };
-        for (std::size_t i = 0; i <= index; ++i) {
-            result += coeffs[i] * delay_line[index - i];
+        std::size_t coeff_idx = 0;
+        std::size_t delay_idx = write_pos + 1;
+
+        // Indices [write_pos ... 0]
+        const std::size_t first_segment = write_pos + 1;
+        for (std::size_t i = 0; i < first_segment; ++i) {
+            --delay_idx;
+            result += coeffs[coeff_idx++] * delay_line[delay_idx];
         }
-        for (std::size_t i = index + 1; i < N; ++i) {
-            result += coeffs[i] * delay_line[index + N - i];
-        }
-        if (++index == N) {
-            index = 0;
+
+        // Wrapped indices [N-1 ... write_pos+1]
+        delay_idx = N;
+        const std::size_t second_segment = N - first_segment;
+        for (std::size_t i = 0; i < second_segment; ++i) {
+            --delay_idx;
+            result += coeffs[coeff_idx++] * delay_line[delay_idx];
         }
         return result;
     }
