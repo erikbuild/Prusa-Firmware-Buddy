@@ -32,6 +32,12 @@
   #include <feature/prusa/crash_recovery.hpp>
 #endif
 
+#if AXIS_IS_TMC(E0)
+  #include <module/planner.h>
+  #include <module/stepper/indirection.h>
+  #include <raii/scope_guard.hpp>
+#endif
+
 extern xyze_pos_t destination;
 
 #if ENABLED(VARIABLE_G0_FEEDRATE)
@@ -49,7 +55,7 @@ extern xyze_pos_t destination;
  *#### Usage
  *
  *    G0 [ X | Y | Z | E | F ]
- *    G1 [ X | Y | Z | E | F ]
+ *    G1 [ X | Y | Z | E | F | C ]
  *
  *#### Parameters
  *
@@ -58,6 +64,7 @@ extern xyze_pos_t destination;
  *  - `Z` - The position to move to on the Z axis
  *  - `E` - The amount to extrude between the starting point and ending point
  *  - `F` - The feedrate per minute of the move between the starting point and ending point (if supplied)
+ *  - `C` - Temporary E motor current in mA for this move only (TMC drivers only)
  */
 void GcodeSuite::G0_G1(TERN_(HAS_FAST_MOVES, const bool fast_move/*=false*/)) {
   TERN_(FULL_REPORT_TO_HOST_FEATURE, set_and_report_grblstate(M_RUNNING));
@@ -77,6 +84,22 @@ void GcodeSuite::G0_G1(TERN_(HAS_FAST_MOVES, const bool fast_move/*=false*/)) {
         feedrate_mm_s = fast_move_feedrate;       // Get G0 feedrate from last usage
       }
     #endif
+  #endif
+
+  #if AXIS_IS_TMC(E0)
+  // Temporary E motor current for this move only
+  uint16_t old_e_current = 0;
+  const bool has_temp_e_current = parser.seenval('C');
+  if (has_temp_e_current) {
+      const uint16_t new_e_current = parser.value_ushort();
+      planner.synchronize();
+      old_e_current = stepperE0.rms_current();
+      stepperE0.rms_current(new_e_current);
+  }
+  ScopeGuard e_current_guard([&] {
+      planner.synchronize();
+      stepperE0.rms_current(old_e_current);
+  }, has_temp_e_current);
   #endif
 
   get_destination_from_command();                 // Get X Y [Z[I[J[K]]]] [E] F (and set cutter power)
