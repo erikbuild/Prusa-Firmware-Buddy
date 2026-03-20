@@ -59,11 +59,12 @@ private:
 };
 
 /// Menu item that automatically periodically calls \param getter in the specified interval, and if the value changes, udpates the label
-template <typename T>
+template <typename Value_>
 class MenuItemAutoUpdatingLabel : public WI_LAMBDA_LABEL_t {
 
 public:
-    using GetterFunction = T (*)(MenuItemAutoUpdatingLabel<T> *item);
+    using Value = Value_;
+    using GetterFunction = Value_ (*)(MenuItemAutoUpdatingLabel<Value_> *item);
 
     MenuItemAutoUpdatingLabel(const string_view_utf8 &label, const char *format, const GetterFunction &getter)
         : MenuItemAutoUpdatingLabel(label, print_function(format), getter) //
@@ -74,7 +75,7 @@ public:
         , getter_(getter) //
     {}
 
-    const T &value() const {
+    const Value &value() const {
         return value_;
     }
 
@@ -100,7 +101,7 @@ private:
         return [this, format](const std::span<char> &buffer) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
-            if constexpr (std::is_same_v<T, float>) {
+            if constexpr (std::is_same_v<Value_, float>) {
                 if (std::isnan(value_)) {
                     strlcpy(buffer.data(), "N/A", buffer.size());
                     return;
@@ -116,5 +117,5 @@ private:
 
     GetterFunction getter_;
     uint32_t last_update_ms_ = 0;
-    T value_ {};
+    Value_ value_ {};
 };
