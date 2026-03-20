@@ -515,7 +515,13 @@ MI_INFO_BED_TEMP::MI_INFO_BED_TEMP()
 // MI_INFO_FILAMENT_SENSOR
 MI_INFO_FILAMENT_SENSOR::MI_INFO_FILAMENT_SENSOR(const string_view_utf8 &label, const GetterFunction &getter_function)
     : MenuItemAutoUpdatingLabel(
-        label, [this](auto &buf) { print_val(buf); }, getter_function) {}
+        label, [this](auto &buf) { print_val(buf); }, getter_function) {
+}
+
+void MI_INFO_FILAMENT_SENSOR::Loop() {
+    MenuItemAutoUpdatingLabel::Loop();
+    set_is_hidden(!value().has_value());
+}
 
 void MI_INFO_FILAMENT_SENSOR::print_val(const std::span<char> &buffer) const {
     static constexpr EnumArray<FilamentSensorState, const char *, 6> texts {
@@ -528,14 +534,19 @@ void MI_INFO_FILAMENT_SENSOR::print_val(const std::span<char> &buffer) const {
     };
 
     const auto val = value();
+    if (!val.has_value()) {
+        buffer[0] = '\0';
+        return;
+    }
+
     StringViewUtf8Parameters<8> params;
-    const auto orig_str = _(texts.get_fallback(val.state, FilamentSensorState::NotInitialized));
-    orig_str.formatted(params, val.value).copyToRAM(buffer);
+    const auto orig_str = _(texts.get_fallback(val->state, FilamentSensorState::NotInitialized));
+    orig_str.formatted(params, val->value).copyToRAM(buffer);
 }
 
-FilamentSensorStateAndValue MI_INFO_FILAMENT_SENSOR::get_value(IFSensor *fsensor) {
+MI_INFO_FILAMENT_SENSOR::Value MI_INFO_FILAMENT_SENSOR::get_value(IFSensor *fsensor) {
     if (!fsensor) {
-        return {};
+        return std::nullopt;
     }
 
     return FilamentSensorStateAndValue {
@@ -553,7 +564,7 @@ MI_INFO_PRINTER_FILAMENT_SENSOR::MI_INFO_PRINTER_FILAMENT_SENSOR()
             return match(
                 marlin_vars().active_extruder.get(),
                 [](VirtualToolIndex virtual_tool) { return get_value(GetExtruderFSensor(virtual_tool.to_physical())); },
-                [](NoTool) { return FilamentSensorStateAndValue {}; });
+                [](NoTool) -> Value { return std::nullopt; });
         } //
     ) {}
 
@@ -566,10 +577,9 @@ MI_INFO_SIDE_FILAMENT_SENSOR::MI_INFO_SIDE_FILAMENT_SENSOR()
             return match(
                 marlin_vars().active_extruder.get(),
                 [](VirtualToolIndex virtual_tool) { return get_value(GetSideFSensor(virtual_tool.to_physical())); },
-                [](NoTool) { return FilamentSensorStateAndValue {}; });
+                [](NoTool) -> Value { return std::nullopt; });
         } //
     ) {
-    set_is_hidden(std::holds_alternative<NoTool>(marlin_vars().active_extruder.get()));
 }
 
 #if BOARD_IS_XBUDDY()

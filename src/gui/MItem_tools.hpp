@@ -257,13 +257,15 @@ public:
     MI_INFO_BED_TEMP();
 };
 
-class MI_INFO_FILAMENT_SENSOR : public MenuItemAutoUpdatingLabel<FilamentSensorStateAndValue> {
+class MI_INFO_FILAMENT_SENSOR : public MenuItemAutoUpdatingLabel<std::optional<FilamentSensorStateAndValue>> {
 public:
     MI_INFO_FILAMENT_SENSOR(const string_view_utf8 &label, const GetterFunction &getter_function);
 
 protected:
+    void Loop() override;
+
     void print_val(const std::span<char> &buffer) const;
-    static FilamentSensorStateAndValue get_value(IFSensor *fsensor);
+    static std::optional<FilamentSensorStateAndValue> get_value(IFSensor *fsensor);
 };
 
 class MI_INFO_PRINTER_FILAMENT_SENSOR : public MI_INFO_FILAMENT_SENSOR {
