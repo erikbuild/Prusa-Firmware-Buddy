@@ -8,6 +8,7 @@
 #include "../../../lib/Marlin/Marlin/src/feature/prusa/e-stall_detector.h"
 #include "pause_stubbed.hpp"
 #include "pause_settings.hpp"
+#include <option/has_mmu2.h>
 
 using namespace filament_gcodes;
 
@@ -53,16 +54,34 @@ void GcodeSuite::M701() {
     const float min_Z_pos = p.option<float>('Z').value_or(Z_AXIS_LOAD_POS);
     const auto op_preheat = p.option<RetAndCool_t>('W', std::to_underlying(RetAndCool_t::last_) + 1);
 
+    const std::optional<uint8_t> mmu_slot = p.option<uint8_t>('P');
+
+#if HAS_MMU2()
+    // HACK: The MMU case is _little bit_ wrong.
+    //
+    // On all our current MMU printers, we have single, always present head. If
+    // we ever get something like XL with 5*MMU, this will not work, but the
+    // M701_load should be changed to take physical tool, not virtual - that
+    // is, we would want to say something like "load 3rd slot of 2nd tool".
+    //
+    // The MMU case doesn't currently use 'T' for tool (extruder, there's just
+    // one). It uses 'P' for the slot. It is not even clear if on XL+5*MMU, the
+    // case would be something like T2 P3 or T2 P13 (eg. 2*5+3) or just P13..
+    static_assert(PhysicalToolIndex::count == 1);
+    if (!mmu_slot.has_value() || *mmu_slot >= VirtualToolIndex::count) {
+        return;
+    }
+    const VirtualToolIndex target_tool = VirtualToolIndex::from_raw(*mmu_slot);
+#else
     const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(PrusaGcodeSuite::get_target_virtual_from_command(p));
     if (!virtual_tool.has_value()) {
         return;
     }
     const VirtualToolIndex target_tool = *virtual_tool;
-
-    const int8_t mmu_slot = p.option<int8_t>('P').value_or(-1);
+#endif
     const ResumePrint_t resume_print = static_cast<ResumePrint_t>(p.option<bool>('R').value_or(false));
 
-    M701_load(filament_to_be_loaded, fast_load_length, min_Z_pos, op_preheat, target_tool, mmu_slot, color_to_be_loaded, resume_print);
+    M701_load(filament_to_be_loaded, fast_load_length, min_Z_pos, op_preheat, target_tool, mmu_slot.has_value() ? static_cast<int8_t>(*mmu_slot) : static_cast<int8_t>(-1), color_to_be_loaded, resume_print);
 }
 
 /**
