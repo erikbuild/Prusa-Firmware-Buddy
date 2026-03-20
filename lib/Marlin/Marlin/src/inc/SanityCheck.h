@@ -349,14 +349,12 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
  * Granular software endstops (Marlin >= 1.1.7)
  */
 #if ENABLED(MIN_SOFTWARE_ENDSTOPS) && DISABLED(MIN_SOFTWARE_ENDSTOP_Z)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if NONE(MIN_SOFTWARE_ENDSTOP_X, MIN_SOFTWARE_ENDSTOP_Y)
     #error "MIN_SOFTWARE_ENDSTOPS requires at least one of the MIN_SOFTWARE_ENDSTOP_[XYZ] options."
   #endif
 #endif
 
 #if ENABLED(MAX_SOFTWARE_ENDSTOPS) && DISABLED(MAX_SOFTWARE_ENDSTOP_Z)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if NONE(MAX_SOFTWARE_ENDSTOP_X, MAX_SOFTWARE_ENDSTOP_Y)
     #error "MAX_SOFTWARE_ENDSTOPS requires at least one of the MAX_SOFTWARE_ENDSTOP_[XYZ] options."
   #endif
@@ -402,13 +400,11 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
  * SD File Sorting
  */
 #if ENABLED(SDCARD_SORT_ALPHA)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if SDSORT_LIMIT > 256
     #error "SDSORT_LIMIT must be 256 or smaller."
   #elif SDSORT_LIMIT < 10
     #error "SDSORT_LIMIT should be greater than 9 to be useful."
   #elif DISABLED(SDSORT_USES_RAM)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if ENABLED(SDSORT_DYNAMIC_RAM)
       #error "SDSORT_DYNAMIC_RAM requires SDSORT_USES_RAM (which reads the directory into RAM)."
     #elif ENABLED(SDSORT_CACHE_NAMES)
@@ -417,11 +413,9 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
   #endif
 
   #if ENABLED(SDSORT_CACHE_NAMES) && DISABLED(SDSORT_DYNAMIC_RAM)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if SDSORT_CACHE_VFATS < 2
       #error "SDSORT_CACHE_VFATS must be 2 or greater!"
     #elif SDSORT_CACHE_VFATS > MAX_VFAT_ENTRIES
-      // #error dead code found by automatic analyses (see BFW-5461)
       #undef SDSORT_CACHE_VFATS
       #define SDSORT_CACHE_VFATS MAX_VFAT_ENTRIES
       #warning "SDSORT_CACHE_VFATS was reduced to MAX_VFAT_ENTRIES!"
@@ -515,7 +509,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
    * SOLENOID_PROBE requirements
    */
   #if ENABLED(SOLENOID_PROBE)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if ENABLED(EXT_SOLENOID)
       #error "SOLENOID_PROBE is incompatible with EXT_SOLENOID."
     #elif !HAS_SOLENOID_1
@@ -527,7 +520,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
    * NUM_SERVOS is required for a Z servo probe
    */
   #if HAS_Z_SERVO_PROBE
-    // #error dead code found by automatic analyses (see BFW-5461)
     #ifndef NUM_SERVOS
       #error "You must set NUM_SERVOS for a Z servo probe (Z_PROBE_SERVO_NR)."
     #elif Z_PROBE_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
@@ -544,7 +536,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #endif
 
   #if ENABLED(BLTOUCH)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if BLTOUCH_DELAY < 200
       #error "BLTOUCH_DELAY less than 200 is unsafe and is not supported."
     #elif DISABLED(BLTOUCH_SET_5V_MODE) && NONE(ENDSTOPPULLUPS, ENDSTOPPULLUP_ZMIN, ENDSTOPPULLUP_ZMIN_PROBE)
@@ -560,7 +551,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
    * Touch-MI probe requirements
    */
   #if ENABLED(TOUCH_MI_PROBE)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if DISABLED(Z_SAFE_HOMING)
       #error "TOUCH_MI_PROBE requires Z_SAFE_HOMING."
     #elif !defined(TOUCH_MI_RETRACT_Z)
@@ -580,7 +570,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
    * Require pin options and pins to be defined
    */
   #if ENABLED(SENSORLESS_PROBING)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if !AXIS_HAS_STALLGUARD(Z)
       #error "SENSORLESS_PROBING requires a TMC2130/2160/2209/5130/5160 driver on Z."
     #endif
@@ -691,7 +680,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * Make sure DISABLE_[XYZ] compatible with selected homing options
  */
 #if ANY(DISABLE_X, DISABLE_Y, DISABLE_Z)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if EITHER(HOME_AFTER_DEACTIVATE, Z_SAFE_HOMING)
     #error "DISABLE_[XYZ] is not compatible with HOME_AFTER_DEACTIVATE or Z_SAFE_HOMING."
   #endif
@@ -709,7 +697,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * Case Light requirements
  */
 #if ENABLED(CASE_LIGHT_ENABLE)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if !PIN_EXISTS(CASE_LIGHT)
     #error "CASE_LIGHT_ENABLE requires CASE_LIGHT_PIN to be defined."
   #elif CASE_LIGHT_PIN == FAN_PIN
@@ -731,27 +718,22 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
       #error "E0_STEP_PIN, E0_DIR_PIN, or E0_ENABLE_PIN not defined for this board."
     #endif
     #if E_STEPPERS > 1
-      // #error dead code found by automatic analyses (see BFW-5461)
       #if !(PINS_EXIST(E1_STEP, E1_DIR) && HAS_E1_ENABLE)
         #error "E1_STEP_PIN, E1_DIR_PIN, or E1_ENABLE_PIN not defined for this board."
       #endif
       #if E_STEPPERS > 2
-        // #error dead code found by automatic analyses (see BFW-5461)
         #if !(PINS_EXIST(E2_STEP, E2_DIR) && HAS_E2_ENABLE)
           #error "E2_STEP_PIN, E2_DIR_PIN, or E2_ENABLE_PIN not defined for this board."
         #endif
         #if E_STEPPERS > 3
-          // #error dead code found by automatic analyses (see BFW-5461)
           #if !(PINS_EXIST(E3_STEP, E3_DIR) && HAS_E3_ENABLE)
             #error "E3_STEP_PIN, E3_DIR_PIN, or E3_ENABLE_PIN not defined for this board."
           #endif
           #if E_STEPPERS > 4
-            // #error dead code found by automatic analyses (see BFW-5461)
             #if !(PINS_EXIST(E4_STEP, E4_DIR) && HAS_E4_ENABLE)
               #error "E4_STEP_PIN, E4_DIR_PIN, or E4_ENABLE_PIN not defined for this board."
             #endif
             #if E_STEPPERS > 5
-              // #error dead code found by automatic analyses (see BFW-5461)
               #if !(PINS_EXIST(E5_STEP, E5_DIR) && HAS_E5_ENABLE)
                 #error "E5_STEP_PIN, E5_DIR_PIN, or E5_ENABLE_PIN not defined for this board."
               #endif
@@ -798,7 +780,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #endif
 
 #if ENABLED(Z_TRIPLE_ENDSTOPS)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if !Z2_USE_ENDSTOP
     #error "You must set Z2_USE_ENDSTOP with Z_TRIPLE_ENDSTOPS."
   #elif Z2_USE_ENDSTOP == _XMIN_ && DISABLED(USE_XMIN_PLUG)
@@ -846,7 +827,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
  * G38 Probe Target
  */
 #if ENABLED(G38_PROBE_TARGET)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if !HAS_BED_PROBE
     #error "G38_PROBE_TARGET requires a bed probe."
   #endif
@@ -925,34 +905,24 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #if AXIS_DRIVER_TYPE_X(TMC2209)
   INVALID_TMC_ADDRESS(X);
 #elif AXIS_DRIVER_TYPE_Y(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(Y);
 #elif AXIS_DRIVER_TYPE_Z(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(Z);
 #elif AXIS_DRIVER_TYPE_Z2(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(Z2);
 #elif AXIS_DRIVER_TYPE_Z3(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(Z3);
 #elif AXIS_DRIVER_TYPE_E0(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(E0);
 #elif AXIS_DRIVER_TYPE_E1(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(E1);
 #elif AXIS_DRIVER_TYPE_E2(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(E2);
 #elif AXIS_DRIVER_TYPE_E3(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(E3);
 #elif AXIS_DRIVER_TYPE_E4(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(E4);
 #elif AXIS_DRIVER_TYPE_E5(TMC2209)
-  // #error dead code found by automatic analyses (see BFW-5461)
   INVALID_TMC_ADDRESS(E5);
 #endif
 #undef INVALID_TMC_ADDRESS
@@ -1003,42 +973,36 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
   #elif Z_SENSORLESS && Z_HOME_DIR > 0 && DISABLED(ENDSTOPPULLUPS, ENDSTOPPULLUP_ZMAX)
     #error "SENSORLESS_HOMING requires ENDSTOPPULLUP_ZMAX (or ENDSTOPPULLUPS) when homing to Z_MAX."
   #elif X_SENSORLESS && X_HOME_DIR < 0 && X_MIN_ENDSTOP_INVERTING != X_ENDSTOP_INVERTING
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if X_ENDSTOP_INVERTING
       #error "SENSORLESS_HOMING requires X_MIN_ENDSTOP_INVERTING = true when homing to X_MIN."
     #else
       #error "SENSORLESS_HOMING requires X_MIN_ENDSTOP_INVERTING = false when homing TMC2209 to X_MIN."
     #endif
   #elif X_SENSORLESS && X_HOME_DIR > 0 && X_MAX_ENDSTOP_INVERTING != X_ENDSTOP_INVERTING
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if X_ENDSTOP_INVERTING
       #error "SENSORLESS_HOMING requires X_MAX_ENDSTOP_INVERTING = true when homing to X_MAX."
     #else
       #error "SENSORLESS_HOMING requires X_MAX_ENDSTOP_INVERTING = false when homing TMC2209 to X_MAX."
     #endif
   #elif Y_SENSORLESS && Y_HOME_DIR < 0 && Y_MIN_ENDSTOP_INVERTING != Y_ENDSTOP_INVERTING
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if Y_ENDSTOP_INVERTING
       #error "SENSORLESS_HOMING requires Y_MIN_ENDSTOP_INVERTING = true when homing to Y_MIN."
     #else
       #error "SENSORLESS_HOMING requires Y_MIN_ENDSTOP_INVERTING = false when homing TMC2209 to Y_MIN."
     #endif
   #elif Y_SENSORLESS && Y_HOME_DIR > 0 && Y_MAX_ENDSTOP_INVERTING != Y_ENDSTOP_INVERTING
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if Y_ENDSTOP_INVERTING
       #error "SENSORLESS_HOMING requires Y_MAX_ENDSTOP_INVERTING = true when homing to Y_MAX."
     #else
       #error "SENSORLESS_HOMING requires Y_MAX_ENDSTOP_INVERTING = false when homing TMC2209 to Y_MAX."
     #endif
   #elif Z_SENSORLESS && Z_HOME_DIR < 0 && Z_MIN_ENDSTOP_INVERTING != Z_ENDSTOP_INVERTING
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if Z_ENDSTOP_INVERTING
       #error "SENSORLESS_HOMING requires Z_MIN_ENDSTOP_INVERTING = true when homing to Z_MIN."
     #else
       #error "SENSORLESS_HOMING requires Z_MIN_ENDSTOP_INVERTING = false when homing TMC2209 to Z_MIN."
     #endif
   #elif Z_SENSORLESS && Z_HOME_DIR > 0 && Z_MAX_ENDSTOP_INVERTING != Z_ENDSTOP_INVERTING
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if Z_ENDSTOP_INVERTING
       #error "SENSORLESS_HOMING requires Z_MAX_ENDSTOP_INVERTING = true when homing to Z_MAX."
     #else
@@ -1055,7 +1019,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 
 // Sensorless probing requirements
 #if ENABLED(SENSORLESS_PROBING)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if !Z_SENSORLESS
     #error "SENSORLESS_PROBING requires a TMC stepper driver with StallGuard on Z."
   #endif
@@ -1090,7 +1053,6 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
 #define IN_CHAIN(A) (A##_CHAIN_POS > 0)
 // TMC SPI Chaining
 #if IN_CHAIN(X) || IN_CHAIN(Y) || IN_CHAIN(Z) || IN_CHAIN(Z2) || IN_CHAIN(Z3) || IN_CHAIN(E0) || IN_CHAIN(E1) || IN_CHAIN(E2) || IN_CHAIN(E3) || IN_CHAIN(E4) || IN_CHAIN(E5)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if  (IN_CHAIN(X)  && !PIN_EXISTS(X_CS) ) || (IN_CHAIN(Y)  && !PIN_EXISTS(Y_CS) ) \
     || (IN_CHAIN(Z)  && !PIN_EXISTS(Z_CS) ) || (IN_CHAIN(Z2) && !PIN_EXISTS(Z2_CS)) \
     || (IN_CHAIN(Z3) && !PIN_EXISTS(Z3_CS)) || (IN_CHAIN(E0) && !PIN_EXISTS(E0_CS)) \
@@ -1099,39 +1061,27 @@ static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.
     || (IN_CHAIN(E5) && !PIN_EXISTS(E5_CS))
     #error "All chained TMC drivers need a CS pin."
   #else
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if IN_CHAIN(X)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE X_CS_PIN
     #elif IN_CHAIN(Y)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE Y_CS_PIN
     #elif IN_CHAIN(Z)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE Z_CS_PIN
     #elif IN_CHAIN(Z2)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE Z2_CS_PIN
     #elif IN_CHAIN(Z3)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE Z3_CS_PIN
     #elif IN_CHAIN(E0)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE E0_CS_PIN
     #elif IN_CHAIN(E1)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE E1_CS_PIN
     #elif IN_CHAIN(E2)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE E2_CS_PIN
     #elif IN_CHAIN(E3)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE E3_CS_PIN
     #elif IN_CHAIN(E4)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE E4_CS_PIN
     #elif IN_CHAIN(E5)
-      // #error dead code found by automatic analyses (see BFW-5461)
       #define CS_COMPARE E5_CS_PIN
     #endif
     #if  (IN_CHAIN(X)  && X_CS_PIN  != CS_COMPARE) || (IN_CHAIN(Y)  && Y_CS_PIN  != CS_COMPARE) \
@@ -1178,9 +1128,7 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
               "DEFAULT_MAX_ACCELERATION values must be positive.");
 
 #if ENABLED(LIMITED_MAX_ACCEL_EDITING)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #ifdef MAX_ACCEL_EDIT_VALUES
-    // #error dead code found by automatic analyses (see BFW-5461)
     constexpr float sanity_arr_4[] = MAX_ACCEL_EDIT_VALUES;
     static_assert(COUNT(sanity_arr_4) >= XYZE, "MAX_ACCEL_EDIT_VALUES requires X, Y, Z and E elements.");
     static_assert(COUNT(sanity_arr_4) <= XYZE, "MAX_ACCEL_EDIT_VALUES has too many elements. X, Y, Z and E elements only.");
@@ -1192,9 +1140,7 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 #endif
 
 #if ENABLED(LIMITED_MAX_FR_EDITING)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #ifdef MAX_FEEDRATE_EDIT_VALUES
-    // #error dead code found by automatic analyses (see BFW-5461)
     constexpr float sanity_arr_5[] = MAX_FEEDRATE_EDIT_VALUES;
     static_assert(COUNT(sanity_arr_5) >= XYZE, "MAX_FEEDRATE_EDIT_VALUES requires X, Y, Z and E elements.");
     static_assert(COUNT(sanity_arr_5) <= XYZE, "MAX_FEEDRATE_EDIT_VALUES has too many elements. X, Y, Z and E elements only.");
@@ -1206,9 +1152,7 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 #endif
 
 #if ENABLED(LIMITED_JERK_EDITING)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #ifdef MAX_JERK_EDIT_VALUES
-    // #error dead code found by automatic analyses (see BFW-5461)
     constexpr float sanity_arr_6[] = MAX_JERK_EDIT_VALUES;
     static_assert(COUNT(sanity_arr_6) >= XYZE, "MAX_JERK_EDIT_VALUES requires X, Y, Z and E elements.");
     static_assert(COUNT(sanity_arr_6) <= XYZE, "MAX_JERK_EDIT_VALUES has too many elements. X, Y, Z and E elements only.");
@@ -1240,7 +1184,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 #endif
 
 #if ENABLED(Z_STEPPER_AUTO_ALIGN)
-  // #error dead code found by automatic analyses (see BFW-5461)
 
   #if !ENABLED(Z_TRIPLE_STEPPER_DRIVERS)
     #error "Z_STEPPER_AUTO_ALIGN requires Z_TRIPLE_STEPPER_DRIVERS."
@@ -1249,7 +1192,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
   #endif
 
   #if ENABLED(Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if DISABLED(Z_TRIPLE_STEPPER_DRIVERS)
       #error "Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS requires Z_TRIPLE_STEPPER_DRIVERS."
     #endif
@@ -1263,7 +1205,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 #endif
 
 #if ENABLED(BACKLASH_COMPENSATION)
-  // #error dead code found by automatic analyses (see BFW-5461)
   #if IS_CORE
     #error "BACKLASH_COMPENSATION is incompatible with CORE kinematics."
   #endif
@@ -1305,7 +1246,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
 #endif
 
 #if HAS_CUTTER
-  // #error dead code found by automatic analyses (see BFW-5461)
   #define _PIN_CONFLICT(P) (PIN_EXISTS(P) && P##_PIN == SPINDLE_LASER_PWM_PIN)
   #if BOTH(SPINDLE_FEATURE, LASER_FEATURE)
     #error "Enable only one of SPINDLE_FEATURE or LASER_FEATURE."
@@ -1314,7 +1254,6 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
   #elif ENABLED(SPINDLE_CHANGE_DIR) && !PIN_EXISTS(SPINDLE_DIR)
     #error "SPINDLE_DIR_PIN is required for SPINDLE_CHANGE_DIR."
   #elif ENABLED(SPINDLE_LASER_PWM)
-    // #error dead code found by automatic analyses (see BFW-5461)
     #if !defined(SPINDLE_LASER_PWM_PIN) || SPINDLE_LASER_PWM_PIN < 0
       #error "SPINDLE_LASER_PWM_PIN is required for SPINDLE_LASER_PWM."
     #elif !PWM_PIN(SPINDLE_LASER_PWM_PIN)
