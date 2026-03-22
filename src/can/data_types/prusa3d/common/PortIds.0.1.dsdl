@@ -43,8 +43,9 @@ uint16 MSG_AC_CONTROLLER_STATUS = 600
 uint16 MSG_AC_CONTROLLER_LEDS = 601 # This is broadcast by master, would need changes if we had two AC Controllers
 
 # Tool offset sensor (PUB6)
-uint16 MSG_TOOL_OFFSET_SENSOR_DATA = 900
+uint16 MSG_TOOL_OFFSET_SENSOR_DATA_CH0 = 900
 uint16 MSG_TOOL_OFFSET_SENSOR_STATUS = 901
+uint16 MSG_TOOL_OFFSET_SENSOR_DATA_CH1 = 902
 
 # NFC (PUB6)
 uint16 MSG_NFC_EVENT = 1000

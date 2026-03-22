@@ -1,6 +1,9 @@
 # Configuration service for tool offset sensor
+# Per-channel enable: when both disabled, sensor shuts down.
+# When either becomes enabled, sensor powers up and reconfigures.
 
-bool enable_streaming
+bool ch0_enabled
+bool ch1_enabled
 @sealed
 ---
 @sealed

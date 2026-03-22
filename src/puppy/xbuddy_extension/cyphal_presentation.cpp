@@ -511,11 +511,8 @@ private:
 #if HAS_TOOL_OFFSET_SENSOR()
         prusa3d_tool_offset_sensor_Config_Request_1_0 request;
         std::memset(&request, 0, sizeof(request));
-        if (r.enable_streaming.has_value()) {
-            request.enable_streaming = *r.enable_streaming;
-        } else {
-            request.enable_streaming = false;
-        }
+        request.ch0_enabled = r.ch0_enabled.value_or(false);
+        request.ch1_enabled = r.ch1_enabled.value_or(false);
         (void)serialize_and_transmit(request, remote_node_id, transfer_id.tool_offset_sensor_config++);
 #else
         (void)remote_node_id;

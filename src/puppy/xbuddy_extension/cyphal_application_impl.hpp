@@ -172,7 +172,7 @@ private:
     AcController ac_controller;
 
     struct ToolOffsetSensor {
-        tool_offset_sensor::Config desired = tool_offset_sensor::Config { .enable_streaming = std::optional<bool> { false } };
+        tool_offset_sensor::Config desired = tool_offset_sensor::Config { .ch0_enabled = false, .ch1_enabled = false };
         tool_offset_sensor::Config active;
         tool_offset_sensor::Status status;
         bool seen_status = false;
