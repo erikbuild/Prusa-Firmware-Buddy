@@ -38,33 +38,33 @@ static void main_task_code(void *) {
         }
 
         LDC1612::ChannelConfig ch_config {
-            .rcount = 0x0005,
-            .settlecount = 0x000A,
-            .fin_divider = 3,
-            .fref_divider = 10,
-            .drive_current = 16,
+            .rcount = 4096,
+            .settlecount = 64,
+            .fin_divider = 1,
+            .fref_divider = 1,
+            .drive_current = 30,
             .offset = 0
         };
 
         LDC1612::DeviceConfig device_config {
             .sleep_mode = false,
-            .use_external_clock = false,
+            .use_external_clock = true,
             .rp_override_en = false,
             .auto_amp_dis = false,
             .mux_config = {
-                .deglitch = LDC1612::DeglitchFilter::MHz_3_3 },
+                .deglitch = LDC1612::DeglitchFilter::MHz_10 },
             .error_config = {
                 .report_underrange = true,
                 .report_overrange = true,
                 .report_watchdog = true,
-                .report_amplitude_high = true,
-                .report_amplitude_low = true,
-                .int_on_underrange = true,
-                .int_on_overrange = true,
-                .int_on_watchdog = true,
-                .int_on_amplitude_high = true,
-                .int_on_amplitude_low = true,
-                .int_on_zero_count = true,
+                .report_amplitude_high = false,
+                .report_amplitude_low = false,
+                .int_on_underrange = false,
+                .int_on_overrange = false,
+                .int_on_watchdog = false,
+                .int_on_amplitude_high = false,
+                .int_on_amplitude_low = false,
+                .int_on_zero_count = false,
                 .int_on_data_ready = true,
             },
             .ch0 = ch_config,

@@ -137,7 +137,7 @@ void hal::init_gpio() {
     // LDC1612_OSC - PA9
     {
         LDC1612_OSC_GPIO_CLK_ENABLE();
-        HAL_RCC_MCOConfig(RCC_MCO1_PA9, RCC_MCO1SOURCE_SYSCLK, RCC_MCODIV_2);
+        HAL_RCC_MCOConfig(RCC_MCO1_PA9, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
     }
 }
 
