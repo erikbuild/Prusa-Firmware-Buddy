@@ -732,8 +732,6 @@ void Temperature::init() {
     INIT_FAN_PIN(FAN2_PIN);
   #endif
 
-  HAL_adc_init();
-
   #if HAS_TEMP_ADC_0
     HAL_ANALOG_SELECT(TEMP_0_PIN);
   #endif
@@ -890,6 +888,9 @@ void Temperature::isr() {
     }
   }
 
+  static uint16_t adc_result;
+
+  #define HAL_START_ADC(pin) adc_result = analogRead(pin)
 
   /**
    * One sensor is sampled on every other call of the ISR.
@@ -901,8 +902,7 @@ void Temperature::isr() {
    * This gives each ADC 0.9765ms to charge up.
    */
   #define ACCUMULATE_ADC(obj) do{ \
-    if (!HAL_ADC_READY()) next_sensor_state = adc_sensor_state; \
-    else obj.sample(HAL_READ_ADC()); \
+    obj.sample(adc_result); \
   }while(0)
 
   ADCSensorState next_sensor_state = adc_sensor_state < SensorsReady ? (ADCSensorState)(int(adc_sensor_state) + 1) : StartSampling;

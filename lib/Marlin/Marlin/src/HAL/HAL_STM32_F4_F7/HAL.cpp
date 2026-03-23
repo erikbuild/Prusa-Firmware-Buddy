@@ -27,11 +27,6 @@
 
 //#include <Wire.h>
 
-// ------------------------
-// Public Variables
-// ------------------------
-
-uint16_t HAL_adc_result;
 
 // ------------------------
 // Public functions
@@ -88,9 +83,5 @@ extern "C" {
 // ------------------------
 // ADC
 // ------------------------
-
-void HAL_adc_start_conversion(const uint8_t adc_pin) { HAL_adc_result = analogRead(adc_pin); }
-
-uint16_t HAL_adc_get_result() { return HAL_adc_result; }
 
 #endif // STM32GENERIC && (STM32F4 || STM32F7)
