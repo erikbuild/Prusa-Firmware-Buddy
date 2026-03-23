@@ -16,10 +16,16 @@ using namespace marlin_server;
 static StateAnimation marlin_to_anim_state() {
     fsm::States::State load_unload_state;
     bool is_preheating;
+    bool is_warning;
     marlin_vars().peek_fsm_states([&](const auto &states) {
         load_unload_state = states[ClientFSM::Load_unload];
         is_preheating = states.is_active(ClientFSM::Preheat);
+        is_warning = states.is_active(ClientFSM::Warning);
     });
+
+    if (is_warning) {
+        return StateAnimation::Warning;
+    }
 
 #if PRINTER_IS_PRUSA_iX()
     /*
