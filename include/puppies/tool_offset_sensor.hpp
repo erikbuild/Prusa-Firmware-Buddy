@@ -16,13 +16,16 @@ namespace buddy::puppies {
 class ToolOffsetSensor final {
 public:
     xbuddy_extension::NodeState get_node_state() const;
+    bool has_sensor_fault() const;
+    bool has_errors() const;
+
+    void set_config(bool ch0_enabled, bool ch1_enabled);
 
     // These are called from the puppy task.
     CommunicationStatus refresh(PuppyModbus &);
     CommunicationStatus initial_scan(PuppyModbus &);
 
 private:
-    // The registers cached here are accessed from different tasks.
     mutable freertos::Mutex mutex;
 
     bool valid = false;
@@ -31,7 +34,11 @@ private:
     using Status = tool_offset_sensor::modbus::Status;
     ModbusInputRegisterBlock<Status::address, Status> status;
 
+    using Config = tool_offset_sensor::modbus::Config;
+    ModbusHoldingRegisterBlock<Config::address, Config> config;
+
     CommunicationStatus refresh_input(PuppyModbus &, uint32_t max_age);
+    CommunicationStatus refresh_holding(PuppyModbus &);
 };
 
 extern ToolOffsetSensor tool_offset_sensor;

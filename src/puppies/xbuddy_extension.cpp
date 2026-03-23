@@ -432,6 +432,19 @@ CommunicationStatus XBuddyExtension::refresh(PuppyModbus &bus) {
     if (std::ranges::all_of(status, equal_to(CommunicationStatus::SKIPPED))) {
         return CommunicationStatus::SKIPPED;
     }
+
+    // Drain the Cyphal bridge queue (up to 5 reads per cycle)
+    if (stream_callback_) {
+        for (int i = 0; i < 5; ++i) {
+            if (pull_cyphal_bridge(bus) != CommunicationStatus::OK) {
+                break;
+            }
+            if (cyphal_bridge.value.bytes_available == 0) {
+                break;
+            }
+        }
+    }
+
     return CommunicationStatus::OK;
 }
 
@@ -505,6 +518,47 @@ void XBuddyExtension::set_otp(const OTP_v5 &otp_data) {
 OTP_v5 XBuddyExtension::get_otp() const {
     Lock lock(mutex);
     return otp;
+}
+
+void XBuddyExtension::set_stream_callback(StreamCallback cb, void *ctx) {
+    Lock lock(mutex);
+    stream_callback_ = cb;
+    stream_callback_ctx_ = ctx;
+}
+
+CommunicationStatus XBuddyExtension::pull_cyphal_bridge(PuppyModbus &bus) {
+    // Always read fresh (no caching)
+    if (!bus.read_input_registers(modbus::ServerAddress::xbuddy_extension, cyphal_bridge.value)) {
+        return CommunicationStatus::ERROR;
+    }
+    dispatch_bridge_messages();
+    return CommunicationStatus::OK;
+}
+
+void XBuddyExtension::dispatch_bridge_messages() {
+    if (!stream_callback_) {
+        return;
+    }
+
+    static_assert(std::endian::native == std::endian::little);
+    const auto bytes = std::as_bytes(std::span { cyphal_bridge.value.data });
+    const uint16_t size = std::min<uint16_t>(cyphal_bridge.value.size, static_cast<uint16_t>(bytes.size()));
+    size_t offset = 0;
+
+    while (offset + 3 <= size) {
+        const uint8_t payload_len = static_cast<uint8_t>(bytes[offset]);
+        const uint16_t port_id = static_cast<uint16_t>(bytes[offset + 1])
+            | (static_cast<uint16_t>(bytes[offset + 2]) << 8);
+        offset += 3;
+
+        if (offset + payload_len > size) {
+            log_warning(Buddy, "XBE: bridge msg truncated len=%u offset=%zu size=%u", payload_len, offset, size);
+            break;
+        }
+
+        stream_callback_(port_id, bytes.subspan(offset, payload_len), stream_callback_ctx_);
+        offset += payload_len;
+    }
 }
 
 XBuddyExtension xbuddy_extension;

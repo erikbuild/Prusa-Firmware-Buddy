@@ -211,9 +211,10 @@ void read_register_file_callback(tool_offset_sensor::modbus::Status &modbus_stat
     tool_offset_sensor::Status status;
     cyphal::application().request_tool_offset_sensor(node_state, status);
     modbus_status.node_state = static_cast<uint16_t>(node_state);
-    modbus_status.channel_flags = (status.ch0_active ? 1 : 0)
-        | (status.ch1_active ? 2 : 0)
-        | (status.sensor_fault ? 4 : 0);
+    using namespace tool_offset_sensor::modbus;
+    modbus_status.channel_flags = (status.ch0_active ? channel_flag_ch0_active : 0)
+        | (status.ch1_active ? channel_flag_ch1_active : 0)
+        | (status.sensor_fault ? channel_flag_sensor_fault : 0);
     modbus_status.sensor_errors = status.sensor_errors;
 }
 

@@ -3,9 +3,11 @@
 
 #include "PuppyModbus.hpp"
 #include "PuppyBus.hpp"
+#include <cstddef>
 #include <atomic>
 #include <freertos/mutex.hpp>
 #include <otp/types.hpp>
+#include <span>
 #include <xbuddy_extension/modbus.hpp>
 #include <xbuddy_extension/shared_enums.hpp>
 
@@ -61,6 +63,11 @@ public:
     // Buddy-side communication error counter (since boot)
     std::atomic<uint16_t> refresh_error_count = 0;
 
+    // Cyphal bridge stream callback -- called from puppy task for each
+    // message drained from the XBE CyphalBridgeQueue.
+    using StreamCallback = void (*)(uint16_t port_id, std::span<const std::byte> payload, void *ctx);
+    void set_stream_callback(StreamCallback cb, void *ctx);
+
     // These are called from the puppy task.
     CommunicationStatus refresh(PuppyModbus &);
     CommunicationStatus initial_scan(PuppyModbus &);
@@ -109,6 +116,14 @@ private:
     CommunicationStatus write_chunk(PuppyModbus &);
     CommunicationStatus write_digest(PuppyModbus &);
     CommunicationStatus refresh_log_message(PuppyModbus &);
+
+    // Cyphal bridge
+    using CyphalBridge = xbuddy_extension::modbus::CyphalBridge;
+    ModbusInputRegisterBlock<CyphalBridge::address, CyphalBridge> cyphal_bridge;
+    StreamCallback stream_callback_ = nullptr;
+    void *stream_callback_ctx_ = nullptr;
+    CommunicationStatus pull_cyphal_bridge(PuppyModbus &);
+    void dispatch_bridge_messages();
 };
 
 extern XBuddyExtension xbuddy_extension;

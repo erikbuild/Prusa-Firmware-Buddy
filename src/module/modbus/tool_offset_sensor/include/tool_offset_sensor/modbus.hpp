@@ -15,7 +15,7 @@ struct Status {
     static constexpr uint16_t address = 0x8000;
 
     uint16_t node_state; ///< corresponds to xbuddy_extension::NodeState
-    uint16_t channel_flags; ///< [0] ch0_active [1] ch1_active [2] sensor_fault
+    uint16_t channel_flags; ///< bitfield, see channel_flag_* constants
     uint16_t sensor_errors; ///< sticky LDC1612 error flags
 };
 
@@ -26,5 +26,10 @@ struct Config {
     uint16_t ch0_enabled; ///< enable channel 0 (boolean)
     uint16_t ch1_enabled; ///< enable channel 1 (boolean)
 };
+
+// Bit positions for Status::channel_flags
+static constexpr uint16_t channel_flag_ch0_active = 1 << 0;
+static constexpr uint16_t channel_flag_ch1_active = 1 << 1;
+static constexpr uint16_t channel_flag_sensor_fault = 1 << 2;
 
 } // namespace tool_offset_sensor::modbus
