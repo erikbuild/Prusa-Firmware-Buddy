@@ -309,6 +309,10 @@ std::optional<uint32_t> LDC1612::read_channel(Channel ch) {
         return std::nullopt;
     }
 
+    return read_channel_data(ch);
+}
+
+std::optional<uint32_t> LDC1612::read_channel_data(Channel ch) {
     Register msb_reg = (ch == Channel::CH0) ? Register::DATA0_MSB : Register::DATA1_MSB;
     Register lsb_reg = (ch == Channel::CH0) ? Register::DATA0_LSB : Register::DATA1_LSB;
 
@@ -317,12 +321,10 @@ std::optional<uint32_t> LDC1612::read_channel(Channel ch) {
 
     // MSB must be read before LSB for data coherency
     if (!read_reg(msb_reg, msb)) {
-        log_warning(LDC1612, "Failed to read MSB for channel %d", static_cast<int>(ch));
         return std::nullopt;
     }
 
     if (!read_reg(lsb_reg, lsb)) {
-        log_warning(LDC1612, "Failed to read LSB for channel %d", static_cast<int>(ch));
         return std::nullopt;
     }
 

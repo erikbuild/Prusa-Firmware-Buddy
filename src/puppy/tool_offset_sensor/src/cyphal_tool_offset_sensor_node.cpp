@@ -5,6 +5,7 @@
 #include <cyphal_pnp.hpp>
 #include <hal.hpp>
 #include <freertos/timing.hpp>
+#include <mutex>
 #include <prusa3d/common/CustomExecuteCommand_1_0.h>
 #include <prusa3d/common/SharedFault_1_0.h>
 
@@ -44,21 +45,32 @@ void ToolOffsetSensorNode::app_tick_pnp(int64_t now_us) {
 }
 
 void ToolOffsetSensorNode::write_config(const ConfigTraits::Request::Type &cfg) {
-    config_mutex.lock();
+    std::lock_guard lock(config_mutex);
     config.ch0_enabled = cfg.ch0_enabled;
     config.ch1_enabled = cfg.ch1_enabled;
-    config_mutex.unlock();
 }
 
 ToolOffsetSensorNode::ChannelConfig ToolOffsetSensorNode::get_config() {
-    config_mutex.lock();
-    auto snapshot = config;
-    config_mutex.unlock();
-    return snapshot;
+    std::lock_guard lock(config_mutex);
+    return config;
 }
 
-void ToolOffsetSensorNode::update_status(StatusTraits::Type &) {
-    // TODO BFW-8360 implement real status update
+ToolOffsetSensorNode::SensorState ToolOffsetSensorNode::get_sensor_state() {
+    std::lock_guard lock(sensor_state_mutex);
+    return sensor_state;
+}
+
+void ToolOffsetSensorNode::set_sensor_state(const SensorState &state) {
+    std::lock_guard lock(sensor_state_mutex);
+    sensor_state = state;
+}
+
+void ToolOffsetSensorNode::update_status(StatusTraits::Type &status) {
+    auto state = get_sensor_state();
+    status.ch0_active = state.ch0_active;
+    status.ch1_active = state.ch1_active;
+    status.sensor_fault = state.sensor_fault;
+    status.sensor_errors = state.sensor_errors;
 }
 
 void ToolOffsetSensorNode::publish_data_ch0(const prusa3d_tool_offset_sensor_Data_1_0 &data) {

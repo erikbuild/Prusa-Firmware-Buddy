@@ -62,12 +62,19 @@ public:
         bool ch1_enabled = false;
     };
 
+    struct SensorState {
+        bool ch0_active = false;
+        bool ch1_active = false;
+        bool sensor_fault = false;
+        uint8_t sensor_errors = 0;
+    };
+
     // Read config snapshot atomically (mutex-guarded)
     ChannelConfig get_config();
 
-    // Written by node task via write_config()
-    freertos::Mutex config_mutex;
-    ChannelConfig config;
+    // Read/write sensor state atomically (mutex-guarded)
+    SensorState get_sensor_state();
+    void set_sensor_state(const SensorState &state);
 
     // Thread-safe publish methods for main task to call
     void publish_data_ch0(const prusa3d_tool_offset_sensor_Data_1_0 &data);
@@ -81,6 +88,12 @@ protected:
     void update_status(StatusTraits::Type &data) override;
 
 private:
+    freertos::Mutex config_mutex;
+    ChannelConfig config;
+
+    freertos::Mutex sensor_state_mutex;
+    SensorState sensor_state;
+
     can::cyphal::SenderDataTraited<
         prusa3d_tool_offset_sensor_Data_1_0_Traits,
         prusa3d_common_PortIds_0_1_MSG_TOOL_OFFSET_SENSOR_DATA_CH0>

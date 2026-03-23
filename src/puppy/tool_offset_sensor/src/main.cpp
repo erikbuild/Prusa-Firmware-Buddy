@@ -27,7 +27,7 @@ extern tool_offset_sensor::cyphal::ToolOffsetSensorNode can_node;
 namespace {
 
 constexpr LDC1612::ChannelConfig default_ch_config {
-    .rcount = 4096,
+    .rcount = 8192,
     .settlecount = 64,
     .fin_divider = 1,
     .fref_divider = 1,
@@ -159,6 +159,15 @@ using PublishFn = void (*)(const prusa3d_tool_offset_sensor_Data_1_0 &);
 void publish_ch0(const prusa3d_tool_offset_sensor_Data_1_0 &msg) { can_node.publish_data_ch0(msg); }
 void publish_ch1(const prusa3d_tool_offset_sensor_Data_1_0 &msg) { can_node.publish_data_ch1(msg); }
 
+void clear_data_ready_semaphore() {
+    while (hal::ldc_data_ready.try_acquire_for(0)) {
+    }
+}
+
+bool has_pending_data(const LDC1612::Status &status, bool ch0, bool ch1) {
+    return (ch0 && status.unread_conv_ch0) || (ch1 && status.unread_conv_ch1);
+}
+
 struct ChannelState {
     SamplingRateTracker<32> rate { 32 };
     DeltaCompressor delta;
@@ -178,12 +187,13 @@ struct ChannelState {
     void reset() {
         rate.reset();
         delta.reset();
+        seq = 0;
     }
 
-    void read_and_publish(LDC1612 &ldc, LDC1612::Channel channel, uint32_t now_us) {
-        auto data = ldc.read_channel(channel);
+    bool read_and_publish(LDC1612 &ldc, LDC1612::Channel channel, uint32_t now_us) {
+        auto data = ldc.read_channel_data(channel);
         if (!data.has_value()) {
-            return;
+            return false;
         }
 
         rate.record(now_us);
@@ -193,10 +203,13 @@ struct ChannelState {
         if (delta.feed(sample, freq)) {
             publish(delta.flush(seq, sample, freq));
         }
+        return true;
     }
 };
 
 } // namespace
+
+using SensorState = tool_offset_sensor::cyphal::ToolOffsetSensorNode::SensorState;
 
 static void main_task_code(void *) {
     LDC1612 ldc;
@@ -206,6 +219,7 @@ static void main_task_code(void *) {
     bool ldc_powered = false;
     bool prev_ch0 = false;
     bool prev_ch1 = false;
+    SensorState sensor_state;
 
     while (true) {
         auto cfg = can_node.get_config();
@@ -229,7 +243,11 @@ static void main_task_code(void *) {
                 ch0_state.flush_and_publish();
                 ch1_state.flush_and_publish();
                 hal::ldc1612_set_enabled(false);
+                clear_data_ready_semaphore();
                 ldc_powered = false;
+
+                sensor_state = {};
+                can_node.set_sensor_state(sensor_state);
             }
             freertos::delay(10);
             consecutive_failures = 0;
@@ -242,12 +260,16 @@ static void main_task_code(void *) {
                 ch0_state.flush_and_publish();
                 ch1_state.flush_and_publish();
                 hal::ldc1612_set_enabled(false);
+                clear_data_ready_semaphore();
                 freertos::delay(1);
             }
 
             if (!initialize_ldc(ldc, ch0, ch1)) {
                 consecutive_failures++;
                 ldc_powered = false;
+                sensor_state = {};
+                sensor_state.sensor_fault = true;
+                can_node.set_sensor_state(sensor_state);
                 freertos::delay(10);
                 continue;
             }
@@ -255,21 +277,53 @@ static void main_task_code(void *) {
             ldc_powered = true;
             ch0_state.reset();
             ch1_state.reset();
+            clear_data_ready_semaphore();
+
+            sensor_state = {};
+            sensor_state.ch0_active = ch0;
+            sensor_state.ch1_active = ch1;
+            can_node.set_sensor_state(sensor_state);
         }
 
-        // Wait for data-ready interrupt
+        // Prefer the DRDY interrupt, but recover by polling status in case
+        // INTB stayed asserted and we missed the falling edge.
         if (!hal::ldc_data_ready.try_acquire_for(50)) {
-            consecutive_failures++;
-            continue;
+            const auto status = ldc.read_status();
+            if (!status.has_value() || !has_pending_data(*status, ch0, ch1)) {
+                consecutive_failures++;
+                continue;
+            }
         }
 
-        uint32_t now_us = static_cast<uint32_t>(ticks_us());
+        while (true) {
+            const auto status = ldc.read_status();
+            if (!status.has_value() || !has_pending_data(*status, ch0, ch1)) {
+                consecutive_failures++;
+                break;
+            }
 
-        if (ch0) {
-            ch0_state.read_and_publish(ldc, LDC1612::Channel::CH0, now_us);
-        }
-        if (ch1) {
-            ch1_state.read_and_publish(ldc, LDC1612::Channel::CH1, now_us);
+            if (status->err_chan0 || status->err_chan1) {
+                sensor_state.sensor_errors |= status->error_flags;
+                can_node.set_sensor_state(sensor_state);
+                consecutive_failures++;
+            }
+
+            uint32_t now_us = static_cast<uint32_t>(ticks_us());
+
+            if (ch0 && status->unread_conv_ch0) {
+                if (ch0_state.read_and_publish(ldc, LDC1612::Channel::CH0, now_us)) {
+                    consecutive_failures = 0;
+                } else {
+                    consecutive_failures++;
+                }
+            }
+            if (ch1 && status->unread_conv_ch1) {
+                if (ch1_state.read_and_publish(ldc, LDC1612::Channel::CH1, now_us)) {
+                    consecutive_failures = 0;
+                } else {
+                    consecutive_failures++;
+                }
+            }
         }
     }
 }

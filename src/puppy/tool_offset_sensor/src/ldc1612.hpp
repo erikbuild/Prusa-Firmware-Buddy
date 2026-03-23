@@ -117,6 +117,8 @@ public:
     std::optional<Status> read_status();
     bool is_data_ready(Channel ch);
     std::optional<uint32_t> read_channel(Channel ch);
+    // Read channel data registers directly (caller must have verified data is ready via STATUS)
+    std::optional<uint32_t> read_channel_data(Channel ch);
 
 private:
     static constexpr uint16_t i2c_address = 0x2B;
