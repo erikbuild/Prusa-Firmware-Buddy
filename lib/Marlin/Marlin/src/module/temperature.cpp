@@ -888,23 +888,6 @@ void Temperature::isr() {
     }
   }
 
-  static uint16_t adc_result;
-
-  #define HAL_START_ADC(pin) adc_result = analogRead(pin)
-
-  /**
-   * One sensor is sampled on every other call of the ISR.
-   * Each sensor is read 16 (OVERSAMPLENR) times, taking the average.
-   *
-   * On each Prepare pass, ADC is started for a sensor pin.
-   * On the next pass, the ADC value is read and accumulated.
-   *
-   * This gives each ADC 0.9765ms to charge up.
-   */
-  #define ACCUMULATE_ADC(obj) do{ \
-    obj.sample(adc_result); \
-  }while(0)
-
   ADCSensorState next_sensor_state = adc_sensor_state < SensorsReady ? (ADCSensorState)(int(adc_sensor_state) + 1) : StartSampling;
 
   switch (adc_sensor_state) {
@@ -934,8 +917,8 @@ void Temperature::isr() {
       break;
 
     #if HAS_TEMP_ADC_0
-      case PrepareTemp_0: HAL_START_ADC(TEMP_0_PIN); break;
-      case MeasureTemp_0: ACCUMULATE_ADC(temp_hotend); break;
+      case PrepareTemp_0: break;
+      case MeasureTemp_0: temp_hotend.sample(analogRead(TEMP_0_PIN)); break;
     #endif
 
     #if HAS_LOCAL_BED()
@@ -944,21 +927,21 @@ void Temperature::isr() {
     #endif
 
     #if HAS_TEMP_HEATBREAK
-      case PrepareTemp_HEATBREAK: HAL_START_ADC(TEMP_HEATBREAK_PIN); break;
-      case MeasureTemp_HEATBREAK: ACCUMULATE_ADC(temp_heatbreak); break;
+      case PrepareTemp_HEATBREAK: break;
+      case MeasureTemp_HEATBREAK: temp_heatbreak.sample(analogRead(TEMP_HEATBREAK_PIN)); break;
     #endif
 
     #if HAS_TEMP_BOARD
-      case PrepareTemp_BOARD: HAL_START_ADC(TEMP_BOARD_PIN); break;
-      case MeasureTemp_BOARD: ACCUMULATE_ADC(temp_board); break;
+      case PrepareTemp_BOARD: break;
+      case MeasureTemp_BOARD: temp_board.sample(analogRead(TEMP_BOARD_PIN)); break;
     #endif
 
 
     #if PRINTER_IS_PRUSA_iX()
-      case PrepareTemp_PSU: HAL_START_ADC(TEMP_PSU_PIN); break;
-      case MeasureTemp_PSU: ACCUMULATE_ADC(temp_psu); break;
-      case PrepareTemp_AMBIENT: HAL_START_ADC(TEMP_AMBIENT_PIN); break;
-      case MeasureTemp_AMBIENT: ACCUMULATE_ADC(temp_ambient); break;
+      case PrepareTemp_PSU: break;
+      case MeasureTemp_PSU: temp_psu.sample(analogRead(TEMP_PSU_PIN)); break;
+      case PrepareTemp_AMBIENT: break;
+      case MeasureTemp_AMBIENT: temp_ambient.sample(analogRead(TEMP_AMBIENT_PIN)); break;
     #endif
 
     case StartupDelay: break;
