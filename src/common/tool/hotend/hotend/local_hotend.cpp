@@ -69,6 +69,13 @@ void LocalHotend::set_heatbreak_target_temp(TargetTemperature set) {
 
 void LocalHotend::manage() {
     nozzle_temp_ = marlin_temptable_lookup(local_config_.nozzle_temp_table, nozzle_raw_temp_);
+    nozzle_low_temp_filter_.Put(nozzle_raw_temp_);
+
+    // Increase oversampling for values lower than 50 degrees Celsius to reduce noise
+    if (nozzle_temp_ <= 50) {
+        const auto filtered_raw_temp = nozzle_low_temp_filter_.GetSum() / nozzle_low_temp_filter_.GetCount();
+        nozzle_temp_ = marlin_temptable_lookup(local_config_.nozzle_temp_table, filtered_raw_temp);
+    }
 
     // !!! MUST be called after temps are set properly
     BaseHotend::manage();

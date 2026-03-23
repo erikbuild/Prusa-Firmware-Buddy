@@ -9,12 +9,6 @@ AdcDma3 adcDma3;
 
 using namespace buddy::hw;
 
-#if BOARD_IS_XBUDDY()
-namespace AdcGet {
-SumRingBuffer<uint16_t, uint32_t, nozzle_buff_size> nozzle_ring_buff;
-}
-#endif
-
 #if BOARD_IS_XLBUDDY()
 AdcMultiplexer<AdcDma1, DMA2_Stream4_IRQn, AdcChannel::POWER_MONITOR_HWID_AND_TEMP_CH_CNT>
     PowerHWIDAndTempMux(adcDma1,

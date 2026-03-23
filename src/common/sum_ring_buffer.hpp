@@ -1,13 +1,15 @@
 #pragma once
-#include <cinttypes>
+
 #include <cstdlib>
 #include <concepts>
+#include <limits>
 
 template <std::integral T, std::integral sumT, size_t SIZE>
 class SumRingBuffer {
 public:
     typedef sumT sum_type;
     static_assert(SIZE > 0, "Invalid input");
+    static_assert(std::numeric_limits<T>::max() * SIZE <= std::numeric_limits<sumT>::max(), "Sum buffer type can overflow");
 
     void Clear() {
         count = 0;

@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include "printers.h"
 #include "MarlinPin.h"
-#include "sum_ring_buffer.hpp"
 #include <device/hal.h>
 #include <limits>
 
@@ -192,8 +191,6 @@ enum AD1 {
     #error "Unknown board."
 #endif
 } // namespace AdcChannel
-
-inline constexpr uint16_t raw_adc_value_at_50_degreas_celsius = 993;
 
 template <ADC_HandleTypeDef &adc, size_t channels>
 class AdcDma {
@@ -432,37 +429,9 @@ inline uint16_t mcuTemperature() { return adcDma1.get_channel(AdcChannel::mcu_te
 #endif
 
 #if (BOARD_IS_XBUDDY())
-static constexpr size_t nozzle_buff_size { 128 };
-extern SumRingBuffer<uint16_t, uint32_t, nozzle_buff_size> nozzle_ring_buff;
-static_assert((adcDma1.sample_max * nozzle_buff_size) <= std::numeric_limits<decltype(nozzle_ring_buff)::sum_type>::max(),
-    "Sum buffer type can overflow");
 
 inline uint16_t nozzle() {
-    auto raw_temp = adcDma1.get_and_shift_channel(AdcChannel::hotend_T);
-
-    // increase oversampling for values lower than 50 degrees Celsius to reduce noise
-    if (raw_temp > raw_adc_value_at_50_degreas_celsius) {
-        // handle an empty buffer
-        if (nozzle_ring_buff.GetSize() == 0) {
-            return adcDma1.reset_value;
-        }
-
-        // decimate to match the behavior of get_and_shift_channel()
-        auto raw_temp_avg = nozzle_ring_buff.GetSum() / nozzle_ring_buff.GetSize();
-        return raw_temp_avg >> adcDma1.shift_bits;
-    }
-
-    return raw_temp;
-}
-
-inline void sampleNozzle() {
-    // the ring buffer is kept at full resolution
-    auto raw_temp = adcDma1.get_channel(AdcChannel::hotend_T);
-    if (raw_temp == adcDma1.reset_value) {
-        nozzle_ring_buff.PopLast();
-    } else {
-        nozzle_ring_buff.Put(raw_temp);
-    }
+    return adcDma1.get_and_shift_channel(AdcChannel::hotend_T);
 }
 
 inline uint16_t bed() { return adcDma1.get_and_shift_channel(AdcChannel::heatbed_T); }

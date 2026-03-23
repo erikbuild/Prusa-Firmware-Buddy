@@ -867,9 +867,6 @@ void Temperature::readings_ready() {
 HAL_TEMP_TIMER_ISR() {
   HAL_timer_isr_prologue(TEMP_TIMER_NUM);
 
-#if (BOARD_IS_XBUDDY())
-    AdcGet::sampleNozzle();
-#endif
     Temperature::isr();
 
   HAL_timer_isr_epilogue(TEMP_TIMER_NUM);

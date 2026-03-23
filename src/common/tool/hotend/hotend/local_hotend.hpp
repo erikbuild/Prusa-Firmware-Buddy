@@ -8,6 +8,7 @@
 
 #include <module/temperature/marlin_temptable.hpp>
 #include <module/temperature/heatbreak_regulator.hpp>
+#include <sum_ring_buffer.hpp>
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
     #include <module/temperature/thermal_model_protection.hpp>
@@ -86,6 +87,10 @@ protected:
 #endif
 
     HotendRegulator nozzle_regulator_;
+
+    /// Additional filter for low temperature nozzle values
+    /// Increases oversampling to improve accuracy
+    SumRingBuffer<uint16_t, uint32_t, 8> nozzle_low_temp_filter_;
 
 #if ENABLED(PIDTEMPHEATBREAK)
     HeatbreakRegulator heatbreak_fan_regulator_;
