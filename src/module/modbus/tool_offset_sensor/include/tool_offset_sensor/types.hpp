@@ -14,5 +14,9 @@ struct Config {
 };
 
 struct Status {
+    bool ch0_active = false;
+    bool ch1_active = false;
+    bool sensor_fault = false;
+    uint8_t sensor_errors = 0;
 };
 } // namespace tool_offset_sensor

@@ -15,6 +15,16 @@ struct Status {
     static constexpr uint16_t address = 0x8000;
 
     uint16_t node_state; ///< corresponds to xbuddy_extension::NodeState
+    uint16_t channel_flags; ///< [0] ch0_active [1] ch1_active [2] sensor_fault
+    uint16_t sensor_errors; ///< sticky LDC1612 error flags
+};
+
+/// MODBUS register file for controlling the tool offset sensor from xBuddy.
+struct Config {
+    static constexpr uint16_t address = 0x9000;
+
+    uint16_t ch0_enabled; ///< enable channel 0 (boolean)
+    uint16_t ch1_enabled; ///< enable channel 1 (boolean)
 };
 
 } // namespace tool_offset_sensor::modbus

@@ -4,4 +4,14 @@ prusa3d.common.SharedFault.1.0 faults
 
 bool time_sync_precise # Time synchronization is precise
 
+bool ch0_active        # Channel initialized and producing samples
+bool ch1_active
+bool sensor_fault      # LDC1612 not detected or init failed
+
+void3                  # pad to byte boundary
+
+# Sticky LDC1612 error flags (cleared on reconfig)
+# Bits: [0] underrange [1] overrange [2] watchdog [3] amp_high [4] amp_low [5] zero_count
+uint8 sensor_errors
+
 @sealed
