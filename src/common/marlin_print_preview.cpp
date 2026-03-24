@@ -756,6 +756,19 @@ IPrintPreview::State PrintPreview::stateFromUpdateCheck() {
 IPrintPreview::State PrintPreview::stateFromPrinterCheck() {
     // Determine whether we want to show the incompatibilities screen
 
+#if HAS_TOOL_MAPPING()
+    // Singletool gcode with exactly one enabled tool: auto-remap T0 to that tool
+    if (!tool_mapper.is_enabled()
+        && GCodeInfo::getInstance().is_singletool_gcode()) {
+        if (auto single = VirtualToolIndex::single_enabled_tool();
+            single.has_value() && single->to_raw() != 0) {
+            tool_mapper.reset();
+            tool_mapper.set_mapping(GcodeToolIndex::from_raw(0), *single);
+            tool_mapper.set_enable(true);
+        }
+    }
+#endif
+
     buddy::gcode_compatibility::CompatibilityReport report;
     if (tools_mapping::is_tool_mapping_possible()) {
         // Only check non-tool related things
@@ -763,8 +776,8 @@ IPrintPreview::State PrintPreview::stateFromPrinterCheck() {
         report.generate_without_toolmapping();
 
     } else {
-        // There will be no separate tooomapping screen,
-        // so show all problems, with the naive 1:1 toolmapping
+        // There will be no separate toolmapping screen,
+        // so show all problems, with the current toolmapping
         report.generate_full({});
     }
 

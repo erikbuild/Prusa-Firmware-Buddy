@@ -2155,7 +2155,7 @@ static void _server_print_loop(void) {
             if (prusa_toolchanger.is_toolchanger_enabled()) {
                 // Handle singletool G-code which doesn't have T commands in it
                 if (GCodeInfo::getInstance().is_singletool_gcode()) {
-                    enqueue_gcode("T0 S1 D0"); // Pick tool 0 (can be remapped to anything) before print
+                    enqueue_gcode("T0 S1 D0"); // Pick tool 0 (remapped by stateFromPrinterCheck if needed)
                 }
             }
 #endif
