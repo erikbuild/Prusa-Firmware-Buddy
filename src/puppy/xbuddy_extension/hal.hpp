@@ -17,6 +17,9 @@ using DutyCycle = uint8_t;
  */
 void init();
 
+/// Called once in the hal_task
+void setup();
+
 /**
  * Enter infinite loop.
  */

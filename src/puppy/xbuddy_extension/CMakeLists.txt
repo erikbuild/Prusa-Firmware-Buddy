@@ -23,6 +23,7 @@ target_sources(
           cyphal_transport.cpp
           hal.cpp
           hal_clock.cpp
+          hal_ext_fs.cpp
           hal_gpio_expander.cpp
           hal_memory.cpp
           hal_mmu.cpp
@@ -53,6 +54,7 @@ target_link_libraries(
           anfc
           modbus
           tool_offset_sensor
+          onewire_master
   )
 
 if(HAS_MMU2)

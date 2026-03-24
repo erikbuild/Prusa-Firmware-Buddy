@@ -3,6 +3,7 @@
 
 #include "extension_variant.h"
 #include "hal_clock.hpp"
+#include "hal_ext_fs.hpp"
 #include "hal_gpio_expander.hpp"
 #include "hal_mmu.hpp"
 #include "hal_pub.hpp"
@@ -369,6 +370,11 @@ void hal::init() {
     hal::pub::init();
     filament_sensor_pins_init();
     hal::rng::init();
+    hal::ext_fs::init();
+}
+
+void hal::setup() {
+    hal::ext_fs::setup();
 }
 
 void hal::panic() {
@@ -409,10 +415,6 @@ static size_t gpio_fs_last_millis = 0;
 static std::bitset<4> gpio_fs_raw;
 static uint8_t gpio_fs_phase = 0;
 #endif
-
-/// TMP1826 multi-sensor states (PC14/EXT connector)
-static std::array<hal::filament_sensor::State, xbuddy_extension::ext_filament_sensor_count> ext_fs_states = {};
-// TODO functionality
 
 static void step_temperature_adc() {
     // Until we have a non-blocking DMA or interrupt based ADC, we do this
@@ -465,6 +467,7 @@ static void step_filament_sensor() {
 void hal::step() {
     step_temperature_adc();
     step_filament_sensor();
+    hal::ext_fs::step();
 }
 
 static uint32_t tim1_period_to_rpm(const TimerEventPeriodTracker &tracker) {
@@ -552,9 +555,4 @@ uint32_t hal::temperature::get_raw() {
 
 hal::filament_sensor::State hal::filament_sensor::get_gpio() {
     return gpio_fs_state;
-}
-
-hal::filament_sensor::State hal::filament_sensor::get_ext(uint8_t index) {
-    assert(index < xbuddy_extension::ext_filament_sensor_count);
-    return ext_fs_states[index];
 }
