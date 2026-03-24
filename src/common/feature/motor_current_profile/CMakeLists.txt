@@ -1,0 +1,7 @@
+if(HAS_MOTOR_CURRENT_PROFILES)
+  if(HAS_INDX)
+    target_sources(firmware PRIVATE motor_current_profile_indx.cpp)
+  else()
+    message(FATAL_ERROR "Missing motor current profile setup for \"${PRINTER}\".")
+  endif()
+endif()

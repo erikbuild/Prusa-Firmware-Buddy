@@ -757,6 +757,7 @@ set_feature_for_printers(
 
 set_feature_for_printers(HAS_INDX "COREONE_INDX" "COREONEL_INDX")
 set_feature_for_printers(HAS_INDX_HEAD "COREONE_INDX" "COREONEL_INDX")
+set_feature_for_printers(HAS_MOTOR_CURRENT_PROFILES "COREONE_INDX" "COREONEL_INDX")
 
 if(HAS_TOOLCHANGER OR HAS_MMU2)
   define_boolean_option(HAS_TOOL_MAPPING yes)
