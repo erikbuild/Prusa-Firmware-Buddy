@@ -4,6 +4,7 @@
 #include <option/has_puppies.h>
 #include <option/has_toolchanger.h>
 #include <option/has_chamber_api.h>
+#include <option/has_motor_current_profiles.h>
 
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
@@ -109,7 +110,11 @@ struct state_planner_t {
 
     uint8_t marlin_debug_flags;
 
-    // everything to target_nozle is aligned - padding the remaining fields
+#if HAS_MOTOR_CURRENT_PROFILES()
+    uint8_t current_profile { 0 };
+#endif
+
+    // everything to target_nozzle is aligned - padding the remaining fields
     static constexpr int _size_to_pad = sizeof(target_nozzle) + sizeof(flow_percentage) + sizeof(marlin_debug_flags);
     uint8_t _padding[(4 - _size_to_pad % 4) % 4];
 };

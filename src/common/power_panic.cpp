@@ -13,6 +13,10 @@
 #include <option/has_toolchanger.h>
 #include <option/has_chamber_api.h>
 #include <option/has_nozzle_cleaner.h>
+#include <option/has_motor_current_profiles.h>
+#if HAS_MOTOR_CURRENT_PROFILES()
+    #include <feature/motor_current_profile/motor_current_profile.hpp>
+#endif
 
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
@@ -312,6 +316,9 @@ void resume_loop() {
         resume.fan_speed = state_buf.planner.fan_speed;
         resume.print_speed = state_buf.planner.print_speed;
         resume.nozzle_temp = state_buf.planner.target_nozzle;
+#if HAS_MOTOR_CURRENT_PROFILES()
+        buddy::set_active_motor_current_profile(static_cast<buddy::StandardMotorCurrentProfile>(state_buf.planner.current_profile));
+#endif
         marlin_server::set_resume_data(&resume);
 
         // Set sdpos
@@ -938,6 +945,9 @@ void ac_fault_isr() {
             state_buf.planner.fan_speed = thermalManager.fan_speed[0];
             state_buf.planner.print_speed = marlin_vars().print_speed;
         }
+#if HAS_MOTOR_CURRENT_PROFILES()
+        state_buf.planner.current_profile = static_cast<uint8_t>(buddy::active_motor_current_profile());
+#endif
         state_buf.planner.target_bed = thermalManager.degTargetBed();
 #if HAS_MODULAR_BED()
         state_buf.planner.enabled_bedlets_mask = thermalManager.getEnabledBedletMask();
