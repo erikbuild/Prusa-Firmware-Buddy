@@ -75,6 +75,9 @@ enum class GeneralCheck : uint8_t {
     /// The GCode requests some features the printer doesn't have
     unsupported_features,
 
+    /// Fails if gcode uses more tools than there are enabled tools
+    not_enough_tools,
+
     _cnt
 };
 

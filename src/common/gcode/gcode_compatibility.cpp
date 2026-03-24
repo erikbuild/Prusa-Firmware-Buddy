@@ -3,6 +3,7 @@
 #include <config_store/store_instance.hpp>
 #include <gcode_info.hpp>
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
+#include <print_utils.hpp>
 #include <window_msgbox.hpp>
 
 #include <option/has_mmu2.h>
@@ -87,6 +88,14 @@ constinit const ChecksTraits<GeneralCheck>::Metadata ChecksTraits<GeneralCheck>:
                 .severity = HWCheckType::firmware,
                 .title = N_("Unsupported features"),
                 .description = N_("G-Code requires some features the printer does not have."),
+            },
+        },
+        {
+            GeneralCheck::not_enough_tools,
+            CheckMetadata {
+                .severity = HWCheckSeverity::Abort,
+                .title = N_("Not enough tools"),
+                .description = N_("G-Code requires more tools than are currently enabled."),
             },
         },
 };
@@ -296,6 +305,10 @@ void CompatibilityReport::generate_without_toolmapping(const GCodeInfo &gcode_in
 
     if (!gcode_info.info().sliced_with_input_shaper_ && !PRINTER_IS_PRUSA_iX()) {
         failed_general_checks.set(GeneralCheck::input_shaper);
+    }
+
+    if (gcode_info.UsedExtrudersCount() > get_num_of_enabled_tools()) {
+        failed_general_checks.set(GeneralCheck::not_enough_tools);
     }
 }
 
