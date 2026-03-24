@@ -169,6 +169,37 @@ GcodeSuite::VirtualToolFromCommand GcodeSuite::get_target_virtual_from_command_p
   return get_target_virtual_from_optional(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt,
   parser.seen('P') ? !parser.value_bool() : true);
 }
+
+GcodeSuite::PhysicalToolFromCommand GcodeSuite::get_target_physical_from_optional(std::optional<uint8_t> extruder, const bool tool_map) {
+  if (extruder.has_value()) {
+    // Parameter provided: parse as virtual (with validation), convert to physical
+    VirtualToolFromCommand virt = get_target_virtual_from_optional(extruder, tool_map);
+    return match(virt,
+      [](VirtualToolIndex vt) -> PhysicalToolFromCommand { return vt.to_physical(); },
+      [](auto other) -> PhysicalToolFromCommand { return other; }
+    );
+  } else {
+    // No parameter: use currently selected physical tool
+    const std::optional<PhysicalToolIndex> current = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (current.has_value()) {
+      return *current;
+    } else {
+      SERIAL_ECHO_START();
+      SERIAL_ECHOLNPAIR(" " MSG_INVALID_EXTRUDER " ", -1);
+      return NoTool {};
+    }
+  }
+}
+
+GcodeSuite::PhysicalToolFromCommand GcodeSuite::get_target_physical_from_command() {
+  return get_target_physical_from_optional(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt, true);
+}
+
+GcodeSuite::PhysicalToolFromCommand GcodeSuite::get_target_physical_from_command_p() {
+  return get_target_physical_from_optional(parser.seenval('T') ? std::optional(parser.value_byte()) : std::nullopt,
+  parser.seen('P') ? !parser.value_bool() : true);
+}
+
 /**
  * Get the target e stepper from the T parameter
  * Return -1 if the T parameter is out of range or unspecified

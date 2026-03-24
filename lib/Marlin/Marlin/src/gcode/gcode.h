@@ -320,6 +320,7 @@ public:
   };
 
   using VirtualToolFromCommand = std::variant<VirtualToolIndex, NoTool, ToolNotMapped, ToolParsingError>;
+  using PhysicalToolFromCommand = std::variant<PhysicalToolIndex, NoTool, ToolNotMapped, ToolParsingError>;
 
   /// Parses tool_index from command.
   /// @param tool_mapping if true, the tool_index is considered GCodeToolIndex and mapping is applied, else it is considered a VirtualToolIndex
@@ -331,6 +332,15 @@ public:
 
   static VirtualToolFromCommand get_target_virtual_from_command();
   static VirtualToolFromCommand get_target_virtual_from_command_p();
+
+  /// Like get_target_virtual_from_optional, but returns a PhysicalToolIndex.
+  /// If the parameter is present, parses as virtual and converts to physical.
+  /// If the parameter is absent, defaults to PhysicalToolIndex::currently_selected().
+  static PhysicalToolFromCommand get_target_physical_from_optional(std::optional<uint8_t> option_value, bool tool_map);
+
+  static PhysicalToolFromCommand get_target_physical_from_command();
+  static PhysicalToolFromCommand get_target_physical_from_command_p();
+
   static int8_t get_target_e_stepper_from_command();
   static void get_destination_from_command();
 

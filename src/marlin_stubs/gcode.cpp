@@ -55,6 +55,13 @@ GcodeSuite::VirtualToolFromCommand PrusaGcodeSuite::get_target_virtual_from_comm
     return GcodeSuite::get_target_virtual_from_optional(p.option<uint8_t>('T'), !p.option<bool>('P').value_or(false));
 }
 
+GcodeSuite::PhysicalToolFromCommand PrusaGcodeSuite::get_target_physical_from_command(const GCodeParser2 &p) {
+    return GcodeSuite::get_target_physical_from_optional(p.option<uint8_t>('T'), true);
+}
+GcodeSuite::PhysicalToolFromCommand PrusaGcodeSuite::get_target_physical_from_command_p(const GCodeParser2 &p) {
+    return GcodeSuite::get_target_physical_from_optional(p.option<uint8_t>('T'), !p.option<bool>('P').value_or(false));
+}
+
 bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
     record_pre_gcode_metrics();
     bool processed = true;

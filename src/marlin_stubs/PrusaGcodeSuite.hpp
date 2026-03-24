@@ -31,6 +31,8 @@ namespace PrusaGcodeSuite {
 
 GcodeSuite::VirtualToolFromCommand get_target_virtual_from_command(const GCodeParser2 &p);
 GcodeSuite::VirtualToolFromCommand get_target_virtual_from_command_p(const GCodeParser2 &p);
+GcodeSuite::PhysicalToolFromCommand get_target_physical_from_command(const GCodeParser2 &p);
+GcodeSuite::PhysicalToolFromCommand get_target_physical_from_command_p(const GCodeParser2 &p);
 /** \defgroup G-Codes G-Code Commands
  * @{
  */
