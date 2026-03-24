@@ -53,10 +53,8 @@ inline uint16_t _crc16_ccitt_false_update(uint16_t crc, uint8_t data) {
  * - Reflected (LSB first)
  */
 inline uint16_t _crc16_modbus_update(uint16_t crc, uint8_t a) {
-    int i;
-
     crc ^= a;
-    for (i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i) {
         if (crc & 1) {
             crc = (crc >> 1) ^ 0xA001;
         } else {
@@ -67,6 +65,19 @@ inline uint16_t _crc16_modbus_update(uint16_t crc, uint8_t a) {
     return crc;
 }
 #endif
+
+/// CRC-8/MAXIM (1-Wire)
+inline uint8_t _crc8_maxim_update(uint8_t crc, uint8_t a) {
+    for (int i = 0; i < 8; i++) {
+        uint8_t mix = (crc ^ a) & 0x01;
+        crc >>= 1;
+        if (mix) {
+            crc ^= 0x8C;
+        }
+        a >>= 1;
+    }
+    return crc;
+}
 
 /**
  * Helper class to calculate crcs for transfers. To use it, create an
@@ -112,5 +123,9 @@ private:
 };
 
 using Crc16CcittFalse = Crc<uint16_t, _crc16_ccitt_false_update, 0xffff>;
+
 // Called CRC16-IBM (or CRC16-ANSI or just CRC16) by wikipedia, used by ModBus
 using Crc16Modbus = Crc<uint16_t, _crc16_modbus_update, 0xffff>;
+
+/// Called CRC8-MAXIM
+using Crc8OneWire = Crc<uint8_t, _crc8_maxim_update, 0>;
