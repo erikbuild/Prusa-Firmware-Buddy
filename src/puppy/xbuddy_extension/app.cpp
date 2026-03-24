@@ -38,6 +38,19 @@ void read_register_file_callback(xbuddy_extension::modbus::Status &status) {
     // Note: Mainboard expects this in decidegree Celsius.
     status.temperature = static_cast<uint16_t>(10 * temperature::raw_to_celsius(hal::temperature::get_raw()));
     status.gpio_filament_sensor = static_cast<uint16_t>(hal::filament_sensor::get_gpio());
+
+    {
+        // Pack all filament sensors into a single register
+        using Register = decltype(status.gpio_filament_sensor);
+        static_assert(xbuddy_extension::ext_filament_sensor_count * xbuddy_extension::bits_per_fs_state <= sizeof(Register) * 8);
+
+        Register ext_fsensors = 0;
+        for (uint8_t i = 0; i < xbuddy_extension::ext_filament_sensor_count; i++) {
+            ext_fsensors |= static_cast<Register>(hal::filament_sensor::get_ext(i)) << (i * xbuddy_extension::bits_per_fs_state);
+        }
+        status.ext_filament_sensors = ext_fsensors;
+    }
+
     const auto flash_data = cyphal::application().request();
     status.chunk_request.file_id = xbuddy_extension::modbus::serialize_file_id(flash_data.flash_request);
     status.chunk_request.offset_lo = static_cast<uint16_t>(flash_data.offset & 0xFFFF);

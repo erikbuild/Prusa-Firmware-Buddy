@@ -217,6 +217,21 @@ std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_gpio_fi
     return static_cast<FilamentSensorState>(status.value.gpio_filament_sensor);
 }
 
+std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_ext_filament_sensor_state(uint8_t index) const {
+    Lock lock(mutex);
+
+    if (!valid) {
+        return std::nullopt;
+    }
+
+    using Register = decltype(status.value.ext_filament_sensors);
+
+    assert(index < xbuddy_extension::ext_filament_sensor_count);
+    const uint8_t shift = index * xbuddy_extension::bits_per_fs_state;
+    constexpr Register mask = (Register(1) << xbuddy_extension::bits_per_fs_state) - 1;
+    return static_cast<FilamentSensorState>((status.value.ext_filament_sensors >> shift) & mask);
+}
+
 CommunicationStatus XBuddyExtension::refresh_input(PuppyModbus &bus, uint32_t max_age) {
     // Already locked by caller.
 

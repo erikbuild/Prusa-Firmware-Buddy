@@ -38,6 +38,10 @@ struct Status {
     uint16_t temperature; /// decidegree Celsius (eg. 23.5°C = 235 in the register)
     uint16_t gpio_filament_sensor; ///< Single GPIO sensor (PA5 on standard, PA9 on iX)
 
+    /// 8x TMP1826 sensors on EXT connector (PC14)
+    /// 2 bits per state, so all states fit into a single register
+    uint16_t ext_filament_sensors;
+
     ChunkRequest chunk_request; ///< request to receive a chunk
 
     DigestRequest digest_request; ///< request to compute digest

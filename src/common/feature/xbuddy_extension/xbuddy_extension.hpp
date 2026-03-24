@@ -159,6 +159,9 @@ public: // Other
     /// Single GPIO sensor (PA5 on standard, PA9 on iX)
     std::optional<FilamentSensorState> gpio_filament_sensor() const;
 
+    /// TMP1826 multi-tool sensor (PC14/EXT connector)
+    std::optional<FilamentSensorState> ext_filament_sensor(uint8_t index) const;
+
 private:
     mutable freertos::Mutex mutex_;
 

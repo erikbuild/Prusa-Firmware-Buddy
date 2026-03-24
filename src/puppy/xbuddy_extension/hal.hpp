@@ -73,6 +73,9 @@ namespace filament_sensor {
 
     /// Single GPIO sensor (PA5 on standard, PA9 on iX)
     State get_gpio();
+
+    /// TMP1826 multi-tool sensors (PC14/EXT connector)
+    State get_ext(uint8_t index);
 } // namespace filament_sensor
 
 } // namespace hal

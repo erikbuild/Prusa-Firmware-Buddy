@@ -372,4 +372,8 @@ std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::gpio_filame
     return puppies::xbuddy_extension.get_gpio_filament_sensor_state();
 }
 
+std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::ext_filament_sensor(uint8_t index) const {
+    return puppies::xbuddy_extension.get_ext_filament_sensor_state(index);
+}
+
 } // namespace buddy

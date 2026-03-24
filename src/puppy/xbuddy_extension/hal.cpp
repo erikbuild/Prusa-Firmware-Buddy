@@ -10,7 +10,9 @@
 #include "hal_rs485.hpp"
 #include "hal_rng.hpp"
 #include "hal_usb.hpp"
+#include <array>
 #include <bitset>
+#include <cassert>
 #include <freertos/timing.hpp>
 #include <stm32h5xx_hal.h>
 #include <stm32h5xx_ll_gpio.h>
@@ -410,6 +412,10 @@ static std::bitset<4> gpio_fs_raw;
 static uint8_t gpio_fs_phase = 0;
 #endif
 
+/// TMP1826 multi-sensor states (PC14/EXT connector)
+static std::array<hal::filament_sensor::State, xbuddy_extension::ext_filament_sensor_count> ext_fs_states = {};
+// TODO functionality
+
 static void step_temperature_adc() {
     // Until we have a non-blocking DMA or interrupt based ADC, we do this
     HAL_ADC_Start(&hadc1);
@@ -548,4 +554,9 @@ uint32_t hal::temperature::get_raw() {
 
 hal::filament_sensor::State hal::filament_sensor::get_gpio() {
     return gpio_fs_state;
+}
+
+hal::filament_sensor::State hal::filament_sensor::get_ext(uint8_t index) {
+    assert(index < xbuddy_extension::ext_filament_sensor_count);
+    return ext_fs_states[index];
 }

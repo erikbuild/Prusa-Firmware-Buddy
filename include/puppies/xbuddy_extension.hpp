@@ -47,6 +47,9 @@ public:
     /// Single GPIO sensor (PA5 on standard, PA9 on iX)
     std::optional<FilamentSensorState> get_gpio_filament_sensor_state() const;
 
+    /// TMP1826 multi-tool sensor (PC14/EXT connector)
+    std::optional<FilamentSensorState> get_ext_filament_sensor_state(uint8_t index) const;
+
     uint8_t get_requested_fan_pwm(size_t fan_idx);
 
     /// Get current flash progress (0-100 percent, 0 if not flashing)
