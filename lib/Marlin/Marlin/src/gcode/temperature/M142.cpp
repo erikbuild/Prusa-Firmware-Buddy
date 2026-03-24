@@ -55,10 +55,10 @@
 void GcodeSuite::M142() {
   if (DEBUGGING(DRYRUN)) return;
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  if (!virtual_tool.has_value()) return;
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
 
-  if (parser.seenval('S')) thermalManager.setTargetHeatbreak(static_cast<int16_t>(parser.value_celsius()), virtual_tool->to_raw());
+  if (parser.seenval('S')) thermalManager.setTargetHeatbreak(static_cast<int16_t>(parser.value_celsius()), tool->to_raw());
 }
 
 /** @}*/

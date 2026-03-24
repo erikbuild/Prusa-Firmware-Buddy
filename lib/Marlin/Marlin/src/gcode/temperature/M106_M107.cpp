@@ -67,20 +67,19 @@
  * @param set_auto true to set auto control
  * @return false to let Marlin process this fan as well, true to eat this G-code
  */
-static bool set_special_fan_speed(uint8_t fan, int8_t raw_tool, uint8_t speed, bool set_auto) {
+static bool set_special_fan_speed(uint8_t fan, std::optional<PhysicalToolIndex> tool, uint8_t speed, bool set_auto) {
     [[maybe_unused]] const auto pwm_or_auto = set_auto ? PWM255OrAuto(pwm_auto) : PWM255OrAuto(speed);
 
     switch (fan) {
     #if HAS_TOOLCHANGER()
     case 1:
         // Heatbreak fan
-        if (raw_tool >= 0 && raw_tool < PhysicalToolIndex::count) {
-            const auto tool = PhysicalToolIndex::from_raw(raw_tool);
-            if (buddy::puppies::dwarfs[tool].is_enabled()) {
+        if (tool.has_value()) {
+            if (buddy::puppies::dwarfs[*tool].is_enabled()) {
                 if (set_auto) {
-                    buddy::puppies::dwarfs[tool].set_fan_auto(1);
+                    buddy::puppies::dwarfs[*tool].set_fan_auto(1);
                 } else {
-                    buddy::puppies::dwarfs[tool].set_fan(1, speed);
+                    buddy::puppies::dwarfs[*tool].set_fan(1, speed);
                 }
             }
         }
@@ -201,8 +200,8 @@ void GcodeSuite::M106() {
     if (parser.seen('S') || parser.seen('A') || auto_control) {
         const uint8_t speed = parser.byteval('S', 255);
 
-        const std::optional<VirtualToolIndex> vt = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-        if (set_special_fan_speed(p, vt.has_value() ? vt->to_raw() : -1, speed, auto_control)) {
+        const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+        if (set_special_fan_speed(p, tool, speed, auto_control)) {
             // Done in the function
 
         } else if (p < _CNT_P) {
@@ -256,8 +255,8 @@ void GcodeSuite::M106() {
 void GcodeSuite::M107() {
     const uint8_t p = parser.byteval('P', _ALT_P);
 
-    const std::optional<VirtualToolIndex> vt = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-    if (set_special_fan_speed(p, vt.has_value() ? vt->to_raw() : -1, 0, false)) {
+    const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+    if (set_special_fan_speed(p, tool, 0, false)) {
         return;
     }
 

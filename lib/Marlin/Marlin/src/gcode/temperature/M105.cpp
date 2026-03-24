@@ -43,14 +43,14 @@
  */
 void GcodeSuite::M105() {
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  if (!virtual_tool.has_value()) return;
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
 
   SERIAL_ECHOPGM(MSG_OK);
 
   #if HAS_TEMP_SENSOR
 
-    thermalManager.print_heater_states(virtual_tool->to_raw());
+    thermalManager.print_heater_states(tool->to_raw());
 
     SERIAL_EOL();
 

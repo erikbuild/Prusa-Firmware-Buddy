@@ -64,19 +64,15 @@ void GcodeSuite::M104() {
 
   if (DEBUGGING(DRYRUN)) return;
 
-  #if HAS_MMU2() // MMU2 doesn't handle different temps per slot, sayonara! (TODO?)
-	  constexpr int8_t target_extruder = 0;
-  #else
-    const std::optional<VirtualToolIndex> te = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-    if (!te.has_value()) return;
-    const uint8_t target_extruder = te->to_raw();
-  #endif
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
+  const uint8_t target_extruder = tool->to_raw();
 
   if (parser.seenval('S')) {
     const int16_t temp = static_cast<int16_t>(parser.value_celsius());
     #if ENABLED(SINGLENOZZLE)
-      singlenozzle_temp[target_extruder] = temp;
-      if (target_extruder != active_extruder) return;
+      singlenozzle_temp[tool->to_raw()] = temp;
+      if (!stdext::holds_value(PhysicalToolIndex::currently_selected(), *tool)) return;
     #endif
     thermalManager.setTargetHotend(temp, target_extruder);
 
@@ -116,13 +112,9 @@ void GcodeSuite::M104() {
  * - `T` - Tool
  */
 void GcodeSuite::M109() {
-   #if HAS_MMU2() // MMU2 doesn't handle different temps per slot, sayonara! (TODO?)
-    constexpr int8_t target_extruder = 0;
-  #else
-    const std::optional<VirtualToolIndex> te = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-    if (!te.has_value()) return;
-    const uint8_t target_extruder = te->to_raw();
-  #endif
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
+  const uint8_t target_extruder = tool->to_raw();
   M109Flags flags {
     .target_temp = static_cast<int16_t>(
       parser.seenval('S') ? parser.value_celsius() :
@@ -145,8 +137,8 @@ void M109_no_parser(uint8_t target_extruder, const M109Flags& flags) {
   if (set_temp) {
     const int16_t temp = flags.target_temp;
     #if ENABLED(SINGLENOZZLE)
-      singlenozzle_temp[target_extruder] = temp;
-      if (target_extruder != active_extruder) return;
+      singlenozzle_temp[tool.to_raw()] = temp;
+      if (!stdext::holds_value(PhysicalToolIndex::currently_selected(), tool)) return;
     #endif
     thermalManager.setTargetHotend(temp, target_extruder);
     if(flags.display_temp.has_value()) {

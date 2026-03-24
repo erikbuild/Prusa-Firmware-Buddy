@@ -85,8 +85,7 @@ static void set_stealth_status(const bool enable, const int8_t target_extruder) 
         #endif
         break;
       case E_AXIS: {
-        if (target_extruder < 0) return;
-        switch (target_extruder) {
+        switch (E_INDEX_N(target_extruder.to_raw())) {
           #if AXIS_HAS_STEALTHCHOP(E0)
             case 0: TMC_SET_STEALTH(E0, i); break;
           #endif
@@ -187,9 +186,9 @@ static void say_stealth_status() {
  */
 void GcodeSuite::M569() {
   if (parser.seen('S')){
-    const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-    if (!virtual_tool.has_value()) return;
-    set_stealth_status(parser.value_bool(), virtual_tool->to_raw());
+    const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+    if (!tool.has_value()) return;
+    set_stealth_status(parser.value_bool(), tool->to_raw());
   } else
     say_stealth_status();
 }

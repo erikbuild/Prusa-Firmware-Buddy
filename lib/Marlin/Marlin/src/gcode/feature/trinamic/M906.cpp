@@ -112,9 +112,9 @@ void GcodeSuite::M906() {
         #endif
         break;
       case E_AXIS: {
-        const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-        if (!virtual_tool.has_value()) return;
-        switch (virtual_tool->to_raw()) {
+        const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+        if (!tool.has_value()) return;
+        switch (E_INDEX_N(tool->to_raw())) {
           #if AXIS_IS_TMC(E0)
             case 0: TMC_SET_CURRENT(E0); break;
           #endif

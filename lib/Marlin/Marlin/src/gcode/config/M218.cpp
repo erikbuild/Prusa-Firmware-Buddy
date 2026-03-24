@@ -51,18 +51,14 @@
  */
 void GcodeSuite::M218() {
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  // FIXME: The virtual_tool->to_raw() >= PhysicalToolIndex::count is clearly wrong.
-  // Will be fixed in some follow-up commit.
-  if (!virtual_tool.has_value() || virtual_tool->to_raw() >= PhysicalToolIndex::count) {
-    SERIAL_ECHOLNPAIR("M218 wrong tool: ", virtual_tool.has_value() ? (int)virtual_tool->to_raw() : -1);
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) {
     return;
   }
-  auto tool = PhysicalToolIndex::from_raw(virtual_tool->to_raw());
 
-  if (parser.seenval('X')) hotend_offset[tool].x = parser.value_linear_units();
-  if (parser.seenval('Y')) hotend_offset[tool].y = parser.value_linear_units();
-  if (parser.seenval('Z')) hotend_offset[tool].z = parser.value_linear_units();
+  if (parser.seenval('X')) hotend_offset[*tool].x = parser.value_linear_units();
+  if (parser.seenval('Y')) hotend_offset[*tool].y = parser.value_linear_units();
+  if (parser.seenval('Z')) hotend_offset[*tool].z = parser.value_linear_units();
 
   if (!parser.seen("XYZ")) {
     SERIAL_ECHO_START();

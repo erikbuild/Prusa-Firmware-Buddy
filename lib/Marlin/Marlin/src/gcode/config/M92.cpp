@@ -81,8 +81,8 @@ void report_M92(const bool echo=true, const int8_t e=-1) {
  */
 void GcodeSuite::M92() {
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  if (!virtual_tool.has_value()) return;
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
 
   // No arguments? Show M92 report.
   if (!parser.seen("XYZE"
@@ -91,7 +91,7 @@ void GcodeSuite::M92() {
       "HL"
     #endif
   )) {
-    return report_M92(true, virtual_tool->to_raw());
+    return report_M92(true, tool->to_raw());
   }
 
   // We need to synchronize before we can change axis steps per unit
@@ -106,17 +106,17 @@ void GcodeSuite::M92() {
     LOOP_XYZE(i) {
       if (parser.seenval(axis_codes[i])) {
         if (i == E_AXIS) {
-          const float value = parser.value_per_axis_units((AxisEnum)(E_AXIS_N(virtual_tool->to_raw())));
+          const float value = parser.value_per_axis_units((AxisEnum)(E_AXIS_N(tool->to_raw())));
           if (value < 20) {
-            float factor = planner.settings.axis_steps_per_mm[E_AXIS_N(virtual_tool->to_raw())] / value; // increase e constants if M92 E14 is given for netfab.
+            float factor = planner.settings.axis_steps_per_mm[E_AXIS_N(tool->to_raw())] / value; // increase e constants if M92 E14 is given for netfab.
             #if HAS_CLASSIC_E_JERK
               s.max_jerk.e *= factor;
             #endif
-            s.max_feedrate_mm_s[E_AXIS_N(virtual_tool->to_raw())] *= factor;
-            planner.max_acceleration_msteps_per_s2[E_AXIS_N(virtual_tool->to_raw())] = static_cast<uint32_t>(planner.max_acceleration_msteps_per_s2[E_AXIS_N(virtual_tool->to_raw())] * factor);
+            s.max_feedrate_mm_s[E_AXIS_N(tool->to_raw())] *= factor;
+            planner.max_acceleration_msteps_per_s2[E_AXIS_N(tool->to_raw())] = static_cast<uint32_t>(planner.max_acceleration_msteps_per_s2[E_AXIS_N(tool->to_raw())] * factor);
           }
-          s.axis_steps_per_mm[E_AXIS_N(virtual_tool->to_raw())] = value;
-          s.axis_msteps_per_mm[E_AXIS_N(virtual_tool->to_raw())] = value * PLANNER_STEPS_MULTIPLIER;
+          s.axis_steps_per_mm[E_AXIS_N(tool->to_raw())] = value;
+          s.axis_msteps_per_mm[E_AXIS_N(tool->to_raw())] = value * PLANNER_STEPS_MULTIPLIER;
         }
         else {
           s.axis_steps_per_mm[i] = parser.value_per_axis_units((AxisEnum)i);
