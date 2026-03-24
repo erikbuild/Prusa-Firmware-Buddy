@@ -28,16 +28,21 @@
 #include "../../../feature/tmc_util.h"
 #include "../../../module/stepper/indirection.h"
 
+#include <option/has_motor_current_profiles.h>
+#if HAS_MOTOR_CURRENT_PROFILES()
+    #include <feature/motor_current_profile/motor_current_profile.hpp>
+#endif
+
 /** \addtogroup G-Codes
  * @{
  */
 
 /**
- *### M906: Get/Set motor current in milliamps <a href="https://reprap.org/wiki/G-code#M906:_Set_motor_currents">M906: Set motor currents</a>
+ *# to ## M906: Get/Set motor current in milliamps <a href="https://reprap.org/wiki/G-code#M906:_Set_motor_currents">M906: Set motor currents</a>
  *
  *#### Usage
  *
- *    M906 [ X | Y | Z | E | I | X ]
+ *    M906 [ X | Y | Z | E | I | T | P ]
  *
  *#### Parameters
  *
@@ -51,12 +56,27 @@
  *   - `1` - for Z2
  *   - `2` - for Z3
  * -` T` - Extruder index (Zero-based. Omit for E0 only.)
+ * -` P` - Motor current profile (requires HAS_MOTOR_CURRENT_PROFILES). When present, other axis parameters are ignored.
+ *   - `0` - Firmware defaults
+ *   - `1` - Increased E current
  *
  * With no parameters report driver currents.
  */
 void GcodeSuite::M906() {
   #define TMC_SAY_CURRENT(Q) tmc_print_current(stepper##Q)
   #define TMC_SET_CURRENT(Q) stepper##Q.rms_current(value)
+
+#if HAS_MOTOR_CURRENT_PROFILES()
+  if (parser.seen('P')) {
+    const auto val = parser.byteval('P');
+    if (val >= static_cast<uint8_t>(buddy::StandardMotorCurrentProfile::_count)) {
+      SERIAL_ECHOLNPGM("Invalid current profile");
+      return;
+    }
+    buddy::set_active_motor_current_profile(static_cast<buddy::StandardMotorCurrentProfile>(val));
+    return;
+  }
+#endif
 
   bool report = true;
 
