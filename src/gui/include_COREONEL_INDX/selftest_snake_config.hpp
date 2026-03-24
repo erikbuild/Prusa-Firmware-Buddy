@@ -57,13 +57,18 @@ constexpr bool is_singletool_only_action([[maybe_unused]] Action action) {
     return false;
 }
 
-consteval auto get_submenu_label(Tool tool, Action action) -> const char * {
+consteval auto get_submenu_label(PhysicalToolIndex tool, Action action) -> const char * {
     struct ToolText {
-        Tool tool;
+        PhysicalToolIndex tool;
         Action action;
         const char *label;
     };
-    const ToolText tooltexts[] { {} };
+    const ToolText tooltexts[] {
+        ToolText {
+            .tool = PhysicalToolIndex::from_raw(0),
+            .action = Action::_first,
+            .label = nullptr }
+    };
 
     if (auto it = std::ranges::find_if(tooltexts, [&](const auto &elem) {
             return elem.tool == tool && elem.action == action;

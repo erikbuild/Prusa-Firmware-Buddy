@@ -38,12 +38,12 @@ private:
     const Tool tool;
 };
 
-template <Tool tool_, Action action_>
+template <uint8_t tool_, Action action_>
     requires SubmenuActionC<action_>
 class MI_STS_SUBMENU : public I_MI_STS_SUBMENU {
 public:
     MI_STS_SUBMENU()
-        : I_MI_STS_SUBMENU(get_submenu_label(tool_, action_), action_, tool_) {}
+        : I_MI_STS_SUBMENU(get_submenu_label(PhysicalToolIndex::from_raw(tool_), action_), action_, Tool { tool_ }) {}
 };
 
 bool is_menu_draw_enabled(window_t *window);

@@ -3,30 +3,30 @@
 
 namespace SelftestSnake {
 
-template <Tool tool>
+template <uint8_t tool>
 using MI_STS_Dock_Calib = MI_STS_SUBMENU<tool, Action::DockCalibration>;
 
-template <Tool tool>
+template <uint8_t tool>
 using MI_STS_LoadcellTest = MI_STS_SUBMENU<tool, Action::Loadcell>;
 
-template <Tool tool>
+template <uint8_t tool>
 using MI_STS_FSensor_Calibration = MI_STS_SUBMENU<tool, Action::FilamentSensorCalibration>;
 
-template <Tool tool>
+template <uint8_t tool>
 using MI_STS_Gears_alignment = MI_STS_SUBMENU<tool, Action::Gears>;
 
 namespace detail {
     using ScreenMenuDockCalibration = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
-        MI_STS_Dock_Calib<Tool::Tool1>, MI_STS_Dock_Calib<Tool::Tool2>, MI_STS_Dock_Calib<Tool::Tool3>, MI_STS_Dock_Calib<Tool::Tool4>, MI_STS_Dock_Calib<Tool::Tool5>>;
+        MI_STS_Dock_Calib<0>, MI_STS_Dock_Calib<1>, MI_STS_Dock_Calib<2>, MI_STS_Dock_Calib<3>, MI_STS_Dock_Calib<4>>;
 
     using ScreenMenuLoadcellTest = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
-        MI_STS_LoadcellTest<Tool::Tool1>, MI_STS_LoadcellTest<Tool::Tool2>, MI_STS_LoadcellTest<Tool::Tool3>, MI_STS_LoadcellTest<Tool::Tool4>, MI_STS_LoadcellTest<Tool::Tool5>>;
+        MI_STS_LoadcellTest<0>, MI_STS_LoadcellTest<1>, MI_STS_LoadcellTest<2>, MI_STS_LoadcellTest<3>, MI_STS_LoadcellTest<4>>;
 
     using ScreenMenuFilamentSensorsCalibration = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
-        MI_STS_FSensor_Calibration<Tool::Tool1>, MI_STS_FSensor_Calibration<Tool::Tool2>, MI_STS_FSensor_Calibration<Tool::Tool3>, MI_STS_FSensor_Calibration<Tool::Tool4>, MI_STS_FSensor_Calibration<Tool::Tool5>>;
+        MI_STS_FSensor_Calibration<0>, MI_STS_FSensor_Calibration<1>, MI_STS_FSensor_Calibration<2>, MI_STS_FSensor_Calibration<3>, MI_STS_FSensor_Calibration<4>>;
 
     using ScreenMenuGearsTest = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
-        MI_STS_Gears_alignment<Tool::Tool1>, MI_STS_Gears_alignment<Tool::Tool2>, MI_STS_Gears_alignment<Tool::Tool3>, MI_STS_Gears_alignment<Tool::Tool4>, MI_STS_Gears_alignment<Tool::Tool5>>;
+        MI_STS_Gears_alignment<0>, MI_STS_Gears_alignment<1>, MI_STS_Gears_alignment<2>, MI_STS_Gears_alignment<3>, MI_STS_Gears_alignment<4>>;
 } // namespace detail
 
 class ScreenMenuDockCalibration : public detail::ScreenMenuDockCalibration {

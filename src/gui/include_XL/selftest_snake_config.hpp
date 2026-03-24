@@ -78,33 +78,33 @@ constexpr bool is_singletool_only_action(Action action) {
     return action == Action::Heaters;
 }
 
-consteval auto get_submenu_label(Tool tool, Action action) -> const char * {
+consteval auto get_submenu_label(PhysicalToolIndex tool, Action action) -> const char * {
     struct ToolText {
-        Tool tool;
+        PhysicalToolIndex tool;
         Action action;
         const char *label;
     };
     const ToolText tooltexts[] {
-        { Tool::Tool1, Action::DockCalibration, N_("Dock 1 Calibration") },
-        { Tool::Tool2, Action::DockCalibration, N_("Dock 2 Calibration") },
-        { Tool::Tool3, Action::DockCalibration, N_("Dock 3 Calibration") },
-        { Tool::Tool4, Action::DockCalibration, N_("Dock 4 Calibration") },
-        { Tool::Tool5, Action::DockCalibration, N_("Dock 5 Calibration") },
-        { Tool::Tool1, Action::Loadcell, N_("Tool 1 Loadcell Test") },
-        { Tool::Tool2, Action::Loadcell, N_("Tool 2 Loadcell Test") },
-        { Tool::Tool3, Action::Loadcell, N_("Tool 3 Loadcell Test") },
-        { Tool::Tool4, Action::Loadcell, N_("Tool 4 Loadcell Test") },
-        { Tool::Tool5, Action::Loadcell, N_("Tool 5 Loadcell Test") },
-        { Tool::Tool1, Action::FilamentSensorCalibration, N_("Tool 1 Filament Sensor Calibration") },
-        { Tool::Tool2, Action::FilamentSensorCalibration, N_("Tool 2 Filament Sensor Calibration") },
-        { Tool::Tool3, Action::FilamentSensorCalibration, N_("Tool 3 Filament Sensor Calibration") },
-        { Tool::Tool4, Action::FilamentSensorCalibration, N_("Tool 4 Filament Sensor Calibration") },
-        { Tool::Tool5, Action::FilamentSensorCalibration, N_("Tool 5 Filament Sensor Calibration") },
-        { Tool::Tool1, Action::Gears, N_("Tool 1 Gearbox alignment") },
-        { Tool::Tool2, Action::Gears, N_("Tool 2 Gearbox alignment") },
-        { Tool::Tool3, Action::Gears, N_("Tool 3 Gearbox alignment") },
-        { Tool::Tool4, Action::Gears, N_("Tool 4 Gearbox alignment") },
-        { Tool::Tool5, Action::Gears, N_("Tool 5 Gearbox alignment") },
+        { PhysicalToolIndex::from_raw(0), Action::DockCalibration, N_("Dock 1 Calibration") },
+        { PhysicalToolIndex::from_raw(1), Action::DockCalibration, N_("Dock 2 Calibration") },
+        { PhysicalToolIndex::from_raw(2), Action::DockCalibration, N_("Dock 3 Calibration") },
+        { PhysicalToolIndex::from_raw(3), Action::DockCalibration, N_("Dock 4 Calibration") },
+        { PhysicalToolIndex::from_raw(4), Action::DockCalibration, N_("Dock 5 Calibration") },
+        { PhysicalToolIndex::from_raw(0), Action::Loadcell, N_("Tool 1 Loadcell Test") },
+        { PhysicalToolIndex::from_raw(1), Action::Loadcell, N_("Tool 2 Loadcell Test") },
+        { PhysicalToolIndex::from_raw(2), Action::Loadcell, N_("Tool 3 Loadcell Test") },
+        { PhysicalToolIndex::from_raw(3), Action::Loadcell, N_("Tool 4 Loadcell Test") },
+        { PhysicalToolIndex::from_raw(4), Action::Loadcell, N_("Tool 5 Loadcell Test") },
+        { PhysicalToolIndex::from_raw(0), Action::FilamentSensorCalibration, N_("Tool 1 Filament Sensor Calibration") },
+        { PhysicalToolIndex::from_raw(1), Action::FilamentSensorCalibration, N_("Tool 2 Filament Sensor Calibration") },
+        { PhysicalToolIndex::from_raw(2), Action::FilamentSensorCalibration, N_("Tool 3 Filament Sensor Calibration") },
+        { PhysicalToolIndex::from_raw(3), Action::FilamentSensorCalibration, N_("Tool 4 Filament Sensor Calibration") },
+        { PhysicalToolIndex::from_raw(4), Action::FilamentSensorCalibration, N_("Tool 5 Filament Sensor Calibration") },
+        { PhysicalToolIndex::from_raw(0), Action::Gears, N_("Tool 1 Gearbox alignment") },
+        { PhysicalToolIndex::from_raw(1), Action::Gears, N_("Tool 2 Gearbox alignment") },
+        { PhysicalToolIndex::from_raw(2), Action::Gears, N_("Tool 3 Gearbox alignment") },
+        { PhysicalToolIndex::from_raw(3), Action::Gears, N_("Tool 4 Gearbox alignment") },
+        { PhysicalToolIndex::from_raw(4), Action::Gears, N_("Tool 5 Gearbox alignment") },
 
     };
 
