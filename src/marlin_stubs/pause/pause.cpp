@@ -927,7 +927,8 @@ void Pause::load_finalize_process(Response) {
     // Only retract from nozzle outside printing
     if (!marlin_server::is_printing()) {
         setPhase(PhasesLoadUnload::AutoRetracting);
-        PauseFsmDurationNotifier progress_notifier(*this, standard_ramming_sequence(StandardRammingSequence::auto_retract, marlin_vars().active_hotend_id()).duration_estimate_ms());
+        const auto vt = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+        PauseFsmDurationNotifier progress_notifier(*this, vt ? standard_ramming_sequence(StandardRammingSequence::auto_retract, *vt).duration_estimate_ms() : 0);
         auto_retract().maybe_retract_from_nozzle();
     }
 #else
@@ -1553,16 +1554,21 @@ bool Pause::ram_filament() {
 
     setPhase(is_unstoppable() ? PhasesLoadUnload::Ramming_unstoppable : PhasesLoadUnload::Ramming_stoppable);
 
+    const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+    if (!virtual_tool) {
+        return false;
+    }
+
     const RammingSequence *ramming_sequence = nullptr;
 
     switch (load_type) {
     case LoadType::filament_change:
     case LoadType::filament_stuck:
-        ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::runout, active_extruder);
+        ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::runout, *virtual_tool);
         break;
 
     default:
-        ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::unload, active_extruder);
+        ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::unload, *virtual_tool);
         break;
     }
 

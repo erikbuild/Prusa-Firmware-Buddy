@@ -4,7 +4,7 @@
 
 using namespace buddy;
 
-const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence seq, [[maybe_unused]] uint8_t hotend) {
+const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence seq, [[maybe_unused]] VirtualToolIndex virtual_tool) {
     switch (seq) {
 
     case StandardRammingSequence::runout:

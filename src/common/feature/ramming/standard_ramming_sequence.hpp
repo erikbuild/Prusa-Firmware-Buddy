@@ -3,6 +3,7 @@
 #include <option/has_auto_retract.h>
 
 #include "ramming_sequence.hpp"
+#include <common/tool_index.hpp>
 
 namespace buddy {
 
@@ -14,6 +15,6 @@ enum class StandardRammingSequence {
     unload,
 };
 
-const RammingSequence &standard_ramming_sequence(StandardRammingSequence seq, uint8_t hotend);
+const RammingSequence &standard_ramming_sequence(StandardRammingSequence seq, VirtualToolIndex virtual_tool);
 
 } // namespace buddy
