@@ -23,7 +23,6 @@ target_sources(
           cyphal_transport.cpp
           hal.cpp
           hal_clock.cpp
-          hal_ext.cpp
           hal_gpio_expander.cpp
           hal_memory.cpp
           hal_mmu.cpp

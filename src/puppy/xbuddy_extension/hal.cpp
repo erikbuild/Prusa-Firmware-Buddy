@@ -3,7 +3,6 @@
 
 #include "extension_variant.h"
 #include "hal_clock.hpp"
-#include "hal_ext.hpp"
 #include "hal_gpio_expander.hpp"
 #include "hal_mmu.hpp"
 #include "hal_pub.hpp"
@@ -367,7 +366,6 @@ void hal::init() {
     hal::mmu::init();
     hal::gpio_expander::init();
     hal::usb::init();
-    hal::ext::init();
     hal::pub::init();
     filament_sensor_pins_init();
     hal::rng::init();
