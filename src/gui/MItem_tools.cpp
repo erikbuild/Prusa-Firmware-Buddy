@@ -525,12 +525,12 @@ void MI_INFO_FILAMENT_SENSOR::Loop() {
 
 void MI_INFO_FILAMENT_SENSOR::print_val(const std::span<char> &buffer) const {
     static constexpr EnumArray<FilamentSensorState, const char *, 6> texts {
-        { FilamentSensorState::NotInitialized, N_("uninitialized / %ld") },
-        { FilamentSensorState::NotCalibrated, N_("uncalibrated / %ld") }, // not calibrated would be too long
-        { FilamentSensorState::HasFilament, N_(" INS / %7ld") },
-        { FilamentSensorState::NoFilament, N_("NINS / %7ld") },
-        { FilamentSensorState::NotConnected, N_("disconnected / %ld") },
-        { FilamentSensorState::Disabled, N_("disabled / %ld") },
+        { FilamentSensorState::NotInitialized, "ninit / %ld" },
+        { FilamentSensorState::NotCalibrated, "ncal / %ld" }, // not calibrated would be too long
+        { FilamentSensorState::HasFilament, " INS / %7ld" },
+        { FilamentSensorState::NoFilament, "NINS / %7ld" },
+        { FilamentSensorState::NotConnected, "ncon / %ld" },
+        { FilamentSensorState::Disabled, "nena / %ld" },
     };
 
     const auto val = value();
@@ -539,9 +539,8 @@ void MI_INFO_FILAMENT_SENSOR::print_val(const std::span<char> &buffer) const {
         return;
     }
 
-    StringViewUtf8Parameters<8> params;
-    const auto orig_str = _(texts.get_fallback(val->state, FilamentSensorState::NotInitialized));
-    orig_str.formatted(params, val->value).copyToRAM(buffer);
+    StringBuilder sb(buffer);
+    sb.append_printf(texts.get_fallback(val->state, FilamentSensorState::NotInitialized), val->value);
 }
 
 MI_INFO_FILAMENT_SENSOR::Value MI_INFO_FILAMENT_SENSOR::get_value(IFSensor *fsensor) {
