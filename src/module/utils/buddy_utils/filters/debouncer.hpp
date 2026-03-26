@@ -38,7 +38,7 @@ public:
         return stable_value_;
     }
 
-    const bool is_stable() const {
+    bool is_stable() const {
         return stability_ == required_stability_;
     }
 
