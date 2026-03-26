@@ -242,16 +242,15 @@ bool ChamberFiltration::needs_filtration() const {
     // Check the always on flag (applies to all prints) [BFW-6829]
     const bool always_filter = config_store().chamber_filtration_always_on.get() || (needs_filtration_override_ == Tristate::yes);
 
-    for (uint8_t extruder = 0; extruder < HOTENDS; extruder++) {
-        const auto hotend = hotend_from_extruder(extruder);
-        const auto hotend_temp = marlin_vars().hotend(hotend).temp_nozzle.get();
+    for (auto virtual_tool : VirtualToolIndex::all()) {
+        const auto hotend_temp = marlin_vars().hotend(virtual_tool.to_physical()).temp_nozzle.get();
 
         // Save on config store lookups if the nozzle is cold
         if (hotend_temp <= 70) {
             continue;
         }
 
-        const FilamentTypeParameters filament = config_store().get_filament_type(extruder).parameters();
+        const FilamentTypeParameters filament = config_store().get_filament_type(virtual_tool).parameters();
 
         const bool hotend_is_hot =
             // Give some headroom over preheat temperature, we don't want the filtration to trigger when oscilating around it
