@@ -86,6 +86,9 @@ using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
     MI_INFO_DOOR_SENSOR,
     #endif
     MI_INFO_EXTRUDER_FILAMENT_SENSOR,
+    #if HOTENDS > 1
+    MenuItemVirtualSubmenu<N_("Extruder Filament Sensors"), MI_INFO_EXTRUDER_FILAMENT_SENSOR, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
+    #endif
     MI_INFO_SIDE_FILAMENT_SENSOR,
     #if PRINTER_IS_PRUSA_MK3_5()
     MI_PINDA,

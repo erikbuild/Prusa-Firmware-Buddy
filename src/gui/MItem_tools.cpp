@@ -556,16 +556,30 @@ MI_INFO_FILAMENT_SENSOR::Value MI_INFO_FILAMENT_SENSOR::get_value(IFSensor *fsen
 
 /*****************************************************************************/
 // MI_INFO_EXTRUDER_FILAMENT_SENSOR
-MI_INFO_EXTRUDER_FILAMENT_SENSOR::MI_INFO_EXTRUDER_FILAMENT_SENSOR()
+MI_INFO_EXTRUDER_FILAMENT_SENSOR::MI_INFO_EXTRUDER_FILAMENT_SENSOR(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool)
     : MI_INFO_FILAMENT_SENSOR(
-        PRINTER_IS_PRUSA_XL() ? _("Tool Filament sensor") : _("Filament Sensor"),
-        [](auto) {
-            return match(
-                marlin_vars().active_extruder.get(),
-                [](VirtualToolIndex virtual_tool) { return get_value(GetExtruderFSensor(virtual_tool.to_physical())); },
-                [](NoTool) -> Value { return std::nullopt; });
-        } //
-    ) {}
+        string_view_utf8 {},
+        [](auto *item) { return static_cast<MI_INFO_EXTRUDER_FILAMENT_SENSOR *>(item)->value(); })
+    , tool_(tool) {
+    SetLabel(match(
+        tool_,
+        [&](PhysicalToolIndex t) { return t.display_name(label_params_); },
+        [](CurrentlySelectedTool) {
+#if PRINTER_IS_PRUSA_XL()
+            return _("Tool Filament sensor");
+#else
+            return _("Filament Sensor");
+#endif
+        }));
+}
+
+std::optional<FilamentSensorStateAndValue> MI_INFO_EXTRUDER_FILAMENT_SENSOR::value() const {
+    const auto tool = resolve_tool_index(tool_);
+    if (!tool.has_value()) {
+        return std::nullopt;
+    }
+    return get_value(GetExtruderFSensor(*tool));
+}
 
 /*****************************************************************************/
 // MI_INFO_SIDE_FILAMENT_SENSOR

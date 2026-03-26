@@ -270,7 +270,13 @@ protected:
 
 class MI_INFO_EXTRUDER_FILAMENT_SENSOR : public MI_INFO_FILAMENT_SENSOR {
 public:
-    MI_INFO_EXTRUDER_FILAMENT_SENSOR();
+    MI_INFO_EXTRUDER_FILAMENT_SENSOR(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool = CurrentlySelectedTool {});
+
+private:
+    std::optional<FilamentSensorStateAndValue> value() const;
+
+    const std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool_;
+    StringViewUtf8Parameters<4> label_params_;
 };
 
 class MI_INFO_SIDE_FILAMENT_SENSOR : public MI_INFO_FILAMENT_SENSOR {
