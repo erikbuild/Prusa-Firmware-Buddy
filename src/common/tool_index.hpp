@@ -94,6 +94,13 @@ struct ToolNotMapped {
     }
 };
 
+/// Strong type for representing a currently selected tool
+struct CurrentlySelectedTool {
+    inline constexpr bool operator==(const CurrentlySelectedTool &) const {
+        return true;
+    }
+};
+
 /// Strong base type for indexing tools, providing common functionality between PhysicalToolIndex, VirtualToolIndex and GcodeToolIndex
 template <const int count_, typename Extension>
 struct ToolIndex : public Extension {
@@ -260,6 +267,35 @@ auto to_physical_tool_index(const std::variant<T...> &variant) {
         }
     };
     return std::visit(f, variant);
+}
+
+/// Resolves the provided variant (presumably including CurrentlySelectedTool) into a std::optional
+template <typename Index, typename... Variants>
+std::optional<Index> resolve_tool_index(const std::variant<Index, Variants...> &variant) {
+    using Result = std::optional<Index>;
+    return match(
+        variant, //
+        [](Index tool) -> Result { return tool; }, //
+        [](CurrentlySelectedTool) -> Result {
+            return match(
+                Index::currently_selected(), //
+                [](Index tool) -> Result { return tool; }, //
+                [](NoTool) -> Result { return std::nullopt; } //
+            ); //
+        },
+        [](NoTool) -> Result { return std::nullopt; } //
+    );
+}
+
+/// Same as resolve_tool_index, but also returns std::nullopt if the tool is disabled
+template <typename Index, typename... Variants>
+std::optional<Index> resolve_enabled_tool_index(const std::variant<Index, Variants...> &variant) {
+    const auto r = resolve_tool_index(variant);
+    if (r.has_value() && r->is_enabled()) {
+        return r;
+    } else {
+        return std::nullopt;
+    }
 }
 
 /// @returns range of tools represented by the variant
