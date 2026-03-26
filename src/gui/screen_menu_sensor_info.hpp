@@ -41,88 +41,80 @@
     #include <MItem_MINI.hpp>
 #endif
 
-template <typename>
-struct ScreenMenuSensorInfo__;
-
-template <size_t... hotend>
-struct ScreenMenuSensorInfo__<std::index_sequence<hotend...>> {
-    using T = ScreenMenu<GuiDefaults::MenuFooter,
-        MI_RETURN,
+using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
+    MI_RETURN,
 
 #if PRINTER_IS_PRUSA_MINI()
-        // Take very minimalist approach for the Mini, we're low on FLASH right now :(
-        // TODO: Remove this
-        MI_INFO_PRINTER_FILAMENT_SENSOR,
-        MI_MINDA,
-        MI_INFO_MCU_TEMP
+    // Take very minimalist approach for the Mini, we're low on FLASH right now :(
+    // TODO: Remove this
+    MI_INFO_PRINTER_FILAMENT_SENSOR,
+    MI_MINDA,
+    MI_INFO_MCU_TEMP
 
 #else
 
     #if HAS_TEMP_BOARD
-        MI_INFO_BOARD_TEMP,
+    MI_INFO_BOARD_TEMP,
     #endif
-        MI_INFO_MCU_TEMP,
-        MI_INFO_BED_TEMP,
+    MI_INFO_MCU_TEMP,
+    MI_INFO_BED_TEMP,
     #if HAS_CHAMBER_API()
-        MI_CHAMBER_TEMP,
+    MI_CHAMBER_TEMP,
     #endif
-        MI_INFO_NOZZLE_TEMP,
+    MI_INFO_NOZZLE_TEMP,
     #if HAS_PER_TOOL_TEMPERATURES()
-        MenuItemVirtualSubmenu<N_("Nozzle Temperatures"), MI_INFO_NOZZLE_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
+    MenuItemVirtualSubmenu<N_("Nozzle Temperatures"), MI_INFO_NOZZLE_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
     #endif
     #if TEMP_SENSOR_HEATBREAK > 0
-        MI_INFO_HEATBREAK_TEMP,
+    MI_INFO_HEATBREAK_TEMP,
         #if HAS_PER_TOOL_TEMPERATURES()
-        MenuItemVirtualSubmenu<N_("Heatbreak Temperatures"), MI_INFO_HEATBREAK_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
+    MenuItemVirtualSubmenu<N_("Heatbreak Temperatures"), MI_INFO_HEATBREAK_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
         #endif
     #endif
     #if HAS_TOOLCHANGER()
-        MI_INFO_DWARF_BOARD_TEMPERATURE,
-        MI_INFO_DWARF_MCU_TEMPERATURE,
+    MI_INFO_DWARF_BOARD_TEMPERATURE,
+    MI_INFO_DWARF_MCU_TEMPERATURE,
     #endif
     #if HAS_REMOTE_BED()
-        MI_INFO_REMOTE_BED_MCU_TEMPERATURE,
+    MI_INFO_REMOTE_BED_MCU_TEMPERATURE,
     #endif
 
     #if HAS_LOADCELL()
-        MI_INFO_LOADCELL,
+    MI_INFO_LOADCELL,
     #endif
     #if HAS_DOOR_SENSOR()
-        MI_INFO_DOOR_SENSOR,
+    MI_INFO_DOOR_SENSOR,
     #endif
-        MI_INFO_PRINTER_FILAMENT_SENSOR,
-        MI_INFO_SIDE_FILAMENT_SENSOR,
+    MI_INFO_PRINTER_FILAMENT_SENSOR,
+    MI_INFO_SIDE_FILAMENT_SENSOR,
     #if PRINTER_IS_PRUSA_MK3_5()
-        MI_PINDA,
+    MI_PINDA,
     #endif
     #if PRINTER_IS_PRUSA_MINI()
-        // #error dead code found by automatic analyses (see BFW-5461)
-        MI_MINDA,
+    // #error dead code found by automatic analyses (see BFW-5461)
+    MI_MINDA,
     #endif
     #if HAS_MMU2()
-        MI_INFO_FINDA,
+    MI_INFO_FINDA,
     #endif
 
     #if BOARD_IS_XBUDDY()
-        MI_INFO_BED_VOLTAGE,
-        MI_INFO_HEATER_VOLTAGE,
-        MI_INFO_HEATER_CURRENT,
-        MI_INFO_INPUT_CURRENT,
+    MI_INFO_BED_VOLTAGE,
+    MI_INFO_HEATER_VOLTAGE,
+    MI_INFO_HEATER_CURRENT,
+    MI_INFO_INPUT_CURRENT,
     #endif
     #if BOARD_IS_XLBUDDY()
-        MI_INFO_5V_VOLTAGE,
-        MI_INFO_SANDWICH_5V_CURRENT,
-        MI_INFO_BUDDY_5V_CURRENT,
+    MI_INFO_5V_VOLTAGE,
+    MI_INFO_SANDWICH_5V_CURRENT,
+    MI_INFO_BUDDY_5V_CURRENT,
     #endif
     #if HAS_MMU2()
-        MI_INFO_MMU_CURRENT,
+    MI_INFO_MMU_CURRENT,
     #endif
-        MI_FAN_INFO
+    MI_FAN_INFO
 #endif
-        >;
-};
-
-using ScreenMenuSensorInfo_ = ScreenMenuSensorInfo__<std::make_index_sequence<PhysicalToolIndex::count>>::T;
+    >;
 
 class ScreenMenuSensorInfo : public ScreenMenuSensorInfo_ {
     FS_AutoloadAutolock lock;
