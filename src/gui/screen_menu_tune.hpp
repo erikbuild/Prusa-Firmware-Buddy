@@ -7,6 +7,7 @@
 #include "MItem_hardware.hpp"
 #include "MItem_print.hpp"
 #include "MItem_tools.hpp"
+#include <gui/menu_item/menu_item_virtual_submenu.hpp>
 #include "MItem_crash.hpp"
 #include "MItem_menus.hpp"
 #include "MItem_mmu.hpp"
@@ -15,6 +16,7 @@
 #include <option/has_emergency_stop.h>
 #include <option/has_chamber_api.h>
 #include <option/has_loadcell.h>
+#include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 #include <option/developer_mode.h>
 #include <option/has_mmu2.h>
@@ -49,9 +51,9 @@ using ScreenMenuTune__ = ScreenMenu<EFooter::On, MI_RETURN,
     MI_CO_CANCEL_OBJECT,
 #endif
     MI_SPEED,
-    MI_NOZZLE<0>,
-#if HAS_TOOLCHANGER()
-    MI_NOZZLE<1>, MI_NOZZLE<2>, MI_NOZZLE<3>, MI_NOZZLE<4>,
+    MI_NOZZLE_TARGET_TEMP,
+#if HAS_PER_TOOL_TEMPERATURES()
+    MenuItemVirtualSubmenu<N_("Nozzle Temperatures"), MI_NOZZLE_TARGET_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
 #endif
     MI_HEATBED,
 #if HAS_CHAMBER_API()

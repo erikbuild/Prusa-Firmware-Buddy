@@ -4,6 +4,7 @@
 #pragma once
 
 #include <option/has_chamber_api.h>
+#include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 #include <option/xbuddy_extension_variant.h>
 
@@ -11,6 +12,7 @@
 #include "WindowMenuItems.hpp"
 #include "MItem_print.hpp"
 #include "MItem_filament.hpp"
+#include <gui/menu_item/menu_item_virtual_submenu.hpp>
 #include <window_menu_callback_item.hpp>
 
 #if HAS_CHAMBER_API()
@@ -30,9 +32,9 @@ using MI_CHAMBER_TARGET_TEMP = WithConstructorArgs<::MI_CHAMBER_TARGET_TEMP, HAS
 using MI_COOLDOWN = WithConstructorArgs<WindowMenuCallbackItem, N_("Cooldown"), nullptr>;
 
 using ScreenBase = ScreenMenu<
-    EFooter::On, MI_RETURN, MI_NOZZLE<0>,
-#if HAS_TOOLCHANGER()
-    MI_NOZZLE<1>, MI_NOZZLE<2>, MI_NOZZLE<3>, MI_NOZZLE<4>,
+    EFooter::On, MI_RETURN, MI_NOZZLE_TARGET_TEMP,
+#if HAS_PER_TOOL_TEMPERATURES()
+    MenuItemVirtualSubmenu<N_("Nozzle Temperatures"), MI_NOZZLE_TARGET_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
 #endif
     MI_HEATBED,
 #if HAS_CHAMBER_API()

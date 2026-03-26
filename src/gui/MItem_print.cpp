@@ -17,28 +17,46 @@
 #endif
 
 /*****************************************************************************/
-// MI_NOZZLE_ABSTRACT
-is_hidden_t MI_NOZZLE_ABSTRACT::is_hidden([[maybe_unused]] uint8_t tool_nr) {
-    const auto tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::from_raw_notool(tool_nr));
-    if (tool.has_value() && tool->is_enabled()) {
-        return is_hidden_t::no;
-    }
-    return is_hidden_t::yes;
-}
-
-MI_NOZZLE_ABSTRACT::MI_NOZZLE_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] const char *label)
-    : WiSpin(uint16_t(marlin_vars().hotend(tool_nr).target_nozzle), numeric_input_config::nozzle_temperature,
-#if HAS_TOOLCHANGER()
-        prusa_toolchanger.is_toolchanger_enabled() ? _(label) : _(generic_label),
+// MI_NOZZLE_TARGET_TEMP
+MI_NOZZLE_TARGET_TEMP::MI_NOZZLE_TARGET_TEMP(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool)
+    : WiSpin(0, numeric_input_config::nozzle_temperature, string_view_utf8 {}, &img::nozzle_16x16)
+    , tool_(tool) {
+    SetLabel(match(
+        tool_,
+        [&](PhysicalToolIndex t) { return t.display_name(label_params_); },
+        [](CurrentlySelectedTool) {
+#if HAS_MINI_DISPLAY()
+            return _("Nozzle");
 #else
-        _(generic_label),
+            return _("Nozzle Temperature");
 #endif
-        &img::nozzle_16x16, is_enabled_t::yes, is_hidden(tool_nr))
-    , tool_nr(tool_nr) {
+        }));
 }
 
-void MI_NOZZLE_ABSTRACT::OnClick() {
-    marlin_client::set_target_nozzle(static_cast<int16_t>(value()), tool_nr);
+void MI_NOZZLE_TARGET_TEMP::OnClick() {
+    if (resolved_tool_.has_value()) {
+        marlin_client::set_target_nozzle(static_cast<int16_t>(value()), *resolved_tool_);
+    }
+}
+
+void MI_NOZZLE_TARGET_TEMP::Loop() {
+    WiSpin::Loop();
+
+    if (is_edited()) {
+        // Don't change the item under user's hands
+        return;
+    }
+
+    // Resolve the tool outside of editing, so that a tool change mid-edit doesn't cause writing to a wrong tool
+    resolved_tool_ = resolve_enabled_tool_index(tool_);
+
+    set_enabled(resolved_tool_.has_value());
+
+    if (resolved_tool_.has_value()) {
+        set_value(marlin_vars().hotend(*resolved_tool_).target_nozzle);
+    } else {
+        set_value(config().special_value);
+    }
 }
 
 /*****************************************************************************/

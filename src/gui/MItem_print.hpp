@@ -8,53 +8,23 @@
 #include <guiconfig/guiconfig.h>
 #include <WindowItemFormatableLabel.hpp>
 
-class MI_NOZZLE_ABSTRACT : public WiSpin {
-    static constexpr const char *const generic_label =
-#if HAS_MINI_DISPLAY()
-        N_("Nozzle"); // Generic string for no toolchanger
-#else
-        N_("Nozzle Temperature");
-#endif
-
-    uint8_t tool_nr;
-    is_hidden_t is_hidden(uint8_t tool_nr);
-
-public:
-    MI_NOZZLE_ABSTRACT(uint8_t tool_nr, const char *label);
-    virtual void OnClick() override;
-};
-
 /// Nozzle target temperature (adjustable spin)
-template <uint8_t N>
-class MI_NOZZLE : public MI_NOZZLE_ABSTRACT {
-public:
-    static constexpr const char *get_label() {
-#if HAS_TOOLCHANGER()
-        static_assert(N >= 0 && N <= 4, "bad input");
-        switch (N) {
-        case 0:
-            return N_("Nozzle 1 Temperature");
-        case 1:
-            return N_("Nozzle 2 Temperature");
-        case 2:
-            return N_("Nozzle 3 Temperature");
-        case 3:
-            return N_("Nozzle 4 Temperature");
-        case 4:
-            return N_("Nozzle 5 Temperature");
-        }
-#else
-        static_assert(N == 0, "For single tool printer, only 0 nozzle is allowed ");
-    #if HAS_MINI_DISPLAY()
-        return N_("Nozzle");
-    #else
-        return N_("Nozzle Temperature");
-    #endif
-#endif
-    }
+class MI_NOZZLE_TARGET_TEMP : public WiSpin {
 
-    MI_NOZZLE()
-        : MI_NOZZLE_ABSTRACT(N, get_label()) {}
+public:
+    MI_NOZZLE_TARGET_TEMP(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool = CurrentlySelectedTool {});
+
+protected:
+    void OnClick() override;
+    void Loop() override;
+
+private:
+    const std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool_;
+
+    /// Resolved tool that is updated in Loop(). Cached so that a tool change mid-edit doesn't write to a wrong tool.
+    std::optional<PhysicalToolIndex> resolved_tool_;
+
+    StringViewUtf8Parameters<4> label_params_;
 };
 
 /// Nozzle current temperature (read only, auto updating)

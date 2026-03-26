@@ -29,13 +29,6 @@ ScreenMenuTemperature::ScreenMenuTemperature()
         }
         marlin_client::set_target_bed(0);
         marlin_client::set_fan_speed(0);
-        Item<MI_NOZZLE<0>>().SetVal(0);
-#if HAS_TOOLCHANGER()
-        Item<MI_NOZZLE<1>>().SetVal(0);
-        Item<MI_NOZZLE<2>>().SetVal(0);
-        Item<MI_NOZZLE<3>>().SetVal(0);
-        Item<MI_NOZZLE<4>>().SetVal(0);
-#endif
         Item<MI_HEATBED>().SetVal(0);
         Item<MI_PRINTFAN>().SetVal(0);
 #if HAS_CHAMBER_API()
