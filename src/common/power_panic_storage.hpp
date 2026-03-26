@@ -115,7 +115,11 @@ struct state_planner_t {
 #endif
 
     // everything to target_nozzle is aligned - padding the remaining fields
-    static constexpr int _size_to_pad = sizeof(target_nozzle) + sizeof(flow_percentage) + sizeof(marlin_debug_flags);
+    static constexpr int _size_to_pad = sizeof(target_nozzle) + sizeof(flow_percentage) + sizeof(marlin_debug_flags)
+#if HAS_MOTOR_CURRENT_PROFILES()
+        + sizeof(current_profile)
+#endif
+        ;
     uint8_t _padding[(4 - _size_to_pad % 4) % 4];
 };
 
