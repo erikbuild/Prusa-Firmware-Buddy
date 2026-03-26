@@ -8,6 +8,7 @@
 #include "config_features.h"
 #include "printers.h"
 #include "footer_eeprom.hpp"
+#include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 #include <config_store/store_instance.hpp>
 #include <utils/string_builder.hpp>
@@ -106,7 +107,7 @@ changed_t FooterItemBed::updateValue() {
     return ret;
 }
 
-#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
+#if HAS_PER_TOOL_TEMPERATURES()
 
 FooterItemAllNozzles::FooterItemAllNozzles(window_t *parent)
     : FooterIconText_IntVal(parent, &img::nozzle_16x16, static_makeView, static_readValue) {

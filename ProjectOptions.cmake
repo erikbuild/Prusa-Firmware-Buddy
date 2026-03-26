@@ -767,6 +767,12 @@ else()
   define_boolean_option(HAS_SPOOL_JOIN no)
 endif()
 
+if(HAS_TOOLCHANGER AND NOT HAS_INDX)
+  define_boolean_option(HAS_PER_TOOL_TEMPERATURES yes)
+else()
+  define_boolean_option(HAS_PER_TOOL_TEMPERATURES no)
+endif()
+
 set_feature_for_printers(HAS_CYPHAL_METRICS)
 set_feature_for_printers(HAS_CYPHAL_LOGGING)
 

@@ -15,6 +15,7 @@
 #include <option/has_sheet_profiles.h>
 #include <option/has_chamber_api.h>
 #include <option/has_indx.h>
+#include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 #include "i18n.h"
 #include <device/board.h>
@@ -29,8 +30,7 @@
     #define FOOTER_ITEMS_PER_LINE__ 5
 #endif
 
-#define HAS_PER_TOOL_NOZZLE_TEMPERATURE() (HAS_TOOLCHANGER() && !HAS_INDX())
-#define FOOTER_HAS_TOOL_NR()              (EXTRUDERS > 1)
+#define FOOTER_HAS_TOOL_NR() (EXTRUDERS > 1)
 
 namespace footer {
 inline constexpr uint8_t default_center_n_and_fewer = FOOTER_ITEMS_PER_LINE__ - 1;
@@ -92,7 +92,7 @@ inline constexpr std::array item_list {
         // Temps
         Item::nozzle,
         Item::nozzle_pwm,
-#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
+#if HAS_PER_TOOL_TEMPERATURES()
         Item::all_nozzles,
 #endif
         Item::bed,

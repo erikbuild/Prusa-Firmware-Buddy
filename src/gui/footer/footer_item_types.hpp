@@ -71,7 +71,7 @@ using FooterItemMappings = TypeList< //
 #if FOOTER_HAS_TOOL_NR()
     FooterItemMappingRec<FooterItemCurrentTool, Item::current_tool>,
 #endif
-#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
+#if HAS_PER_TOOL_TEMPERATURES()
     FooterItemMappingRec<FooterItemAllNozzles, Item::all_nozzles>,
 #endif
 #if HAS_SIDE_FSENSOR()

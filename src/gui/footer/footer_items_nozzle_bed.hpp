@@ -7,6 +7,7 @@
 #include "footer_items_heaters.hpp"
 #include "config_features.h"
 #include <option/has_modular_bed.h>
+#include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 
 class FooterItemNozzle final : public FooterItemHeater {
@@ -51,7 +52,7 @@ protected:
     static constexpr uint COLD = 40;
 };
 
-#if HAS_PER_TOOL_NOZZLE_TEMPERATURE()
+#if HAS_PER_TOOL_TEMPERATURES()
 /**
  * @brief Show all temperatures, cycle all nozzles.
  */
