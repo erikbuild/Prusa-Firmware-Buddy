@@ -64,20 +64,23 @@ float MI_INFO_NOZZLE_TEMP::value() const {
 
 /*****************************************************************************/
 // MI_INFO_HEATBREAK_TEMP
-MI_INFO_HEATBREAK_TEMP::MI_INFO_HEATBREAK_TEMP(uint8_t tool)
-    : MenuItemAutoUpdatingLabel({}, standard_print_format::temp_c,
-        [](auto *item) { return marlin_vars().hotend(reinterpret_cast<MI_INFO_HEATBREAK_TEMP *>(item)->tool_).temp_heatbreak.get(); } //
-        )
-    , tool_(tool) //
-{
-    StringBuilder sb(label_);
-    sb.append_string_view(_("Heatbreak Temp"));
-#if HAS_TOOLCHANGER()
-    if (prusa_toolchanger.is_toolchanger_enabled()) {
-        sb.append_printf(" %i", tool + 1);
+MI_INFO_HEATBREAK_TEMP::MI_INFO_HEATBREAK_TEMP(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool)
+    : MenuItemAutoUpdatingLabel(string_view_utf8 {}, standard_print_format::temp_c,
+        [](auto *item) { return static_cast<MI_INFO_HEATBREAK_TEMP *>(item)->value(); })
+    , tool_(tool) {
+    SetLabel(match(
+        tool_,
+        [&](PhysicalToolIndex t) { return t.display_name(label_params_); },
+        [](CurrentlySelectedTool) { return _("Heatbreak Temp"); }));
+}
+
+float MI_INFO_HEATBREAK_TEMP::value() const {
+    const auto tool = resolve_enabled_tool_index(tool_);
+    if (!tool.has_value()) {
+        return NAN;
     }
-#endif
-    SetLabel(string_view_utf8::MakeRAM(label_.data()));
+
+    return marlin_vars().hotend(*tool).temp_heatbreak;
 }
 
 /*****************************************************************************/

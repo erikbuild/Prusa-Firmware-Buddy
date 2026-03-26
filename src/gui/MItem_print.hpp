@@ -69,14 +69,16 @@ private:
     const std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool_;
 };
 
-/// Nozzle current temperature (read only, auto updating)
+/// Heatbreak current temperature (read only, auto updating)
 class MI_INFO_HEATBREAK_TEMP : public MenuItemAutoUpdatingLabel<float> {
 public:
-    MI_INFO_HEATBREAK_TEMP(uint8_t tool = 0);
+    MI_INFO_HEATBREAK_TEMP(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool = CurrentlySelectedTool {});
+
+    float value() const;
 
 private:
-    std::array<char, 32> label_;
-    const uint8_t tool_;
+    StringViewUtf8Parameters<4> label_params_;
+    const std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool_;
 };
 
 class MI_HEATBED : public WiSpin {
