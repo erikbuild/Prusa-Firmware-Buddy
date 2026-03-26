@@ -86,13 +86,25 @@
  * - `T` - Tool. With multiple extruders use T to specify which one.
  */
 void GcodeSuite::M201() {
+  // FIXME: M201 conceptually operates on a virtual tool (per-filament-slot
+  // acceleration), but E_AXIS_N formally requires physical tool (and would
+  // be invalid on some configurations if out of range virtual tool would be
+  // used).
+  //
+  // Therefore, using the (wrong) physical tool as a workaround, until we have
+  // a proper fix.
+  //
+  // Note that the distinction is mostly moot on our printers now, since the
+  // E_AXIS_N resolves to the same number no matter what parameter it gets and
+  // it conflates the values for different tools/slots nevertheless (which
+  // should be solved as part of the aforementioned proper fix).
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  if (!virtual_tool.has_value()) return;
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
 
   LOOP_XYZE(i) {
     if (parser.seen(axis_codes[i])) {
-      const uint8_t a = (i == E_AXIS ? uint8_t(E_AXIS_N(virtual_tool->to_raw())) : i);
+      const uint8_t a = (i == E_AXIS ? uint8_t(E_AXIS_N(tool->to_raw())) : i);
       planner.set_max_acceleration(a, parser.value_axis_units((AxisEnum)a));
     }
   }
@@ -116,13 +128,25 @@ void GcodeSuite::M201() {
  * - `T` - Tool. With multiple extruders use T to specify which one.
  */
 void GcodeSuite::M203() {
+  // FIXME: M203 conceptually operates on a virtual tool (per-filament-slot
+  // acceleration), but E_AXIS_N formally requires physical tool (and would
+  // be invalid on some configurations if out of range virtual tool would be
+  // used).
+  //
+  // Therefore, using the (wrong) physical tool as a workaround, until we have
+  // a proper fix.
+  //
+  // Note that the distinction is mostly moot on our printers now, since the
+  // E_AXIS_N resolves to the same number no matter what parameter it gets and
+  // it conflates the values for different tools/slots nevertheless (which
+  // should be solved as part of the aforementioned proper fix).
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  if (!virtual_tool.has_value()) return;
+  const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
+  if (!tool.has_value()) return;
 
   LOOP_XYZE(i)
     if (parser.seen(axis_codes[i])) {
-      const uint8_t a = (i == E_AXIS ? uint8_t(E_AXIS_N(virtual_tool->to_raw())) : i);
+      const uint8_t a = (i == E_AXIS ? uint8_t(E_AXIS_N(tool->to_raw())) : i);
       planner.set_max_feedrate(a, parser.value_axis_units((AxisEnum)a));
     }
 }
