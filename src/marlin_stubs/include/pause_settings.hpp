@@ -45,6 +45,10 @@ public:
         return VirtualToolIndex::from_raw(target_extruder);
     }
 
+    inline PhysicalToolIndex physical_tool() const {
+        return virtual_tool().to_physical();
+    }
+
     float purge_length() const;
 
 private:

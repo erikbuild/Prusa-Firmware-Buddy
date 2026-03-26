@@ -266,7 +266,7 @@ bool Pause::should_park() {
         return false;
     case Pause::LoadType::unload:
 #if HAS_AUTO_RETRACT()
-        if (auto_retract().is_safely_retracted_for_unload(hotend_from_extruder(active_extruder))) {
+        if (auto_retract().is_safely_retracted_for_unload(settings.physical_tool())) {
             return false;
         }
 #endif
@@ -280,17 +280,12 @@ bool Pause::is_target_temperature_safe() {
     // Restore target temperatures, otherwise targetTooColdToExtrude would return true
     buddy::safety_timer().reset_restore_nonblocking();
 
-    auto active_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
-    if (!active_tool.has_value()) {
-        return false;
-    }
-
 #if HAS_AUTO_RETRACT()
-    if (load_type == LoadType::unload && auto_retract().is_safely_retracted_for_unload(*active_tool)) {
+    if (load_type == LoadType::unload && auto_retract().is_safely_retracted_for_unload(settings.physical_tool())) {
         return true; // Its safe to unload even if the temp is too low if we are retracted
     }
 #endif
-    if (!DEBUGGING(DRYRUN) && thermalManager.targetTooColdToExtrude(*active_tool)) {
+    if (!DEBUGGING(DRYRUN) && thermalManager.targetTooColdToExtrude(settings.physical_tool())) {
         SERIAL_ECHO_MSG(MSG_ERR_HOTEND_TOO_COLD);
         return false;
     } else {
@@ -324,7 +319,7 @@ bool Pause::ensureSafeTemperatureNotifyProgress() {
     setPhase(is_unstoppable() ? PhasesLoadUnload::WaitingTemp_unstoppable : PhasesLoadUnload::WaitingTemp_stoppable);
 
     PauseFsmNotifier N(*this, Temperature::degHotend(active_extruder),
-        Temperature::degTargetHotend(active_extruder) - heating_phase_min_hotend_diff, marlin_vars().hotend(active_extruder).temp_nozzle);
+        Temperature::degTargetHotend(active_extruder) - heating_phase_min_hotend_diff, marlin_vars().hotend(settings.physical_tool()).temp_nozzle);
 
     // Wait until temperature is close
     while (!is_tempreature_reached()) {
@@ -721,7 +716,7 @@ void Pause::purge_process([[maybe_unused]] Response response) {
         std::ignore = do_e_move_notify_progress_hotextrude(retract_distance, retract_feedrate, StopConditions::UserStopped);
     }
 
-    config_store().set_filament_type(settings.GetExtruder(), filament::get_type_to_load());
+    config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
 
     setPhase(load_type == LoadType::load_purge ? PhasesLoadUnload::IsColorPurge : PhasesLoadUnload::IsColor);
     set(LoadState::color_correct_ask);
@@ -777,7 +772,7 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
         mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
         planner.synchronize(); // Wait for the park to finish before continuing
     }
-    config_store().set_filament_type(settings.GetExtruder(), filament::get_type_to_load());
+    config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
     set(LoadState::load_finalize);
 }
 #endif // HAS_NOZZLE_CLEANER()
@@ -1078,9 +1073,9 @@ void Pause::filament_stuck_ask_process(Response response) {
 
 void Pause::ram_sequence_process([[maybe_unused]] Response response) {
 #if HAS_AUTO_RETRACT()
-    if (auto_retract().is_safely_retracted_for_unload()) {
+    if (auto_retract().is_safely_retracted_for_unload(settings.physical_tool())) {
         // The filament is already retracted from the nozzle -> no ramming needed, we don't even need to heat up the nozzle
-        ram_retracted_distance = auto_retract().retracted_distance().value(); // We are sure value is not std::nullopt because of is_safely_retracted_for_unload()
+        ram_retracted_distance = auto_retract().retracted_distance(settings.physical_tool()).value(); // We are sure value is not std::nullopt because of is_safely_retracted_for_unload()
         set(LoadState::unload);
         return;
     }
@@ -1096,12 +1091,12 @@ void Pause::unload_process([[maybe_unused]] Response response) {
 #if HAS_NOZZLE_CLEANER()
     bool needs_cleaning = true; // Assume we need to clean the nozzle
     #if HAS_AUTO_RETRACT()
-    needs_cleaning = !auto_retract().is_safely_retracted_for_unload(); // If we are retracted, we don't need to clean the nozzle
+    needs_cleaning = !auto_retract().is_safely_retracted_for_unload(settings.physical_tool()); // If we are retracted, we don't need to clean the nozzle
     #endif
 #endif
     unload_filament();
 
-    config_store().set_filament_type(settings.GetExtruder(), FilamentType::none);
+    config_store().set_filament_type(settings.virtual_tool(), FilamentType::none);
 
     switch (load_type) {
     case LoadType::unload:
@@ -1613,7 +1608,7 @@ void Pause::handle_filament_removal(LoadState state_to_set) {
     // only if there is no filament present and we are sure (FS on and sees no filament)
     if (FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
         set(state_to_set);
-        config_store().set_filament_type(settings.GetExtruder(), FilamentType::none);
+        config_store().set_filament_type(settings.virtual_tool(), FilamentType::none);
         return;
     }
     return;

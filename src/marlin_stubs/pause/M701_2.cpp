@@ -58,12 +58,12 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
 
     if (marlin_server::printer_idle() && !res) { // Failed when printer is not printing
         // Disable nozzle heater
-        thermalManager.setTargetHotend(0, rSettings.GetExtruder());
+        thermalManager.setTargetHotend(0, rSettings.physical_tool());
         return false;
     }
 
     if (disp_temp > targ_temp) {
-        thermalManager.setTargetHotend(static_cast<int16_t>(targ_temp), rSettings.GetExtruder());
+        thermalManager.setTargetHotend(static_cast<int16_t>(targ_temp), rSettings.physical_tool());
     }
     return res;
 }

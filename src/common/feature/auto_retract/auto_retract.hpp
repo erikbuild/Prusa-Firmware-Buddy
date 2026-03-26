@@ -33,7 +33,13 @@ public:
     }
 
     /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
+    [[deprecated("Use the ToolIndex overload")]]
     std::optional<float> retracted_distance(uint8_t hotend = current_hotend()) const;
+
+    /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
+    std::optional<float> retracted_distance(PhysicalToolIndex tool) const {
+        return retracted_distance(tool.to_raw());
+    }
 
     /// If !is_safely_retracted_for_unload(), executes the retraction process and saves retracted distance
     void maybe_retract_from_nozzle(const ProgressCallback &progress_callback = nullptr);
