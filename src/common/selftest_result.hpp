@@ -48,7 +48,6 @@ struct SelftestTool {
 
     bool has_heatbreak_fan_passed();
     TestResult evaluate_fans();
-    void reset_fan_tests();
 
     bool operator==(const SelftestTool &rhs) const = default;
 };

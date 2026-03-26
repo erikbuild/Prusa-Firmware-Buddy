@@ -36,9 +36,3 @@ TestResult SelftestTool::evaluate_fans() {
 
     return TestResult_Unknown;
 }
-
-void SelftestTool::reset_fan_tests() {
-    printFan = TestResult_Unknown;
-    heatBreakFan = TestResult_Unknown;
-    fansSwitched = TestResult_Unknown;
-}
