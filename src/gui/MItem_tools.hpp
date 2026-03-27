@@ -268,9 +268,9 @@ protected:
     static std::optional<FilamentSensorStateAndValue> get_value(IFSensor *fsensor);
 };
 
-class MI_INFO_PRINTER_FILAMENT_SENSOR : public MI_INFO_FILAMENT_SENSOR {
+class MI_INFO_EXTRUDER_FILAMENT_SENSOR : public MI_INFO_FILAMENT_SENSOR {
 public:
-    MI_INFO_PRINTER_FILAMENT_SENSOR();
+    MI_INFO_EXTRUDER_FILAMENT_SENSOR();
 };
 
 class MI_INFO_SIDE_FILAMENT_SENSOR : public MI_INFO_FILAMENT_SENSOR {

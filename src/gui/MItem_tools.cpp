@@ -556,8 +556,8 @@ MI_INFO_FILAMENT_SENSOR::Value MI_INFO_FILAMENT_SENSOR::get_value(IFSensor *fsen
 }
 
 /*****************************************************************************/
-// MI_INFO_PRINTER_FILAMENT_SENSOR
-MI_INFO_PRINTER_FILAMENT_SENSOR::MI_INFO_PRINTER_FILAMENT_SENSOR()
+// MI_INFO_EXTRUDER_FILAMENT_SENSOR
+MI_INFO_EXTRUDER_FILAMENT_SENSOR::MI_INFO_EXTRUDER_FILAMENT_SENSOR()
     : MI_INFO_FILAMENT_SENSOR(
         PRINTER_IS_PRUSA_XL() ? _("Tool Filament sensor") : _("Filament Sensor"),
         [](auto) {

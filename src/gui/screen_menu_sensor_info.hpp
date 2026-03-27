@@ -47,7 +47,7 @@ using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
 #if PRINTER_IS_PRUSA_MINI()
     // Take very minimalist approach for the Mini, we're low on FLASH right now :(
     // TODO: Remove this
-    MI_INFO_PRINTER_FILAMENT_SENSOR,
+    MI_INFO_EXTRUDER_FILAMENT_SENSOR,
     MI_MINDA,
     MI_INFO_MCU_TEMP
 
@@ -85,7 +85,7 @@ using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
     #if HAS_DOOR_SENSOR()
     MI_INFO_DOOR_SENSOR,
     #endif
-    MI_INFO_PRINTER_FILAMENT_SENSOR,
+    MI_INFO_EXTRUDER_FILAMENT_SENSOR,
     MI_INFO_SIDE_FILAMENT_SENSOR,
     #if PRINTER_IS_PRUSA_MK3_5()
     MI_PINDA,
