@@ -133,6 +133,8 @@ using FrameAskMiniHasFsensor = WithConstructorArgs<FrameSpoolAndText, N_("Do you
 using FrameOfferUnload = WithConstructorArgs<FrameSpoolAndText,
 #if HAS_SIDE_FSENSOR()
     N_("Please make sure there is no filament in the tool and side filament sensors.\n\nYou will need filament to finish this test later.")
+#elif HAS_INDX() // INDX's FS is not exactly extruder
+    N_("Please make sure there is no filament in the filament sensor.\n\nYou will need filament to finish this test later.")
 #else
     N_("We need to start without the filament in the extruder. Please make sure there is no filament in the filament sensor.")
 #endif
@@ -164,6 +166,8 @@ using FrameInsertFilamentNotReady = WithConstructorArgs<FrameTextAndImage,
     #if HAS_SIDE_FSENSOR()
     // #error dead code found by automatic analyses (see BFW-5461)
     N_("Push the filament through the side and extruder filament sensors."),
+    #elif HAS_INDX() // INDX's FS is not exactly extruder
+    N_("Insert the filament into the filament sensor."),
     #else
     N_("Insert the filament into the extruder filament sensor."),
     #endif
