@@ -284,7 +284,11 @@ void FilamentSensors::process_events() {
         // During MMU standard operation, there is no filament loaded to the nozzle when not printing.
         // So it's not a good idea to reset what filament types we have stored.
         if (!has_mmu && no_filament_surely(LogicalFilamentSensor::extruder) && tool_index < PhysicalToolIndex::count) {
-            config_store().set_filament_type(tool_index, FilamentType::none);
+            const auto physical_tool = PhysicalToolIndex::from_raw(tool_index);
+            const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(physical_tool.currently_selected_virtual_tool());
+            if (virtual_tool.has_value()) {
+                config_store().set_filament_type(*virtual_tool, FilamentType::none);
+            }
         }
 
         if (check_autoload()) {

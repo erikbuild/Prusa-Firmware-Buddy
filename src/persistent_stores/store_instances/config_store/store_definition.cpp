@@ -201,9 +201,9 @@ FilamentType CurrentStore::get_filament_type([[maybe_unused]] uint8_t index) {
     return loaded_filament_type.get(index);
 }
 
-void CurrentStore::set_filament_type(uint8_t index, FilamentType value) {
+void CurrentStore::set_filament_type(VirtualToolIndex virtual_tool, FilamentType value) {
     if (value == PendingAdHocFilamentType {}) {
-        const FilamentType new_value = AdHocFilamentType { .tool = index };
+        const FilamentType new_value = AdHocFilamentType { .tool = virtual_tool.to_raw() };
         new_value.set_parameters(value.parameters());
         value = new_value;
     }
@@ -216,16 +216,16 @@ void CurrentStore::set_filament_type(uint8_t index, FilamentType value) {
 
 #if HAS_AUTO_RETRACT()
         // On filament removal, it invalidates retracted distance
-        buddy::auto_retract().set_retracted_distance(HAS_TOOLCHANGER() ? index : 0, std::nullopt);
+        buddy::auto_retract().set_retracted_distance(virtual_tool.to_physical().to_raw(), std::nullopt);
 #endif
 
         loaded_filament_is_previous.apply([&](auto &item) {
-            item.set(index, true);
+            item.set(virtual_tool.to_raw(), true);
         });
     } else {
-        loaded_filament_type.set(index, value);
+        loaded_filament_type.set(virtual_tool.to_raw(), value);
         loaded_filament_is_previous.apply([&](auto &item) {
-            item.set(index, false);
+            item.set(virtual_tool.to_raw(), false);
         });
     }
 }

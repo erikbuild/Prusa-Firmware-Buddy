@@ -106,7 +106,7 @@ void PrusaGcodeSuite::M865() {
     }
 
     if (auto load = p.option<uint8_t, uint8_t, uint8_t>('L', 0, VirtualToolIndex::count - 1)) {
-        config_store().set_filament_type(*load, filament_type);
+        config_store().set_filament_type(VirtualToolIndex::from_raw(*load), filament_type);
     }
 
     if (filament_type != FilamentType::none) {

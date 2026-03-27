@@ -811,7 +811,7 @@ void Pause::mmu_load_start_process([[maybe_unused]] Response response) {
             set(LoadState::load_finalize);
             return;
         }
-        config_store().set_filament_type(settings.mmu_filament_to_load, filament::get_type_to_load());
+        config_store().set_filament_type(VirtualToolIndex::from_raw(settings.mmu_filament_to_load), filament::get_type_to_load());
 
         setPhase(PhasesLoadUnload::IsColor);
         set(LoadState::color_correct_ask);

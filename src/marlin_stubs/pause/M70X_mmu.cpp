@@ -70,7 +70,7 @@ void filament_gcodes::mmu_off() {
     // If there is nothing in the nozzle, clear the setting.
     // BFW-5199
     if (!FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder)) {
-        config_store().set_filament_type(0, {});
+        config_store().set_filament_type(VirtualToolIndex::from_raw(0), {});
     }
 
     MMU2::mmu2.Stop();

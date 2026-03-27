@@ -473,12 +473,7 @@ struct CurrentStore
         return get_filament_type(tool.to_raw());
     }
 
-    [[deprecated("Use the overload with VirtualToolIndex")]]
-    void set_filament_type(uint8_t index, FilamentType value);
-
-    inline void set_filament_type(VirtualToolIndex tool, FilamentType value) {
-        set_filament_type(tool.to_raw(), value);
-    }
+    void set_filament_type(VirtualToolIndex tool, FilamentType value);
 
     FilamentType get_previous_filament_type(VirtualToolIndex tool);
 
