@@ -7,6 +7,7 @@
 
 #include <inc/MarlinConfigPre.h>
 #include <utils/array_extensions.hpp>
+#include <utils/variant_utils.hpp>
 #include <utils/storage/strong_index_array.hpp>
 #include <bsod/bsod.h>
 #include <utils/overloaded_visitor.hpp>
@@ -214,6 +215,10 @@ struct PhysicalToolIndexExtension {
     /// @note There can be a currrently_active() physical tool without having any currently_active() virtual one.
     /// @note That would for example mean that a tool is picked but a MMU for that tool does not have any slot loaded in.
     static std::variant<PhysicalToolIndex, NoTool> currently_selected();
+
+    static std::optional<PhysicalToolIndex> currently_selected_opt() {
+        return stdext::get_optional<PhysicalToolIndex>(currently_selected());
+    }
 };
 
 struct VirtualToolIndexExtension {
@@ -231,6 +236,10 @@ struct VirtualToolIndexExtension {
     /// @returns currently active virtual tool
     /// Active = the corresponding physical tool is active and has the resulting virtual tool selected
     static std::variant<VirtualToolIndex, NoTool> currently_selected();
+
+    static std::optional<VirtualToolIndex> currently_selected_opt() {
+        return stdext::get_optional<VirtualToolIndex>(currently_selected());
+    }
 };
 
 struct GcodeToolIndexExtension {
