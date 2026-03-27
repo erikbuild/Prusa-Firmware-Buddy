@@ -71,9 +71,9 @@ using ScreenMenuTune__ = ScreenMenu<EFooter::On, MI_RETURN,
 #if HAS_LOADCELL()
     MI_LIVE_ADJUST_Z, // position with loadcell
 #endif
-    MI_FLOWFACT<0>,
-#if HAS_TOOLCHANGER()
-    MI_FLOWFACT<1>, MI_FLOWFACT<2>, MI_FLOWFACT<3>, MI_FLOWFACT<4>,
+    MI_FLOW_FACTOR,
+#if EXTRUDERS > 1
+    MenuItemVirtualSubmenu<N_("Flow Factors"), MI_FLOW_FACTOR, VirtualToolIndex::count, VirtualToolIndex::from_raw>,
 #endif
 #if HAS_FILAMENT_SENSORS_MENU()
     MI_FILAMENT_SENSORS,

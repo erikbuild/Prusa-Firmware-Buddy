@@ -6,15 +6,6 @@
 #include "img_resources.hpp"
 #include <numeric_input_config_common.hpp>
 #include <utils/string_builder.hpp>
-#include <option/has_mmu2.h>
-
-#include <option/has_toolchanger.h>
-#if HAS_TOOLCHANGER()
-    #include "module/prusa/toolchanger.h"
-#endif
-#if HAS_MMU2()
-    #include <feature/prusa/MMU2/mmu2_mk4.h>
-#endif
 
 /*****************************************************************************/
 // MI_NOZZLE_TARGET_TEMP
@@ -146,34 +137,46 @@ void MI_SPEED::OnClick() {
 }
 
 /*****************************************************************************/
-// MI_FLOWFACT_ABSTRACT
-is_hidden_t MI_FLOWFACT_ABSTRACT::is_hidden([[maybe_unused]] uint8_t tool_nr) {
-    const auto tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::from_raw_notool(tool_nr));
-    if (tool.has_value() && tool->is_enabled()) {
-        return is_hidden_t::no;
-    }
-    return is_hidden_t::yes;
-}
-
+// MI_FLOW_FACTOR
 static constexpr NumericInputConfig flowfact_spin_config {
     .min_value = 50,
     .max_value = 150,
+    .special_value = 0,
+    .special_value_str = N_("N/A"),
     .unit = Unit::percent,
 };
 
-MI_FLOWFACT_ABSTRACT::MI_FLOWFACT_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] const char *label)
-    : WiSpin(uint16_t(marlin_vars().virtual_tools[VirtualToolIndex::from_raw(tool_nr)].flow_factor), flowfact_spin_config,
-#if HAS_TOOLCHANGER()
-        prusa_toolchanger.is_toolchanger_enabled() ? _(label) : _(generic_label),
-#elif HAS_MMU2()
-        MMU2::mmu2.Enabled() ? _(label) : _(generic_label),
-#else
-        _(generic_label),
-#endif
-        nullptr, is_enabled_t::yes, is_hidden(tool_nr))
-    , tool_nr(tool_nr) {
+MI_FLOW_FACTOR::MI_FLOW_FACTOR(std::variant<VirtualToolIndex, CurrentlySelectedTool> tool)
+    : WiSpin(0, flowfact_spin_config, string_view_utf8 {}, nullptr)
+    , tool_(tool) {
+    SetLabel(match(
+        tool_,
+        [&](VirtualToolIndex t) { return t.display_name(label_params_); },
+        [](CurrentlySelectedTool) { return _("Flow Factor"); }));
 }
 
-void MI_FLOWFACT_ABSTRACT::OnClick() {
-    marlin_client::set_flow_factor(static_cast<uint16_t>(value()), VirtualToolIndex::from_raw(tool_nr));
+void MI_FLOW_FACTOR::OnClick() {
+    if (resolved_tool_.has_value()) {
+        marlin_client::set_flow_factor(static_cast<uint16_t>(value()), *resolved_tool_);
+    }
+}
+
+void MI_FLOW_FACTOR::Loop() {
+    WiSpin::Loop();
+
+    if (is_edited()) {
+        // Don't change the item under user's hands
+        return;
+    }
+
+    // Resolve the tool outside of editing, so that a tool change mid-edit doesn't cause writing to a wrong tool
+    resolved_tool_ = resolve_enabled_tool_index(tool_);
+
+    set_enabled(resolved_tool_.has_value());
+
+    if (resolved_tool_.has_value()) {
+        set_value(marlin_vars().virtual_tools[*resolved_tool_].flow_factor);
+    } else {
+        set_value(config().special_value);
+    }
 }
