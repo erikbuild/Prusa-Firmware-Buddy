@@ -162,7 +162,7 @@ static constexpr NumericInputConfig flowfact_spin_config {
 };
 
 MI_FLOWFACT_ABSTRACT::MI_FLOWFACT_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] const char *label)
-    : WiSpin(uint16_t(marlin_vars().hotend(tool_nr).flow_factor), flowfact_spin_config,
+    : WiSpin(uint16_t(marlin_vars().virtual_tools[VirtualToolIndex::from_raw(tool_nr)].flow_factor), flowfact_spin_config,
 #if HAS_TOOLCHANGER()
         prusa_toolchanger.is_toolchanger_enabled() ? _(label) : _(generic_label),
 #elif HAS_MMU2()
@@ -175,5 +175,5 @@ MI_FLOWFACT_ABSTRACT::MI_FLOWFACT_ABSTRACT(uint8_t tool_nr, [[maybe_unused]] con
 }
 
 void MI_FLOWFACT_ABSTRACT::OnClick() {
-    marlin_client::set_flow_factor(static_cast<uint16_t>(value()), tool_nr);
+    marlin_client::set_flow_factor(static_cast<uint16_t>(value()), VirtualToolIndex::from_raw(tool_nr));
 }

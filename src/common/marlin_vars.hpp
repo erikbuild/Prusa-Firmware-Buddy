@@ -17,6 +17,7 @@
 #include <marlin_server_types/marlin_server_state.h>
 #include <variant>
 #include <tool_index.hpp>
+#include <utils/uncopyable.hpp>
 
 #include <option/has_cancel_object.h>
 
@@ -386,7 +387,6 @@ public:
         MarlinVariable<uint16_t> heatbreak_fan_rpm; // Fans::heat_break(active_extruder).getActualRPM() [1/min]
 
         // others
-        MarlinVariable<uint16_t> flow_factor; // flow factor [%]
         MarlinVariable<uint16_t> print_fan_rpm; // Fans::print(active_extruder).getActualRPM() [1/min]
 
         Hotend() {}
@@ -434,6 +434,12 @@ public:
     inline Hotend &hotend(PhysicalToolIndex physical_tool) {
         return hotend(physical_tool.to_raw());
     }
+
+    struct VirtualToolVars : public Uncopyable {
+        MarlinVariable<uint16_t> flow_factor; // flow factor [%]
+    };
+
+    StrongIndexArray<VirtualToolVars, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> virtual_tools;
 
     struct JobInfo {
         enum class JobResult {

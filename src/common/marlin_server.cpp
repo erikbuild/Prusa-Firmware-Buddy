@@ -3345,12 +3345,13 @@ static void _server_update_vars() {
         extruder.temp_heatbreak = hotend.heatbreak_temp();
         extruder.target_heatbreak = hotend.heatbreak_target_temp();
 #endif
-        const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(tool.currently_selected_virtual_tool());
-        if (virtual_tool.has_value()) {
-            extruder.flow_factor = static_cast<uint16_t>(planner.flow_percentage[*virtual_tool]);
-        }
         extruder.print_fan_rpm = Fans::print(tool).get_actual_rpm();
         extruder.heatbreak_fan_rpm = Fans::heat_break(tool).get_actual_rpm();
+    }
+
+    for (auto tool : VirtualToolIndex::all()) {
+        auto &virtual_tool_data = marlin_vars().virtual_tools[tool];
+        virtual_tool_data.flow_factor = planner.flow_percentage[tool];
     }
 
     marlin_vars().temp_bed = thermalManager.degBed();
@@ -3636,16 +3637,21 @@ static void _server_set_var(const Request &request) {
     }
 
     // Now see if extruder variable is set
-    for (int8_t e = 0; e < HOTENDS; e++) {
-        auto &extruder = marlin_vars().hotend(e);
-        if (reinterpret_cast<uintptr_t>(&extruder.target_nozzle) == variable_identifier) {
-            extruder.target_nozzle = static_cast<int16_t>(request.set_variable.uint32_value);
-            thermalManager.setTargetHotend(extruder.target_nozzle, e);
+    for (auto tool : PhysicalToolIndex::all()) {
+        auto &physical_tool_data = marlin_vars().hotend(tool);
+        if (reinterpret_cast<uintptr_t>(&physical_tool_data.target_nozzle) == variable_identifier) {
+            physical_tool_data.target_nozzle = static_cast<int16_t>(request.set_variable.uint32_value);
+            thermalManager.setTargetHotend(physical_tool_data.target_nozzle, tool);
             return;
-        } else if (reinterpret_cast<uintptr_t>(&extruder.flow_factor) == variable_identifier) {
-            extruder.flow_factor = request.set_variable.uint32_value;
-            planner.flow_percentage[e] = (int16_t)extruder.flow_factor;
-            planner.refresh_e_factor(e);
+        }
+    }
+
+    for (auto tool : VirtualToolIndex::all()) {
+        auto &virtual_tool_data = marlin_vars().virtual_tools[tool];
+        if (reinterpret_cast<uintptr_t>(&virtual_tool_data.flow_factor) == variable_identifier) {
+            virtual_tool_data.flow_factor = request.set_variable.uint32_value;
+            planner.flow_percentage[tool] = (int16_t)virtual_tool_data.flow_factor;
+            planner.refresh_e_factor(tool);
             return;
         }
     }

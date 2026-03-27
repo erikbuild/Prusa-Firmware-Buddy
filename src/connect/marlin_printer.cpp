@@ -275,7 +275,11 @@ Printer::Params MarlinPrinter::params() const {
     params.pos[Y_AXIS_POS] = marlin_vars().logical_pos[Y_AXIS_POS];
     params.pos[Z_AXIS_POS] = marlin_vars().logical_pos[Z_AXIS_POS];
     params.print_speed = marlin_vars().print_speed;
-    params.flow_factor = marlin_vars().active_hotend().flow_factor;
+
+    if (auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected())) {
+        params.flow_factor = marlin_vars().virtual_tools[*virtual_tool].flow_factor;
+    }
+
     params.job_id = marlin_vars().job_id;
     params.version = PrinterModelInfo::current().version;
     get_slot_info(params);

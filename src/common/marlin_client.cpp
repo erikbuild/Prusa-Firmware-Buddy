@@ -479,7 +479,7 @@ void marlin_set_variable(MarlinVariable<T> &variable, T value) {
     _send_request_to_server_and_wait(request);
 }
 
-void set_target_nozzle(int16_t val, uint8_t hotend) {
+void set_target_nozzle(int16_t val, PhysicalToolIndex hotend) {
     return marlin_set_variable(marlin_vars().hotend(hotend).target_nozzle, val);
 }
 void set_target_bed(int16_t val) {
@@ -491,8 +491,8 @@ void set_fan_speed(uint8_t val) {
 void set_print_speed(uint16_t val) {
     return marlin_set_variable(marlin_vars().print_speed, val);
 }
-void set_flow_factor(uint16_t val, uint8_t hotend) {
-    return marlin_set_variable(marlin_vars().hotend(hotend).flow_factor, val);
+void set_flow_factor(uint16_t val, VirtualToolIndex tool) {
+    return marlin_set_variable(marlin_vars().virtual_tools[tool].flow_factor, val);
 }
 void set_z_offset(float val) {
     return marlin_set_variable(marlin_vars().z_offset, std::clamp(val, Z_OFFSET_MIN, Z_OFFSET_MAX));

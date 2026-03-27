@@ -411,6 +411,10 @@ class Planner {
       );
     }
 
+    inline void refresh_e_factor(VirtualToolIndex tool) {
+      refresh_e_factor(tool.to_raw());
+    }
+
     // Manage fans, paste pressure, etc.
     static void check_axes_activity();
 

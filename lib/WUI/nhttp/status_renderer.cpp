@@ -71,7 +71,7 @@ json::JsonResult StatusRenderer::renderState(size_t resume_point, json::JsonOutp
                 JSON_FIELD_FFIXED("axis_x", marlin_vars().logical_curr_pos[0], 1) JSON_COMMA;
                 JSON_FIELD_FFIXED("axis_y", marlin_vars().logical_curr_pos[1], 1) JSON_COMMA;
             }
-            JSON_FIELD_INT("flow", marlin_vars().active_hotend().flow_factor) JSON_COMMA;
+            JSON_FIELD_INT("flow", VirtualToolIndex::currently_selected_opt().transform([] (auto tool) { return marlin_vars().virtual_tools[tool].flow_factor.get(); }).value_or(0)) JSON_COMMA;
             JSON_FIELD_INT("speed", marlin_vars().print_speed) JSON_COMMA;
             JSON_FIELD_INT("fan_hotend", marlin_vars().active_hotend().heatbreak_fan_rpm) JSON_COMMA;
             JSON_FIELD_INT("fan_print", marlin_vars().active_hotend().print_fan_rpm);
