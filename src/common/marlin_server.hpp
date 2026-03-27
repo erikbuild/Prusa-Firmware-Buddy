@@ -174,12 +174,7 @@ void set_exclusive_mode(int exclusive);
 namespace call_manually {
     // display different value than target, used in preheat
     // Called automatically from setTargetHotend since 6.6. Don't forget to add it back if you're cherry-picking to older branches!
-    [[deprecated]]
-    void set_temp_to_display(float value, uint8_t extruder);
-
-    inline void set_temp_to_display(float value, PhysicalToolIndex extruder) {
-        set_temp_to_display(value, extruder.to_raw());
-    }
+    void set_temp_to_display(float value, PhysicalToolIndex extruder);
 } // namespace call_manually
 
 // called to set target bed (sets both marlin_vars and thermal_manager)

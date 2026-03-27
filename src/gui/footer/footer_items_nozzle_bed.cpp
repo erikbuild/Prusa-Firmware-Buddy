@@ -122,10 +122,10 @@ footer::ItemDrawType FooterItemAllNozzles::GetDrawType() {
 
 int FooterItemAllNozzles::static_readValue() {
     /// Keep displayed value until switch_gui_time, so there is less flicker
-    static uint keep_value = static_cast<uint16_t>(round(marlin_vars().hotend(0).temp_nozzle));
+    static uint keep_value = 0;
 
     ///< gui::GetTick() of last change of nozzle_n
-    static uint32_t switch_gui_time = gui::GetTick();
+    static uint32_t switch_gui_time = 0;
 
     // Wait for CYCLE_TIME
     uint32_t now = gui::GetTick();
@@ -141,7 +141,7 @@ int FooterItemAllNozzles::static_readValue() {
         } while (!PhysicalToolIndex::from_raw(nozzle_n).is_enabled() && nozzle_n != start);
 
         // Update shown tool and temperature
-        keep_value = (nozzle_n << 16) | static_cast<uint16_t>(round(marlin_vars().hotend(nozzle_n).temp_nozzle));
+        keep_value = (nozzle_n << 16) | static_cast<uint16_t>(round(marlin_vars().hotend(PhysicalToolIndex::from_raw(nozzle_n)).temp_nozzle));
     }
 
     return keep_value; // Return nozzle number in higher 16 bits and shown temperature in lower 16 bits

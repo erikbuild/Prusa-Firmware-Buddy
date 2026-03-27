@@ -395,44 +395,13 @@ public:
         Hotend &operator=(Hotend const &) = delete;
     };
 
-    uint8_t active_hotend_id() {
-        if constexpr (ENABLED(SINGLENOZZLE)) {
-            // for MMU2 printers - hotend 0 is always active, no switching is possible
-            return 0;
-        } else {
-            // for toolchanger printers
-            const uint8_t hotend = match(
-                active_extruder.get(),
-                [](VirtualToolIndex virtual_tool) { return virtual_tool.to_raw(); },
-                [](NoTool) { return VirtualToolIndex::count; });
-            assert(hotend < hotends.max_size());
-            return hotend;
-        }
-    }
-
     /// @brief  Reference to active extruder structure
     Hotend &active_hotend() {
-        return hotends[active_hotend_id()];
-    }
-
-    /**
-     * @brief Reference to selected extruder (MARLIN_SERVER_CURRENT_TOOL means select current extruder )
-     *
-     * @param extruder
-     * @return Extruder&
-     */
-    [[deprecated("Use the ToolIndex overload")]]
-    Hotend &hotend(uint8_t hotend) {
-        if (hotend == marlin_server::CURRENT_TOOL) {
-            return active_hotend();
-        } else {
-            assert(hotend < hotends.max_size());
-            return hotends[hotend];
-        }
+        return hotends[PhysicalToolIndex::currently_selected_opt().transform(PhysicalToolIndex::to_raw_static).value_or(PhysicalToolIndex::count)];
     }
 
     inline Hotend &hotend(PhysicalToolIndex physical_tool) {
-        return hotend(physical_tool.to_raw());
+        return hotends[physical_tool];
     }
 
     struct VirtualToolVars : public Uncopyable {
@@ -500,7 +469,7 @@ public:
 
 private:
     freertos::Mutex mutex;
-    std::array<Hotend, HOTENDS> hotends; // array of hotends (use hotend()/active_hotend() getter)
+    StrongIndexArray<Hotend, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> hotends; // array of hotends (use hotend()/active_hotend() getter)
     std::array<std::optional<JobInfo>, 2> job_history;
     fsm::States fsm_states;
 #if HAS_CANCEL_OBJECT()

@@ -3206,8 +3206,8 @@ void set_target_bed(int16_t value) {
 
 namespace call_manually {
 
-    void set_temp_to_display(float value, uint8_t extruder) {
-        marlin_vars().hotend(extruder).display_nozzle = value;
+    void set_temp_to_display(float value, PhysicalToolIndex tool) {
+        marlin_vars().hotend(tool).display_nozzle = value;
     }
 
 } // namespace call_manually

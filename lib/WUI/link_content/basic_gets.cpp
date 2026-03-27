@@ -159,11 +159,11 @@ JsonResult get_printer(size_t resume_point, JsonOutput &output) {
 
         JSON_FIELD_OBJ("temperature");
             JSON_FIELD_OBJ("tool0");
-                JSON_FIELD_FFIXED("actual", vars.hotend(0).temp_nozzle, 1) JSON_COMMA;
-                JSON_FIELD_FFIXED("target", vars.hotend(0).target_nozzle, 1) JSON_COMMA;
+                JSON_FIELD_FFIXED("actual", vars.hotend(PhysicalToolIndex::from_raw(0)).temp_nozzle, 1) JSON_COMMA;
+                JSON_FIELD_FFIXED("target", vars.hotend(PhysicalToolIndex::from_raw(0)).target_nozzle, 1) JSON_COMMA;
                 // Note: our own extension, because our printers sometimes display
                 // different "target" temperature than what they heat towards.
-                JSON_FIELD_FFIXED("display", vars.hotend(0).display_nozzle, 1) JSON_COMMA;
+                JSON_FIELD_FFIXED("display", vars.hotend(PhysicalToolIndex::from_raw(0)).display_nozzle, 1) JSON_COMMA;
                 JSON_FIELD_INT("offset", 0);
             JSON_OBJ_END JSON_COMMA;
             JSON_FIELD_OBJ("bed");
