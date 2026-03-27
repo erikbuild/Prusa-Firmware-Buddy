@@ -157,8 +157,8 @@ void MarlinSettings::postprocess() {
       planner.calculate_volumetric_multipliers();
     #elif EXTRUDERS
       // #error dead code found by automatic analyses (see BFW-5461)
-      for (uint8_t i = COUNT(planner.e_factor); i--;)
-        planner.refresh_e_factor(i);
+      for (auto tool : VirtualToolIndex::all())
+        planner.refresh_e_factor(tool);
     #endif
 
     // Software endstops depend on home_offset
@@ -377,8 +377,8 @@ void MarlinSettings::reset() {
         false
       #endif
     ;
-    for (uint8_t q = 0; q < COUNT(planner.filament_size); q++)
-      planner.filament_size[q] = DEFAULT_NOMINAL_FILAMENT_DIA;
+    for (auto tool : VirtualToolIndex::all())
+      planner.filament_size[tool] = DEFAULT_NOMINAL_FILAMENT_DIA;
 
   #endif
 
@@ -477,9 +477,9 @@ void MarlinSettings::reset() {
           SERIAL_ECHOLNPGM(" Disabled");
       }
 
-      for(int i = 0; i < VirtualToolIndex::count; i++) {
+      for(auto tool : VirtualToolIndex::all()) {
         CONFIG_ECHO_START();
-        SERIAL_ECHOLNPAIR("  M200 T", i, " D", LINEAR_UNIT(planner.filament_size[i]));
+        SERIAL_ECHOLNPAIR("  M200 T", tool.to_raw(), " D", LINEAR_UNIT(planner.filament_size[tool]));
       }
 
       if (!parser.volumetric_enabled)

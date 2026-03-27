@@ -313,8 +313,8 @@ void FirstLayer::print_shape_1() {
 void FirstLayer::print_shape_2() {
     enable_all_steppers();
     // M221 S100 ; reset flow
-    planner.flow_percentage[0] = 100;
-    planner.refresh_e_factor(0);
+    planner.flow_percentage[VirtualToolIndex::from_raw(0)] = 100;
+    planner.refresh_e_factor(VirtualToolIndex::from_raw(0));
     /// fixed lines - constant to show 100% at the end + calibration pattern
     total_lines = 8 - 3 + ARRAY_SIZE(snake2);
     current_line = 0;

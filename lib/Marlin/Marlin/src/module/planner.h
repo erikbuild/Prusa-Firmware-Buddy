@@ -256,13 +256,15 @@ class Planner {
       static uint8_t last_extruder;                 // Respond to extruder change
     #endif
 
-    static StrongIndexArray<int16_t, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> flow_percentage; // Extrusion factor for each extruder
+    static StrongIndexArray<int16_t, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> flow_percentage; // Extrusion factor for each extruder
     static StrongIndexArray<float, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> e_factor;  // The flow percentage and volumetric multiplier combine to scale E movement
 
     #if DISABLED(NO_VOLUMETRICS)
-      static float filament_size[EXTRUDERS],          // diameter of filament (in millimeters), typically around 1.75 or 2.85, 0 disables the volumetric calculations for the extruder
-                   volumetric_area_nominal,           // Nominal cross-sectional area
-                   volumetric_multiplier[EXTRUDERS];  // Reciprocal of cross-sectional area of filament (in mm^2). Pre-calculated to reduce computation in the planner
+      // diameter of filament (in millimeters), typically around 1.75 or 2.85, 0 disables the volumetric calculations for the extruder
+      static StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> filament_size;
+
+      // Reciprocal of cross-sectional area of filament (in mm^2). Pre-calculated to reduce computation in the planner
+      static StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> volumetric_multiplier;
     #endif
 
     /// Reference to working_settings - settings with applied limits
@@ -403,16 +405,12 @@ class Planner {
     FORCE_INLINE static float qsteps_per_mm(const AxisEnum axis) { return (settings.axis_steps_per_mm[axis] / (float)usteps_per_qstep(axis)); }
     FORCE_INLINE static float distance_to_stepper_zero(const AxisEnum axis, bool inverted_dir) { return mm_per_qsteps(axis, inverted_dir ? nsteps_per_qstep(axis) - stepper_mscnt(axis) : stepper_mscnt(axis)) / (float)nsteps_per_qstep(axis); }
 
-    FORCE_INLINE static void refresh_e_factor(const uint8_t e) {
-      e_factor[e] = (flow_percentage[e] * 0.01f
+    FORCE_INLINE static void refresh_e_factor(VirtualToolIndex tool) {
+      e_factor[tool] = (flow_percentage[tool] * 0.01f
         #if DISABLED(NO_VOLUMETRICS)
-          * volumetric_multiplier[e]
+          * volumetric_multiplier[tool]
         #endif
       );
-    }
-
-    inline void refresh_e_factor(VirtualToolIndex tool) {
-      refresh_e_factor(tool.to_raw());
     }
 
     // Manage fans, paste pressure, etc.
@@ -424,15 +422,7 @@ class Planner {
     #if DISABLED(NO_VOLUMETRICS)
 
       FORCE_INLINE static void set_filament_size(VirtualToolIndex e, const float v) {
-        set_filament_size(e.to_raw(), v);
-      }
-
-      [[deprecated]]
-      FORCE_INLINE static void set_filament_size(const uint8_t e, const float v) {
         filament_size[e] = v;
-        // make sure all extruders have some sane value for the filament size
-        for (uint8_t i = 0; i < COUNT(filament_size); i++)
-          if (!filament_size[i]) filament_size[i] = DEFAULT_NOMINAL_FILAMENT_DIA;
       }
 
     #endif

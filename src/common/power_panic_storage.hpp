@@ -106,7 +106,7 @@ struct state_planner_t {
     PrinterGCodeCompatibilityReport compatibility;
 
     StrongIndexArray<int16_t, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> target_nozzle;
-    int16_t flow_percentage[HOTENDS];
+    StrongIndexArray<int16_t, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> flow_percentage;
 
     uint8_t marlin_debug_flags;
 

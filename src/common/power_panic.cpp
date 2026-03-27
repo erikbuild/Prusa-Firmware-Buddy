@@ -466,9 +466,7 @@ void resume_loop() {
         }
 
         // original planner state
-        for (int8_t e = 0; e < HOTENDS; e++) {
-            planner.flow_percentage[e] = state_buf.planner.flow_percentage[e];
-        }
+        planner.flow_percentage = state_buf.planner.flow_percentage;
         gcode.axis_relative = state_buf.planner.axis_relative;
 
         // IS/PA
@@ -958,9 +956,7 @@ void ac_fault_isr() {
 #endif
 
         // remaining planner parameters
-        for (int8_t e = 0; e < HOTENDS; e++) {
-            state_buf.planner.flow_percentage[e] = planner.flow_percentage[e];
-        }
+        state_buf.planner.flow_percentage = planner.flow_percentage;
         state_buf.planner.axis_relative = gcode.axis_relative;
 
         // IS/PA

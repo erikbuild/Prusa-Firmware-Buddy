@@ -235,13 +235,12 @@ float Planner::mm_per_mstep[XYZE_N];          // (mm) Millimeters per mini-step
   uint8_t Planner::last_extruder = 0;     // Respond to extruder change
 #endif
 
-StrongIndexArray<int16_t, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Planner::flow_percentage (stdext::make_filled_array<int16_t, EXTRUDERS>( 100 )); // Extrusion factor for each extruder
+StrongIndexArray<int16_t, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> Planner::flow_percentage (stdext::make_filled_array<int16_t, VirtualToolIndex::count>( 100 )); // Extrusion factor for each extruder
 StrongIndexArray<float, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Planner::e_factor (stdext::make_filled_array<float, EXTRUDERS>( 1.0f )); // The flow percentage and volumetric multiplier combine to scale E movement
 
 #if DISABLED(NO_VOLUMETRICS)
-  float Planner::filament_size[EXTRUDERS],          // diameter of filament (in millimeters), typically around 1.75 or 2.85, 0 disables the volumetric calculations for the extruder
-        Planner::volumetric_area_nominal = CIRCLE_AREA(float(DEFAULT_NOMINAL_FILAMENT_DIA) * 0.5f), // Nominal cross-sectional area
-        Planner::volumetric_multiplier[EXTRUDERS];  // Reciprocal of cross-sectional area of filament (in mm^2). Pre-calculated to reduce computation in the planner
+  StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> Planner::filament_size(stdext::make_filled_array<float, VirtualToolIndex::count>( DEFAULT_NOMINAL_FILAMENT_DIA ));
+  StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> Planner::volumetric_multiplier {};
 #endif
 
 #if HAS_LEVELING
@@ -913,9 +912,9 @@ void Planner::check_axes_activity() {
    * The multiplier converts a given E value into a length.
    */
   void Planner::calculate_volumetric_multipliers() {
-    for (uint8_t i = 0; i < COUNT(filament_size); i++) {
-      volumetric_multiplier[i] = calculate_volumetric_multiplier(filament_size[i]);
-      refresh_e_factor(i);
+    for (auto tool : VirtualToolIndex::all()) {
+      volumetric_multiplier[tool] = calculate_volumetric_multiplier(filament_size[tool]);
+      refresh_e_factor(tool);
     }
   }
 

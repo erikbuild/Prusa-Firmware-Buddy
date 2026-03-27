@@ -2220,9 +2220,9 @@ static void _server_print_loop(void) {
             feedrate_percentage = 100;
 
             // Reset flow factor for all extruders
-            for (int8_t e = 0; e < HOTENDS; e++) {
-                planner.flow_percentage[e] = 100;
-                planner.refresh_e_factor(e);
+            for (auto tool : VirtualToolIndex::all()) {
+                planner.flow_percentage[tool] = 100;
+                planner.refresh_e_factor(tool);
             }
         }
 

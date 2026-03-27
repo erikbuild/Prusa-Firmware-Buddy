@@ -44,8 +44,10 @@
  */
 void GcodeSuite::M221() {
 
-  const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
-  if (!virtual_tool.has_value()) return;
+  const std::optional<VirtualToolIndex> virtual_tool_opt = stdext::get_optional<VirtualToolIndex>(get_target_virtual_from_command());
+  if (!virtual_tool_opt.has_value()) return;
+
+  const auto virtual_tool = *virtual_tool_opt;
 
   if (parser.seenval('S')) {
     int16_t flow_percentage = parser.value_int();
@@ -54,14 +56,14 @@ void GcodeSuite::M221() {
         flow_percentage = static_cast<int16_t>(flow_percentage / 0.95f);
       }
     #endif
-    planner.flow_percentage[*virtual_tool] = flow_percentage;
-    planner.refresh_e_factor(virtual_tool->to_raw());
+    planner.flow_percentage[virtual_tool] = flow_percentage;
+    planner.refresh_e_factor(virtual_tool);
   }
   else {
     SERIAL_ECHO_START();
     SERIAL_CHAR('E');
-    SERIAL_CHAR('0' + virtual_tool->to_raw());
-    SERIAL_ECHOPAIR(" Flow: ", planner.flow_percentage[*virtual_tool]);
+    SERIAL_CHAR('0' + virtual_tool.to_raw());
+    SERIAL_ECHOPAIR(" Flow: ", planner.flow_percentage[virtual_tool]);
     SERIAL_CHAR('%');
     SERIAL_EOL();
   }
