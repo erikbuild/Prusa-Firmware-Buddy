@@ -855,11 +855,11 @@ struct CurrentStore
 
     // Each hotend holds retracted distance. This value is compressed (casted to uint8) to range < 0 ; 255 > with 255 being special value reserved for unknown distance
     // DO NOT ACCESS THIS ARRAY DIRECTLY, user getter/setter instead
-    StoreItemArray<uint8_t, uint8_t { 255 }, ItemFlag::printer_state, journal::hash("Filament retracted"), 16, HOTENDS> filament_retracted_distances;
+    StoreItemArray<uint8_t, uint8_t { 255 }, ItemFlag::printer_state, journal::hash("Filament retracted"), 16, PhysicalToolIndex::count> filament_retracted_distances;
 
     // Casts float of range < 0.0f ; 254f > to uint8. Value 255 is reserved to unknown value
-    void set_filament_retracted_distance(uint8_t tool_idx, std::optional<float> dist);
-    std::optional<float> get_filament_retracted_distance(uint8_t tool_idx);
+    void set_filament_retracted_distance(PhysicalToolIndex tool, std::optional<float> dist);
+    std::optional<float> get_filament_retracted_distance(PhysicalToolIndex tool);
 #endif
 
 #if HAS_ANFC()

@@ -2165,7 +2165,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
     // maybe_retract_from_nozzle will overwrite the value at the end of it's sequence, other moves invalidate auto_retract value
     // Before retract tracker's value is validated invalidate on any retract E move (10)
     if (buddy::filament_tracker().get_retracted_distance(*tools.physical_tool).value_or(10) > 5) {
-      buddy::auto_retract().set_retracted_distance(tools.physical_tool->to_raw(), std::nullopt);
+      buddy::auto_retract().set_retracted_distance(*tools.physical_tool, std::nullopt);
     }
   }
 #endif

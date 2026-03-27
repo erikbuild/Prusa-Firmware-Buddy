@@ -211,12 +211,12 @@ void CurrentStore::set_filament_type(VirtualToolIndex virtual_tool, FilamentType
     if (value == FilamentType::none) {
 #if HAS_ANFC()
         // Unassign OpenPrintTag on filament removal
-        opt_tool_assigned_tag.set_to_default(index);
+        opt_tool_assigned_tag.set_to_default(virtual_tool.to_raw());
 #endif
 
 #if HAS_AUTO_RETRACT()
         // On filament removal, it invalidates retracted distance
-        buddy::auto_retract().set_retracted_distance(virtual_tool.to_physical().to_raw(), std::nullopt);
+        buddy::auto_retract().set_retracted_distance(virtual_tool.to_physical(), std::nullopt);
 #endif
 
         loaded_filament_is_previous.apply([&](auto &item) {
@@ -504,20 +504,20 @@ void CurrentStore::set_phase_stepping_enabled(AxisEnum axis, bool new_state) {
 
 #if HAS_AUTO_RETRACT()
 
-void CurrentStore::set_filament_retracted_distance(uint8_t tool_idx, std::optional<float> dist) {
+void CurrentStore::set_filament_retracted_distance(PhysicalToolIndex tool, std::optional<float> dist) {
     if (!dist.has_value()) {
-        filament_retracted_distances.set(tool_idx, invalid_retracted_distance);
+        filament_retracted_distances.set(tool.to_raw(), invalid_retracted_distance);
         return;
     }
 
     const float rounded_dist = std::round(dist.value());
     const float clamped_dist = std::clamp<float>(rounded_dist, 0, invalid_retracted_distance - 1);
     assert(clamped_dist == rounded_dist);
-    filament_retracted_distances.set(tool_idx, static_cast<uint8_t>(clamped_dist));
+    filament_retracted_distances.set(tool.to_raw(), static_cast<uint8_t>(clamped_dist));
 }
 
-std::optional<float> CurrentStore::get_filament_retracted_distance(uint8_t tool_idx) {
-    const auto distance = filament_retracted_distances.get(tool_idx);
+std::optional<float> CurrentStore::get_filament_retracted_distance(PhysicalToolIndex tool) {
+    const auto distance = filament_retracted_distances.get(tool.to_raw());
     if (distance == invalid_retracted_distance) {
         return std::nullopt;
     }

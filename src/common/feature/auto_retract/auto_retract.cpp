@@ -31,38 +31,41 @@ AutoRetract &buddy::auto_retract() {
 }
 
 AutoRetract::AutoRetract() {
-    for (uint8_t i = 0; i < HOTENDS; i++) {
-        const auto dist = config_store().get_filament_retracted_distance(i);
-        retracted_hotends_bitset_.set(i, dist.value_or(0.0f) > 0.0f);
-        known_hotends_bitset_.set(i, dist.has_value());
+    for (auto tool : PhysicalToolIndex::all()) {
+        const auto dist = config_store().get_filament_retracted_distance(tool);
+        retracted_hotends_bitset_.set(tool.to_raw(), dist.value_or(0.0f) > 0.0f);
+        known_hotends_bitset_.set(tool.to_raw(), dist.has_value());
     }
 }
-
-uint8_t buddy::AutoRetract::current_hotend() {
-    return marlin_vars().active_hotend_id();
+bool AutoRetract::will_deretract(ToolVariant tool) const {
+    return match(
+        tool, //
+        [this](PhysicalToolIndex physical_tool) -> bool { return retracted_hotends_bitset_.test(physical_tool.to_raw()); }, //
+        [](NoTool) -> bool { return false; } //
+    );
 }
 
-bool AutoRetract::will_deretract(uint8_t hotend) const {
-    return retracted_hotends_bitset_.test(hotend);
-}
-
-bool AutoRetract::is_safely_retracted_for_unload(uint8_t hotend) const {
-    const auto dist = config_store().get_filament_retracted_distance(hotend);
+bool AutoRetract::is_safely_retracted_for_unload(ToolVariant tool) const {
+    const auto dist = retracted_distance(tool);
     return dist.has_value() && dist.value() >= minimum_auto_retract_distance;
 }
 
-std::optional<float> AutoRetract::retracted_distance(uint8_t hotend) const {
-    return config_store().get_filament_retracted_distance(hotend);
+std::optional<float> AutoRetract::retracted_distance(ToolVariant tool) const {
+    return match(
+        tool, //
+        [](PhysicalToolIndex physical_tool) -> std::optional<float> { return config_store().get_filament_retracted_distance(physical_tool); }, //
+        [](NoTool) -> std::optional<float> { return std::nullopt; } //
+    );
 }
 
-void AutoRetract::set_retracted_distance(uint8_t hotend, std::optional<float> dist) {
-    if (!dist.has_value() && !known_hotends_bitset_.test(hotend)) {
+void AutoRetract::set_retracted_distance(PhysicalToolIndex tool, std::optional<float> dist) {
+    if (!dist.has_value() && !known_hotends_bitset_.test(tool.to_raw())) {
         // To reduce mutex locking
         return;
     }
-    known_hotends_bitset_.set(hotend, dist.has_value());
-    retracted_hotends_bitset_.set(hotend, dist.value_or(0.0f) > 0.0f);
-    config_store().set_filament_retracted_distance(hotend, dist);
+    known_hotends_bitset_.set(tool.to_raw(), dist.has_value());
+    retracted_hotends_bitset_.set(tool.to_raw(), dist.value_or(0.0f) > 0.0f);
+    config_store().set_filament_retracted_distance(tool, dist);
 }
 
 void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_callback) {
@@ -87,8 +90,10 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
         return;
     }
 
+    const auto filament_parameters = config_store().get_filament_type(virtual_tool).parameters();
+
     // Do not auto retract flexible filaments, they might get tangled in the extruder (BFW-6953)
-    if (config_store().get_filament_type(virtual_tool).parameters().is_flexible) {
+    if (filament_parameters.is_flexible) {
         return;
     }
 
@@ -102,7 +107,7 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
     });
 
     // heat up the nozzle (especially important for INDX where nozzle can cool down before autoretract is finished)
-    const auto filament_temp = config_store().get_filament_type(virtual_tool).parameters().nozzle_temperature;
+    const auto filament_temp = filament_parameters.nozzle_temperature;
     if (original_temp < filament_temp) {
         const M109Flags flags = {
             .target_temp = filament_temp,
@@ -151,7 +156,7 @@ void AutoRetract::maybe_retract_from_nozzle(const ProgressCallback &progress_cal
     }
 
     assert(sequence.retracted_distance() >= minimum_auto_retract_distance);
-    set_retracted_distance(physical_tool.to_raw(), sequence.retracted_distance());
+    set_retracted_distance(physical_tool, sequence.retracted_distance());
 }
 
 void AutoRetract::maybe_deretract_to_nozzle() {
@@ -161,14 +166,19 @@ void AutoRetract::maybe_deretract_to_nozzle() {
     }
     AutoRestore ar(is_checking_deretract_, true);
 
-    const auto hotend = marlin_vars().active_hotend_id();
-
-    // Is not retracted -> exit
-    if (!will_deretract(hotend)) {
+    const auto physical_tool_opt = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (!physical_tool_opt.has_value()) {
         return;
     }
 
-    if (!ready_to_extrude()) {
+    const auto physical_tool = *physical_tool_opt;
+
+    // Is not retracted -> exit
+    if (!will_deretract(physical_tool)) {
+        return;
+    }
+
+    if (thermalManager.tooColdToExtrude(physical_tool) || gcode_exceptions().is_unwinding()) {
         if (!DEBUGGING(DRYRUN)) {
             // With dry run this spams logs and overflows the RTT buffers
             log_error(MarlinServer, "auto_retract: Cannot perform deretract");
@@ -183,7 +193,7 @@ void AutoRetract::maybe_deretract_to_nozzle() {
         // to the point where the motor skips, but we don't care, as it doesn't
         // damage the print.
         BlockEStallDetection estall_blocker;
-        mapi::extruder_move(retracted_distance().value_or(0.0f), FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+        mapi::extruder_move(retracted_distance(physical_tool).value_or(0.0f), FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
         planner.synchronize();
     }
 
@@ -191,32 +201,29 @@ void AutoRetract::maybe_deretract_to_nozzle() {
     // firmware gets very confused if the current position changes while it is planning a move
     sync_e_position_to(orig_e_position);
 
-    set_retracted_distance(hotend, 0.0f);
+    set_retracted_distance(physical_tool, 0.0f);
 }
 
 void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
+    const auto virtual_tool_opt = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+    if (!virtual_tool_opt.has_value()) {
+        return;
+    }
+
+    const auto virtual_tool = *virtual_tool_opt;
+    const auto physical_tool = virtual_tool.to_physical();
+
     assert(purge_length >= 0.0f); // no sense having negative purge length
-    if (this->retracted_distance() >= minimum_auto_retract_distance) {
+    if (this->retracted_distance(physical_tool) >= minimum_auto_retract_distance) {
         return; // should not do anything when already retracted more than standard distance
     }
-    // Wait for temperature to extrude
-    // FIXME:
-    // * The active_hotend_id() is _probably_ a physical tool index (it
-    //   currently returns the ID on XL and 0 on MMU printers, but it's unclear
-    //   if it's really the intention or just "happens" to be so).
-    // * It is used for physical tool manipulations here (correct), but also to
-    //   query filament properties (incorrent on MMU, always takes the 0th,
-    //   happens-to-be-correct on XL).
-    //
-    // This is probably a low-priority, because MMU printers don't use
-    // autoretract, they just remove the filament completely on print end.
-    const uint8_t hotend = marlin_vars().active_hotend_id();
+
     planner.synchronize();
-    const auto temp_before = thermalManager.degTargetHotend(hotend);
+    const auto temp_before = thermalManager.degTargetHotend(physical_tool);
     const M109Flags flags_pre = {
-        .target_temp = config_store().get_filament_type(hotend).parameters().nozzle_temperature,
+        .target_temp = config_store().get_filament_type(virtual_tool).parameters().nozzle_temperature,
     };
-    M109_no_parser(PhysicalToolIndex::from_raw(hotend), flags_pre);
+    M109_no_parser(physical_tool, flags_pre);
 
     {
         BlockEStallDetection estall_blocker;
@@ -226,15 +233,17 @@ void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
             planner.synchronize();
         }
         // Retract
-        const float retracted_distance = this->retracted_distance().value_or(0.f);
+        const float retracted_distance = this->retracted_distance(physical_tool).value_or(0.f);
+
         // There's a generic trap on the extruder moves, which prevents any extruder retraction once we are already auto-retracted.
         // Because of that, we need to set the auto-retracted distance to nullopt, to make the generic trap allow us to retract
         // where we want (and we then set the new total auto-retracted distance after doing this).
-        set_retracted_distance(hotend, std::nullopt);
+        set_retracted_distance(physical_tool, std::nullopt);
+
         const float retract_amount = minimum_auto_retract_distance - retracted_distance;
         mapi::extruder_move(-retract_amount, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
         planner.synchronize();
-        set_retracted_distance(hotend, minimum_auto_retract_distance);
+        set_retracted_distance(physical_tool, minimum_auto_retract_distance);
     }
 
     // Reach back to original temp
@@ -243,14 +252,5 @@ void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
         .wait_heat_or_cool = true,
         .autotemp = true, // Use fans to cool
     };
-    M109_no_parser(PhysicalToolIndex::from_raw(hotend), flags_post);
-}
-
-bool AutoRetract::ready_to_extrude() const {
-    return match(
-        PhysicalToolIndex::currently_selected(),
-        [](PhysicalToolIndex physical_tool) {
-            return !thermalManager.tooColdToExtrude(physical_tool) && !gcode_exceptions().is_unwinding();
-        },
-        [](NoTool) { return false; });
+    M109_no_parser(physical_tool, flags_post);
 }

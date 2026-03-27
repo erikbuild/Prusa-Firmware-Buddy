@@ -14,32 +14,18 @@ class AutoRetract {
 
 public:
     using ProgressCallback = stdext::inplace_function<void(float progress_0_100)>;
+    using ToolVariant = std::variant<PhysicalToolIndex, NoTool>;
 
     static constexpr float minimum_auto_retract_distance = 20.f; ///< Minimum retract distance for the filament to be considered auto-retracted. Auto-retracted filaments can be unloaded without heating.
 
-    /// To hide dependency on marlin_vars
-    static uint8_t current_hotend();
-
     /// \returns whether the specified \param hotend is retracted (some amount > 0.0f) and is a known value -> will deretract on positive Z move
-    bool will_deretract(uint8_t hotend = current_hotend()) const;
+    bool will_deretract(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
     /// \returns true if the filament is completely retracted from the \param hotend's nozzle (distance >= minimum_retract_distance), allowing for cold unload.
-    [[deprecated("Use the ToolIndex overload")]]
-    bool is_safely_retracted_for_unload(uint8_t hotend = current_hotend()) const;
-
-    /// \returns true if the filament is completely retracted from the \param hotend's nozzle (distance >= minimum_retract_distance), allowing for cold unload.
-    inline bool is_safely_retracted_for_unload(PhysicalToolIndex physical_tool) const {
-        return is_safely_retracted_for_unload(physical_tool.to_raw());
-    }
+    bool is_safely_retracted_for_unload(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
     /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
-    [[deprecated("Use the ToolIndex overload")]]
-    std::optional<float> retracted_distance(uint8_t hotend = current_hotend()) const;
-
-    /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
-    std::optional<float> retracted_distance(PhysicalToolIndex tool) const {
-        return retracted_distance(tool.to_raw());
-    }
+    std::optional<float> retracted_distance(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
     /// If !is_safely_retracted_for_unload(), executes the retraction process and saves retracted distance
     void maybe_retract_from_nozzle(const ProgressCallback &progress_callback = nullptr);
@@ -52,19 +38,16 @@ public:
     void ensure_retracted_no_ramming(float purge_length = 0.f);
 
     /// Save values to persistent storage
-    void set_retracted_distance(uint8_t hotend, std::optional<float> distance);
+    void set_retracted_distance(PhysicalToolIndex tool, std::optional<float> distance);
 
 private:
     AutoRetract();
 
-    /// Common checks for retract & deretract
-    bool ready_to_extrude() const;
-
     /// Shadows the config_store variable to reduce mutex locking
-    std::bitset<HOTENDS> retracted_hotends_bitset_ = 0;
+    std::bitset<PhysicalToolIndex::count> retracted_hotends_bitset_ = 0;
 
     /// Keeps whether saved value in persistent storage is known or unknown (invalidated)
-    std::bitset<HOTENDS> known_hotends_bitset_ = 0;
+    std::bitset<PhysicalToolIndex::count> known_hotends_bitset_ = 0;
 
     bool is_checking_deretract_ = false;
 };

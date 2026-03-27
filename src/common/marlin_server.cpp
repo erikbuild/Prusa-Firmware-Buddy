@@ -953,7 +953,7 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
         // Do not save filament_tracker value before it was validated
         if (dist.has_value()) {
             // update only used hotends
-            buddy::auto_retract().set_retracted_distance(tool.to_raw(), dist);
+            buddy::auto_retract().set_retracted_distance(tool, dist);
         }
     }
 #endif

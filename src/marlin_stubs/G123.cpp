@@ -59,7 +59,10 @@ void PrusaGcodeSuite::G123() {
 #if HAS_AUTO_RETRACT()
     // When the user takes manual control over the extruder, do not do any retracting/deretracting moves
     if (target_pos.e != current_position.e) {
-        buddy::auto_retract().set_retracted_distance(marlin_vars().active_hotend_id(), std::nullopt);
+        const auto physical_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+        if (physical_tool.has_value()) {
+            buddy::auto_retract().set_retracted_distance(*physical_tool, std::nullopt);
+        }
     }
 #endif
 
