@@ -16,6 +16,7 @@
 #include "loadcell.hpp"
 
 #include <logging/log.hpp>
+#include <raii/scope_guard.hpp>
 #include <timing.h>
 
 #include <algorithm>
@@ -318,6 +319,11 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     if (!GcodeSuite::G28_no_parser(true, true, true, G28Flags { .only_if_needed = true })) {
         return std::unexpected("Homing failed");
     }
+
+    // Sensor may be below soft endstop limits — disable them for the whole measurement
+    const bool saved_soft_endstops = soft_endstops_enabled;
+    soft_endstops_enabled = false;
+    ScopeGuard restore_soft_endstops([&] { soft_endstops_enabled = saved_soft_endstops; });
 
     const float safe_z = config.sensor_position.z + config.safe_z_height;
     do_blocking_move_to_z(safe_z);
