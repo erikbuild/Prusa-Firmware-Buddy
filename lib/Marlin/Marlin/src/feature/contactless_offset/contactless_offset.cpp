@@ -1,3 +1,41 @@
+// Contactless tool offset measurement
+//
+// Measures XY (and Z) offset of the current nozzle relative to an inductive
+// sensor mounted on the bed. The key challenge is that we do not know the
+// time delay between commanding a step and seeing the corresponding sensor
+// response, so we cannot simply map a peak in the sensor signal to a
+// physical position.
+//
+// The trick is to sweep the nozzle over the sensor at two different speeds.
+// Each sweep consists of four passes: forward-slow, backward-slow,
+// forward-fast, backward-fast. Because the sensor response is roughly
+// symmetric around the nozzle-sensor alignment, we detect the symmetry axis
+// of each pass via correlation. This gives us four peak times t1..t4.
+//
+// From the motion profile we know the exact relationship between peak times
+// and two unknowns: the nozzle position (relative to sweep start) and the
+// sensor time delay. The two speeds break the degeneracy — a pure position
+// shift moves all four peaks equally, while a pure time delay shifts them
+// by amounts proportional to the speed. A least-squares fit over the four
+// observed peak times recovers both unknowns simultaneously, without
+// requiring any clock synchronization between the motion system and the
+// sensor.
+//
+// Each axis (X, Y) is measured independently. We do it in two rounds:
+// first a rough "center detection" scan centered on the nominal sensor
+// position, then a refined "nozzle offset" scan where the cross-axis
+// position is corrected by the first round's result, so the nozzle passes
+// through the strongest part of the sensor field.
+//
+// Motion is driven via signal2step (direct step enqueueing) rather than the
+// Marlin planner. The planner would buffer and reshape the moves in ways we
+// cannot predict — junction deviation, look-ahead merging, etc. — so the
+// actual velocity profile would not match the one we use to build the
+// theoretical peak-time model. With signal2step we generate the exact
+// trapezoidal velocity waveform we want, convert it to step events
+// ourselves, and feed them straight into precise_stepping. This gives us a
+// known, deterministic motion profile that the fitting step can rely on.
+
 #include "contactless_offset.hpp"
 
 #include <gcode/gcode.h>
@@ -24,290 +62,16 @@
 #include <array>
 #include <cassert>
 #include <cmath>
-#include <cstdarg>
-#include <cstdio>
 #include <sfl/segmented_vector.hpp>
 
 LOG_COMPONENT_DEF(ContactlessOffset, logging::Severity::debug);
 
 #define SERIAL_DEBUG
 
-#ifdef SERIAL_DEBUG
-static void serial_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-
-static void serial_printf(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char buf[512];
-    vsnprintf(buf, sizeof(buf), fmt, args);
-    va_end(args);
-    SerialUSB.cdc_write_sync(reinterpret_cast<uint8_t *>(buf), strlen(buf));
-}
-#endif
-
-// Streaming reporter for raw sensor samples during a line scan
-class LineSamplesDebugReporter {
-#ifdef SERIAL_DEBUG
-    const char *label;
-    bool first_sample = true;
-#endif
-
-public:
-    explicit LineSamplesDebugReporter([[maybe_unused]] const char *label)
-#ifdef SERIAL_DEBUG
-        : label(label)
-#endif
-    {
-    }
-
-    void start() {
-#ifdef SERIAL_DEBUG
-        serial_printf("# line_samples {\"label\": \"%s\", \"samples\": [", label);
-#endif
-    }
-
-    void report_sample([[maybe_unused]] float sensor_value) {
-#ifdef SERIAL_DEBUG
-        if (!first_sample) {
-            serial_printf(", ");
-        } else {
-            first_sample = false;
-        }
-        serial_printf("%.6f", sensor_value);
-#endif
-    }
-
-    void finish([[maybe_unused]] float sampling_freq_hz) {
-#ifdef SERIAL_DEBUG
-        serial_printf("], \"sampling_freq_hz\": %.2f}\n", sampling_freq_hz);
-#endif
-    }
-};
-
-static void debug_report_probed_z([[maybe_unused]] float sensor_z, [[maybe_unused]] float offset) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# probed_z {\"sensor_z\": %.6f, \"offset\": %.6f}\n", sensor_z, offset);
-#endif
-}
-
-static void debug_report_scan_start([[maybe_unused]] const char *label) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# scan_start {\"label\": \"%s\"}\n", label);
-#endif
-}
-
-static void debug_report_scan_result([[maybe_unused]] const char *label, [[maybe_unused]] float confidence) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# scan_result {\"label\": \"%s\", \"confidence\": %.3f}\n", label, confidence);
-#endif
-}
-
-static void debug_report_pass1_center([[maybe_unused]] float x, [[maybe_unused]] float y) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# pass1_center {\"x\": %.6f, \"y\": %.6f}\n", x, y);
-#endif
-}
-
-static void debug_report_analysis_error([[maybe_unused]] const char *label, [[maybe_unused]] const char *error) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# analysis_error {\"label\": \"%s\", \"error\": \"%s\"}\n", label, error);
-#endif
-}
-
-static void debug_report_symmetry_search(
-    [[maybe_unused]] unsigned n, [[maybe_unused]] unsigned max_lag,
-    [[maybe_unused]] int coarse_lag, [[maybe_unused]] float coarse_score,
-    [[maybe_unused]] int fine_min, [[maybe_unused]] int fine_max,
-    [[maybe_unused]] int best_lag, [[maybe_unused]] float best_combined,
-    [[maybe_unused]] float corr_at_0_val, [[maybe_unused]] float corr_at_0_der,
-    [[maybe_unused]] float corr_at_best_val, [[maybe_unused]] float corr_at_best_der) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# symmetry_debug {\"n\": %u, \"max_lag\": %u, "
-                  "\"coarse_lag\": %d, \"coarse_score\": %.4f, "
-                  "\"fine_range\": [%d, %d], \"best_lag\": %d, \"best_combined\": %.4f, "
-                  "\"corr_at_0\": [%.4f, %.4f], \"corr_at_best\": [%.4f, %.4f]}\n",
-        n, max_lag,
-        coarse_lag, coarse_score,
-        fine_min, fine_max, best_lag, best_combined,
-        corr_at_0_val, corr_at_0_der, corr_at_best_val, corr_at_best_der);
-#endif
-}
-
-static void debug_report_rough_align(
-    [[maybe_unused]] const char *status,
-    [[maybe_unused]] int offset,
-    [[maybe_unused]] float extra_float,
-    [[maybe_unused]] const size_t pass_start[4],
-    [[maybe_unused]] const size_t pass_end[4]) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# rough_align {\"status\": \"%s\", \"offset\": %d, \"extra\": %.3f, "
-                  "\"chunks\": [[%u,%u],[%u,%u],[%u,%u],[%u,%u]]}\n",
-        status, offset, extra_float,
-        static_cast<unsigned>(pass_start[0]), static_cast<unsigned>(pass_end[0]),
-        static_cast<unsigned>(pass_start[1]), static_cast<unsigned>(pass_end[1]),
-        static_cast<unsigned>(pass_start[2]), static_cast<unsigned>(pass_end[2]),
-        static_cast<unsigned>(pass_start[3]), static_cast<unsigned>(pass_end[3]));
-#endif
-}
-
-template <typename Container>
-static void debug_report_pass_preprocessed(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] size_t chunk_start,
-    [[maybe_unused]] size_t chunk_size,
-    [[maybe_unused]] float dt,
-    [[maybe_unused]] const Container &signal_value) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# pass_preprocessed {\"label\": \"%s\", \"pass\": %d, "
-                  "\"chunk_start\": %u, \"chunk_size\": %u, \"dt\": %.6f, \"samples\": [",
-        label, pass_num,
-        static_cast<unsigned>(chunk_start),
-        static_cast<unsigned>(chunk_size), dt);
-    for (size_t i = 0; i < signal_value.size(); ++i) {
-        if (i > 0) {
-            serial_printf(", ");
-        }
-        serial_printf("%.6f", signal_value[i]);
-    }
-    serial_printf("]}\n");
-#endif
-}
-
-template <typename Container>
-static void debug_report_pass_derivative(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] const Container &signal_deriv) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# pass_derivative {\"label\": \"%s\", \"pass\": %d, \"samples\": [",
-        label, pass_num);
-    for (size_t i = 0; i < signal_deriv.size(); ++i) {
-        if (i > 0) {
-            serial_printf(", ");
-        }
-        serial_printf("%.6f", signal_deriv[i]);
-    }
-    serial_printf("]}\n");
-#endif
-}
-
-template <typename Container>
-static void debug_report_pass_correlation(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] int fine_min,
-    [[maybe_unused]] int fine_max,
-    [[maybe_unused]] int best_lag,
-    [[maybe_unused]] const Container &signal_value,
-    [[maybe_unused]] const Container &signal_deriv) {
-#ifdef SERIAL_DEBUG
-    // Compute normalization factors over the fine range
-    float max_abs_val = 0, max_abs_der = 0;
-    for (int lag = fine_min; lag <= fine_max; ++lag) {
-        max_abs_val = std::max(max_abs_val, std::abs(sp::symmetry_correlation(signal_value, lag, 1.0f)));
-        max_abs_der = std::max(max_abs_der, std::abs(sp::symmetry_correlation(signal_deriv, lag, -1.0f)));
-    }
-    float inv_val = (max_abs_val > 1e-10f) ? 1.0f / max_abs_val : 0.0f;
-    float inv_der = (max_abs_der > 1e-10f) ? 1.0f / max_abs_der : 0.0f;
-
-    // Find per-type best lags
-    int best_lag_value = fine_min, best_lag_deriv = fine_min;
-    float best_val_score = -std::numeric_limits<float>::infinity();
-    float best_der_score = -std::numeric_limits<float>::infinity();
-
-    // Emit header with all three best lags
-    // (best_lag_combined is the existing best_lag parameter)
-    serial_printf("# pass_correlation {\"label\": \"%s\", \"pass\": %d, "
-                  "\"fine_min\": %d, \"fine_max\": %d, ",
-        label, pass_num, fine_min, fine_max);
-
-    // First pass: find per-type best lags
-    for (int lag = fine_min; lag <= fine_max; ++lag) {
-        float cv = sp::symmetry_correlation(signal_value, lag, 1.0f) * inv_val;
-        float cd = sp::symmetry_correlation(signal_deriv, lag, -1.0f) * inv_der;
-        if (cv > best_val_score) {
-            best_val_score = cv;
-            best_lag_value = lag;
-        }
-        if (cd > best_der_score) {
-            best_der_score = cd;
-            best_lag_deriv = lag;
-        }
-    }
-
-    serial_printf("\"best_lag_value\": %d, \"best_lag_deriv\": %d, \"best_lag_combined\": %d, ",
-        best_lag_value, best_lag_deriv, best_lag);
-
-    // Emit value scores
-    serial_printf("\"value_scores\": [");
-    for (int lag = fine_min; lag <= fine_max; ++lag) {
-        if (lag > fine_min) {
-            serial_printf(", ");
-        }
-        serial_printf("%.4f", sp::symmetry_correlation(signal_value, lag, 1.0f) * inv_val);
-    }
-
-    // Emit derivative scores
-    serial_printf("], \"deriv_scores\": [");
-    for (int lag = fine_min; lag <= fine_max; ++lag) {
-        if (lag > fine_min) {
-            serial_printf(", ");
-        }
-        serial_printf("%.4f", sp::symmetry_correlation(signal_deriv, lag, -1.0f) * inv_der);
-    }
-
-    // Emit combined scores
-    serial_printf("], \"combined_scores\": [");
-    for (int lag = fine_min; lag <= fine_max; ++lag) {
-        if (lag > fine_min) {
-            serial_printf(", ");
-        }
-        float cv = sp::symmetry_correlation(signal_value, lag, 1.0f) * inv_val;
-        float cd = sp::symmetry_correlation(signal_deriv, lag, -1.0f) * inv_der;
-        serial_printf("%.4f", cv + cd);
-    }
-    serial_printf("]}\n");
-#endif
-}
-
 struct EnergyRegion {
     size_t start;
     size_t end;
 };
-
-template <typename Container>
-static void debug_report_rough_align_energy(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int decimation,
-    [[maybe_unused]] float dt_dec,
-    [[maybe_unused]] float threshold,
-    [[maybe_unused]] int offset_original,
-    [[maybe_unused]] const EnergyRegion *regions,
-    [[maybe_unused]] size_t num_regions,
-    [[maybe_unused]] const Container &energy) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# rough_align_energy {\"label\": \"%s\", \"decimation\": %d, "
-                  "\"dt_dec\": %.6f, \"threshold\": %.6f, \"offset\": %d, \"regions\": [",
-        label, decimation, dt_dec, threshold, offset_original);
-    for (size_t i = 0; i < num_regions; ++i) {
-        if (i > 0) {
-            serial_printf(", ");
-        }
-        serial_printf("[%u, %u]",
-            static_cast<unsigned>(regions[i].start),
-            static_cast<unsigned>(regions[i].end));
-    }
-    serial_printf("], \"energy\": [");
-    for (size_t i = 0; i < energy.size(); ++i) {
-        if (i > 0) {
-            serial_printf(", ");
-        }
-        serial_printf("%.4f", energy[i]);
-    }
-    serial_printf("]}\n");
-#endif
-}
 
 struct LineMotionConfig {
     xy_pos_t start;
@@ -345,129 +109,6 @@ struct TwoSpeedAnalysisResult {
     float delta_13_obs, delta_24_obs;
     float delta_12_model, delta_34_model;
 };
-
-// Forward declaration — defined later in this file
-static std::expected<TwoSpeedAnalysisResult, const char *> record_line_sweep(
-    const LineMotionConfig &config,
-    tool_offset::Sensor &sensor,
-    const char *label);
-
-static constexpr float position_tolerance = 0.01f;
-
-static float measure_sensor_true_z(const tool_offset::ProbingConfig &config) {
-    assert(std::abs(current_position.x - config.sensor_position.x) < position_tolerance);
-    assert(std::abs(current_position.y - config.sensor_position.y) < position_tolerance);
-
-    // Both are needed to run `probe_here`
-    pressure_advance::PressureAdvanceDisabler pa_disabler;
-    Loadcell::HighPrecisionEnabler loadcell_high_precision_enabler(loadcell);
-
-    // probe_here adds probe_offset.z and hotend_currently_applied_offset.z,
-    // but we want the raw nozzle contact position — subtract them back out.
-    const float probed_z = probe_here(config.sensor_position.z);
-    const float correction = probe_offset.z + TERN0(HAS_HOTEND_OFFSET, hotend_currently_applied_offset.z);
-    return probed_z - correction;
-}
-
-std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_current_tool_offset(
-    const tool_offset::ProbingConfig &config,
-    tool_offset::Sensor &sensor) {
-
-    // Check nozzle temperature before probing
-    if (thermalManager.degHotend(0) > config.max_safe_temp) {
-        return std::unexpected("Nozzle too hot for probing");
-    }
-
-    if (!GcodeSuite::G28_no_parser(true, true, true, G28Flags { .only_if_needed = true })) {
-        return std::unexpected("Homing failed");
-    }
-
-    // Sensor may be below soft endstop limits — disable them for the whole measurement
-    const bool saved_soft_endstops = soft_endstops_enabled;
-    soft_endstops_enabled = false;
-    ScopeGuard restore_soft_endstops([&] { soft_endstops_enabled = saved_soft_endstops; });
-
-    const float safe_z = config.sensor_position.z + config.safe_z_height;
-    do_blocking_move_to_z(safe_z);
-    do_blocking_move_to_xy(config.sensor_position);
-
-    const float sensor_z = measure_sensor_true_z(config);
-
-    const float probing_z = sensor_z + config.sensing_z;
-    do_blocking_move_to_z(probing_z);
-
-    debug_report_probed_z(sensor_z, sensor_z - config.sensor_position.z);
-
-    tool_offset::ToolOffset result;
-    result.z = sensor_z - config.sensor_position.z;
-
-    // XY offset measurement via two-pass scanning
-    const float scan_half_width = config.sensing_diameter / 2.0f;
-    const float sensor_x = config.sensor_position.x;
-    const float sensor_y = config.sensor_position.y;
-
-    // Helper: build a line scan config along one axis
-    auto make_line_config = [&](float scan_start, float scan_end,
-                                float cross_pos, bool along_x) {
-        LineMotionConfig cfg;
-        if (along_x) {
-            cfg.start.set(scan_start, cross_pos);
-            cfg.end.set(scan_end, cross_pos);
-        } else {
-            cfg.start.set(cross_pos, scan_start);
-            cfg.end.set(cross_pos, scan_end);
-        }
-        cfg.speed = config.sensing_speed_slow;
-        cfg.speed2 = config.sensing_speed_fast;
-        cfg.rest_time = config.sweep_rest_time;
-        return cfg;
-    };
-
-    // Helper: run one scan, return offset from scan center
-    auto run_scan = [&](const char *name, bool along_x, float center, float cross_pos)
-        -> std::expected<float, const char *> {
-        auto cfg = make_line_config(center - scan_half_width, center + scan_half_width,
-            cross_pos, along_x);
-        debug_report_scan_start(name);
-        auto scan_result = record_line_sweep(cfg, sensor, name);
-        if (!scan_result.has_value()) {
-            return std::unexpected(scan_result.error());
-        }
-        debug_report_scan_result(name, scan_result->confidence);
-        return scan_result->estimate_all.position_mm - scan_half_width;
-    };
-
-    // Pass 1: center detection — scans centered on sensor_position
-    auto cd_x = run_scan("center-detection-x", true, sensor_x, sensor_y);
-    if (!cd_x.has_value()) {
-        return std::unexpected(cd_x.error());
-    }
-    auto cd_y = run_scan("center-detection-y", false, sensor_y, sensor_x);
-    if (!cd_y.has_value()) {
-        return std::unexpected(cd_y.error());
-    }
-
-    const float max_offset = scan_half_width * 0.8f;
-    const float cd_x_offset = std::clamp(*cd_x, -max_offset, max_offset);
-    const float cd_y_offset = std::clamp(*cd_y, -max_offset, max_offset);
-
-    debug_report_pass1_center(cd_x_offset, cd_y_offset);
-
-    // Pass 2: nozzle offset — cross-axis corrected by pass-1 result
-    auto no_x = run_scan("nozzle-offset-x", true, sensor_x, sensor_y + cd_y_offset);
-    if (!no_x.has_value()) {
-        return std::unexpected(no_x.error());
-    }
-    auto no_y = run_scan("nozzle-offset-y", false, sensor_y, sensor_x + cd_x_offset);
-    if (!no_y.has_value()) {
-        return std::unexpected(no_y.error());
-    }
-
-    result.x = *no_x;
-    result.y = *no_y;
-
-    return result;
-}
 
 // Two-speed sweep motion profile.
 // Pure configuration — all derived quantities are computed on demand.
@@ -539,17 +180,19 @@ struct SweepSpeedProfile {
             return sp::pipe::make_constant(0.0f, freq)
                 | sp::pipe::take_samples(static_cast<int>(rest_time * freq));
         };
-        auto negate = [](float v) { return -v; };
+        auto backward_trapezoid = [&](float speed) {
+            return trapezoid(speed) | sp::pipe::transform([](float v) { return -v; });
+        };
 
         return sp::pipe::chain(
             rest(),
             trapezoid(speed1),
             rest(),
-            sp::pipe::SignalSource<float>(trapezoid(speed1) | sp::pipe::transform(negate)),
+            backward_trapezoid(speed1),
             rest(),
             trapezoid(speed2),
             rest(),
-            sp::pipe::SignalSource<float>(trapezoid(speed2) | sp::pipe::transform(negate)),
+            backward_trapezoid(speed2),
             rest());
     }
 };
@@ -559,39 +202,40 @@ struct RawRecordedSample {
     float sensor_value;
 };
 
-static void debug_report_pass_raw_chunk(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] size_t chunk_start,
-    [[maybe_unused]] size_t chunk_size,
-    [[maybe_unused]] const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples) {
-#ifdef SERIAL_DEBUG
-    serial_printf("# pass_raw_chunk {\"label\": \"%s\", \"pass\": %d, "
-                  "\"chunk_start\": %u, \"chunk_size\": %u, \"samples\": [",
-        label, pass_num,
-        static_cast<unsigned>(chunk_start),
-        static_cast<unsigned>(chunk_size));
-    for (size_t i = 0; i < chunk_size; ++i) {
-        if (i > 0) {
-            serial_printf(", ");
-        }
-        serial_printf("%.0f", raw_samples[chunk_start + i].sensor_value);
-    }
-    serial_printf("]}\n");
-#endif
-}
-
 struct MotionExecutionResult {
     sfl::segmented_vector<RawRecordedSample, 512> raw_samples;
     abce_pos_t moved_by;
     float sensor_sampling_freq_hz;
-    uint32_t motion_profile_start_us; // time=0 of motion profile (for sensor alignment)
+    uint32_t motion_profile_start_us;
 
     uint32_t convert_time_ms;
     uint32_t steps_time_ms;
     uint32_t expected_time_ms;
     uint32_t actual_time_ms;
 };
+
+// We place the debug reporters into a separate file so we do not clutter
+// the business logic with debug-only code.
+#include "debug_reporters.defs"
+
+static std::expected<TwoSpeedAnalysisResult, const char *> execute_and_analyze_sweep(
+    const LineMotionConfig &config,
+    tool_offset::Sensor &sensor,
+    const char *label);
+
+static constexpr float position_tolerance = 0.01f;
+
+static float measure_sensor_true_z(const tool_offset::ProbingConfig &config) {
+    assert(std::abs(current_position.x - config.sensor_position.x) < position_tolerance);
+    assert(std::abs(current_position.y - config.sensor_position.y) < position_tolerance);
+
+    // Both are needed to run `probe_here`
+    pressure_advance::PressureAdvanceDisabler pa_disabler;
+    Loadcell::HighPrecisionEnabler loadcell_high_precision_enabler(loadcell);
+
+    const float probed_z = probe_here(config.sensor_position.z);
+    return probed_z;
+}
 
 static bool wait_for_first_sample(tool_offset::Sensor &sensor, uint32_t timeout_us = 2'000'000) {
     uint32_t start = ticks_us();
@@ -630,7 +274,6 @@ static MotionExecutionResult execute_motion_with_recording(
     mm_per_step.pos[2] = 1.0f / planner.settings.axis_steps_per_mm[Z_AXIS];
     mm_per_step.pos[3] = 1.0f / planner.settings.axis_steps_per_mm[E_AXIS];
 
-    // Debug reporter for samples
     LineSamplesDebugReporter samples_reporter(label);
     samples_reporter.start();
 
@@ -640,7 +283,6 @@ static MotionExecutionResult execute_motion_with_recording(
         return result;
     }
 
-    // Enable steppers
     enable_all_steppers();
 
     auto receive_samples = [&]() {
@@ -737,49 +379,102 @@ static auto create_motion_signal(
         | signal2step::cartesian_to_printer_kinematics();
 }
 
-template <typename SpeedSource>
-static void debug_report_motion_profile(
-    [[maybe_unused]] SpeedSource &profile_source,
-    [[maybe_unused]] sp::SamplingFreq sampling_freq,
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] const char *extra_json_fields) {
+std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_current_tool_offset(
+    const tool_offset::ProbingConfig &config,
+    tool_offset::Sensor &sensor) {
 
-#ifdef SERIAL_DEBUG
-    const float dt = 1.0f / sampling_freq;
+    // Check nozzle temperature before probing
+    if (thermalManager.degHotend(0) > config.max_safe_temp) {
+        return std::unexpected("Nozzle too hot for probing");
+    }
 
-    serial_printf("# motion_profile {\"label\": \"%s\"%s, \"header\": \"time_s, position_mm, velocity_mm_s\", \"samples\": [",
-        label, extra_json_fields);
-    bool first = true;
-    float pos = 0.0f;
-    float t = 0.0f;
-    while (profile_source.available()) {
-        float v = profile_source.next();
-        if (!first) {
-            serial_printf(", ");
+    if (!GcodeSuite::G28_no_parser(true, true, true, G28Flags { .only_if_needed = true })) {
+        return std::unexpected("Homing failed");
+    }
+
+    // Sensor may be below soft endstop limits — disable them for the whole measurement
+    const bool saved_soft_endstops = soft_endstops_enabled;
+    soft_endstops_enabled = false;
+    ScopeGuard restore_soft_endstops([&] { soft_endstops_enabled = saved_soft_endstops; });
+
+    const float safe_z = config.sensor_position.z + config.safe_z_height;
+    do_blocking_move_to_z(safe_z);
+    do_blocking_move_to_xy(config.sensor_position);
+
+    const float sensor_z = measure_sensor_true_z(config);
+
+    const float probing_z = sensor_z + config.sensing_z;
+    do_blocking_move_to_z(probing_z);
+
+    debug_report_probed_z(sensor_z, sensor_z - config.sensor_position.z);
+
+    tool_offset::ToolOffset result;
+    result.z = sensor_z - config.sensor_position.z;
+
+    // XY offset measurement via two-pass scanning
+    const float scan_half_width = config.sensing_diameter / 2.0f;
+    const float sensor_x = config.sensor_position.x;
+    const float sensor_y = config.sensor_position.y;
+
+    auto make_line_config = [&](float scan_start, float scan_end,
+                                float cross_pos, bool along_x) {
+        LineMotionConfig cfg;
+        if (along_x) {
+            cfg.start.set(scan_start, cross_pos);
+            cfg.end.set(scan_end, cross_pos);
+        } else {
+            cfg.start.set(cross_pos, scan_start);
+            cfg.end.set(cross_pos, scan_end);
         }
-        first = false;
-        serial_printf("[%.6f, %.6f, %.6f]", t, pos, v);
-        pos += v * dt;
-        t += dt;
-    }
-    serial_printf("]}\n");
-#endif
-}
+        cfg.speed = config.sensing_speed_slow;
+        cfg.speed2 = config.sensing_speed_fast;
+        cfg.rest_time = config.sweep_rest_time;
+        return cfg;
+    };
 
-static void debug_report_motion_timing(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] const MotionExecutionResult &result) {
+    auto run_scan = [&](const char *name, bool along_x, float center, float cross_pos)
+        -> std::expected<float, const char *> {
+        auto cfg = make_line_config(center - scan_half_width, center + scan_half_width,
+            cross_pos, along_x);
+        debug_report_scan_start(name);
+        auto scan_result = execute_and_analyze_sweep(cfg, sensor, name);
+        if (!scan_result.has_value()) {
+            return std::unexpected(scan_result.error());
+        }
+        debug_report_scan_result(name, scan_result->confidence);
+        return scan_result->estimate_all.position_mm - scan_half_width;
+    };
 
-#ifdef SERIAL_DEBUG
-    float sensor_offset_ms = 0;
-    if (!result.raw_samples.empty() && result.motion_profile_start_us != 0) {
-        sensor_offset_ms = static_cast<float>(
-                               static_cast<int32_t>(result.raw_samples[0].timestamp_us - result.motion_profile_start_us))
-            / 1000.0f;
+    // Pass 1: center detection — scans centered on sensor_position
+    auto cd_x = run_scan("center-detection-x", true, sensor_x, sensor_y);
+    if (!cd_x.has_value()) {
+        return std::unexpected(cd_x.error());
     }
-    serial_printf("# motion_timing {\"label\": \"%s\", \"convert_ms\": %lu, \"steps_ms\": %lu, \"expected_ms\": %lu, \"actual_ms\": %lu, \"sensor_offset_ms\": %.3f}\n",
-        label, result.convert_time_ms, result.steps_time_ms, result.expected_time_ms, result.actual_time_ms, sensor_offset_ms);
-#endif
+    auto cd_y = run_scan("center-detection-y", false, sensor_y, sensor_x);
+    if (!cd_y.has_value()) {
+        return std::unexpected(cd_y.error());
+    }
+
+    const float max_offset = scan_half_width * 0.8f;
+    const float cd_x_offset = std::clamp(*cd_x, -max_offset, max_offset);
+    const float cd_y_offset = std::clamp(*cd_y, -max_offset, max_offset);
+
+    debug_report_pass1_center(cd_x_offset, cd_y_offset);
+
+    // Pass 2: nozzle offset — cross-axis corrected by pass-1 result
+    auto no_x = run_scan("nozzle-offset-x", true, sensor_x, sensor_y + cd_y_offset);
+    if (!no_x.has_value()) {
+        return std::unexpected(no_x.error());
+    }
+    auto no_y = run_scan("nozzle-offset-y", false, sensor_y, sensor_x + cd_x_offset);
+    if (!no_y.has_value()) {
+        return std::unexpected(no_y.error());
+    }
+
+    result.x = *no_x;
+    result.y = *no_y;
+
+    return result;
 }
 
 // Signal preprocessing: median filter + normalize + zero-phase lowpass + detrend
@@ -809,69 +504,19 @@ static bool preprocess_signal(
         bwd[i] = median_filter.filter(raw_samples[chunk_start_idx + i].sensor_value);
     }
 
-    // Average and compute stats in one pass (double precision for LDC1612 values)
-    double sum = 0, sum_sq = 0;
     for (size_t i = 0; i < chunk_size; ++i) {
-        double v = static_cast<double>(signal_value[i] + bwd[i]) * 0.5;
-        signal_value[i] = static_cast<float>(v);
-        sum += v;
-        sum_sq += v * v;
+        signal_value[i] = (signal_value[i] + bwd[i]) * 0.5f;
     }
 
-    double d_mean = sum / static_cast<double>(chunk_size);
-    double d_variance = (sum_sq / static_cast<double>(chunk_size)) - (d_mean * d_mean);
-    float mean = static_cast<float>(d_mean);
-    float std_val = static_cast<float>(std::sqrt(std::max(d_variance, 0.0)));
-
+    auto [mean, std_val] = sp::normalize_inplace(signal_value);
     if (std_val < 1e-10f) {
         return false;
     }
 
-    // Normalize
     constexpr float signal_lowpass_cutoff_hz = 50.0f;
-    for (size_t i = 0; i < chunk_size; ++i) {
-        signal_value[i] = (signal_value[i] - mean) / std_val;
-    }
-
-    // Zero-phase lowpass with odd-extension edge padding.
-    // Without padding, the biquad startup transient distorts the signal
-    // near chunk edges, biasing the symmetry peak detection.
-    {
-        auto lowpass_coeffs = sp::butterworth_lowpass_biquad_2nd(signal_lowpass_cutoff_hz, 1.0f / dt);
-        sp::Biquad<float> lp(lowpass_coeffs);
-
-        const float sample_rate = 1.0f / dt;
-        const size_t tau_samples = static_cast<size_t>(sample_rate / (2.0f * static_cast<float>(M_PI) * signal_lowpass_cutoff_hz));
-        const size_t pad_len = std::min(10 * tau_samples, chunk_size - 1);
-
-        sfl::segmented_vector<float, 256> padded;
-        padded.reserve(chunk_size + 2 * pad_len);
-
-        // Front: odd extension around signal_value[0]
-        for (size_t i = pad_len; i >= 1; --i) {
-            padded.push_back(2.0f * signal_value[0] - signal_value[i]);
-        }
-        for (size_t i = 0; i < chunk_size; ++i) {
-            padded.push_back(signal_value[i]);
-        }
-        // Back: odd extension around signal_value[chunk_size-1]
-        for (size_t i = 1; i <= pad_len; ++i) {
-            padded.push_back(2.0f * signal_value[chunk_size - 1] - signal_value[chunk_size - 1 - i]);
-        }
-
-        const size_t pn = padded.size();
-        for (size_t i = 0; i < pn; ++i) {
-            padded[i] = lp.process(padded[i]);
-        }
-        lp.reset();
-        for (size_t i = pn; i-- > 0;) {
-            padded[i] = lp.process(padded[i]);
-        }
-
-        for (size_t i = 0; i < chunk_size; ++i) {
-            signal_value[i] = padded[pad_len + i];
-        }
-    }
+    auto lowpass_coeffs = sp::butterworth_lowpass_biquad_2nd(signal_lowpass_cutoff_hz, 1.0f / dt);
+    sp::zero_phase_biquad_padded<sfl::segmented_vector<float, 256>>(
+        signal_value, lowpass_coeffs, 1.0f / dt, signal_lowpass_cutoff_hz);
 
     sp::linear_detrend(signal_value);
     return true;
@@ -896,8 +541,6 @@ static void compute_signal_derivative(
 }
 
 // Evaluate normalized combined (value + derivative) correlation score at a lag.
-// Computes sp::symmetry_correlation for both signals, normalizes each by
-// its max absolute value over the 3-point neighborhood, then sums.
 static float combined_correlation_score(
     const sfl::segmented_vector<float, 256> &signal_value,
     const sfl::segmented_vector<float, 256> &signal_deriv,
@@ -910,9 +553,8 @@ static float combined_correlation_score(
 }
 
 // Search a lag range for the best combined (value+derivative) correlation.
-// Three sweeps: (1) value corr to find normalization, (2) deriv corr, (3) combined peak.
 template <typename ValCorrFn, typename DerCorrFn>
-static void search_correlation_range(
+static void find_best_correlation_lag(
     int lag_min, int lag_max,
     ValCorrFn value_corr_fn, DerCorrFn deriv_corr_fn,
     int &out_best_lag, float &out_best_combined) {
@@ -941,7 +583,7 @@ static void search_correlation_range(
 
 // Coarse-to-fine symmetry correlation search.
 // Returns the best lag (in samples) and combined correlation score.
-static int coarse_fine_symmetry_search(
+static int find_approx_symmetry_lag(
     const sfl::segmented_vector<float, 256> &signal_value,
     const sfl::segmented_vector<float, 256> &signal_deriv,
     size_t max_lag,
@@ -949,7 +591,6 @@ static int coarse_fine_symmetry_search(
     int &out_fine_min,
     int &out_fine_max) {
 
-    size_t n = signal_value.size();
     int best_lag = 0;
     out_best_combined = 0;
 
@@ -958,26 +599,10 @@ static int coarse_fine_symmetry_search(
 
     constexpr size_t decimate_factor = 8;
 
-    // Downsample with averaging for coarse search (avoids aliasing from sample-picking)
-    size_t n_ds = n / decimate_factor;
-    size_t nd_ds = signal_deriv.size() / decimate_factor;
+    // Downsample with averaging for coarse search
     sfl::segmented_vector<float, 256> val_ds, der_ds;
-    val_ds.reserve(n_ds);
-    der_ds.reserve(nd_ds);
-    for (size_t i = 0; i < n_ds; ++i) {
-        float sum_v = 0;
-        for (size_t j = 0; j < decimate_factor; ++j) {
-            sum_v += signal_value[i * decimate_factor + j];
-        }
-        val_ds.push_back(sum_v / static_cast<float>(decimate_factor));
-    }
-    for (size_t i = 0; i < nd_ds; ++i) {
-        float sum_d = 0;
-        for (size_t j = 0; j < decimate_factor; ++j) {
-            sum_d += signal_deriv[i * decimate_factor + j];
-        }
-        der_ds.push_back(sum_d / static_cast<float>(decimate_factor));
-    }
+    sp::decimate_average(signal_value, val_ds, decimate_factor);
+    sp::decimate_average(signal_deriv, der_ds, decimate_factor);
 
     auto ds_val_corr = [&](int lag) { return sp::symmetry_correlation(val_ds, lag, 1.0f); };
     auto ds_der_corr = [&](int lag) { return sp::symmetry_correlation(der_ds, lag, -1.0f); };
@@ -985,7 +610,7 @@ static int coarse_fine_symmetry_search(
     int max_lag_ds = static_cast<int>(max_lag / decimate_factor);
     int coarse_best = 0;
     float coarse_combined = 0;
-    search_correlation_range(-max_lag_ds, max_lag_ds, ds_val_corr, ds_der_corr, coarse_best, coarse_combined);
+    find_best_correlation_lag(-max_lag_ds, max_lag_ds, ds_val_corr, ds_der_corr, coarse_best, coarse_combined);
 
     // Fine pass: ±2 coarse bins around coarse result
     int fine_center = coarse_best * static_cast<int>(decimate_factor);
@@ -995,19 +620,12 @@ static int coarse_fine_symmetry_search(
     out_fine_min = fine_min;
     out_fine_max = fine_max;
 
-    search_correlation_range(fine_min, fine_max, value_corr, deriv_corr, best_lag, out_best_combined);
-
-    // Correlation at lag=0 (perfect symmetry) and at a few key points for diagnostics
-    float corr_at_0_val = sp::symmetry_correlation(signal_value, 0, 1.0f);
-    float corr_at_0_der = sp::symmetry_correlation(signal_deriv, 0, -1.0f);
-    float corr_at_best_val = sp::symmetry_correlation(signal_value, best_lag, 1.0f);
-    float corr_at_best_der = sp::symmetry_correlation(signal_deriv, best_lag, -1.0f);
+    find_best_correlation_lag(fine_min, fine_max, value_corr, deriv_corr, best_lag, out_best_combined);
 
     debug_report_symmetry_search(
-        static_cast<unsigned>(n), static_cast<unsigned>(max_lag),
+        signal_value, signal_deriv, static_cast<unsigned>(max_lag),
         coarse_best, coarse_combined,
-        fine_min, fine_max, best_lag, out_best_combined,
-        corr_at_0_val, corr_at_0_der, corr_at_best_val, corr_at_best_der);
+        fine_min, fine_max, best_lag, out_best_combined);
 
     return best_lag;
 }
@@ -1041,9 +659,7 @@ static float refine_lag_parabolic(
 }
 
 // Detect symmetry peak using value + derivative correlations.
-// Median-filters and lowpass-filters the signal, then finds the lag where
-// the signal best matches its own reverse (symmetry axis = peak center).
-static SymmetryPeakResult detect_symmetry_peak_streaming(
+static SymmetryPeakResult detect_symmetry_peak(
     const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples,
     size_t chunk_start_idx,
     size_t chunk_size,
@@ -1074,7 +690,7 @@ static SymmetryPeakResult detect_symmetry_peak_streaming(
 
     float best_combined = 0;
     int fine_min = 0, fine_max = 0;
-    int best_lag = coarse_fine_symmetry_search(signal_value, signal_deriv, max_lag, best_combined, fine_min, fine_max);
+    int best_lag = find_approx_symmetry_lag(signal_value, signal_deriv, max_lag, best_combined, fine_min, fine_max);
 
     debug_report_pass_correlation(label, pass_num, fine_min, fine_max, best_lag, signal_value, signal_deriv);
 
@@ -1090,11 +706,8 @@ static SymmetryPeakResult detect_symmetry_peak_streaming(
 }
 
 // Rough alignment: find the sample offset that best aligns the expected
-// peak spacing pattern with the actual signal. Computes a local energy
-// signal (squared amplitude) and detects 4 active regions separated by
-// rest gaps. Works for both bell-shaped and W-shaped sensor responses.
-// Returns the best offset in samples, or nullopt on failure.
-static std::optional<int> rough_align_offset(
+// peak spacing pattern with the actual signal.
+static std::optional<int> find_rough_time_alignment(
     const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples,
     float dt,
     const SweepSpeedProfile &profile,
@@ -1114,7 +727,6 @@ static std::optional<int> rough_align_offset(
         return std::nullopt;
     }
 
-    // Median-filter and decimate the raw samples
     const float dt_dec = dt * decimation;
     const size_t n_dec = n / decimation;
     sfl::segmented_vector<float, 256> energy;
@@ -1134,27 +746,16 @@ static std::optional<int> rough_align_offset(
 
     sp::linear_detrend(energy);
 
-    // Square in-place to get energy — high for both bell and W shapes
-    for (size_t i = 0; i < n_dec; ++i) {
-        energy[i] = energy[i] * energy[i];
-    }
-
-    // Causal lowpass to smooth the energy signal
+    // Square, lowpass, and find peak in a single pass
     {
         auto lp_coeffs = sp::butterworth_lowpass_biquad_1st(energy_lowpass_cutoff_hz, 1.0f / dt_dec);
         sp::Biquad<float> lp(lp_coeffs);
         for (size_t i = 0; i < n_dec; ++i) {
-            energy[i] = lp.process(energy[i]);
+            energy[i] = lp.process(energy[i] * energy[i]);
         }
     }
 
-    // Adaptive threshold from peak energy
-    float max_energy = 0;
-    for (size_t i = 0; i < n_dec; ++i) {
-        if (energy[i] > max_energy) {
-            max_energy = energy[i];
-        }
-    }
+    float max_energy = *std::max_element(energy.begin(), energy.end());
     if (max_energy < 1e-10f) {
         return std::nullopt;
     }
@@ -1162,7 +763,6 @@ static std::optional<int> rough_align_offset(
     const float threshold_high = threshold_fraction * max_energy;
     const float threshold_low = threshold_high * hysteresis_ratio;
 
-    // Detect active regions with hysteresis
     constexpr size_t max_regions = 8;
     EnergyRegion regions[max_regions];
     size_t num_regions = 0;
@@ -1188,8 +788,9 @@ static std::optional<int> rough_align_offset(
         regions[num_regions++] = { region_start, n_dec };
     }
 
-    // Merge regions with gaps shorter than min_gap (handles W-shape dip splitting)
+    // Merge regions with small gaps (handles W-shape dip splitting), then discard tiny ones
     const size_t min_gap_samples = static_cast<size_t>(min_gap_s / dt_dec);
+    const size_t min_region_samples = static_cast<size_t>(min_region_s / dt_dec);
     {
         size_t write = 0;
         for (size_t r = 0; r < num_regions; ++r) {
@@ -1200,12 +801,8 @@ static std::optional<int> rough_align_offset(
             }
         }
         num_regions = write;
-    }
 
-    // Discard tiny spurious regions
-    const size_t min_region_samples = static_cast<size_t>(min_region_s / dt_dec);
-    {
-        size_t write = 0;
+        write = 0;
         for (size_t r = 0; r < num_regions; ++r) {
             if ((regions[r].end - regions[r].start) >= min_region_samples) {
                 regions[write++] = regions[r];
@@ -1214,41 +811,34 @@ static std::optional<int> rough_align_offset(
         num_regions = write;
     }
 
-    // Must have exactly 4 regions
-    if (num_regions != 4) {
-        debug_report_rough_align_energy(label, decimation, dt_dec, threshold_high, 0, regions, num_regions, energy);
+    auto fail = [&](int offset = 0) -> std::optional<int> {
+        debug_report_rough_align_energy(label, decimation, dt_dec, threshold_high, offset, regions, num_regions, energy);
         return std::nullopt;
+    };
+
+    if (num_regions != 4) {
+        return fail();
     }
 
-    // Validate region durations against expected pass times
-    float expected_durations[4] = {
-        profile.pass_time1(),
-        profile.pass_time1(),
-        profile.pass_time2(),
-        profile.pass_time2(),
-    };
     for (int i = 0; i < 4; ++i) {
         float detected = static_cast<float>(regions[i].end - regions[i].start) * dt_dec;
-        float expected = expected_durations[i];
+        float expected = (i < 2) ? profile.pass_time1() : profile.pass_time2();
         if (detected < expected * (1.0f - duration_tolerance)
             || detected > expected * (1.0f + duration_tolerance)) {
-            debug_report_rough_align_energy(label, decimation, dt_dec, threshold_high, 0, regions, num_regions, energy);
-            return std::nullopt;
+            return fail();
         }
     }
 
-    // Compute offset: average shift of region centers relative to expected peak times
+    // Average shift of region centers relative to expected peak times
     auto t_peaks = profile.expected_peak_times();
     float offset_sum = 0;
     for (int i = 0; i < 4; ++i) {
         float region_center_time = static_cast<float>(regions[i].start + regions[i].end) / 2.0f * dt_dec;
         offset_sum += (region_center_time - t_peaks[i]);
     }
-    float avg_offset_time = offset_sum / 4.0f;
-    int offset_original = static_cast<int>(avg_offset_time / dt);
+    int offset_original = static_cast<int>((offset_sum / 4.0f) / dt);
 
     debug_report_rough_align_energy(label, decimation, dt_dec, threshold_high, offset_original, regions, num_regions, energy);
-
     return offset_original;
 }
 
@@ -1266,7 +856,7 @@ static FourPassPeaks detect_four_peaks(
     auto t_peaks = profile.expected_peak_times();
 
     // Try data-driven rough alignment first
-    auto rough_offset = rough_align_offset(raw_samples, dt, profile, label);
+    auto rough_offset = find_rough_time_alignment(raw_samples, dt, profile, label);
 
     size_t pass_start_idx[4];
     size_t pass_end_idx[4];
@@ -1279,7 +869,6 @@ static FourPassPeaks detect_four_peaks(
         }
 
         // Chunk boundaries: midpoints between adjacent peaks
-        // First chunk starts at 0, last chunk ends at n
         pass_start_idx[0] = 0;
         pass_end_idx[0] = static_cast<size_t>((aligned_peaks[0] + aligned_peaks[1]) / 2);
         pass_start_idx[1] = pass_end_idx[0];
@@ -1369,7 +958,7 @@ static FourPassPeaks detect_four_peaks(
 
         uint32_t pass_start_us = ticks_us();
 
-        *pass_results[i] = detect_symmetry_peak_streaming(
+        *pass_results[i] = detect_symmetry_peak(
             raw_samples,
             chunk_start,
             chunk_size,
@@ -1388,7 +977,7 @@ static FourPassPeaks detect_four_peaks(
 }
 
 // Estimate position by grid-searching the time offset that minimizes
-// weighted peak position variance. When weights is null, uniform weighting.
+// weighted peak position variance.
 static PositionEstimate estimate_position_iterative(
     const float *peak_times,
     const float *weights,
@@ -1479,13 +1068,13 @@ static PositionEstimate estimate_position_iterative(
 }
 
 // Compute final position estimate using all/forward/backward peak subsets
-static TwoSpeedAnalysisResult compute_final_result(
+static TwoSpeedAnalysisResult estimate_position_from_peaks(
     const FourPassPeaks &peaks,
     const SweepSpeedProfile &profile,
     sp::SamplingFreq motion_sampling_freq) {
 
     constexpr float max_delay_fallback_s = 0.5f;
-    constexpr float max_spread_mm = 1.0f; // spread above this → zero confidence
+    constexpr float max_spread_mm = 0.1f; // spread above this → zero confidence
 
     uint32_t final_start_us = ticks_us();
 
@@ -1501,7 +1090,6 @@ static TwoSpeedAnalysisResult compute_final_result(
     float forward_peaks[2] = { peaks.pass1.peak_time_s, peaks.pass3.peak_time_s };
     float backward_peaks[2] = { peaks.pass2.peak_time_s, peaks.pass4.peak_time_s };
 
-    // Position lookup table: O(1) per query vs. integrating each time
     const float dt = 1.0f / motion_sampling_freq;
     auto speed_source = profile.make_source(motion_sampling_freq);
     sfl::segmented_vector<float, 512> position_table;
@@ -1514,7 +1102,7 @@ static TwoSpeedAnalysisResult compute_final_result(
         }
     }
 
-    log_info(ContactlessOffset, "compute_final_result: built position_table with %u entries",
+    log_info(ContactlessOffset, "estimate_position_from_peaks: built position_table with %u entries",
         static_cast<unsigned>(position_table.size()));
 
     // Dynamic max delay: min(0.5s, 10% of profile duration)
@@ -1540,7 +1128,7 @@ static TwoSpeedAnalysisResult compute_final_result(
         backward_peaks, nullptr, 2, position_table, motion_sampling_freq, profile.total_time(), max_delay);
     uint32_t est_bwd_us = ticks_us() - est_bwd_start_us;
 
-    log_info(ContactlessOffset, "compute_final_result: estimate_all=%uus estimate_fwd=%uus estimate_bwd=%uus",
+    log_info(ContactlessOffset, "estimate_position_from_peaks: estimate_all=%uus estimate_fwd=%uus estimate_bwd=%uus",
         static_cast<unsigned>(est_all_us), static_cast<unsigned>(est_fwd_us), static_cast<unsigned>(est_bwd_us));
 
     result.delta_12_obs = peaks.pass2.peak_time_s - peaks.pass1.peak_time_s;
@@ -1549,7 +1137,6 @@ static TwoSpeedAnalysisResult compute_final_result(
     result.delta_24_obs = peaks.pass4.peak_time_s - peaks.pass2.peak_time_s;
 
     // Model predictions: analytical deltas at estimated position
-    // Δ12 = rest + 2*(D-p)/v1,  Δ34 = rest + 2*(D-p)/v2
     float D = profile.total_distance;
     float p = result.estimate_all.position_mm;
     result.delta_12_model = (profile.speed1 > 0)
@@ -1559,75 +1146,13 @@ static TwoSpeedAnalysisResult compute_final_result(
         ? profile.rest_time + 2.0f * (D - p) / profile.speed2
         : 0;
 
-    // Confidence from residual variance: spread of 1mm → 0 confidence
+    // Confidence from residual variance: spread of 0.1mm → 0 confidence
     float spread = std::sqrt(std::max(0.0f, result.estimate_all.residual_variance / 4.0f));
     result.confidence = std::max(0.0f, 1.0f - spread / max_spread_mm);
 
-    log_info(ContactlessOffset, "compute_final_result: total %uus", static_cast<unsigned>(ticks_us() - final_start_us));
+    log_info(ContactlessOffset, "estimate_position_from_peaks: total %uus", static_cast<unsigned>(ticks_us() - final_start_us));
 
     return result;
-}
-
-static void debug_report_twospeed_analysis(
-    [[maybe_unused]] const TwoSpeedAnalysisResult &result,
-    [[maybe_unused]] const SweepSpeedProfile &profile,
-    [[maybe_unused]] const char *label) {
-
-#ifdef SERIAL_DEBUG
-    char name[64];
-    snprintf(name, sizeof(name), "%.0f/%.0f mm/s, %.0fmm",
-        profile.speed1, profile.speed2, profile.total_distance);
-
-    serial_printf("# twospeed_peaks {\"label\": \"%s\", \"name\": \"%s\", "
-                  "\"t1\": %.6f, \"t2\": %.6f, \"t3\": %.6f, \"t4\": %.6f, "
-                  "\"confidence\": %.3f}\n",
-        label, name,
-        result.peaks.pass1.peak_time_s,
-        result.peaks.pass2.peak_time_s,
-        result.peaks.pass3.peak_time_s,
-        result.peaks.pass4.peak_time_s,
-        result.confidence);
-
-    serial_printf("# twospeed_estimates {\"label\": \"%s\", \"name\": \"%s\", "
-                  "\"all\": {\"pos\": %.6f, \"tau\": %.6f, \"residual\": %.6f}, "
-                  "\"forward\": {\"pos\": %.6f, \"tau\": %.6f, \"residual\": %.6f}, "
-                  "\"backward\": {\"pos\": %.6f, \"tau\": %.6f, \"residual\": %.6f}}\n",
-        label, name,
-        result.estimate_all.position_mm,
-        result.estimate_all.time_offset_s,
-        result.estimate_all.residual_variance,
-        result.estimate_forward.position_mm,
-        result.estimate_forward.time_offset_s,
-        result.estimate_forward.residual_variance,
-        result.estimate_backward.position_mm,
-        result.estimate_backward.time_offset_s,
-        result.estimate_backward.residual_variance);
-
-    serial_printf("# twospeed_deltas {\"label\": \"%s\", \"name\": \"%s\", "
-                  "\"delta_12_obs\": %.6f, \"delta_34_obs\": %.6f, "
-                  "\"delta_12_model\": %.6f, \"delta_34_model\": %.6f, "
-                  "\"delta_13_obs\": %.6f, \"delta_24_obs\": %.6f}\n",
-        label, name,
-        result.delta_12_obs, result.delta_34_obs,
-        result.delta_12_model, result.delta_34_model,
-        result.delta_13_obs, result.delta_24_obs);
-
-    const SymmetryPeakResult *passes[] = {
-        &result.peaks.pass1, &result.peaks.pass2,
-        &result.peaks.pass3, &result.peaks.pass4
-    };
-    for (int i = 0; i < 4; ++i) {
-        const auto &pass = *passes[i];
-        serial_printf("# twospeed_symmetry {\"label\": \"%s\", \"name\": \"%s\", "
-                      "\"pass\": %d, "
-                      "\"peak_time\": %.6f, \"confidence\": %.3f, "
-                      "\"correlation_peak\": %.3f}\n",
-            label, name, i + 1,
-            pass.peak_time_s,
-            pass.confidence,
-            pass.correlation_peak);
-    }
-#endif
 }
 
 // Main entry point for two-speed sweep analysis
@@ -1656,7 +1181,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> analyze_twospeed_swee
     uint32_t peaks_us = ticks_us() - peaks_start_us;
 
     uint32_t final_result_start_us = ticks_us();
-    TwoSpeedAnalysisResult result = compute_final_result(peaks, profile, motion_sampling_freq);
+    TwoSpeedAnalysisResult result = estimate_position_from_peaks(peaks, profile, motion_sampling_freq);
     uint32_t final_result_us = ticks_us() - final_result_start_us;
 
     log_info(ContactlessOffset, "analyze_twospeed: total %uus (detect_peaks=%uus compute_result=%uus) samples=%u",
@@ -1668,7 +1193,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> analyze_twospeed_swee
     return result;
 }
 
-static std::expected<TwoSpeedAnalysisResult, const char *> record_line_sweep(
+static std::expected<TwoSpeedAnalysisResult, const char *> execute_and_analyze_sweep(
     const LineMotionConfig &config,
     tool_offset::Sensor &sensor,
     const char *label) {
@@ -1708,13 +1233,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> record_line_sweep(
         std::move(motion_signal), sensor, label, expected_duration_us);
 
     uint32_t serial_output_start_us = ticks_us();
-    auto profile_source = profile.make_source(motion_sampling_freq);
-    char extra_fields[128];
-    snprintf(extra_fields, sizeof(extra_fields),
-        ", \"mode\": \"twospeed\", \"speed1\": %.2f, \"speed2\": %.2f, \"rest_time\": %.6f",
-        profile.speed1, profile.speed2, profile.rest_time);
-    debug_report_motion_profile(profile_source, motion_sampling_freq, label, extra_fields);
-
+    debug_report_motion_profile(profile, motion_sampling_freq, label);
     debug_report_motion_timing(label, result);
     uint32_t serial_output_us = ticks_us() - serial_output_start_us;
 
@@ -1728,7 +1247,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> record_line_sweep(
         label);
     uint32_t analysis_us = ticks_us() - analysis_start_us;
 
-    log_info(ContactlessOffset, "record_line_sweep: serial_output=%uus analysis=%uus",
+    log_info(ContactlessOffset, "execute_and_analyze_sweep: serial_output=%uus analysis=%uus",
         static_cast<unsigned>(serial_output_us), static_cast<unsigned>(analysis_us));
 
     if (!analysis_result.has_value()) {
