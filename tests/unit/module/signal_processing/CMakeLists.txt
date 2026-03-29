@@ -1,4 +1,4 @@
-add_executable(signal_processing_tests pipeline_testing.cpp)
+add_executable(signal_processing_tests filter_testing.cpp pipeline_testing.cpp)
 
 target_link_libraries(signal_processing_tests signal_processing)
 add_catch_test(signal_processing_tests)
