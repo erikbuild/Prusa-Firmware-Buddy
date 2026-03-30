@@ -99,6 +99,7 @@
 
 #include <option/has_gui.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_crash_recovery.h>
 #include <option/has_tool_mapping.h>
 #include <option/has_selftest.h>
 #include <option/has_dwarf.h>
@@ -1483,7 +1484,7 @@ void serial_print_finalize(void) {
     case State::Paused:
     case State::Resuming_Reheating:
     case State::Finishing_WaitIdle:
-    #if HAS_TOOLCHANGER()
+    #if HAS_TOOL_CRASH_RECOVERY()
     case State::CrashRecovery_Tool_Pickup:
     #endif
         server.print_state = State::Finishing_WaitIdle;
@@ -1508,7 +1509,7 @@ void print_abort(void) {
     case State::Resuming_BufferData:
     case State::Resuming_Reheating:
     case State::Finishing_WaitIdle:
-#if HAS_TOOLCHANGER()
+#if HAS_TOOL_CRASH_RECOVERY()
     case State::CrashRecovery_Tool_Pickup:
 #endif
         server.print_state = State::Aborting_Begin;

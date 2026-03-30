@@ -7,7 +7,7 @@
 #include <option/has_mmu2.h>
 #include <option/has_tool_mapping.h>
 #include <option/has_side_fsensor.h>
-#include <option/has_toolchanger.h>
+#include <option/has_tool_crash_recovery.h>
 
 namespace leds {
 
@@ -156,7 +156,7 @@ static StateAnimation marlin_to_anim_state() {
     case State::CrashRecovery_Lifting:
     case State::CrashRecovery_ToolchangePowerPanic:
     case State::CrashRecovery_XY_Measure:
-#if HAS_TOOLCHANGER()
+#if HAS_TOOL_CRASH_RECOVERY()
     case State::CrashRecovery_Tool_Pickup:
 #endif
     case State::CrashRecovery_XY_HOME:

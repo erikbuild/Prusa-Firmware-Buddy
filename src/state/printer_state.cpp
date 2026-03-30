@@ -308,7 +308,7 @@ DeviceState get_print_state(State state, bool ready) {
     case State::CrashRecovery_Repeated_Crash:
     case State::CrashRecovery_HOMEFAIL:
         return DeviceState::Attention;
-#if HAS_TOOLCHANGER()
+#if HAS_TOOL_CRASH_RECOVERY()
     case State::CrashRecovery_Tool_Pickup:
         return DeviceState::Attention;
 #endif

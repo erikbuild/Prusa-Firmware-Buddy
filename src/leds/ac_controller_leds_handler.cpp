@@ -4,6 +4,7 @@
 #include <marlin_vars.hpp>
 #include <puppies/ac_controller.hpp>
 #include <ac_controller/types.hpp>
+#include <option/has_tool_crash_recovery.h>
 
 namespace leds {
 
@@ -43,6 +44,9 @@ static ac_controller::AnimationType marlin_to_anim_state() {
     case State::CrashRecovery_HOMEFAIL:
     case State::CrashRecovery_Axis_NOK:
     case State::CrashRecovery_Repeated_Crash:
+#if HAS_TOOL_CRASH_RECOVERY()
+    case State::CrashRecovery_Tool_Pickup:
+#endif
     case State::PowerPanic_acFault:
     case State::PowerPanic_Resume:
     case State::PowerPanic_AwaitingResume:

@@ -21,7 +21,7 @@
 #include <common/directory.hpp>
 #include <version/version.hpp>
 #include <common/printer_model.hpp>
-#include <option/has_toolchanger.h>
+#include <option/has_tool_crash_recovery.h>
 
 using namespace json;
 using namespace marlin_server;
@@ -58,7 +58,7 @@ JsonResult get_printer(size_t resume_point, JsonOutput &output) {
     case State::CrashRecovery_ToolchangePowerPanic:
     case State::CrashRecovery_Retracting:
     case State::CrashRecovery_XY_Measure:
-#if HAS_TOOLCHANGER()
+#if HAS_TOOL_CRASH_RECOVERY()
     case State::CrashRecovery_Tool_Pickup:
 #endif
     case State::CrashRecovery_XY_HOME:
@@ -277,7 +277,7 @@ JsonResult get_job_octoprint(size_t resume_point, JsonOutput &output) {
     case State::CrashRecovery_ToolchangePowerPanic:
     case State::CrashRecovery_Retracting:
     case State::CrashRecovery_XY_Measure:
-#if HAS_TOOLCHANGER()
+#if HAS_TOOL_CRASH_RECOVERY()
     case State::CrashRecovery_Tool_Pickup:
 #endif
     case State::CrashRecovery_XY_HOME:

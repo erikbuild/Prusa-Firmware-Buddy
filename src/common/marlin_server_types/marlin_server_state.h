@@ -1,7 +1,7 @@
 #pragma once
 
 #include <option/has_mmu2.h>
-#include <option/has_toolchanger.h>
+#include <option/has_tool_crash_recovery.h>
 #include <option/has_tool_mapping.h>
 
 namespace marlin_server {
@@ -48,7 +48,7 @@ enum class State {
     CrashRecovery_Lifting,
     CrashRecovery_ToolchangePowerPanic, // Prepare for toolchange after power panic
     CrashRecovery_XY_Measure,
-#if HAS_TOOLCHANGER()
+#if HAS_TOOL_CRASH_RECOVERY()
     CrashRecovery_Tool_Pickup,
 #endif
     CrashRecovery_XY_HOME,
