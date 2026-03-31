@@ -652,7 +652,7 @@ void fsm_change(FSMAndPhase fsm_and_phase, fsm::PhaseData data) {
 
     auto &fsm_state = fsm_states[fsm_and_phase.fsm];
 
-    if (fsm_state->GetPhase() != fsm_and_phase.phase) {
+    if (!fsm_state.has_value() || fsm_state->GetPhase() != fsm_and_phase.phase) {
         // Clear any pending responses for this FSM. They might have been sent a long time ago and we don't want them to affect the behavior.
         marlin_server::clear_fsm_response(fsm_and_phase.fsm);
     }
