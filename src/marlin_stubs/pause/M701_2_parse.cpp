@@ -4,12 +4,14 @@
 #include "M70X.hpp"
 #include "fs_event_autolock.hpp"
 #include "../../../lib/Marlin/Marlin/src/gcode/gcode.h"
-#include <utils/variant_utils.hpp>
 #include "../../../lib/Marlin/Marlin/src/feature/prusa/e-stall_detector.h"
 #include "pause_stubbed.hpp"
 #include "pause_settings.hpp"
 #include <option/has_mmu2.h>
 #include <utils/variant_utils.hpp>
+#if HAS_MMU2()
+    #include <feature/prusa/MMU2/mmu2_mk4.h>
+#endif
 
 using namespace filament_gcodes;
 
@@ -69,17 +71,24 @@ void GcodeSuite::M701() {
     // one). It uses 'P' for the slot. It is not even clear if on XL+5*MMU, the
     // case would be something like T2 P3 or T2 P13 (eg. 2*5+3) or just P13..
     static_assert(PhysicalToolIndex::count == 1);
-    if (!mmu_slot.has_value() || *mmu_slot >= VirtualToolIndex::count) {
-        return;
-    }
-    const VirtualToolIndex target_tool = VirtualToolIndex::from_raw(*mmu_slot);
+    const bool mmu_enabled = MMU2::mmu2.Enabled();
 #else
-    const std::optional<VirtualToolIndex> virtual_tool = stdext::get_optional<VirtualToolIndex>(PrusaGcodeSuite::get_target_virtual_from_command(p));
+    constexpr bool mmu_enabled = false;
+#endif
+
+    std::optional<VirtualToolIndex> virtual_tool;
+    if (mmu_enabled) {
+        if (mmu_slot.has_value() && *mmu_slot < VirtualToolIndex::count) {
+            virtual_tool = VirtualToolIndex::from_raw(*mmu_slot);
+        }
+    } else {
+        virtual_tool = stdext::get_optional<VirtualToolIndex>(PrusaGcodeSuite::get_target_virtual_from_command(p));
+    }
+
     if (!virtual_tool.has_value()) {
         return;
     }
     const VirtualToolIndex target_tool = *virtual_tool;
-#endif
     const ResumePrint_t resume_print = static_cast<ResumePrint_t>(p.option<bool>('R').value_or(false));
 
     M701_load(filament_to_be_loaded, fast_load_length, min_Z_pos, op_preheat, target_tool, mmu_slot.has_value() ? static_cast<int8_t>(*mmu_slot) : static_cast<int8_t>(-1), color_to_be_loaded, resume_print);
