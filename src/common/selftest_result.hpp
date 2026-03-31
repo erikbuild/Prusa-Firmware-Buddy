@@ -57,18 +57,18 @@ struct SelftestResult {
     static constexpr size_t tools_count = 6; ///< Number of tool slots in stored layout. Do not change without config store migration.
 
     SelftestResult() = default;
-    TestResult xaxis : 2 {};
-    TestResult yaxis : 2 {};
-    TestResult zaxis : 2 {};
-    TestResult bed : 2 {};
-    TestResultNet eth : 3 {};
-    TestResultNet wifi : 3 {};
-    TestResult zalign : 2 {};
+    TestResult _xaxis : 2 {};
+    TestResult _yaxis : 2 {};
+    TestResult _zaxis : 2 {};
+    TestResult _bed : 2 {};
+    TestResultNet _eth : 3 {};
+    TestResultNet _wifi : 3 {};
+    TestResult _zalign : 2 {};
     // This member is no longer used and is kept to allow backwards compatibility with config store
     // It was replaced by a result supporting more than one toolhead, that can
     // be found in SelftTool class
-    TestResult deprecated_gears : 2 {};
-    StrongIndexArray<SelftestTool, tools_count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> tools {};
+    TestResult _deprecated_gears : 2 {};
+    StrongIndexArray<SelftestTool, tools_count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> _tools {};
 
     bool operator==(const SelftestResult &) const = default;
 
@@ -179,6 +179,29 @@ struct SelftestResult {
     inline void set_gearbox(PhysicalToolIndex tool, TestResult result) {
         set_gearbox(tool.to_raw(), result);
     }
+
+    TestResult get_xaxis() const;
+    void set_xaxis(TestResult result);
+
+    TestResult get_yaxis() const;
+    void set_yaxis(TestResult result);
+
+    TestResult get_zaxis() const;
+    void set_zaxis(TestResult result);
+
+    TestResult get_bed_heater() const;
+    void set_bed_heater(TestResult result);
+
+    TestResultNet get_ethernet() const;
+    void set_ethernet(TestResultNet result);
+
+    TestResultNet get_wifi() const;
+    void set_wifi(TestResultNet result);
+
+    TestResult get_zalign() const;
+    void set_zalign(TestResult result);
+
+    TestResult get_deprecated_gears() const;
 };
 
 #pragma pack(pop)

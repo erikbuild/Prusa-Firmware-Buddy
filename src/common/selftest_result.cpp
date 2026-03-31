@@ -3,81 +3,141 @@
 #include <selftest_result_evaluation.hpp>
 
 TestResult SelftestResult::get_print_fan(uint8_t tool) const {
-    return tools[tool]._printFan;
+    return _tools[tool]._printFan;
 }
 
 void SelftestResult::set_print_fan(uint8_t tool, TestResult result) {
-    tools[tool]._printFan = result;
+    _tools[tool]._printFan = result;
 }
 
 TestResult SelftestResult::get_heatbreak_fan(uint8_t tool) const {
-    return tools[tool]._heatBreakFan;
+    return _tools[tool]._heatBreakFan;
 }
 
 void SelftestResult::set_heatbreak_fan(uint8_t tool, TestResult result) {
-    tools[tool]._heatBreakFan = result;
+    _tools[tool]._heatBreakFan = result;
 }
 
 TestResult SelftestResult::get_fans_switched(uint8_t tool) const {
-    return tools[tool]._fansSwitched;
+    return _tools[tool]._fansSwitched;
 }
 
 void SelftestResult::set_fans_switched(uint8_t tool, TestResult result) {
-    tools[tool]._fansSwitched = result;
+    _tools[tool]._fansSwitched = result;
 }
 
 TestResult SelftestResult::evaluate_fans(uint8_t tool) const {
 #if HAS_SWITCHED_FAN_TEST()
-    return SelftestSnake::evaluate_results(tools[tool]._printFan, tools[tool]._heatBreakFan, tools[tool]._fansSwitched);
+    return SelftestSnake::evaluate_results(_tools[tool]._printFan, _tools[tool]._heatBreakFan, _tools[tool]._fansSwitched);
 #else
-    return SelftestSnake::evaluate_results(tools[tool]._printFan, tools[tool]._heatBreakFan);
+    return SelftestSnake::evaluate_results(_tools[tool]._printFan, _tools[tool]._heatBreakFan);
 #endif
 }
 
 bool SelftestResult::has_heatbreak_fan_passed(uint8_t tool) const {
-    return tools[tool]._heatBreakFan == TestResult_Passed
+    return _tools[tool]._heatBreakFan == TestResult_Passed
 #if HAS_SWITCHED_FAN_TEST()
-        && tools[tool]._fansSwitched == TestResult_Passed
+        && _tools[tool]._fansSwitched == TestResult_Passed
 #endif /* HAS_SWITCHED_FAN_TEST */
         ;
 }
 
 TestResult SelftestResult::get_nozzle_heater(uint8_t tool) const {
-    return tools[tool]._nozzle;
+    return _tools[tool]._nozzle;
 }
 
 void SelftestResult::set_nozzle_heater(uint8_t tool, TestResult result) {
-    tools[tool]._nozzle = result;
+    _tools[tool]._nozzle = result;
 }
 
 TestResult SelftestResult::get_loadcell(uint8_t tool) const {
-    return tools[tool]._loadcell;
+    return _tools[tool]._loadcell;
 }
 
 void SelftestResult::set_loadcell(uint8_t tool, TestResult result) {
-    tools[tool]._loadcell = result;
+    _tools[tool]._loadcell = result;
 }
 
 TestResult SelftestResult::get_dock_offset(uint8_t tool) const {
-    return tools[tool]._dockoffset;
+    return _tools[tool]._dockoffset;
 }
 
 void SelftestResult::set_dock_offset(uint8_t tool, TestResult result) {
-    tools[tool]._dockoffset = result;
+    _tools[tool]._dockoffset = result;
 }
 
 TestResult SelftestResult::get_tool_offset(uint8_t tool) const {
-    return tools[tool]._tooloffset;
+    return _tools[tool]._tooloffset;
 }
 
 void SelftestResult::set_tool_offset(uint8_t tool, TestResult result) {
-    tools[tool]._tooloffset = result;
+    _tools[tool]._tooloffset = result;
 }
 
 TestResult SelftestResult::get_gearbox(uint8_t tool) const {
-    return tools[tool]._gears;
+    return _tools[tool]._gears;
 }
 
 void SelftestResult::set_gearbox(uint8_t tool, TestResult result) {
-    tools[tool]._gears = result;
+    _tools[tool]._gears = result;
+}
+
+TestResult SelftestResult::get_xaxis() const {
+    return _xaxis;
+}
+
+void SelftestResult::set_xaxis(TestResult result) {
+    _xaxis = result;
+}
+
+TestResult SelftestResult::get_yaxis() const {
+    return _yaxis;
+}
+
+void SelftestResult::set_yaxis(TestResult result) {
+    _yaxis = result;
+}
+
+TestResult SelftestResult::get_zaxis() const {
+    return _zaxis;
+}
+
+void SelftestResult::set_zaxis(TestResult result) {
+    _zaxis = result;
+}
+
+TestResult SelftestResult::get_bed_heater() const {
+    return _bed;
+}
+
+void SelftestResult::set_bed_heater(TestResult result) {
+    _bed = result;
+}
+
+TestResultNet SelftestResult::get_ethernet() const {
+    return _eth;
+}
+
+void SelftestResult::set_ethernet(TestResultNet result) {
+    _eth = result;
+}
+
+TestResultNet SelftestResult::get_wifi() const {
+    return _wifi;
+}
+
+void SelftestResult::set_wifi(TestResultNet result) {
+    _wifi = result;
+}
+
+TestResult SelftestResult::get_zalign() const {
+    return _zalign;
+}
+
+void SelftestResult::set_zalign(TestResult result) {
+    _zalign = result;
+}
+
+TestResult SelftestResult::get_deprecated_gears() const {
+    return _deprecated_gears;
 }

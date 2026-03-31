@@ -192,7 +192,7 @@ bool CSelftest::Start(const uint64_t test_mask, [[maybe_unused]] const TestData 
     m_Mask = SelftestMask_t(test_mask);
     if (m_Mask & (stmXAxis | stmYAxis | stmZAxis)) {
         m_Mask = static_cast<SelftestMask_t>(m_Mask | uint64_t(stmWait_axes));
-        if (m_result.zaxis != TestResult_Passed) {
+        if (m_result.get_zaxis() != TestResult_Passed) {
             m_Mask = static_cast<SelftestMask_t>(m_Mask | static_cast<uint64_t>(stmEnsureZAway));
         }
     }
@@ -367,11 +367,11 @@ void CSelftest::next() {
 #endif
     case stsZAxis: { // loadcell and both X and Y must be OK to test Z
         bool loadcell_passed = m_result.get_loadcell(0) == TestResult_Passed;
-        bool xy_axis_passed = m_result.xaxis == TestResult_Passed && m_result.yaxis == TestResult_Passed;
+        bool xy_axis_passed = m_result.get_xaxis() == TestResult_Passed && m_result.get_yaxis() == TestResult_Passed;
         if (loadcell_passed && xy_axis_passed) {
             return; // current state can be run
         }
-        m_result.zaxis = TestResult_Unknown;
+        m_result.set_zaxis(TestResult_Unknown);
         break; // current state cannot be run
     }
     default:

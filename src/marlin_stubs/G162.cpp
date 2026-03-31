@@ -41,7 +41,7 @@ void selftest::calib_Z([[maybe_unused]] bool move_down_after) {
 
     // mark test as failed (so it will be failed after reset - disconnected cables can cause rsod)
     auto result = config_store().selftest_result.get();
-    result.zalign = TestResult_Failed;
+    result.set_zalign(TestResult_Failed);
     config_store().selftest_result.set(result);
 
     // Move the nozzle up and away from the bed
@@ -83,7 +83,7 @@ void selftest::calib_Z([[maybe_unused]] bool move_down_after) {
     set_axis_is_not_at_home(Z_AXIS);
 
     // Store Z aligned
-    result.zalign = TestResult_Passed;
+    result.set_zalign(TestResult_Passed);
     config_store().selftest_result.set(result);
 }
 #else
@@ -120,7 +120,7 @@ static void safe_move_down() {
 void selftest::calib_Z(bool move_down_after) {
     // mark test as failed (so it will be failed after reset - disconnected cables can cause rsod)
     auto result = config_store().selftest_result.get();
-    result.zalign = TestResult_Failed;
+    result.set_zalign(TestResult_Failed);
     config_store().selftest_result.set(result);
 
     // backup original acceleration/feedrates and reset defaults for calibration
@@ -162,7 +162,7 @@ void selftest::calib_Z(bool move_down_after) {
     planner.set_max_acceleration(Z_AXIS, orig_max_accel);
 
     // Store Z aligned
-    result.zalign = TestResult_Passed;
+    result.set_zalign(TestResult_Passed);
     config_store().selftest_result.set(result);
 }
 #endif

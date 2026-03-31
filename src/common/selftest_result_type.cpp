@@ -31,11 +31,11 @@ void SelftestResult_Log(const SelftestResult &results) {
         log_info(Selftest, "Loadcell result %u is %s", tool.to_raw(), ToString(results.get_loadcell(tool)));
 #endif /*HAS_LOADCELL()*/
     }
-    log_info(Selftest, "X axis result is %s", ToString(results.xaxis));
-    log_info(Selftest, "Y axis result is %s", ToString(results.yaxis));
-    log_info(Selftest, "Z axis result is %s", ToString(results.zaxis));
-    log_info(Selftest, "Z calibration result is %s", ToString(results.zalign));
-    log_info(Selftest, "Bed heater result is %s", ToString(results.bed));
-    log_info(Selftest, "Ethernet result is %s", ToString(results.eth));
-    log_info(Selftest, "Wifi result is %s", ToString(results.wifi));
+    log_info(Selftest, "X axis result is %s", ToString(results.get_xaxis()));
+    log_info(Selftest, "Y axis result is %s", ToString(results.get_yaxis()));
+    log_info(Selftest, "Z axis result is %s", ToString(results.get_zaxis()));
+    log_info(Selftest, "Z calibration result is %s", ToString(results.get_zalign()));
+    log_info(Selftest, "Bed heater result is %s", ToString(results.get_bed_heater()));
+    log_info(Selftest, "Ethernet result is %s", ToString(results.get_ethernet()));
+    log_info(Selftest, "Wifi result is %s", ToString(results.get_wifi()));
 }

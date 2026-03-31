@@ -141,9 +141,9 @@ void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed)
     }
 
     // mark test as failed (so it will be failed after reset)
-    auto result = config_store().selftest_result.get();
-    result.bed = TestResult_Failed;
-    config_store().selftest_result.set(result);
+    auto sr = config_store().selftest_result.get();
+    sr.set_bed_heater(TestResult_Failed);
+    config_store().selftest_result.set(sr);
     resultHeaters.bed = SelftestHeater_t(0, SelftestSubtestState_t::not_good, SelftestSubtestState_t::not_good);
     resultHeaters.tested_parts |= to_one_hot(SelftestHeaters_t::TestedParts::bed);
 
@@ -206,7 +206,7 @@ bool phaseHeaters(std::array<IPartHandler *, PhysicalToolIndex::count> &pNozzles
     }
     if (just_finished_bed) {
         assert(pBed && *pBed);
-        eeres.bed = (*pBed)->GetResult();
+        eeres.set_bed_heater((*pBed)->GetResult());
     }
     config_store().selftest_result.set(eeres);
 

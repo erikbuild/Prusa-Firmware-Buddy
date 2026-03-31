@@ -66,11 +66,11 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
         return res;
     }
     case Action::ZAlign:
-        return evaluate_results(sr.zalign);
+        return sr.get_zalign();
     case Action::YCheck:
-        return evaluate_results(sr.yaxis);
+        return sr.get_yaxis();
     case Action::XCheck:
-        return evaluate_results(sr.xaxis);
+        return sr.get_xaxis();
 #if HAS_PRECISE_HOMING_COREXY()
     case Action::PreciseHoming:
         return corexy_home_is_calibrated() ? TestResult::TestResult_Passed : TestResult::TestResult_Unknown;
@@ -80,9 +80,9 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
             return sr.get_loadcell(e);
         });
     case Action::ZCheck:
-        return evaluate_results(sr.zaxis);
+        return sr.get_zaxis();
     case Action::Heaters:
-        return evaluate_results(sr.bed, merge_hotends_evaluations([&](int8_t e) {
+        return evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::Gears:

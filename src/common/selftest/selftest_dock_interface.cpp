@@ -102,7 +102,7 @@ TestReturn phaseDocks(const ToolMask tool_mask, std::array<IPartHandler *, Physi
 
         // Store dock calibration state
         // Do not store if aborted, do not regress
-        if (i < std::size(eeres.tools)
+        if (i < PhysicalToolIndex::count
             && pDocks[i]->GetResult() != TestResult_Skipped) {
             eeres.set_dock_offset(i, pDocks[i]->GetResult());
         }

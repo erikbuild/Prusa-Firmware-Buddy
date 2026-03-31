@@ -299,7 +299,7 @@ void CSelftest::Loop() {
 
     case stsReviseSetupAfterAxes:
         m_result = config_store().selftest_result.get();
-        if (m_result.xaxis == TestResult_Failed || m_result.yaxis == TestResult_Failed) {
+        if (m_result.get_xaxis() == TestResult_Failed || m_result.get_yaxis() == TestResult_Failed) {
             switch (phase_revise_printer_setup()) {
 
             case RevisePrinterSetupResult::running:
@@ -309,9 +309,9 @@ void CSelftest::Loop() {
                 break;
 
             case RevisePrinterSetupResult::retry:
-                m_result.xaxis = TestResult_Unknown;
-                m_result.yaxis = TestResult_Unknown;
-                m_result.zaxis = TestResult_Unknown;
+                m_result.set_xaxis(TestResult_Unknown);
+                m_result.set_yaxis(TestResult_Unknown);
+                m_result.set_zaxis(TestResult_Unknown);
                 config_store().selftest_result.set(m_result);
 
                 m_State = stsXAxis;
@@ -342,7 +342,7 @@ void CSelftest::Loop() {
     case stsReviseSetupAfterHeaters:
         m_result = config_store().selftest_result.get();
 
-        if (m_result.bed == TestResult_Failed) {
+        if (m_result.get_bed_heater() == TestResult_Failed) {
             marlin_server::fsm_change(PhasesSelftest::Heaters_AskBedSheetAfterFail, {});
             switch (marlin_server::get_response_from_phase(PhasesSelftest::Heaters_AskBedSheetAfterFail)) {
 
@@ -454,14 +454,14 @@ void CSelftest::next() {
 #endif
     case stsZAxis: { // loadcell and both X and Y must be OK to test Z
         bool loadcell_passed = m_result.get_loadcell(0) == TestResult_Passed;
-        bool xy_axis_passed = m_result.xaxis == TestResult_Passed && m_result.yaxis == TestResult_Passed;
+        bool xy_axis_passed = m_result.get_xaxis() == TestResult_Passed && m_result.get_yaxis() == TestResult_Passed;
         if (loadcell_passed && xy_axis_passed) {
             return; // current state can be run
         }
         break; // current state cannot be run
     }
     case stsMoveZup: // Z must be OK, if axis are not homed, it could be stacked at the top and generate noise, but the way states are generated from mask should prevent it
-        if (m_result.zaxis == TestResult_Passed) {
+        if (m_result.get_zaxis() == TestResult_Passed) {
             return; // current state can be run
         }
         break; // current state cannot be run

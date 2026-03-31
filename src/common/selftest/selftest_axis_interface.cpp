@@ -37,9 +37,9 @@ bool phaseAxis(IPartHandler *&m_pAxis, const AxisConfig_t &config_axis, Separate
 
         // Init staticResults with current state from EEPROM
         SelftestResult eeres = config_store().selftest_result.get();
-        staticResults[0].state = to_SubtestState(eeres.xaxis);
-        staticResults[1].state = to_SubtestState(eeres.yaxis);
-        staticResults[2].state = to_SubtestState(eeres.zaxis);
+        staticResults[0].state = to_SubtestState(eeres.get_xaxis());
+        staticResults[1].state = to_SubtestState(eeres.get_yaxis());
+        staticResults[2].state = to_SubtestState(eeres.get_zaxis());
 
         // Allocate selftest part
         switch (config_axis.axis) {
@@ -82,13 +82,13 @@ bool phaseAxis(IPartHandler *&m_pAxis, const AxisConfig_t &config_axis, Separate
         auto result = config_store().selftest_result.get();
         switch (config_axis.axis) {
         case X_AXIS:
-            result.xaxis = new_result;
+            result.set_xaxis(new_result);
             break;
         case Y_AXIS:
-            result.yaxis = new_result;
+            result.set_yaxis(new_result);
             break;
         case Z_AXIS:
-            result.zaxis = new_result;
+            result.set_zaxis(new_result);
             break;
         default:
             bsod_unreachable();

@@ -32,7 +32,7 @@ bool is_selftest_successfully_completed() {
         return ((results == TestResult_Passed) && ...); // all passed
     };
 
-    if (!all_passed(sr.xaxis, sr.yaxis, sr.zaxis, sr.bed)) {
+    if (!all_passed(sr.get_xaxis(), sr.get_yaxis(), sr.get_zaxis(), sr.get_bed_heater())) {
         return false;
     }
 

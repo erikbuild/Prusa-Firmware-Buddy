@@ -19,17 +19,17 @@ TestResult get_test_result(Action action, Tool tool) {
                 return sr.evaluate_fans(e);
             });
     case Action::ZAlign:
-        return evaluate_results(sr.zalign);
+        return sr.get_zalign();
     case Action::XYCheck:
-        return evaluate_results(sr.xaxis, sr.yaxis);
+        return evaluate_results(sr.get_xaxis(), sr.get_yaxis());
     case Action::Loadcell:
         return merge_hotends(tool, [&](const int8_t e) {
             return sr.get_loadcell(e);
         });
     case Action::ZCheck:
-        return evaluate_results(sr.zaxis);
+        return sr.get_zaxis();
     case Action::Heaters:
-        return evaluate_results(sr.bed, merge_hotends_evaluations([&](int8_t e) {
+        return evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::FilamentSensorCalibration:

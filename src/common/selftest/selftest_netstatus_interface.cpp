@@ -46,12 +46,12 @@ void phaseNetStatus() {
     SelftestResult eeres = config_store().selftest_result.get();
 
     netdev_status_t eth = netdev_get_status(NETDEV_ETH_ID);
-    eeres.eth = convert(eth);
+    eeres.set_ethernet(convert(eth));
     log_info(Selftest, "Eth %s", to_string(eth));
 
 #if HAS_ESP()
     netdev_status_t wifi = netdev_get_status(NETDEV_ESP_ID);
-    eeres.wifi = convert(wifi);
+    eeres.set_wifi(convert(wifi));
     log_info(Selftest, "Wifi %s", to_string(wifi));
 #endif
 

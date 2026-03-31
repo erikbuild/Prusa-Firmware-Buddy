@@ -214,7 +214,7 @@ bool CSelftest::Start(const uint64_t test_mask, [[maybe_unused]] const TestData 
     m_Mask = SelftestMask_t(test_mask);
     if (m_Mask & (stmXAxis | stmYAxis | stmZAxis)) {
         m_Mask = static_cast<SelftestMask_t>(m_Mask | uint64_t(stmWait_axes));
-        if (m_result.zaxis != TestResult_Passed) {
+        if (m_result.get_zaxis() != TestResult_Passed) {
             m_Mask = static_cast<SelftestMask_t>(m_Mask | static_cast<uint64_t>(stmEnsureZAway));
         }
     }
