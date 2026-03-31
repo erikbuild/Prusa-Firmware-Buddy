@@ -30,12 +30,13 @@ constexpr std::optional<ErrCode> map_print_preview_phase_to_error_code(const FSM
         return ErrCode::CONNECT_PRINT_PREVIEW_WRONG_FILAMENT;
     case PhasesPrintPreview::new_firmware_available:
         return ErrCode::CONNECT_PRINT_PREVIEW_NEW_FW;
+#if HAS_TOOL_MAPPING()
+    case PhasesPrintPreview::tools_mapping:
+        return ErrCode::CONNECT_PRINT_PREVIEW_TOOLS_MAPPING;
+#endif
     case PhasesPrintPreview::loading:
     case PhasesPrintPreview::main_dialog:
     case PhasesPrintPreview::download_wait:
-#if HAS_TOOL_MAPPING()
-    case PhasesPrintPreview::tools_mapping:
-#endif
         break;
     }
     return std::nullopt;
