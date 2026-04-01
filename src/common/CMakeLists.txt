@@ -193,7 +193,7 @@ endif()
 
 if(BOARD IN_LIST BUDDY_BOARDS)
   if(HAS_SELFTEST)
-    target_sources(firmware PRIVATE selftest_result.cpp selftest_result_type.cpp)
+    target_sources(firmware PRIVATE selftest_result_type.cpp)
     add_subdirectory(selftest)
   endif()
 endif()
