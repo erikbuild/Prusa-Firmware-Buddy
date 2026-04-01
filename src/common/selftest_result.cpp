@@ -1,6 +1,5 @@
 #include "selftest_result.hpp"
 #include <option/has_switched_fan_test.h>
-#include <selftest_result_evaluation.hpp>
 
 TestResult SelftestResult::get_print_fan(uint8_t tool) const {
     return _tools[tool]._printFan;
@@ -28,9 +27,9 @@ void SelftestResult::set_fans_switched(uint8_t tool, TestResult result) {
 
 TestResult SelftestResult::evaluate_fans(uint8_t tool) const {
 #if HAS_SWITCHED_FAN_TEST()
-    return SelftestSnake::evaluate_results(_tools[tool]._printFan, _tools[tool]._heatBreakFan, _tools[tool]._fansSwitched);
+    return test_result::evaluate_results(_tools[tool]._printFan, _tools[tool]._heatBreakFan, _tools[tool]._fansSwitched);
 #else
-    return SelftestSnake::evaluate_results(_tools[tool]._printFan, _tools[tool]._heatBreakFan);
+    return test_result::evaluate_results(_tools[tool]._printFan, _tools[tool]._heatBreakFan);
 #endif
 }
 

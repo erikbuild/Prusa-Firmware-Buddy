@@ -40,10 +40,10 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
             const auto chamber_results = config_store().xbe_fan_test_results.get();
             static_assert(HAS_CHAMBER_FILTRATION_API());
             if (buddy::xbuddy_extension().using_filtration_fan_instead_of_cooling_fans()) {
-                res = evaluate_results(res, chamber_results.fans[2]);
+                res = test_result::evaluate_results(res, chamber_results.fans[2]);
             } else {
-                res = evaluate_results(res, chamber_results.fans[0]);
-                res = evaluate_results(res, chamber_results.fans[1]);
+                res = test_result::evaluate_results(res, chamber_results.fans[0]);
+                res = test_result::evaluate_results(res, chamber_results.fans[1]);
             }
             break;
         }
@@ -56,12 +56,12 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
         {
             const auto bed_fan_results = config_store().bed_fan_selftest_result.get();
             for (const auto &fan_result : bed_fan_results.fans) {
-                res = evaluate_results(res, fan_result);
+                res = test_result::evaluate_results(res, fan_result);
             }
         }
 #endif
 #if HAS_PSU_FAN()
-        res = evaluate_results(res, config_store().psu_fan_selftest_result.get());
+        res = test_result::evaluate_results(res, config_store().psu_fan_selftest_result.get());
 #endif
         return res;
     }
@@ -82,7 +82,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
     case Action::ZCheck:
         return sr.get_zaxis();
     case Action::Heaters:
-        return evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::Gears:
@@ -90,13 +90,13 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
             return sr.get_gearbox(e);
         });
     case Action::DoorSensor:
-        return evaluate_results(config_store().selftest_result_door_sensor.get());
+        return test_result::evaluate_results(config_store().selftest_result_door_sensor.get());
     case Action::FilamentSensorCalibration:
         return merge_hotends(tool, [&](const int8_t e) {
             return get_fsensor_calibration_result(e);
         });
     case Action::PhaseSteppingCalibration:
-        return evaluate_results(config_store().selftest_result_phase_stepping.get());
+        return test_result::evaluate_results(config_store().selftest_result_phase_stepping.get());
     case Action::_count:
         break;
     }

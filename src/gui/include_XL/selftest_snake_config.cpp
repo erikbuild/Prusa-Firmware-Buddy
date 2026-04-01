@@ -40,7 +40,7 @@ TestResult get_test_result(Action action, Tool tool) {
         switch (buddy::chamber().backend()) {
     #if XL_ENCLOSURE_SUPPORT()
         case buddy::Chamber::Backend::xl_enclosure:
-            res = evaluate_results(res, config_store().xl_enclosure_fan_selftest_result.get());
+            res = test_result::evaluate_results(res, config_store().xl_enclosure_fan_selftest_result.get());
             break;
     #endif /* XL_ENCLOSURE_SUPPORT() */
         case buddy::Chamber::Backend::none:
@@ -80,7 +80,7 @@ TestResult get_test_result(Action action, Tool tool) {
             return sr.get_nozzle_heater(e);
         });
     case Action::Heaters:
-        return evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::FilamentSensorCalibration:
@@ -88,7 +88,7 @@ TestResult get_test_result(Action action, Tool tool) {
             return get_fsensor_calibration_result(e);
         });
     case Action::PhaseSteppingCalibration:
-        return evaluate_results(config_store().selftest_result_phase_stepping.get());
+        return test_result::evaluate_results(config_store().selftest_result_phase_stepping.get());
     case Action::Gears:
         return merge_hotends(tool, [&](const int8_t e) {
             return sr.get_gearbox(e);

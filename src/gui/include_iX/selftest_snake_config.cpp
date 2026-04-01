@@ -36,7 +36,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
     case Action::ZCheck:
         return sr.get_zaxis();
     case Action::Heaters:
-        return evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::FilamentSensorCalibration:
@@ -44,7 +44,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
             return get_fsensor_calibration_result(e);
         });
     case Action::PhaseSteppingCalibration:
-        return evaluate_results(config_store().selftest_result_phase_stepping.get());
+        return test_result::evaluate_results(config_store().selftest_result_phase_stepping.get());
     case Action::_count:
         break;
     }

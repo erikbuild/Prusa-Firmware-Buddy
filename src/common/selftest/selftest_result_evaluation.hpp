@@ -1,4 +1,5 @@
 #pragma once
+#include <test_result.hpp>
 #include <selftest_snake_config.hpp>
 #include <inc/Conditionals_LCD.h>
 #include <printers.h>
@@ -11,24 +12,10 @@
 
 namespace SelftestSnake {
 
-constexpr TestResult evaluate_results(std::same_as<TestResult> auto... results) {
-    static_assert(sizeof...(results) > 0, "Pass at least one result");
-
-    if (((results == TestResult::passed) && ... && true)) { // all passed
-        return TestResult::passed;
-    } else if (((results == TestResult::failed) || ... || false)) { // any failed
-        return TestResult::failed;
-    } else if (((results == TestResult::skipped) || ... || false)) { // any skipped
-        return TestResult::skipped;
-    } else { // only unknowns and passed (max n-1) are left
-        return TestResult::unknown;
-    }
-}
-
 constexpr TestResult merge_hotends_evaluations(std::invocable<int8_t> auto evaluate_one) {
     TestResult res { TestResult::passed };
     for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
-        res = evaluate_results(res, evaluate_one(tool.to_raw()));
+        res = test_result::evaluate_results(res, evaluate_one(tool.to_raw()));
     }
     return res;
 };
@@ -57,7 +44,7 @@ inline TestResult map_fsensor_calibration_result(IFSensor *sensor) {
 /// Map live filament sensor state to a TestResult for calibration checkmark display.
 /// Checks both extruder and side sensor (if present) for the given tool index.
 inline TestResult get_fsensor_calibration_result(int8_t tool_index) {
-    return evaluate_results(
+    return test_result::evaluate_results(
         map_fsensor_calibration_result(GetExtruderFSensor(tool_index)),
         map_fsensor_calibration_result(GetSideFSensor(tool_index)));
 }

@@ -21,7 +21,7 @@ TestResult get_test_result(Action action, Tool tool) {
     case Action::ZAlign:
         return sr.get_zalign();
     case Action::XYCheck:
-        return evaluate_results(sr.get_xaxis(), sr.get_yaxis());
+        return test_result::evaluate_results(sr.get_xaxis(), sr.get_yaxis());
     case Action::Loadcell:
         return merge_hotends(tool, [&](const int8_t e) {
             return sr.get_loadcell(e);
@@ -29,7 +29,7 @@ TestResult get_test_result(Action action, Tool tool) {
     case Action::ZCheck:
         return sr.get_zaxis();
     case Action::Heaters:
-        return evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::FilamentSensorCalibration:
