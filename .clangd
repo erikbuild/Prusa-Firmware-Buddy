@@ -10,3 +10,4 @@ CompileFlags:
     - "-std=c++23"
   Remove:
     - "-Wno-deprecated-declarations"
+    - "-fno-extended-identifiers"
