@@ -763,7 +763,7 @@ void safely_unload_filament_from_nozzle_to_mmu() {
         return; // no filament loaded, nothing to do
     }
     const uint16_t original_temp = thermalManager.degTargetHotend(active_extruder);
-    enqueue_gcode_printf("M702 W2 T%" PRIu8, active_extruder.load());
+    enqueue_gcode("M702 W2");
     enqueue_gcode_printf("M104 S%" PRIu16, original_temp);
 }
 #endif

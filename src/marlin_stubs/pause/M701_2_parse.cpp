@@ -139,6 +139,15 @@ void GcodeSuite::M702() {
     }
 #endif
 
+    // FIXME: Should this actually be _physical_ one?
+    //
+    // If we imagine an XL+5*MMU printer kind of thing, with M701 above would
+    // `M701 T2 P3` probably mean something like "load slot 3 on the 2 head".
+    //
+    // Similarly, `M702 T2` should then mean "Unload whatever is loaded in the
+    // 2 head".
+    //
+    // But for now, the actual implementations take Virtual indexes.
     const std::optional<VirtualToolIndex> target = stdext::get_optional<VirtualToolIndex>(target_result);
     if (!target.has_value()) {
         return;
