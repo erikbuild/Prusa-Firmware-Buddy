@@ -126,3 +126,19 @@ target_include_directories(
   encoded_bitset_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
   )
 add_catch_test(encoded_bitset_tests)
+
+add_executable(
+  encoded_filament_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/encoded_filament_test.cpp
+  ${CMAKE_SOURCE_DIR}/src/lang/string_view_utf8.cpp
+  ${CMAKE_SOURCE_DIR}/src/persistent_stores/store_instances/config_store/filament_variant_decode.cpp
+  )
+target_include_directories(
+  encoded_filament_tests
+  PUBLIC # Stubs must come first to shadow headers with heavy dependencies (e.g. tool_index.hpp →
+         # Marlin)
+         ${CMAKE_CURRENT_SOURCE_DIR}/encoded_filament_stubs
+         ${CMAKE_SOURCE_DIR}/src/persistent_stores/store_instances ${CMAKE_SOURCE_DIR}/src/common
+         ${CMAKE_SOURCE_DIR}/src/lang ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
+  )
+add_catch_test(encoded_filament_tests)

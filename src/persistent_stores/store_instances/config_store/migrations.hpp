@@ -83,6 +83,9 @@ namespace deprecated_ids {
     inline constexpr uint16_t fsensor_enabled[] {
         decltype(DeprecatedStore::fsensor_enabled_v2)::hashed_id,
     };
+    inline constexpr uint16_t filament_order_v1[] {
+        decltype(DeprecatedStore::filament_order_v1)::hashed_id,
+    };
 } // namespace deprecated_ids
 
 namespace migrations {
@@ -112,6 +115,8 @@ namespace migrations {
     void printer_setup_done(journal::Backend &backend);
 
     void fsensor_enabled(journal::Backend &backend);
+
+    void filament_order(journal::Backend &backend);
 } // namespace migrations
 
 /**
@@ -140,6 +145,7 @@ inline constexpr journal::Backend::MigrationFunction migration_functions[] {
 #if HAS_EMERGENCY_STOP()
         { migrations::emergency_stop, deprecated_ids::emergency_stop_enable },
 #endif
+        { migrations::filament_order, deprecated_ids::filament_order_v1 },
         { migrations::printer_setup_done, deprecated_ids::printer_setup_done },
         { migrations::fsensor_enabled, deprecated_ids::fsensor_enabled },
 };

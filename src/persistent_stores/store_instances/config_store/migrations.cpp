@@ -1,4 +1,5 @@
 #include "migrations.hpp"
+#include "filament_variant_decode.hpp"
 #include <common/utils/algorithm_extensions.hpp>
 #include <footer_def.hpp>
 #include <footer_eeprom.hpp>
@@ -292,6 +293,27 @@ namespace migrations {
         }
     }
 #endif
+
+    void filament_order(journal::Backend &backend) {
+        using OldItem = decltype(DeprecatedStore::filament_order_v1);
+        using NewItem = decltype(CurrentStore::filament_order);
+
+        OldItem::value_type old_data {};
+        read_old_item_value_impl(backend, OldItem::hashed_id, &old_data);
+
+        NewItem::value_type new_data {};
+        static_assert(old_data.size() == new_data.size() * 2);
+
+        // Old format: std::variant<...> entries, 2 bytes each: [value, discriminant]
+        // Represented as array<uint8_t, ...> for manual decoding.
+        for (size_t i = 0; i < new_data.size(); i++) {
+            const uint8_t value = old_data[i * 2];
+            const uint8_t discriminant = old_data[i * 2 + 1];
+            new_data[i] = EncodedFilamentType(filament_type_from_variant_bytes(discriminant, value));
+        }
+
+        backend.save_migration_item<NewItem::value_type>(NewItem::hashed_id, new_data);
+    }
 
     void printer_setup_done(journal::Backend &backend) {
         const auto old_value = read_old_item_value<decltype(DeprecatedStore::printer_setup_done)>(backend);

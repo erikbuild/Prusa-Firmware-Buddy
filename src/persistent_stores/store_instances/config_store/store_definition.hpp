@@ -1022,8 +1022,9 @@ struct DeprecatedStore
         StoreItem<bool, true, ItemFlag::calibrations, journal::hash("Run Selftest")> run_selftest;
         */
 
-    // Old filament order stored as variant-based FilamentType array, replaced by EncodedFilamentType array
-    StoreItem<std::array<FilamentType, max_total_filament_count>, NoFilamentType {}, journal::hash("Filament Order")> filament_order_v1;
+    // Old filament order stored as variant-based FilamentType array (2 bytes each, 128 bytes total).
+    // Replaced by EncodedFilamentType array. Read as raw bytes for migration.
+    StoreItem<std::array<uint8_t, max_total_filament_count * 2>, uint8_t { 0 }, journal::hash("Filament Order")> filament_order_v1;
 
     // This was replaced by 2 separate items for network and hw_config
     StoreItem<bool, false, journal::hash("Printer setup done")> printer_setup_done;
