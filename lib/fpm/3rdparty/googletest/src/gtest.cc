@@ -2184,12 +2184,12 @@ static bool TestPartSkipped(const TestPartResult& result) {
 }
 
 // Returns true iff the test was skipped.
-bool TestResult::Skipped() const {
+bool TestResult::skipped() const {
   return !Failed() && CountIf(test_part_results_, TestPartSkipped) > 0;
 }
 
 // Returns true iff the test failed.
-bool TestResult::Failed() const {
+bool TestResult::failed() const {
   for (int i = 0; i < total_part_count(); ++i) {
     if (GetTestPartResult(i).failed())
       return true;

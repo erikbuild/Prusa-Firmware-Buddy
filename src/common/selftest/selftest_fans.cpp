@@ -45,7 +45,7 @@ void FanHandler::reset_samples() {
 }
 
 TestResult FanHandler::test_result() const {
-    return is_failed() ? TestResult_Failed : TestResult_Passed;
+    return is_failed() ? TestResult::failed : TestResult::passed;
 }
 
 CommonFanHandler::CommonFanHandler(const FanType type, uint8_t tool_nr, FanRPMRange fan_range, CFanCtlCommon *fan_control, FanRPMRange low_fan_range)

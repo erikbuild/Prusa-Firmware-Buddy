@@ -71,7 +71,7 @@ Action get_previous_action(Action action) {
 
 bool is_completed(TestResult test_result) {
     // Skipped is also considered completed - it marks non-obligatory tests that have been explicitly skipped by the user
-    return test_result == TestResult_Passed || test_result == TestResult_Skipped;
+    return test_result == TestResult::passed || test_result == TestResult::skipped;
 }
 
 bool are_previous_completed(Action action) {
@@ -87,13 +87,13 @@ bool are_previous_completed(Action action) {
 
 const img::Resource *get_icon(Action action, Tool tool) {
     switch (get_test_result(action, tool)) {
-    case TestResult_Passed:
+    case TestResult::passed:
         return &img::ok_color_16x16;
-    case TestResult_Skipped:
+    case TestResult::skipped:
         return &img::ok_16x16;
-    case TestResult_Unknown:
+    case TestResult::unknown:
         return &img::na_color_16x16;
-    case TestResult_Failed:
+    case TestResult::failed:
         return &img::nok_color_16x16;
     }
 

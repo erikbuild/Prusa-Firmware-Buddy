@@ -9,13 +9,13 @@
 
 constexpr const char *ToString(TestResult res) {
     switch (res) {
-    case TestResult_Unknown:
+    case TestResult::unknown:
         return "Unknown";
-    case TestResult_Skipped:
+    case TestResult::skipped:
         return "Skipped";
-    case TestResult_Passed:
+    case TestResult::passed:
         return "Passed";
-    case TestResult_Failed:
+    case TestResult::failed:
         return "Failed";
     default:
         break;
@@ -25,15 +25,15 @@ constexpr const char *ToString(TestResult res) {
 
 constexpr const char *ToString(TestResultNet res) {
     switch (res) {
-    case TestResultNet_Unknown:
+    case TestResultNet::unknown:
         return "Unknown";
-    case TestResultNet_Unlinked:
+    case TestResultNet::unlinked:
         return "Unlinked";
-    case TestResultNet_Down:
+    case TestResultNet::down:
         return "Down";
-    case TestResultNet_NoAddress:
+    case TestResultNet::no_address:
         return "NoAddress";
-    case TestResultNet_Up:
+    case TestResultNet::up:
         return "Up";
     default:
         break;

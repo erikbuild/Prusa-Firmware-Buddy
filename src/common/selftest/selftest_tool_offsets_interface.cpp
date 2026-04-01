@@ -47,7 +47,7 @@ TestReturn phaseToolOffsets([[maybe_unused]] const ToolMask tool_mask, IPartHand
     SelftestResult eeres = config_store().selftest_result.get();
     for (const auto physical_tool : PhysicalToolIndex::all().skip_all_disabled()) {
 
-        if (pToolOffsets->GetResult() == TestResult_Skipped) {
+        if (pToolOffsets->GetResult() == TestResult::skipped) {
             continue; // Test was aborted, do not regress
         }
 
@@ -56,7 +56,7 @@ TestReturn phaseToolOffsets([[maybe_unused]] const ToolMask tool_mask, IPartHand
     }
     config_store().selftest_result.set(eeres);
 
-    const bool skipped = pToolOffsets->GetResult() != TestResult_Passed; ///< Return value whether to run next test
+    const bool skipped = pToolOffsets->GetResult() != TestResult::passed; ///< Return value whether to run next test
 
     delete pToolOffsets;
     pToolOffsets = nullptr;

@@ -40,7 +40,7 @@ private:
     void skip_ask() {
         switch (wait_for_response(curr_phase)) {
         case Response::Skip:
-            config_store().selftest_result_door_sensor.set(TestResult_Skipped);
+            config_store().selftest_result_door_sensor.set(TestResult::skipped);
             check_and_prompt_enable_safety_feature();
             break;
         case Response::Calibrate:
@@ -73,7 +73,7 @@ private:
     void done() {
         switch (wait_for_response(curr_phase)) {
         case Response::Continue:
-            config_store().selftest_result_door_sensor.set(TestResult_Passed);
+            config_store().selftest_result_door_sensor.set(TestResult::passed);
             check_and_prompt_enable_safety_feature();
             break;
         default:
@@ -96,7 +96,7 @@ private:
     void confirm_abort() {
         switch (wait_for_response(curr_phase)) {
         case Response::Skip:
-            config_store().selftest_result_door_sensor.set(TestResult_Skipped);
+            config_store().selftest_result_door_sensor.set(TestResult::skipped);
             check_and_prompt_enable_safety_feature();
             break;
         case Response::Back:

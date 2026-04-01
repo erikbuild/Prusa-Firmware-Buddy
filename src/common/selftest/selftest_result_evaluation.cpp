@@ -29,7 +29,7 @@ bool is_selftest_successfully_completed() {
     const auto all_passed = [](std::same_as<TestResult> auto... results) -> bool {
         static_assert(sizeof...(results) > 0, "Pass at least one result");
 
-        return ((results == TestResult_Passed) && ...); // all passed
+        return ((results == TestResult::passed) && ...); // all passed
     };
 
     if (!all_passed(sr.get_xaxis(), sr.get_yaxis(), sr.get_zaxis(), sr.get_bed_heater())) {
@@ -58,14 +58,14 @@ bool is_selftest_successfully_completed() {
 #endif
 
 #if HAS_GEARBOX_ALIGNMENT()
-        if (sr.get_gearbox(tool) == TestResult_Failed) {
+        if (sr.get_gearbox(tool) == TestResult::failed) {
             return false;
         }
 #endif /* HAS_GEARBOX_ALIGNMENT */
 
         // Skipped means the sensor is disabled by the user, which is acceptable.
         const auto fs_result = SelftestSnake::get_fsensor_calibration_result(tool.to_raw());
-        if (fs_result != TestResult_Passed && fs_result != TestResult_Skipped) {
+        if (fs_result != TestResult::passed && fs_result != TestResult::skipped) {
             return false;
         }
 
@@ -75,11 +75,11 @@ bool is_selftest_successfully_completed() {
         }
 #endif /* HAS_LOADCELL() */
 
-        if (sr.get_nozzle_heater(tool) != TestResult_Passed) {
+        if (sr.get_nozzle_heater(tool) != TestResult::passed) {
             return false;
         }
 
-        if (sr.evaluate_fans(tool) != TestResult_Passed) {
+        if (sr.evaluate_fans(tool) != TestResult::passed) {
             return false;
         }
     }

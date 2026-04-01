@@ -69,7 +69,7 @@ void phaseHeaters_noz_ena(std::array<IPartHandler *, PhysicalToolIndex::count> &
     for (size_t i = 0; i < config_nozzle.size(); i++) {
         // mark test as failed (so it will be failed after reset - disconnected cables can cause rsod)
         auto result = config_store().selftest_result.get();
-        result.set_nozzle_heater(i, TestResult_Failed);
+        result.set_nozzle_heater(i, TestResult::failed);
         config_store().selftest_result.set(result);
         resultHeaters.noz[PhysicalToolIndex::from_raw(i)] = SelftestHeater_t(0, SelftestSubtestState_t::not_good, SelftestSubtestState_t::not_good);
 
@@ -142,7 +142,7 @@ void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed)
 
     // mark test as failed (so it will be failed after reset)
     auto sr = config_store().selftest_result.get();
-    sr.set_bed_heater(TestResult_Failed);
+    sr.set_bed_heater(TestResult::failed);
     config_store().selftest_result.set(sr);
     resultHeaters.bed = SelftestHeater_t(0, SelftestSubtestState_t::not_good, SelftestSubtestState_t::not_good);
     resultHeaters.tested_parts |= to_one_hot(SelftestHeaters_t::TestedParts::bed);

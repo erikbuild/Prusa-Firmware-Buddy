@@ -288,7 +288,7 @@ void CSelftest::Loop() {
 
     case stsReviseSetupAfterHeaters:
         m_result = config_store().selftest_result.get();
-        if (m_result.get_bed_heater() == TestResult_Failed) {
+        if (m_result.get_bed_heater() == TestResult::failed) {
             marlin_server::fsm_change(PhasesSelftest::Heaters_AskBedSheetAfterFail, {});
             switch (marlin_server::get_response_from_phase(PhasesSelftest::Heaters_AskBedSheetAfterFail)) {
 
@@ -304,7 +304,7 @@ void CSelftest::Loop() {
             }
         }
 
-        if (m_result.get_nozzle_heater(0) == TestResult_Failed) {
+        if (m_result.get_nozzle_heater(0) == TestResult::failed) {
             switch (phase_revise_printer_setup()) {
 
             case RevisePrinterSetupResult::running:
@@ -403,12 +403,12 @@ void CSelftest::next() {
     m_result = config_store().selftest_result.get();
     switch (m_State) {
     case stsZAxis: // both X and Y must be OK to test Z
-        if (m_result.get_xaxis() == TestResult_Passed && m_result.get_yaxis() == TestResult_Passed) {
+        if (m_result.get_xaxis() == TestResult::passed && m_result.get_yaxis() == TestResult::passed) {
             return; // current state can be run
         }
         break; // current state cannot be run
     case stsMoveZup: // Z must be OK, if axis are not homed, it could be stacked at the top and generate noise, but the way states are generated from mask should prevent it
-        if (m_result.get_zaxis() == TestResult_Passed) {
+        if (m_result.get_zaxis() == TestResult::passed) {
             return; // current state can be run
         }
         break; // current state cannot be run

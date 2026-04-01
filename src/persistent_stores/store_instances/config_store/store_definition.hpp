@@ -755,7 +755,7 @@ struct CurrentStore
 #endif
 
 #if HAS_INPUT_SHAPER_CALIBRATION()
-    StoreItem<TestResult, TestResult_Unknown, ItemFlag::calibrations, journal::hash("Input Shaper Calibration")> selftest_result_input_shaper_calibration;
+    StoreItem<TestResult, TestResult::unknown, ItemFlag::calibrations, journal::hash("Input Shaper Calibration")> selftest_result_input_shaper_calibration;
 #endif
 
 #if HAS_I2C_EXPANDER()

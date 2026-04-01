@@ -283,9 +283,9 @@ private:
     void reset_fan_result() {
         SelftestResult result = config_store().selftest_result.get();
         for (auto tool : PhysicalToolIndex::all()) {
-            result.set_print_fan(tool, TestResult_Unknown);
-            result.set_heatbreak_fan(tool, TestResult_Unknown);
-            result.set_fans_switched(tool, TestResult_Unknown);
+            result.set_print_fan(tool, TestResult::unknown);
+            result.set_heatbreak_fan(tool, TestResult::unknown);
+            result.set_fans_switched(tool, TestResult::unknown);
         }
         config_store().selftest_result.set(result);
 
@@ -294,7 +294,7 @@ private:
 
     #if XL_ENCLOSURE_SUPPORT()
         case buddy::Chamber::Backend::xl_enclosure:
-            config_store().xl_enclosure_fan_selftest_result.set(TestResult_Unknown);
+            config_store().xl_enclosure_fan_selftest_result.set(TestResult::unknown);
             break;
     #endif /* XL_ENCLOSURE_SUPPORT() */
 
@@ -312,7 +312,7 @@ private:
         config_store().bed_fan_selftest_result.set(bed_fan::SelftestResult {});
 #endif
 #if HAS_PSU_FAN()
-        config_store().psu_fan_selftest_result.set(TestResult_Unknown);
+        config_store().psu_fan_selftest_result.set(TestResult::unknown);
 #endif
     }
 
@@ -331,7 +331,7 @@ private:
                 result.set_print_fan(fan->get_desc_num(), fan->test_result());
 #if HAS_SWITCHED_FAN_TEST()
                 // Also save fanSwitched
-                result.set_fans_switched(fan->get_desc_num(), fans_switched[fan->get_desc_num()] ? TestResult_Failed : TestResult_Passed);
+                result.set_fans_switched(fan->get_desc_num(), fans_switched[fan->get_desc_num()] ? TestResult::failed : TestResult::passed);
 #endif
                 break;
             case FanType::heatbreak:

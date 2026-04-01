@@ -31,7 +31,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
         }));
     case Action::FirstLayer:
         // instead of test result that isn't saved to eeprom, consider calibrated sheet as passed.
-        return SteelSheets::IsSheetCalibrated(config_store().active_sheet.get()) ? TestResult_Passed : TestResult_Unknown;
+        return SteelSheets::IsSheetCalibrated(config_store().active_sheet.get()) ? TestResult::passed : TestResult::unknown;
     case Action::FilamentSensorCalibration:
         return merge_hotends(tool, [&](const int8_t e) {
             return get_fsensor_calibration_result(e);
@@ -39,7 +39,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] Tool tool) {
     case Action::_count:
         break;
     }
-    return TestResult_Unknown;
+    return TestResult::unknown;
 }
 
 uint64_t get_test_mask(Action action) {

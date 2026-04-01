@@ -57,7 +57,7 @@ TestResult get_test_result(Action action, Tool tool) {
         return sr.get_xaxis();
 #if HAS_PRECISE_HOMING_COREXY()
     case Action::PreciseHoming:
-        return corexy_home_is_calibrated() ? TestResult::TestResult_Passed : TestResult::TestResult_Unknown;
+        return corexy_home_is_calibrated() ? TestResult::passed : TestResult::unknown;
 #endif
     case Action::DockCalibration:
         return merge_hotends(tool, [&](const int8_t e) {
@@ -96,7 +96,7 @@ TestResult get_test_result(Action action, Tool tool) {
     case Action::_count:
         break;
     }
-    return TestResult_Unknown;
+    return TestResult::unknown;
 }
 
 uint64_t get_test_mask(Action action) {

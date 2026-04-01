@@ -26,9 +26,9 @@ bool phaseAxis(IPartHandler *&m_pAxis, const AxisConfig_t &config_axis, Separate
         // Convert from EEPROM test state to GUI subtest state
         auto to_SubtestState = [](TestResult state) {
             switch (state) {
-            case TestResult_Failed:
+            case TestResult::failed:
                 return SelftestSubtestState_t::not_good;
-            case TestResult_Passed:
+            case TestResult::passed:
                 return SelftestSubtestState_t::ok;
             default:
                 return SelftestSubtestState_t::undef;
@@ -98,7 +98,7 @@ bool phaseAxis(IPartHandler *&m_pAxis, const AxisConfig_t &config_axis, Separate
     };
 
     // mark test as failed (so it will be failed after reset - disconnected cables can cause rsod)
-    set_selftest_result(TestResult_Failed);
+    set_selftest_result(TestResult::failed);
 
     bool in_progress = m_pAxis->Loop();
     SelftestAxis_t result = SelftestAxis_t(staticResults[0], staticResults[1], staticResults[2], (separate == Separate::yes) ? config_axis.axis : (Z_AXIS + 1)); // If separate, use >Z_AXIS

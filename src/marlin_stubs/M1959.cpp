@@ -468,13 +468,13 @@ static PhasesInputShaperCalibration results(Context &context) {
         input_shaper::set_axis_config(X_AXIS, context.axis_config_x);
         config_store().input_shaper_axis_y_config.set(context.axis_config_y);
         input_shaper::set_axis_config(Y_AXIS, context.axis_config_y);
-        set_test_result(TestResult_Passed);
+        set_test_result(TestResult::passed);
         return PhasesInputShaperCalibration::finish;
     case Response::No:
-        set_test_result(TestResult_Skipped);
+        set_test_result(TestResult::skipped);
         return PhasesInputShaperCalibration::finish;
     case Response::Ok:
-        set_test_result(TestResult_Skipped);
+        set_test_result(TestResult::skipped);
         return PhasesInputShaperCalibration::finish;
     default:
         break;

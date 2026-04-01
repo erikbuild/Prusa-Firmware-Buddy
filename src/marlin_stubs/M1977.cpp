@@ -104,7 +104,7 @@ void calibration_helper(AxisEnum axis, CalibrateAxisHooks &hooks) {
 PhasesPhaseStepping fail_helper(PhasesPhaseStepping phase) {
     switch (wait_for_response(phase)) {
     case Response::Ok:
-        config_store().selftest_result_phase_stepping.set(TestResult::TestResult_Failed);
+        config_store().selftest_result_phase_stepping.set(TestResult::failed);
         return PhasesPhaseStepping::finish;
     default:
         bsod_unreachable();
@@ -387,7 +387,7 @@ namespace state {
         config_store().set_phase_stepping_enabled(X_AXIS, true);
         phase_stepping::enable(Y_AXIS, true);
         config_store().set_phase_stepping_enabled(Y_AXIS, true);
-        config_store().selftest_result_phase_stepping.set(TestResult::TestResult_Passed);
+        config_store().selftest_result_phase_stepping.set(TestResult::passed);
         switch (wait_for_response(PhasesPhaseStepping::calib_ok)) {
         case Response::Ok:
             return PhasesPhaseStepping::finish;

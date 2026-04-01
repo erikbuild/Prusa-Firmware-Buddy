@@ -10,11 +10,11 @@
 
 ResultLoadcell::ResultLoadcell()
     : SelfTestGroup(_("Loadcell check"))
-    , loadcell(_("Loadcell"), &img::nozzle_16x16, TestResult_Unknown) {
+    , loadcell(_("Loadcell"), &img::nozzle_16x16, TestResult::unknown) {
     Add(loadcell);
 }
 
 void ResultLoadcell::SetState(TestResult res) {
     loadcell.SetState(res);
-    failed = (res == TestResult_Failed);
+    failed = (res == TestResult::failed);
 }

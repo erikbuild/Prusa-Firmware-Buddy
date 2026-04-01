@@ -14,19 +14,19 @@ namespace SelftestSnake {
 constexpr TestResult evaluate_results(std::same_as<TestResult> auto... results) {
     static_assert(sizeof...(results) > 0, "Pass at least one result");
 
-    if (((results == TestResult_Passed) && ... && true)) { // all passed
-        return TestResult_Passed;
-    } else if (((results == TestResult_Failed) || ... || false)) { // any failed
-        return TestResult_Failed;
-    } else if (((results == TestResult_Skipped) || ... || false)) { // any skipped
-        return TestResult_Skipped;
+    if (((results == TestResult::passed) && ... && true)) { // all passed
+        return TestResult::passed;
+    } else if (((results == TestResult::failed) || ... || false)) { // any failed
+        return TestResult::failed;
+    } else if (((results == TestResult::skipped) || ... || false)) { // any skipped
+        return TestResult::skipped;
     } else { // only unknowns and passed (max n-1) are left
-        return TestResult_Unknown;
+        return TestResult::unknown;
     }
 }
 
 constexpr TestResult merge_hotends_evaluations(std::invocable<int8_t> auto evaluate_one) {
-    TestResult res { TestResult_Passed };
+    TestResult res { TestResult::passed };
     for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
         res = evaluate_results(res, evaluate_one(tool.to_raw()));
     }
@@ -44,13 +44,13 @@ constexpr TestResult merge_hotends(Tool tool, stdext::inplace_function<TestResul
 /// Map a filament sensor's calibration status to a TestResult.
 inline TestResult map_fsensor_calibration_result(IFSensor *sensor) {
     if (sensor == nullptr) {
-        return TestResult_Passed;
+        return TestResult::passed;
     } else if (sensor->is_calibrated()) {
-        return TestResult_Passed;
+        return TestResult::passed;
     } else if (!should_enable(sensor->id())) {
-        return TestResult_Skipped;
+        return TestResult::skipped;
     } else {
-        return TestResult_Unknown;
+        return TestResult::unknown;
     }
 }
 

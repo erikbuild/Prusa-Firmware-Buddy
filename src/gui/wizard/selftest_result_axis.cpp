@@ -11,9 +11,9 @@
 
 ResultAxis::ResultAxis()
     : SelfTestGroup(_("Axis check"))
-    , x(_("axis"), &img::x_axis_16x16, TestResult_Unknown)
-    , y(_("axis"), &img::y_axis_16x16, TestResult_Unknown)
-    , z(_("axis"), &img::z_axis_16x16, TestResult_Unknown)
+    , x(_("axis"), &img::x_axis_16x16, TestResult::unknown)
+    , y(_("axis"), &img::y_axis_16x16, TestResult::unknown)
+    , z(_("axis"), &img::z_axis_16x16, TestResult::unknown)
 #if HAS_LOADCELL()
     , txt(_("Axis check was skipped because Loadcell check failed."), is_multiline::yes)
 #else
@@ -25,7 +25,7 @@ ResultAxis::ResultAxis()
 void ResultAxis::SetState(TestResult x_res, TestResult y_res, TestResult z_res) {
     // if all axis were skipped, show message instead of results
     // TODO there should be some information send from selftest instead
-    if (x_res == TestResult_Skipped) {
+    if (x_res == TestResult::skipped) {
         Remove(x);
         Remove(y);
         Remove(z);
@@ -39,6 +39,6 @@ void ResultAxis::SetState(TestResult x_res, TestResult y_res, TestResult z_res) 
         Add(x);
         Add(y);
         Add(z);
-        failed = (x_res == TestResult_Failed || y_res == TestResult_Failed || z_res == TestResult_Failed);
+        failed = (x_res == TestResult::failed || y_res == TestResult::failed || z_res == TestResult::failed);
     }
 }

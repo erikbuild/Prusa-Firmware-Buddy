@@ -35,9 +35,9 @@ TestResult SelftestResult::evaluate_fans(uint8_t tool) const {
 }
 
 bool SelftestResult::has_heatbreak_fan_passed(uint8_t tool) const {
-    return _tools[tool]._heatBreakFan == TestResult_Passed
+    return _tools[tool]._heatBreakFan == TestResult::passed
 #if HAS_SWITCHED_FAN_TEST()
-        && _tools[tool]._fansSwitched == TestResult_Passed
+        && _tools[tool]._fansSwitched == TestResult::passed
 #endif /* HAS_SWITCHED_FAN_TEST */
         ;
 }

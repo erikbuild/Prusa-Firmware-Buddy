@@ -248,7 +248,7 @@ bool CSelftest::Start(const uint64_t test_mask, const selftest::TestData test_da
     m_Mask = SelftestMask_t(test_mask);
     if (m_Mask & (stmXAxis | stmYAxis | stmZAxis)) {
         m_Mask = (SelftestMask_t)(m_Mask | uint64_t(stmWait_axes));
-        if (m_result.get_zaxis() != TestResult_Passed) {
+        if (m_result.get_zaxis() != TestResult::passed) {
             m_Mask = (SelftestMask_t)(m_Mask | uint64_t(stmEnsureZAway)); // Ensure Z is away enough if Z not calibrated yet
         }
     }
@@ -357,7 +357,7 @@ void CSelftest::Loop() {
     case stsReviseSetupAfterHeaters:
         m_result = config_store().selftest_result.get();
 
-        if (m_result.get_bed_heater() == TestResult_Failed) {
+        if (m_result.get_bed_heater() == TestResult::failed) {
             marlin_server::fsm_change(PhasesSelftest::Heaters_AskBedSheetAfterFail, {});
             switch (marlin_server::get_response_from_phase(PhasesSelftest::Heaters_AskBedSheetAfterFail)) {
 

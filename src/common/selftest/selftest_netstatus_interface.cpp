@@ -12,17 +12,17 @@ LOG_COMPONENT_REF(Selftest);
 static TestResultNet convert(netdev_status_t status) {
     switch (status) {
     case NETDEV_UNLINKED:
-        return TestResultNet_Unlinked;
+        return TestResultNet::unlinked;
     case NETDEV_NETIF_DOWN:
-        return TestResultNet_Down;
+        return TestResultNet::down;
     case NETDEV_NETIF_NOADDR:
-        return TestResultNet_NoAddress;
+        return TestResultNet::no_address;
     case NETDEV_NETIF_UP:
-        return TestResultNet_Up;
+        return TestResultNet::up;
     default:
         break;
     }
-    return TestResultNet_Unlinked; // did not use Unknown, because it means test did not run
+    return TestResultNet::unlinked; // did not use Unknown, because it means test did not run
 }
 
 static const char *to_string(netdev_status_t status) {

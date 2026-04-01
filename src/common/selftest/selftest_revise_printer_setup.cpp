@@ -101,7 +101,7 @@ RevisePrinterSetupResult selftest::phase_revise_printer_setup() {
         return RevisePrinterSetupResult::running;
     }
 
-    const auto result = (machine->GetResult() == TestResult_Skipped) ? RevisePrinterSetupResult::do_not_retry : RevisePrinterSetupResult::retry;
+    const auto result = (machine->GetResult() == TestResult::skipped) ? RevisePrinterSetupResult::do_not_retry : RevisePrinterSetupResult::retry;
     delete machine;
     machine = nullptr;
     return result;

@@ -37,7 +37,7 @@ namespace config_store_ns {
 // Holds default constants so they can be referenced by store item. Placing these constants in another header where it's more meaningful is welcome. These defaults could be passed directly as template parameter to store items from gcc 11 onwards (and store items would accept them as value instead of as a const ref).
 namespace defaults {
     // default values for variables that have distinct requirements
-    inline constexpr TestResult test_result_unknown { TestResult_Unknown };
+    inline constexpr TestResult test_result_unknown { TestResult::unknown };
 
     inline constexpr std::array<char, lan_hostname_max_len + 1> net_hostname { LAN_HOSTNAME_DEF };
     inline constexpr int8_t lan_timezone { 1 };

@@ -133,7 +133,7 @@ namespace frame {
             bool switched_fans = false;
 #endif
             auto process_fan_result = [&failed](auto result, auto &icons, auto index) {
-                const bool subtest_failed = result == TestResult_Failed;
+                const bool subtest_failed = result == TestResult::failed;
                 icons.SetState(subtest_failed ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, index);
                 failed |= subtest_failed;
                 return subtest_failed;

@@ -108,9 +108,9 @@ void SelfTestViewTextWithIconAndResult::Draw(Rect16::Top_t top) const {
 
 const img::Resource *SelfTestViewTextWithIconAndResult::ResultToIconId(TestResult res) {
     switch (res) {
-    case TestResult_Passed:
+    case TestResult::passed:
         return &img::ok_color_18x18;
-    case TestResult_Failed:
+    case TestResult::failed:
         return &img::nok_color_18x18;
     default:
         break;

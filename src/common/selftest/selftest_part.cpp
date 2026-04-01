@@ -123,15 +123,15 @@ bool IPartHandler::isInProgress() const {
 TestResult IPartHandler::GetResult() const {
     // cannot use switch, cases would be evaluated at runtime
     if (current_state == IndexAborted()) {
-        return TestResult_Skipped;
+        return TestResult::skipped;
     }
     if (current_state == IndexFinished()) {
-        return TestResult_Passed;
+        return TestResult::passed;
     }
     if (current_state == IndexFailed()) {
-        return TestResult_Failed;
+        return TestResult::failed;
     }
-    return TestResult_Unknown;
+    return TestResult::unknown;
 }
 
 void IPartHandler::next() {

@@ -43,7 +43,7 @@ TestResult get_test_result(Action action, Tool tool) {
     case Action::_count:
         break;
     }
-    return TestResult_Unknown;
+    return TestResult::unknown;
 }
 
 uint64_t get_test_mask(Action action) {

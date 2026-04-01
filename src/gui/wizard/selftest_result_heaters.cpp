@@ -10,8 +10,8 @@
 
 ResultHeaters::ResultHeaters()
     : SelfTestGroup(_("Heaters check"))
-    , noz(_("Nozzle"), &img::nozzle_16x16, TestResult_Unknown)
-    , bed(_("Heatbed"), &img::heatbed_16x16, TestResult_Unknown) {
+    , noz(_("Nozzle"), &img::nozzle_16x16, TestResult::unknown)
+    , bed(_("Heatbed"), &img::heatbed_16x16, TestResult::unknown) {
     Add(noz);
     Add(bed);
 }
@@ -19,5 +19,5 @@ ResultHeaters::ResultHeaters()
 void ResultHeaters::SetState(TestResult res_noz, TestResult res_bed) {
     noz.SetState(res_noz);
     bed.SetState(res_bed);
-    failed = (res_noz == TestResult_Failed || res_bed == TestResult_Failed);
+    failed = (res_noz == TestResult::failed || res_bed == TestResult::failed);
 }

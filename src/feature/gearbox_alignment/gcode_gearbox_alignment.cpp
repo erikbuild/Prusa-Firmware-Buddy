@@ -121,7 +121,7 @@ private:
     void intro() {
         switch (marlin_server::wait_for_response(PhaseGearboxAlignment::intro)) {
         case Response::Skip:
-            finish(TestResult_Skipped);
+            finish(TestResult::skipped);
             return;
         case Response::Continue:
 #if HAS_TOOLCHANGER()
@@ -138,7 +138,7 @@ private:
     void filament_loaded_ask_unload() {
         switch (marlin_server::wait_for_response(PhaseGearboxAlignment::filament_loaded_ask_unload)) {
         case Response::Abort:
-            finish(TestResult_Skipped);
+            finish(TestResult::skipped);
             return;
         case Response::Unload:
             filament_unload();
@@ -152,7 +152,7 @@ private:
     void filament_unknown_ask_unload() {
         switch (marlin_server::wait_for_response(PhaseGearboxAlignment::filament_unknown_ask_unload)) {
         case Response::Abort:
-            finish(TestResult_Skipped);
+            finish(TestResult::skipped);
             return;
         case Response::Unload:
             filament_unload();
@@ -172,7 +172,7 @@ private:
             fsm_change(PhaseGearboxAlignment::alignment);
             return;
         case Response::Skip:
-            finish(TestResult_Skipped);
+            finish(TestResult::skipped);
             return;
         default:
             break;
@@ -209,7 +209,7 @@ private:
     void done() {
         switch (marlin_server::wait_for_response(PhaseGearboxAlignment::done)) {
         case Response::Continue:
-            finish(TestResult_Passed);
+            finish(TestResult::passed);
             return;
         default:
             break;

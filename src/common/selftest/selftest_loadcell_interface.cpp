@@ -70,12 +70,12 @@ TestReturn phaseLoadcell(const ToolMask tool_mask, std::array<IPartHandler *, Ph
         // Store loadcell test state
         // Do not store if aborted, do not regress
         if (i < PhysicalToolIndex::count
-            && m_pLoadcell[i]->GetResult() != TestResult_Skipped) {
+            && m_pLoadcell[i]->GetResult() != TestResult::skipped) {
             eeres.set_loadcell(i, m_pLoadcell[i]->GetResult());
         }
 
         // If any test failed, do not run next test
-        if (m_pLoadcell[i]->GetResult() != TestResult_Passed) {
+        if (m_pLoadcell[i]->GetResult() != TestResult::passed) {
             skipped = true;
         }
 
