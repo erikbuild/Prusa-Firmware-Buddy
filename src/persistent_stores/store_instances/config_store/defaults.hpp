@@ -15,6 +15,7 @@
 #include <common/hw_check.hpp>
 #include <filament_eeprom.hpp>
 #include <tristate.hpp>
+#include <utils/storage/encoded_bitset.hpp>
 
 #include "constants.hpp"
 
@@ -230,15 +231,8 @@ namespace defaults {
     inline constexpr uint8_t uint8_percentage_80 { 80 };
     inline constexpr int64_t int64_zero { 0 };
 
-    // This is a bit wonky, but std::bitset "is not structural", so we cannot pass it directly as a template argument.
-    // So instead, we pass this empty struct that converts to the bitset.
-    // The struct intializes everything to one.
-    struct VisiblePresetFilamentTypes {
-        constexpr operator std::bitset<max_preset_filament_type_count>() const {
-            return ~std::bitset<max_preset_filament_type_count>();
-        }
-    };
-    inline constexpr VisiblePresetFilamentTypes visible_preset_filament_types;
+    // All preset filament types visible by default (all bits set)
+    inline constexpr EncodedBitset<max_preset_filament_type_count> visible_preset_filament_types = EncodedBitset<max_preset_filament_type_count>::all();
 
     /// By default, no user filaments are enabled
     inline constexpr uint8_t visible_user_filament_types = 0;

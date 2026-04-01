@@ -4,6 +4,7 @@
 #include <bitset>
 
 #include <utils/array_extensions.hpp>
+#include <utils/storage/encoded_bitset.hpp>
 #include "constants.hpp"
 #include "defaults.hpp"
 #include <option/has_config_store_wo_backend.h>
@@ -439,12 +440,12 @@ struct CurrentStore
     /// given tool) holds the currently loaded filament (false) or the filament
     /// that was loaded previously and that there is currenly no loaded
     /// filament (true).
-    StoreItem<std::bitset<16>, 0, ItemFlag::printer_state, journal::hash("Loaded filament is previous")> loaded_filament_is_previous;
+    StoreItem<EncodedBitset<16>, 0, ItemFlag::printer_state, journal::hash("Loaded filament is previous")> loaded_filament_is_previous;
 
     /// User-defined filament ordering. Does not need to contain all the filaments - the rest will be appended to the back using the standard rules
     StoreItem<std::array<FilamentType, max_total_filament_count>, NoFilamentType {}, ItemFlag::user_presets, journal::hash("Filament Order")> filament_order;
 
-    StoreItem<std::bitset<max_preset_filament_type_count>, defaults::visible_preset_filament_types, ItemFlag::user_presets, journal::hash("Visible Preset Filament Types")> visible_preset_filament_types;
+    StoreItem<EncodedBitset<max_preset_filament_type_count>, defaults::visible_preset_filament_types, ItemFlag::user_presets, journal::hash("Visible Preset Filament Types")> visible_preset_filament_types;
 
     // We cannot use the constant in StoreItemArray, because it is scanned by a script and it would not be able to parse it
     static_assert(max_user_filament_type_count == 32);
@@ -464,7 +465,7 @@ struct CurrentStore
     StoreItemArray<FilamentTypeParameters_EEPROM3, FilamentTypeParameters_EEPROM3 {}, ItemFlag::user_presets, journal::hash("Adhoc Filament Parameters 3"), 16, adhoc_filament_type_count> adhoc_filament_parameters_3;
 #endif
 
-    StoreItem<std::bitset<max_user_filament_type_count>, defaults::visible_user_filament_types, ItemFlag::user_presets, journal::hash("Visible User Filament Types")> visible_user_filament_types;
+    StoreItem<EncodedBitset<max_user_filament_type_count>, defaults::visible_user_filament_types, ItemFlag::user_presets, journal::hash("Visible User Filament Types")> visible_user_filament_types;
 
     [[deprecated("Use the overload with VirtualToolIndex")]]
     FilamentType get_filament_type(uint8_t index);
@@ -514,14 +515,11 @@ struct CurrentStore
         set_nozzle_diameter(tool.to_raw(), value);
     }
 
-// Make sure we dont need migration from bitset<8> to bitset<16>, also that bitset size doesnt change in some gcc version
-#ifndef UNITTESTS // unittests are built on a different platform (64bit vs 32bit)
-    static_assert(sizeof(std::bitset<8>) == 4);
-#endif
-    static_assert(sizeof(std::bitset<8>) == sizeof(std::bitset<16>));
+    static_assert(sizeof(EncodedBitset<8>) == 4);
+    static_assert(sizeof(EncodedBitset<8>) == sizeof(EncodedBitset<16>));
 
     /// Stores whether a nozzle is hardened (resistant to abrasive filament) or not. One bit per each hotend
-    StoreItem<std::bitset<16>, defaults::nozzle_is_hardened, ItemFlag::hw_config, journal::hash("Nozzle is Hardened")> nozzle_is_hardened;
+    StoreItem<EncodedBitset<16>, defaults::nozzle_is_hardened, ItemFlag::hw_config, journal::hash("Nozzle is Hardened")> nozzle_is_hardened;
 
     [[deprecated("Use the ToolIndex overload")]]
     bool get_nozzle_is_hardened(uint8_t index);
@@ -538,7 +536,7 @@ struct CurrentStore
     }
 
     /// Stores whether a nozzle is high-flow (supports high-flow print profile) or not. One bit per each hotend
-    StoreItem<std::bitset<16>, defaults::nozzle_is_high_flow, ItemFlag::hw_config, journal::hash("Nozzle is High-Flow")> nozzle_is_high_flow;
+    StoreItem<EncodedBitset<16>, defaults::nozzle_is_high_flow, ItemFlag::hw_config, journal::hash("Nozzle is High-Flow")> nozzle_is_high_flow;
 
     [[deprecated("Use the ToolIndex overload")]]
     bool get_nozzle_is_high_flow(uint8_t index);
