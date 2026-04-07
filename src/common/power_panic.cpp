@@ -190,6 +190,17 @@ void prepare() {
     power_panic_state = PPState::Prepared;
 }
 
+void refresh_sfn() {
+    if (power_panic_state != PPState::Prepared) {
+        // No MBL ready yet, don't save incomplete data.
+        return;
+    }
+    // Make sure we don't save invalid data if we get PP in the middle of this.
+    // Really a rare cornercase, just minimizing the blast radius of such situation.
+    power_panic_state = PPState::Inactive;
+    prepare();
+}
+
 enum class ResumeState : uint8_t {
     Setup,
     Resume,

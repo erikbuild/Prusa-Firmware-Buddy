@@ -1852,6 +1852,10 @@ void update_sfn() {
     log_info(MarlinServer, "New SFN: %s", d.filepath_sfn.get());
     marlin_vars().media_SFN_path.set(d.filepath_sfn.get());
     GCodeInfo::getInstance().set_gcode_file(d.filepath_sfn.get(), d.lfn);
+
+#if ENABLED(POWER_PANIC)
+    power_panic::refresh_sfn();
+#endif
 }
 
 void print_resume(void) {

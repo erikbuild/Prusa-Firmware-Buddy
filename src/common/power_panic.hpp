@@ -24,6 +24,11 @@ void reset();
 // Call once after MBL during the printing process (usually after a successful G29)
 void prepare();
 
+// Re-save fixed data, updating SFN in the process of doing so.
+//
+// Does nothing if not prepared yet (pre-G29, we don't have valid MBL yet).
+void refresh_sfn();
+
 // Start resuming a stored print
 void resume_print();
 
