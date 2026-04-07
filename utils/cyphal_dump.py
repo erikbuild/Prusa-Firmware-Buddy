@@ -30,8 +30,9 @@ def port_id_to_name(port_id):
         502: 'prusa3d.common.AutoBootCancel',
         600: 'prusa3d.ac_controller.Status.1',
         601: 'prusa3d.common.leds.Config.1',
-        900: 'prusa3d.tool_offset_sensor.Data.1',
+        900: 'prusa3d.tool_offset_sensor.Data_CH0.1',
         901: 'prusa3d.tool_offset_sensor.Status.1',
+        902: 'prusa3d.tool_offset_sensor.Data_CH1.1',
         1000: 'prusa3d.nfc.event.Event.1',
         1001: 'prusa3d.nfc.Status.1',
         7509: 'uavcan.node.Heartbeat.1',
@@ -889,6 +890,55 @@ def pretty(port, what, data):
             output = f' {pretty_string(output_data)}' if output_data else ''
 
             return f'{status}{output}'
+
+    elif port in ('prusa3d.tool_offset_sensor.Data_CH0.1',
+                  'prusa3d.tool_offset_sensor.Data_CH1.1'):
+        sequence, data = unpack_unsigned(data, 1)
+        # frequency is uint24, 16.8 fixed-point Hz
+        freq_raw, data = unpack_unsigned(data, 3)
+        freq_hz = freq_raw / 256.0
+        sample, data = unpack_signed(data, 4)
+        # deltas: dynamic array with 1-byte length prefix
+        delta_count, data = unpack_unsigned(data, 1)
+        deltas = []
+        for _ in range(delta_count):
+            d, data = unpack_signed(data, 2)
+            deltas.append(d)
+        # Reconstruct absolute sample values
+        values = [sample & 0x0FFFFFFF]
+        current = sample
+        for d in deltas:
+            current += d
+            values.append(current & 0x0FFFFFFF)
+        return f'seq={sequence} freq={freq_hz:.1f}Hz n={len(values)} samples={values}'
+
+    elif port == 'prusa3d.tool_offset_sensor.Status.1':
+        # SharedFault.1.0 (1 byte bitfield) + bool flags + sensor_errors
+        faults, data = unpack_unsigned(data, 1)
+        flags, data = unpack_unsigned(data, 1)
+        time_sync = bool(flags & 0x01)
+        ch0_active = bool(flags & 0x02)
+        ch1_active = bool(flags & 0x04)
+        sensor_fault = bool(flags & 0x08)
+        sensor_errors, data = unpack_unsigned(data, 1)
+        err_names = []
+        if sensor_errors & 0x01: err_names.append('underrange')
+        if sensor_errors & 0x02: err_names.append('overrange')
+        if sensor_errors & 0x04: err_names.append('watchdog')
+        if sensor_errors & 0x08: err_names.append('amp_high')
+        if sensor_errors & 0x10: err_names.append('amp_low')
+        if sensor_errors & 0x20: err_names.append('zero_count')
+        errs = '|'.join(err_names) if err_names else 'none'
+        return f'ch0={ch0_active} ch1={ch1_active} fault={sensor_fault} sync={time_sync} errors={errs}'
+
+    elif port == 'prusa3d.tool_offset_sensor.Config.1':
+        if what == 'Request':
+            flags, data = unpack_unsigned(data, 1)
+            ch0 = bool(flags & 0x01)
+            ch1 = bool(flags & 0x02)
+            return f'ch0={ch0} ch1={ch1}'
+        elif what == 'Response':
+            return 'ack'
 
     elif port == 'uavcan.node.port.List.1.0':
         # Network introspection - list of active ports
