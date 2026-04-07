@@ -118,7 +118,7 @@ struct SnakeConfig {
         last_action = get_last_action();
     }
 
-    void next(Action action, Tool tool) {
+    void next(Action action, PhysicalToolIndex tool) {
         in_progress = true;
         last_action = action;
         last_tool = tool;
@@ -128,7 +128,7 @@ struct SnakeConfig {
     AutoContinue auto_continue { AutoContinue::ask }; ///< Should we continue running other selftests after finishing the current one?
 
     Action last_action { Action::_last }; ///< Last action that we'have done
-    Tool last_tool { Tool::_first };
+    PhysicalToolIndex last_tool { PhysicalToolIndex::from_raw(0) };
 };
 
 } // namespace
@@ -199,7 +199,7 @@ void do_snake(Action action, Tool tool = Tool::_first) {
 
         if (has_test_special_handling) {
             marlin_client::gcode("M118 nop"); // No operation gcode to fill the queue until selftest is done
-            snake_config.next(action, tool);
+            snake_config.next(action, PhysicalToolIndex::from_raw(std::to_underlying(tool)));
             return;
         }
     }
@@ -211,11 +211,11 @@ void do_snake(Action action, Tool tool = Tool::_first) {
         marlin_client::test_start(get_test_mask(action));
     }
 
-    snake_config.next(action, tool);
+    snake_config.next(action, PhysicalToolIndex::from_raw(std::to_underlying(tool)));
 };
 
 void continue_snake() {
-    const TestResult last_test_result = get_test_result(snake_config.last_action, snake_config.last_tool);
+    const TestResult last_test_result = get_test_result(snake_config.last_action, Tool { snake_config.last_tool.to_raw() });
     if (!is_completed(last_test_result)
         || SelftestInstance().IsAborted()) { // last selftest didn't pass
         snake_config.reset();
@@ -224,17 +224,17 @@ void continue_snake() {
 
     // if the last action was the last action possible
     if (snake_config.last_action == get_last_action()
-        && (!has_submenu(get_last_action()) || snake_config.last_tool == Tool { get_last_enabled_tool().to_raw() })) {
+        && (!has_submenu(get_last_action()) || snake_config.last_tool == get_last_enabled_tool())) {
         snake_config.reset();
         return;
     }
 
-    if (snake_config.auto_continue == SnakeConfig::AutoContinue::submenu && has_submenu(snake_config.last_action) && snake_config.last_tool == Tool { get_last_enabled_tool().to_raw() }) {
+    if (snake_config.auto_continue == SnakeConfig::AutoContinue::submenu && has_submenu(snake_config.last_action) && snake_config.last_tool == get_last_enabled_tool()) {
         snake_config.auto_continue = SnakeConfig::AutoContinue::ask;
     }
 
     if (snake_config.auto_continue == SnakeConfig::AutoContinue::ask) {
-        if (is_multitool() && has_submenu(snake_config.last_action) && snake_config.last_tool != Tool { get_last_enabled_tool().to_raw() }) {
+        if (is_multitool() && has_submenu(snake_config.last_action) && snake_config.last_tool != get_last_enabled_tool()) {
             const auto resp = MsgBoxQuestion(_("FINISH remaining calibrations without proceeding to other tests, or perform ALL Calibrations and Tests?\n\nIf you QUIT, all data up to this point is saved."), { Response::Finish, Response::All, Response::Quit }, 2);
             switch (resp) {
 
@@ -278,10 +278,10 @@ void continue_snake() {
 
     if (!is_multitool()
         || !has_submenu(snake_config.last_action)
-        || snake_config.last_tool == Tool { get_last_enabled_tool().to_raw() }) { // singletool or wasn't submenu or was last in a submenu
+        || snake_config.last_tool == get_last_enabled_tool()) { // singletool or wasn't submenu or was last in a submenu
         do_snake(get_next_action(snake_config.last_action));
     } else { // current submenu not yet finished
-        do_snake(snake_config.last_action, get_next_tool(snake_config.last_tool));
+        do_snake(snake_config.last_action, get_next_tool(Tool { snake_config.last_tool.to_raw() }));
     }
 }
 
@@ -410,7 +410,7 @@ void do_menu_event(window_t *receiver, [[maybe_unused]] window_t *sender, GUI_ev
     }
 
     if (is_submenu) {
-        if (snake_config.last_action == action && snake_config.last_tool == Tool { get_last_enabled_tool().to_raw() }) { // finished testing this submenu
+        if (snake_config.last_action == action && snake_config.last_tool == get_last_enabled_tool()) { // finished testing this submenu
             Screens::Access()->Close();
         }
     }
