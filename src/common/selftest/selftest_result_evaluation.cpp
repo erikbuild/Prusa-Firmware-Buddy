@@ -50,9 +50,15 @@ bool is_selftest_successfully_completed() {
 
         // Without toolchanger, we don't have tool offsets
         if (prusa_toolchanger.is_toolchanger_enabled()) {
-            if (!all_passed(sr.get_dock_offset(tool), sr.get_tool_offset(tool))) {
+            if (sr.get_dock_offset(tool) != TestResult::passed) {
                 return false;
             }
+
+    #if !HAS_INDX() // tool offset is not a selftest on INDX
+            if (sr.get_tool_offset(tool) != TestResult::passed) {
+                return false;
+            }
+    #endif
         }
 
 #endif

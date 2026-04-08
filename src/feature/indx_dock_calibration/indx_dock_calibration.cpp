@@ -57,16 +57,18 @@ public:
         const auto result = run_inner();
 
         // Store calibration result (abort leaves it unchanged)
+        auto sr = config_store().selftest_result.get();
         switch (result) {
         case Result::success:
-            config_store().selftest_result_dock_calibration.set(TestResult::passed);
+            sr.set_dock_offset(PhysicalToolIndex::from_raw(0), TestResult::passed);
             break;
         case Result::failed:
-            config_store().selftest_result_dock_calibration.set(TestResult::failed);
+            sr.set_dock_offset(PhysicalToolIndex::from_raw(0), TestResult::failed);
             break;
         case Result::aborted:
             break;
         }
+        config_store().selftest_result.set(sr);
 
         // Disable motors at the end of the wizard
         disable_XY();

@@ -86,7 +86,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
             return get_fsensor_calibration_result(e);
         });
     case Action::DockCalibration:
-        return test_result::evaluate_results(config_store().selftest_result_dock_calibration.get());
+        return sr.get_dock_offset(PhysicalToolIndex::from_raw(0));
     case Action::NozzleCleanerCalibration:
         return test_result::evaluate_results(config_store().selftest_result_nozzle_cleaner_calibration.get());
     case Action::PhaseSteppingCalibration:

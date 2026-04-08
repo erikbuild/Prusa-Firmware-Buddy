@@ -4,6 +4,9 @@
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
 #include <option/has_switched_fan_test.h>
+#include <option/has_indx.h>
+
+static_assert(!HAS_INDX());
 
 #pragma pack(push, 1)
 

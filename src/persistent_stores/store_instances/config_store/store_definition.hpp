@@ -656,7 +656,7 @@ struct CurrentStore
     // INDX has a different max_tool_count, making SelftestResult a different size.
     // INDX_TODO: Find proper solution
     #if HAS_INDX()
-    StoreItem<SelftestResult, defaults::selftest_result, ItemFlag::calibrations, journal::hash("Selftest Result INDX")> selftest_result;
+    StoreItem<SelftestResult, defaults::selftest_result, ItemFlag::calibrations, journal::hash("Selftest Result Indx")> selftest_result;
     #else
     StoreItem<SelftestResult, defaults::selftest_result, ItemFlag::calibrations, journal::hash("Selftest Result Gears")> selftest_result;
     #endif
@@ -782,7 +782,6 @@ struct CurrentStore
 #endif
 
 #if HAS_INDX()
-    StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("Selftest Result - Dock Calibration")> selftest_result_dock_calibration;
     StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("Selftest Result - Nozzle Cleaner Calibration")> selftest_result_nozzle_cleaner_calibration;
     StoreItem<std::bitset<PhysicalToolIndex::count>, 0, ItemFlag::calibrations, journal::hash("INDX dock calibrated mask")> indx_dock_calibrated_mask;
 #endif
