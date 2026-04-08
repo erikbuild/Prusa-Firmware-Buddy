@@ -11,8 +11,10 @@
 #include "marlin_stubs/G26.hpp"
 #include "M70X.hpp"
 #include "SteelSheets.hpp"
+#include <bsod.h>
 #include <config_store/store_instance.hpp>
 #include <gcode/gcode.h>
+#include <tool_index.hpp>
 
 using namespace selftest;
 LOG_COMPONENT_REF(Selftest);
@@ -49,7 +51,12 @@ static filament_status get_filament_status() {
 }
 
 void preheat() {
-    const auto filament_desc = config_store().get_filament_type(active_extruder).parameters();
+    const std::optional<VirtualToolIndex> virtual_tool = VirtualToolIndex::currently_selected_opt();
+    if (!virtual_tool.has_value()) {
+        // Ensured by the wizard that we do have filament.
+        bsod("First layer calibration: no filament");
+    }
+    const FilamentTypeParameters filament_desc = config_store().get_filament_type(*virtual_tool).parameters();
 
     // nozzle temperature preheat
     thermalManager.setTargetHotend(filament_desc.nozzle_preheat_temperature, 0);

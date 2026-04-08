@@ -826,7 +826,9 @@ float run_z_probe(const RunZProbeParams& params) {
 void prepare_for_nozzle_cleaning() {
   // Do not retract on unknown retracted_distance
   const auto retracted_distance = buddy::auto_retract().retracted_distance().value_or(10);
-  const bool do_not_autoretract = config_store().get_filament_type(active_extruder).parameters().is_flexible;
+  const bool do_not_autoretract = VirtualToolIndex::currently_selected_opt()
+    .transform([](VirtualToolIndex vt) { return config_store().get_filament_type(vt).parameters().is_flexible; })
+    .value_or(false);
 
   // Do not auto retract filaments marked is_flexible, they might get tangled in the extruder (BFW-6953)
   // Skip if retracted distance is known and filament is out of the nozzle

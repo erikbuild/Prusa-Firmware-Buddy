@@ -11,7 +11,9 @@
 #include "filament.hpp"
 #include "G26.hpp"
 #include "cmath_ext.h"
+#include <bsod.h>
 #include <config_store/store_instance.hpp>
+#include <tool_index.hpp>
 
 namespace {
 constexpr float filamentD = 1.75f;
@@ -352,7 +354,12 @@ void FirstLayer::print_shape_2() {
 
 void FirstLayer::run() {
     // is filament selected
-    auto filament = config_store().get_filament_type(active_extruder);
+    const std::optional<VirtualToolIndex> virtual_tool = VirtualToolIndex::currently_selected_opt();
+    if (!virtual_tool.has_value()) {
+        // Ensured by the wizard that we do have filament.
+        bsod("First layer calibration: no filament");
+    }
+    const FilamentType filament = config_store().get_filament_type(*virtual_tool);
     if (filament == FilamentType::none) {
         return;
     }

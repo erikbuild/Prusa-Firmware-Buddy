@@ -64,8 +64,17 @@ public:
 #if HAS_NOZZLE_CLEANING_FAILED_PURGING()
         // Recommend to do the purge sequence
         if (recommend_purge()) {
-            const int16_t temp_before = Temperature::degTargetHotend(active_extruder);
-            const int16_t target_temp = config_store().get_filament_type(active_extruder).parameters().nozzle_temperature;
+            // Tool must exist, ensured by caller
+            const PhysicalToolIndex physical_tool = std::get<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+            const int16_t temp_before = Hotend::for_tool(physical_tool).nozzle_target_temp();
+            // Use the filament's nozzle temperature if known, otherwise purge at the current hotend target.
+            // Skip if no meaningful purge temperature is available (no filament configured or hotend off).
+            const int16_t target_temp = VirtualToolIndex::currently_selected_opt()
+                                            .transform([](VirtualToolIndex vt) { return config_store().get_filament_type(vt).parameters().nozzle_temperature; })
+                                            .value_or(temp_before);
+            if (target_temp <= 0) {
+                return Result::retry;
+            }
 
             // Heat up the nozzle
             if (!wait_temp(target_temp)) {
@@ -83,7 +92,7 @@ public:
             autoretract();
 
             // Start cooling back to original temperature (no waiting)
-            thermalManager.setTargetHotend(temp_before, active_extruder);
+            Hotend::for_tool(physical_tool).set_nozzle_target_temp(temp_before);
 
             // Ask the user to clean the nozzle from the ooze
             if (!ask_user_to_clean_nozzle()) {
@@ -121,7 +130,11 @@ public:
             return;
         }
 
-        if (config_store().get_filament_type(active_extruder).parameters().is_flexible) {
+        const std::optional<VirtualToolIndex> virtual_tool = VirtualToolIndex::currently_selected_opt();
+        if (!virtual_tool.has_value()) {
+            return;
+        }
+        if (config_store().get_filament_type(*virtual_tool).parameters().is_flexible) {
             // The filament has auto-retract disabled, globally enabling auto-retract would not help
             return;
         }
