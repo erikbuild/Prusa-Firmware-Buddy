@@ -39,9 +39,18 @@ public:
             return;
         }
 
-        CHECK_PP_OR_ABORT(HAL_SPI_DeInit(hspi));
+        // Abort clears transactions and resets the state, but doesn't "kill" the whole bus.
+        // Init is then more lightweight, which:
+        // * Saves some time reinitializing.
+        // * More importantly, avoids the HAL_SPI_MspInit which, unlike other
+        //   things, aborts from _inside_ instead of returning errors - which is
+        //   exactly what we don't want during power panic, see above.
+        // * Avoids unnecessary GPIO deinit-init which possibly generates noise
+        //   on the bus.
+        CHECK_PP_OR_ABORT(HAL_SPI_Abort(hspi));
 
         hspi->Init.BaudRatePrescaler = new_prescaler;
+        // Just applies the configuration changes, nothing more.
         CHECK_PP_OR_ABORT(HAL_SPI_Init(hspi));
     }
 
@@ -50,7 +59,7 @@ public:
             return;
         }
 
-        CHECK_PP_OR_ABORT(HAL_SPI_DeInit(hspi));
+        CHECK_PP_OR_ABORT(HAL_SPI_Abort(hspi));
         hspi->Init.BaudRatePrescaler = old_prescaler;
         CHECK_PP_OR_ABORT(HAL_SPI_Init(hspi));
     }
