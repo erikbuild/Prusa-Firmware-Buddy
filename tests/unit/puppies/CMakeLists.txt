@@ -2,20 +2,6 @@ add_subdirectory(cyphal_node_stubs)
 add_subdirectory(minimal_cyphal_node)
 
 add_executable(
-  fifo_coder_tests
-  ${CMAKE_CURRENT_SOURCE_DIR}/fifo_coder_tests.cpp
-  ${CMAKE_SOURCE_DIR}/src/puppy/dwarf/fifo_encoder.cpp
-  ${CMAKE_SOURCE_DIR}/src/puppies/fifo_decoder.cpp
-  )
-
-target_include_directories(
-  fifo_coder_tests PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/tests/stubs
-  )
-target_link_libraries(fifo_coder_tests logging-mock)
-
-add_catch_test(fifo_coder_tests)
-
-add_executable(
   time_sync ${CMAKE_CURRENT_SOURCE_DIR}/time_sync.cpp ${CMAKE_SOURCE_DIR}/src/puppies/time_sync.cpp
   )
 

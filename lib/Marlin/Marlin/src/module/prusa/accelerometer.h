@@ -17,7 +17,7 @@ static_assert(HAS_LOCAL_ACCELEROMETER() || HAS_REMOTE_ACCELEROMETER());
 #elif HAS_REMOTE_ACCELEROMETER()
     #include <freertos/mutex.hpp>
     #include <common/circular_buffer.hpp>
-    #include <puppies/fifo_coder.hpp>
+    #include <fifo_coder/fifo_coder.hpp>
 #else
     #error "Why do you #include me?"
 #endif
@@ -207,7 +207,7 @@ public:
     }
 
 #if HAS_REMOTE_ACCELEROMETER()
-    static void put_sample(common::puppies::fifo::AccelerometerXyzSample sample);
+    static void put_sample(fifo_coder::AccelerometerXyzSample sample);
 
     /**
      * @brief Set frequency of calling put_sample().
@@ -265,7 +265,7 @@ private:
     // Mutex is very RAM (80B) consuming for this fast operation, consider switching to critical section
     static freertos::Mutex s_buffer_mutex;
     struct SampleBuffer {
-        CircularBuffer<common::puppies::fifo::AccelerometerXyzSample, 128> buffer;
+        CircularBuffer<fifo_coder::AccelerometerXyzSample, 128> buffer;
         ErrorImpl error;
     };
     static SampleBuffer *s_sample_buffer;

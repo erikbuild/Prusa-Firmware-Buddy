@@ -1,6 +1,6 @@
 #pragma once
 
-#include <puppies/fifo_coder.hpp>
+#include <fifo_coder/fifo_coder.hpp>
 #include <accelerometer_record/types.hpp>
 #include <cstddef>
 

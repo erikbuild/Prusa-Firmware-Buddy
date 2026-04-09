@@ -5,7 +5,7 @@
 #pragma once
 
 #include "accelerometer.h"
-#include "puppies/fifo_coder.hpp"
+#include <fifo_coder/fifo_coder.hpp>
 #include <accelerometer_record/types.hpp>
 #include <stdint.h>
 #include <option/has_remote_accelerometer.h>
@@ -27,15 +27,15 @@ public:
     /**
      * @brief Pack top 10 bits of each XYZ axis raw acceleration
      */
-    static common::puppies::fifo::AccelerometerXyzSample pack_record(dwarf::accelerometer::AccelerometerRecord record) {
-        static_assert(sizeof(common::puppies::fifo::AccelerometerXyzSample) >= 4, "At least 30 bits needed.");
+    static fifo_coder::AccelerometerXyzSample pack_record(dwarf::accelerometer::AccelerometerRecord record) {
+        static_assert(sizeof(fifo_coder::AccelerometerXyzSample) >= 4, "At least 30 bits needed.");
         constexpr uint_least32_t bottom_10_bits = 0b11'1111'1111u;
         constexpr uint_least32_t x_mask = bottom_10_bits;
         constexpr uint_least32_t y_mask = x_mask << 10;
         constexpr uint_least32_t z_mask = y_mask << 10;
-        return ((static_cast<common::puppies::fifo::AccelerometerXyzSample>(record.z) << z_left_shift) & z_mask)
-            | ((static_cast<common::puppies::fifo::AccelerometerXyzSample>(record.y) << y_left_shift) & y_mask)
-            | ((static_cast<common::puppies::fifo::AccelerometerXyzSample>(record.x) >> x_right_shift) & x_mask)
+        return ((static_cast<fifo_coder::AccelerometerXyzSample>(record.z) << z_left_shift) & z_mask)
+            | ((static_cast<fifo_coder::AccelerometerXyzSample>(record.y) << y_left_shift) & y_mask)
+            | ((static_cast<fifo_coder::AccelerometerXyzSample>(record.x) >> x_right_shift) & x_mask)
             | (record.buffer_overflow ? buffer_overflow_mask : 0)
             | (record.sample_overrun ? sample_overrun_mask : 0);
     }
@@ -45,6 +45,6 @@ public:
         bool buffer_overflow;
         bool sample_overrun;
     };
-    static PrusaAccelerometer::RawAcceleration unpack_sample(SampleStatus &sampleStatus, common::puppies::fifo::AccelerometerXyzSample sample);
+    static PrusaAccelerometer::RawAcceleration unpack_sample(SampleStatus &sampleStatus, fifo_coder::AccelerometerXyzSample sample);
 #endif
 };

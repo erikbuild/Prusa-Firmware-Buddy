@@ -1,10 +1,8 @@
-#include "puppies/fifo_encoder.hpp"
+#include <fifo_coder/fifo_encoder.hpp>
 
-namespace common::puppies::fifo {
+namespace fifo_coder {
 
-LOG_COMPONENT_DEF(ModbusFIFOEncoder, logging::Severity::info);
-
-Encoder::Encoder(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo)
+Encoder::Encoder(std::span<uint16_t, MODBUS_FIFO_LEN> fifo)
     : fifo(fifo)
     , fifo_bytes_pos(0) {};
 
@@ -22,4 +20,4 @@ uint8_t Encoder::available_bytes() const {
     return fifo.size() * sizeof(uint16_t) - fifo_bytes_pos;
 }
 
-} // namespace common::puppies::fifo
+} // namespace fifo_coder

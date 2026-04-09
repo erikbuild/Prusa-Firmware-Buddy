@@ -7,7 +7,7 @@ static_assert(HAS_REMOTE_ACCELEROMETER());
 /**
  * Unpack 10bit samples into 16bit sample and swap X and Z axis to compensate for Dwarf orientation
  */
-PrusaAccelerometer::RawAcceleration AccelerometerUtils::unpack_sample(AccelerometerUtils::SampleStatus &sampleStatus, common::puppies::fifo::AccelerometerXyzSample sample) {
+PrusaAccelerometer::RawAcceleration AccelerometerUtils::unpack_sample(AccelerometerUtils::SampleStatus &sampleStatus, fifo_coder::AccelerometerXyzSample sample) {
     constexpr int16_t top_10_bits = 0b1111'1111'1100'0000u;
     PrusaAccelerometer::RawAcceleration accelerometer_sample;
     accelerometer_sample.val[0] = (sample << x_right_shift) & top_10_bits;

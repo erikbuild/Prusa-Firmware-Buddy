@@ -4,10 +4,10 @@
 #include <stdint.h>
 #include <array>
 
-#include "puppies/fifo_coder.hpp"
+#include <fifo_coder/fifo_coder.hpp>
 
 namespace dwarf::loadcell {
-using namespace common::puppies::fifo;
+using namespace fifo_coder;
 void loadcell_init();
 void loadcell_loop();
 bool get_loadcell_sample(LoadcellRecord &sample);

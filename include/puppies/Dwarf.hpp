@@ -6,7 +6,8 @@
 #include <memory>
 
 #include "puppies/PuppyModbus.hpp"
-#include "puppies/fifo_decoder.hpp"
+#include <fifo_coder/fifo_decoder.hpp>
+#include <logging/log.hpp>
 #include "puppies/puppy_constants.hpp"
 #include "puppies/time_sync.hpp"
 #include <include/dwarf_registers.hpp>
@@ -22,7 +23,7 @@ namespace freertos {
 class Mutex;
 }
 
-using namespace common::puppies::fifo;
+using namespace fifo_coder;
 
 namespace buddy::puppies {
 

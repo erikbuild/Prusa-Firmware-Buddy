@@ -5,7 +5,7 @@
 #include "ModbusTask.hpp"
 #include "PuppyConfig.hpp"
 #include "ModbusControl.hpp"
-#include "puppies/fifo_coder.hpp"
+#include <fifo_coder/fifo_encoder.hpp>
 #include "startup/ApplicationStartupArguments.hpp"
 
 // Make release build happy about assert being no-op.

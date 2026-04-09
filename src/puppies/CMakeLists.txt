@@ -1,9 +1,6 @@
 # Cmake for puppies (Dwarf + Modular bed)
 
-target_sources(
-  firmware PUBLIC fifo_decoder.cpp modbus.cpp puppy_task.cpp PuppyBus.cpp PuppyModbus.cpp
-                  time_sync.cpp
-  )
+target_sources(firmware PUBLIC modbus.cpp puppy_task.cpp PuppyBus.cpp PuppyModbus.cpp time_sync.cpp)
 
 target_link_libraries(firmware PRIVATE crc modbus)
 

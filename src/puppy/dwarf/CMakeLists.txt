@@ -8,7 +8,6 @@ target_sources(
           # by Default_Handler (no compiler error)
           accelerometer.cpp
           Cheese.cpp
-          fifo_encoder.cpp
           interrupts.cpp
           led.cpp
           loadcell.cpp

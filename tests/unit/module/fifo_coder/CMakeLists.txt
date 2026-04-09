@@ -1,0 +1,4 @@
+add_executable(fifo_coder_tests fifo_coder_tests.cpp)
+
+target_link_libraries(fifo_coder_tests fifo_encoder fifo_decoder)
+add_catch_test(fifo_coder_tests)

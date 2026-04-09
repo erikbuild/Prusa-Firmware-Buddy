@@ -7,6 +7,7 @@
 #include "../../core/serial.h"
 #include <mutex>
 #include <option/has_remote_accelerometer.h>
+#include <fifo_coder/fifo_coder.hpp>
 
 static_assert(HAS_REMOTE_ACCELEROMETER());
 
@@ -105,7 +106,7 @@ PrusaAccelerometer::GetSampleResult PrusaAccelerometer::get_sample(RawAccelerati
         return GetSampleResult::error;
     }
 
-    common::puppies::fifo::AccelerometerXyzSample sample;
+    fifo_coder::AccelerometerXyzSample sample;
     if (!m_sample_buffer.buffer.try_get(sample)) {
         return GetSampleResult::buffer_empty;
     }
@@ -126,7 +127,7 @@ PrusaAccelerometer::GetSampleResult PrusaAccelerometer::get_sample(RawAccelerati
     return GetSampleResult::ok;
 }
 
-void PrusaAccelerometer::put_sample(common::puppies::fifo::AccelerometerXyzSample sample) {
+void PrusaAccelerometer::put_sample(fifo_coder::AccelerometerXyzSample sample) {
     std::lock_guard lock(s_buffer_mutex);
     if (s_sample_buffer) {
         if (!s_sample_buffer->buffer.try_put(sample)) {

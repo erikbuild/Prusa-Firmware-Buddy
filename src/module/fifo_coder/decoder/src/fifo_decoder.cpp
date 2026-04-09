@@ -1,12 +1,10 @@
-#include "puppies/fifo_decoder.hpp"
+#include <fifo_coder/fifo_decoder.hpp>
 
 #include <cassert>
 
-namespace common::puppies::fifo {
+namespace fifo_coder {
 
-LOG_COMPONENT_DEF(ModbusFIFODecoder, logging::Severity::info);
-
-Decoder::Decoder(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo, size_t len)
+Decoder::Decoder(std::span<uint16_t, MODBUS_FIFO_LEN> fifo, size_t len)
     : fifo(fifo)
     , data(reinterpret_cast<uint8_t *>(fifo.data()))
     , len(len * sizeof(uint16_t)) {
@@ -51,4 +49,4 @@ uint8_t Decoder::available_bytes() const {
     return (reinterpret_cast<uint8_t *>(fifo.data()) + len) - data;
 }
 
-} // namespace common::puppies::fifo
+} // namespace fifo_coder

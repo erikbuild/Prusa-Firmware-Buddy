@@ -2,14 +2,11 @@
 
 #include <cstdint>
 #include <cstring>
-#include <array>
+#include <span>
 
-#include <logging/log.hpp>
-#include "fifo_coder.hpp"
+#include <fifo_coder/fifo_coder.hpp>
 
-namespace common::puppies::fifo {
-
-LOG_COMPONENT_REF(ModbusFIFOEncoder);
+namespace fifo_coder {
 
 /**
  * Encoder
@@ -21,7 +18,7 @@ LOG_COMPONENT_REF(ModbusFIFOEncoder);
  */
 class Encoder {
 public:
-    Encoder(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo);
+    Encoder(std::span<uint16_t, MODBUS_FIFO_LEN> fifo);
 
     /**
      * Test whenever message fits in
@@ -36,13 +33,6 @@ public:
      */
     template <typename T>
     bool encode(const T data) {
-        log_debug(
-            ModbusFIFOEncoder,
-            "Encoding message type: %u, size: %zu+%zu at byte offset: %u",
-            static_cast<unsigned>(message_type<T>()),
-            sizeof(Header),
-            sizeof(T),
-            fifo_bytes_pos);
         if (!can_encode<T>()) {
             return false;
         }
@@ -68,7 +58,7 @@ public:
     void padd();
 
 private:
-    std::array<uint16_t, MODBUS_FIFO_LEN> &fifo; // TODO: In C++20 this can be a span - we might save some casts
+    std::span<uint16_t, MODBUS_FIFO_LEN> fifo; // TODO: In C++20 this can be a span - we might save some casts
     uint8_t fifo_bytes_pos;
 
     /**
@@ -85,4 +75,4 @@ private:
     uint8_t available_bytes() const;
 };
 
-} // namespace common::puppies::fifo
+} // namespace fifo_coder

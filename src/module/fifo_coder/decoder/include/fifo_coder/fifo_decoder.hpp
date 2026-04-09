@@ -2,14 +2,11 @@
 
 #include <cstdint>
 #include <cstring>
-#include <array>
+#include <span>
 
-#include <logging/log.hpp>
-#include "fifo_coder.hpp"
+#include <fifo_coder/fifo_coder.hpp>
 
-namespace common::puppies::fifo {
-
-LOG_COMPONENT_REF(ModbusFIFODecoder);
+namespace fifo_coder {
 
 /**
  * Decoder
@@ -32,7 +29,7 @@ public:
         ~Callbacks() = default;
     };
 
-    Decoder(std::array<uint16_t, MODBUS_FIFO_LEN> &fifo, size_t len);
+    Decoder(std::span<uint16_t, MODBUS_FIFO_LEN> fifo, size_t len);
     void decode(Callbacks &callbacks);
 
     /**
@@ -42,7 +39,7 @@ public:
     bool more() const;
 
 private:
-    std::array<uint16_t, MODBUS_FIFO_LEN> &fifo;
+    std::span<uint16_t, MODBUS_FIFO_LEN> fifo;
     uint8_t *data;
     size_t len;
 
@@ -73,4 +70,4 @@ private:
     uint8_t available_bytes() const;
 };
 
-} // namespace common::puppies::fifo
+} // namespace fifo_coder

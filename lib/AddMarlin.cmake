@@ -160,6 +160,7 @@ if(BOARD_IS_MASTER_BOARD)
       Marlin PRIVATE Marlin/Marlin/src/module/prusa/accelerometer_remote.cpp
                      Marlin/Marlin/src/module/prusa/accelerometer_utils.cpp
       )
+    target_link_libraries(Marlin PRIVATE fifo_decoder accelerometer_record)
   endif()
 
   if(HAS_POWER_PANIC OR HAS_CRASH_DETECTION)

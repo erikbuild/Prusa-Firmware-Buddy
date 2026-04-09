@@ -1,10 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring>
 
-#include "puppies/fifo_encoder.hpp"
-#include "puppies/fifo_decoder.hpp"
+#include <fifo_coder/fifo_encoder.hpp>
+#include <fifo_coder/fifo_decoder.hpp>
 
-using namespace common::puppies::fifo;
+using namespace fifo_coder;
 
 static constexpr LogData log_fragment = { 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o' };
 static constexpr LoadcellRecord loadcell_fragment = { 0, 0x12345678 };

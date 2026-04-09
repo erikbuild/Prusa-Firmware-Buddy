@@ -1,14 +1,14 @@
 #include "ModbusFIFOHandlers.hpp"
 
 #include <logging/log_dest_bufflog.hpp>
-#include "puppies/fifo_encoder.hpp"
+#include <fifo_coder/fifo_encoder.hpp>
 #include "../loadcell.hpp"
 #include "accelerometer.hpp"
 #include <accelerometer_record/types.hpp>
 #include "Marlin/src/module/prusa/accelerometer_utils.h"
 #include "bsod.h"
 
-using namespace common::puppies::fifo;
+using namespace fifo_coder;
 
 LOG_COMPONENT_DEF(ModbusFIFOHandlers, logging::Severity::debug);
 

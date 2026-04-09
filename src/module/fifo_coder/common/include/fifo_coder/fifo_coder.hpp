@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 
-namespace common::puppies::fifo {
+namespace fifo_coder {
 
 /**
  * FIFO coded stream
@@ -21,7 +21,7 @@ namespace common::puppies::fifo {
  * - Message type 0 means no message - padding. This allows to pad data with 0 if necessary.
  */
 
-inline constexpr auto MODBUS_FIFO_LEN = 31;
+constexpr auto MODBUS_FIFO_LEN = 31;
 
 enum class MessageType : uint8_t {
     no_data = 0, // Padding
@@ -32,51 +32,51 @@ enum class MessageType : uint8_t {
     // ...
 };
 
-typedef uint32_t TimeStamp_us;
+using TimeStamp_us = uint32_t;
 
-typedef struct __attribute__((packed)) {
+struct [[gnu::packed]] Header {
     MessageType type;
-} Header;
+};
 
 // Payload types
-typedef uint32_t AccelerometerXyzSample;
-typedef uint32_t LoadcellSample_t;
+using AccelerometerXyzSample = uint32_t;
+using LoadcellSample_t = uint32_t;
 
-typedef struct __attribute__((packed)) {
+struct [[gnu::packed]] LoadcellRecord {
     TimeStamp_us timestamp;
     LoadcellSample_t loadcell_raw_value;
-} LoadcellRecord;
+};
 
-typedef std::array<char, 8> LogData;
-typedef std::array<AccelerometerXyzSample, 2> AccelerometerFastData;
+using LogData = std::array<char, 8>;
+using AccelerometerFastData = std::array<AccelerometerXyzSample, 2>;
 
-typedef struct {
+struct AccelerometerSamplingRate {
     float frequency;
-} AccelerometerSamplingRate;
+};
 
 // Payload to message type mapping using template specialization
 template <typename T>
-inline constexpr MessageType message_type() {
+constexpr MessageType message_type() {
     return MessageType::no_data;
 }
 
 template <>
-inline constexpr MessageType message_type<LogData>() {
+constexpr MessageType message_type<LogData>() {
     return MessageType::log;
 }
 
 template <>
-inline constexpr MessageType message_type<LoadcellRecord>() {
+constexpr MessageType message_type<LoadcellRecord>() {
     return MessageType::loadcell;
 }
 
 template <>
-inline constexpr MessageType message_type<AccelerometerFastData>() {
+constexpr MessageType message_type<AccelerometerFastData>() {
     return MessageType::accelerometer_fast;
 }
 
 template <>
-inline constexpr MessageType message_type<AccelerometerSamplingRate>() {
+constexpr MessageType message_type<AccelerometerSamplingRate>() {
     return MessageType::accelerometer_sampling_rate;
 }
-} // namespace common::puppies::fifo
+} // namespace fifo_coder

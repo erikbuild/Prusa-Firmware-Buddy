@@ -2,7 +2,7 @@
 #include <limits>
 
 #include <puppies/Dwarf.hpp>
-#include <puppies/fifo_decoder.hpp>
+#include <fifo_coder/fifo_decoder.hpp>
 #include <freertos/mutex.hpp>
 
 #include "bsod.h"
@@ -23,7 +23,7 @@
 #include "Marlin/src/module/prusa/accelerometer.h"
 #include <common/power_panic.hpp>
 
-using namespace common::puppies::fifo;
+using namespace fifo_coder;
 
 namespace buddy::puppies {
 
