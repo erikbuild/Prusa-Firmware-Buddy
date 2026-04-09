@@ -68,6 +68,9 @@ LOG_COMPONENT_DEF(ContactlessOffset, logging::Severity::debug);
 
 #define SERIAL_DEBUG
 
+// Margin (in samples) added around each chunk to suppress filter edge artifacts.
+static constexpr size_t preprocess_edge_margin = 10;
+
 struct EnergyRegion {
     size_t start;
     size_t end;
@@ -486,25 +489,33 @@ static bool preprocess_signal(
     float dt,
     sfl::segmented_vector<float, 256> &signal_value) {
 
+    // Extend the processing range by a margin on each side to avoid
+    // edge artifacts from the median and lowpass filters. The margin
+    // is trimmed from the output at the end.
+    const size_t margin_before = std::min(preprocess_edge_margin, chunk_start_idx);
+    const size_t margin_after = std::min(preprocess_edge_margin, raw_samples.size() - (chunk_start_idx + chunk_size));
+    const size_t ext_start = chunk_start_idx - margin_before;
+    const size_t ext_size = margin_before + chunk_size + margin_after;
+
     // Zero-phase median filter: forward + backward, averaged.
     // A causal median filter shifts the symmetry axis due to asymmetric
     // startup transients. Averaging forward and backward passes cancels this.
     sp::MedianFilter<float, 5> median_filter;
 
-    signal_value.reserve(chunk_size);
-    for (size_t i = 0; i < chunk_size; ++i) {
-        signal_value.push_back(median_filter.filter(raw_samples[chunk_start_idx + i].sensor_value));
+    signal_value.reserve(ext_size);
+    for (size_t i = 0; i < ext_size; ++i) {
+        signal_value.push_back(median_filter.filter(raw_samples[ext_start + i].sensor_value));
     }
 
     sfl::segmented_vector<float, 256> bwd;
-    bwd.reserve(chunk_size);
-    bwd.resize(chunk_size);
+    bwd.reserve(ext_size);
+    bwd.resize(ext_size);
     median_filter.reset();
-    for (size_t i = chunk_size; i-- > 0;) {
-        bwd[i] = median_filter.filter(raw_samples[chunk_start_idx + i].sensor_value);
+    for (size_t i = ext_size; i-- > 0;) {
+        bwd[i] = median_filter.filter(raw_samples[ext_start + i].sensor_value);
     }
 
-    for (size_t i = 0; i < chunk_size; ++i) {
+    for (size_t i = 0; i < ext_size; ++i) {
         signal_value[i] = (signal_value[i] + bwd[i]) * 0.5f;
     }
 
@@ -519,6 +530,14 @@ static bool preprocess_signal(
         signal_value, lowpass_coeffs, 1.0f / dt, signal_lowpass_cutoff_hz);
 
     sp::linear_detrend(signal_value);
+
+    // Trim margins to return only the original chunk range
+    if (margin_after > 0) {
+        signal_value.erase(signal_value.end() - margin_after, signal_value.end());
+    }
+    if (margin_before > 0) {
+        signal_value.erase(signal_value.begin(), signal_value.begin() + margin_before);
+    }
     return true;
 }
 
@@ -849,7 +868,7 @@ static FourPassPeaks detect_four_peaks(
     const SweepSpeedProfile &profile,
     uint32_t motion_profile_start_us,
     const char *label) {
-
+    constexpr uint8_t peaks_number = 4;
     FourPassPeaks result;
     const size_t n = raw_samples.size();
 
@@ -858,31 +877,30 @@ static FourPassPeaks detect_four_peaks(
     // Try data-driven rough alignment first
     auto rough_offset = find_rough_time_alignment(raw_samples, dt, profile, label);
 
-    size_t pass_start_idx[4];
-    size_t pass_end_idx[4];
+    size_t pass_start_idx[peaks_number];
+    size_t pass_end_idx[peaks_number];
 
     if (rough_offset.has_value()) {
         // Compute aligned peak centers in sample indices
-        int aligned_peaks[4];
-        for (int i = 0; i < 4; ++i) {
+        int aligned_peaks[peaks_number];
+        for (int i = 0; i < peaks_number; ++i) {
             aligned_peaks[i] = static_cast<int>(t_peaks[i] / dt) + *rough_offset;
         }
 
         // Chunk boundaries: midpoints between adjacent peaks
-        pass_start_idx[0] = 0;
+        // First and last chunks are inset by preprocess_edge_margin so that
+        // the preprocessing margin has real data to work with on both sides.
+        pass_start_idx[0] = std::min(preprocess_edge_margin, n);
         pass_end_idx[0] = static_cast<size_t>((aligned_peaks[0] + aligned_peaks[1]) / 2);
+        pass_end_idx[0] = std::min(pass_end_idx[0], n);
         pass_start_idx[1] = pass_end_idx[0];
         pass_end_idx[1] = static_cast<size_t>((aligned_peaks[1] + aligned_peaks[2]) / 2);
+        pass_end_idx[1] = std::min(pass_end_idx[1], n);
         pass_start_idx[2] = pass_end_idx[1];
         pass_end_idx[2] = static_cast<size_t>((aligned_peaks[2] + aligned_peaks[3]) / 2);
+        pass_end_idx[2] = std::min(pass_end_idx[2], n);
         pass_start_idx[3] = pass_end_idx[2];
-        pass_end_idx[3] = n;
-
-        // Clamp all to valid range
-        for (int i = 0; i < 4; ++i) {
-            pass_start_idx[i] = std::min(pass_start_idx[i], n);
-            pass_end_idx[i] = std::min(pass_end_idx[i], n);
-        }
+        pass_end_idx[3] = (n > preprocess_edge_margin) ? n - preprocess_edge_margin : n;
 
         debug_report_rough_align("ok", *rough_offset, 0.0f, pass_start_idx, pass_end_idx);
 
@@ -903,8 +921,8 @@ static FourPassPeaks detect_four_peaks(
         log_info(ContactlessOffset, "detect_four_peaks: rough align failed, using profile timing (offset=%.3fms)",
             sensor_offset_s * 1000.0f);
 
-        float pass_start_times[4];
-        float pass_end_times[4];
+        float pass_start_times[peaks_number];
+        float pass_end_times[peaks_number];
         const float r = profile.rest_time;
 
         pass_start_times[0] = r;
@@ -916,7 +934,7 @@ static FourPassPeaks detect_four_peaks(
         pass_start_times[3] = pass_end_times[2] + r;
         pass_end_times[3] = pass_start_times[3] + profile.pass_time2();
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < peaks_number; ++i) {
             float start_s = pass_start_times[i] - sensor_offset_s;
             float end_s = pass_end_times[i] - sensor_offset_s;
             pass_start_idx[i] = (start_s > 0) ? static_cast<size_t>(start_s / dt) : 0;
@@ -924,6 +942,11 @@ static FourPassPeaks detect_four_peaks(
             pass_start_idx[i] = std::min(pass_start_idx[i], n);
             pass_end_idx[i] = std::min(pass_end_idx[i], n);
         }
+        // Inset first/last chunks so preprocessing margin has data on both sides
+        pass_start_idx[0] = std::max(pass_start_idx[0], preprocess_edge_margin);
+        pass_end_idx[peaks_number - 1] = (pass_end_idx[peaks_number - 1] > preprocess_edge_margin)
+            ? std::min(pass_end_idx[peaks_number - 1], n - preprocess_edge_margin)
+            : pass_end_idx[peaks_number - 1];
 
         debug_report_rough_align("fallback", 0, sensor_offset_s * 1000.0f, pass_start_idx, pass_end_idx);
     }
@@ -935,7 +958,7 @@ static FourPassPeaks detect_four_peaks(
 
     uint32_t detect_four_start_us = ticks_us();
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < peaks_number; ++i) {
         size_t chunk_start = pass_start_idx[i];
         size_t chunk_end = pass_end_idx[i];
 
