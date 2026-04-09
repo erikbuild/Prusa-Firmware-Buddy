@@ -6,6 +6,7 @@
 
 #include "accelerometer.h"
 #include "puppies/fifo_coder.hpp"
+#include <accelerometer_record/types.hpp>
 #include <stdint.h>
 #include <option/has_remote_accelerometer.h>
 

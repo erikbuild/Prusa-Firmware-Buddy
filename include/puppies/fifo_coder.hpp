@@ -80,16 +80,3 @@ inline constexpr MessageType message_type<AccelerometerSamplingRate>() {
     return MessageType::accelerometer_sampling_rate;
 }
 } // namespace common::puppies::fifo
-
-namespace dwarf::accelerometer {
-struct AccelerometerRecord {
-    union {
-        struct {
-            int16_t x, y, z;
-        };
-        int16_t raw[3];
-    };
-    bool buffer_overflow = false;
-    bool sample_overrun = false;
-};
-} // namespace dwarf::accelerometer

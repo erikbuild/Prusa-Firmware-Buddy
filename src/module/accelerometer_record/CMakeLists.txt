@@ -1,0 +1,2 @@
+add_library(accelerometer_record INTERFACE)
+target_include_directories(accelerometer_record INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

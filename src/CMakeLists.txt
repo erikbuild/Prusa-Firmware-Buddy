@@ -82,7 +82,7 @@ elseif(BOARD STREQUAL "DWARF")
   add_subdirectory(puppy/dwarf)
   add_subdirectory(puppy/shared)
 
-  target_link_libraries(firmware PRIVATE FreeRTOS::CMSIS)
+  target_link_libraries(firmware PRIVATE FreeRTOS::CMSIS accelerometer_record)
 elseif(BOARD STREQUAL "MODULARBED")
   target_include_directories(firmware PRIVATE .)
 
