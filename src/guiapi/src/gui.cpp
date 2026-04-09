@@ -94,6 +94,8 @@ void gui_handle_touch() {
         return;
     }
 
+    touchscreen.update();
+
     const auto touch_event = touchscreen.get_event();
     if (!touch_event) {
         return;
