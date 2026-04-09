@@ -23,6 +23,10 @@
 #include <raii/scope_guard.hpp>
 #include <nozzle_cleaner.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
+#include <feature/contactless_offset/contactless_offset.hpp>
+#include <feature/pressure_advance/pressure_advance_config.hpp>
+#include <utils/variant_utils.hpp>
+#include <option/has_toolchanger.h>
 
 #include <option/has_spool_join.h>
 #if HAS_SPOOL_JOIN()
@@ -142,8 +146,37 @@ bool prepare_tool(PhysicalToolIndex tool) {
 }
 
 void calibrate_xy_offset([[maybe_unused]] PhysicalToolIndex tool) {
-    // INDX_TODO: Implement XY offset calibration
-    // For each tool: move to tool_offset board, execute moves, measure, return
+    auto config = tool_offset::get_default_probing_config();
+
+    const auto selected_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (!selected_tool.has_value()) {
+        log_error(ToolOffsetCalib, "failed: no tool selected");
+        return;
+    }
+
+    // Zero hotend offset and currently applied offset to avoid stale offset
+    // affecting subsequent tool changes (same as G425)
+    reset_hotend_offset(selected_tool.value());
+    hotend_currently_applied_offset = xyz_pos_t {};
+
+    // Reset planner state
+    planner.synchronize();
+    planner.reset_position();
+
+    // Disable PA to reduce filter delay during probe analysis
+    pressure_advance::PressureAdvanceDisabler pa_disabler;
+
+    // Perform the measurement for picked tool
+    auto sensor = tool_offset::get_default_sensor();
+    auto result = tool_offset::measure_current_tool_offset(config, *sensor);
+    if (!result.has_value()) {
+        log_error(ToolOffsetCalib, "failed: %s", result.error());
+        return;
+    }
+
+    hotend_offset[selected_tool.value()].x = -result->x;
+    hotend_offset[selected_tool.value()].y = -result->y;
+    prusa_toolchanger.save_tool_offset(selected_tool.value());
 }
 
 using ToolSet = std::bitset<PhysicalToolIndex::count>;
@@ -190,6 +223,15 @@ ToolSet collect_mapped_physical_tools() {
     return seen;
 }
 
+/// Collect all physically enabled tools.
+ToolSet collect_all_enabled_tools() {
+    ToolSet seen;
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+        seen.set(tool.to_raw());
+    }
+    return seen;
+}
+
 /// Find the lowest set bit in a ToolSet, return as PhysicalToolIndex
 PhysicalToolIndex first_tool(const ToolSet &set) {
     for (uint8_t i = 0; i < PhysicalToolIndex::count; i++) {
@@ -226,19 +268,23 @@ bool run(uint8_t r_param, uint8_t probe_count) {
         tool_change(stdext::to_variant(original_tool), tool_return_t::no_return);
     });
 
-    if (axis_unhomed_error()) {
-        log_error(ToolOffsetCalib, "Axes not homed");
+    if (!GcodeSuite::G28_no_parser(true, true, true, G28Flags { .only_if_needed = true })) {
+        log_error(ToolOffsetCalib, "Homing failed");
         return false;
     }
 
-    // Collect the physical tools we need to calibrate from the active tool mapping
-    const ToolSet mapped_tools = collect_mapped_physical_tools();
+    // Collect the physical tools we need to calibrate from the active tool mapping.
+    // Fall back to all enabled tools when no mapping is active (e.g. debug/standalone use).
+    ToolSet mapped_tools = collect_mapped_physical_tools();
     if (mapped_tools.none()) {
-        log_error(ToolOffsetCalib, "No mapped tools found");
+        mapped_tools = collect_all_enabled_tools();
+    }
+    if (mapped_tools.none()) {
+        log_error(ToolOffsetCalib, "No tools found");
         return false;
     }
 
-    log_info(ToolOffsetCalib, "Mapped tools: %u tool(s)", mapped_tools.count());
+    log_info(ToolOffsetCalib, "Calibrating %u tool(s)", mapped_tools.count());
 
     const PhysicalToolIndex first = first_tool(mapped_tools);
 

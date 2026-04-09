@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Standalone G426 tool offset debug script.
+Standalone G426/G427 tool offset debug script.
 
-Captures G426 debug output from the printer and displays C++ analysis results.
+Captures G426/G427 debug output from the printer and displays C++ analysis results.
 
 Usage:
     # Single probe from printer, save raw data
@@ -16,6 +16,12 @@ Usage:
 
     # Replay saved repeatability data
     python debug_tool_offset.py repeat --load runs.json --show
+
+    # G427 full calibration: all mapped tools
+    python debug_tool_offset.py all_tools --save calib.json
+
+    # Replay G427 calibration data
+    python debug_tool_offset.py all_tools --load calib.json --show
 """
 from __future__ import annotations
 
@@ -377,8 +383,53 @@ _PARSERS = [
     ("# rough_align_energy", "rough_align_energy", RoughAlignEnergy.from_json),
 ]
 
+_NOISE_RE = re.compile(r'echo:busy: processing'
+                       r'|^T:\d'
+                       r'|^X:\d'
+                       r'|^echo:Unknown command')
+
+
+def _reassemble_lines(response: List[str]) -> List[str]:
+    """Reassemble debug lines fragmented by auto-report interleaving.
+
+    The streaming line_samples reporter writes samples one-by-one.
+    Auto-report messages (echo:busy, temperature) can get spliced in
+    mid-line, breaking it into multiple readline() results.  Detect
+    incomplete debug lines and stitch them back together.
+    """
+    out: List[str] = []
+    pending: Optional[str] = None
+
+    for line in response:
+        if pending is not None:
+            # Strip noise injected into the middle of a debug line
+            cleaned = _NOISE_RE.sub('', line).strip()
+            if cleaned:
+                pending += cleaned
+            # Check if the JSON is now complete (ends with })
+            if pending.rstrip().endswith('}'):
+                out.append(pending)
+                pending = None
+            continue
+
+        if line.startswith('#'):
+            # Check if this debug line looks incomplete (no closing brace)
+            if not line.rstrip().endswith('}'):
+                pending = line
+                # Strip trailing noise from the first fragment
+                pending = _NOISE_RE.sub('', pending)
+                continue
+
+        out.append(line)
+
+    if pending is not None:
+        out.append(pending)  # flush incomplete line as-is
+
+    return out
+
 
 def parse_response(response: List[str]) -> Dict[str, Any]:
+    response = _reassemble_lines(response)
     data: Dict[str, list] = {key: [] for _, key, _ in _PARSERS}
 
     final = FinalOffset()
@@ -406,6 +457,33 @@ def parse_response(response: List[str]) -> Dict[str, Any]:
                 final.y_mm, final.y_confidence = val, conf_f
             elif axis == "Z":
                 final.z_mm = val
+
+    # Extract offsets from scan_result debug lines when G426-style
+    # "X offset: ..." lines are absent (e.g. G427).
+    # Prefer nozzle-offset results; fall back to center-detection.
+    if final.x_mm is None or final.y_mm is None:
+        scan_results: Dict[str, tuple] = {}
+        for line in response:
+            if line.startswith("# scan_result"):
+                try:
+                    sr = json.loads(line.split(" ", maxsplit=2)[2])
+                    scan_results[sr["label"]] = (
+                        float(sr.get("position_mm", 0)),
+                        float(sr.get("confidence", 0)),
+                    )
+                except (IndexError, json.JSONDecodeError, KeyError):
+                    pass
+        for axis, preferred, fallback in [
+            ("x", "nozzle-offset-x", "center-detection-x"),
+            ("y", "nozzle-offset-y", "center-detection-y"),
+        ]:
+            sr = scan_results.get(preferred) or scan_results.get(fallback)
+            if sr:
+                val, conf = sr
+                if axis == "x" and final.x_mm is None:
+                    final.x_mm, final.x_confidence = val, conf
+                elif axis == "y" and final.y_mm is None:
+                    final.y_mm, final.y_confidence = val, conf
 
     data["final"] = final
     return data
@@ -457,6 +535,39 @@ def build_g426(speed1, speed2, diameter, zheight) -> str:
         if value is not None:
             cmd += f" {letter}{value}"
     return cmd
+
+
+def build_g427(r_param=None, probe_count=None) -> str:
+    cmd = "G427"
+    for letter, value in [("R", r_param), ("P", probe_count)]:
+        if value is not None:
+            cmd += f" {letter}{value}"
+    return cmd
+
+
+def split_response_by_tool(response: List[str]) -> List[List[str]]:
+    """Split a G427 multi-tool response into per-tool segments.
+
+    Each tool's XY calibration starts with a center-detection-x line_samples
+    entry. Non-debug lines before the first tool are kept in the first segment.
+    """
+    BOUNDARY = '# line_samples {"label": "center-detection-x"'
+    segments: List[List[str]] = []
+    current: List[str] = []
+    found_first = False
+
+    for line in response:
+        if line.startswith(BOUNDARY):
+            if found_first and current:
+                segments.append(current)
+                current = []
+            found_first = True
+        current.append(line)
+
+    if current:
+        segments.append(current)
+
+    return segments if segments else [response]
 
 
 def print_axis_results(
@@ -694,6 +805,7 @@ def plot_sweep_analysis(
     correlations: Optional[List[PassCorrelation]] = None,
     raw_chunks: Optional[List[PassRawChunk]] = None,
     energy_data: Optional[RoughAlignEnergy] = None,
+    tool_label: Optional[str] = None,
 ) -> Optional[go.Figure]:
     """Single complex figure per sweep with all analysis panels."""
     if not samples or not samples.samples or not profile or not profile.time_s:
@@ -1179,10 +1291,11 @@ def plot_sweep_analysis(
     fig.update_xaxes(title_text="Position (mm)", row=cur_row, col=1)
     fig.update_yaxes(title_text="Sensor response", row=cur_row, col=1)
 
+    main_title = (f"{tool_label} \u2014 {title_prefix}: Sweep Analysis"
+                  if tool_label else f"{title_prefix}: Sweep Analysis")
     fig.update_layout(
-        title=dict(text=(f"{title_prefix}: Sweep Analysis"
-                         f"<br><sup>{subtitle}</sup>"
-                         if subtitle else f"{title_prefix}: Sweep Analysis")),
+        title=dict(text=(f"{main_title}<br><sup>{subtitle}</sup>"
+                         if subtitle else main_title)),
         autosize=True,
         height=450 * n_rows,
         showlegend=True,
@@ -1439,7 +1552,9 @@ def _gather_scan_data(data: Dict[str, Any], frag: str) -> Dict[str, Any]:
     }
 
 
-def process_single(response: List[str], diameter: float) -> tuple:
+def process_single(response: List[str],
+                   diameter: float,
+                   tool_label: Optional[str] = None) -> tuple:
     """Process a single probe. Returns (data, figures) where figures is a list of go.Figure."""
     data = parse_response(response)
     figures: List[go.Figure] = []
@@ -1470,7 +1585,8 @@ def process_single(response: List[str], diameter: float) -> tuple:
                                   derivatives=sd["derivatives"],
                                   correlations=sd["correlations"],
                                   raw_chunks=sd["raw_chunks"],
-                                  energy_data=sd["energy_data"])
+                                  energy_data=sd["energy_data"],
+                                  tool_label=tool_label)
         if fig:
             figures.append(fig)
 
@@ -1565,7 +1681,7 @@ def _print_run_result(label: str, final: FinalOffset) -> None:
 
 @click.group()
 def cli():
-    """G426 tool offset debug and repeatability tool."""
+    """G426/G427 tool offset debug and repeatability tool."""
     pass
 
 
@@ -1662,6 +1778,57 @@ def repeat(port, speed1, speed2, diameter, zheight, save, load, show, plot,
         plot_repeat_timeseries(x_vals, y_vals, x_conf, y_conf),
     ]
     _emit_figures(figures, show, plot)
+
+
+@cli.command(name="all_tools")
+@click.option("--port",
+              default=None,
+              help="Serial port (auto-detect Prusa VID)")
+@click.option("--r-param",
+              "-R",
+              type=int,
+              default=None,
+              help="Random jitter mm for Z probing")
+@click.option("--probe-count",
+              "-P",
+              type=int,
+              default=None,
+              help="Z probe repetitions per point")
+@click.option("--diameter",
+              "-D",
+              type=float,
+              default=None,
+              help="Scan diameter for analysis (mm)")
+@output_options
+def all_tools(port, r_param, probe_count, diameter, save, load, show, plot):
+    """G427: Full tool offset calibration for all enabled tools."""
+    d = diameter or 10.0
+
+    if load:
+        print(f"Loading from {load}...")
+        response = load_raw(load)
+    else:
+        gcode = build_g427(r_param, probe_count)
+        with enabledMachineConnection(port) as machine:
+            print(f"  Sending: {gcode}")
+            response = machine.command(gcode, timeout=600)
+
+    if save:
+        save_raw(save, response)
+
+    tool_responses = split_response_by_tool(response)
+    print(f"\nDetected {len(tool_responses)} tool(s) in response")
+
+    all_figures: List[go.Figure] = []
+    for i, tool_resp in enumerate(tool_responses):
+        tool_label = f"Tool {i}"
+        print(f"\n{'#' * 70}")
+        print(f"  {tool_label.upper()}")
+        print(f"{'#' * 70}")
+        data, figures = process_single(tool_resp, d, tool_label=tool_label)
+        all_figures.extend(figures)
+
+    _emit_figures(all_figures, show, plot)
 
 
 if __name__ == "__main__":
