@@ -397,7 +397,17 @@ void espif_input_once(struct netif *netif) {
         __HAL_UART_DISABLE_IT(&uart_handle_for_esp, UART_IT_IDLE);
         auto enable_idle_iterrupt = ScopeGuard { [&] { __HAL_UART_ENABLE_IT(&uart_handle_for_esp, UART_IT_IDLE); } };
 
-        HAL_UART_DeInit(&uart_handle_for_esp);
+        // Abort clears transactions and resets the state, but doesn't tear down the peripheral, no need for full deinit.
+        //
+        // * Init after Abort is then more lightweight — just reconfigures UART registers.
+        // * More importantly, this avoids HAL_UART_MspInit which calls bsod_system() on DMA
+        //   init failure instead of returning errors.
+        // * Avoids deinit-init of GPIO pins, which could cause some random noise on the bus.
+        if (const HAL_StatusTypeDef status = HAL_UART_Abort(&uart_handle_for_esp); status != HAL_OK) {
+            log_warning(ESPIF, "HAL_UART_Abort() failed: %d", status);
+            uart_error_occured = true;
+            return;
+        }
         if (const HAL_StatusTypeDef status = HAL_UART_Init(&uart_handle_for_esp); status != HAL_OK) {
             log_warning(ESPIF, "HAL_UART_Init() failed: %d", status);
             uart_error_occured = true;
