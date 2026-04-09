@@ -137,13 +137,7 @@ static SnakeConfig snake_config {};
 
 namespace {
 
-void do_snake(Action action, Tool tool = Tool::_first) {
-    // Code checked - this should never happen. Let's assume a bit of sanity here.
-    // _all_tools would break out gcode selftests
-    if (tool == Tool::_all_tools) {
-        bsod_unreachable();
-    }
-
+void do_snake(Action action, PhysicalToolIndex tool) {
     if (!are_previous_completed(action) && !snake_config.in_progress) {
         if (MsgBoxQuestion(_("Previous Calibrations & Tests are not all done. Continue anyway?"), Responses_YesNo, 1) == Response::No) {
             snake_config.reset();
@@ -169,17 +163,17 @@ void do_snake(Action action, Tool tool = Tool::_first) {
 
         case Action::FilamentSensorCalibration:
 #if HAS_SIDE_FSENSOR_REMAP()
-            if (!snake_config.in_progress || tool == Tool::_first) {
+            if (!snake_config.in_progress || tool == PhysicalToolIndex::from_raw(0)) {
                 // Ask user whether to remap filament sensors
                 side_fsensor_remap::ask_to_remap();
             }
 #endif
-            marlin_client::gcode_printf("M1981 T%d", static_cast<int>(tool));
+            marlin_client::gcode_printf("M1981 T%d", tool.to_raw());
             break;
 
 #if HAS_GEARBOX_ALIGNMENT()
         case Action::Gears:
-            marlin_client::gcode_printf("M1979 T%d", static_cast<int>(tool));
+            marlin_client::gcode_printf("M1979 T%d", tool.to_raw());
             break;
 #endif
 #if HAS_DOOR_SENSOR_CALIBRATION()
@@ -199,19 +193,18 @@ void do_snake(Action action, Tool tool = Tool::_first) {
 
         if (has_test_special_handling) {
             marlin_client::gcode("M118 nop"); // No operation gcode to fill the queue until selftest is done
-            snake_config.next(action, PhysicalToolIndex::from_raw(std::to_underlying(tool)));
+            snake_config.next(action, tool);
             return;
         }
     }
 
     if (has_submenu(action)) {
-        const auto tool_mask = (tool < Tool::_count) ? PhysicalToolIndex::from_raw(std::to_underlying(tool)) : ToolMask { AllTools {} };
-        marlin_client::test_start_with_data(get_test_mask(action), tool_mask);
+        marlin_client::test_start_with_data(get_test_mask(action), tool);
     } else {
         marlin_client::test_start(get_test_mask(action));
     }
 
-    snake_config.next(action, PhysicalToolIndex::from_raw(std::to_underlying(tool)));
+    snake_config.next(action, tool);
 };
 
 void continue_snake() {
@@ -279,9 +272,9 @@ void continue_snake() {
     if (!is_multitool()
         || !has_submenu(snake_config.last_action)
         || snake_config.last_tool == get_last_enabled_tool()) { // singletool or wasn't submenu or was last in a submenu
-        do_snake(get_next_action(snake_config.last_action));
+        do_snake(get_next_action(snake_config.last_action), PhysicalToolIndex::from_raw(0));
     } else { // current submenu not yet finished
-        do_snake(snake_config.last_action, Tool { get_next_tool(snake_config.last_tool).to_raw() });
+        do_snake(snake_config.last_action, get_next_tool(snake_config.last_tool));
     }
 }
 
@@ -369,7 +362,7 @@ I_MI_STS::I_MI_STS(Action action)
 
 void I_MI_STS::click(IWindowMenu &) {
     if (!has_submenu(action) || !is_multitool()) {
-        do_snake(action);
+        do_snake(action, PhysicalToolIndex::from_raw(0));
     } else {
         open_submenu(action);
     }
@@ -388,7 +381,7 @@ I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, PhysicalToo
 }
 
 void I_MI_STS_SUBMENU::click(IWindowMenu &) {
-    do_snake(action, Tool { tool.to_raw() });
+    do_snake(action, tool);
 }
 
 void I_MI_STS_SUBMENU::Loop() {
@@ -468,7 +461,7 @@ void ScreenMenuSTSWizard::windowEvent(window_t *sender, GUI_event_t event, void 
         // Now show always, bed heater selftest can fail if there is no sheet on the bed
         MsgBoxInfo(_("Before you continue, make sure the print sheet is installed on the heatbed."), Responses_Ok);
 
-        do_snake(get_first_action());
+        do_snake(get_first_action(), PhysicalToolIndex::from_raw(0));
         snake_config.auto_continue = SnakeConfig::AutoContinue::all;
         return;
     }
