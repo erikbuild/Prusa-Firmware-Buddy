@@ -168,7 +168,7 @@ public:
     /**
      * Read FIFO queue
      */
-    CommunicationStatus ReadFIFO(uint8_t unit, uint16_t address, std::array<uint16_t, 31> &buffer, size_t &read);
+    CommunicationStatus ReadFIFO(uint8_t unit, uint16_t address, std::array<uint16_t, 31> &buffer, size_t &read, size_t retries = 0);
 
     /// Last request begin timestamp
     uint32_t last_request_begin_ns;

@@ -327,7 +327,7 @@ CommunicationStatus PuppyModbus::write_coil(uint8_t unit, bool value, uint16_t a
     return status;
 }
 
-CommunicationStatus PuppyModbus::ReadFIFO(uint8_t unit, uint16_t address, std::array<uint16_t, 31> &buffer, size_t &read) {
+CommunicationStatus PuppyModbus::ReadFIFO(uint8_t unit, uint16_t address, std::array<uint16_t, 31> &buffer, size_t &read, size_t retries) {
     auto lock = PuppyBus::LockGuard();
 
     [[maybe_unused]] ModbusErrorInfo err = modbusBuildRequest24RTU(&master, unit, address);
@@ -335,7 +335,7 @@ CommunicationStatus PuppyModbus::ReadFIFO(uint8_t unit, uint16_t address, std::a
 
     active_value = { static_cast<void *>(buffer.data()), unit, address, static_cast<uint16_t>(buffer.size()) };
 
-    const auto status = make_request(nullptr, 0);
+    const auto status = make_request(nullptr, retries);
     if (status == CommunicationStatus::OK) {
         read = active_value->data_processed;
     } else {
