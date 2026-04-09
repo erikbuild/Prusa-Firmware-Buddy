@@ -874,7 +874,7 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = 576.f / 550.f;
     #define Y_MAX_POS (Y_MAX_PRINT_POS) // extra distance in Y to reach toolchanger
     #define PROBE_MAX_Y Y_BED_SIZE // limit maximal Y probe position (so that tool doesn't hit toolchanger with high tool offsets)
     #define Y_DOCK_SAFE_OFFSET 28.6f // distance from the side, which could be occupied by INDX (linked to DOCK_SAFE_Y_OFFSET in toolchangers_utils.h)
-    #define Y_DOCK_PARKING_MIN_SAFE_POS (Y_MIN_POS + Y_DOCK_SAFE_OFFSET) // position for save index head (bellow this position the motion on X could damage the nozzles)
+    #define Y_DOCK_PARKING_MIN_SAFE_POS (Y_MIN_POS + Y_DOCK_SAFE_OFFSET + 5.f) // position for save index head (bellow this position the motion on X could damage the nozzles or hit ventilation lever)
 #else
     // The size of the print bed
     #define X_BED_SIZE 250
