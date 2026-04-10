@@ -14,6 +14,11 @@ if(HAS_DWARF)
   target_sources(firmware PUBLIC Dwarf.cpp)
 endif()
 
+if(HAS_INDX)
+  target_sources(firmware PUBLIC INDX.cpp)
+  target_link_libraries(firmware PUBLIC indx_head)
+endif()
+
 if(HAS_PUPPY_MODULARBED)
   target_sources(firmware PUBLIC modular_bed.cpp)
 endif()

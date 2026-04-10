@@ -1,0 +1,546 @@
+#include <puppies/INDX.hpp>
+
+#include <cassert>
+
+#include <fifo_coder/fifo_decoder.hpp>
+#include <freertos/mutex.hpp>
+#include <indx_head/errors.hpp>
+#include <indx_head/nozzle_presence.hpp>
+
+#include <logging/log.hpp>
+#include "loadcell.hpp"
+#include "timing.h"
+#include <logging/log_dest_bufflog.hpp>
+#include <assert.h>
+#include "metric.h"
+#include <puppies/PuppyBootstrap.hpp>
+#include <i18n.h>
+#include <config_store/store_instance.hpp>
+#include "Marlin/src/module/prusa/accelerometer.h"
+#include <utils/string_builder.hpp>
+#include <option/has_indx_head.h>
+
+using namespace fifo_coder;
+
+namespace buddy::puppies {
+
+using Lock = std::unique_lock<freertos::Mutex>;
+
+LOG_COMPONENT_DEF(INDX, logging::Severity::info);
+
+METRIC_DEF(metric_fast_refresh_delay, "dwarf_fast_refresh_delay", METRIC_VALUE_INTEGER, 0, METRIC_DISABLED);
+
+METRIC_DEF(metric_dwarf_heater_current, "dwarf_heat_curr", METRIC_VALUE_CUSTOM, 100, METRIC_DISABLED);
+
+Indx::Indx(uint8_t modbus_address)
+    : ModbusDevice(modbus_address)
+    , mutex(new freertos::Mutex)
+    , time_sync(1) // Just magic number for metric (unnecessary with single head)
+    , loadcell_samplerate {} {
+
+    register_general_status.value.fault_status = indx_head::errors::FaultStatusMask::no_fault;
+    register_general_status.value.hotend_measured_temperature = (HEATER_0_MINTEMP + 1) * 100; // Hotend temp is sent as centiDeg. Init to temperature that won't immediately trigger mintemp
+    general_write.value.nozzle_target_temperature = 0;
+
+    if (config_store().tool_leds_enabled.get()) {
+        set_leds_color(COLOR_ORANGE, indx_head::leds::Mode::solid);
+    } else {
+        set_leds_color(COLOR_BLACK, indx_head::leds::Mode::off);
+    }
+}
+
+CommunicationStatus Indx::refresh(PuppyModbus &bus) {
+    Lock guard(*mutex);
+    typedef CommunicationStatus (Indx::*MethodType)(PuppyModbus &);
+    static constexpr MethodType funcs[] = {
+        &Indx::read_general_status,
+        &Indx::write_general,
+        &Indx::run_time_sync,
+    };
+    if (++refresh_nr >= std::size(funcs)) {
+        refresh_nr = 0;
+    }
+    return (this->*funcs[refresh_nr])(bus);
+}
+
+void Indx::handle_nozzle_presence() {
+    // Trust nozzle data only when both are true:
+    //  1. Head echoed back our invalidation token (debouncer was reset)
+    //  2. Head reports a definitive result (not unknown — debouncer has settled with fresh samples)
+    using indx_head::NozzlePresence;
+    const auto nozzle_state = static_cast<NozzlePresence>(register_general_status.value.nozzle_present);
+    const bool has_definitive_result = nozzle_state != NozzlePresence::unknown;
+    const bool head_acknowledged = register_general_status.value.nozzle_invalidation_ack == nozzle_invalidation_token;
+    nozzle_data_valid.store(has_definitive_result && head_acknowledged);
+}
+
+CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
+    // read general status registers
+    CommunicationStatus status = bus.read(unit, register_general_status, 250);
+    if (status == CommunicationStatus::OK) {
+        if (register_general_status.value.fault_status != indx_head::errors::FaultStatusMask::no_fault) {
+            handle_indx_head_fault(bus);
+            register_general_status.value.fault_status = indx_head::errors::FaultStatusMask::no_fault;
+        }
+
+        metric_record_custom(&metric_dwarf_heater_current, "v=%d", register_general_status.value.heater_current_mA);
+
+        handle_nozzle_presence();
+    }
+    return status;
+}
+
+CommunicationStatus Indx::ping(PuppyModbus &bus) {
+    Lock guard(*mutex);
+    return bus.read(unit, general_static);
+}
+
+CommunicationStatus Indx::initial_scan(PuppyModbus &bus) {
+    Lock guard(*mutex);
+    time_sync.init();
+    run_time_sync(bus);
+
+    // Update static values
+    CommunicationStatus status = bus.read(unit, general_static);
+    if (status == CommunicationStatus::ERROR) {
+        return status;
+    }
+
+    log_info(INDX, "HwBomId: %d", general_static.value.hw_bom_id);
+    log_info(INDX, "HwOtpTimestsamp: %" PRIu32, general_static.value.hw_otp_timestamp());
+
+    serial_nr_t sn = {}; // Last byte has to be '\0'
+    static constexpr size_t raw_datamatrix_regsize = std::tuple_size_v<decltype(general_static.value.hw_raw_datamatrix)>;
+    // Check size of text -1 as the terminating \0 is not sent
+    static_assert((raw_datamatrix_regsize * sizeof(uint16_t)) == (sn.size() - 1), "Size of raw datamatrix doesn't fit modbus registers");
+
+    for (uint16_t i = 0; i < raw_datamatrix_regsize; ++i) {
+        sn[i * 2] = general_static.value.hw_raw_datamatrix[i] & 0xff;
+        sn[i * 2 + 1] = general_static.value.hw_raw_datamatrix[i] >> 8;
+    }
+    log_info(INDX, "HwDatamatrix: %s", sn.data());
+
+    general_write.value.loadcell_enabled = true;
+    general_write.dirty = true;
+
+    // Write coil values that are not written automatically
+    if (bus.write(unit, general_write) == CommunicationStatus::ERROR) {
+        return CommunicationStatus::ERROR;
+    }
+
+    return status;
+}
+
+void Indx::set_leds_color(Color color, indx_head::leds::Mode mode) {
+    // FIXME: Calculate this on the head so we set correct colors from inside of the head, but needs to be rewritten into fixed point arythmetic
+    static constexpr float gamma = 2.2f; // Use 2.6 or 2.8 for richer colors
+    static constexpr float rgb_max = 255.f;
+    static constexpr float pwm_max = 255.f;
+    color.r = static_cast<uint8_t>(pwm_max * std::pow(float(color.r) / rgb_max, gamma));
+    color.g = static_cast<uint8_t>(pwm_max * std::pow(float(color.g) / rgb_max, gamma));
+    color.b = static_cast<uint8_t>(pwm_max * std::pow(float(color.b) / rgb_max, gamma));
+    Lock guard(*mutex);
+    general_write.value.leds.r = color.r;
+    general_write.value.leds.g = color.g;
+    general_write.value.leds.b = color.b;
+    general_write.value.leds.mode = mode;
+    general_write.dirty = true;
+}
+
+void Indx::set_leds_enabled(bool set) {
+    Lock guard(*mutex);
+    general_write.value.leds.mode = set ? indx_head::leds::Mode::solid : indx_head::leds::Mode::off;
+    general_write.dirty = true;
+}
+
+bool Indx::dispatch_log_event() {
+    // Look for EOT byte - end of log entry
+    size_t eot_pos = 0;
+    while (eot_pos < log_line_pos && log_line_buffer[eot_pos] != BUFFLOG_TERMINATION_CHAR) {
+        eot_pos++;
+    }
+
+    if (eot_pos == log_line_pos) {
+        return false;
+    }
+
+    // Log event
+    if (eot_pos) {
+        log_info(INDX, "%.*s", eot_pos, log_line_buffer.data());
+    }
+
+    // Compact buffer
+    log_line_pos -= eot_pos + 1;
+    memmove(log_line_buffer.data(), &log_line_buffer[eot_pos + 1], log_line_pos);
+
+    return true;
+}
+
+CommunicationStatus Indx::fifo_refresh(PuppyModbus &bus, uint32_t cycle_ticks_ms) {
+    Lock guard(*mutex);
+    // pull fifo every 200 ms
+    if (last_pull_ms + DWARF_FIFO_PULL_PERIOD > cycle_ticks_ms) {
+        return CommunicationStatus::SKIPPED;
+    }
+
+    bool more;
+    CommunicationStatus status = pull_fifo_nolock(bus, more);
+    if (!more && status == CommunicationStatus::OK) {
+        last_pull_ms = cycle_ticks_ms; // Wait before next pull only if all is read
+    }
+    return status;
+}
+
+CommunicationStatus Indx::pull_fifo(PuppyModbus &bus, bool &more) {
+    Lock guard(*mutex);
+    return pull_fifo_nolock(bus, more);
+}
+
+CommunicationStatus Indx::pull_fifo_nolock(PuppyModbus &bus, bool &more) {
+    // Read coded FIFO
+    std::array<uint16_t, MODBUS_FIFO_LEN> fifo;
+    size_t read = 0;
+    CommunicationStatus status = bus.ReadFIFO(unit, ENCODED_FIFO_ADDRESS, fifo, read, FIFO_RETRIES);
+    if (status == CommunicationStatus::ERROR) {
+        more = true; // Request failed, most probably there is more data waiting
+        PrusaAccelerometer::set_possible_overflow();
+        return status;
+    }
+
+    // calculate metric of read latency
+    static uint32_t time_last_read = 0;
+    auto now = ticks_ms();
+    metric_record_integer(&metric_fast_refresh_delay, now - time_last_read);
+    time_last_read = now;
+
+    if (!read) {
+        more = false;
+        return CommunicationStatus::OK;
+    }
+
+    Decoder decoder(fifo, read);
+    decoder.decode(*this);
+
+    // Update sampling rate of the loadcell.ProcessSample()
+    if (loadcell_samplerate.count > 30) {
+        float interval = static_cast<float>(loadcell_samplerate.last_timestamp - loadcell_samplerate.last_processed_timestamp) / static_cast<float>(1000 * loadcell_samplerate.count);
+        // Ignore invalid values, values outside of 25% of expected value may be caused by glitch in modbus communication
+        if (interval >= loadcell_samplerate.expected * 0.75f && interval <= loadcell_samplerate.expected * 1.25f) {
+            loadcell.analysis.SetSamplingIntervalMs(interval); // Update sampling interval
+        }
+        loadcell_samplerate.count = 0;
+        loadcell_samplerate.last_processed_timestamp = loadcell_samplerate.last_timestamp;
+    }
+
+    more = decoder.more();
+    return status;
+}
+
+namespace fans {
+    constexpr size_t PRINTFAN_INDEX = 0;
+    constexpr size_t HEATBREAKFAN_INDEX = 1;
+} // namespace fans
+
+CommunicationStatus Indx::write_general(PuppyModbus &bus) {
+    // Handle delayed writes from possibly an interrupt.
+    uint16_t pwm_desired = fan_pwm_desired[fans::PRINTFAN_INDEX].load();
+    if (pwm_desired != general_write.value.print_fan_pwm.value) {
+        general_write.value.print_fan_pwm.value = pwm_desired;
+        general_write.dirty = true;
+    }
+    CommunicationStatus status = bus.write(unit, general_write);
+    if (status == CommunicationStatus::ERROR) {
+        return status;
+    }
+
+    log_debug(INDX, "Written GeneralWrite");
+    return status;
+}
+
+float Indx::get_hotend_temp() {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+
+    // Sent as int16 in uint16 modbus register - sent in centiDeg (deg * 100) for percision on 2 decimal places
+    return static_cast<float>(static_cast<int16_t>(register_general_status.value.hotend_measured_temperature)) / 100.f;
+}
+
+CommunicationStatus Indx::set_hotend_target_temp(float target) {
+    Lock guard(*mutex);
+
+    general_write.value.nozzle_target_temperature = (uint16_t)target;
+    general_write.dirty = true;
+    return CommunicationStatus::OK;
+}
+
+CommunicationStatus Indx::run_time_sync(PuppyModbus &bus) {
+    RequestTiming timing;
+    CommunicationStatus status = bus.read(unit, TimeSync, 1000, &timing);
+    if (status == CommunicationStatus::ERROR) {
+        log_error(INDX, "Failed to read fault status register");
+        return status;
+    }
+
+    if (status != CommunicationStatus::SKIPPED) {
+        time_sync.sync(TimeSync.value.dwarf_time_us, timing);
+    }
+
+    return status;
+}
+
+bool Indx::set_accelerometer(PuppyModbus &bus, bool active) {
+    Lock guard(*mutex);
+    accelerometer_enabled.value.accelerometer_enabled = active;
+    accelerometer_enabled.dirty = true;
+    general_write.value.accelerometer_enabled = active;
+    return bus.write(unit, accelerometer_enabled) == CommunicationStatus::OK;
+}
+
+bool Indx::set_loadcell(PuppyModbus &bus, bool active) {
+    Lock guard(*mutex);
+
+    return set_loadcell_nolock(bus, active);
+}
+
+bool Indx::set_loadcell_nolock(PuppyModbus &bus, bool active) {
+    return raw_set_loadcell(bus, active);
+}
+
+bool Indx::raw_set_loadcell(PuppyModbus &bus, bool enable) {
+    loadcell_enabled.value.loadcell_enabled = enable;
+    loadcell_enabled.dirty = true;
+    general_write.value.loadcell_enabled = enable;
+    return bus.write(unit, loadcell_enabled) == CommunicationStatus::OK;
+}
+
+int16_t Indx::get_mcu_temperature() {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+
+    // Sent as int16 in uint16 modbus register
+    return static_cast<int16_t>(register_general_status.value.mcu_temperature);
+}
+
+int16_t Indx::get_board_temperature() {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+
+    // Sent as int16 in uint16 modbus register
+    return static_cast<int16_t>(register_general_status.value.board_temperature);
+}
+
+float Indx::get_24V() {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+
+    return register_general_status.value.system_24V_mV / 1000.0f;
+}
+
+float Indx::get_heater_current() {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+
+    return register_general_status.value.heater_current_mA / 1000.0f;
+}
+
+uint16_t Indx::get_diag_uart_errors() {
+    return register_general_status.value.diag_uart_errors;
+}
+uint16_t Indx::get_diag_i2c_errors() {
+    return register_general_status.value.diag_i2c_errors;
+}
+uint16_t Indx::get_diag_spi_errors() {
+    return register_general_status.value.diag_spi_errors;
+}
+uint16_t Indx::get_diag_i2c_thermo_errors() {
+    return register_general_status.value.diag_i2c_thermo_errors;
+}
+uint16_t Indx::get_diag_i2c_led_errors() {
+    return register_general_status.value.diag_i2c_led_errors;
+}
+uint16_t Indx::get_diag_spi_accel_errors() {
+    return register_general_status.value.diag_spi_accel_errors;
+}
+uint16_t Indx::get_diag_spi_loadcell_errors() {
+    return register_general_status.value.diag_spi_loadcell_errors;
+}
+
+std::optional<bool> Indx::get_nozzle_present() {
+    Lock guard(*mutex);
+    if (!nozzle_data_valid.load()) {
+        return std::nullopt;
+    }
+
+    using indx_head::NozzlePresence;
+    const auto state = static_cast<NozzlePresence>(register_general_status.value.nozzle_present);
+    if (state == NozzlePresence::unknown) {
+        return std::nullopt; // Head is still debouncing
+    }
+    return state == NozzlePresence::present;
+}
+
+void Indx::invalidate_nozzle_data() {
+    Lock guard(*mutex);
+    nozzle_data_valid.store(false);
+
+    // Generate a new token and send it to the head. The head will reset its
+    // debouncer and echo the token back in nozzle_invalidation_ack.
+    // handle_nozzle_presence() won't re-validate until the ack matches,
+    nozzle_invalidation_token = static_cast<uint16_t>(ticks_ms());
+    if (nozzle_invalidation_token == 0) {
+        nozzle_invalidation_token = 1; // Avoid 0 — it's the head's initial ack value
+    }
+    general_write.value.invalidate_nozzle_presence = nozzle_invalidation_token;
+    general_write.dirty = true;
+}
+
+uint16_t Indx::get_nozzle_decay_x1000() {
+    Lock guard(*mutex);
+    return register_general_status.value.nozzle_decay_x1000;
+}
+
+void Indx::set_fan(uint8_t fan, uint16_t target) {
+    assert(fan < NUM_FANS);
+    // FIXME:
+    // Because this sometimes gets called from an interrupt, we need to just
+    // store the value and handle it properly under a lock somewhere else.
+    // BFW-6219.
+    fan_pwm_desired[fan].store(target);
+}
+
+void Indx::set_fan_auto(uint8_t fan) {
+    assert(fan < NUM_FANS);
+    fan_pwm_desired[fan].store(FAN_MODE_AUTO_PWM);
+}
+
+void Indx::handle_indx_head_fault([[maybe_unused]] PuppyModbus &bus) {
+    auto fault = register_general_status.value.fault_status;
+    if (fault == last_reported_fault) {
+        return;
+    }
+    last_reported_fault = fault;
+    log_error(INDX, "Fault status: %d", std::to_underlying(fault));
+}
+
+uint16_t Indx::get_heatbreak_fan_pwr() {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+    return 0;
+    // return RegisterGeneralStatus.value.heaterbreak_fan_pwm;
+}
+
+void Indx::decode_log(const LogData &data) {
+    // If buffer cannot handle next read, clean it
+    if (log_line_pos + data.size() > log_line_buffer.size()) {
+        log_warning(INDX, "Out of log buffer, logging incomplete data");
+        log_info(INDX, "%.*s", log_line_pos, log_line_buffer.data());
+        log_line_pos = 0;
+    }
+
+    // Copy data skipping 0 padding
+    for (const char c : data) {
+        if (c == 0) {
+            break;
+        }
+        log_line_buffer[log_line_pos++] = c;
+    }
+    while (dispatch_log_event())
+        ;
+}
+
+void Indx::decode_loadcell(const LoadcellRecord &data) {
+    // throw away samples if time is not synced
+    if (!this->time_sync.is_time_sync_valid()) {
+        return;
+    }
+
+    // Store sample timestamp and count sample
+    loadcell_samplerate.last_timestamp = this->time_sync.buddy_time_us(data.timestamp);
+    loadcell_samplerate.count++;
+
+    loadcell.ProcessSample(data.loadcell_raw_value, loadcell_samplerate.last_timestamp);
+}
+
+void Indx::decode_accelerometer_fast(const AccelerometerFastData &data) {
+    for (AccelerometerXyzSample sample : data) {
+        PrusaAccelerometer::put_sample(sample);
+    }
+}
+
+void Indx::decode_accelerometer_freq(const AccelerometerSamplingRate &data) {
+    PrusaAccelerometer::set_rate(data.frequency);
+}
+
+uint16_t Indx::get_fan_pwm(uint8_t fan_nr) const {
+    // Lock guard(*mutex);
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    switch (fan_nr) {
+    case fans::PRINTFAN_INDEX:
+        return register_general_status.value.print_fan_pwm;
+    case fans::HEATBREAKFAN_INDEX:
+        return register_general_status.value.heaterbreak_fan_pwm;
+    }
+    bsod_unreachable();
+}
+
+uint16_t Indx::get_fan_rpm(uint8_t fan_nr) const {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+    switch (fan_nr) {
+    case fans::PRINTFAN_INDEX:
+        return register_general_status.value.print_fan_rpm;
+    case fans::HEATBREAKFAN_INDEX:
+        return register_general_status.value.heaterbreak_fan_rpm;
+    }
+    bsod_unreachable();
+}
+
+bool Indx::get_fan_rpm_ok(uint8_t fan_nr) const {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+    switch (fan_nr) {
+    case fans::PRINTFAN_INDEX:
+        return register_general_status.value.print_fan_is_rpm_ok;
+    case fans::HEATBREAKFAN_INDEX:
+        return register_general_status.value.heaterbreak_fan_is_rpm_ok;
+    }
+    bsod_unreachable();
+}
+
+uint16_t Indx::get_fan_state(uint8_t fan_nr) const {
+    // FIXME:
+    // Called from interrupts, can't lock :-(
+    // BFW-6219.
+    // Lock guard(*mutex);
+    switch (fan_nr) {
+    case fans::PRINTFAN_INDEX:
+        return register_general_status.value.print_fan_state;
+    case fans::HEATBREAKFAN_INDEX:
+        return register_general_status.value.heaterbreak_fan_state;
+    }
+    bsod_unreachable();
+}
+
+#if HAS_INDX_HEAD()
+Indx indx { PuppyBootstrap::get_modbus_address_for_dock(Dock::INDX_HEAD) };
+#endif
+
+} // namespace buddy::puppies
