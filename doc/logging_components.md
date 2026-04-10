@@ -29,8 +29,6 @@ This file is generated automatically so don't edit it directly
 - Metrics: logging::Severity::info, src/common/metric.cpp
 - Modbus: default_modbus_severity, src/puppies/PuppyModbus.cpp
 - ModbusControl: logging::Severity::info, src/puppy/dwarf/modbus/ModbusControl.cpp
-- ModbusFIFODecoder: logging::Severity::info, src/puppies/fifo_decoder.cpp
-- ModbusFIFOEncoder: logging::Severity::info, src/puppy/dwarf/fifo_encoder.cpp
 - ModbusFIFOHandlers: logging::Severity::debug, src/puppy/dwarf/modbus/ModbusFIFOHandlers.cpp
 - ModularBed: logging::Severity::info, src/puppies/modular_bed.cpp
 - Network: logging::Severity::info, lib/WUI/wui.cpp

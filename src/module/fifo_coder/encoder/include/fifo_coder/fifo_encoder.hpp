@@ -58,7 +58,7 @@ public:
     void padd();
 
 private:
-    std::span<uint16_t, MODBUS_FIFO_LEN> fifo; // TODO: In C++20 this can be a span - we might save some casts
+    std::span<uint16_t, MODBUS_FIFO_LEN> fifo;
     uint8_t fifo_bytes_pos;
 
     /**
