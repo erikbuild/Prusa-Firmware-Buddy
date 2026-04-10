@@ -64,7 +64,7 @@ bool is_selftest_successfully_completed() {
 #endif /* HAS_GEARBOX_ALIGNMENT */
 
         // Skipped means the sensor is disabled by the user, which is acceptable.
-        const auto fs_result = SelftestSnake::get_fsensor_calibration_result(tool.to_raw());
+        const auto fs_result = SelftestSnake::get_fsensor_calibration_result(tool);
         if (fs_result != TestResult::passed && fs_result != TestResult::skipped) {
             return false;
         }

@@ -12,18 +12,18 @@
 
 namespace SelftestSnake {
 
-constexpr TestResult merge_hotends_evaluations(std::invocable<int8_t> auto evaluate_one) {
+constexpr TestResult merge_hotends_evaluations(std::invocable<PhysicalToolIndex> auto evaluate_one) {
     TestResult res { TestResult::passed };
     for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
-        res = test_result::evaluate_results(res, evaluate_one(tool.to_raw()));
+        res = test_result::evaluate_results(res, evaluate_one(tool));
     }
     return res;
 };
 
-constexpr TestResult merge_hotends(ToolMask tool_mask, stdext::inplace_function<TestResult(int8_t)> evaluate) {
+constexpr TestResult merge_hotends(ToolMask tool_mask, stdext::inplace_function<TestResult(PhysicalToolIndex)> evaluate) {
     return match(
         tool_mask,
-        [&](PhysicalToolIndex tool) { return evaluate(tool.to_raw()); },
+        [&](PhysicalToolIndex tool) { return evaluate(tool); },
         [&](AllTools) { return merge_hotends_evaluations(evaluate); });
 }
 
@@ -42,7 +42,7 @@ inline TestResult map_fsensor_calibration_result(IFSensor *sensor) {
 
 /// Map live filament sensor state to a TestResult for calibration checkmark display.
 /// Checks both extruder and side sensor (if present) for the given tool index.
-inline TestResult get_fsensor_calibration_result(int8_t tool_index) {
+inline TestResult get_fsensor_calibration_result(PhysicalToolIndex tool_index) {
     return test_result::evaluate_results(
         map_fsensor_calibration_result(GetExtruderFSensor(tool_index)),
         map_fsensor_calibration_result(GetSideFSensor(tool_index)));

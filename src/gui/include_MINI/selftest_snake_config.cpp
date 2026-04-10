@@ -11,7 +11,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
     switch (action) {
     case Action::Fans:
         return merge_hotends_evaluations(
-            [&](int8_t e) {
+            [&](PhysicalToolIndex e) {
                 return sr.evaluate_fans(e);
             });
     case Action::XYCheck:
@@ -19,14 +19,14 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
     case Action::ZCheck:
         return sr.get_zaxis();
     case Action::Heaters:
-        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](PhysicalToolIndex e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::FirstLayer:
         // instead of test result that isn't saved to eeprom, consider calibrated sheet as passed.
         return SteelSheets::IsSheetCalibrated(config_store().active_sheet.get()) ? TestResult::passed : TestResult::unknown;
     case Action::FilamentSensorCalibration:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return get_fsensor_calibration_result(e);
         });
     case Action::_count:

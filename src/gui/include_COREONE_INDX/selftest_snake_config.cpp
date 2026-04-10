@@ -30,7 +30,7 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
     switch (action) {
     case Action::Fans: {
         TestResult res = merge_hotends_evaluations(
-            [&](int8_t e) {
+            [&](PhysicalToolIndex e) {
                 return sr.evaluate_fans(e);
             });
 #if HAS_CHAMBER_API()
@@ -65,23 +65,23 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
         return corexy_home_is_calibrated() ? TestResult::passed : TestResult::unknown;
 #endif
     case Action::Loadcell:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return sr.get_loadcell(e);
         });
     case Action::ZCheck:
         return sr.get_zaxis();
     case Action::Heaters:
-        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](PhysicalToolIndex e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::Gears:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return sr.get_gearbox(e);
         });
     case Action::DoorSensor:
         return test_result::evaluate_results(config_store().selftest_result_door_sensor.get());
     case Action::FilamentSensorCalibration:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return get_fsensor_calibration_result(e);
         });
     case Action::_count:

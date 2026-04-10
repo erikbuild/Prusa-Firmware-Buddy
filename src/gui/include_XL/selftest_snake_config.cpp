@@ -33,7 +33,7 @@ TestResult get_test_result(Action action, ToolMask tool) {
     switch (action) {
     case Action::Fans: {
         TestResult res = merge_hotends_evaluations(
-            [&](int8_t e) {
+            [&](PhysicalToolIndex e) {
                 return sr.evaluate_fans(e);
             });
 #if HAS_CHAMBER_API()
@@ -60,15 +60,15 @@ TestResult get_test_result(Action action, ToolMask tool) {
         return corexy_home_is_calibrated() ? TestResult::passed : TestResult::unknown;
 #endif
     case Action::DockCalibration:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return sr.get_dock_offset(e);
         });
     case Action::Loadcell:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return sr.get_loadcell(e);
         });
     case Action::ToolOffsetsCalibration:
-        return merge_hotends_evaluations([&](int8_t e) {
+        return merge_hotends_evaluations([&](PhysicalToolIndex e) {
             return sr.get_tool_offset(e);
         });
     case Action::ZCheck:
@@ -76,21 +76,21 @@ TestResult get_test_result(Action action, ToolMask tool) {
     case Action::BedHeaters:
         return sr.get_bed_heater();
     case Action::NozzleHeaters:
-        return merge_hotends_evaluations([&](int8_t e) {
+        return merge_hotends_evaluations([&](PhysicalToolIndex e) {
             return sr.get_nozzle_heater(e);
         });
     case Action::Heaters:
-        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](int8_t e) {
+        return test_result::evaluate_results(sr.get_bed_heater(), merge_hotends_evaluations([&](PhysicalToolIndex e) {
             return sr.get_nozzle_heater(e);
         }));
     case Action::FilamentSensorCalibration:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return get_fsensor_calibration_result(e);
         });
     case Action::PhaseSteppingCalibration:
         return test_result::evaluate_results(config_store().selftest_result_phase_stepping.get());
     case Action::Gears:
-        return merge_hotends(tool, [&](const int8_t e) {
+        return merge_hotends(tool, [&](const PhysicalToolIndex e) {
             return sr.get_gearbox(e);
         });
     case Action::_count:
