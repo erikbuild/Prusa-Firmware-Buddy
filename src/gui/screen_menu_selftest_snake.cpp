@@ -87,22 +87,6 @@ bool are_previous_completed(Action action) {
     return true;
 }
 
-PhysicalToolIndex get_last_enabled_tool() {
-    auto result = PhysicalToolIndex::from_raw(0);
-    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
-        result = tool;
-    }
-    return result;
-}
-
-PhysicalToolIndex get_next_tool(PhysicalToolIndex tool) {
-    assert(tool != get_last_enabled_tool() && "Unhandled edge case");
-    do {
-        tool = PhysicalToolIndex::from_raw(tool.to_raw() + 1);
-    } while (!tool.is_enabled());
-    return tool;
-}
-
 const img::Resource *get_icon(Action action, ToolMask mask) {
     switch (get_test_result(action, mask)) {
     case TestResult::passed:
@@ -136,17 +120,24 @@ struct SnakeConfig {
         last_action = get_last_action();
     }
 
-    void next(Action action, PhysicalToolIndex tool) {
+    void next(Action action) {
         in_progress = true;
         last_action = action;
-        last_tool = tool;
+    }
+
+    /// True iff the last-started tool is the last enabled tool.
+    bool on_last_tool() const {
+        PhysicalToolIndex::Iterator next = tool;
+        ++next;
+        return next.at_end();
     }
 
     bool in_progress { false }; ///< Is snake currently running?
     AutoContinue auto_continue { AutoContinue::ask }; ///< Should we continue running other selftests after finishing the current one?
 
     Action last_action { Action::_last }; ///< Last action that we'have done
-    PhysicalToolIndex last_tool { PhysicalToolIndex::from_raw(0) };
+    /// Iterator positioned at the tool whose test is running / just finished.
+    PhysicalToolIndex::Iterator tool { PhysicalToolIndex::Iterator::make_all().skip_all_disabled() };
 };
 
 } // namespace
@@ -235,7 +226,7 @@ void do_snake(Action action, PhysicalToolIndex tool) {
 
         if (has_test_special_handling) {
             marlin_client::gcode("M118 nop"); // No operation gcode to fill the queue until selftest is done
-            snake_config.next(action, tool);
+            snake_config.next(action);
             return;
         }
     }
@@ -246,11 +237,11 @@ void do_snake(Action action, PhysicalToolIndex tool) {
         marlin_client::test_start(get_test_mask(action));
     }
 
-    snake_config.next(action, tool);
+    snake_config.next(action);
 };
 
 void continue_snake() {
-    const TestResult last_test_result = get_test_result(snake_config.last_action, snake_config.last_tool);
+    const TestResult last_test_result = get_test_result(snake_config.last_action, *snake_config.tool);
     if (!is_completed(last_test_result)
         || SelftestInstance().IsAborted()) { // last selftest didn't pass
         snake_config.reset();
@@ -259,17 +250,17 @@ void continue_snake() {
 
     // if the last action was the last action possible
     if (snake_config.last_action == get_last_action()
-        && (!has_submenu(get_last_action()) || snake_config.last_tool == get_last_enabled_tool())) {
+        && (!has_submenu(get_last_action()) || snake_config.on_last_tool())) {
         snake_config.reset();
         return;
     }
 
-    if (snake_config.auto_continue == SnakeConfig::AutoContinue::submenu && has_submenu(snake_config.last_action) && snake_config.last_tool == get_last_enabled_tool()) {
+    if (snake_config.auto_continue == SnakeConfig::AutoContinue::submenu && has_submenu(snake_config.last_action) && snake_config.on_last_tool()) {
         snake_config.auto_continue = SnakeConfig::AutoContinue::ask;
     }
 
     if (snake_config.auto_continue == SnakeConfig::AutoContinue::ask) {
-        if (is_multitool() && has_submenu(snake_config.last_action) && snake_config.last_tool != get_last_enabled_tool()) {
+        if (is_multitool() && has_submenu(snake_config.last_action) && !snake_config.on_last_tool()) {
             const auto resp = MsgBoxQuestion(_("FINISH remaining calibrations without proceeding to other tests, or perform ALL Calibrations and Tests?\n\nIf you QUIT, all data up to this point is saved."), { Response::Finish, Response::All, Response::Quit }, 2);
             switch (resp) {
 
@@ -313,10 +304,12 @@ void continue_snake() {
 
     if (!is_multitool()
         || !has_submenu(snake_config.last_action)
-        || snake_config.last_tool == get_last_enabled_tool()) { // singletool or wasn't submenu or was last in a submenu
-        do_snake(get_next_action(snake_config.last_action), PhysicalToolIndex::from_raw(0));
+        || snake_config.on_last_tool()) { // singletool or wasn't submenu or was last in a submenu
+        snake_config.tool = PhysicalToolIndex::Iterator::make_all().skip_all_disabled();
+        do_snake(get_next_action(snake_config.last_action), *snake_config.tool);
     } else { // current submenu not yet finished
-        do_snake(snake_config.last_action, get_next_tool(snake_config.last_tool));
+        ++snake_config.tool;
+        do_snake(snake_config.last_action, *snake_config.tool);
     }
 }
 
@@ -395,7 +388,8 @@ I_MI_STS::I_MI_STS(Action action)
 
 void I_MI_STS::click(IWindowMenu &) {
     if (!has_submenu(action) || !is_multitool()) {
-        do_snake(action, PhysicalToolIndex::from_raw(0));
+        snake_config.tool = PhysicalToolIndex::Iterator::make_all().skip_all_disabled();
+        do_snake(action, *snake_config.tool);
     } else {
         open_submenu(action);
     }
@@ -414,6 +408,10 @@ I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, PhysicalToo
 }
 
 void I_MI_STS_SUBMENU::click(IWindowMenu &) {
+    snake_config.tool = PhysicalToolIndex::Iterator::make_all().skip_all_disabled();
+    while (!snake_config.tool.at_end() && *snake_config.tool != tool) {
+        ++snake_config.tool;
+    }
     do_snake(action, tool);
 }
 
@@ -436,7 +434,7 @@ void do_menu_event(window_t *receiver, [[maybe_unused]] window_t *sender, GUI_ev
     }
 
     if (is_submenu) {
-        if (snake_config.last_action == action && snake_config.last_tool == get_last_enabled_tool()) { // finished testing this submenu
+        if (snake_config.last_action == action && snake_config.on_last_tool()) { // finished testing this submenu
             Screens::Access()->Close();
         }
     }
@@ -494,7 +492,8 @@ void ScreenMenuSTSWizard::windowEvent(window_t *sender, GUI_event_t event, void 
         // Now show always, bed heater selftest can fail if there is no sheet on the bed
         MsgBoxInfo(_("Before you continue, make sure the print sheet is installed on the heatbed."), Responses_Ok);
 
-        do_snake(get_first_action(), PhysicalToolIndex::from_raw(0));
+        snake_config.tool = PhysicalToolIndex::Iterator::make_all().skip_all_disabled();
+        do_snake(get_first_action(), *snake_config.tool);
         snake_config.auto_continue = SnakeConfig::AutoContinue::all;
         return;
     }
