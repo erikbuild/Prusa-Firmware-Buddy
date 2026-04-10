@@ -87,6 +87,22 @@ bool are_previous_completed(Action action) {
     return true;
 }
 
+PhysicalToolIndex get_last_enabled_tool() {
+    auto result = PhysicalToolIndex::from_raw(0);
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+        result = tool;
+    }
+    return result;
+}
+
+PhysicalToolIndex get_next_tool(PhysicalToolIndex tool) {
+    assert(tool != get_last_enabled_tool() && "Unhandled edge case");
+    do {
+        tool = PhysicalToolIndex::from_raw(tool.to_raw() + 1);
+    } while (!tool.is_enabled());
+    return tool;
+}
+
 const img::Resource *get_icon(Action action, ToolMask mask) {
     switch (get_test_result(action, mask)) {
     case TestResult::passed:

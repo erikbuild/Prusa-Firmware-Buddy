@@ -126,13 +126,4 @@ inline constexpr MenuItemText blank_item_texts[] {
 
 TestResult get_test_result(Action action, ToolMask tool);
 uint64_t get_test_mask(Action action);
-
-PhysicalToolIndex get_last_enabled_tool();
-
-/**
- * @brief Get the next enabled tool.
- * @param tool current tool
- * @return next enabled tool
- */
-PhysicalToolIndex get_next_tool(PhysicalToolIndex tool);
 } // namespace SelftestSnake

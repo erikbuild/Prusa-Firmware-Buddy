@@ -137,22 +137,4 @@ uint64_t get_test_mask(Action action) {
     bsod_unreachable();
 }
 
-PhysicalToolIndex get_last_enabled_tool() {
-    auto result = PhysicalToolIndex::from_raw(0);
-    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
-        result = tool;
-    }
-    return result;
-}
-
-PhysicalToolIndex get_next_tool(PhysicalToolIndex tool) {
-#if HAS_TOOLCHANGER()
-    assert(tool != get_last_enabled_tool() && "Unhandled edge case");
-    do {
-        tool = PhysicalToolIndex::from_raw(tool.to_raw() + 1);
-    } while (!tool.is_enabled());
-#endif
-    return tool;
-}
-
 } // namespace SelftestSnake
