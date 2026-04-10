@@ -278,15 +278,6 @@ void continue_snake() {
     }
 }
 
-is_hidden_t get_subitem_hidden_state(Tool tool) {
-#if HAS_TOOLCHANGER()
-    const auto idx { std::to_underlying(tool) };
-    return prusa_toolchanger.is_tool_enabled(idx) ? is_hidden_t::no : is_hidden_t::yes;
-#else
-    return tool == Tool::Tool1 ? is_hidden_t::no : is_hidden_t::yes;
-#endif
-}
-
 is_hidden_t get_mainitem_hidden_state(Action action) {
     if constexpr (!option::has_toolchanger) {
         if (requires_toolchanger(action)) {
@@ -374,7 +365,7 @@ void I_MI_STS::Loop() {
 }
 
 I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, PhysicalToolIndex tool)
-    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, get_subitem_hidden_state(Tool { tool.to_raw() }))
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, tool.is_enabled() ? is_hidden_t::no : is_hidden_t::yes)
     , action(action)
     , tool(tool) {
     set_icon_position(IconPosition::before_extension);
