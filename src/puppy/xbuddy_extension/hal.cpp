@@ -366,7 +366,14 @@ void hal::init() {
     hal::rs485::init();
     hal::mmu::init();
     hal::gpio_expander::init();
+
     hal::usb::init();
+#if EXTENSION_IS_IX()
+    hal::usb::power_pin_set(true);
+#else
+    hal::usb::power_pin_set(false);
+#endif
+
     hal::pub::init();
     filament_sensor_pins_init();
     hal::rng::init();

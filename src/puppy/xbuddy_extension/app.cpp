@@ -2,6 +2,7 @@
 #include "app.hpp"
 
 #include "cyphal_application.hpp"
+#include "extension_variant.h"
 #include "hal.hpp"
 #include "hal_mmu.hpp"
 #include "hal_rs485.hpp"
@@ -80,7 +81,9 @@ bool write_register_file_callback(const xbuddy_extension::modbus::Config &config
     hal::rgbw_led::set_g_pwm(config.rgbw_led_g_pwm);
     hal::rgbw_led::set_b_pwm(config.rgbw_led_b_pwm);
     hal::rgbw_led::set_w_pwm(config.rgbw_led_w_pwm);
+#if !EXTENSION_IS_IX()
     hal::usb::power_pin_set(static_cast<bool>(config.usb_power));
+#endif
     hal::mmu::power_pin_set(static_cast<bool>(config.mmu_power));
     hal::mmu::nreset_pin_set(static_cast<bool>(config.mmu_nreset));
     // Technically, this frequency is common also for some fans. But they seem to work fine.
