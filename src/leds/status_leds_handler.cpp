@@ -144,12 +144,12 @@ static StateAnimation marlin_to_anim_state() {
     case State::Aborting_Preview:
     case State::Aborting_UnloadFilament:
     case State::Aborted:
-        return StateAnimation::Aborting;
+        return StateAnimation::Aborted;
 
     case State::Finishing_ParkHead:
     case State::Finishing_UnloadFilament:
     case State::Finished:
-        return StateAnimation::Finishing;
+        return StateAnimation::Finished;
 
     case State::CrashRecovery_Begin:
     case State::CrashRecovery_Retracting:
@@ -196,13 +196,13 @@ namespace {
 #if PRINTER_IS_PRUSA_iX()
         { StateAnimation::Idle, { { 0, 0, 255 }, 1000, 0, 400, solid } },
             { StateAnimation::Printing, { { 0, 255, 0 }, 1000, 0, 400, solid } },
-            { StateAnimation::Finishing, { { 0, 0, 255 }, 500, 0, 250, pulsing } },
+            { StateAnimation::Finished, { { 0, 0, 255 }, 500, 0, 250, pulsing } },
 #else
         { StateAnimation::Idle, { { 0, 0, 0 }, 1000, 0, 400, solid } },
             { StateAnimation::Printing, { { 0, 150, 255 }, 1000, 0, 400, solid } },
-            { StateAnimation::Finishing, { { 0, 255, 0 }, 1000, 0, 400, solid } },
+            { StateAnimation::Finished, { { 0, 255, 0 }, 1000, 0, 400, solid } },
 #endif
-            { StateAnimation::Aborting, { { 0, 0, 0 }, 1000, 0, 400, solid } },
+            { StateAnimation::Aborted, { { 0, 0, 0 }, 1000, 0, 400, solid } },
 #if PRINTER_IS_PRUSA_iX()
             { StateAnimation::Warning, { { 128, 32, 0 }, 1000, 0, 1000, pulsing } },
 #else
