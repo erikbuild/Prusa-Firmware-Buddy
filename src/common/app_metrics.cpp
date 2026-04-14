@@ -302,6 +302,11 @@ void RecordMarlinVariables() {
 
     metric_record_integer(&metric_planner_unoptimized, PreciseStepping::planner_unoptimized_count.load(std::memory_order_relaxed));
 
+#if ENABLED(SLOWDOWN)
+    /// Cumulative count of blocks where the SLOWDOWN mechanism reduced feedrate
+    METRIC_DEF(metric_planner_slowdown, "plan_slow", METRIC_VALUE_INTEGER, 100, METRIC_DISABLED);
+    metric_record_integer(&metric_planner_slowdown, Planner::slowdown_count.load(std::memory_order_relaxed));
+#endif
 
     /// Position of the last executed gcode in the media stream
     METRIC_DEF(metric_sdpos, "sdpos", METRIC_VALUE_INTEGER, 100, METRIC_ENABLED);

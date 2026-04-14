@@ -155,6 +155,9 @@ volatile uint8_t Planner::block_buffer_head,    // Index of the next block to be
                  Planner::block_buffer_tail;    // Index of the busy block, if any
 uint32_t Planner::delay_before_delivering;      // Initial milliseconds of delay for planner optimization
 std::atomic<bool> Planner::recalculating = false;
+#if ENABLED(SLOWDOWN)
+std::atomic<uint32_t> Planner::slowdown_count = 0;
+#endif
 
 // A flag to indicate that that buffer is being emptied intentionally
 bool Planner::emptying_buffer;
@@ -1428,6 +1431,8 @@ bool Planner::_populate_block(block_t * const block,
       if (!draining() && !emptying_buffer && queue.length <= 3 && WITHIN(total_blocks_queued, 2, (BLOCK_BUFFER_SIZE) / (SLOWDOWN_DIVISOR) - 1)) {
         const int32_t time_diff = static_cast<int32_t>(settings.min_segment_time_us) - segment_time_us;
         if (time_diff > 0) {
+          // Count actual feedrate reductions (not just the buffer-depth gate above).
+          slowdown_count.fetch_add(1, std::memory_order_relaxed);
           // Buffer is draining so add extra time. The amount of time added increases if the buffer is still emptied more.
           const uint32_t nst = segment_time_us + LROUND(2 * time_diff / total_blocks_queued);
           inverse_secs = 1000000.0f / nst;

@@ -249,6 +249,9 @@ class Planner {
                             block_buffer_tail;        // Index of the busy block, if any
     static uint32_t delay_before_delivering;          // Initial milliseconds of delay for planner optimization
     static std::atomic<bool> recalculating;           // Recalculating blocks.
+    #if ENABLED(SLOWDOWN)
+    static std::atomic<uint32_t> slowdown_count;      // Cumulative count of SLOWDOWN-triggered feedrate reductions.
+    #endif
 
 
     #if ENABLED(DISTINCT_E_FACTORS)
