@@ -457,16 +457,10 @@ bool OPTBackend_NFCV::is_valid(TagID tag_id) {
 }
 
 std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag, nfcv::Error error) {
-    if (!is_valid(tag)) {
-        return std::unexpected(to_backend_error(error));
-    }
-
     if (error == nfcv::Error::no_response) {
         // Lets see if this is going to work, if it is too eager, then we can maybe set some timer and check if it happens too often
         // Can fail, that's ok
-        if (events.enqueue(OPTBackend::TagLostEvent { .tag = tag })) {
-            tags.at(tag).state = TagData::State::lost;
-        }
+        try_report_tag_lost(tag);
     }
 
     return std::unexpected(to_backend_error(error));
@@ -591,21 +585,35 @@ void OPTBackend_NFCV::run_next_discovery() {
             continue;
         }
 
-        // Detected lost tag - lets mark it and enqueue an event
-        if (!events.enqueue(OPTBackend::TagLostEvent { .tag = tag_id })) {
-            // we have too many events - this should never happend but lets be sure
-            // we can't report the lost tag => so we don't want to mark it as lost
-            // if this ultimately happens increase the events queue by little bit
-            continue;
-        }
-
-        if (config_.auto_forget_tag) {
-            forget_tag(tag_id);
-        } else {
-            tag_data.state = TagData::State::lost;
-        }
+        try_report_tag_lost(tag_id);
     }
 
     // Cycle antennas between discoveries
     discovery_antenna = (discovery_antenna + 1) % reader.antenna_count();
+}
+
+void OPTBackend_NFCV::try_report_tag_lost(TagID tag_id) {
+    if (!is_valid(tag_id)) {
+        return;
+    }
+
+    auto &tag_data = tags.at(tag_id);
+
+    if (tag_data.state != TagData::State::known) {
+        return;
+    }
+
+    // Detected lost tag - lets mark it and enqueue an event
+    if (!events.enqueue(OPTBackend::TagLostEvent { .tag = tag_id })) {
+        // we have too many events - this should never happend but lets be sure
+        // we can't report the lost tag => so we don't want to mark it as lost
+        // if this ultimately happens increase the events queue by little bit
+        return;
+    }
+
+    if (config_.auto_forget_tag) {
+        forget_tag(tag_id);
+    } else {
+        tag_data.state = TagData::State::lost;
+    }
 }

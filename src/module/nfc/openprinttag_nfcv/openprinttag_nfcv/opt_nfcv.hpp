@@ -92,6 +92,9 @@ private:
 
     /// Helper function for read implementation
     [[nodiscard]] nfcv::Result<void> read_impl(const TagData &tag_data, PayloadPos start, const std::span<std::byte> &buffer);
+
+    /// Attempts to mark the tag as lost
+    void try_report_tag_lost(TagID tag_id);
 };
 
 } // namespace openprinttag
