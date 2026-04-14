@@ -73,7 +73,11 @@ ColumnItem::ColumnItem(FrameToolMapping &frame, const ToolType type, const uint8
 void ColumnItem::update() {
     const auto tool = this->tool();
     const bool is_selected_for_connecting = !std::holds_alternative<NoTool>(tool) && (frame_.selected_tool_for_connecting() == tool);
-    set_color_scheme(is_selected_for_connecting ? &color_scheme_selected_for_editing : &IWindowMenuItem::color_scheme_default);
+    const bool is_focusable = frame_.is_item_focusable(type_, item_index_);
+    set_color_scheme(
+        is_selected_for_connecting ? &color_scheme_selected_for_editing
+            : !is_focusable        ? &color_scheme_default_disabled
+                                   : &IWindowMenuItem::color_scheme_default);
 }
 
 ToolVariant ColumnItem::tool() const {
@@ -131,8 +135,8 @@ void ColumnItem::click(IWindowMenu &) {
         ScopeGuard scope_guard = [&] {
             frame_.select_tool_for_connecting(NoTool {});
 
-            // Move focus to the first unconnected item on the other menu to streamline routing
-            frame_.focus_first_unconnected_tool(other_tool_type);
+            // Move focus to the first unconnected item on the gcode side to streamline routing
+            frame_.focus_first_unconnected_tool(ToolType::gcode_tool);
 
             // Hide the guide, show possible errors
             frame_.update_status_text(ShowGuide::no);
@@ -295,18 +299,7 @@ int ColumnMenu::item_count() const {
 }
 
 bool ColumnMenu::is_item_focusable(int index) const {
-    const auto &item = frame_.items()[index];
-
-    switch (type_) {
-
-    case ToolType::gcode_tool:
-        return item.gcode_tool.has_value();
-
-    case ToolType::virtual_tool:
-        return item.virtual_tool.has_value();
-    }
-
-    bsod_unreachable();
+    return frame_.is_item_focusable(type_, index);
 }
 
 void ColumnMenu::setup_item(ItemVariant &variant, int index) {
@@ -438,6 +431,8 @@ FrameToolMapping::FrameToolMapping(window_frame_t *parent)
     update_config();
     update_mapping();
     update_scroll();
+
+    select_tool_for_connecting(NoTool {});
 }
 
 FrameToolMapping::~FrameToolMapping() {
@@ -546,22 +541,39 @@ ColumnItem *FrameToolMapping::tool_menu_item(ToolVariant tool) {
 }
 
 void FrameToolMapping::select_tool_for_connecting(ToolVariant tool) {
-    if (tool == selected_tool_for_connecting_) {
-        return;
-    }
+    // Do NOT lazily exit if tool == selected_tool_for_connecting_
+    // We need to do this unconditionally in the constructor
 
-    const auto old_selected_tool = selected_tool_for_connecting_;
     selected_tool_for_connecting_ = tool;
 
-    if (auto item = tool_menu_item(old_selected_tool)) {
-        // Invalidate the item, the color scheme changed
-        item->update();
+    // Only allow selecting virtual tools if a g-code tool for connecting is selected
+    // The workflow for the knob is always fist select gcode tool, then select virtual tool
+    // !!! Must be before updating the items, update() changes visuals based on the menu being enabled
+    virtual_tools_menu_.set_enabled(std::holds_alternative<GcodeToolIndex>(selected_tool_for_connecting_));
+
+    // Update all items
+    for (auto *menu : { &gcode_tools_menu_, &virtual_tools_menu_ }) {
+        for (auto &item : menu->buffered_items()) {
+            if (auto ci = item.get_if<ColumnItem>()) {
+                ci->update();
+            }
+        }
+    }
+}
+
+bool FrameToolMapping::is_item_focusable(ToolType type, uint8_t index) const {
+    const auto &item = items_[index];
+
+    switch (type) {
+
+    case ToolType::gcode_tool:
+        return item.gcode_tool.has_value();
+
+    case ToolType::virtual_tool:
+        return item.virtual_tool.has_value() && virtual_tools_menu_.IsEnabled();
     }
 
-    if (auto item = tool_menu_item(tool)) {
-        // Invalidate the item, the color scheme changed
-        item->update();
-    }
+    bsod_unreachable();
 }
 
 void FrameToolMapping::update_config() {

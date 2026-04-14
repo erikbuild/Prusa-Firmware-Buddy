@@ -195,6 +195,8 @@ public:
         return config_;
     }
 
+    bool is_item_focusable(ToolType type, uint8_t index) const;
+
 public:
     /// To be called when mapping changes
     void schedule_mapping_update() {
