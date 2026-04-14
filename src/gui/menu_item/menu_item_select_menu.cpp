@@ -19,7 +19,12 @@ private:
     std::array<char, MenuItemSelectMenu::value_buffer_size> label_ { '\0' };
 };
 
-class DialogMenu final : public WindowMenuVirtual {
+// Size-sensitive
+static_assert(sizeof(DialogItem) == 64);
+
+// This dialog gets allocated on the stack, so we want to have the WindowMenuVirtual as small as possible
+// This means ditching the default alloc buffer size for the extact DialogItem sizeof, at the cost of extra flash usage
+class DialogMenu final : public WindowMenuVirtualSized<WindowMenuVirtualBase::default_item_buffer_size, sizeof(DialogItem)> {
 
 public:
     DialogMenu(window_t *parent, Rect16 rect, MenuItemSelectMenu &menu);
@@ -65,7 +70,7 @@ void DialogItem::click(IWindowMenu &menu) {
 // DialogMenu
 // =============================================================
 DialogMenu::DialogMenu(window_t *parent, Rect16 rect, MenuItemSelectMenu &menu)
-    : WindowMenuVirtual(parent, rect, CloseScreenReturnBehavior::yes)
+    : WindowMenuVirtualSized(parent, rect, CloseScreenReturnBehavior::yes)
     , menu(menu) //
 {
     setup_items();
