@@ -27,7 +27,6 @@ target_sources(
   PRIVATE "${CMAKE_SOURCE_DIR}/src/device/multi_watchdog.cpp"
           src/adc.cpp
           src/anfc_event_publisher.cpp
-          src/atomic_c0.cpp
           src/cyphal_anfc_node.cpp
           src/enum_mapping_check.cpp
           src/hal.cpp
@@ -66,6 +65,7 @@ target_link_libraries(
           crc
           mbedTLS
           log_dev_null
+          cortex-m0-atomic
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using

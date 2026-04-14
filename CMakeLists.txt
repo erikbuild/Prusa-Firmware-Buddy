@@ -719,10 +719,11 @@ elseif(BOARD STREQUAL "DWARF")
             freertos
             Marlin
             printf::printf
+            cortex-m0-atomic
     )
 elseif(BOARD STREQUAL "MODULARBED")
   target_link_libraries(
-    firmware PRIVATE BuddyHeaders CrashCatcher error_codes freertos printf::printf
+    firmware PRIVATE BuddyHeaders CrashCatcher error_codes freertos printf::printf cortex-m0-atomic
     )
 elseif(BOARD STREQUAL "XBUDDY_EXTENSION")
   # let us manage the libraries where needed, not globally

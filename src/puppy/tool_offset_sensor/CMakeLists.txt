@@ -23,7 +23,6 @@ add_library(STM32C0_HAL_Config ALIAS HAL_Config)
 target_sources(
   firmware
   PRIVATE "${CMAKE_SOURCE_DIR}/src/device/multi_watchdog.cpp"
-          src/atomic_c0.cpp
           src/cyphal_tool_offset_sensor_node.cpp
           src/hal.cpp
           src/i2c_manager.cpp
@@ -57,6 +56,7 @@ target_link_libraries(
           raii
           crc
           mbedTLS
+          cortex-m0-atomic
   )
 
 # TODO For now, we need to also explicitly depend on `FreeRTOS::FreeRTOS` because we are using
