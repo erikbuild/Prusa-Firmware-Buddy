@@ -41,6 +41,7 @@ static constexpr EnumArray<Response, const char *, Response::_count> response_st
     R(Quit),
     R(Reheat),
     R(Replace),
+    R(Remap),
     R(Remove),
     R(Restart),
     R(Resume),

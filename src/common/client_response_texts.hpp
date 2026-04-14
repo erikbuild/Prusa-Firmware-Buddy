@@ -78,6 +78,8 @@ inline constexpr const char *get_response_text(Response response) {
         return N_("REHEAT");
     case Response::Replace:
         return N_("REPLACE");
+    case Response::Remap:
+        return N_("REMAP");
     case Response::Remove:
         return N_("REMOVE");
     case Response::Restart:

@@ -406,7 +406,7 @@ FrameToolMapping::FrameToolMapping(window_frame_t *parent)
     bottom_status_.set_font(Font::normal);
     bottom_status_.SetAlignment(Align_t::Center());
 
-    bottom_buttons_.Change(PhaseResponses { Response::Abort, Response::Filament, Response::Change, Response::Print });
+    bottom_buttons_.Change(PhaseResponses { Response::Abort, Response::Filament, Response::Remap, Response::Print });
     bottom_buttons_.SetFocus();
     bottom_buttons_.SetBtnIndex(3); // Pre-select the print button
 
@@ -839,7 +839,7 @@ void FrameToolMapping::windowEvent(window_t *sender, GUI_event_t event, void *co
             marlin_client::FSM_response(PhasesPrintPreview::tools_mapping, response);
             return;
 
-        case Response::Change:
+        case Response::Remap:
             // Just a helper button to help people realize that they can change the mapping on this screen
             // We've seen some github/social media posts where people thought the tool mapping is just for display and you cannot change it
             focus_first_unconnected_tool(ToolType::gcode_tool);
