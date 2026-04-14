@@ -11,6 +11,7 @@
 #include <meta_utils.hpp>
 #include <multi_filament_change.hpp>
 #include <gui/menu_item/menu_item_select_menu.hpp>
+#include <utils/compact_optional.hpp>
 
 namespace multi_filament_change {
 
@@ -35,7 +36,7 @@ private:
 private:
     const VirtualToolIndex tool;
     bool has_filament_loaded = false;
-    std::optional<Color> color;
+    CompactOptional<Color, COLOR_NONE> color;
 
     StringViewUtf8Parameters<2> label_params;
     DynamicIndexMapping<items> index_mapping;
