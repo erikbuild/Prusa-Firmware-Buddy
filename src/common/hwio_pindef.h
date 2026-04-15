@@ -500,6 +500,7 @@ inline constexpr SPI_HandleTypeDef *hw_get_spi_side_strip() {
         MACRO_FUNCTION(buddy::hw::OutputPin, fanHeatBreakPwm, buddy::hw::IoPort::E COMMA buddy::hw::IoPin::p9, Pin::State::low COMMA OMode::pushPull COMMA OSpeed::high, buddy::hw::noHandler)
 // clang-format on
 
+    // This virtual pin is needed for Z_MIN to correctly propagate to zMinReadFn from Marlin. These virtual pins are hardcoded into Marlin.
     #if HAS_LOADCELL_HX717() or HAS_INDX()
 
     /**

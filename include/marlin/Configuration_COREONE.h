@@ -415,7 +415,6 @@
     #define Z_MAX_ENDSTOP_INVERTING true // set to true to invert the logic of the endstop.
     #define Z_MIN_PROBE_ENDSTOP_INVERTING true // set to true to invert the logic of the probe.
 #if HAS_INDX()
-    // INDX_TODO: This is only for testing purposes, verify with hardware
     #define XY_PROBE_ENDSTOP_INVERTING true // set to true to invert the logic of the probe
 #endif
 
