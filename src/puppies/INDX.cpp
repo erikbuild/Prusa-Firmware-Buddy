@@ -19,6 +19,7 @@
 #include "Marlin/src/module/prusa/accelerometer.h"
 #include <utils/string_builder.hpp>
 #include <option/has_indx_head.h>
+#include <otp/types.hpp>
 
 using namespace fifo_coder;
 

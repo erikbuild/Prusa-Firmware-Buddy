@@ -5,9 +5,9 @@
 #include "PuppyBus.hpp"
 #include <atomic>
 #include <freertos/mutex.hpp>
+#include <otp/types.hpp>
 #include <xbuddy_extension/modbus.hpp>
 #include <xbuddy_extension/shared_enums.hpp>
-#include <common/otp_types.hpp>
 
 namespace buddy::puppies {
 

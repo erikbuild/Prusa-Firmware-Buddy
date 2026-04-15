@@ -1,7 +1,6 @@
 /// @file
 #include <common/data_exchange.hpp>
 
-#include <common/otp_types.hpp>
 #include <common/wdt.hpp>
 #include <cstdint>
 #include <cstring>
@@ -9,6 +8,7 @@
 #include <hw/at21csxx.hpp>
 #include <option/bootloader.h>
 #include <option/has_indx.h>
+#include <otp/types.hpp>
 
 // pin PA13 state
 static constexpr uint8_t APPENDIX_FLAG_MASK = 0x01;

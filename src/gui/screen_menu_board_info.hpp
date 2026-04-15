@@ -5,9 +5,9 @@
 #include "WindowMenuItems.hpp"
 #include "screen_menu.hpp"
 #include <array>
-#include <common/otp_types.hpp>
 #include <guiconfig/GuiDefaults.hpp>
 #include <lang/string_view_utf8.hpp>
+#include <otp/types.hpp>
 
 /// Helper base class to fix initialization order fiasco.
 class WindowMenuInfoOtpBase {

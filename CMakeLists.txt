@@ -707,6 +707,7 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             bgcode_core
             heatshrink_decoder
             version
+            otp
     )
 elseif(BOARD STREQUAL "DWARF")
   target_link_libraries(
@@ -720,10 +721,18 @@ elseif(BOARD STREQUAL "DWARF")
             Marlin
             printf::printf
             cortex-m0-atomic
+            otp
     )
 elseif(BOARD STREQUAL "MODULARBED")
   target_link_libraries(
-    firmware PRIVATE BuddyHeaders CrashCatcher error_codes freertos printf::printf cortex-m0-atomic
+    firmware
+    PRIVATE BuddyHeaders
+            CrashCatcher
+            error_codes
+            freertos
+            printf::printf
+            otp
+            cortex-m0-atomic
     )
 elseif(BOARD STREQUAL "XBUDDY_EXTENSION")
   # let us manage the libraries where needed, not globally

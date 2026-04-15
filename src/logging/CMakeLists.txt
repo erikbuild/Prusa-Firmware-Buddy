@@ -29,6 +29,7 @@ target_link_libraries(
           SG14 # config store 🤦
           error_codes # config store 🤦
           buddy_utils # config store 🤦
+          otp
   PUBLIC log_interface
   )
 

@@ -3,7 +3,6 @@
 #include <array>
 #include <buddy/bootstrap_state.hpp>
 #include <buddy/digest.hpp>
-#include <common/otp_types.hpp>
 #include <common/timing.h>
 #include <cstdint>
 #include <cstring>
@@ -12,6 +11,7 @@
 #include <hw/xbuddy/hw_configuration.hpp>
 #include <option/has_puppies_bootloader.h>
 #include <option/puppy_flash_fw.h>
+#include <otp/types.hpp>
 #include <puppies/xbuddy_extension.hpp>
 #include <random/random.h>
 #include <sys/stat.h>

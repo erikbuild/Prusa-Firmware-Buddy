@@ -73,6 +73,7 @@ add_executable(
   )
 target_compile_definitions(otp_tests PUBLIC UNITTEST)
 target_include_directories(otp_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/common)
+target_link_libraries(otp_tests otp)
 
 add_executable(
   url_decode_tests

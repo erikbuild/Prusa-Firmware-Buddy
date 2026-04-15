@@ -1,10 +1,10 @@
 /// @file
 #pragma once
 
-#include <common/otp_types.hpp>
 #include <option/has_xlcd.h>
 #include <option/has_love_board.h>
 #include <option/has_indx.h>
+#include <otp/types.hpp>
 
 /**
  * Init the data_exchange struct in case of no-bootloader build.

@@ -3,7 +3,6 @@
  */
 
 #pragma once
-#include "otp_types.hpp"
 
 namespace buddy::hw {
 /**

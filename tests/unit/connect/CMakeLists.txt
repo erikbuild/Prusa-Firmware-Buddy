@@ -132,6 +132,7 @@ target_link_libraries(
   bgcode_core
   raii
   xbuddy_extension
+  otp
   random
   random_sw
   )
@@ -255,7 +256,7 @@ target_include_directories(
   )
 add_dependencies(connect_planner_tests generate-httpc-automata-tests-connect)
 
-target_link_libraries(connect_planner_tests raii xbuddy_extension random random_sw)
+target_link_libraries(connect_planner_tests raii xbuddy_extension otp random random_sw)
 
 add_executable(
   connect_registration_tests
@@ -352,7 +353,7 @@ target_include_directories(
   )
 add_dependencies(connect_registration_tests generate-httpc-automata-tests-connect)
 
-target_link_libraries(connect_registration_tests raii xbuddy_extension random random_sw)
+target_link_libraries(connect_registration_tests raii xbuddy_extension otp random random_sw)
 
 add_catch_test(connect_tests)
 add_catch_test(connect_planner_tests)

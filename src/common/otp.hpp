@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <array>
 #include <optional>
-#include "otp_types.hpp"
+#include <otp/types.hpp>
 
 /// @param datamatrix structure to be filled with binary datamatrix representation (decompiled from textual information in OTP)
 /// @return if successfully extracted (OTP v3 and newer) datamatrix representation, std::nullopt otherwise
