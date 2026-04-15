@@ -412,6 +412,8 @@ inline constexpr SPI_HandleTypeDef *hw_get_spi_side_strip() {
             MACRO_FUNCTION(buddy::hw::InterruptPin, hx717Soft, buddy::hw::IoPort::E COMMA buddy::hw::IoPin::p3, IMode::IT_rising_falling COMMA Pull::down COMMA ISR_PRIORITY_HX717_SOFT COMMA 0 COMMA false, buddy::hw::hx717_soft) \
             MACRO_FUNCTION(buddy::hw::OutputPin, hx717Sck, buddy::hw::IoPort::G COMMA buddy::hw::IoPin::p1, Pin::State::low COMMA OMode::pushPull COMMA OSpeed::very_high, buddy::hw::noHandler)
 #else
+        // With HAS_LOADCELL_HX717() false, we still use the HX pins to detect MK3.5 that has the DOUT and SCK pins shorted together.
+        // So we just define the necessary pins for driving the `mk35_extruder_detected` bitbang without any interrupts set up.
         #define PIN_TABLE_BOARD_SPECIFIC(MACRO_FUNCTION) \
             PIN_TABLE_BOARD_SPECIFIC_COMMON(MACRO_FUNCTION) \
             MACRO_FUNCTION(buddy::hw::InputPin, hx717Dout, buddy::hw::IoPort::E COMMA buddy::hw::IoPin::p7, IMode::input COMMA Pull::up, buddy::hw::noHandler) \
