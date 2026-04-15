@@ -65,14 +65,14 @@ extern uint32_t SystemCoreClock;
 #define configPROTECTED_KERNEL_OBJECT_POOL_SIZE 32
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     0
-#define configUSE_TICK_HOOK                     0
+#define configUSE_TICK_HOOK                     1
 #define configUSE_MUTEXES                       1
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES   2
 #define INCLUDE_vTaskDelay                      1
 #define INCLUDE_vTaskSuspend                    1
-#define configCHECK_FOR_STACK_OVERFLOW          0
+#define configCHECK_FOR_STACK_OVERFLOW          2
 
 /* Cortex-M specific definitions. */
 #define configPRIO_BITS      4
@@ -95,11 +95,11 @@ to all Cortex-M ports, and do not rely on any particular library functions. */
 See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS))
 
-#include <stdlib.h>
+void hal_panic();
 #define configASSERT(x)           \
     if ((x) == 0) {               \
         taskDISABLE_INTERRUPTS(); \
-        abort();                  \
+        hal_panic();              \
     }
 
 #define xPortPendSVHandler  PendSV_Handler

@@ -1,28 +1,28 @@
 #include <sys/reent.h>
 #include <sys/stat.h>
 
-#include <cstdlib>
+#include "hal.hpp"
 
 extern "C" {
 
 void __assert_func(const char *, int, const char *, const char *) {
-    std::abort();
+    hal::panic(indx_head::errors::FaultStatusMask::assert_failed);
 }
 
 int _close(struct _reent *, int) {
-    std::abort();
+    hal::panic(indx_head::errors::FaultStatusMask::assert_failed);
 }
 
 _off_t _lseek(struct _reent *, int, _off_t, int) {
-    std::abort();
+    hal::panic(indx_head::errors::FaultStatusMask::assert_failed);
 }
 
 _ssize_t _read(struct _reent *, int, void *, size_t) {
-    std::abort();
+    hal::panic(indx_head::errors::FaultStatusMask::assert_failed);
 }
 
 _ssize_t _write(struct _reent *, int, const void *, size_t) {
-    std::abort();
+    hal::panic(indx_head::errors::FaultStatusMask::assert_failed);
 }
 
 int __attribute__((used)) _getpid() {
@@ -30,6 +30,6 @@ int __attribute__((used)) _getpid() {
 }
 
 int __attribute__((used)) _kill(int, int) {
-    std::abort();
+    hal::panic(indx_head::errors::FaultStatusMask::assert_failed);
 }
 }

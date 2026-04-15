@@ -20,9 +20,20 @@ target_compile_definitions(HAL_Config INTERFACE STM32C092xx USE_HAL_DRIVER USE_F
 target_include_directories(HAL_Config INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/config")
 add_library(STM32C0_HAL_Config ALIAS HAL_Config)
 
-target_sources(firmware PRIVATE src/main.cpp src/startup.s src/stdlib.cpp src/system.c)
+target_sources(
+  firmware
+  PRIVATE src/hal.cpp
+          src/hal_adc.cpp
+          src/hal_crc.cpp
+          src/hal_spi.cpp
+          src/hal_tim.cpp
+          src/main.cpp
+          src/startup.s
+          src/stdlib.cpp
+          src/system.c
+  )
 
-target_link_libraries(firmware PRIVATE STM32C0::HAL HAL_Config freertos)
+target_link_libraries(firmware PRIVATE STM32C0::HAL HAL_Config freertos indx_head)
 
 target_include_directories(firmware PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
