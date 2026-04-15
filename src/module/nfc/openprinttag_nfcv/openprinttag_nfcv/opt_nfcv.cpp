@@ -457,12 +457,6 @@ bool OPTBackend_NFCV::is_valid(TagID tag_id) {
 }
 
 std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag, nfcv::Error error) {
-    if (error == nfcv::Error::no_response) {
-        // Lets see if this is going to work, if it is too eager, then we can maybe set some timer and check if it happens too often
-        // Can fail, that's ok
-        try_report_tag_lost(tag);
-    }
-
     return std::unexpected(to_backend_error(error));
 }
 
