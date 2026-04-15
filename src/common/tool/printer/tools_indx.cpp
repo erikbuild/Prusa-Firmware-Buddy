@@ -13,15 +13,15 @@ INDXTool &IndxHotend::indx_tool(PhysicalToolIndex tool) {
     };
     static StrongIndexArray<INDXTool, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> tools {
         INDXTool(PhysicalToolIndex::from_raw(0), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(1), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(2), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(3), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(4), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(5), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(6), &hotend_config),
-        INDXTool(PhysicalToolIndex::from_raw(7), &hotend_config),
+        // INDXTool(PhysicalToolIndex::from_raw(1), &hotend_config),
+        // INDXTool(PhysicalToolIndex::from_raw(2), &hotend_config),
+        // INDXTool(PhysicalToolIndex::from_raw(3), &hotend_config),
+        // INDXTool(PhysicalToolIndex::from_raw(4), &hotend_config),
+        // INDXTool(PhysicalToolIndex::from_raw(5), &hotend_config),
+        // INDXTool(PhysicalToolIndex::from_raw(6), &hotend_config), // INDX_MERGE_TODO
+        // INDXTool(PhysicalToolIndex::from_raw(7), &hotend_config),
     };
-    static_assert(PhysicalToolIndex::count == 8);
+    // static_assert(PhysicalToolIndex::count == 8);
     return tools[tool];
 }
 

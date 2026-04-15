@@ -96,6 +96,7 @@
 #include <feature/pressure_advance/pressure_advance_config.hpp> // for disabling PA during homing
 
 #include <option/has_nozzle_cleaner.h>
+#include <option/has_indx.h> // INDX_MERGE_TODO
 
 #if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(AXEL_TPARA) || ENABLED(FOAMCUTTER_XYUV)
   #error These babies are no longer welcome here. The relevants ifdefs were removed.
@@ -639,7 +640,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   #endif
 
   // Always home with tool 0 active (but not with HAS_TOOLCHANGER())
-  #if HAS_MULTI_HOTEND && !HAS_TOOLCHANGER()
+  #if HAS_MULTI_HOTEND && !HAS_TOOLCHANGER() && !HAS_INDX() // INDX_MERGE_TODO
     // #error dead code found by automatic analyses (see BFW-5461)
     const auto old_tool_index = PhysicalToolIndex::currently_selected();
     tool_change(0, tool_return_t::no_return);
@@ -892,7 +893,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
   TERN_(CAN_SET_LEVELING_AFTER_G28, if (leveling_restore_state) set_bed_leveling_enabled());
 
   // Restore the active tool after homing
-  #if HAS_MULTI_HOTEND && !HAS_TOOLCHANGER()
+  #if HAS_MULTI_HOTEND && !HAS_TOOLCHANGER() && !HAS_INDX() // INDX_MERGE_TODO
     // #error dead code found by automatic analyses (see BFW-5461)
     tool_change(old_tool_index, true);   // Do move if one of these
   #endif

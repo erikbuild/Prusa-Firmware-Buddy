@@ -143,7 +143,7 @@
 #if HAS_MMU2()
 #define EXTRUDERS 6 // 5 + NoTool
 #elif HAS_INDX()
-#define EXTRUDERS 9 // 8 + NoTool
+#define EXTRUDERS 1 // 8 + NoTool
 #else
 #define EXTRUDERS 1
 #endif
