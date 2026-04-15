@@ -9,8 +9,7 @@ namespace side_fsensor_remap {
 namespace preset {
     /// @note Default no_mapping is defined in "filament_sensors_remap_data.hpp".
 
-    // INDX_TODO: Adjust for max_tool_count == 8
-    // static_assert(max_sensor_mapping_count == 6, "XL presets work for 6 sensor mapping slots only");
+    static_assert(max_sensor_mapping_count == 6, "XL presets work for 6 sensor mapping slots only");
 
     /**
      * @brief Remap tool 2 right and move tool 3 and 4 one down.

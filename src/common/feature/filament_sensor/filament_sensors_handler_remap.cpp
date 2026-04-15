@@ -2,15 +2,11 @@
 #include "filament_sensors_handler_remap.hpp"
 #include <config_store/store_instance.hpp>
 #include <window_msgbox.hpp>
-#include <module/prusa/toolchanger.h>
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <option/has_side_fsensor_remap.h>
 #include <module/prusa/toolchanger.h>
 
 static_assert(HAS_SIDE_FSENSOR() && HAS_SIDE_FSENSOR_REMAP(), "You need these for remapping to work");
-
-#include <option/has_toolchanger.h>
-#if HAS_TOOLCHANGER()
 
 namespace side_fsensor_remap {
 
@@ -75,13 +71,13 @@ uint32_t ask_to_remap() {
         uint32_t remapped = 0; ///< Mask of remapped tools
         for (uint8_t e = 0; e < std::size(current_mapping); ++e) {
             if (current_mapping[e] != new_mapping[e]) {
-    #if HAS_SELFTEST()
+#if HAS_SELFTEST()
                 if (auto side = GetSideFSensor(e); side) {
                     // Invalidate the sensor calibration
                     FilamentSensorCalibrator::Storage storage;
                     side->create_calibrator(storage)->finish();
                 }
-    #endif
+#endif
                 remapped |= 1 << e;
             }
         }
@@ -95,5 +91,3 @@ uint32_t ask_to_remap() {
 static_assert(static_cast<std::result_of<decltype(ask_to_remap) &()>::type>(1 << std::tuple_size<Mapping>()) != 0, "Tool mask won't fit into returned type");
 
 } // namespace side_fsensor_remap
-
-#endif /*HAS_TOOLCHANGER*/

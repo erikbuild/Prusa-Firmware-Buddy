@@ -8,7 +8,7 @@ namespace side_fsensor_remap {
 
 /// Maximum number of sensor mapping slots. Do not change without config store migration.
 inline constexpr size_t max_sensor_mapping_count = 6;
-// static_assert(PhysicalToolIndex::count <= max_sensor_mapping_count);
+static_assert(PhysicalToolIndex::count <= max_sensor_mapping_count);
 
 /**
  * @note Mapping of tools to sensor positions.
