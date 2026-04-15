@@ -113,6 +113,10 @@ elseif(BOARD STREQUAL "TOOL_OFFSET_SENSOR")
   add_subdirectory(puppy/honeybee_shared)
   add_subdirectory(can)
 
+elseif(BOARD STREQUAL "INDX_HEAD")
+  add_subdirectory(freertos)
+  add_subdirectory(puppy/indx_head)
+
 elseif(BOARD STREQUAL "XL_DEV_KIT_XLB")
   target_include_directories(firmware PRIVATE .)
 

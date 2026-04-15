@@ -406,7 +406,8 @@ if(BOARD IN_LIST BUDDY_BOARDS AND HAS_PUPPIES_BOOTLOADER)
       SOURCE_DIR "${INDX_HEAD_SOURCE_DIR}"
       BINARY_DIR "${INDX_HEAD_BINARY_DIR}"
       CMAKE_ARGS
-        --preset xl-dwarf_${CMAKE_BUILD_TYPE_lower}_boot -B "${INDX_HEAD_BINARY_DIR}" # INDX_TODO
+        --preset ${PRINTER_lower}_indx-head_${CMAKE_BUILD_TYPE_lower}_boot -B
+        "${INDX_HEAD_BINARY_DIR}"
         $<$<BOOL:${CUSTOM_COMPILE_OPTIONS}>:-DCUSTOM_COMPILE_OPTIONS=${CUSTOM_COMPILE_OPTIONS}>
       BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target firmware
       INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step"
