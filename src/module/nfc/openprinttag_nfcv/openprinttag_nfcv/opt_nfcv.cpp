@@ -453,7 +453,7 @@ bool OPTBackend_NFCV::is_valid(TagID tag_id) {
         return false;
     }
 
-    return tags.at(tag_id).state == TagData::State::known;
+    return tags.at(tag_id).state != TagData::State::free;
 }
 
 std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag, nfcv::Error error) {
