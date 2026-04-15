@@ -57,6 +57,13 @@ std::optional<float> AutoRetract::retracted_distance(ToolVariant tool) const {
         [](NoTool) -> std::optional<float> { return std::nullopt; } //
     );
 }
+bool AutoRetract::is_cold_unload_allowed_and_filament_retracted([[maybe_unused]] PhysicalToolIndex physical_tool) const {
+    if constexpr (option::has_indx) {
+        return false; // With the very short nozzle and tiny heatsink area, the decision was made to not support cold unload. This may change with further tuning.
+    } else {
+        return is_safely_retracted_for_unload(physical_tool);
+    }
+}
 
 void AutoRetract::set_retracted_distance(PhysicalToolIndex tool, std::optional<float> dist) {
     if (!dist.has_value() && !known_hotends_bitset_.test(tool.to_raw())) {

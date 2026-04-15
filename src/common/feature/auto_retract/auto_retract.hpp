@@ -24,6 +24,8 @@ public:
     /// \returns true if the filament is completely retracted from the \param hotend's nozzle (distance >= minimum_retract_distance), allowing for cold unload.
     bool is_safely_retracted_for_unload(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
+    bool is_cold_unload_allowed_and_filament_retracted(PhysicalToolIndex physical_tool) const;
+
     /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
     std::optional<float> retracted_distance(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 

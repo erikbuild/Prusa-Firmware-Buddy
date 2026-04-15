@@ -590,9 +590,25 @@ set_feature_for_printers(
   "XL"
   "MINI"
   )
-set_feature_for_printers(HAS_AUTO_RETRACT "COREONE" "COREONEL" "MK4" "iX" "XL")
 set_feature_for_printers(
-  HAS_FILAMENT_TRACKER "COREONE" "COREONEL" "MK4" "iX" "XL"
+  HAS_AUTO_RETRACT
+  "COREONE"
+  "COREONE_INDX"
+  "COREONEL"
+  "COREONEL_INDX"
+  "MK4"
+  "iX"
+  "XL"
+  )
+set_feature_for_printers(
+  HAS_FILAMENT_TRACKER
+  "COREONE"
+  "COREONE_INDX"
+  "COREONEL"
+  "COREONEL_INDX"
+  "MK4"
+  "iX"
+  "XL"
   ) # TODO: When INDX gets fixed, also try enabling HAS_ANFC
 set_feature_for_printers_master_board(
   HAS_E2EE_SUPPORT

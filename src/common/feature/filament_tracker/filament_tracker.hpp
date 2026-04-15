@@ -6,6 +6,7 @@
 #include <bitset>
 #include <optional>
 #include <option/has_nextruder.h>
+#include <option/has_indx_head.h>
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
 
@@ -27,6 +28,8 @@ class FilamentTracker : Uncopyable {
 public:
 #if HAS_NEXTRUDER()
     static constexpr float extruder_to_nozzle_distance = 40.f; // mm
+#elif HAS_INDX_HEAD()
+    static constexpr float extruder_to_nozzle_distance = 27.f; // mm
 #else
     #error
 #endif

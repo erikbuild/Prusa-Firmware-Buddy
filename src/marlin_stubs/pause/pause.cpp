@@ -267,7 +267,7 @@ bool Pause::should_park() {
         return false;
     case Pause::LoadType::unload:
 #if HAS_AUTO_RETRACT()
-        if (auto_retract().is_safely_retracted_for_unload(settings.physical_tool())) {
+        if (auto_retract().is_cold_unload_allowed_and_filament_retracted(settings.physical_tool())) {
             return false;
         }
 #endif
@@ -282,7 +282,7 @@ bool Pause::is_target_temperature_safe() {
     buddy::safety_timer().reset_restore_nonblocking();
 
 #if HAS_AUTO_RETRACT()
-    if (load_type == LoadType::unload && auto_retract().is_safely_retracted_for_unload(settings.physical_tool())) {
+    if (load_type == LoadType::unload && auto_retract().is_cold_unload_allowed_and_filament_retracted(settings.physical_tool())) {
         return true; // Its safe to unload even if the temp is too low if we are retracted
     }
 #endif
@@ -1080,7 +1080,7 @@ void Pause::filament_stuck_ask_process(Response response) {
 
 void Pause::ram_sequence_process([[maybe_unused]] Response response) {
 #if HAS_AUTO_RETRACT()
-    if (auto_retract().is_safely_retracted_for_unload(settings.physical_tool())) {
+    if (auto_retract().is_cold_unload_allowed_and_filament_retracted(settings.physical_tool())) {
         // The filament is already retracted from the nozzle -> no ramming needed, we don't even need to heat up the nozzle
         ram_retracted_distance = auto_retract().retracted_distance(settings.physical_tool()).value(); // We are sure value is not std::nullopt because of is_safely_retracted_for_unload()
         set(LoadState::unload);
@@ -1098,7 +1098,7 @@ void Pause::unload_process([[maybe_unused]] Response response) {
 #if HAS_NOZZLE_CLEANER()
     bool needs_cleaning = true; // Assume we need to clean the nozzle
     #if HAS_AUTO_RETRACT()
-    needs_cleaning = !auto_retract().is_safely_retracted_for_unload(settings.physical_tool()); // If we are retracted, we don't need to clean the nozzle
+    needs_cleaning = !auto_retract().is_cold_unload_allowed_and_filament_retracted(settings.physical_tool()); // If we are retracted, we don't need to clean the nozzle
     #endif
 #endif
     unload_filament();

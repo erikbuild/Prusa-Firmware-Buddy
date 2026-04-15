@@ -48,7 +48,7 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     {
 #if ENABLED(PREVENT_COLD_EXTRUSION) && HAS_AUTO_RETRACT()
         const bool is_unload = load_type == Pause::LoadType::unload || load_type == Pause::LoadType::unload_confirm || load_type == Pause::LoadType::unload_from_gears;
-        const bool allow_cold = is_unload && buddy::auto_retract().is_safely_retracted_for_unload(rSettings.physical_tool());
+        const bool allow_cold = is_unload && buddy::auto_retract().is_cold_unload_allowed_and_filament_retracted(rSettings.physical_tool());
         AutoRestore ar_ce(thermalManager.allow_cold_extrude, true, allow_cold);
 #endif
 
@@ -135,11 +135,12 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
 void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex virtual_tool, bool ask_unloaded) {
     InProgress progress;
 
+    bool do_preheat = op_preheat.has_value();
 #if HAS_AUTO_RETRACT()
-    if (op_preheat && !buddy::auto_retract().is_safely_retracted_for_unload(virtual_tool.to_physical())) {
-#else
-    if (op_preheat) {
+    do_preheat = do_preheat && !buddy::auto_retract().is_cold_unload_allowed_and_filament_retracted(virtual_tool.to_physical());
 #endif
+
+    if (do_preheat) {
         PreheatData data = PreheatData::make(PreheatMode::unload, virtual_tool, *op_preheat);
         // avoid preheating bed in this case
         auto preheat_ret = preheat(data, PreheatBehavior::force_preheat_only_extruder());
@@ -345,11 +346,12 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
 
     PreheatStatus::SetResult(PreheatStatus::Result::DoneHasFilament);
 
+    bool is_safe_to_unload = false;
 #if HAS_AUTO_RETRACT()
-    if (!buddy::auto_retract().is_safely_retracted_for_unload(virtual_tool.to_physical())) {
-#else
-    {
+    is_safe_to_unload = buddy::auto_retract().is_cold_unload_allowed_and_filament_retracted(virtual_tool.to_physical());
 #endif
+
+    if (!is_safe_to_unload) {
         preheat_to(filament, virtual_tool.to_physical(), PreheatBehavior::for_filament_change(false));
     }
     xyze_pos_t current_position_tmp = current_position;
