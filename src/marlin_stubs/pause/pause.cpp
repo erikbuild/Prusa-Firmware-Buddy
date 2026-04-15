@@ -921,10 +921,16 @@ void Pause::load_finalize_process(Response) {
 #if HAS_AUTO_RETRACT()
     // Only retract from nozzle outside printing
     if (!marlin_server::is_printing()) {
+        // Needed for progress mapper
+        // The process() of the state should never get called though, because end of this function switches to _finished
+        set(LoadState::auto_retract);
         setPhase(PhasesLoadUnload::AutoRetracting);
         const auto vt = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
         PauseFsmDurationNotifier progress_notifier(*this, vt ? standard_ramming_sequence(StandardRammingSequence::auto_retract, *vt).duration_estimate_ms() : 0);
         auto_retract().maybe_retract_from_nozzle();
+
+        // Set the state back, just in case
+        set(LoadState::load_finalize);
     }
 #else
     if constexpr (false) {
