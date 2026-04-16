@@ -40,7 +40,7 @@ namespace {
     /// @brief Plans a move to a new X-axis coordinate.
     /// @param x The target X-axis position.
     /// @param feedrate The speed of the move in mm/s.
-    void plan_to_x(float x, feedRate_t feedrate = feedRate_t(XY_PROBE_FEEDRATE_MM_S)) {
+    [[maybe_unused]] void plan_to_x(float x, feedRate_t feedrate = feedRate_t(XY_PROBE_FEEDRATE_MM_S)) {
         xyze_pos_t xyz = current_position;
         xyz.x = x;
         prepare_move_to(xyz, feedrate, {});
@@ -49,58 +49,54 @@ namespace {
     /// @brief Plans a move to a new Y-axis coordinate.
     /// @param y The target Y-axis position.
     /// @param feedrate The speed of the move in mm/s.
-    void plan_to_y(float y, feedRate_t feedrate = feedRate_t(XY_PROBE_FEEDRATE_MM_S)) {
+    [[maybe_unused]] void plan_to_y(float y, feedRate_t feedrate = feedRate_t(XY_PROBE_FEEDRATE_MM_S)) {
         xyze_pos_t xyz = current_position;
         xyz.y = y;
         prepare_move_to(xyz, feedrate, {});
     }
 
-    /// @brief Prepares the printer for a vent lever switch.
-    /// @return true on success, false on failure.
-    bool before() {
-        if (!GcodeSuite::G28_no_parser(true, true, false, { .only_if_needed = true, .precise = false })) {
-            return false;
-        }
-        return true;
-    }
-
-    void after() {
-        // Return to the home position after the vent operation.
-        mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::park));
-    }
-
-    void switch_lever(VentState wanted_state) {
-        // Move to a safe Y-axis position to avoid the lever.
-        plan_to_y(Y_SAFE);
-        // Move to a horizontal position (left or right) of the lever.
-        plan_to_x(wanted_state == VentState::open ? X_OPEN_START_POS : X_CLOSE_START_POS);
-        // Move into the lever's Y-axis line.
-        plan_to_y(Y_LEVER);
-        // Move horizontally to engage the lever and switch it.
-        plan_to_x(wanted_state == VentState::open ? X_OPEN_END_POS : X_CLOSE_END_POS, lever_move_feedrate);
-        // Move horizontally to release the lever tension
-        plan_to_x(wanted_state == VentState::open ? X_OPEN_END_POS + X_LEVER_MOVE_AWAY : X_CLOSE_END_POS - X_LEVER_MOVE_AWAY, lever_move_feedrate);
-        // Back out to the safe Y-axis position to avoid a collision on future moves.
-        plan_to_y(Y_SAFE);
-    }
-
 }; // namespace
 
 bool execute_control(VentState target_state) {
+    const bool open = (target_state == VentState::open);
+
     PrintStatusMessageGuard psm_guard;
-    if (target_state == VentState::open) {
+    if (open) {
         psm_guard.update<PrintStatusMessage::Type::opening_chamber_vents>({});
     } else {
         psm_guard.update<PrintStatusMessage::Type::closing_chamber_vents>({});
     }
 
-    if (!before()) {
+#if HAS_INDX()
+    // TODO
+
+#else
+    if (!GcodeSuite::G28_no_parser(true, true, false, { .only_if_needed = true, .precise = false })) {
         return false;
     }
-    switch_lever(target_state);
+
+    // Move to a safe Y-axis position to avoid the lever.
+    plan_to_y(Y_SAFE);
+    // Move to a horizontal position (left or right) of the lever.
+    plan_to_x(open ? X_OPEN_START_POS : X_CLOSE_START_POS);
+    // Move into the lever's Y-axis line.
+    plan_to_y(Y_LEVER);
+    // Move horizontally to engage the lever and switch it.
+    plan_to_x(open ? X_OPEN_END_POS : X_CLOSE_END_POS, lever_move_feedrate);
+    // Move horizontally to release the lever tension
+    plan_to_x(open ? X_OPEN_END_POS + X_LEVER_MOVE_AWAY : X_CLOSE_END_POS - X_LEVER_MOVE_AWAY, lever_move_feedrate);
+    // Back out to the safe Y-axis position to avoid a collision on future moves.
+    plan_to_y(Y_SAFE);
+
+    // Return to the home position after the vent operation.
+    mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::park));
+#endif
+
+    // Wait for all planned moves to complete
+    planner.synchronize();
+
     buddy::chamber().set_vent_state(target_state);
-    after();
-    planner.synchronize(); // Wait for all planned moves to complete
+
     return true;
 }
 
