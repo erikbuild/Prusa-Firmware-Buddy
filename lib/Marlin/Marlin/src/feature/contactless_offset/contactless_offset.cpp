@@ -56,6 +56,7 @@
 
 #include <logging/log.hpp>
 #include <raii/scope_guard.hpp>
+#include <raii/auto_restore.hpp>
 #include <timing.h>
 
 #include <algorithm>
@@ -63,6 +64,8 @@
 #include <cassert>
 #include <cmath>
 #include <sfl/segmented_vector.hpp>
+#include <puppies/INDX.hpp>
+#include <puppies/PuppyModbus.hpp>
 
 LOG_COMPONENT_DEF(ContactlessOffset, logging::Severity::debug);
 
@@ -389,8 +392,10 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     const tool_offset::ProbingConfig &config,
     tool_offset::Sensor &sensor) {
 
+    auto &hotend = Hotend::for_tool(PhysicalToolIndex::currently_selected());
+
     // Check nozzle temperature before probing
-    if (thermalManager.degHotend(0) > config.max_safe_temp) {
+    if (hotend.nozzle_temp() > config.max_safe_temp) {
         return std::unexpected("Nozzle too hot for probing");
     }
 
@@ -399,9 +404,7 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     }
 
     // Sensor may be below soft endstop limits — disable them for the whole measurement
-    const bool saved_soft_endstops = soft_endstops_enabled;
-    soft_endstops_enabled = false;
-    ScopeGuard restore_soft_endstops([&] { soft_endstops_enabled = saved_soft_endstops; });
+    AutoRestore restore_soft_endstops(soft_endstops_enabled, false);
 
     const float safe_z = config.sensor_position.z + config.safe_z_height;
     do_blocking_move_to_z(safe_z);
@@ -416,6 +419,25 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
 
     tool_offset::ToolOffset result;
     result.z = sensor_z - config.sensor_position.z;
+
+    // Disable INDX loadcell and accelerometer to free Modbus bandwidth for tool offset sensor streaming and restore its state on exit
+    // Loadcell can be diabled only after probing Z height
+    const auto saved_loadcell_active = buddy::puppies::indx.get_loadcell_active();
+    buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, false);
+    const auto saved_accelerometer_active = buddy::puppies::indx.get_accelerometer_active();
+    buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, false);
+    // Disable INDX heater during XY scanning to reduce measured noise
+    const auto saved_hotend_target = hotend.nozzle_target_temp();
+    hotend.set_nozzle_target_temp(0);
+    const auto saved_bed_target = thermalManager.degTargetBed();
+    thermalManager.setTargetBed(0);
+
+    ScopeGuard restore_previous_state([&hotend, saved_hotend_target, saved_bed_target, saved_loadcell_active, saved_accelerometer_active] {
+        buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, saved_loadcell_active);
+        buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, saved_accelerometer_active);
+        hotend.set_nozzle_target_temp(saved_hotend_target);
+        thermalManager.setTargetBed(saved_bed_target);
+    });
 
     // XY offset measurement via two-pass scanning
     const float scan_half_width = config.sensing_diameter / 2.0f;

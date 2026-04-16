@@ -86,6 +86,13 @@ public:
     bool set_loadcell(PuppyModbus &, bool active);
 
     /**
+     * @brief Get loadcell active state
+     *
+     * @return True if loadcell is active, false otherwise
+     */
+    bool get_loadcell_active();
+
+    /**
      * @brief Enable/disable accelerometer data in FIFO.
      *
      * The head keeps sampling the accelerometer continuously,
@@ -95,6 +102,13 @@ public:
      * @return True when successful, false on communication error
      */
     bool set_accelerometer(PuppyModbus &, bool active);
+
+    /**
+     * @brief Gets accelerometer active state
+     *
+     * @return True if accelerometer output is enabled, false otherwise
+     */
+    bool get_accelerometer_active();
 
     CommunicationStatus set_hotend_target_temp(float target);
     CommunicationStatus set_hotend_temp_compensation(float offset);
