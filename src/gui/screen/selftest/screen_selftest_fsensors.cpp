@@ -166,6 +166,8 @@ using FrameInsertFilamentNotReady = WithConstructorArgs<FrameTextAndImage,
     N_("Push the filament through the side and extruder filament sensors, until the extruder engages with the filament."),
     #elif HAS_EXTRUDER_FSENSOR()
     N_("Push the filament through extruder filament sensor, until the extruder engages with the filament."),
+    #else
+    N_("Push the filament through filament sensor, until the extruder engages with the filament."),
     #endif
 #else
     #if HAS_SIDE_FSENSOR() && HAS_EXTRUDER_FSENSOR()
