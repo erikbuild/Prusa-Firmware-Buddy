@@ -329,7 +329,7 @@ static void main_task_code(void *) {
 }
 
 namespace {
-constexpr size_t main_task_stack_size = 1024;
+constexpr size_t main_task_stack_size = 4096 / sizeof(StackType_t);
 alignas(32) StackType_t main_task_stack[main_task_stack_size];
 StaticTask_t main_task_control_block;
 
