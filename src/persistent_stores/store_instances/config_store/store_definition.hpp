@@ -653,7 +653,13 @@ struct CurrentStore
     }
 
 #if HAS_SELFTEST()
+    // INDX has a different max_tool_count, making SelftestResult a different size.
+    // INDX_TODO: Find proper solution
+    #if HAS_INDX()
+    StoreItem<SelftestResult, defaults::selftest_result, ItemFlag::calibrations, journal::hash("Selftest Result INDX")> selftest_result;
+    #else
     StoreItem<SelftestResult, defaults::selftest_result, ItemFlag::calibrations, journal::hash("Selftest Result Gears")> selftest_result;
+    #endif
 #endif
 
 #if HAS_PHASE_STEPPING()
@@ -698,7 +704,7 @@ struct CurrentStore
     StoreItem<int16_t, defaults::homing_sens_x, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("Homing Sens X")> homing_sens_x; // X axis homing sensitivity
     StoreItem<int16_t, defaults::homing_sens_y, ItemFlag::calibrations | ItemFlag::common_misconfigurations, journal::hash("Homing Sens Y")> homing_sens_y; // Y axis homing sensitivity
 
-    StoreItem<bool, true, ItemFlag::features, journal::hash("Stuck filament detection V2")> stuck_filament_detection;
+    StoreItem<bool, !HAS_INDX(), ItemFlag::features, journal::hash("Stuck filament detection V2")> stuck_filament_detection;
 
     StoreItem<bool, false, ItemFlag::features, journal::hash("Stealth mode")> stealth_mode;
 
@@ -773,6 +779,12 @@ struct CurrentStore
 
 #if HAS_DOOR_SENSOR_CALIBRATION()
     StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("Selftest Result - Door Sensor")> selftest_result_door_sensor;
+#endif
+
+#if HAS_INDX()
+    StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("Selftest Result - Dock Calibration")> selftest_result_dock_calibration;
+    StoreItem<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("Selftest Result - Nozzle Cleaner Calibration")> selftest_result_nozzle_cleaner_calibration;
+    StoreItem<std::bitset<PhysicalToolIndex::count>, 0, ItemFlag::calibrations, journal::hash("INDX dock calibrated mask")> indx_dock_calibrated_mask;
 #endif
 
 #if HAS_EMERGENCY_STOP()
@@ -892,9 +904,23 @@ struct CurrentStore
 #endif
 
 #if HAS_INDX()
+    static_assert(PhysicalToolIndex::count <= 16, "Increase bits in default value");
+    StoreItem<std::bitset<PhysicalToolIndex::count>, defaults::bitset_u16_ones, ItemFlag::hw_config, journal::hash("INDX enabled tools mask")> indx_enabled_tools;
+    void set_indx_tool_enabled(PhysicalToolIndex tool, bool enabled);
+    bool is_indx_tool_enabled(PhysicalToolIndex tool);
+
+    StoreItem<uint8_t, defaults::no_tool_value, ItemFlag::printer_state, journal::hash("INDX last picked tool")> indx_last_picked_tool;
+    // !!! Make sure to check indx_last_picked_tool_valid before using this !!!
+    std::variant<PhysicalToolIndex, NoTool> get_indx_last_picked_tool();
+    void set_indx_last_picked_tool(std::variant<PhysicalToolIndex, NoTool> tool);
+
+    // Whether the stored last_picked_tool value is valid (invalidated during prints to avoid EEPROM wear)
+    StoreItem<bool, false, ItemFlag::printer_state, journal::hash("INDX last picked tool valid")> indx_last_picked_tool_valid;
+
     // Offsets specific to every printer (relative to the absolute position of the nozzle cleaner)
     StoreItem<float, defaults::nozzle_cleaner_x_origin_offset, ItemFlag::hw_config, journal::hash("Nozzle cleaner X origin offset")> nozzle_cleaner_x_origin_offset;
     StoreItem<float, defaults::nozzle_cleaner_y_origin_offset, ItemFlag::hw_config, journal::hash("Nozzle cleaner Y origin offset")> nozzle_cleaner_y_origin_offset;
+
 #endif
 
 private:

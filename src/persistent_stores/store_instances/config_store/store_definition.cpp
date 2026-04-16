@@ -538,4 +538,33 @@ void CurrentStore::set_vent_control(VentControl state) {
 }
 #endif
 
+#if HAS_INDX()
+bool CurrentStore::is_indx_tool_enabled(PhysicalToolIndex tool) {
+    return indx_enabled_tools.get().test(tool.to_raw());
+}
+
+void CurrentStore::set_indx_tool_enabled(PhysicalToolIndex tool, bool enabled) {
+    auto mask = indx_enabled_tools.get();
+    mask.set(tool.to_raw(), enabled);
+    indx_enabled_tools.set(mask);
+}
+
+std::variant<PhysicalToolIndex, NoTool> CurrentStore::get_indx_last_picked_tool() {
+    if (indx_last_picked_tool.get() == defaults::no_tool_value) {
+        return NoTool {};
+    }
+
+    return PhysicalToolIndex::from_raw(indx_last_picked_tool.get());
+}
+
+void CurrentStore::set_indx_last_picked_tool(std::variant<PhysicalToolIndex, NoTool> tool) {
+    if (std::holds_alternative<NoTool>(tool)) {
+        indx_last_picked_tool.set(defaults::no_tool_value);
+    } else {
+        indx_last_picked_tool.set(std::get<PhysicalToolIndex>(tool).to_raw());
+    }
+}
+
+#endif
+
 } // namespace config_store_ns

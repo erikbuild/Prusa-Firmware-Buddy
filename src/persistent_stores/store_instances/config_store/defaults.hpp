@@ -30,6 +30,9 @@
 #endif
 
 #include <option/has_indx.h>
+#if HAS_INDX()
+    #include <module/prusa/indx_dock_position_defaults.hpp>
+#endif
 
 #include <option/has_sheet_support.h>
 #include <option/has_loadcell.h>
@@ -156,7 +159,11 @@ namespace defaults {
 
     inline constexpr uint16_t print_progress_time { 30 };
 
+#if HAS_INDX()
+    inline constexpr auto dock_position = indx_dock_position_defaults::positions;
+#else
     inline constexpr DockPosition dock_position { 0, 0 };
+#endif
     inline constexpr ToolOffset tool_offset { 0, 0, 0 };
 
     inline constexpr float nozzle_diameter {
@@ -168,7 +175,9 @@ namespace defaults {
     };
 
     inline constexpr uint8_t nozzle_is_hardened {
-#if PRINTER_IS_PRUSA_iX()
+#if HAS_INDX()
+        0xFF, // Bitset -> all tools
+#elif PRINTER_IS_PRUSA_iX()
         1 << 0, // Bitset -> first and only nozzle
 #else
         0,
@@ -176,7 +185,9 @@ namespace defaults {
     };
 
     inline constexpr uint8_t nozzle_is_high_flow {
-#if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL() || PRINTER_IS_PRUSA_iX()
+#if HAS_INDX()
+        0xFF, // Bitset -> all tools
+#elif PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL() || PRINTER_IS_PRUSA_iX()
         1 << 0, // Bitset -> first and only nozzle
 #else
         0,
@@ -288,11 +299,14 @@ namespace defaults {
 #endif
 
     inline constexpr bool heat_entire_bed = PRINTER_IS_PRUSA_iX();
+
 #if HAS_INDX()
+    inline constexpr uint8_t no_tool_value = 255;
+    inline constexpr uint16_t bitset_u16_ones = std::numeric_limits<uint16_t>::max();
+
     inline constexpr float nozzle_cleaner_x_origin_offset { 0.0f };
     inline constexpr float nozzle_cleaner_y_origin_offset { 0.0f };
 #endif
-
 } // namespace defaults
 
 } // namespace config_store_ns
