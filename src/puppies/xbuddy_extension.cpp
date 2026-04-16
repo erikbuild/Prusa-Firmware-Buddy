@@ -366,27 +366,37 @@ CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus) {
     }
 
     const ClosingFileDescriptor fd { open(file_id) };
-    if (fd.fd == -1) {
-        return CommunicationStatus::SKIPPED;
-    }
 
     const uint32_t salt = static_cast<uint32_t>(current_request.salt_hi << 16) | static_cast<uint32_t>(current_request.salt_lo);
     xbuddy_extension::modbus::Digest modbus_digest;
     modbus_digest.request = current_request;
 
-    // we defined Digest::data as little endian => no byte swapping needed
-    // we also compute the digest in-place and save some stack space
-    static_assert(std::endian::native == std::endian::little);
-    const auto buddy_digest = std::as_writable_bytes(std::span { modbus_digest.data });
-
-    if (buddy::compute_file_digest(fd.fd, salt, buddy_digest)) {
-        if (bus.write_holding_registers(modbus::ServerAddress::xbuddy_extension, modbus_digest)) {
-            return CommunicationStatus::OK;
+    const auto digest_status = [&] {
+        if (fd.fd == -1) {
+            modbus_digest.data = {};
+            return xbuddy_extension::DigestStatus::unavailable;
         } else {
-            return CommunicationStatus::ERROR;
+            // we defined Digest::data as little endian => no byte swapping needed
+            // we also compute the digest in-place and save some stack space
+            static_assert(std::endian::native == std::endian::little);
+            const auto buddy_digest = std::as_writable_bytes(std::span { modbus_digest.data });
+            if (buddy::compute_file_digest(fd.fd, salt, buddy_digest)) {
+                return xbuddy_extension::DigestStatus::ok;
+            } else {
+                log_error(Buddy, "buddy::compute_file_digest() failed");
+                modbus_digest.data = {};
+                return xbuddy_extension::DigestStatus::retry;
+            }
         }
+    }();
+    modbus_digest.status = xbuddy_extension::modbus::serialize_digest_status(digest_status);
+
+    if (bus.write_holding_registers(modbus::ServerAddress::xbuddy_extension, modbus_digest)) {
+        // Prevent further work of this function until next refresh
+        status.value.digest_request.file_id = xbuddy_extension::modbus::serialize_file_id(FileId::none);
+        return CommunicationStatus::OK;
     } else {
-        log_error(Buddy, "buddy::compute_file_digest() failed");
+        // Best effort, if this fails, we retry later
         return CommunicationStatus::SKIPPED;
     }
 }

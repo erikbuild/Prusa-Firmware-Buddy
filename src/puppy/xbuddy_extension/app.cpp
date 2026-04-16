@@ -97,7 +97,8 @@ bool write_register_file_callback(const xbuddy_extension::modbus::Config &config
 bool write_register_file_callback(const xbuddy_extension::modbus::Digest &hash) {
     const auto salt = (uint32_t)hash.request.salt_hi << 16 | (uint32_t)hash.request.salt_lo;
     const auto file = (cyphal::FirmwareFile)hash.request.file_id;
-    return cyphal::application().receive_digest(file, salt, std::as_bytes(std::span { hash.data }));
+    const auto status = xbuddy_extension::modbus::parse_digest_status(hash.status);
+    return cyphal::application().receive_digest(file, salt, status, std::as_bytes(std::span { hash.data }));
 }
 
 bool write_register_file_callback(const xbuddy_extension::modbus::Chunk &chunk) {

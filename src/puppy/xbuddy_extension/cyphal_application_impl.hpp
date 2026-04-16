@@ -115,6 +115,7 @@ private:
         FirmwareFile hash_response = FirmwareFile::none;
         uint32_t hash_salt = 0;
         std::array<std::byte, 32> hash_digest;
+        xbuddy_extension::DigestStatus hash_status = xbuddy_extension::DigestStatus::unavailable;
 
         void update_modbus_request() {
             modbus_request.hash_request = hash_request;
@@ -475,11 +476,23 @@ private:
                 if (!verify.received_from_source) {
                     // We are waiting for the digest from the board.
                     if (filesystem.hash_response == get_firmware_file_for_node_name(info.name) && filesystem.hash_salt == verify.salt) {
-                        verify.received_from_source = true;
-                        verify.received(filesystem.hash_digest);
-                        state = try_activate(application, verify);
-                        filesystem.hash_request = filesystem.hash_response = FirmwareFile::none;
-                        presentation.transmit_diagnostic_record(Severity::notice, "hash received");
+                        switch (filesystem.hash_status) {
+                        case xbuddy_extension::DigestStatus::ok:
+                            verify.received_from_source = true;
+                            verify.received(filesystem.hash_digest);
+                            state = try_activate(application, verify);
+                            presentation.transmit_diagnostic_record(Severity::notice, "hash received: ok");
+                            filesystem.hash_request = filesystem.hash_response = FirmwareFile::none;
+                            break;
+                        case xbuddy_extension::DigestStatus::unavailable:
+                            state = Inert {};
+                            presentation.transmit_diagnostic_record(Severity::warning, "hash received: unavailable");
+                            filesystem.hash_request = filesystem.hash_response = FirmwareFile::none;
+                            break;
+                        case xbuddy_extension::DigestStatus::retry:
+                            std::swap(filesystem.hash_request, filesystem.hash_response);
+                            break;
+                        }
                         return true;
                     }
                     return false;
@@ -916,8 +929,9 @@ public:
         return filesystem.modbus_request;
     }
 
-    bool receive_digest(FirmwareFile file, uint32_t salt, std::span<const std::byte, 32> digest) final {
+    bool receive_digest(FirmwareFile file, uint32_t salt, xbuddy_extension::DigestStatus status, std::span<const std::byte, 32> digest) final {
         if (filesystem.hash_request == file && filesystem.hash_salt == salt) {
+            filesystem.hash_status = status;
             // static_assert(filesystem.hash_digest.size() == digest.size());
             std::memcpy(filesystem.hash_digest.data(), digest.data(), digest.size());
             std::swap(filesystem.hash_response, filesystem.hash_request);

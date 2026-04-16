@@ -78,7 +78,7 @@ public:
     // Called by modbus handlers.
 
     [[nodiscard]] virtual bool receive_chunk(const uint8_t *data, size_t size, bool is_last, uint16_t file_id, uint32_t offset) = 0;
-    [[nodiscard]] virtual bool receive_digest(FirmwareFile file, uint32_t salt, std::span<const std::byte, 32> digest) = 0;
+    [[nodiscard]] virtual bool receive_digest(FirmwareFile file, uint32_t salt, xbuddy_extension::DigestStatus status, std::span<const std::byte, 32> digest) = 0;
     [[nodiscard]] virtual bool receive(const ac_controller::Config &) = 0;
     [[nodiscard]] virtual bool receive(const ac_controller::LedConfig &) = 0;
     virtual const ModbusRequest &request() = 0;

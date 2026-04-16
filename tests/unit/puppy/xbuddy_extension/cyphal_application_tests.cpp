@@ -268,7 +268,7 @@ void setup_nfc_node(Application &app, MockPresentation &mock, NodeId node_id, ui
     // node and motherboard respond with a matching hash, no more work is done
     {
         const auto digest = generate_random_digest();
-        const auto received = app.receive_digest(cyphal::FirmwareFile::firmware_anfc, 0, digest);
+        const auto received = app.receive_digest(cyphal::FirmwareFile::firmware_anfc, 0, xbuddy_extension::DigestStatus::ok, digest);
         REQUIRE(received);
         app.receive_node_execute_command_response(node_id, 0, digest);
         const auto mock_before = run(app, mock, make_timepoint(time++));
@@ -624,7 +624,7 @@ SCENARIO("happy case") {
 
                             AND_WHEN("parent system sends file hash to application") {
                                 std::byte digest[32] = {};
-                                (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, digest);
+                                (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, xbuddy_extension::DigestStatus::ok, digest);
                                 app.receive_node_heartbeat(node_id, make_timepoint(1000), healthy_firmware);
                                 app.receive_node_heartbeat(node_id, make_timepoint(2000), healthy_firmware);
                                 const auto mock_before = run(app, mock, make_timepoint(2500));
@@ -710,7 +710,7 @@ SCENARIO("happy case") {
 
                         AND_WHEN("they respond with matching hash") {
                             const auto digest = generate_random_digest();
-                            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, digest);
+                            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, xbuddy_extension::DigestStatus::ok, digest);
                             app.receive_node_execute_command_response(node_id, 0, digest);
                             const auto mock_before = run(app, mock, make_timepoint(3));
 
@@ -722,7 +722,7 @@ SCENARIO("happy case") {
                         AND_WHEN("they respond with mismatching hash") {
                             const auto digest1 = generate_random_digest();
                             const auto digest2 = generate_random_digest();
-                            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, digest1);
+                            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, 0, xbuddy_extension::DigestStatus::ok, digest1);
                             app.receive_node_execute_command_response(node_id, 0, digest2);
                             const auto mock_before = run(app, mock, make_timepoint(3));
 
@@ -758,6 +758,88 @@ SCENARIO("happy case") {
 
                     // TODO BFW-7918
                     // Check that no communication happens with that node...
+                }
+            }
+        }
+    }
+}
+
+SCENARIO("motherboard signals firmware unavailable") {
+    const auto healthy_firmware = Heartbeat { Health::nominal, Mode::operational, 0 };
+    const auto node_id = NodeId { 1 };
+
+    GIVEN("node is verifying its firmware") {
+        MockPresentation mock;
+        Application app;
+
+        app.receive_pnp_allocation(make_unique_id(0xdeadbeef));
+        run(app, mock, make_timepoint(0));
+        app.receive_node_heartbeat(node_id, make_timepoint(1), healthy_firmware);
+        run(app, mock, make_timepoint(1));
+        app.receive_node_get_info_response(node_id, known_node_name);
+        run(app, mock, make_timepoint(2));
+
+        const auto initial_request = app.request();
+        REQUIRE(initial_request.hash_request == cyphal::FirmwareFile::firmware_ac_controller);
+
+        WHEN("motherboard reports the file as unavailable") {
+            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, initial_request.hash_salt, xbuddy_extension::DigestStatus::unavailable, std::array<std::byte, 32> {});
+            const auto mock_before = run(app, mock, make_timepoint(3));
+
+            THEN("hash request is cleared") {
+                CHECK(app.request().hash_request == cyphal::FirmwareFile::none);
+            }
+
+            AND_WHEN("more time passes") {
+                const auto commands_before_wait = mock.node_execute_command_request.size();
+                const auto info_requests_before_wait = mock.node_get_info_request.size();
+                run(app, mock, make_timepoint(5000));
+
+                THEN("no further commands are sent and no new hash is requested") {
+                    CHECK(mock.node_execute_command_request.size() == commands_before_wait);
+                    CHECK(mock.node_get_info_request.size() == info_requests_before_wait);
+                    CHECK(app.request().hash_request == cyphal::FirmwareFile::none);
+                }
+            }
+        }
+
+        WHEN("an unavailable response arrives with a mismatching file/salt") {
+            (void)app.receive_digest(cyphal::FirmwareFile::firmware_anfc, initial_request.hash_salt, xbuddy_extension::DigestStatus::unavailable, std::array<std::byte, 32> {});
+            run(app, mock, make_timepoint(3));
+
+            THEN("the hash request is still pending") {
+                CHECK(app.request().hash_request == cyphal::FirmwareFile::firmware_ac_controller);
+            }
+
+            AND_WHEN("a matching digest later arrives and the node responds") {
+                const auto digest = generate_random_digest();
+                (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, initial_request.hash_salt, xbuddy_extension::DigestStatus::ok, digest);
+                app.receive_node_execute_command_response(node_id, 0, digest);
+                run(app, mock, make_timepoint(4));
+
+                THEN("verification completes normally (request is cleared)") {
+                    CHECK(app.request().hash_request == cyphal::FirmwareFile::none);
+                }
+            }
+        }
+
+        WHEN("motherboard reports retry") {
+            const auto garbage = generate_random_digest();
+            (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, initial_request.hash_salt, xbuddy_extension::DigestStatus::retry, garbage);
+            run(app, mock, make_timepoint(3));
+
+            THEN("the hash request stays pending") {
+                CHECK(app.request().hash_request == cyphal::FirmwareFile::firmware_ac_controller);
+            }
+
+            AND_WHEN("motherboard eventually responds with ok and the node matches") {
+                const auto digest = generate_random_digest();
+                (void)app.receive_digest(cyphal::FirmwareFile::firmware_ac_controller, initial_request.hash_salt, xbuddy_extension::DigestStatus::ok, digest);
+                app.receive_node_execute_command_response(node_id, 0, digest);
+                run(app, mock, make_timepoint(4));
+
+                THEN("verification completes (request is cleared)") {
+                    CHECK(app.request().hash_request == cyphal::FirmwareFile::none);
                 }
             }
         }

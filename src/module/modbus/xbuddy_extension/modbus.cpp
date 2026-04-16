@@ -27,3 +27,17 @@ xbuddy_extension::FileId xbuddy_extension::modbus::parse_file_id(uint16_t file_i
 uint16_t xbuddy_extension::modbus::serialize_file_id(xbuddy_extension::FileId file_id) {
     return static_cast<uint16_t>(file_id);
 }
+
+xbuddy_extension::DigestStatus xbuddy_extension::modbus::parse_digest_status(uint16_t status) {
+    switch (const auto value = static_cast<DigestStatus>(status)) {
+    case DigestStatus::ok:
+    case DigestStatus::unavailable:
+    case DigestStatus::retry:
+        return value;
+    }
+    return DigestStatus::unavailable; // Quartum non datur 🙃
+}
+
+uint16_t xbuddy_extension::modbus::serialize_digest_status(xbuddy_extension::DigestStatus status) {
+    return static_cast<uint16_t>(status);
+}

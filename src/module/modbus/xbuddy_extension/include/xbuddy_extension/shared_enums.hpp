@@ -40,4 +40,11 @@ enum class FileId : uint8_t {
     firmware_tool_offset_sensor
 };
 
+/// Status accompanying a Digest response.
+enum class DigestStatus : uint8_t {
+    ok = 0, ///< data contains a valid digest
+    unavailable, ///< data is invalid and retry won't help
+    retry, ///< data is invalid and retry might help
+};
+
 } // namespace xbuddy_extension

@@ -93,7 +93,8 @@ struct Digest {
     static constexpr uint16_t address = 0x9200;
 
     DigestRequest request; ///< echoed back to prevent mixup
-    std::array<uint16_t, 16> data; ///< actual bytes of the digest (little endian)
+    uint16_t status; ///< DigestStatus encoded as uint16_t
+    std::array<uint16_t, 16> data; ///< actual bytes of the digest (little endian); only valid when status == ok
 };
 
 /// MODBUS register file for reporting log messages from xBuddyExtension to motherboard.
@@ -110,5 +111,11 @@ FileId parse_file_id(uint16_t);
 
 /// Serialize FileId to modbus structure.
 uint16_t serialize_file_id(FileId);
+
+/// Parse DigestStatus from modbus structure.
+DigestStatus parse_digest_status(uint16_t);
+
+/// Serialize DigestStatus to modbus structure.
+uint16_t serialize_digest_status(DigestStatus);
 
 } // namespace xbuddy_extension::modbus
