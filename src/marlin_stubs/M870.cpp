@@ -25,11 +25,11 @@ void PrusaGcodeSuite::M870() {
     if (open && close) {
         SERIAL_ERROR_MSG("M870: Cannot specify both O and C");
     } else if (open) {
-        if (!automatic_chamber_vents::open()) {
+        if (!automatic_chamber_vents::execute_control(automatic_chamber_vents::VentState::open)) {
             SERIAL_ERROR_MSG("M870: Failed to open chamber vents");
         }
     } else if (close) {
-        if (!automatic_chamber_vents::close()) {
+        if (!automatic_chamber_vents::execute_control(automatic_chamber_vents::VentState::closed)) {
             SERIAL_ERROR_MSG("M870: Failed to close chamber vents");
         }
     }

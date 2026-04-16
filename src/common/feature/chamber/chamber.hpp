@@ -8,6 +8,7 @@
 #include <temperature.hpp>
 #include <freertos/mutex.hpp>
 #include <printers.h>
+#include <utils/compact_optional.hpp>
 
 // TODO: Migrate XL Enclosure to use this API (& unify)
 // TODO: Add support for controlling MK4 enclosure through GPIO expander
@@ -83,7 +84,6 @@ public: // Temperature control
     void manage_ventilation_state(std::optional<Temperature> fil_target);
 
     enum class VentState : uint8_t {
-        unknown,
         open,
         closed,
     };
@@ -98,7 +98,8 @@ private:
     std::optional<Temperature> target_temperature_;
 
 #if HAS_CHAMBER_VENTS()
-    VentState vent_state_ = VentState::unknown;
+    /// Nullopt = unknown state
+    CompactOptional<VentState, static_cast<VentState>(0xff)> vent_state_ = std::nullopt;
 #endif
 
     Capabilities capabilities_nolock() const;

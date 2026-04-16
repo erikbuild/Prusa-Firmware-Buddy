@@ -37,11 +37,6 @@ namespace {
     #error
 #endif
 
-    enum class VentState {
-        open,
-        close
-    };
-
     /// @brief Plans a move to a new X-axis coordinate.
     /// @param x The target X-axis position.
     /// @param feedrate The speed of the move in mm/s.
@@ -91,32 +86,22 @@ namespace {
 
 }; // namespace
 
-bool open() {
+bool execute_control(VentState target_state) {
     PrintStatusMessageGuard psm_guard;
-    psm_guard.update<PrintStatusMessage::Type::opening_chamber_vents>({});
+    if (target_state == VentState::open) {
+        psm_guard.update<PrintStatusMessage::Type::opening_chamber_vents>({});
+    } else {
+        psm_guard.update<PrintStatusMessage::Type::closing_chamber_vents>({});
+    }
 
     if (!before()) {
         return false;
     }
-    switch_lever(VentState::open);
-    buddy::chamber().set_vent_state(buddy::Chamber::VentState::open);
+    switch_lever(target_state);
+    buddy::chamber().set_vent_state(target_state);
     after();
     planner.synchronize(); // Wait for all planned moves to complete
     return true;
 }
 
-bool close() {
-    PrintStatusMessageGuard psm_guard;
-    psm_guard.update<PrintStatusMessage::Type::closing_chamber_vents>({});
-
-    if (!before()) {
-        return false;
-    }
-
-    switch_lever(VentState::close);
-    buddy::chamber().set_vent_state(buddy::Chamber::VentState::closed);
-    after();
-    planner.synchronize(); // Wait for all planned moves to complete
-    return true;
-}
 } // namespace automatic_chamber_vents
