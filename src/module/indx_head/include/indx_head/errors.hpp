@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstdlib>
 
 /**
  * @brief Shared between xBuddy and INDX_HEAD
@@ -14,24 +13,13 @@ enum class FaultStatusMask : uint16_t {
     nozzle_min_temp = (1 << 1),
     tpis_invalid_timeout = (1 << 2),
     nozzle_max_temp = (1 << 3),
-    // Low-level faults (saved to PWR backup register before hal::panic)
     hard_fault = (1 << 4),
     stack_overflow = (1 << 5),
     assert_failed = (1 << 6),
+    loadcell_crc_mismatch = (1 << 7),
     watchdog_reset = (1 << 8),
+    pin_reset = (1 << 9),
+    power_reset = (1 << 10),
 };
-
-static constexpr const char *to_string(FaultStatusMask mask) {
-    switch (mask) {
-    case FaultStatusMask::no_fault:
-        return "No fault";
-    case FaultStatusMask::nozzle_max_temp:
-        return "Nozzle max temperature fault";
-    case FaultStatusMask::tpis_invalid_timeout:
-        return "TPIS invalid timeout fault";
-    default:
-        std::abort();
-    }
-}
 
 } // namespace indx_head::errors
