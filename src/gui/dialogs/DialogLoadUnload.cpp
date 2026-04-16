@@ -30,11 +30,7 @@ static constexpr const char *txt_unload = N_("Unloading");
 static constexpr const char *txt_unload_confirm = N_("Was filament unload successful?");
 static constexpr const char *txt_filament_not_in_fs = N_("Please remove filament from filament sensor.");
 static constexpr const char *txt_manual_unload = N_("Please open idler and remove filament manually");
-#if HAS_EXTRUDER_FSENSOR()
-static constexpr const char *txt_push_fil = N_("Push the filament into the extruder and then press CONTINUE.");
-#else
-static constexpr const char *txt_push_fil = N_("Press CONTINUE and push filament into the extruder.");
-#endif
+static constexpr const char *txt_push_fil = N_("Push the filament into the extruder and then, while still pushing, press CONTINUE.");
 static constexpr const char *txt_make_sure_inserted = N_("Make sure the filament is inserted through the sensor.");
 static constexpr const char *txt_inserting = N_("Inserting");
 static constexpr const char *txt_is_filament_in_gear = N_("Is filament in extruder gear?");
