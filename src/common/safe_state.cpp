@@ -43,6 +43,9 @@ void hwio_safe_state(void) {
     dwarf4Reset.reset();
     dwarf5Reset.reset();
     dwarf6Reset.reset();
+    #elif HAS_INDX()
+    // INDX_TODO: Safe state for fans (heatbreak is CFanCtlPuppy)
+    Fans::print(0).safe_state();
     #else
     Fans::print(PhysicalToolIndex::from_raw(0)).safe_state();
     Fans::heat_break(PhysicalToolIndex::from_raw(0)).safe_state();

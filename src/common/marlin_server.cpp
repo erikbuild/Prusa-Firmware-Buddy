@@ -120,6 +120,7 @@
 #if HAS_MOTOR_CURRENT_PROFILES()
     #include <feature/motor_current_profile/motor_current_profile.hpp>
 #endif
+#include <option/has_indx.h>
 
 #if HAS_DWARF()
     #include <puppies/Dwarf.hpp>
