@@ -6,12 +6,20 @@
 #include "CFanCtl3WireDynamic.hpp"
 #include <option/has_love_board.h>
 #include <hw_configuration.hpp>
+#include <option/has_indx.h>
+
+#if HAS_INDX()
+    #include <fanctl/xlbuddy/CFanCtlPuppy.hpp>
+#endif
 
 #if !PRINTER_IS_PRUSA_MK4() && !PRINTER_IS_PRUSA_COREONE() && !PRINTER_IS_PRUSA_COREONEL()
     #error "Dynamic PWM is only for MK4/COREONE/COREONEL, fix your CMakeLists.txt!"
 #endif
 
-CFanCtlCommon &Fans::print(size_t index) {
+CFanCtlCommon &Fans::print([[maybe_unused]] size_t index) {
+#if HAS_INDX()
+    static auto instance = CFanCtlPuppy(0, 0, false, FANCTLPRINT_RPM_MAX);
+#else
     static auto instance = CFanCtl3WireDynamic(
         buddy::hw::fanPrintPwm,
         buddy::hw::fanTach,
@@ -25,6 +33,7 @@ CFanCtlCommon &Fans::print(size_t index) {
     if (index) {
         bsod("Print fan %u does not exist", index);
     }
+#endif
     return instance;
 };
 
@@ -36,7 +45,10 @@ static auto read_heat_tacho = []() {
     return buddy::hw::fanTach.readb();
 };
 
-CFanCtlCommon &Fans::heat_break(size_t index) {
+CFanCtlCommon &Fans::heat_break([[maybe_unused]] size_t index) {
+#if HAS_INDX()
+    static auto instance = CFanCtlPuppy(0, 1, true, FANCTLHEATBREAK_RPM_MAX);
+#else
     static CFanCtl3Wire instance = CFanCtl3Wire(
         write_heat_pwm,
         read_heat_tacho,
@@ -55,10 +67,12 @@ CFanCtlCommon &Fans::heat_break(size_t index) {
     if (index) {
         bsod("Heat break fan %u does not exist", index);
     }
+#endif
     return instance;
 };
 
 void Fans::tick() {
+#if !HAS_INDX()
     CFanCtl3Wire &heatbreak_fan = static_cast<CFanCtl3Wire &>(Fans::heat_break(PhysicalToolIndex::from_raw(0)));
     CFanCtl3Wire &print_fan = static_cast<CFanCtl3Wire &>(Fans::print(PhysicalToolIndex::from_raw(0)));
 
@@ -73,4 +87,5 @@ void Fans::tick() {
     }
     Fans::print(PhysicalToolIndex::from_raw(0)).tick();
     Fans::heat_break(PhysicalToolIndex::from_raw(0)).tick();
+#endif
 }

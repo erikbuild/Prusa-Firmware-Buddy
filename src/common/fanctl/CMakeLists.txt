@@ -7,6 +7,9 @@ elseif((BOARD STREQUAL "XBUDDY") AND (PRINTER STREQUAL "iX"))
   target_sources(firmware PRIVATE CFanCtlCommon.cpp fan_ctl_ix_turbine.cpp ix/fanctl_instances.cpp)
   target_link_libraries(firmware PUBLIC xbuddy_extension)
 elseif(BOARD STREQUAL "XBUDDY")
+  if(HAS_INDX)
+    target_sources(firmware PRIVATE xlbuddy/CFanCtlPuppy.cpp)
+  endif()
   target_sources(
     firmware PRIVATE CFanCtlCommon.cpp xbuddy/CFanCtl3WireDynamic.cpp xbuddy/fanctl_instances.cpp
     )
