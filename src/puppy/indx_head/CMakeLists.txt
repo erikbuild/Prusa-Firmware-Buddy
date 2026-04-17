@@ -32,6 +32,7 @@ target_sources(
           src/startup.s
           src/stdlib.cpp
           src/system.c
+          src/timing.cpp
   )
 
 target_link_libraries(firmware PRIVATE STM32C0::HAL HAL_Config freertos indx_head)
