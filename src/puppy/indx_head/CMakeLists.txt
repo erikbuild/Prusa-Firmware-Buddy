@@ -26,6 +26,7 @@ target_sources(
           src/hal.cpp
           src/hal_adc.cpp
           src/hal_crc.cpp
+          src/hal_i2c.cpp
           src/hal_spi.cpp
           src/hal_tim.cpp
           src/hal_watchdog.cpp
@@ -38,7 +39,16 @@ target_sources(
           src/watchdog.cpp
   )
 
-target_link_libraries(firmware PRIVATE STM32C0::HAL HAL_Config freertos indx_head)
+target_link_libraries(
+  firmware
+  PRIVATE STM32C0::HAL
+          HAL_Config
+          freertos
+          indx_head
+          bsod
+          fpm
+          cortex-m0-atomic
+  )
 
 target_include_directories(firmware PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 

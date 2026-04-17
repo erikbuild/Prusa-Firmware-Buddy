@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stm32c0xx_hal.h>
+#include <fpm/fixed.hpp>
 
 #include <indx_head/errors.hpp>
 #include <freertos/binary_semaphore.hpp>
@@ -22,6 +23,21 @@ void __attribute__((noreturn)) panic(indx_head::errors::FaultStatusMask);
 void set_ind_heater_pwr(bool enabled);
 
 void set_safe_state();
+
+struct FloatReading {
+    float value;
+    bool valid;
+};
+
+namespace i2c {
+    // Does everything to prepare and initialize all the I2C peripherals
+    void init_comm();
+
+    using fixed = fpm::fixed<int32_t, int64_t, 7>;
+
+    /// Returns ambient and object temperatures
+    FloatReading read_tpis_object_temp();
+} // namespace i2c
 
 namespace tim {
     void set_printfan_pwm(uint8_t pwm);
