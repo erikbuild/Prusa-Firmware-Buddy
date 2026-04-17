@@ -1114,8 +1114,18 @@ void Temperature::isr() {
       Hotend::for_tool(tool).set_nozzle_target_temp(celsius);
     }
 
-    bool Temperature::wait_for_hotend(const uint8_t target_extruder, const bool no_wait_for_cooling/*=true*/, bool fan_cooling/*=false*/) {
-      Hotend &hotend = Hotend::for_tool(target_extruder);
+    bool Temperature::wait_for_hotend(const uint8_t target_extruder, const bool no_wait_for_cooling/*=true*/, bool fan_cooling/*=false*/) {      
+      const auto target_tool = PhysicalToolIndex::from_raw_notool(target_extruder);
+#if HAS_INDX()
+      // The INDX is unable to read temperature of a tool that isn't picked.
+      // Therefore it can't wait for its temperature.
+      const auto current_tool = PhysicalToolIndex::currently_selected();
+      if (std::holds_alternative<NoTool>(target_tool) || std::holds_alternative<NoTool>(current_tool) || target_tool != current_tool) {
+        return false;
+      }
+#endif
+
+      Hotend &hotend = Hotend::for_tool(target_tool);
 
       #if BOARD_IS_MASTER_BOARD()
         // Keep all heaters on while we're waiting for temperatures
