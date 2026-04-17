@@ -5,6 +5,7 @@
 #include <array>
 #include <config.h>
 #include <common/primitive_any.hpp>
+#include <option/has_indx.h>
 
 class ScreenFactory {
     ScreenFactory() = delete;
@@ -14,6 +15,8 @@ class ScreenFactory {
     using Storage = std::array<uint8_t, 4280>;
 #elif PRINTER_IS_PRUSA_MINI()
     using Storage = std::array<uint8_t, 3344>;
+#elif HAS_INDX()
+    using Storage = std::array<uint8_t, 4400>;
 #else
     using Storage = std::array<uint8_t, 4192>;
 #endif
