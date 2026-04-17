@@ -34,6 +34,10 @@ public:
         }
     }
 
+    void destabilize() {
+        stability_ = 0;
+    }
+
     const Value &value() const {
         return stable_value_;
     }
