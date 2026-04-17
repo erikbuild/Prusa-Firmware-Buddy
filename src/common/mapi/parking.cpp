@@ -93,6 +93,7 @@ ParkingPosition ParkingPosition::from_xyz_pos(const xyz_pos_t &pos) {
  * └──────────────────────────────────────────────────────────────────────────┘        O ──────►
  */
 static void pre_park_move_pattern(const feedRate_t &feedrate, const xy_pos_t &destination) {
+    #if PRINTER_IS_PRUSA_iX()
     static constexpr float x_border_point = X_NOZZLE_PARK_POINT + 1;
     static constexpr float X_BRUSH_POINT = 242.f; // X point before which we can go directly from (no need to avoid v-blade)
 
@@ -140,6 +141,40 @@ static void pre_park_move_pattern(const feedRate_t &feedrate, const xy_pos_t &de
             do_blocking_move_to_x(destination.x, feedrate);
         }
     } // Both in print area, no need to pre-park move
+    #elif HAS_INDX()
+    const bool start_in_side_area = current_position.x > X_WASTEBIN_SAFE_POINT;
+    const bool destination_in_side_area = destination.x > X_WASTEBIN_SAFE_POINT;
+
+    const bool start_in_wastebin_area = start_in_side_area && current_position.y > Y_WASTEBIN_SAFE_POINT;
+    const bool destination_in_wastebin_area = destination_in_side_area && destination.y > Y_WASTEBIN_SAFE_POINT;
+
+    if (start_in_side_area != destination_in_side_area) { // One in the side, other in print area
+        if (start_in_wastebin_area || destination_in_wastebin_area) { // One in waste area, other in print area
+            do_blocking_move_to_y(Y_BRUSH_AVOID_POINT, feedrate);
+            do_blocking_move_to_x(destination.x, feedrate);
+        } else { // One in no-waste land, other in print area
+            if (start_in_side_area) { // Start in no-waste land, end in print area
+                do_blocking_move_to_x(X_WASTEBIN_SAFE_POINT, feedrate);
+            } else { // Start in print area, end in no-waste land
+                do_blocking_move_to_y(destination.y, feedrate);
+            }
+        }
+    } else if (start_in_side_area) { // Both in the side area
+        if (start_in_wastebin_area != destination_in_wastebin_area) { // One in waste area, other in no-waste land
+            if (start_in_wastebin_area) { // Start in waste area, end in no-waste land
+                do_blocking_move_to_y(Y_BRUSH_AVOID_POINT, feedrate);
+                do_blocking_move_to_x(X_WASTEBIN_SAFE_POINT, feedrate);
+                do_blocking_move_to_y(destination.y, feedrate);
+            } else { // Start in no-waste land, end in waste area
+                do_blocking_move_to_x(X_WASTEBIN_SAFE_POINT, feedrate);
+                do_blocking_move_to_y(Y_BRUSH_AVOID_POINT, feedrate);
+                do_blocking_move_to_x(destination.x, feedrate);
+            }
+        }
+    } // Both in print area, no need to pre-park move
+    #else
+        #error "Implement"
+    #endif
 }
 
     #if HAS_INDX()
@@ -159,7 +194,11 @@ ParkingPosition apply_nozzle_cleaner_offset(const ParkingPosition &position) {
     #endif
 
 void move_out_of_nozzle_cleaner_area() {
+    #if PRINTER_IS_PRUSA_iX()
     pre_park_move_pattern(NOZZLE_PARK_XY_FEEDRATE, { X_WASTEBIN_POINT, Y_WASTEBIN_SAFE_POINT });
+    #else
+    pre_park_move_pattern(NOZZLE_PARK_XY_FEEDRATE, { X_WASTEBIN_SAFE_POINT, Y_BRUSH_AVOID_POINT });
+    #endif
 }
 #endif
 
@@ -188,6 +227,12 @@ void park(ZAction z_action, const ParkingPosition &parking_position) {
         }
     }
 
+#if HAS_INDX()
+    // move out of dock area perpendicularly before parking
+    if (current_position.y < Y_DOCK_PARKING_MIN_SAFE_POS) {
+        do_blocking_move_to_y(Y_DOCK_PARKING_MIN_SAFE_POS, feedrate_mm_s);
+    }
+#endif
     const xy_pos_t park_destination = parking_position.to_xyz_pos(current_position.xyz()).xy();
 #if HAS_NOZZLE_CLEANER()
     pre_park_move_pattern(fr_xy, park_destination);
