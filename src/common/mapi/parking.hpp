@@ -5,6 +5,7 @@
 
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_wastebin.h>
+#include <option/has_indx.h>
 #include <bsod/bsod.h>
 
 namespace mapi {
@@ -79,6 +80,12 @@ ParkingPosition get_parking_position(ParkPosition position);
 
 #if HAS_NOZZLE_CLEANER()
 void move_out_of_nozzle_cleaner_area();
+
+    #if HAS_INDX()
+/// Applies nozzle cleaner origin offsets (from calibration) to the given parking position's X and Y.
+ParkingPosition apply_nozzle_cleaner_offset(const ParkingPosition &position);
+    #endif
+
 #endif
 
 /**

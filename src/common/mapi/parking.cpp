@@ -2,6 +2,7 @@
 
 #include <Marlin/src/gcode/gcode.h>
 #include <Marlin/src/module/motion.h>
+#include <config_store/store_instance.hpp>
 
 #include <option/has_wastebin.h>
 
@@ -10,10 +11,18 @@ namespace mapi {
 ParkingPosition get_parking_position(ParkPosition position) {
     switch (position) {
     case ParkPosition::park:
+#if HAS_INDX()
+        return apply_nozzle_cleaner_offset({ X_NOZZLE_PARK_POINT, Y_NOZZLE_PARK_POINT, Z_NOZZLE_PARK_POINT });
+#else
         return ParkingPosition(XYZ_NOZZLE_PARK_POINT);
+#endif
     case ParkPosition::purge:
 #if HAS_WASTEBIN()
+    #if HAS_INDX()
+        return apply_nozzle_cleaner_offset({ X_WASTEBIN_POINT, Y_WASTEBIN_POINT, Z_AXIS_LOAD_POS });
+    #else
         return ParkingPosition { X_WASTEBIN_POINT, Y_WASTEBIN_POINT, Z_AXIS_LOAD_POS };
+    #endif
 #else
         return ParkingPosition { X_AXIS_LOAD_POS, Y_AXIS_LOAD_POS, Z_AXIS_LOAD_POS };
 #endif
@@ -132,6 +141,22 @@ static void pre_park_move_pattern(const feedRate_t &feedrate, const xy_pos_t &de
         }
     } // Both in print area, no need to pre-park move
 }
+
+    #if HAS_INDX()
+ParkingPosition apply_nozzle_cleaner_offset(const ParkingPosition &position) {
+    const float x_offset = config_store().nozzle_cleaner_x_origin_offset.get();
+    const float y_offset = config_store().nozzle_cleaner_y_origin_offset.get();
+
+    ParkingPosition result = position;
+    if (auto *x = std::get_if<float>(&result.x)) {
+        *x += x_offset;
+    }
+    if (auto *y = std::get_if<float>(&result.y)) {
+        *y += y_offset;
+    }
+    return result;
+}
+    #endif
 
 void move_out_of_nozzle_cleaner_area() {
     pre_park_move_pattern(NOZZLE_PARK_XY_FEEDRATE, { X_WASTEBIN_POINT, Y_WASTEBIN_SAFE_POINT });
