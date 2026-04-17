@@ -257,8 +257,7 @@ class Planner {
     #endif
 
     static StrongIndexArray<int16_t, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> flow_percentage; // Extrusion factor for each extruder
-    // e_factor needs to be EXTUDERS, which takes into account NoTool index. On INDX, there are E service moves without tool picked
-    static StrongIndexArray<float, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> e_factor;  // The flow percentage and volumetric multiplier combine to scale E movement
+    static StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> e_factor;  // The flow percentage and volumetric multiplier combine to scale E movement
 
     #if DISABLED(NO_VOLUMETRICS)
       // diameter of filament (in millimeters), typically around 1.75 or 2.85, 0 disables the volumetric calculations for the extruder

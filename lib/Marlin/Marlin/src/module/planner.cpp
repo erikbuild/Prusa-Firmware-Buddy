@@ -238,7 +238,7 @@ float Planner::mm_per_mstep[XYZE_N];          // (mm) Millimeters per mini-step
 #endif
 
 StrongIndexArray<int16_t, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> Planner::flow_percentage (stdext::make_filled_array<int16_t, VirtualToolIndex::count>( 100 )); // Extrusion factor for each extruder
-StrongIndexArray<float, EXTRUDERS, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> Planner::e_factor (stdext::make_filled_array<float, EXTRUDERS>( 1.0f )); // The flow percentage and volumetric multiplier combine to scale E movement
+StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> Planner::e_factor (stdext::make_filled_array<float, VirtualToolIndex::count>( 1.0f )); // The flow percentage and volumetric multiplier combine to scale E movement
 
 #if DISABLED(NO_VOLUMETRICS)
   StrongIndexArray<float, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> Planner::filament_size(stdext::make_filled_array<float, VirtualToolIndex::count>( DEFAULT_NOMINAL_FILAMENT_DIA ));
@@ -1246,13 +1246,11 @@ bool Planner::_populate_block(block_t * const block,
   if (de < 0) SBI(dm, E_AXIS);
 
   float e_fac = tools.virtual_tool.has_value()
-    ? e_factor[tools.virtual_tool->to_raw()]
+    ? e_factor[*tools.virtual_tool]
     : 1.0f;
 #if HAS_INDX()
   if (hints.move.is_service_extruder_move) {
-    // INDX service moves set e_factor via AutoRestore in toolchanger_indx,
-    // tools does not have virtual/physical on NoTool, but extruder is properly set up (MARLIN_NO_PICKED_TOOL)
-    e_fac = e_factor[tools.extruder];
+    e_fac = EXTRUDER_SERVICE_MOVE_E_FACTOR;
   }
 #endif
   const float e_msteps_float = de * e_fac;
@@ -2161,7 +2159,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
       // Note: This is not >>ideal<<, because although the moves get planned, they might get discarded through (gcode_exceptions/quick_stop)
       // Most notably, this will track some extra filament usage if user intterupts purging
       // Tying this directly to the immediate motor positions might be better, but one would also need to also handle the origin resets
-      buddy::filament_tracker().track_extruder_move(*tools.virtual_tool, (xyze.e - position_float.e) * e_factor[tools.virtual_tool->to_raw()]);
+      buddy::filament_tracker().track_extruder_move(*tools.virtual_tool, (xyze.e - position_float.e) * e_factor[*tools.virtual_tool]);
     }
 #endif
   }
@@ -2260,7 +2258,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
       #endif // PREVENT_COLD_EXTRUSION
       #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
         const float e_fac = tools.virtual_tool.has_value()
-          ? e_factor[tools.virtual_tool->to_raw()]
+          ? e_factor[*tools.virtual_tool]
           : 1.0f;
         const float e_msteps = ABS(de * e_fac);
         const float max_e_msteps = settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)] * (EXTRUDE_MAXLENGTH);
