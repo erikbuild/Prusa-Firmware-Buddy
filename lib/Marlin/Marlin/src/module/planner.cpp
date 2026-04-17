@@ -123,6 +123,8 @@
   #include <feature/filament_tracker/filament_tracker.hpp>
 #endif
 
+#include <option/has_indx.h>
+
 #include <feature/safety_timer/safety_timer.hpp>
 #include <freertos/critical_section.hpp>
 #include <feature/gcode_exception/gcode_exception.hpp>
@@ -1177,6 +1179,9 @@ bool Planner::_buffer_msteps(const xyze_msteps_t &target, const MachinePosXYZE &
 }
 
 void Planner::manage_extruders(PhysicalToolIndex physical_tool) {
+#if HAS_INDX()
+  enable_E(0);
+#else
   const uint8_t extruder = physical_tool.to_raw();
   for (uint8_t i = 0; i < EXTRUDERS; i++) {
     if (i != extruder) {
@@ -1194,6 +1199,7 @@ void Planner::manage_extruders(PhysicalToolIndex physical_tool) {
     enable_E(i);
     counter = (BLOCK_BUFFER_SIZE) * 2;
   }
+#endif
 }
 
 /**
@@ -1239,9 +1245,16 @@ bool Planner::_populate_block(block_t * const block,
   if (dc < 0) SBI(dm, Z_AXIS);
   if (de < 0) SBI(dm, E_AXIS);
 
-  const float e_fac = tools.virtual_tool.has_value()
+  float e_fac = tools.virtual_tool.has_value()
     ? e_factor[tools.virtual_tool->to_raw()]
     : 1.0f;
+#if HAS_INDX()
+  if (hints.move.is_service_extruder_move) {
+    // INDX service moves set e_factor via AutoRestore in toolchanger_indx,
+    // tools does not have virtual/physical on NoTool, but extruder is properly set up (MARLIN_NO_PICKED_TOOL)
+    e_fac = e_factor[tools.extruder];
+  }
+#endif
   const float e_msteps_float = de * e_fac;
   const int32_t e_msteps = static_cast<int32_t>(std::abs(e_msteps_float) + 0.5f);
 
@@ -1361,6 +1374,13 @@ bool Planner::_populate_block(block_t * const block,
     if (tools.physical_tool.has_value()) {
       Planner::manage_extruders(*tools.physical_tool);
     }
+    #if HAS_INDX()
+    else if (hints.move.is_service_extruder_move) {
+      // INDX service moves (lock/unlock mechanism) run without a picked tool.
+      // Enable the single physical E stepper directly.
+      enable_E(0);
+    }
+    #endif
 
     // Perform E pre-move hooks
     motor_prepare_move_e();
@@ -2147,8 +2167,9 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
   }
 
 #if HAS_AUTO_RETRACT()
-  if (hints.move.is_service_extruder_move) {
+  if (hints.move.is_service_extruder_move || !tools.physical_tool.has_value()) {
     // Extruder switch move is out of filament gears
+    // Or tool is not in the extruder
     
   } else if (target.e > position.e) {
     buddy::auto_retract().maybe_deretract_to_nozzle();
