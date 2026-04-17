@@ -6,6 +6,7 @@ This file is generated automatically so don't edit it directly
 - BufferedSerial: logging::Severity::debug, src/hw/buffered_serial.cpp
 - Cheese: logging::Severity::info, src/puppy/dwarf/Cheese.cpp
 - Core: logging::Severity::info, src/common/appmain.cpp
+- DockCalibration: logging::Severity::info, src/feature/indx_dock_calibration/indx_dock_calibration.cpp
 - Dwarf: logging::Severity::info, src/puppy/dwarf/task_startup.cpp
 - Dwarf_1: logging::Severity::info, src/puppies/Dwarf.cpp
 - Dwarf_2: logging::Severity::info, src/puppies/Dwarf.cpp
