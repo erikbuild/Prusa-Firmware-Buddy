@@ -230,6 +230,15 @@ if(BOARD_IS_MASTER_BOARD)
       target_link_libraries(Marlin PRIVATE sfl-library)
     endif()
   endif()
+
+  if(HAS_CONTACTLESS_OFFSET)
+    target_sources(
+      Marlin
+      PRIVATE Marlin/Marlin/src/feature/contactless_offset/config.cpp
+              Marlin/Marlin/src/feature/contactless_offset/contactless_offset.cpp
+              Marlin/Marlin/src/feature/contactless_offset/tool_sensor.cpp
+      )
+  endif()
 endif()
 
 target_compile_features(Marlin PUBLIC cxx_std_17)

@@ -432,6 +432,7 @@ set_feature_for_printers_master_board(
   "COREONEL"
   "COREONEL_INDX"
   )
+set_feature_for_printers_master_board(HAS_CONTACTLESS_OFFSET "MK4")
 set_feature_for_printers_master_board(
   HAS_NEXTRUDER
   "MK4"
