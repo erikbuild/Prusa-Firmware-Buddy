@@ -3,6 +3,7 @@
 #include "critical_section.hpp"
 #include "hal_crc.hpp"
 #include "hal_spi.hpp"
+#include "watchdog.hpp"
 
 #include <stm32c0xx_hal.h>
 #include <stm32c0xx_ll_tim.h>
@@ -935,6 +936,7 @@ extern "C" void UsageFault_Handler() {
 // SysTick_Handler defined by FreeRTOS, defining FreeRTOS hook to increment HAL tick if needed
 extern "C" void vApplicationTickHook(void) {
     HAL_IncTick();
+    watchdog::manager().tick();
 }
 
 extern "C" void EXTI0_1_IRQHandler(void) {

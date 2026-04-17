@@ -27,12 +27,14 @@ target_sources(
           src/hal_crc.cpp
           src/hal_spi.cpp
           src/hal_tim.cpp
+          src/hal_watchdog.cpp
           src/main.cpp
           src/rtt.cpp
           src/startup.s
           src/stdlib.cpp
           src/system.c
           src/timing.cpp
+          src/watchdog.cpp
   )
 
 target_link_libraries(firmware PRIVATE STM32C0::HAL HAL_Config freertos indx_head)
