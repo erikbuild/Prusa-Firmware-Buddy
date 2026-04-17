@@ -929,15 +929,6 @@ static void cycle() {
 /// \retval true the function did its job and we can continue with the state machine
 /// \retval false the function is not ready yet, we need to call it later again (loop in the same state)
 static bool pre_finalize_print([[maybe_unused]] bool finished) {
-#if HAS_NOZZLE_CLEANER()
-    if (nozzle_cleaner::is_loader_idle()) {
-        nozzle_cleaner::load_clean_gcode();
-    }
-    if (nozzle_cleaner::is_loader_buffering()) {
-        return false; // We are not ready yet, we need to wait for the loader to finish buffering
-    }
-#endif // HAS_NOZZLE_CLEANER()
-
 #if HAS_ANFC()
     buddy::openprinttag::filament_usage_tracker().flush({
         .tools = AllTools {},
@@ -978,9 +969,13 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
     }
 
 #if HAS_NOZZLE_CLEANER()
-    // Here the nozzle cleaner loader should already be ready to execute the gcode.
-    nozzle_cleaner::execute();
-    mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
+    // Skip nozzle cleaning if no tool is picked (e.g. tool already parked during pause on INDX)
+    if (!std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
+        if (!nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::clean)) {
+            return false;
+        }
+        mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
+    }
 #endif
 
     disable_e_steppers();

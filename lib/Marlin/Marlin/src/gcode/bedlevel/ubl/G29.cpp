@@ -40,6 +40,7 @@
     #include <marlin_server.hpp>
     #include <calibration_z.hpp>
     #include <option/has_uneven_bed_prompt.h>
+    #include <option/has_auto_retract.h>
 
     #include <mapi/motion.hpp>
 
@@ -308,25 +309,14 @@ void GcodeSuite::G29() {
                 // Park over the bin
                 mapi::park(mapi::ZAction::absolute_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_WASTEBIN_POINT } }));
 
+                #if HAS_AUTO_RETRACT()
                 // Extrude a bit and retract quickly (skip ramming)
                 const float purge_length = 8.f;
                 buddy::auto_retract().ensure_retracted_no_ramming(purge_length);
-                // Ensure the nozzle cleaner is ready
-                while (true) {
-                    if (planner.draining()) return;
-                    
-                    if (nozzle_cleaner::is_loader_idle()) {
-                        nozzle_cleaner::load_clean_gcode();
-                    }
-                    if (nozzle_cleaner::is_loader_buffering()) {
-                        idle(true); // Wait for the loader to finish buffering
-                        continue; // We are not ready yet, we need to wait for the loader to finish buffering
-                    }
-                    break;
-                }
+                #endif
 
                 // Clean the nozzle
-                if(nozzle_cleaner::execute()) {
+                if(nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::clean)) {
                     // Nozzle cleaner cleaning succeeded, proceed to retry nozzle cleaning
                     continue;
                 } else {

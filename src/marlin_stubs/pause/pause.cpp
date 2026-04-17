@@ -748,13 +748,7 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
 
     float purged = 0.f;
     while (purged < settings.purge_length()) {
-        if (nozzle_cleaner::is_loader_idle()) {
-            nozzle_cleaner::load_vblade_cut_gcode();
-        }
-        if (nozzle_cleaner::is_loader_buffering()) {
-            idle(true); // Wait for the loader to finish buffering
-            continue; // We are not ready yet, we need to wait for the loader to finish buffering
-        }
+    #if !HAS_INDX() // We do the purgue move in the gcode of the loader on INDX, so we don't want to do it here
         const auto purge_result = do_e_move_notify_progress_hotextrude(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE, StopConditions::All);
         purged += purge_length;
         switch (purge_result) {
@@ -768,8 +762,13 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
         default:
             break;
         }
+    #endif
         planner.synchronize(); // Wait for the purge to finish before continuing
-        if (!nozzle_cleaner::execute()) {
+        if (!nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::purge_clean)) {
+            if (planner.draining()) {
+                return; // we exited the load_and_execute cause of .draining, we need to exit asap
+            }
+
             if (++failed_purge_attempts >= retry_cnt) {
                 // If we failed to purge the nozzle x times, we need to stop the process
                 SERIAL_ECHO_MSG("Purging with nozzle cleaning failed, stopping the process");
@@ -781,6 +780,10 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
         };
         mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
         planner.synchronize(); // Wait for the park to finish before continuing
+
+    #if HAS_INDX() // INDX_TODO: clean up this :)
+        break; // On INDX we do the purge in the gcode of the loader, so we only want to loop on the cleaner execution, but not do multiple purges
+    #endif
     }
     config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
     set(LoadState::load_finalize);
@@ -971,7 +974,8 @@ void Pause::load_finalize_process(Response) {
 
 #if HAS_NOZZLE_CLEANER()
     {
-        nozzle_cleaner::load_clean_gcode();
+        // We cant use the regual load_and_execute cause we need to handle user_stop also
+        nozzle_cleaner::load_sequence(nozzle_cleaner::Sequence::clean);
         setPhase(PhasesLoadUnload::LoadNozzleCleaning);
         while (!nozzle_cleaner::execute()) {
             if (planner.draining() || check_user_stop(getResponse())) {
@@ -1132,7 +1136,6 @@ void Pause::unload_process([[maybe_unused]] Response response) {
     case LoadType::filament_stuck:
 #if HAS_NOZZLE_CLEANER()
         if (needs_cleaning) {
-            nozzle_cleaner::load_clean_gcode();
             set(LoadState::unload_nozzle_clean);
             return;
         }
@@ -1180,7 +1183,7 @@ void Pause::unload_from_gears_process([[maybe_unused]] Response response) {
 void Pause::unload_nozzle_clean_process([[maybe_unused]] Response response) {
     setPhase(PhasesLoadUnload::UnloadNozzleCleaning);
 
-    if (nozzle_cleaner::execute()) {
+    if (nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::clean)) {
         if constexpr (!option::has_human_interactions) {
             runout_timer_ms = ticks_ms();
             set(LoadState::filament_not_in_fs);
@@ -1683,7 +1686,11 @@ void Pause::setup_progress_mapper() {
             { LoadState::load_to_gears, 1 },
                 { LoadState::load_wait_temp, 3 },
                 { LoadState::long_load, 1 },
+#if HAS_NOZZLE_CLEANER()
+                { LoadState::purge_nozzle_clean, 1 },
+#else
                 { LoadState::purge, 1 },
+#endif
 #if HAS_AUTO_RETRACT()
                 { LoadState::auto_retract, 1 },
 #endif
@@ -1695,7 +1702,11 @@ void Pause::setup_progress_mapper() {
     case LoadType::load_purge: {
         constexpr static ProgressMapperWorkflowArray workflow { std::to_array<WorkflowStep>({
             { LoadState::load_wait_temp, 3 },
+#if HAS_NOZZLE_CLEANER()
+                { LoadState::purge_nozzle_clean, 1 },
+#else
                 { LoadState::purge, 1 },
+#endif
 #if HAS_AUTO_RETRACT()
                 { LoadState::auto_retract, 1 },
 #endif
@@ -1729,7 +1740,11 @@ void Pause::setup_progress_mapper() {
             { LoadState::unload_wait_temp, 3 },
                 { LoadState::ram_sequence, 1 },
                 { LoadState::long_load, 2 },
+#if HAS_NOZZLE_CLEANER()
+                { LoadState::purge_nozzle_clean, 1 },
+#else
                 { LoadState::purge, 1 },
+#endif
 #if HAS_AUTO_RETRACT()
                 { LoadState::auto_retract, 1 },
 #endif
