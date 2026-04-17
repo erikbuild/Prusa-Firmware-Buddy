@@ -151,6 +151,7 @@
 
 #if HAS_TOOLCHANGER()
     #include "module/prusa/toolchanger.h"
+    #include "module/tool_change.h"
 #endif
 
 #if HAS_MMU2()
@@ -504,6 +505,12 @@ namespace {
         server.resume.nozzle_temp = buddy::safety_timer().original_hotend_targets();
         server.resume.fan_speed = marlin_vars().print_fan_speed; // save fan speed
         server.resume.print_speed = marlin_vars().print_speed;
+#if HAS_INDX()
+        server.resume.active_tool = match(
+            PhysicalToolIndex::currently_selected(),
+            [](PhysicalToolIndex tool) { return tool.to_raw(); },
+            [](NoTool) { return PrusaToolChanger::MARLIN_NO_TOOL_PICKED; });
+#endif
 #if FAN_COUNT > 0
         if (hotendErrorChecker.runFullFan()) {
             thermalManager.set_fan_speed(0, 255);
@@ -2073,6 +2080,13 @@ static void resuming_reheating() {
         return;
     }
 #endif /*ENABLED(CRASH_RECOVERY)*/
+
+#if HAS_INDX()
+    // Pick the tool back from its dock before resuming
+    if (server.resume.active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+        tool_change(PhysicalToolIndex::from_raw(server.resume.active_tool), tool_return_t::no_return);
+    }
+#endif
 
     unpark_head_XY();
     server.print_state = State::Resuming_UnparkHead_XY;

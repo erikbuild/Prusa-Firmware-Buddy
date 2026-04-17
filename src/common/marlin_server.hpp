@@ -18,6 +18,7 @@
 #include <utils/publisher.hpp>
 #include <tool_index.hpp>
 #include <utils/storage/strong_index_array.hpp>
+#include <option/has_indx.h>
 
 #include <serial_printing.hpp>
 
@@ -132,6 +133,9 @@ struct resume_state_t {
     StrongIndexArray<int16_t, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> nozzle_temp; // target nozzle temperatures
     uint8_t fan_speed = 0; // resume fan speed
     uint16_t print_speed = 0; // resume printing speed
+#if HAS_INDX()
+    uint8_t active_tool = PhysicalToolIndex::count; // raw tool index; PhysicalToolIndex::count == MARLIN_NO_TOOL_PICKED means no tool
+#endif
 };
 
 //

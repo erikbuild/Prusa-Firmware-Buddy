@@ -5,6 +5,7 @@
 #include <option/has_toolchanger.h>
 #include <option/has_chamber_api.h>
 #include <option/has_motor_current_profiles.h>
+#include <option/has_indx.h>
 #include <option/has_tool_crash_recovery.h>
 
 #if HAS_TOOLCHANGER()
@@ -115,10 +116,17 @@ struct state_planner_t {
     uint8_t current_profile { 0 };
 #endif
 
+#if HAS_INDX()
+    uint8_t active_tool { PrusaToolChanger::MARLIN_NO_TOOL_PICKED };
+#endif
+
     // everything to target_nozzle is aligned - padding the remaining fields
     static constexpr int _size_to_pad = sizeof(target_nozzle) + sizeof(flow_percentage) + sizeof(marlin_debug_flags)
 #if HAS_MOTOR_CURRENT_PROFILES()
         + sizeof(current_profile)
+#endif
+#if HAS_INDX()
+        + sizeof(active_tool) // uint8_t
 #endif
         ;
     uint8_t _padding[(4 - _size_to_pad % 4) % 4];

@@ -19,6 +19,7 @@
     #include <feature/motor_current_profile/motor_current_profile.hpp>
 #endif
 #include <option/has_tool_crash_recovery.h>
+#include <option/has_indx.h>
 
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
@@ -331,6 +332,9 @@ void resume_loop() {
         resume.nozzle_temp = state_buf.planner.target_nozzle;
 #if HAS_MOTOR_CURRENT_PROFILES()
         buddy::set_active_motor_current_profile(static_cast<buddy::StandardMotorCurrentProfile>(state_buf.planner.current_profile));
+#endif
+#if HAS_INDX()
+        resume.active_tool = state_buf.planner.active_tool;
 #endif
         marlin_server::set_resume_data(&resume);
 
@@ -958,9 +962,18 @@ void ac_fault_isr() {
         if (state_buf.planner.was_paused) {
             state_buf.planner.fan_speed = resume.fan_speed;
             state_buf.planner.print_speed = resume.print_speed;
+#if HAS_INDX()
+            state_buf.planner.active_tool = resume.active_tool;
+#endif
         } else {
             state_buf.planner.fan_speed = thermalManager.fan_speed[0];
             state_buf.planner.print_speed = marlin_vars().print_speed;
+#if HAS_INDX()
+            state_buf.planner.active_tool = match(
+                PhysicalToolIndex::currently_selected(),
+                [](PhysicalToolIndex tool) { return tool.to_raw(); },
+                [](NoTool) { return PrusaToolChanger::MARLIN_NO_TOOL_PICKED; });
+#endif
         }
 #if HAS_MOTOR_CURRENT_PROFILES()
         state_buf.planner.current_profile = static_cast<uint8_t>(buddy::active_motor_current_profile());
