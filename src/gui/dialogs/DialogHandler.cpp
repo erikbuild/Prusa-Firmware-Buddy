@@ -16,11 +16,16 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_belt_tuning.h>
 #include <option/has_loadcell.h>
+#include <option/has_indx.h>
 #include <gui/screen/screen_preheat.hpp>
 #include <gui/screen/dialog_safety_timer.hpp>
 
 #if HAS_LOADCELL()
     #include <gui/screen/screen_nozzle_cleaning_failed.hpp>
+#endif
+
+#if HAS_INDX()
+    #include <gui/screen/screen_nozzle_mismatch.hpp>
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()
@@ -294,6 +299,9 @@ using FSMDisplayConfig = FSMDisplayConfigDef<
 #endif
 #if HAS_LOADCELL()
     FSMScreenDef<ClientFSM::NozzleCleaningFailed, ScreenNozzleCleaningFailed>,
+#endif
+#if HAS_INDX()
+    FSMScreenDef<ClientFSM::NozzleMismatch, ScreenNozzleMismatch>,
 #endif
     // This is here so that we can worry-free write commas at the end of each argument
     FSMEndDef>;

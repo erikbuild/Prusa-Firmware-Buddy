@@ -6,6 +6,7 @@
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_belt_tuning.h>
+#include <option/has_indx.h>
 #include <logging/log.hpp>
 
 LOG_COMPONENT_DEF(Fsm, logging::Severity::debug);
@@ -63,13 +64,17 @@ static constexpr uint32_t score(ClientFSM fsm_type) {
     case ClientFSM::NozzleCleaningFailed:
 #endif
         return 2;
+#if HAS_INDX()
+    case ClientFSM::NozzleMismatch:
+        return 3;
+#endif
 
     case ClientFSM::SafetyTimer:
         // Show over everything except warnings
-        return 3;
+        return 4;
 
     case ClientFSM::Warning:
-        return 4;
+        return 5;
 
     case ClientFSM::_none:
         break;

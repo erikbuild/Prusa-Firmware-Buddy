@@ -16,6 +16,8 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_manual_belt_tuning.h>
 #include <option/has_serial_print.h>
+#include <option/has_indx.h>
+
 #include <inc/MarlinConfigPre.h>
 
 #include <stdint.h>
@@ -67,6 +69,9 @@ enum class ClientFSM : uint8_t {
     #endif
     #if HAS_LOADCELL()
     NozzleCleaningFailed,
+    #endif
+    #if HAS_INDX()
+    NozzleMismatch,
     #endif
     SafetyTimer,
     Wait, ///< FSM that only blocks the screen with a "please wait" text

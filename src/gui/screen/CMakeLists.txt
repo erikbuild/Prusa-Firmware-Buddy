@@ -38,3 +38,7 @@ endif()
 if(HAS_TOOLCHANGER)
   target_sources(firmware PRIVATE screen_tool_pick_park.cpp)
 endif()
+
+if(HAS_INDX)
+  target_sources(firmware PRIVATE screen_nozzle_mismatch.cpp)
+endif()

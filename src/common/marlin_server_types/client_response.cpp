@@ -12,6 +12,10 @@
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
 #endif
 
+#if HAS_INDX()
+    #include <fsm/nozzle_mismatch_phases.hpp>
+#endif
+
 #if HAS_SELFTEST()
     #include <fsm/selftest_fsensors_phases.hpp>
 #endif
@@ -62,6 +66,9 @@ constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM:
 #endif
 #if HAS_LOADCELL()
         { ClientFSM::NozzleCleaningFailed, nozzle_cleaning_responses },
+#endif
+#if HAS_INDX()
+        { ClientFSM::NozzleMismatch, nozzle_mismatch_responses },
 #endif
         { ClientFSM::SafetyTimer, safety_timer_responses },
         { ClientFSM::Wait, {} },

@@ -37,6 +37,10 @@
     #include <fsm/nozzle_cleaning_failed_phases.hpp>
     #include <fsm/nozzle_cleaning_failed_mapper.hpp>
 #endif
+#if HAS_INDX()
+    #include <fsm/nozzle_mismatch_phases.hpp>
+    #include <fsm/nozzle_mismatch_mapper.hpp>
+#endif
 
 using namespace marlin_server;
 using namespace printer_state;
@@ -264,6 +268,10 @@ DeviceState get_state(bool ready) {
     case ClientFSM::Preheat:
     case ClientFSM::Wait:
         return busy_state;
+#if HAS_INDX()
+    case ClientFSM::NozzleMismatch:
+        return DeviceState::Attention;
+#endif
 
     case ClientFSM::SafetyTimer:
         return safety_timer_is_phase_attention.test(data.GetPhase()) ? DeviceState::Attention : busy_state;
@@ -471,6 +479,16 @@ StateWithDialog get_state_with_dialog(bool ready) {
 #endif
 #if HAS_DOOR_SENSOR_CALIBRATION()
     case ClientFSM::DoorSensorCalibration:
+#endif
+#if HAS_INDX()
+    case ClientFSM::NozzleMismatch: {
+        auto phase = GetEnumFromPhaseIndex<PhaseNozzleMismatch>(data.GetPhase());
+        if (auto attention_code = nozzle_mismatch_phase_error_code_mapper(phase); attention_code.has_value()) {
+            const Response *available_responses = ClientResponses::get_available_responses(phase).data();
+            return { state, attention_code, fsm_gen, available_responses };
+        }
+        break;
+    }
 #endif
     case ClientFSM::Preheat:
     case ClientFSM::SafetyTimer:
