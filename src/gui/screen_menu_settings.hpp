@@ -15,6 +15,7 @@
 #include <option/xbuddy_extension_variant.h>
 #include <option/has_phase_stepping.h>
 #include <option/has_toolchanger.h>
+#include <option/has_indx.h>
 
 #if HAS_MMU2()
     #include "MItem_mmu.hpp"
@@ -61,7 +62,7 @@ using ScreenMenuSettings__ = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
 #else
     MI_FILAMENT_SENSOR,
 #endif
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
     MI_STUCK_FILAMENT_DETECTION,
 #endif
 #if HAS_AUTO_RETRACT()

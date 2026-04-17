@@ -22,6 +22,7 @@
 #include <option/has_mmu2.h>
 #include <option/xbuddy_extension_variant.h>
 #include <option/has_chamber_filtration_api.h>
+#include <option/has_indx.h>
 #include <device/board.h>
 #include <gui/screen/screen_m600.hpp>
 
@@ -80,7 +81,7 @@ using ScreenMenuTune__ = ScreenMenu<EFooter::On, MI_RETURN,
 #else
     MI_FILAMENT_SENSOR,
 #endif
-#if HAS_LOADCELL()
+#if HAS_LOADCELL() && !HAS_INDX()
     MI_STUCK_FILAMENT_DETECTION,
 #endif
 #if XL_ENCLOSURE_SUPPORT()

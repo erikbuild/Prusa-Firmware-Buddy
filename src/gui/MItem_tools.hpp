@@ -13,6 +13,7 @@
 #include <utility_extensions.hpp>
 #include <option/has_door_sensor.h>
 #include <option/has_dwarf.h>
+#include <option/has_indx.h>
 #include <option/has_filament_sensors_menu.h>
 #include <option/has_coldpull.h>
 #include <option/has_leds.h>
@@ -46,6 +47,7 @@ protected:
     virtual void OnChange(size_t old_index) override;
 };
 
+#if !HAS_INDX()
 class MI_STUCK_FILAMENT_DETECTION : public WI_ICON_SWITCH_OFF_ON_t {
     constexpr static const char *const label = N_("Stuck Filament Detection");
     bool init_index() const;
@@ -57,6 +59,7 @@ public:
 protected:
     virtual void OnChange(size_t old_index) override;
 };
+#endif
 
 class MI_STEALTH_MODE : public WI_ICON_SWITCH_OFF_ON_t {
     constexpr static const char *const label = N_("Stealth Mode");
