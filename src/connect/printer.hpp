@@ -9,7 +9,9 @@
 #include <cstdint>
 #include <cstddef>
 #include <tuple>
+#include <expected>
 #include <optional>
+#include <variant>
 
 #include <netif_settings.h>
 #include "printer_type.hpp"
@@ -242,7 +244,9 @@ public:
     virtual NetCreds net_creds() const = 0;
     virtual bool job_control(JobControl) = 0;
     virtual bool is_valid_file_or_transfer(const char *path) const = 0;
-    virtual const char *start_print(const char *path, const std::optional<ToolMapping> &tools_mapping) = 0;
+    // Result of start_print: job_id on success, error message on failure.
+    using StartPrintResult = std::expected<uint16_t, const char *>;
+    virtual StartPrintResult start_print(const char *path, const std::optional<ToolMapping> &tools_mapping) = 0;
     // Deletes a file.
     //
     // returns nullptr on success, message with reason of failure otherwise

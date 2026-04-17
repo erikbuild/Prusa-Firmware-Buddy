@@ -522,23 +522,27 @@ bool MarlinPrinter::is_valid_file_or_transfer(const char *path) const {
     return transfers::is_valid_file_or_transfer(path);
 }
 
-const char *MarlinPrinter::start_print(const char *path, [[maybe_unused]] const std::optional<ToolMapping> &tools_mapping) {
+Printer::StartPrintResult MarlinPrinter::start_print(const char *path, [[maybe_unused]] const std::optional<ToolMapping> &tools_mapping) {
     if (!printer_state::remote_print_ready(false)) {
-        return "Can't print now";
+        return std::unexpected("Can't print now");
     }
 
     if (tools_mapping.has_value()) {
 #if HAS_TOOL_MAPPING()
         if (const char *error = handle_tool_mapping(tools_mapping.value()); error != nullptr) {
-            return error;
+            return std::unexpected(error);
         }
 #else
-        return "Tools mapping not enabled";
+        return std::unexpected("Tools mapping not enabled");
 #endif
     }
 
     print_begin(path, marlin_server::PreviewSkipIfAble::all);
-    return marlin_client::is_print_started() ? nullptr : "Can't print now";
+    if (!marlin_client::is_print_started()) {
+        return std::unexpected("Can't print now");
+    }
+    // job_id already updated internally in MarkStarted phase
+    return static_cast<uint16_t>(marlin_vars().job_id);
 }
 
 const char *MarlinPrinter::delete_file(const char *path) {

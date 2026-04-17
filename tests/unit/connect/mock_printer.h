@@ -87,9 +87,9 @@ public:
     }
 
     // Return value for start_print(). Defaults to "No", most tests get rejected StartPrint.
-    const char *start_print_result = "No";
+    StartPrintResult start_print_result = std::unexpected("No");
 
-    virtual const char *start_print(const char *, const std::optional<ToolMapping> &) override {
+    virtual StartPrintResult start_print(const char *, const std::optional<ToolMapping> &) override {
         return start_print_result;
     }
 

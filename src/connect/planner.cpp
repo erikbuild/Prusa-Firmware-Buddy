@@ -349,7 +349,7 @@ void Planner::reset() {
     // Don't keep IDs across possible server changes.
     print_start_cmd = nullopt;
     transfer_start_cmd = nullopt;
-    observed_job_id = nullopt;
+    print_start_job_id = nullopt;
 }
 
 void Planner::reset_telemetry() {
@@ -430,15 +430,13 @@ Action Planner::next_action(SharedBuffer &buffer, http::Connection *wake_on_read
     }
 
     const auto params = printer.params();
-    const std::optional<uint16_t> current_job_id = params.has_job ? std::make_optional(params.job_id) : std::nullopt;
-    if (observed_job_id != current_job_id) {
-        if (observed_job_id.has_value()) {
-            // The previously-observed job just went away (finished or
-            // replaced). The command id no longer belongs to any
-            // current job.
+    if (print_start_cmd.has_value()) {
+        const std::optional<uint16_t> current_job_id = params.has_job ? std::make_optional(params.job_id) : std::nullopt;
+        if (current_job_id != print_start_job_id) {
+            // The CMD id is stale, drop it
             print_start_cmd.reset();
+            print_start_job_id.reset();
         }
-        observed_job_id = current_job_id;
     }
 
     auto current_transfer = Monitor::instance.id();
@@ -711,19 +709,27 @@ void Planner::command(const Command &command, const StartPrint &params) {
         reason = "Forbidden path";
     } else if (!printer.is_valid_file_or_transfer(path)) {
         reason = "File not found";
-    } else if (const char *error = printer.start_print(path, params.tool_mapping); error != nullptr) {
-        reason = error;
     }
 
-    if (reason == nullptr) {
-        print_start_cmd = command.id;
-        planned_event = Event { EventType::JobInfo, command.id };
-        // Note: We let job_id be empty here and that disables the "check" for
-        // the same job.
-        planned_event->start_cmd_id = command.id;
-    } else {
+    if (reason != nullptr) {
         planned_event = Event { EventType::Rejected, command.id, nullopt, nullopt, nullopt, reason };
+        return;
     }
+
+    Printer::StartPrintResult result = printer.start_print(path, params.tool_mapping);
+    if (!result.has_value()) {
+        planned_event = Event { EventType::Rejected, command.id, nullopt, nullopt, nullopt, result.error() };
+        return;
+    }
+
+    uint16_t job_id = result.value();
+    print_start_cmd = command.id;
+    print_start_job_id = job_id;
+    planned_event = Event { EventType::JobInfo, command.id };
+    // Note: We let job_id be empty here and that disables the "check" for
+    // the same job. If we included it, the server would immediately ask
+    // for the JobInfo again.
+    planned_event->start_cmd_id = command.id;
 }
 
 void Planner::command(const Command &command, const SendInfo &) {

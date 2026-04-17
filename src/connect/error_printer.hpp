@@ -25,7 +25,7 @@ private:
     virtual NetCreds net_creds() const override;
     virtual bool job_control(JobControl) override;
     virtual bool is_valid_file_or_transfer(const char *) const override;
-    virtual const char *start_print(const char *path, const std::optional<ToolMapping> &tools_mapping) override;
+    virtual StartPrintResult start_print(const char *path, const std::optional<ToolMapping> &tools_mapping) override;
     // If the state of the printer is "Finished" and we are
     // trying to delete the file, that just got printed,
     // this first exits the print and then deletes the file.

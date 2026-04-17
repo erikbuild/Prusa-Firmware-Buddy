@@ -553,17 +553,20 @@ TEST_CASE("Command Set value - xbuddy_extension usb addon power logic") {
 }
 
 // Regression test: print_start_cmd must not leak across jobs.
+// BFW-8603.
 //
 // Scenario:
-//   1. StartPrint command sets print_start_cmd; next JobInfo carries start_cmd_id.
+//   1. StartPrint command sets print_start_cmd; JobInfo carries start_cmd_id
+//      and the real job_id.
 //   2. Job A appears (has_job=true, job_id=A) -> start_cmd_id stays.
 //   3. Job B replaces A (has_job=true, job_id=B) -> start_cmd_id is dropped.
 TEST_CASE("start_cmd_id does not leak across jobs") {
     Test test;
 
-    // Make StartPrint acceptable: the file "exists" and start_print succeeds.
+    // Make StartPrint acceptable: the file "exists" and start_print succeeds
+    // with job_id 100.
     test.printer.is_valid_file_or_transfer_result = true;
-    test.printer.start_print_result = nullptr;
+    test.printer.start_print_result = static_cast<uint16_t>(100);
 
     // Commands come as replies to telemetries.
     test.consume_telemetry();
@@ -576,8 +579,7 @@ TEST_CASE("start_cmd_id does not leak across jobs") {
         "/usb/foo.gcode", path_borrow.size());
 
     // 1. StartPrint issued by Connect. print_start_cmd gets set to 42.
-    //    Note: SharedPath is not stored in planned_event, so the buffer
-    //    borrow is released at the end of this statement.
+    //    The JobInfo now carries the real job_id returned by start_print().
     test.planner.command(Command { CommandId(42),
         StartPrint { SharedPath(move(path_borrow)), std::nullopt } });
     {
@@ -585,20 +587,25 @@ TEST_CASE("start_cmd_id does not leak across jobs") {
         const auto *event = get_if<Event>(&action);
         REQUIRE(event != nullptr);
         REQUIRE(event->type == EventType::JobInfo);
+        // job_id is intentionally empty here — including it would make
+        // the server immediately re-request the JobInfo.
+        REQUIRE_FALSE(event->job_id.has_value());
         REQUIRE(event->start_cmd_id == CommandId(42));
         test.planner.action_done(ActionResult::Ok);
     }
 
-    test.consume_telemetry();
-
-    // 2. Job A appears (the Connect-started one). SendJobInfo still carries
-    //    start_cmd_id because print_start_cmd is for *this* job.
-    //
-    //    The consume_sleep() tick is required: command(SendJobInfo) snapshots
-    //    the current print_start_cmd at call time, so the edge detector (in
-    //    next_action) must run between mutating params and calling command().
+    // The job is already visible right after start_print() succeeds
+    // (job_id is updated internally in the MarkStarted phase).
     test.params.has_job = true;
     test.params.job_id = 100;
+
+    test.consume_telemetry();
+
+    // 2. SendJobInfo for the Connect-started job still carries start_cmd_id
+    //    because print_start_cmd is for *this* job.
+    //
+    //    The consume_sleep() tick lets the planner run its clearing check
+    //    (which is a no-op here since job_id matches print_start_job_id).
     test.consume_sleep();
     test.planner.command(Command { CommandId(43), SendJobInfo { 100 } });
     {
@@ -612,8 +619,7 @@ TEST_CASE("start_cmd_id does not leak across jobs") {
 
     test.consume_telemetry();
 
-    // 3. Job A ends and job B starts locally — the bug scenario. The edge
-    //    detector must drop print_start_cmd before SendJobInfo is answered.
+    // 3. Job A ends and job B starts locally — the CMD id is removed as stale.
     test.params.job_id = 200;
     test.consume_sleep();
     test.planner.command(Command { CommandId(44), SendJobInfo { 200 } });

@@ -84,8 +84,8 @@ bool ErrorPrinter::is_valid_file_or_transfer(const char *) const {
     return false;
 }
 
-const char *ErrorPrinter::start_print(const char *, const std::optional<ToolMapping> &) {
-    return "Can't print in error";
+Printer::StartPrintResult ErrorPrinter::start_print(const char *, const std::optional<ToolMapping> &) {
+    return std::unexpected("Can't print in error");
 }
 
 const char *ErrorPrinter::delete_file(const char *) {
