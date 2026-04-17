@@ -106,6 +106,12 @@ inline constexpr const char *get_response_text(Response response) {
         return N_("HEATUP");
     case Response::Postpone5Days:
         return N_("POSTPONE");
+    case Response::Docks4:
+        return N_("4 DOCKS");
+    case Response::Docks8:
+        return N_("8 DOCKS");
+    case Response::Other:
+        return N_("OTHER");
 
     case Response::_count:
         break;

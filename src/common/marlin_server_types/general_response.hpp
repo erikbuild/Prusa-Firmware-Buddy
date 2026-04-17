@@ -59,6 +59,9 @@ enum class Response : uint8_t {
     Yes,
     Heatup,
     Postpone5Days,
+    Docks4,
+    Docks8,
+    Other,
 
     _count,
     _last = _count - 1,

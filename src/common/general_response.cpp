@@ -55,6 +55,9 @@ static constexpr EnumArray<Response, const char *, Response::_count> response_st
     R(Yes),
     R(Heatup),
     R(Postpone5Days),
+    R(Docks4),
+    R(Docks8),
+    R(Other),
 };
 
 #undef R

@@ -36,6 +36,9 @@ static constexpr uint32_t score(ClientFSM fsm_type) {
 #if HAS_DOOR_SENSOR_CALIBRATION()
     case ClientFSM::DoorSensorCalibration:
 #endif
+#if HAS_INDX()
+    case ClientFSM::DockCalibration:
+#endif
         return 1;
 
     case ClientFSM::Load_unload:

@@ -462,6 +462,24 @@ enum class PhaseDoorSensorCalibration : PhaseUnderlyingType {
 constexpr inline ClientFSM client_fsm_from_phase(PhaseDoorSensorCalibration) { return ClientFSM::DoorSensorCalibration; }
 #endif
 
+#if HAS_INDX()
+enum class PhaseDockCalibration : PhaseUnderlyingType {
+    intro,
+    remove_tool,
+    select_dock_count,
+    select_docks,
+    homing,
+    moving_away,
+    ask_position_dock,
+    lock_position,
+    measuring,
+    calibration_success,
+    calibration_failed,
+    _last = calibration_failed,
+};
+constexpr inline ClientFSM client_fsm_from_phase(PhaseDockCalibration) { return ClientFSM::DockCalibration; }
+#endif
+
 namespace ClientResponses {
 
 #if HAS_SELFTEST()
@@ -729,6 +747,22 @@ inline constexpr EnumArray<PhaseDoorSensorCalibration, PhaseResponses, CountPhas
     { PhaseDoorSensorCalibration::warn_disabled_sensor, { Response::Cancel, Response::Disable } }, // Cancel is first to have it selected (temporary solution till we rewrite the frames used to have radio button in as well to be able to change focus from inside the frame)
     { PhaseDoorSensorCalibration::done, { Response::Continue } },
     { PhaseDoorSensorCalibration::finish, {} },
+};
+#endif
+
+#if HAS_INDX()
+inline constexpr EnumArray<PhaseDockCalibration, PhaseResponses, CountPhases<PhaseDockCalibration>()> dock_calibration_responses {
+    { PhaseDockCalibration::intro, { Response::Continue, Response::Abort } },
+    { PhaseDockCalibration::remove_tool, { Response::Abort } },
+    { PhaseDockCalibration::select_dock_count, { Response::Docks4, Response::Docks8, Response::Other } },
+    { PhaseDockCalibration::select_docks, {} }, // selected docks passed through FSMResponseVariant as uint8_t bitmask
+    { PhaseDockCalibration::homing, {} },
+    { PhaseDockCalibration::moving_away, {} },
+    { PhaseDockCalibration::ask_position_dock, { Response::Continue, Response::Abort } },
+    { PhaseDockCalibration::lock_position, { Response::Continue, Response::Back, Response::Abort } },
+    { PhaseDockCalibration::measuring, {} },
+    { PhaseDockCalibration::calibration_success, { Response::Continue } },
+    { PhaseDockCalibration::calibration_failed, { Response::Retry, Response::Abort } },
 };
 #endif
 

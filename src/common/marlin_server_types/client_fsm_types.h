@@ -72,6 +72,7 @@ enum class ClientFSM : uint8_t {
     #endif
     #if HAS_INDX()
     NozzleMismatch,
+    DockCalibration,
     #endif
     SafetyTimer,
     Wait, ///< FSM that only blocks the screen with a "please wait" text

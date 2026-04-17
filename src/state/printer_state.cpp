@@ -256,6 +256,9 @@ DeviceState get_state(bool ready) {
 #if HAS_DOOR_SENSOR_CALIBRATION()
     case ClientFSM::DoorSensorCalibration:
 #endif
+#if HAS_INDX()
+    case ClientFSM::DockCalibration:
+#endif
 #if HAS_SERIAL_PRINT()
     case ClientFSM::Serial_printing:
 #endif
@@ -489,6 +492,7 @@ StateWithDialog get_state_with_dialog(bool ready) {
         }
         break;
     }
+    case ClientFSM::DockCalibration:
 #endif
     case ClientFSM::Preheat:
     case ClientFSM::SafetyTimer:
