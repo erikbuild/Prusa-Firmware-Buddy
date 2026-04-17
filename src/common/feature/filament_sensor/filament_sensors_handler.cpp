@@ -213,7 +213,8 @@ void FilamentSensors::reconfigure_sensors_if_needed(bool force) {
     ls[LFS::extruder] = extruder_fs;
     ls[LFS::side] = side_fs;
     ls[LFS::primary_runout] = side_fs_enabled ? side_fs : extruder_fs;
-    ls[LFS::secondary_runout] = side_fs_enabled ? extruder_fs : nullptr;
+    ls[LFS::closest_to_nozzle] = extruder_fs ?: side_fs;
+    ls[LFS::closest_to_nozzle_independent] = (extruder_fs && extruder_fs_independent) ? extruder_fs : side_fs;
 }
 
 void FilamentSensors::process_events() {
@@ -285,16 +286,14 @@ void FilamentSensors::process_events() {
             return;
         }
 
-        // With an MMU, don't check for runout on the secondary sensor
-        if (!has_mmu && check_runout(LogicalFilamentSensor::secondary_runout)) {
+        // With an MMU, don't check for runout on the extruder sensor, it would be too late for anything
+        if (!has_mmu && check_runout(LogicalFilamentSensor::extruder)) {
             return;
         }
     } else {
         // During MMU standard operation, there is no filament loaded to the nozzle when not printing.
         // So it's not a good idea to reset what filament types we have stored.
-        const bool filament_surely_removed = no_filament_surely(LogicalFilamentSensor::extruder)
-            || (!sensor(LogicalFilamentSensor::extruder) && no_filament_surely(LogicalFilamentSensor::side));
-        if (!has_mmu && filament_surely_removed && tool_index < PhysicalToolIndex::count) {
+        if (!has_mmu && no_filament_surely(LogicalFilamentSensor::closest_to_nozzle) && tool_index < PhysicalToolIndex::count) {
             const auto physical_tool = PhysicalToolIndex::from_raw(tool_index);
             const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(physical_tool.currently_selected_virtual_tool());
             if (virtual_tool.has_value()) {

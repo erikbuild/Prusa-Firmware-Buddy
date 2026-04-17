@@ -1187,9 +1187,7 @@ void Pause::filament_not_in_fs_process(Response response) {
     setPhase(PhasesLoadUnload::FilamentNotInFS);
     handle_help(response);
     // We want to use the sensor that is the closest to the extruder and will not be triggered by the printer itself
-    // If we have mmu_rework, the unload itself ejects filament from sensor so we need to use the one that is further
-    // Here the runout sensors are handy but in reverse order (since the primary is the further one from extruder)
-    if (!FSensors_instance().has_filament_surely(!FSensors_instance().is_extruder_fs_independent() ? LogicalFilamentSensor::side : LogicalFilamentSensor::extruder)) {
+    if (!FSensors_instance().has_filament_surely(LogicalFilamentSensor::closest_to_nozzle_independent)) {
         if constexpr (!option::has_human_interactions) {
             // In case of no human interactions, require no filament being
             // detected for at least 1s to avoid FS flicking off and on due
