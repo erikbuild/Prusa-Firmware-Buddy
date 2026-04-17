@@ -61,7 +61,7 @@ void MI_DOCK_Y::store_value_impl(PhysicalToolIndex ix, float set) {
     prusa_toolchanger.save_tool_info();
 }
 
-#if HAS_SELFTEST()
+#if HAS_SELFTEST() && !HAS_INDX()
 // * MI_DOCK_CALIBRATE
 MI_DOCK_CALIBRATE::MI_DOCK_CALIBRATE(Toolhead toolhead)
     : MI_TOOLHEAD_SPECIFIC_BASE(toolhead, _("Calibrate Dock Position")) {
