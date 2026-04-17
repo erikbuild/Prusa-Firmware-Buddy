@@ -18,6 +18,7 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_chamber_vents.h>
 #include <option/has_spool_join.h>
+#include <option/has_indx.h>
 
 #include <gcode/gcode_parser.hpp>
 
@@ -161,6 +162,9 @@ void M1980(); //< Door sensor calibration
 #endif
 #if HAS_SELFTEST()
 void M1981(); //< Filament sensors selftest
+#endif
+#if HAS_INDX()
+void M1982(); //< INDX dock calibration
 #endif
 
 void M9140(); //< Set normal (non-stealth) mode

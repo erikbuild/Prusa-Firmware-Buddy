@@ -19,6 +19,7 @@
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_chamber_vents.h>
 #include <option/has_spool_join.h>
+#include <option/has_indx.h>
 
 #if HAS_LOADCELL()
     #include "loadcell.hpp"
@@ -322,6 +323,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
 #if HAS_SELFTEST()
         case 1981:
             PrusaGcodeSuite::M1981();
+            break;
+#endif
+#if HAS_INDX()
+        case 1982:
+            PrusaGcodeSuite::M1982();
             break;
 #endif
         case 9140:

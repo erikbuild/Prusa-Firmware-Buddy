@@ -98,6 +98,10 @@ if(HAS_DOOR_SENSOR_CALIBRATION)
   target_sources(firmware PRIVATE M1980.cpp)
 endif()
 
+if(HAS_INDX)
+  target_sources(firmware PRIVATE M1982.cpp)
+endif()
+
 if(HAS_PRECISE_HOMING_COREXY)
   target_sources(firmware PRIVATE M9202.cpp)
 endif()
