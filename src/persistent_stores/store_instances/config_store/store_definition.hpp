@@ -54,6 +54,7 @@
 #include <option/has_psu_fan.h>
 #include <option/has_heatbed_screws_during_transport.h>
 #include <option/has_anfc.h>
+#include <option/has_indx.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -888,6 +889,12 @@ struct CurrentStore
     /// Tags assigned to specific tools. See ToolTag::for_tool_assigned
     /// Not using ToolTag::UIDHash here to avoid dependency hell. static_asserted inside tool_tag.cpp
     StoreItemArray<uint16_t, uint16_t(0), ItemFlag::printer_state, journal::hash("OpenPrintTag assigned tool"), 16, VirtualToolIndex::count> opt_tool_assigned_tag;
+#endif
+
+#if HAS_INDX()
+    // Offsets specific to every printer (relative to the absolute position of the nozzle cleaner)
+    StoreItem<float, defaults::nozzle_cleaner_x_origin_offset, ItemFlag::hw_config, journal::hash("Nozzle cleaner X origin offset")> nozzle_cleaner_x_origin_offset;
+    StoreItem<float, defaults::nozzle_cleaner_y_origin_offset, ItemFlag::hw_config, journal::hash("Nozzle cleaner Y origin offset")> nozzle_cleaner_y_origin_offset;
 #endif
 
 private:

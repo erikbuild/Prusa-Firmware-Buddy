@@ -29,6 +29,8 @@
     #include <feature/filament_sensor/filament_sensors_remap_data.hpp>
 #endif
 
+#include <option/has_indx.h>
+
 #include <option/has_sheet_support.h>
 #include <option/has_loadcell.h>
 #include <option/has_phase_stepping.h>
@@ -286,6 +288,11 @@ namespace defaults {
 #endif
 
     inline constexpr bool heat_entire_bed = PRINTER_IS_PRUSA_iX();
+#if HAS_INDX()
+    inline constexpr float nozzle_cleaner_x_origin_offset { 0.0f };
+    inline constexpr float nozzle_cleaner_y_origin_offset { 0.0f };
+#endif
+
 } // namespace defaults
 
 } // namespace config_store_ns
