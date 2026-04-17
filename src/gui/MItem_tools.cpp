@@ -33,6 +33,7 @@
 #include <feature/prusa/e-stall_detector.h>
 #include <option/bootloader.h>
 #include <option/filament_sensor.h>
+#include <option/has_indx.h>
 #include <option/has_side_leds.h>
 #include <option/has_coldpull.h>
 #include <option/has_auto_retract.h>
@@ -901,6 +902,22 @@ MI_PICK_PARK_TOOL::MI_PICK_PARK_TOOL()
 }
 
 void MI_PICK_PARK_TOOL::click(IWindowMenu & /*window_menu*/) {
+    #if HAS_INDX()
+    const bool no_tool_picked = !PhysicalToolIndex::currently_selected_opt().has_value();
+    const bool no_dock_calibrated = config_store().indx_dock_calibrated_mask.get().none();
+    // Dont allow pickup of tool when not calibrated (we allow park to enable parking of uncalibrated tools (default position works fine))
+    if (no_dock_calibrated && no_tool_picked) {
+        switch (MsgBoxWarning(_("Please calibrate the docks first."), { Response::Calibrate, Response::Back })) {
+        case Response::Calibrate:
+            marlin_client::gcode("M1982");
+            return;
+        case Response::Back:
+            return;
+        default:
+            bsod_unreachable();
+        }
+    }
+    #endif
     Screens::Access()->Open(screen_tool_pick_park_creator());
 }
 #endif

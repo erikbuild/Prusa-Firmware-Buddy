@@ -28,6 +28,15 @@ public:
 };
 #endif
 
+#if HAS_INDX()
+class MI_DOCK_INVALIDATE_CALIBRATION : public MI_TOOLHEAD_SPECIFIC_BASE<IWindowMenuItem> {
+public:
+    MI_DOCK_INVALIDATE_CALIBRATION(Toolhead toolhead = default_toolhead);
+    void click(IWindowMenu &);
+    void update() final {}
+};
+#endif
+
 using ScreenToolheadDetailDock_ = ScreenMenu<EFooter::Off,
     MI_RETURN,
     MI_DOCK_X,
@@ -35,6 +44,10 @@ using ScreenToolheadDetailDock_ = ScreenMenu<EFooter::Off,
 #if HAS_SELFTEST() && !HAS_INDX()
     ,
     MI_DOCK_CALIBRATE
+#endif
+#if HAS_INDX()
+    ,
+    MI_DOCK_INVALIDATE_CALIBRATION
 #endif
     >;
 

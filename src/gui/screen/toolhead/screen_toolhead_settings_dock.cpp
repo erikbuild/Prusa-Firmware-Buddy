@@ -1,6 +1,11 @@
+#include "../../inc/MarlinConfig.h"
 #include "screen_toolhead_settings_dock.hpp"
 #include <option/has_dwarf.h>
 #include <option/has_indx.h>
+#if HAS_INDX()
+    #include <config_store/store_instance.hpp>
+    #include <window_msgbox.hpp>
+#endif
 
 using namespace screen_toolhead_settings;
 
@@ -67,8 +72,26 @@ MI_DOCK_CALIBRATE::MI_DOCK_CALIBRATE(Toolhead toolhead)
     : MI_TOOLHEAD_SPECIFIC_BASE(toolhead, _("Calibrate Dock Position")) {
 }
 
-void MI_DOCK_CALIBRATE::click(IWindowMenu &) {
+void MI_DOCK_CALIBRATE::click([[maybe_unused]] IWindowMenu &menu) {
     marlin_client::test_start_with_data(stmDocks, std::get<PhysicalToolIndex>(toolhead()));
+}
+#endif
+
+#if HAS_INDX()
+// * MI_DOCK_INVALIDATE_CALIBRATION
+MI_DOCK_INVALIDATE_CALIBRATION::MI_DOCK_INVALIDATE_CALIBRATION(Toolhead toolhead)
+    : MI_TOOLHEAD_SPECIFIC_BASE(toolhead, _("Invalidate Calibration")) {
+}
+
+void MI_DOCK_INVALIDATE_CALIBRATION::click([[maybe_unused]] IWindowMenu &menu) {
+    if (MsgBoxWarning(_("This will invalidate calibration for this tool. The tool will not be available for printing until its dock is calibrated again via Calibrations. Proceed?"), { Response::Continue, Response::Back, Response::_none, Response::_none }) != Response::Continue) {
+        return;
+    }
+
+    const auto dock_index = std::get<PhysicalToolIndex>(toolhead());
+    auto calibrated_mask = config_store().indx_dock_calibrated_mask.get();
+    calibrated_mask.reset(dock_index.to_raw());
+    config_store().indx_dock_calibrated_mask.set(calibrated_mask);
 }
 #endif
 
