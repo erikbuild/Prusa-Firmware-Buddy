@@ -14,6 +14,7 @@
 #include <config_store/store_instance.hpp>
 #include <odometer.hpp>
 #include <filament_to_load.hpp>
+#include <M70X.hpp>
 
 LOG_COMPONENT_REF(MMU2);
 
@@ -102,7 +103,7 @@ bool UseMMU() { return true; }
 
 /// Disables MMU in EEPROM
 void DisableMMUInSettings() {
-    config_store().mmu2_enabled.set(false);
+    filament_gcodes::mmu_off();
 }
 
 void MakeSound(SoundType s) {
