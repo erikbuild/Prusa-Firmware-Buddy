@@ -95,6 +95,7 @@ xyz_pos_t probe_offset; // Initialized by settings.load()
 #include <feature/print_status_message/print_status_message_guard.hpp>
 
 #include <option/has_auto_retract.h>
+#include <option/has_indx.h>
 #include <mapi/motion.hpp>
 #include <gcode/temperature/M104_M109.hpp>
 #include <config_store/store_instance.hpp>
@@ -1017,7 +1018,7 @@ float probe_at_point(const xy_pos_t &pos, const ProbePtRaise raise_after/*=PROBE
     measured_z += probe_offset.z;
 
     #if HAS_HOTEND_OFFSET
-    #if !HAS_TOOLCHANGER()
+    #if !HAS_TOOLCHANGER() && !HAS_INDX()
       #error not implemented
     #endif
     // measured Z is in probe's logical coordinate space, shift it to printers native coordinate space
