@@ -358,7 +358,7 @@ bool FilamentSensors::MMUReadyToPrint() {
  * @return MMU2::FilamentState
  */
 FilamentState FilamentSensors::WhereIsFilament() {
-    switch (logical_sensor_states_[LogicalFilamentSensor::secondary_runout]) {
+    switch (logical_sensor_states_[LogicalFilamentSensor::extruder]) {
 
     case FilamentSensorState::HasFilament:
         return FilamentState::AT_FSENSOR;
