@@ -726,7 +726,7 @@ void Pause::purge_process([[maybe_unused]] Response response) {
 
 #if HAS_NOZZLE_CLEANER()
 void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
-    static constexpr float purge_length = 5.f;
+    [[maybe_unused]] static constexpr float purge_length = 5.f;
     static constexpr uint8_t retry_cnt = 3; // Number of maximum retries for the whole nozzle cleaning purge loop
 
     setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
@@ -736,6 +736,15 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
     ScopeGuard resetLoader = [&] {
         nozzle_cleaner::reset();
     };
+
+    #if HAS_INDX()
+    // Purge gcode sequences use relative E moves — save and restore the original mode
+    const uint8_t saved_axis_relative = GcodeSuite::axis_relative;
+    GcodeSuite::set_e_relative();
+    ScopeGuard restore_e_mode = [saved_axis_relative] {
+        GcodeSuite::axis_relative = saved_axis_relative;
+    };
+    #endif
 
     float purged = 0.f;
     while (purged < settings.purge_length()) {
@@ -782,7 +791,14 @@ void Pause::color_correct_ask_process(Response response) {
     switch (response) {
 
     case Response::Purge_more:
+#if HAS_NOZZLE_CLEANER()
+        // On printers with nozzle cleaner, go through the full purge flow:
+        // park to nozzle cleaner position → ensure temp → nozzle clean sequence
+        load_type = LoadType::load_purge;
+        set(LoadState::move_to_purge);
+#else
         set(LoadState::purge);
+#endif
         break;
 
     case Response::Retry:
