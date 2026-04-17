@@ -347,6 +347,10 @@ void do_blocking_move_to_xy(const xy_pos_t &raw, const feedRate_t &fr_mm_s=0.0f)
 FORCE_INLINE void do_blocking_move_to_xy(const xyz_pos_t &raw, const feedRate_t &fr_mm_s=0.0f)  { do_blocking_move_to_xy(raw.xy(), fr_mm_s); }
 FORCE_INLINE void do_blocking_move_to_xy(const xyze_pos_t &raw, const feedRate_t &fr_mm_s=0.0f) { do_blocking_move_to_xy(raw.xy(), fr_mm_s); }
 
+/// Straight XYE blocking move. \p re is relative E distance.
+/// Feedrate controls overall move speed (XY); E rate is implicit from E/XY distance ratio.
+void do_blocking_move_to_xye(const float &rx, const float &ry, const float &re, const feedRate_t &fr_xy_mm_s=0.0f);
+
 void remember_feedrate_and_scaling();
 void remember_feedrate_scaling_off();
 void restore_feedrate_and_scaling();

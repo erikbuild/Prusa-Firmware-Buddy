@@ -357,6 +357,22 @@ void do_blocking_move_to_xy(const xy_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0
   do_blocking_move_to_xy(raw.x, raw.y, fr_mm_s);
 }
 
+/// Straight XYE blocking move. re is relative E distance.
+/// The feedrate controls the overall move speed (XY travel speed);
+/// E moves proportionally over the same duration — its rate is determined
+/// by the ratio of E distance to XY distance, not by a separate parameter.
+void do_blocking_move_to_xye(const float &rx, const float &ry, const float &re, const feedRate_t &fr_xy_mm_s/*=0.0f*/) {
+  const feedRate_t real_fr = fr_xy_mm_s ?: feedRate_t(XY_PROBE_FEEDRATE_MM_S);
+
+  destination = current_position;
+  destination.x = rx;
+  destination.y = ry;
+  destination.e = current_position.e + re;
+  prepare_internal_move_to_destination(real_fr);
+
+  planner.synchronize();
+}
+
 #if HAS_Z_AXIS
   uint8_t do_z_clearance(const float zclear, const bool lower_allowed/*=false*/) {
     float zdest = zclear;
