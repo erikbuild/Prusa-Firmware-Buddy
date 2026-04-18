@@ -11,6 +11,7 @@
 #include <option/has_embedded_esp32.h>
 #include <option/has_remote_bed.h>
 #include <option/has_toolchanger.h>
+#include <option/has_indx.h>
 #include <option/has_chamber_api.h>
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_motor_current_profiles.h>
@@ -784,7 +785,13 @@ void panic_loop() {
             destination = current_position;
             const PrintArea::rect_t print_rect = print_area.get_bounding_rect(); // We need to get out of print area
 #if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
-            if (state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL) { // Is in the toolchange area
+            bool in_dock_area = false;
+    #if HAS_INDX()
+            in_dock_area = state_buf.crash.crash_position.y < PrusaToolChanger::SAFE_Y_WITH_TOOL;
+    #elif PRINTER_IS_PRUSA_XL()
+            in_dock_area = state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL;
+    #endif
+            if (in_dock_area) { // Is in the toolchange area
                 // Do not move X or Y
             } else
 #endif
