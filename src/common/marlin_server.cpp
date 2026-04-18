@@ -3128,7 +3128,13 @@ static void park_head([[maybe_unused]] bool is_pause) {
 #if HAS_TOOLCHANGER()
     // Check that we are not in dock
     // Can happen if stopped during toolchanging, toolchange will finish but last move doesn't wait for planner.synchronize();
-    if (current_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL) {
+    bool in_dock_area = false;
+    #if HAS_INDX()
+    in_dock_area = current_position.y < PrusaToolChanger::SAFE_Y_WITH_TOOL;
+    #elif PRINTER_IS_PRUSA_XL()
+    in_dock_area = current_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL;
+    #endif
+    if (in_dock_area) {
         current_position.y = PrusaToolChanger::SAFE_Y_WITH_TOOL;
         line_to_current_position(NOZZLE_PARK_XY_FEEDRATE); // Move to safe Y
         planner.synchronize();
