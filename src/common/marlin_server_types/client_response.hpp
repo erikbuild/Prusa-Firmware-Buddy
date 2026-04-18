@@ -793,7 +793,7 @@ enum class SelftestParts {
     Heaters,
     FirstLayer,
     FirstLayerQuestions,
-    #if HAS_TOOLCHANGER()
+    #if HAS_TOOLCHANGER() && !HAS_INDX()
     Dock,
     ToolOffsets,
     #endif
@@ -818,7 +818,7 @@ inline constexpr PhasesSelftest SelftestGetFirstPhaseFromPart(SelftestParts part
         return PhasesSelftest::_first_FirstLayer;
     case SelftestParts::FirstLayerQuestions:
         return PhasesSelftest::_first_FirstLayerQuestions;
-    #if HAS_TOOLCHANGER()
+    #if HAS_TOOLCHANGER() && !HAS_INDX()
     case SelftestParts::Dock:
         return PhasesSelftest::_first_Dock;
     case SelftestParts::ToolOffsets:
@@ -849,7 +849,7 @@ inline constexpr PhasesSelftest SelftestGetLastPhaseFromPart(SelftestParts part)
         return PhasesSelftest::_last_FirstLayer;
     case SelftestParts::FirstLayerQuestions:
         return PhasesSelftest::_last_FirstLayerQuestions;
-    #if HAS_TOOLCHANGER()
+    #if HAS_TOOLCHANGER() && !HAS_INDX()
     case SelftestParts::Dock:
         return PhasesSelftest::_last_Dock;
     case SelftestParts::ToolOffsets:
