@@ -15,7 +15,7 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
         // auto_retract is never called for flexible filaments
         // (filtered in auto_retract.cpp), so no differentiation needed here
         static constexpr RammingSequenceArray seq({
-            { 8, 600 },
+            { 8, 480 },
             { -8, 4800 },
             { 1, 1440 },
             { -1, 1440 },
@@ -38,7 +38,7 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
             { -24, 4800 },
             { 2, 120 },
             { -2, 120 },
-            { 23, 4800 },
+            { 23, 4800 }, // G-code specifies E23.5, truncated to int16
             { 1, 1200 },
             { -18, 4800 },
             { -4, 120 },
@@ -62,7 +62,7 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
             { -24, 4800 },
             { 2, 120 },
             { -2, 120 },
-            { 23, 4800 },
+            { 23, 4800 }, // G-code specifies E23.5, truncated to int16
             { 1, 1200 },
             { -18, 4800 },
             { -4, 120 },
