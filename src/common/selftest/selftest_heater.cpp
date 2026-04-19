@@ -88,6 +88,10 @@ LoopResult CSelftestPart_Heater::stateSetup() {
     }
 #endif
 
+#if HAS_INDX()
+    tool_change(m_config.tool_nr);
+#endif
+
 #if HAS_TOOLCHANGER()
     if (prusa_toolchanger.get_num_enabled_tools() <= 1)
 #endif

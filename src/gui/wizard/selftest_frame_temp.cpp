@@ -2,6 +2,7 @@
 #include "i18n.h"
 #include <guiconfig/wizard_config.hpp>
 #include "selftest_heaters_type.hpp"
+#include <option/has_indx.h>
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
     #include "module/prusa/toolchanger.h"
@@ -16,7 +17,8 @@ constexpr size_t text_w = WizardDefaults::status_text_w;
 constexpr size_t col_0 = WizardDefaults::MarginLeft;
 constexpr size_t col_1 = WizardDefaults::status_icon_X_pos;
 
-constexpr int16_t tool_icons_x = int16_t(col_1 - PhysicalToolIndex::count * WindowIconOkNgArray::icon_space_width);
+constexpr size_t tool_icon_count = option::has_indx ? 1 : PhysicalToolIndex::count;
+constexpr int16_t tool_icons_x = int16_t(col_1 - tool_icon_count * WindowIconOkNgArray::icon_space_width);
 
 constexpr size_t txt_h = WizardDefaults::txt_h;
 constexpr size_t row_h = WizardDefaults::row_h;
@@ -99,14 +101,14 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
     , text_info(&test_frame, info_text_rect, is_multiline::yes)
     , text_dialog(this, GetRect() + Rect16::X_t(WizardDefaults::MarginLeft) + Rect16::Y_t(GuiDefaults::FramePadding) - Rect16::H_t(80) - Rect16::W_t(2 * WizardDefaults::MarginLeft), is_multiline::yes, is_closed_on_click_t::no, {})
     // results
-    , icons_noz_prep(&test_frame, { .x = tool_icons_x, .y = row_noz_2 }, PhysicalToolIndex::count)
-    , icons_noz_heat(&test_frame, { .x = tool_icons_x, .y = row_noz_3 }, PhysicalToolIndex::count)
+    , icons_noz_prep(&test_frame, { .x = tool_icons_x, .y = row_noz_2 }, tool_icon_count)
+    , icons_noz_heat(&test_frame, { .x = tool_icons_x, .y = row_noz_3 }, tool_icon_count)
 #if HAS_HEATBREAK_TEMP()
-    , icons_heatbreak(&test_frame, { .x = tool_icons_x, .y = row_heatbreak }, PhysicalToolIndex::count)
+    , icons_heatbreak(&test_frame, { .x = tool_icons_x, .y = row_heatbreak }, tool_icon_count)
 #endif
 {
 
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && !HAS_INDX()
     // when toolchanger enabled, hide results of tools that are not connected
     for (auto tool : PhysicalToolIndex::all()) {
         if (!tool.is_enabled()) {
@@ -123,7 +125,7 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
     if (FSMExtendedDataManager::get(dt)) {
         if (is_tested(dt, SelftestHeaters_t::TestedParts::noz) && is_tested(dt, SelftestHeaters_t::TestedParts::bed)) {
             // Nozzle & Bed are both tested
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && !HAS_INDX()
             footer.Create(prusa_toolchanger.is_toolchanger_enabled() ? footer::Item::all_nozzles : footer::Item::nozzle, 0);
 #else
             footer.Create(footer::Item::nozzle, 0);
@@ -139,7 +141,7 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
 
         } else if (is_tested(dt, SelftestHeaters_t::TestedParts::noz)) {
             // ONLY nozzle is tested
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && !HAS_INDX()
             footer.Create(prusa_toolchanger.is_toolchanger_enabled() ? footer::Item::all_nozzles : footer::Item::nozzle, 0);
 #else
             footer.Create(footer::Item::nozzle, 0);
@@ -178,13 +180,21 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
 #endif
         }
 
+#if HAS_INDX()
+        icons_noz_prep.SetIconHidden(0, hidden);
+        icons_noz_heat.SetIconHidden(0, hidden);
+    #if HAS_HEATBREAK_TEMP()
+        icons_heatbreak.SetIconHidden(0, hidden);
+    #endif
+#else
         for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
             icons_noz_prep.SetIconHidden(tool.to_raw(), hidden);
             icons_noz_heat.SetIconHidden(tool.to_raw(), hidden);
-#if HAS_HEATBREAK_TEMP()
+    #if HAS_HEATBREAK_TEMP()
             icons_heatbreak.SetIconHidden(tool.to_raw(), hidden);
-#endif
+    #endif
         }
+#endif
 
         if (is_tested(dt, SelftestHeaters_t::TestedParts::bed)) {
             // Bed is tested - all cases
@@ -254,6 +264,17 @@ void ScreenSelftestTemp::change() {
         if (FSMExtendedDataManager::get(dt)) {
             if (is_tested(dt, SelftestHeaters_t::TestedParts::noz)) {
 
+#if HAS_INDX()
+                {
+                    const auto &noz = dt.noz[PhysicalToolIndex::from_raw(0)];
+                    icons_noz_prep.SetState(noz.prep_state, 0);
+                    icons_noz_heat.SetState(noz.heat_state, 0);
+    #if HAS_HEATBREAK_TEMP()
+                    icons_heatbreak.SetState(noz.heatbreak_error ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, 0);
+    #endif
+                    progress_noz.set_progress_percent(noz.progress);
+                }
+#else
                 uint8_t progress = std::numeric_limits<decltype(progress)>::max();
 
                 for (const auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
@@ -262,12 +283,13 @@ void ScreenSelftestTemp::change() {
 
                     icons_noz_prep.SetState(noz.prep_state, i);
                     icons_noz_heat.SetState(noz.heat_state, i);
-#if HAS_HEATBREAK_TEMP()
+    #if HAS_HEATBREAK_TEMP()
                     icons_heatbreak.SetState(noz.heatbreak_error ? SelftestSubtestState_t::not_good : SelftestSubtestState_t::ok, i);
-#endif
+    #endif
                     progress = std::min(progress, noz.progress);
                 }
                 progress_noz.set_progress_percent(progress);
+#endif
             }
 
             if (is_tested(dt, SelftestHeaters_t::TestedParts::bed)) {
