@@ -446,7 +446,7 @@ namespace {
     };
 
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-    constinit StrongIndexArray<ErrorChecker, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> hotendFanErrorChecker;
+    constinit StrongIndexArray<ErrorChecker, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> hotendFanErrorChecker;
     constinit ErrorChecker printFanErrorChecker;
 
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
@@ -460,20 +460,20 @@ namespace {
 
 #if HAS_TEMP_HEATBREAK
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-    constinit StrongIndexArray<ErrorChecker, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> heatBreakThermistorErrorChecker;
+    constinit StrongIndexArray<ErrorChecker, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> heatBreakThermistorErrorChecker;
 #endif
     constinit HotendErrorChecker hotendErrorChecker;
 
     constinit MCUTempErrorChecker mcuMaxTempErrorChecker; ///< Check Buddy MCU temperature
 #if HAS_DWARF()
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-    static constexpr StrongIndexArray<const char *, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarf_names {
-        "Dwarf 1", "Dwarf 2", "Dwarf 3", "Dwarf 4", "Dwarf 5", "Dwarf 6"
+    static constexpr StrongIndexArray<const char *, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarf_names {
+        "Dwarf 1", "Dwarf 2", "Dwarf 3", "Dwarf 4", "Dwarf 5"
     };
 
     /// Check Dwarf MCU temperature
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-    constinit StrongIndexArray<MCUTempErrorChecker, HOTENDS, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarfMaxTempErrorChecker;
+    constinit StrongIndexArray<MCUTempErrorChecker, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarfMaxTempErrorChecker;
 #endif /*HAS_DWARF()*/
 #if HAS_REMOTE_BED()
     constinit MCUTempErrorChecker modbedMaxTempErrorChecker; ///< Check ModularBed MCU temperature
@@ -2245,7 +2245,7 @@ static void _server_print_loop(void) {
             // Cooldown unused tools
             // Ignore spool join - spool joined tools will get heated as spool join is activated
             // BFW-5996
-            for (uint8_t physical_tool = 0; physical_tool < HOTENDS; physical_tool++) {
+            for (uint8_t physical_tool = 0; physical_tool < PhysicalToolIndex::count; physical_tool++) {
                 if (tool_mapper.to_gcode(physical_tool) == tools_mapping::no_tool) {
                     thermalManager.setTargetHotend(0, physical_tool);
                 }
