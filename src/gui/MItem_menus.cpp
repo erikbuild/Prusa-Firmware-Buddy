@@ -43,6 +43,7 @@
 #include <option/has_esp.h>
 #include <option/has_mmu2.h>
 #include <option/has_toolchanger.h>
+#include <option/has_indx.h>
 
 #if PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI()
     #include <screen_menu_bed_level_correction.hpp>
@@ -175,6 +176,7 @@ void MI_SERIAL_PRINTING_SCREEN_ENABLE::OnChange(size_t old_index) {
     config_store().serial_print_screen_enabled.set(!old_index);
 }
 
+// TODO: this would be better to split into separate menu items between singletool printers and the toolchanger ones.
 // * MI_TOOLHEAD_SETTINGS
 MI_TOOLHEAD_SETTINGS::MI_TOOLHEAD_SETTINGS()
     : IWindowMenuItem(
@@ -184,7 +186,12 @@ MI_TOOLHEAD_SETTINGS::MI_TOOLHEAD_SETTINGS()
         _("Printhead"),
 #endif
         nullptr,
-        is_enabled_t::yes, is_hidden_t::no, expands_t::yes) {
+#if HAS_TOOLCHANGER()
+        prusa_toolchanger.get_num_enabled_tools() > 0 ? is_enabled_t::yes : is_enabled_t::no,
+#else
+        is_enabled_t::yes,
+#endif
+        is_hidden_t::no, expands_t::yes) {
 }
 
 void MI_TOOLHEAD_SETTINGS::click(IWindowMenu &) {
