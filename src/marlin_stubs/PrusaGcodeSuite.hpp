@@ -93,6 +93,11 @@ void M708(); //< Write variable to MMU
 void M709(); //< MMU turn on/off/reset
 /// @}
 
+/// @name INDX specific G-CODES
+#if HAS_INDX()
+void G427(); ///< Tool offset calibration (Z-probe + XY tool offset board calib)
+#endif
+
 #ifdef PRINT_CHECKING_Q_CMDS
 /// @name Print checking commands
 ///

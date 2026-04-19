@@ -4,6 +4,7 @@
 #include <option/has_chamber_api.h>
 #include <option/has_auto_retract.h>
 #include <option/has_spool_join.h>
+#include <option/has_indx.h>
 
 #include "print_status_message_data.hpp"
 #include <inc/MarlinConfigPre.h>
@@ -49,6 +50,9 @@ struct PrintStatusMessage {
 #if HAS_CHAMBER_VENTS()
         opening_chamber_vents,
         closing_chamber_vents,
+#endif
+#if HAS_INDX()
+        tool_offset_calibrating,
 #endif
 
         _cnt
@@ -118,6 +122,9 @@ struct PrintStatusMessage {
 #if HAS_CHAMBER_VENTS()
         TypeRecord<Type::opening_chamber_vents, std::monostate>,
         TypeRecord<Type::closing_chamber_vents, std::monostate>,
+#endif
+#if HAS_INDX()
+        TypeRecord<Type::tool_offset_calibrating, PrintStatusMessageDataToolProgress>,
 #endif
 
         TypeRecord<Type::none, std::monostate>>;

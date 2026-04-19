@@ -384,6 +384,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::G163();
             break;
 #endif
+#if HAS_INDX()
+        case 427:
+            PrusaGcodeSuite::G427();
+            break;
+#endif
         default:
             processed = false;
             break;

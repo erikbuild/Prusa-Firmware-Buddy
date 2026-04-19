@@ -3,6 +3,7 @@
 #include <option/has_spool_join.h>
 
 #include <option/has_toolchanger.h>
+#include <option/has_indx.h>
 #if HAS_TOOLCHANGER()
     #include <Marlin/src/module/prusa/toolchanger.h>
 #endif
@@ -48,6 +49,9 @@ static constexpr EnumArray<Message::Type, const char *, Message::Type::_cnt> mes
 #if HAS_CHAMBER_VENTS()
         { Message::Type::opening_chamber_vents, N_("Opening chamber vents") },
         { Message::Type::closing_chamber_vents, N_("Closing chamber vents") },
+#endif
+#if HAS_INDX()
+        { Message::Type::tool_offset_calibrating, N_("Calibrating tool offsets") },
 #endif
 };
 
@@ -140,6 +144,14 @@ void PrintStatusMessageFormatterBuddy::format(StringBuilder &target, const Messa
         target.append_printf("\n%i %%", (int)std::round(d.current));
         break;
     }
+
+#if HAS_INDX()
+    case Message::Type::tool_offset_calibrating: {
+        const auto d = std::get<PrintStatusMessageDataToolProgress>(msg.data);
+        target.append_printf("\nT%i (%i/%i)", (int)(d.tool + 1), (int)d.progress.current, (int)d.progress.target);
+        break;
+    }
+#endif
 
     case Message::Type::none:
     case Message::Type::_cnt:

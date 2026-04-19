@@ -49,6 +49,7 @@ This file is generated automatically so don't edit it directly
 - Resources: logging::Severity::debug, src/resources/bootstrap.cpp
 - RingAllocator: logging::Severity::info, src/common/ring_allocator.cpp
 - Selftest: logging::Severity::debug, src/common/selftest/i_selftest.cpp
+- ToolOffsetCalib: logging::Severity::info, src/feature/tool_offset_calibration/tool_offset_calibration.cpp
 - Touch: logging::Severity::info, src/hw/touchscreen/touchscreen_common.cpp
 - USBDevice: logging::Severity::info, src/buddy/usb_device.cpp
 - USBHost: logging::Severity::info, src/buddy/usbh_conf.cpp
