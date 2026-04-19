@@ -15,19 +15,6 @@
 // So feel free to move registers around as needed;
 
 namespace indx_head::modbus {
-/// These data are not changed during run of the device. they are loaded once on the first request if available (dev boards wont have otp).
-struct StaticStatus {
-    static constexpr uint16_t address = 0x8001;
-    uint16_t hw_bom_id = 0;
-    uint16_t hw_otp_timestamp_lo = 0;
-    uint16_t hw_otp_timestamp_hi = 0;
-    constexpr uint32_t hw_otp_timestamp() {
-        return (static_cast<uint32_t>(hw_otp_timestamp_hi) << 16) | hw_otp_timestamp_lo;
-    }
-    std::array<uint16_t, 12> hw_raw_datamatrix {}; // 24B
-};
-static_assert(sizeof(StaticStatus) % 2 == 0);
-static_assert(std::alignment_of_v<StaticStatus> == 2);
 
 /// These data are updated regularly to reflect current status of the device.
 /// Also these values are big subject to change, most of them won't be used by indx_head.
@@ -41,10 +28,10 @@ struct Status {
     uint16_t print_fan_pwm = 0;
     uint16_t print_fan_state = 0;
     uint16_t print_fan_is_rpm_ok = 0;
-    uint16_t heaterbreak_fan_rpm = 0;
-    uint16_t heaterbreak_fan_pwm = 0;
-    uint16_t heaterbreak_fan_state = 0;
-    uint16_t heaterbreak_fan_is_rpm_ok = 0;
+    uint16_t heatbreak_fan_rpm = 0;
+    uint16_t heatbreak_fan_pwm = 0;
+    uint16_t heatbreak_fan_state = 0;
+    uint16_t heatbreak_fan_is_rpm_ok = 0;
     uint16_t system_24V_mV = 0; // [mV]
     uint16_t heater_current_mA = 0; // [mA]
     uint16_t time_sync_lo = 0;
@@ -61,7 +48,6 @@ struct Status {
 };
 static_assert(sizeof(Status) % 2 == 0);
 static_assert(std::alignment_of_v<Status> == 2);
-static_assert(Status::address > StaticStatus::address + sizeof(StaticStatus) / 2);
 
 /// These data are used to configure the device. Again some of the values might not be used, so feel free to change them (again only for initial Dwarf support).
 struct Config {
@@ -75,6 +61,7 @@ struct Config {
     uint16_t invalidate_nozzle_presence = 0;
     uint16_t loadcell_enabled = 0;
     uint16_t accelerometer_enabled = 0;
+    uint16_t clear_fault_status = 0; ///< errors::FaultStatusMask to clear from Status::fault_status when written
     static constexpr uint16_t loadcell_enabled_address() {
         return address + (offsetof(Config, loadcell_enabled) / sizeof(Config::loadcell_enabled));
     }

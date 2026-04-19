@@ -145,7 +145,6 @@ public:
     uint16_t get_fan_state(uint8_t fan_nr) const;
 
 private:
-    ModbusInputRegisterBlock<indx_head::modbus::StaticStatus::address, indx_head::modbus::StaticStatus> general_static {};
     ModbusInputRegisterBlock<indx_head::modbus::Status::address, indx_head::modbus::Status> register_general_status {};
 
     // Cached from RegisterGeneralStatus.ToolFilamentSensor, for use from an interrupt (where we can't lock).
@@ -202,8 +201,6 @@ private:
     bool dispatch_log_event();
     CommunicationStatus run_time_sync(PuppyModbus &);
     CommunicationStatus read_general_status(PuppyModbus &);
-    void handle_indx_head_fault(PuppyModbus &);
-    indx_head::errors::FaultStatusMask last_reported_fault = indx_head::errors::FaultStatusMask::no_fault;
     void handle_nozzle_presence(); ///< Update cached_nozzle_state from latest modbus data
     bool set_loadcell_nolock(PuppyModbus &, bool active);
     bool raw_set_loadcell(PuppyModbus &, bool active); // Low level loadcell enable/disable, no dependencies

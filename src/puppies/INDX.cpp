@@ -82,9 +82,11 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
     // read general status registers
     CommunicationStatus status = bus.read(unit, register_general_status, 250);
     if (status == CommunicationStatus::OK) {
-        if (register_general_status.value.fault_status != indx_head::errors::FaultStatusMask::no_fault) {
-            handle_indx_head_fault(bus);
-            register_general_status.value.fault_status = indx_head::errors::FaultStatusMask::no_fault;
+        const auto fault = register_general_status.value.fault_status;
+        if (fault != indx_head::errors::FaultStatusMask::no_fault) {
+            log_error(INDX, "Fault status: %d", std::to_underlying(fault));
+            general_write.value.clear_fault_status = std::to_underlying(fault);
+            general_write.dirty = true;
         }
 
         metric_record_custom(&metric_dwarf_heater_current, "v=%d", register_general_status.value.heater_current_mA);
@@ -96,7 +98,8 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
 
 CommunicationStatus Indx::ping(PuppyModbus &bus) {
     Lock guard(*mutex);
-    return bus.read(unit, general_static);
+    // Need to check if puppy is responding on modbus, might as well read general status.
+    return bus.read(unit, register_general_status);
 }
 
 CommunicationStatus Indx::initial_scan(PuppyModbus &bus) {
@@ -104,35 +107,10 @@ CommunicationStatus Indx::initial_scan(PuppyModbus &bus) {
     time_sync.init();
     run_time_sync(bus);
 
-    // Update static values
-    CommunicationStatus status = bus.read(unit, general_static);
-    if (status == CommunicationStatus::ERROR) {
-        return status;
-    }
-
-    log_info(INDX, "HwBomId: %d", general_static.value.hw_bom_id);
-    log_info(INDX, "HwOtpTimestsamp: %" PRIu32, general_static.value.hw_otp_timestamp());
-
-    serial_nr_t sn = {}; // Last byte has to be '\0'
-    static constexpr size_t raw_datamatrix_regsize = std::tuple_size_v<decltype(general_static.value.hw_raw_datamatrix)>;
-    // Check size of text -1 as the terminating \0 is not sent
-    static_assert((raw_datamatrix_regsize * sizeof(uint16_t)) == (sn.size() - 1), "Size of raw datamatrix doesn't fit modbus registers");
-
-    for (uint16_t i = 0; i < raw_datamatrix_regsize; ++i) {
-        sn[i * 2] = general_static.value.hw_raw_datamatrix[i] & 0xff;
-        sn[i * 2 + 1] = general_static.value.hw_raw_datamatrix[i] >> 8;
-    }
-    log_info(INDX, "HwDatamatrix: %s", sn.data());
-
     general_write.value.loadcell_enabled = true;
     general_write.dirty = true;
 
-    // Write coil values that are not written automatically
-    if (bus.write(unit, general_write) == CommunicationStatus::ERROR) {
-        return CommunicationStatus::ERROR;
-    }
-
-    return status;
+    return bus.write(unit, general_write);
 }
 
 void Indx::set_leds_color(Color color, indx_head::leds::Mode mode) {
@@ -258,6 +236,7 @@ CommunicationStatus Indx::write_general(PuppyModbus &bus) {
     }
 
     log_debug(INDX, "Written GeneralWrite");
+    general_write.value.clear_fault_status = 0;
     return status;
 }
 
@@ -405,22 +384,13 @@ void Indx::set_fan_auto(uint8_t fan) {
     fan_pwm_desired[fan].store(FAN_MODE_AUTO_PWM);
 }
 
-void Indx::handle_indx_head_fault([[maybe_unused]] PuppyModbus &bus) {
-    auto fault = register_general_status.value.fault_status;
-    if (fault == last_reported_fault) {
-        return;
-    }
-    last_reported_fault = fault;
-    log_error(INDX, "Fault status: %d", std::to_underlying(fault));
-}
-
 uint16_t Indx::get_heatbreak_fan_pwr() {
     // FIXME:
     // Called from interrupts, can't lock :-(
     // BFW-6219.
     // Lock guard(*mutex);
     return 0;
-    // return RegisterGeneralStatus.value.heaterbreak_fan_pwm;
+    // return RegisterGeneralStatus.value.heatbreak_fan_pwm;
 }
 
 void Indx::decode_log(const LogData &data) {
@@ -474,7 +444,7 @@ uint16_t Indx::get_fan_pwm(uint8_t fan_nr) const {
     case fans::PRINTFAN_INDEX:
         return register_general_status.value.print_fan_pwm;
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heaterbreak_fan_pwm;
+        return register_general_status.value.heatbreak_fan_pwm;
     }
     bsod_unreachable();
 }
@@ -488,7 +458,7 @@ uint16_t Indx::get_fan_rpm(uint8_t fan_nr) const {
     case fans::PRINTFAN_INDEX:
         return register_general_status.value.print_fan_rpm;
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heaterbreak_fan_rpm;
+        return register_general_status.value.heatbreak_fan_rpm;
     }
     bsod_unreachable();
 }
@@ -502,7 +472,7 @@ bool Indx::get_fan_rpm_ok(uint8_t fan_nr) const {
     case fans::PRINTFAN_INDEX:
         return register_general_status.value.print_fan_is_rpm_ok;
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heaterbreak_fan_is_rpm_ok;
+        return register_general_status.value.heatbreak_fan_is_rpm_ok;
     }
     bsod_unreachable();
 }
@@ -516,7 +486,7 @@ uint16_t Indx::get_fan_state(uint8_t fan_nr) const {
     case fans::PRINTFAN_INDEX:
         return register_general_status.value.print_fan_state;
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heaterbreak_fan_state;
+        return register_general_status.value.heatbreak_fan_state;
     }
     bsod_unreachable();
 }
