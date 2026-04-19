@@ -150,7 +150,11 @@ private:
 
     // Cached from RegisterGeneralStatus.ToolFilamentSensor, for use from an interrupt (where we can't lock).
     std::atomic<uint16_t> tool_filament_sensor = 0;
-    std::atomic<bool> nozzle_data_valid = false; ///< Set true once head reports definitive nozzle state (not indx_head::NozzlePresence::unknown)
+    /// Cached nozzle presence for use by Marlin.
+    ///
+    /// (encodes validity too).
+    std::atomic<indx_head::NozzlePresence> cached_nozzle_state { indx_head::NozzlePresence::unknown };
+    static_assert(std::atomic<indx_head::NozzlePresence>::is_always_lock_free);
 
     uint16_t nozzle_invalidation_token = 0; ///< Token sent to head; data is valid only after head echoes it back nozzle_invalidation_ack from INDX_HEAD
 
@@ -198,9 +202,9 @@ private:
     bool dispatch_log_event();
     CommunicationStatus run_time_sync(PuppyModbus &);
     CommunicationStatus read_general_status(PuppyModbus &);
-    void handle_nozzle_presence(); ///< Update nozzle_data_valid from latest modbus data
     void handle_indx_head_fault(PuppyModbus &);
     indx_head::errors::FaultStatusMask last_reported_fault = indx_head::errors::FaultStatusMask::no_fault;
+    void handle_nozzle_presence(); ///< Update cached_nozzle_state from latest modbus data
     bool set_loadcell_nolock(PuppyModbus &, bool active);
     bool raw_set_loadcell(PuppyModbus &, bool active); // Low level loadcell enable/disable, no dependencies
 

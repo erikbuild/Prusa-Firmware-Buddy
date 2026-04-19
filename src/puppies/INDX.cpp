@@ -1,6 +1,7 @@
 #include <puppies/INDX.hpp>
 
 #include <cassert>
+#include <utility>
 
 #include <fifo_coder/fifo_decoder.hpp>
 #include <freertos/mutex.hpp>
@@ -72,7 +73,9 @@ void Indx::handle_nozzle_presence() {
     const auto nozzle_state = static_cast<NozzlePresence>(register_general_status.value.nozzle_present);
     const bool has_definitive_result = nozzle_state != NozzlePresence::unknown;
     const bool head_acknowledged = register_general_status.value.nozzle_invalidation_ack == nozzle_invalidation_token;
-    nozzle_data_valid.store(has_definitive_result && head_acknowledged);
+    const bool valid = has_definitive_result && head_acknowledged;
+
+    cached_nozzle_state.store(valid ? nozzle_state : NozzlePresence::unknown);
 }
 
 CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
@@ -359,26 +362,22 @@ uint16_t Indx::get_diag_uart_errors() {
 }
 
 std::optional<bool> Indx::get_nozzle_present() {
-    Lock guard(*mutex);
-    if (!nozzle_data_valid.load()) {
+    // Called from Marlin - keep lockfree.
+    const auto state = cached_nozzle_state.load();
+    if (state == indx_head::NozzlePresence::unknown) {
         return std::nullopt;
     }
 
-    using indx_head::NozzlePresence;
-    const auto state = static_cast<NozzlePresence>(register_general_status.value.nozzle_present);
-    if (state == NozzlePresence::unknown) {
-        return std::nullopt; // Head is still debouncing
-    }
-    return state == NozzlePresence::present;
+    return state == indx_head::NozzlePresence::present;
 }
 
 void Indx::invalidate_nozzle_data() {
     Lock guard(*mutex);
-    nozzle_data_valid.store(false);
+    cached_nozzle_state.store(indx_head::NozzlePresence::unknown);
 
     // Generate a new token and send it to the head. The head will reset its
     // debouncer and echo the token back in nozzle_invalidation_ack.
-    // handle_nozzle_presence() won't re-validate until the ack matches,
+    // handle_nozzle_presence() won't re-validate until the ack matches.
     nozzle_invalidation_token = static_cast<uint16_t>(ticks_ms());
     if (nozzle_invalidation_token == 0) {
         nozzle_invalidation_token = 1; // Avoid 0 — it's the head's initial ack value
