@@ -1030,6 +1030,11 @@ void static finalize_print(bool finished) {
 #if HAS_MOTOR_CURRENT_PROFILES()
     buddy::set_active_motor_current_profile(buddy::StandardMotorCurrentProfile::fw_default);
 #endif
+#if HAS_INDX()
+    // Park the tool to its dock and persist the state to eeprom
+    tool_change(NoTool {}, tool_return_t::no_return);
+    prusa_toolchanger.persist_last_picked_tool(PhysicalToolIndex::currently_selected(), true);
+#endif
 
 #if !PRINTER_IS_PRUSA_iX()
     // On iX, we're not cooling down the bed after the print.
@@ -2268,6 +2273,10 @@ static void _server_print_loop(void) {
         buddy::reenable_ceiling_clearance_warning();
 #endif
 
+#if HAS_INDX()
+        prusa_toolchanger.set_nozzle_check_disabled(false);
+#endif
+
 #if HAS_CANCEL_OBJECT()
         buddy::cancel_object().reset();
         for (auto &cancel_object_name : marlin_vars().cancel_object_names) {
@@ -2349,6 +2358,10 @@ static void _server_print_loop(void) {
         break;
     case State::Pausing_ParkHead:
         if (!planner.processing()) {
+#if HAS_INDX()
+            // Park the tool to its dock after pausing
+            tool_change(NoTool {}, tool_return_t::no_return);
+#endif
             server.print_state = State::Paused;
         }
         break;
