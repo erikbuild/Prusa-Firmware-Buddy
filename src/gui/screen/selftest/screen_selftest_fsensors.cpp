@@ -8,7 +8,6 @@
 #include <standard_frame/frame_prompt.hpp>
 #include <selftest/fsensor/selftest_fsensors_config.hpp>
 #include <option/has_extruder_fsensor.h>
-#include <option/has_indx.h>
 
 namespace {
 
@@ -267,5 +266,7 @@ void ScreenSelftestFSensors::destroy_frame() {
 }
 
 void ScreenSelftestFSensors::update_frame() {
+    const uint8_t tool = fsm_base_data.GetData()[0];
+    header.SetText(_("FS calibration - Tool %d").formatted(title_params_, tool + 1));
     Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
 }

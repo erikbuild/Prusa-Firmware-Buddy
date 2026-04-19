@@ -2,6 +2,7 @@
 
 #include <screen_fsm.hpp>
 #include <marlin_server_types/fsm/selftest_fsensors_phases.hpp>
+#include <option/has_indx.h>
 
 class ScreenSelftestFSensors final : public ScreenFSM {
 
@@ -18,4 +19,6 @@ protected:
     void create_frame() override;
     void destroy_frame() override;
     void update_frame() override;
+
+    StringViewUtf8Parameters<3> title_params_;
 };
