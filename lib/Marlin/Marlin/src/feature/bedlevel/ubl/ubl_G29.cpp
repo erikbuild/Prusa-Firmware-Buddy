@@ -40,7 +40,6 @@
   #include "../../../feature/print_area.h"
   #include <fanctl.hpp>
   #include <option/has_love_board.h>
-  #include <option/has_indx.h>
   #include <raii/scope_guard.hpp>
 
   #if BOARD_IS_XBUDDY()
