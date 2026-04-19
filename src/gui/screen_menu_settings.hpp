@@ -57,6 +57,9 @@ protected:
 /*****************************************************************************/
 
 using ScreenMenuSettings__ = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
+#if HAS_TOOLCHANGER()
+    MI_TOOLHEAD_SETTINGS,
+#endif
 #if HAS_FILAMENT_SENSORS_MENU()
     MI_FILAMENT_SENSORS,
 #else
@@ -89,9 +92,7 @@ using ScreenMenuSettings__ = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
 #if ENABLED(CRASH_RECOVERY)
     MI_CRASH_DETECTION,
 #endif // ENABLED(CRASH_RECOVERY)
-#if HAS_TOOLCHANGER()
-    MI_TOOLHEAD_SETTINGS,
-#endif
+
     MI_INPUT_SHAPER,
 #if HAS_PHASE_STEPPING()
     MI_PHASE_STEPPING_SCREEN,
