@@ -7,6 +7,7 @@
 #include <Marlin/src/module/motion.h>
 #include <Marlin/src/module/planner.h>
 #include <printers.h>
+#include <option/has_indx.h>
 
 #include <feature/chamber/chamber.hpp>
 
@@ -37,6 +38,7 @@ namespace {
     #error
 #endif
 
+#if !HAS_INDX()
     /// @brief Plans a move to a new X-axis coordinate.
     /// @param x The target X-axis position.
     /// @param feedrate The speed of the move in mm/s.
@@ -54,6 +56,7 @@ namespace {
         xyz.y = y;
         prepare_move_to(xyz, feedrate, {});
     }
+#endif
 
 }; // namespace
 
