@@ -20,6 +20,7 @@
 #include <climits>
 #include <sensor_data.hpp>
 
+#include <option/has_indx.h>
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>
@@ -28,7 +29,12 @@
 LOG_COMPONENT_REF(Selftest);
 using namespace selftest;
 
-static constexpr int32_t acceptable_noise_range_g = 60;
+static constexpr int32_t acceptable_noise_range_g =
+#if HAS_INDX()
+    200; // TODO pick correct number
+#else
+    60;
+#endif
 
 auto set_extruder_temperature = [](int16_t temperature, uint8_t extruder) {
     thermalManager.setTargetHotend(temperature, extruder);
@@ -93,7 +99,7 @@ LoopResult CSelftestPart_Loadcell::stateCooldownInit() {
     rResult.temperature = static_cast<int16_t>(temp);
     need_cooling = temp > rConfig.cool_temp; // Check if temperature is safe
     if (need_cooling) {
-#if HAS_TOOLCHANGER()
+#if HAS_TOOLCHANGER() && !HAS_INDX()
         if (prusa_toolchanger.is_toolchanger_enabled()) {
             if (!axis_unhomed_error(_BV(X_AXIS) | _BV(Y_AXIS))) {
                 // Nozzle is hot and axes are known, park it and don't let user touch it

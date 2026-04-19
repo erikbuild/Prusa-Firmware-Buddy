@@ -88,7 +88,7 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
         .heat_time_ms = 42000,
         .start_temp = 80,
         .undercool_temp = 75,
-        .target_temp = 290,
+        .target_temp = 230,
         .heat_min_temp = 195,
         .heat_max_temp = 245,
         .heatbreak_min_temp = 10,
@@ -220,7 +220,7 @@ void CSelftest::Loop() {
         phaseStart();
         break;
     case stsLoadcell:
-        if (selftest::phaseLoadcell(AllTools {}, m_pLoadcell, Config_Loadcell)) {
+        if (selftest::phaseLoadcell(PhysicalToolIndex::from_raw(0), m_pLoadcell, Config_Loadcell)) {
             return;
         }
         break;

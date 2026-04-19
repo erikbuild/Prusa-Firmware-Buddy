@@ -43,7 +43,7 @@ TestReturn phaseLoadcell(const ToolMask tool_mask, std::array<IPartHandler *, Ph
 
     uint8_t current_tool = std::numeric_limits<uint8_t>::max();
     for (uint i = 0; i < m_pLoadcell.size(); ++i) {
-        if (!is_tool_selftest_enabled(i, tool_mask)) {
+        if (!is_tool_selftest_enabled(i, tool_mask) || !m_pLoadcell[i]) {
             continue;
         }
 
@@ -63,7 +63,7 @@ TestReturn phaseLoadcell(const ToolMask tool_mask, std::array<IPartHandler *, Ph
     bool skipped = false; ///< Return value whether to run next test
     SelftestResult eeres = config_store().selftest_result.get();
     for (uint i = 0; i < m_pLoadcell.size(); ++i) {
-        if (!is_tool_selftest_enabled(i, tool_mask)) {
+        if (!is_tool_selftest_enabled(i, tool_mask) || !m_pLoadcell[i]) {
             continue;
         }
 
