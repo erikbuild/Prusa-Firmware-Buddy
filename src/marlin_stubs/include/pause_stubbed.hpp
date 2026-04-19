@@ -47,6 +47,9 @@ public:
 #if HAS_AUTO_RETRACT()
         auto_retract,
 #endif
+#if HAS_INDX()
+        unload_purge,
+#endif
         ram_sequence,
         unload,
         unloaded_ask,
@@ -201,6 +204,9 @@ private:
 #if HAS_LOADCELL() && HAS_EXTRUDER_FSENSOR()
     void filament_stuck_ask_process(Response response);
 #endif
+#if HAS_INDX()
+    void unload_purge_process(Response response);
+#endif
     void ram_sequence_process(Response response);
     void unload_process(Response response);
     void unloaded_ask_process(Response response);
@@ -248,6 +254,9 @@ private:
             // Should never get called (now is part of load_finalize)
             // But it is necessary for the progress mapper
             { LoadState::auto_retract, nullptr },
+#endif
+#if HAS_INDX()
+            { LoadState::unload_purge, &Pause::unload_purge_process },
 #endif
             { LoadState::ram_sequence, &Pause::ram_sequence_process },
             { LoadState::unload, &Pause::unload_process },

@@ -252,6 +252,13 @@ LoadUnloadMode Pause::get_load_unload_mode() {
 }
 
 bool Pause::should_park() {
+    auto virtual_tool = stdext::get_optional<VirtualToolIndex>(VirtualToolIndex::currently_selected());
+    bool is_already_parked = !virtual_tool.has_value();
+    assert(!is_already_parked);
+    if (is_already_parked) {
+        return false;
+    }
+
     switch (load_type) {
     case Pause::LoadType::load_purge:
         return true;
@@ -512,7 +519,7 @@ void Pause::filament_push_ask_process(Response response) {
         const bool has_filament = FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
         const bool is_mmu_rework_and_has_filament = !FSensors_instance().is_extruder_fs_independent() && has_filament;
         const bool side_fs_empty = FSensors_instance().no_filament_surely(LogicalFilamentSensor::side);
-        const bool extruder_fs_not_working = !FSensors_instance().is_working(LogicalFilamentSensor::extruder);
+        const bool extruder_fs_not_working = FSensors_instance().sensor(LogicalFilamentSensor::extruder) && !FSensors_instance().is_working(LogicalFilamentSensor::extruder);
 
         if (response == Response::Continue || is_mmu_rework_and_has_filament) {
             set(LoadState::load_to_gears);
@@ -656,7 +663,11 @@ void Pause::unload_wait_temp_process([[maybe_unused]] Response response) {
         return;
     }
 
+#if HAS_INDX()
+    set(LoadState::unload_purge);
+#else
     set(LoadState::ram_sequence);
+#endif
 }
 
 void Pause::long_load_process([[maybe_unused]] Response response) {
@@ -719,7 +730,6 @@ void Pause::purge_process([[maybe_unused]] Response response) {
 
     config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
 
-    setPhase(load_type == LoadType::load_purge ? PhasesLoadUnload::IsColorPurge : PhasesLoadUnload::IsColor);
     set(LoadState::color_correct_ask);
     handle_filament_removal(LoadState::filament_push_ask);
 }
@@ -730,6 +740,8 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
     static constexpr uint8_t retry_cnt = 3; // Number of maximum retries for the whole nozzle cleaning purge loop
 
     setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
+    static constexpr uint32_t purge_nozzle_clean_duration_estimate_ms = 8'000;
+    PauseFsmDurationNotifier progress_notifier(*this, purge_nozzle_clean_duration_estimate_ms);
     mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge)); // park just to be sure
     planner.synchronize(); // Finish any pending moves before starting the purge
 
@@ -786,11 +798,17 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
     #endif
     }
     config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
-    set(LoadState::load_finalize);
+
+    if constexpr (option::has_human_interactions) {
+        set(LoadState::color_correct_ask);
+    } else {
+        set(LoadState::load_finalize);
+    }
 }
 #endif // HAS_NOZZLE_CLEANER()
 
 void Pause::color_correct_ask_process(Response response) {
+    setPhase(load_type == LoadType::load_purge ? PhasesLoadUnload::IsColorPurge : PhasesLoadUnload::IsColor);
     switch (response) {
 
     case Response::Purge_more:
@@ -833,7 +851,6 @@ void Pause::mmu_load_start_process([[maybe_unused]] Response response) {
         }
         config_store().set_filament_type(VirtualToolIndex::from_raw(settings.mmu_filament_to_load), filament::get_type_to_load());
 
-        setPhase(PhasesLoadUnload::IsColor);
         set(LoadState::color_correct_ask);
     } else if (load_type == LoadType::filament_change) {
         if (settings.mmu_filament_to_load == MMU2::FILAMENT_UNKNOWN) {
@@ -863,7 +880,6 @@ void Pause::mmu_load_process([[maybe_unused]] Response response) {
     MMU2::mmu2.load_filament(settings.mmu_filament_to_load);
     MMU2::mmu2.load_filament_to_nozzle(settings.mmu_filament_to_load);
 
-    setPhase(PhasesLoadUnload::IsColor);
     set(LoadState::color_correct_ask);
 }
 
@@ -1098,7 +1114,22 @@ void Pause::filament_stuck_ask_process(Response response) {
 }
 #endif
 
+#if HAS_INDX()
+void Pause::unload_purge_process([[maybe_unused]] Response response) {
+    setPhase(PhasesLoadUnload::Purging_unstoppable);
+
+    static constexpr float unload_purge_length = 2.0f; // mm
+    std::ignore = do_e_move_notify_progress_hotextrude(unload_purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE, StopConditions::UserStopped);
+
+    set(LoadState::ram_sequence);
+}
+#endif
+
 void Pause::ram_sequence_process([[maybe_unused]] Response response) {
+    auto physical_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (!physical_tool.has_value()) {
+        bsod("ramming with notool");
+    }
 #if HAS_AUTO_RETRACT()
     if (auto_retract().is_cold_unload_allowed_and_filament_retracted(settings.physical_tool())) {
         // The filament is already retracted from the nozzle -> no ramming needed, we don't even need to heat up the nozzle
@@ -1114,6 +1145,11 @@ void Pause::ram_sequence_process([[maybe_unused]] Response response) {
 }
 
 void Pause::unload_process([[maybe_unused]] Response response) {
+    auto physical_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+    if (!physical_tool.has_value()) {
+        bsod("unloading notool");
+    }
+
     setPhase(is_unstoppable() ? PhasesLoadUnload::Unloading_unstoppable : PhasesLoadUnload::Unloading_stoppable);
 #if HAS_NOZZLE_CLEANER()
     bool needs_cleaning = true; // Assume we need to clean the nozzle
@@ -1226,7 +1262,9 @@ void Pause::filament_not_in_fs_process(Response response) {
 }
 
 void Pause::manual_unload_process(Response response) {
-    const bool can_continue = !FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
+    const bool has_filament = FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder)
+        || (!FSensors_instance().sensor(LogicalFilamentSensor::extruder) && FSensors_instance().has_filament_surely(LogicalFilamentSensor::side));
+    const bool can_continue = !has_filament;
     setPhase(can_continue ? PhasesLoadUnload::ManualUnload_continuable : PhasesLoadUnload::ManualUnload_uncontinuable);
     handle_help(response);
 
@@ -1363,44 +1401,20 @@ void Pause::park_nozzle_and_notify() {
     }
 
     const float target_Z = settings.park_pos.z;
-    const float Z_len = current_position.z - target_Z; // sign does not matter
-    const float Z_feedrate = HOMING_FEEDRATE_INVERTED_Z;
 
-    float XY_len = 0;
-    float begin_pos = 0;
-    float end_pos = 0;
-    const bool x_greater_than_y = parkMoveXGreaterThanY(current_position.xyz(), settings.park_pos);
-    if (x_greater_than_y) {
-        if (!isnan(settings.park_pos.x)) {
-            begin_pos = axes_need_homing(_BV(X_AXIS)) ? float(X_HOME_POS) : current_position.x;
-            end_pos = settings.park_pos.x;
-            XY_len = begin_pos - end_pos; // sign does not matter
-        }
-    } else {
-        if (!isnan(settings.park_pos.y)) {
-            begin_pos = axes_need_homing(_BV(Y_AXIS)) ? float(Y_HOME_POS) : current_position.y;
-            end_pos = settings.park_pos.y;
-            XY_len = begin_pos - end_pos; // sign does not matter
-        }
-    }
-
-    // move by z_lift, scope for PauseFsmExplicitProgressNotifier
+    // Z lift
     if (isfinite(target_Z)) {
         if (axes_need_homing(_BV(Z_AXIS))) {
             unhomed_z_lift(target_Z);
         } else {
-            PauseFsmExplicitProgressNotifier N(*this, current_position.z, target_Z, 0, parkMoveZPercent(Z_len, XY_len), marlin_vars().native_pos[MARLIN_VAR_INDEX_Z]);
-            log_info(MarlinServer, "Parking");
-            plan_park_move_to(current_position.x, current_position.y, target_Z, NOZZLE_PARK_XY_FEEDRATE, Z_feedrate, Segmented::yes);
-            log_info(MarlinServer, "Park done");
-            if (wait_for_motion_finish_stoppable() == StopConditions::UserStopped) {
-                return;
-            }
+            log_info(MarlinServer, "Parking Z");
+            mapi::park(mapi::ZAction::absolute_move, { .x = {}, .y = {}, .z = target_Z });
         }
     }
 
-    // move to (x_pos, y_pos)
-    if (XY_len != 0) {
+    // Home XY if needed before parking
+    const bool has_xy_park = !isnan(settings.park_pos.x) || !isnan(settings.park_pos.y);
+    if (has_xy_park) {
 #if CORE_IS_XY
         if (axes_need_homing(_BV(X_AXIS) | _BV(Y_AXIS))) {
             GcodeSuite::G28_no_parser(true, true, false,
@@ -1447,11 +1461,9 @@ void Pause::park_nozzle_and_notify() {
         }
 #endif /*CORE_IS_XY*/
 
-        PauseFsmExplicitProgressNotifier N(*this, begin_pos, end_pos, parkMoveZPercent(Z_len, XY_len), 100, marlin_vars().native_pos[x_greater_than_y ? MARLIN_VAR_INDEX_X : MARLIN_VAR_INDEX_Y]); // from Z% to 100%
-        plan_park_move_to_xyz(settings.park_pos, NOZZLE_PARK_XY_FEEDRATE, Z_feedrate, Segmented::yes);
-        if (wait_for_motion_finish_stoppable() == StopConditions::UserStopped) {
-            return;
-        }
+        // XY park (includes dock avoidance on INDX)
+        log_info(MarlinServer, "Parking XY");
+        mapi::park(mapi::ZAction::no_move, { .x = settings.park_pos.x, .y = settings.park_pos.y, .z = {} });
     }
 
     report_current_position();
@@ -1482,7 +1494,7 @@ void Pause::unpark_nozzle_and_notify() {
 
     {
         PauseFsmExplicitProgressNotifier N(*this, begin_pos, end_pos, 0, parkMoveXYPercent(Z_len, XY_len), marlin_vars().native_pos[x_greater_than_y ? MARLIN_VAR_INDEX_X : MARLIN_VAR_INDEX_Y]);
-        do_blocking_move_to_xy(settings.resume_pos, NOZZLE_UNPARK_XY_FEEDRATE);
+        mapi::park(mapi::ZAction::no_move, { .x = settings.resume_pos.x, .y = settings.resume_pos.y, .z = {} });
     }
 
     // Move Z_AXIS to saved position, scope for PauseFsmNotifier
@@ -1544,6 +1556,10 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
 
     print_job_timer.pause();
 
+    // Save print speed - M600 bypasses the pause state machine (pause_print/resume),
+    // so feedrate_percentage must be saved and restored here explicitly.
+    const int16_t saved_feedrate_percentage = feedrate_percentage;
+
     // Wait for buffered blocks to complete
     planner.synchronize();
 
@@ -1553,6 +1569,8 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
     // Set extruder to saved position
     sync_e_position_to(settings.resume_pos.e);
     destination.e = settings.resume_pos.e;
+
+    feedrate_percentage = saved_feedrate_percentage;
 
     --did_pause_print;
 
@@ -1630,7 +1648,9 @@ bool Pause::check_user_stop(Response response) {
 
 void Pause::handle_filament_removal(LoadState state_to_set) {
     // only if there is no filament present and we are sure (FS on and sees no filament)
-    if (FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
+    const bool filament_surely_removed = FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)
+        || (!FSensors_instance().sensor(LogicalFilamentSensor::extruder) && FSensors_instance().no_filament_surely(LogicalFilamentSensor::side));
+    if (filament_surely_removed) {
         set(state_to_set);
         config_store().set_filament_type(settings.virtual_tool(), FilamentType::none);
         return;
@@ -1720,8 +1740,11 @@ void Pause::setup_progress_mapper() {
     case LoadType::filament_stuck: {
         constexpr static ProgressMapperWorkflowArray workflow { std::to_array<WorkflowStep>({
             { LoadState::unload_wait_temp, 3 },
-            { LoadState::ram_sequence, 2 },
-            { LoadState::unload, 1 },
+#if HAS_INDX()
+                { LoadState::unload_purge, 1 },
+#endif
+                { LoadState::ram_sequence, 2 },
+                { LoadState::unload, 1 },
         }) };
         result = &workflow;
         break;
@@ -1738,6 +1761,9 @@ void Pause::setup_progress_mapper() {
     case LoadType::filament_change: {
         constexpr static ProgressMapperWorkflowArray workflow { std::to_array<WorkflowStep>({
             { LoadState::unload_wait_temp, 3 },
+#if HAS_INDX()
+                { LoadState::unload_purge, 1 },
+#endif
                 { LoadState::ram_sequence, 1 },
                 { LoadState::long_load, 2 },
 #if HAS_NOZZLE_CLEANER()

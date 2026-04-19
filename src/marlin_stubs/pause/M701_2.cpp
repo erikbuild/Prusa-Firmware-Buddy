@@ -29,6 +29,11 @@
 
 #include <raii/scope_guard.hpp>
 
+#include <option/has_indx.h>
+#if HAS_INDX()
+    #include <Marlin/src/module/tool_change.h>
+#endif
+
 uint filament_gcodes::InProgress::lock = 0;
 
 using namespace filament_gcodes;
@@ -127,6 +132,13 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     sync_e_position_to(current_position_tmp.e);
     destination.e = current_position_tmp.e;
 
+#if HAS_INDX()
+    // Park the tool back to its dock after load
+    if (!do_resume_print) {
+        tool_change(NoTool {}, tool_return_t::no_return);
+    }
+#endif
+
     if (do_resume_print) {
         marlin_server::print_resume();
     }
@@ -178,6 +190,11 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
     M70X_process_user_response(PreheatStatus::Result::CooledDown, virtual_tool);
     sync_e_position_to(current_position_tmp.e);
     destination.e = current_position_tmp.e;
+
+#if HAS_INDX()
+    // Park the tool back to its dock after unload
+    tool_change(NoTool {}, tool_return_t::no_return);
+#endif
 }
 
 namespace PreheatStatus {
@@ -269,14 +286,19 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
         thermalManager.setTargetHotend(EXTRUDE_MINTEMP, *active_tool);
     }
 
+    const auto no_filament_in_extruder = [&]() {
+        return FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)
+            || (!FSensors_instance().sensor(LogicalFilamentSensor::extruder) && FSensors_instance().no_filament_surely(LogicalFilamentSensor::side));
+    };
+
     // catch filament in gear and then ask for temp
-    if (!Pause::Instance().perform(Pause::LoadType::load_to_gears, settings) && !FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
+    if (!Pause::Instance().perform(Pause::LoadType::load_to_gears, settings) && !no_filament_in_extruder()) {
         // Unload when user said stop and filament was already loaded
         unload_filament(Pause::LoadType::unload_from_gears);
         return;
     }
     // check if filament is in gears before continuing to preheat
-    if (FSensors_instance().no_filament_surely(LogicalFilamentSensor::extruder)) {
+    if (no_filament_in_extruder()) {
         return;
     }
 
@@ -393,6 +415,9 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
     filament::set_type_to_load(filament_to_be_loaded);
     filament::set_color_to_load(color_to_be_loaded);
 
+    // Update park position for load phase (move to front/load position instead of staying at unload/waste bin position)
+    settings.SetParkPoint({ X_AXIS_LOAD_POS, Y_AXIS_LOAD_POS, park_position.z });
+
 #ifndef DO_NOT_RESTORE_Z_AXIS
     // Has to be set before last Pause operation, otherwise it unparks and parks again inbetween operations
     settings.SetResumePoint(current_position_tmp);
@@ -403,4 +428,9 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
     } else {
         M70X_process_user_response(PreheatStatus::Result::DidNotFinish, virtual_tool);
     }
+
+#if HAS_INDX()
+    // Park the tool back to its dock after change filament
+    tool_change(NoTool {}, tool_return_t::no_return);
+#endif
 }
