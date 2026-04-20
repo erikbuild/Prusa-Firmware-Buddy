@@ -1,0 +1,19 @@
+Each sample counts as 3.14673e-05 seconds.
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  Ts/call  Ts/call  name
+ 44.66      4.06     4.06                             prvIdleTask
+ 10.68      5.04     0.97                             DMA1_Channel1_IRQHandler
+  3.63      5.37     0.33                             __aeabi_fmul
+  3.21      5.66     0.29                             ADC_DMAConvCplt
+  2.61      5.90     0.24                             USART2_IRQHandler
+  2.52      6.13     0.23                             vPortExitCritical
+  2.03      6.31     0.19                             xQueueSemaphoreTake
+  2.02      6.49     0.18                             __aeabi_fsub
+  1.97      6.67     0.18                             vTaskSwitchContext
+  1.88      6.84     0.17                             xTaskResumeAll
+  1.71      7.00     0.16                             __aeabi_fadd
+  1.55      7.14     0.14                             PendSV_Handler
+  1.20      7.25     0.11                             main::{lambda(void*)#3}::_FUN(void*)
+  1.18      7.36     0.11                             vPortEnterCritical
+  1.17      7.46     0.11                             main::{lambda(void*)#2}::_FUN(void*)
+  1.12      7.57     0.10                             xTaskRemoveFromEventList
