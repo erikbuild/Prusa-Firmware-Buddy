@@ -410,11 +410,12 @@ pipeline {
                         . .venv/bin/activate
                         utils/generate-error-codes-report.py | tee error-codes-report.txt
                         utils/translations_and_fonts/generate-translations-report.sh | tee translations-report.txt
+                        utils/generate-icon-parity-report.py | tee icon-parity-report.txt
                         """
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: 'error-codes-report.txt, translations-report.txt, Prusa-Firmware-Buddy.pot'
+                            archiveArtifacts artifacts: 'error-codes-report.txt, translations-report.txt, icon-parity-report.txt, Prusa-Firmware-Buddy.pot'
                         }
                     }
                 }
