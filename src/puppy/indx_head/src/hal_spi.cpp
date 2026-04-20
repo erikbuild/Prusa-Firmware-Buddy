@@ -4,6 +4,7 @@
 #include "hal.hpp"
 #include "rtt.hpp"
 #include <ads131m02/ADS131M02.hpp>
+#include <ais2ih/AIS2IH.hpp>
 #include <cstddef>
 #include <freertos/binary_semaphore.hpp>
 #include <freertos/timing.hpp>
@@ -124,15 +125,52 @@ namespace {
 
 namespace accel {
     namespace {
+        class SPIDevice : Uncopyable {
+        public:
+            [[nodiscard]] bool transmit_receive(std::span<const std::byte> tx, std::span<std::byte> rx) {
+                SPI_ASSERT("sizes must match\n", tx.size() == rx.size());
+                SPI_ASSERT("config must not be changed in-flight\n", !LL_SPI_IsEnabled(SPIx));
+
+                MODIFY_REG(SPIx->CR1, SPI_CR1_CPOL, LL_SPI_POLARITY_HIGH);
+                return hal::spi::transmit_receive({
+                    .tx_data = tx.data(),
+                    .rx_data = rx.data(),
+                    .size = tx.size(),
+                    .cs_port = GPIOC,
+                    .cs_pin = GPIO_PIN_6,
+                });
+            }
+        };
+
+        class AIS2IH final : public ::AIS2IH::Impl<SPIDevice> {
+        public:
+            using ::AIS2IH::Impl<SPIDevice>::Impl;
+        };
+
+        AIS2IH ais2ih;
     } // namespace
 
-    [[nodiscard]] bool get_sample([[maybe_unused]] Sample &sample) {
-        return false;
+    [[nodiscard]] bool get_sample(Sample &sample) {
+        ::AIS2IH::Sample ais2ih_sample;
+        if (ais2ih.get_sample(ais2ih_sample)) [[likely]] {
+            sample.x = ais2ih_sample.x;
+            sample.y = ais2ih_sample.y;
+            sample.z = ais2ih_sample.z;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /// Blocks until the accelerometer is detected and configured.
     /// The accelerometer is critical — the system cannot operate without it.
     void init() {
+        while (!ais2ih.is_chip_detected()) {
+            freertos::yield();
+        }
+        while (!ais2ih.setup()) {
+            freertos::yield();
+        }
     }
 } // namespace accel
 

@@ -51,6 +51,7 @@ target_link_libraries(
           raii
           fpm
           ADS131M02
+          AIS2IH
           LP5817
           cortex-m0-atomic
   )
