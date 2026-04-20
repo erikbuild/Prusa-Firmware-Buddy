@@ -21,6 +21,7 @@ enum class Action {
     ZCheck,
     Heaters,
     FilamentSensorCalibration,
+    DockCalibration,
     NozzleCleanerCalibration,
     _count,
     _last = _count - 1,
@@ -92,6 +93,7 @@ inline constexpr MenuItemText blank_item_texts[] {
         { Action::ZCheck, N_("%d Z Axis Test") },
         { Action::Heaters, N_("%d Heater Test") },
         { Action::FilamentSensorCalibration, N_("%d Filament Sensor Calibration") },
+        { Action::DockCalibration, N_("%d Dock Calibration") },
         { Action::NozzleCleanerCalibration, N_("%d Nozzle Cleaner Calibration") },
 };
 
