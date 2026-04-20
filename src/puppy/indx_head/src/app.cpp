@@ -21,8 +21,19 @@ constexpr uint32_t invalid_nozzle_temp_timeout_ms = 1000 * 2;
 constexpr uint32_t control_frequency = 300 /*Hz*/;
 constexpr uint32_t control_delay_us = 1'000'000 / control_frequency;
 
+constexpr uint32_t fan_update_frequency = 10 /*Hz*/;
+constexpr uint32_t fan_update_delay_us = 1'000'000 / fan_update_frequency;
+
+std::atomic<uint8_t> printfan_pwm = 0;
+std::atomic<uint8_t> boardfan_pwm = 0;
+
+std::atomic<uint32_t> printfan_start_ms = 0;
+std::atomic<uint32_t> boardfan_start_ms = 0;
+
 std::atomic<indx_head::leds::LedConfig> leds_config = {};
 std::atomic<bool> leds_changed = true;
+
+std::atomic<bool> selftest_mode = false;
 } // namespace
 
 namespace app {
@@ -34,6 +45,7 @@ void run() {
     freertos::delay(300);
 
     uint64_t last_induction_control = timing::get_timestamp_us();
+    uint64_t last_fan_update = timing::get_timestamp_us();
     uint32_t last_valid_nozzle_temp_ms = timing::get_timestamp_ms(); // Timestamp of last valid nozzle temp reading
     FOREVER_WITH_WATCHDOG(100) {
         const auto now = timing::get_timestamp_us();
@@ -60,12 +72,34 @@ void run() {
             // TODO: Update induction heating
         }
 
-        // LEDs control loop
-        if (leds_changed) {
-            leds_changed = false;
-            auto cfg = leds_config.load();
-            hal::i2c::set_led_pwm(cfg.r, cfg.g, cfg.b);
-            hal::i2c::set_led_mode(cfg.mode);
+        // Fans and leds control loop
+        if (now - last_fan_update >= fan_update_delay_us) {
+            last_fan_update = now;
+
+            // Print fan - direct PWM control
+            hal::tim::set_printfan_pwm(printfan_pwm.load());
+
+            // Heatbreak/Board fan
+            {
+                // Auto mode - thermal loop controls fan
+                const bool is_heating = target_temp.load() > 0;
+                const bool nozzle_temp_threshold_reached = nozzle_temp.load() > 50 * 100; /*stored in centiDeg*/
+                const uint8_t pwm = (is_heating || nozzle_temp_threshold_reached || selftest_mode.load()) ? 255 : 0;
+                hal::tim::set_boardfan_pwm(pwm);
+                if (boardfan_pwm == 0) {
+                    // MUST be before setting the PWM to avoid race conditions
+                    boardfan_start_ms = freertos::millis();
+                }
+                boardfan_pwm = pwm;
+            }
+
+            // LEDs control loop
+            if (target_temp.load() == 0 && leds_changed) {
+                leds_changed = false;
+                auto cfg = leds_config.load();
+                hal::i2c::set_led_pwm(cfg.r, cfg.g, cfg.b);
+                hal::i2c::set_led_mode(cfg.mode);
+            }
         }
 
         freertos::delay(1);
@@ -76,8 +110,81 @@ int16_t get_nozzle_temp() {
     return nozzle_temp.load();
 }
 
+void set_nozzle_present(indx_head::NozzlePresence state) {
+    if (state == indx_head::NozzlePresence::unknown) {
+        return; // Invalid analysis — do not disturb debounce
+    }
+
+    CriticalSection cs; // ISR-safe guard against concurrent invalidate_nozzle_presence() from modbus task
+    nozzle_debouncer.push(state == indx_head::NozzlePresence::present);
+    if (nozzle_debouncer.is_stable()) {
+        nozzle_present.store(nozzle_debouncer.value()
+                ? indx_head::NozzlePresence::present
+                : indx_head::NozzlePresence::absent);
+    }
+}
+
+indx_head::NozzlePresence get_nozzle_present() {
+    return nozzle_present.load();
+}
+
+void invalidate_nozzle_presence(uint16_t ack_value) {
+    {
+        CriticalSection cs; // ISR-safe guard against concurrent set_nozzle_present() from DMA ISR
+        nozzle_debouncer.destabilize();
+        nozzle_present.store(indx_head::NozzlePresence::unknown);
+    }
+    nozzle_invalidation_ack.store(ack_value);
+}
+
+uint16_t get_nozzle_invalidation_ack() {
+    return nozzle_invalidation_ack.load();
+}
+
+void set_nozzle_decay(float decay) {
+    last_nozzle_decay_x1000.store(static_cast<uint16_t>(decay * 1000));
+}
+
+uint16_t get_nozzle_decay_x1000() {
+    return last_nozzle_decay_x1000.load();
+}
+
+void set_nozzle_target_temp(uint16_t new_target) {
+    if (new_target > max_target_temp) {
+        target_temp.store(max_target_temp);
+    } else {
+        target_temp.store(new_target);
+    }
+}
+
 void set_led_config(const indx_head::leds::LedConfig cfg) {
     leds_config.store(cfg);
     leds_changed = true;
+}
+
+void set_printfan_pwm(uint8_t pwm) {
+    if (printfan_pwm == 0) {
+        // MUST be before setting the PWM to avoid race conditions
+        printfan_start_ms = freertos::millis();
+    }
+    printfan_pwm = pwm;
+}
+
+uint8_t get_printfan_pwm() {
+    return printfan_pwm.load();
+}
+
+uint8_t get_boardfan_pwm() {
+    return boardfan_pwm.load();
+}
+
+static constexpr uint32_t fan_startup_duration_ms = 2000;
+
+bool is_printfan_rpm_ok() {
+    return printfan_pwm == 0 || hal::tim::get_printfan_rpm_counter() > 0 || freertos::millis() - printfan_start_ms < fan_startup_duration_ms;
+}
+
+bool is_boardfan_rpm_ok() {
+    return boardfan_pwm == 0 || hal::tim::get_boardfan_rpm_counter() > 0 || freertos::millis() - boardfan_start_ms < fan_startup_duration_ms;
 }
 } // namespace app
