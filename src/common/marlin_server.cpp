@@ -2086,13 +2086,6 @@ static void resuming_reheating() {
     }
 #endif /*ENABLED(CRASH_RECOVERY)*/
 
-#if HAS_INDX()
-    // Pick the tool back from its dock before resuming
-    if (server.resume.active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
-        tool_change(PhysicalToolIndex::from_raw(server.resume.active_tool), tool_return_t::no_return);
-    }
-#endif
-
     unpark_head_XY();
     server.print_state = State::Resuming_UnparkHead_XY;
 }
@@ -3056,6 +3049,16 @@ void resuming_begin(void) {
 #if HAS_REMOTE_BED()
     modbedMaxTempErrorChecker.reset();
 #endif /*HAS_REMOTE_BED()*/
+
+#if HAS_INDX()
+    // Pick the tool from its dock before setting temperatures.
+    // Inactive tools don't accept temperatures and won't heat up.
+    //
+    // And waiting after they've heat up wouldn't work, for obivous reasons.
+    if (server.resume.active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+        tool_change(PhysicalToolIndex::from_raw(server.resume.active_tool), tool_return_t::no_return);
+    }
+#endif
 
     for (auto tool : PhysicalToolIndex::all()) {
         thermalManager.setTargetHotend(server.resume.nozzle_temp[tool], tool);
