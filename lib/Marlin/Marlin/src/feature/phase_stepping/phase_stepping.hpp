@@ -175,7 +175,6 @@ struct AxisState {
     StealableTarget next_target; // Next planned target to move
 
     double next_target_end_time; // Absolute end time (s) for the next planned target
-    std::atomic<bool> is_moving = false;
     std::atomic<bool> is_cruising = false;
 
     float initial_hold_multiplier; // Original holding current multiplier

@@ -769,7 +769,6 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
             }
 
             axis_state.is_cruising.store((current_target->half_accel == 0) && (current_target->duration > 10'000), std::memory_order_release);
-            axis_state.is_moving.store(true, std::memory_order_release);
             {
                 float end_speed, end_pos_unused;
                 axis_position(axis_state, current_target->duration, end_speed, end_pos_unused);
@@ -791,8 +790,6 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
         } else {
             // No new movement
             axis_state.is_cruising.store(false, std::memory_order_release);
-            axis_state.is_moving.store(false, std::memory_order_release);
-
             if (planner.draining()) {
                 axis_state.is_slowed_down = true;
             }
