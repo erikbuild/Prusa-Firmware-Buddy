@@ -69,6 +69,10 @@ void hal::set_safe_state() {
     tim::set_boardfan_pwm(255);
 }
 
+namespace hal::diag {
+std::atomic<uint16_t> uart_errors { 0 };
+} // namespace hal::diag
+
 namespace hal {
 enum ADC_Config {
     NONE,

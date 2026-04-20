@@ -8,7 +8,10 @@
 #include <freertos/binary_semaphore.hpp>
 
 #include <array>
+#include <atomic>
+#include <cstddef>
 #include <cstdint>
+#include <span>
 #include <utility>
 
 namespace hal {
@@ -25,6 +28,10 @@ void __attribute__((noreturn)) panic(indx_head::errors::FaultStatusMask);
 void set_ind_heater_pwr(bool enabled);
 
 void set_safe_state();
+
+namespace rs485 {
+    std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> data);
+} // namespace rs485
 
 struct FloatReading {
     float value;
@@ -91,5 +98,10 @@ namespace peripherals {
     extern ADC_HandleTypeDef hadc1;
     extern freertos::BinarySemaphore adc_semaphore;
 } // namespace peripherals
+
+namespace diag {
+    // Bus-level counters (incremented on every recovery)
+    extern std::atomic<uint16_t> uart_errors;
+} // namespace diag
 
 } // namespace hal

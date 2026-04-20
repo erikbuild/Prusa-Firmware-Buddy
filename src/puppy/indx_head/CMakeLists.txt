@@ -28,6 +28,7 @@ target_sources(
           src/hal_clk.cpp
           src/hal_crc.cpp
           src/hal_i2c.cpp
+          src/hal_rs485.cpp
           src/hal_spi.cpp
           src/hal_tim.cpp
           src/hal_watchdog.cpp
