@@ -205,6 +205,9 @@ void do_snake(Action action, PhysicalToolIndex tool) {
             break;
 #endif
 #if HAS_INDX()
+        case Action::DockCalibration:
+            marlin_client::gcode("M1982");
+            break;
         case Action::NozzleCleanerCalibration:
             marlin_client::gcode("M1983");
             break;
