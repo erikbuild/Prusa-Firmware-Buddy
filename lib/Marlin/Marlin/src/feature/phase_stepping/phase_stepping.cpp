@@ -762,14 +762,14 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
         if (current_target.has_value()) {
             axis_state.current_target = *current_target;
 
-            if (std::abs(current_target->start_v - axis_state.previous_speed) > speed_diff_threshold) {
+            if (__builtin_fabsf(current_target->start_v - axis_state.previous_speed) > speed_diff_threshold) {
                 [[maybe_unused]] const auto res = debug_events_queue.enqueue(SuddenSpeedChange { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed, .new_speed = current_target->start_v });
             }
 
             axis_state.is_cruising.store((current_target->half_accel == 0) && (current_target->duration > 10'000), std::memory_order_release);
             axis_state.is_moving.store(true, std::memory_order_release);
             auto [end_speed, end_pos] = axis_position(axis_state, current_target->duration);
-            axis_state.is_slowed_down = std::abs(end_speed) < 2; // if < 2 we slowed down
+            axis_state.is_slowed_down = __builtin_fabsf(end_speed) < 2; // if < 2 we slowed down
             if (axis_state.stalled_for != 0) {
                 [[maybe_unused]] const auto res = debug_events_queue.enqueue(Stalled {
                     .timestamp = now,
