@@ -135,6 +135,7 @@ static void init_step_generator_internal(
 
     axis_state.last_position = axis_state.next_target.peek().initial_pos;
     axis_state.current_target = MoveTarget(axis_state.last_position);
+    axis_state.has_current_target = true;
     axis_state.next_target_end_time = MAX_PRINT_TIME;
 
     int32_t initial_steps_made = pos_to_steps(AxisEnum(axis), axis_state.next_target.peek().initial_pos);
@@ -361,7 +362,7 @@ bool phase_stepping::processing() {
 
     // check for pending targets
     for (auto &state : axis_states) {
-        if (!state.pending_targets.isEmpty() || state.current_target.has_value()) {
+        if (!state.pending_targets.isEmpty() || state.has_current_target) {
             return true;
         }
     }
@@ -405,7 +406,7 @@ void phase_stepping::jump_to_position(AxisEnum axis, float pos, bool set_origin)
     assert_initialized();
 
     auto &axis_state = axis_states[axis];
-    assert(axis_state.pending_targets.isEmpty() && !axis_state.current_target.has_value());
+    assert(axis_state.pending_targets.isEmpty() && !axis_state.has_current_target);
 
     bool was_active = axis_state.active;
     axis_state.active = false;
@@ -443,7 +444,7 @@ static void enable_phase_stepping(AxisEnum axis_num) {
     TMCStepperType &stepper = stepper_axis(axis_num);
     auto &axis_state = axis_states[axis_num];
     assert(!axis_state.enabled && !axis_state.active);
-    assert(!axis_state.current_target.has_value() && axis_state.pending_targets.isEmpty());
+    assert(!axis_state.has_current_target && axis_state.pending_targets.isEmpty());
 
     // Read axis configuration and cache it so we can access it fast
     axis_state.direction = (Stepper::motor_direction(axis_num) ^ axis_state.inverted);
@@ -617,7 +618,7 @@ void phase_stepping::clear_targets() {
         bool was_active = axis_state.active;
         axis_state.active = false;
 
-        axis_state.current_target.reset();
+        axis_state.has_current_target = false;
         while (!axis_state.pending_targets.isEmpty()) {
             axis_state.pending_targets.dequeue();
         }
@@ -727,11 +728,11 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
     uint32_t move_epoch = ticks_diff(now, axis_state.initial_time);
     float move_position = axis_state.last_position;
 
-    while (!axis_state.current_target.has_value() || move_epoch >= axis_state.current_target->duration) {
-        if (axis_state.current_target.has_value()) {
-            axis_state.initial_time += axis_state.current_target->duration;
-            move_position = axis_state.current_target->target_pos;
-            axis_state.current_target.reset();
+    while (!axis_state.has_current_target || move_epoch >= axis_state.current_target.duration) {
+        if (axis_state.has_current_target) {
+            axis_state.initial_time += axis_state.current_target.duration;
+            move_position = axis_state.current_target.target_pos;
+            axis_state.has_current_target = false;
             calibration_move_cleanup(axis_state);
         }
 
@@ -761,6 +762,7 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
 
         if (current_target.has_value()) {
             axis_state.current_target = *current_target;
+            axis_state.has_current_target = true;
 
             if (__builtin_fabsf(current_target->start_v - axis_state.previous_speed) > speed_diff_threshold) {
                 [[maybe_unused]] const auto res = debug_events_queue.enqueue(SuddenSpeedChange { .timestamp = now, .axis = axis_index ? 'Y' : 'X', .original_speed = axis_state.previous_speed, .new_speed = current_target->start_v });
@@ -768,8 +770,11 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
 
             axis_state.is_cruising.store((current_target->half_accel == 0) && (current_target->duration > 10'000), std::memory_order_release);
             axis_state.is_moving.store(true, std::memory_order_release);
-            auto [end_speed, end_pos] = axis_position(axis_state, current_target->duration);
-            axis_state.is_slowed_down = __builtin_fabsf(end_speed) < 2; // if < 2 we slowed down
+            {
+                float end_speed, end_pos_unused;
+                axis_position(axis_state, current_target->duration, end_speed, end_pos_unused);
+                axis_state.is_slowed_down = __builtin_fabsf(end_speed) < 2; // if < 2 we slowed down
+            }
             if (axis_state.stalled_for != 0) {
                 [[maybe_unused]] const auto res = debug_events_queue.enqueue(Stalled {
                     .timestamp = now,
@@ -800,9 +805,13 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
         }
     }
 
-    auto [speed, position] = axis_state.current_target.has_value()
-        ? axis_position(axis_state, move_epoch)
-        : std::make_tuple(0.f, move_position);
+    float speed, position;
+    if (axis_state.has_current_target) {
+        axis_position(axis_state, move_epoch, speed, position);
+    } else {
+        speed = 0.f;
+        position = move_position;
+    }
 
     axis_state.previous_speed = speed;
 
@@ -930,7 +939,7 @@ int phase_stepping::logical_ustep(AxisEnum axis) {
     }
 
     // ensure we're not being called while still moving
-    assert(!axis_state.current_target.has_value());
+    assert(!axis_state.has_current_target);
 #if HAS_BURST_STEPPING()
     // #error dead code found by automatic analyses (see BFW-5461)
     assert(!burst_stepping::busy());
@@ -940,13 +949,11 @@ int phase_stepping::logical_ustep(AxisEnum axis) {
     return axis_state.last_phase;
 }
 
-FORCE_OFAST std::tuple<float, float> phase_stepping::axis_position(const AxisState &axis_state, uint32_t move_epoch) {
+FORCE_OFAST void phase_stepping::axis_position(const AxisState &axis_state, uint32_t move_epoch, float &out_speed, float &out_position) {
     float epoch = move_epoch / static_cast<float>(TICK_FREQ);
-    const MoveTarget &trg = *axis_state.current_target;
-    return {
-        trg.start_v + 2.f * trg.half_accel * epoch,
-        trg.initial_pos + trg.start_v * epoch + trg.half_accel * epoch * epoch
-    };
+    const MoveTarget &trg = axis_state.current_target;
+    out_speed = trg.start_v + 2.f * trg.half_accel * epoch;
+    out_position = trg.initial_pos + trg.start_v * epoch + trg.half_accel * epoch * epoch;
 }
 
 namespace phase_stepping {

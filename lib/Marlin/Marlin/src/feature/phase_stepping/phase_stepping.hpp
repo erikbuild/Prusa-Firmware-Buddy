@@ -71,7 +71,10 @@ struct AxisState {
     // Once complete it is pushed to pending_targets. When current_target is empty, the refresh loop
     // will dequeue items from pending_targets and set it as the current_target. When the position
     // is reached the cycle repeats, until no more targets are present and current_target is reset.
-    std::optional<MoveTarget> current_target; // Current target to move
+    // Note: these two are not std::optional<MoveTarget> for performance reasons
+    // (std::optional adds overhead in the ISR hot path).
+    MoveTarget current_target; // Current target to move
+    bool has_current_target = false;
     AtomicCircularQueue<MoveTarget, unsigned, 32> pending_targets; // queue of pre-processed elements
     /// Synchronization primitive to allow phase stepping to "steal" the next target.
     ///
@@ -275,7 +278,7 @@ bool any_axis_enabled();
  * Given axis state and time in µs ticks from movement start, compute axis
  * speed and position.
  */
-std::tuple<float, float> axis_position(const AxisState &axis_state, uint32_t move_epoch);
+void axis_position(const AxisState &axis_state, uint32_t move_epoch, float &out_speed, float &out_position);
 
 /**
  * Extracts physical axis position from logical one

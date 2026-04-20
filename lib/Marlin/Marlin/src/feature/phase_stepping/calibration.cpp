@@ -446,7 +446,7 @@ std::atomic<int> calibration_axis_active = -1;
 
 void calibration_new_move(const AxisState &axis_state) {
     float calibration_distance = calibration_sweep.setup_distance + calibration_sweep.sweep_distance;
-    auto current_target = axis_state.current_target.value();
+    auto current_target = axis_state.current_target;
     float move_distance = current_target.target_pos - current_target.initial_pos;
     calibration_axis_active = std::fabs(move_distance) >= std::fabs(calibration_distance) ? axis_state.axis_index : -1;
 }

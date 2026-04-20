@@ -45,7 +45,7 @@ static inline void calibration_new_move(const AxisState &axis_state) {
 static inline correction_t calibration_phase_correction(const AxisState &axis_state,
     const CorrectedCurrentLut &lut, float current_position, int phase) {
     if (calibration_active_on_axis(axis_state)) {
-        float start_position = axis_state.current_target->initial_pos;
+        float start_position = axis_state.current_target.initial_pos;
         float relative_position = current_position - start_position;
         auto [harmonic, pha, mag] = internal::compute_calibration_tweak(relative_position);
         return lut.get_correction_for_calibration(phase, harmonic, pha, mag);
