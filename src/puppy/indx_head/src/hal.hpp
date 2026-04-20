@@ -64,6 +64,17 @@ namespace adc {
         _cnt
     };
 
+    /// Returs raw adc value for given @p channel
+    uint16_t get_raw(Channel channel);
+    /// Calcules MCU temp in degC
+    int16_t get_mcu_temp();
+    /// Calculates board temp in degC
+    int16_t get_board_temp();
+    /// Calculates input volatage in V * 100
+    uint16_t get_input_voltage();
+    /// Calculates heater current in V * 100
+    uint16_t get_heater_current();
+
     namespace impl {
         alignas(uint32_t) extern std::array<uint16_t, std::to_underlying(Channel::_cnt)> buffer;
     }
