@@ -360,6 +360,10 @@ CommunicationStatus XBuddyExtension::write_chunk(PuppyModbus &bus) {
 CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus) {
     const xbuddy_extension::modbus::DigestRequest &current_request = status.value.digest_request;
 
+    if (current_request == last_digest_request) {
+        return CommunicationStatus::SKIPPED;
+    }
+
     const FileId file_id = xbuddy_extension::modbus::parse_file_id(current_request.file_id);
     if (file_id == FileId::none) {
         return CommunicationStatus::OK;
@@ -392,11 +396,11 @@ CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus) {
     modbus_digest.status = xbuddy_extension::modbus::serialize_digest_status(digest_status);
 
     if (bus.write_holding_registers(modbus::ServerAddress::xbuddy_extension, modbus_digest)) {
-        // Prevent further work of this function until next refresh
-        status.value.digest_request.file_id = xbuddy_extension::modbus::serialize_file_id(FileId::none);
+        last_digest_request = current_request;
         return CommunicationStatus::OK;
     } else {
-        // Best effort, if this fails, we retry later
+        // Best effort — retry on next cycle (last_digest_request not updated,
+        // so dedup won't suppress it).
         return CommunicationStatus::SKIPPED;
     }
 }

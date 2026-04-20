@@ -102,6 +102,9 @@ private:
 
     // Just don't resend another request unless a new request comes.
     xbuddy_extension::modbus::ChunkRequest last_chunk_request = {};
+    // Dedup is safe across XBE resets because each request carries a fresh
+    // random salt, so a re-issued request won't match the stale entry.
+    xbuddy_extension::modbus::DigestRequest last_digest_request = {};
 
     // The file we are reading from during flashing (-1 when not flashing).
     int flash_fd = -1;
