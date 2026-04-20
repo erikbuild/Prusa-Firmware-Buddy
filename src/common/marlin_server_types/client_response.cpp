@@ -70,6 +70,7 @@ constinit const EnumArray<ClientFSM, std::span<const PhaseResponses>, ClientFSM:
 #if HAS_INDX()
         { ClientFSM::NozzleMismatch, nozzle_mismatch_responses },
         { ClientFSM::DockCalibration, dock_calibration_responses },
+        { ClientFSM::NozzleCleanerCalibration, nozzle_cleaner_calibration_responses },
 #endif
         { ClientFSM::SafetyTimer, safety_timer_responses },
         { ClientFSM::Wait, {} },

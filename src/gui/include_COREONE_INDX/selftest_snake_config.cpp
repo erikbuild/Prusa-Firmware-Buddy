@@ -74,6 +74,8 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
         return merge_hotends_evaluations([](const PhysicalToolIndex e) {
             return get_fsensor_calibration_result(e);
         });
+    case Action::NozzleCleanerCalibration:
+        return test_result::evaluate_results(config_store().selftest_result_nozzle_cleaner_calibration.get());
     case Action::_count:
         break;
     }
@@ -85,6 +87,7 @@ uint64_t get_test_mask(Action action) {
     case Action::Fans:
     case Action::DoorSensor:
     case Action::FilamentSensorCalibration:
+    case Action::NozzleCleanerCalibration:
 #if HAS_PRECISE_HOMING_COREXY()
     case Action::PreciseHoming:
 #endif

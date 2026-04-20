@@ -7,6 +7,7 @@
 #include <raii/auto_restore.hpp>
 #include <option/has_phase_stepping_selftest.h>
 #include <option/has_door_sensor_calibration.h>
+#include <option/has_indx.h>
 #include <option/has_toolchanger.h>
 #include <option/has_manual_belt_tuning.h>
 #include <bsod/bsod.h>
@@ -201,6 +202,11 @@ void do_snake(Action action, PhysicalToolIndex tool) {
 #if HAS_PRECISE_HOMING_COREXY()
         case Action::PreciseHoming:
             marlin_client::gcode("G28 XY C");
+            break;
+#endif
+#if HAS_INDX()
+        case Action::NozzleCleanerCalibration:
+            marlin_client::gcode("M1983");
             break;
 #endif
         default:

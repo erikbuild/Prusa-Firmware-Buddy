@@ -258,6 +258,7 @@ DeviceState get_state(bool ready) {
 #endif
 #if HAS_INDX()
     case ClientFSM::DockCalibration:
+    case ClientFSM::NozzleCleanerCalibration:
 #endif
 #if HAS_SERIAL_PRINT()
     case ClientFSM::Serial_printing:
@@ -493,6 +494,7 @@ StateWithDialog get_state_with_dialog(bool ready) {
         break;
     }
     case ClientFSM::DockCalibration:
+    case ClientFSM::NozzleCleanerCalibration:
 #endif
     case ClientFSM::Preheat:
     case ClientFSM::SafetyTimer:

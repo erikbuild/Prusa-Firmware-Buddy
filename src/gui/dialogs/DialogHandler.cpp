@@ -27,6 +27,7 @@
 #if HAS_INDX()
     #include <gui/screen/screen_nozzle_mismatch.hpp>
     #include <feature/indx_dock_calibration/screen_dock_calibration.hpp>
+    #include <feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.hpp>
 #endif
 
 #if HAS_MANUAL_BELT_TUNING()
@@ -304,6 +305,7 @@ using FSMDisplayConfig = FSMDisplayConfigDef<
 #if HAS_INDX()
     FSMScreenDef<ClientFSM::NozzleMismatch, ScreenNozzleMismatch>,
     FSMScreenDef<ClientFSM::DockCalibration, ScreenDockCalibration>,
+    FSMScreenDef<ClientFSM::NozzleCleanerCalibration, ScreenNozzleCleanerCalibration>,
 #endif
     // This is here so that we can worry-free write commas at the end of each argument
     FSMEndDef>;

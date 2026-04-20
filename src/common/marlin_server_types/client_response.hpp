@@ -478,6 +478,25 @@ enum class PhaseDockCalibration : PhaseUnderlyingType {
     _last = calibration_failed,
 };
 constexpr inline ClientFSM client_fsm_from_phase(PhaseDockCalibration) { return ClientFSM::DockCalibration; }
+
+enum class PhaseNozzleCleanerCalibration : PhaseUnderlyingType {
+    intro,
+    picking_tool,
+    homing,
+    moving_away,
+    move_to_z_point,
+    ask_position_y,
+    lock_position_y,
+    measuring_y,
+    evaluating_y,
+    ask_position_x,
+    lock_position_x,
+    measuring_x,
+    evaluating_x,
+    calibration_success,
+    _last = calibration_success,
+};
+constexpr inline ClientFSM client_fsm_from_phase(PhaseNozzleCleanerCalibration) { return ClientFSM::NozzleCleanerCalibration; }
 #endif
 
 namespace ClientResponses {
@@ -763,6 +782,23 @@ inline constexpr EnumArray<PhaseDockCalibration, PhaseResponses, CountPhases<Pha
     { PhaseDockCalibration::measuring, {} },
     { PhaseDockCalibration::calibration_success, { Response::Continue } },
     { PhaseDockCalibration::calibration_failed, { Response::Retry, Response::Abort } },
+};
+
+inline constexpr EnumArray<PhaseNozzleCleanerCalibration, PhaseResponses, CountPhases<PhaseNozzleCleanerCalibration>()> nozzle_cleaner_calibration_responses {
+    { PhaseNozzleCleanerCalibration::intro, { Response::Continue, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::picking_tool, {} },
+    { PhaseNozzleCleanerCalibration::homing, {} },
+    { PhaseNozzleCleanerCalibration::moving_away, {} },
+    { PhaseNozzleCleanerCalibration::move_to_z_point, { Response::Continue, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::ask_position_y, { Response::Continue, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::lock_position_y, { Response::Continue, Response::Back, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::measuring_y, {} },
+    { PhaseNozzleCleanerCalibration::evaluating_y, { Response::Retry, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::ask_position_x, { Response::Continue, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::lock_position_x, { Response::Continue, Response::Back, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::measuring_x, {} },
+    { PhaseNozzleCleanerCalibration::evaluating_x, { Response::Retry, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::calibration_success, { Response::Continue } },
 };
 #endif
 

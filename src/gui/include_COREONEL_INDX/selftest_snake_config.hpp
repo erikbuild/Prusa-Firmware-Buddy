@@ -21,6 +21,7 @@ enum class Action {
     ZCheck,
     Heaters,
     FilamentSensorCalibration,
+    NozzleCleanerCalibration,
     PhaseSteppingCalibration,
     _count,
     _last = _count - 1,
