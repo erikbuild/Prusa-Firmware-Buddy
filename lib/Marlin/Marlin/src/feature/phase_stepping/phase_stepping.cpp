@@ -39,6 +39,13 @@ using namespace buddy::hw;
 
 AtomicCircularQueue<ProblemEvents, uint16_t, 32> phase_stepping::debug_events_queue {};
 
+// Max rounding "adjustment" for jump_to_position(origin=true).
+//
+// In perfect arithmetic, it should stay the same, but there is rounding
+// through two int() calls, which can perturb it a little bit. Anything beyond
+// this is likely a logic error.
+static constexpr int MAX_JUMP_PHASE_DELTA = 4;
+
 // Global definitions
 std::array<AxisState, SUPPORTED_AXIS_COUNT> phase_stepping::axis_states = { X_AXIS, Y_AXIS };
 static bool initialized = false;
@@ -419,6 +426,18 @@ void phase_stepping::jump_to_position(AxisEnum axis, float pos, bool set_origin)
     }
 
     axis_state.last_position = pos;
+    if (set_origin && was_active) {
+        // The intention here is to stay at the same physical position.
+        // Compute the "new" values the refresh will get and check this is
+        // true, allowing for a little bit of rounding error.
+        float check_phys = resolve_axis_inversion(axis_state.inverted, axis_state.last_position)
+            + axis_state.offset;
+        int check_phase = pos_to_phase(axis, check_phys);
+        int delta = phase_difference(axis_state.last_phase, check_phase);
+        if (std::abs(delta) > MAX_JUMP_PHASE_DELTA) {
+            bsod("phase-jump axis=%d delta=%d", static_cast<int>(axis), delta);
+        }
+    }
     axis_state.active = was_active;
 }
 
