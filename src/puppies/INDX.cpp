@@ -355,11 +355,6 @@ void Indx::invalidate_nozzle_data() {
     general_write.dirty = true;
 }
 
-uint16_t Indx::get_nozzle_decay_x1000() {
-    Lock guard(*mutex);
-    return register_general_status.value.nozzle_decay_x1000;
-}
-
 void Indx::set_fan(uint8_t fan, uint16_t target) {
     assert(fan < NUM_FANS);
     // FIXME:

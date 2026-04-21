@@ -581,9 +581,8 @@ bool PrusaToolChanger::verify_nozzle_state(PhysicalToolIndex prev_tool, bool exp
         NOZZLE_VERIFY_TIMEOUT_MS);
 
     if (data_ready) {
-        log_info(PrusaToolChanger, "Nozzle verify after %s tool #%u: ok (decay=%u/1000)",
-            expect_present ? "pickup" : "park", prev_tool.to_raw(),
-            buddy::puppies::indx.get_nozzle_decay_x1000());
+        log_info(PrusaToolChanger, "Nozzle verify after %s tool #%u: ok",
+            expect_present ? "pickup" : "park", prev_tool.to_raw());
         return true;
     }
 

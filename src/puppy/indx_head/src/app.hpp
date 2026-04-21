@@ -13,8 +13,6 @@ void set_nozzle_present(indx_head::NozzlePresence state);
 indx_head::NozzlePresence get_nozzle_present();
 void invalidate_nozzle_presence(uint16_t ack_value); ///< Reset debouncer and set nozzle state to unknown, store ack for buddy to read
 uint16_t get_nozzle_invalidation_ack();
-uint16_t get_nozzle_decay_x1000(); ///< Last ringdown decay × 1000
-void set_nozzle_decay(float decay); ///< Store last ringdown decay for modbus reporting
 void set_nozzle_target_temp(uint16_t temp);
 void set_led_config(const indx_head::leds::LedConfig cfg);
 

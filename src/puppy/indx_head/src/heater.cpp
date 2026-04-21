@@ -332,7 +332,6 @@ void InductionHeater::ringdown_analysis(void) {
     // energy sink and LC circuit voltage could rise to dangerous levels, which
     // would burn TVS or MOSFET.
     analysis.nozzle_detected = decay >= minimal_nozzle_decay;
-    app::set_nozzle_decay(decay);
 
     uint16_t interval = 0;
     for (int i = skip_count; i < skip_count + avg_peaks; i++) {

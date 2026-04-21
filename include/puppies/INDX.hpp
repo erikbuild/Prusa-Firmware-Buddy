@@ -107,7 +107,6 @@ public:
      */
     [[nodiscard]] std::optional<bool> get_nozzle_present();
     void invalidate_nozzle_data(); ///< Invalidate after pickup/park
-    [[nodiscard]] uint16_t get_nozzle_decay_x1000(); ///< Last ringdown decay × 1000 from head
 
     // Diagnostics counters (for testing)
     [[nodiscard]] uint16_t get_diag_uart_errors();
