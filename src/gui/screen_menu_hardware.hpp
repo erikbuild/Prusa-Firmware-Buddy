@@ -22,9 +22,6 @@
 #include <common/extended_printer_type.hpp>
 #include "printers.h"
 
-#if HAS_TOOLCHANGER()
-    #include "screen_menu_tools.hpp"
-#endif
 #if HAS_MODULAR_BED()
     #include "screen_menu_modular_bed.hpp"
 #endif

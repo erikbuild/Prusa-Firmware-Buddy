@@ -25,9 +25,6 @@
 #if HAS_LOADCELL()
     #include <MItem_loadcell.hpp>
 #endif
-#if HAS_TOOLCHANGER()
-    #include <screen_menu_tools.hpp>
-#endif
 #if HAS_REMOTE_BED()
     #include "screen_menu_remote_bed.hpp"
 #endif
@@ -40,6 +37,20 @@
 #endif
 #if PRINTER_IS_PRUSA_MINI()
     #include <MItem_MINI.hpp>
+#endif
+
+#if HAS_DWARF() || HAS_INDX()
+
+class MI_INFO_HEAD_PCB_TEMPERATURE : public MenuItemAutoUpdatingLabel<float> {
+public:
+    MI_INFO_HEAD_PCB_TEMPERATURE();
+};
+
+class MI_INFO_HEAD_MCU_TEMPERATURE : public MenuItemAutoUpdatingLabel<float> {
+public:
+    MI_INFO_HEAD_MCU_TEMPERATURE();
+};
+
 #endif
 
 using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
@@ -72,9 +83,9 @@ using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
     MenuItemVirtualSubmenu<N_("Heatbreak Temperatures"), MI_INFO_HEATBREAK_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
         #endif
     #endif
-    #if HAS_TOOLCHANGER()
-    MI_INFO_DWARF_BOARD_TEMPERATURE,
-    MI_INFO_DWARF_MCU_TEMPERATURE,
+    #if HAS_DWARF() || HAS_INDX()
+    MI_INFO_HEAD_PCB_TEMPERATURE,
+    MI_INFO_HEAD_MCU_TEMPERATURE,
     #endif
     #if HAS_REMOTE_BED()
     MI_INFO_REMOTE_BED_MCU_TEMPERATURE,

@@ -100,7 +100,7 @@ if(HAS_XLCD_TOUCH_DRIVER)
 endif()
 
 if(HAS_TOOLCHANGER)
-  target_sources(firmware PRIVATE screen_menu_filament_changeall.cpp screen_menu_tools.cpp)
+  target_sources(firmware PRIVATE screen_menu_filament_changeall.cpp)
 endif()
 
 if(HAS_MODULAR_BED)

@@ -55,7 +55,6 @@
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
     #include "../../../lib/Marlin/Marlin/src/module/prusa/toolchanger.h"
-    #include "screen_menu_tools.hpp"
     #include <gui/screen/screen_tool_pick_park.hpp>
 #endif
 
