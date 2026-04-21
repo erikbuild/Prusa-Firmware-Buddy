@@ -361,17 +361,26 @@ void phase_stepping::synchronize() {
     planner.synchronize();
 }
 
+bool phase_stepping::motion_pending() {
+    if (!initialized) {
+        return false;
+    }
+    for (auto &state : axis_states) {
+        if (!state.pending_targets.isEmpty() || state.has_current_target) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool phase_stepping::processing() {
     if (!initialized) {
         // processing() can be called early during app_setup(), before init() actually gets called.
         return false;
     }
 
-    // check for pending targets
-    for (auto &state : axis_states) {
-        if (!state.pending_targets.isEmpty() || state.has_current_target) {
-            return true;
-        }
+    if (motion_pending()) {
+        return true;
     }
 
     // ensure the last target has also been flushed

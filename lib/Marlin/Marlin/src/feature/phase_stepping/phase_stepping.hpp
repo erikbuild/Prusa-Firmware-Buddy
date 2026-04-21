@@ -320,6 +320,14 @@ void synchronize();
 bool processing();
 
 /**
+ * Return if a motion target is queued or being consumed.
+ *
+ * Narrower than processing(): does not count in-flight SPI/burst DMA traffic
+ * that can occur without any commanded motion (e.g. holding-current rescale).
+ */
+bool motion_pending();
+
+/**
  * Check phase stepping internal state
  * NOTE: To be called while idle!
  */

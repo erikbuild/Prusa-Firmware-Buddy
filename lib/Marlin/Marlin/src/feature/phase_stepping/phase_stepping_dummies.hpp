@@ -48,6 +48,10 @@ static constexpr inline bool processing() {
     return false;
 }
 
+static constexpr inline bool motion_pending() {
+    return false;
+}
+
 static constexpr inline bool is_enabled(AxisEnum) {
     return false;
 }

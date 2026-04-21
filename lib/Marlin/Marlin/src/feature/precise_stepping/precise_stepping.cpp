@@ -1158,7 +1158,7 @@ bool PreciseStepping::process_queue_of_blocks() {
             // = true.
         } else if (PreciseStepping::total_print_time == 0. && busy) {
             // motion reset has completed and there is no pending block to process, we're now free
-            assert(!has_blocks_queued() && !phase_stepping::processing());
+            assert(!has_blocks_queued() && !phase_stepping::motion_pending());
             busy = false;
         }
         return processed;
