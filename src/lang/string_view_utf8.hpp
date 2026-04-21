@@ -150,6 +150,10 @@ public:
         return MakeCPUFLASH(reinterpret_cast<const uint8_t *>(utf8raw));
     }
 
+    static inline string_view_utf8 MakeCPUFLASH(std::string_view str) {
+        return MakeRAM(str);
+    }
+
     /// Construct string_view_utf8 to provide data from RAM
     /// basically the same as from CPU FLASH, only the string_view_utf8's type differs of course
     static string_view_utf8 MakeRAM(const uint8_t *utf8raw) {

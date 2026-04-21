@@ -11,6 +11,7 @@
 
 #include <option/has_chamber_api.h>
 #include <option/has_filament_heatbreak_param.h>
+#include <option/has_filament_base_preset_param.h>
 
 namespace screen_filament_detail {
 
@@ -36,6 +37,22 @@ protected:
     FilamentTypeParameters::Name value_;
     FilamentType filament_type_;
 };
+
+#if HAS_FILAMENT_BASE_PRESET_PARAM()
+class MI_FILAMENT_BASE_PRESET final : public MenuItemSelectMenu {
+public:
+    using T = FilamentTypeParameters::BasePreset;
+    static constexpr auto parameter_ptr = &FilamentTypeParameters::base_preset;
+
+    MI_FILAMENT_BASE_PRESET();
+
+    T value() const;
+    void set_value(T set);
+
+    int item_count() const final;
+    string_view_utf8 build_item_text(int index, ItemTextParams &params) const final;
+};
+#endif
 
 class MI_FILAMENT_NOZZLE_TEMPERATURE final : public WiSpin {
 public:
@@ -136,6 +153,9 @@ using ScreenFilamentDetail_ = ScreenMenu<EFooter::Off,
     MI_RETURN,
     MI_FILAMENT_NAME,
     MI_FILAMENT_VISIBLE,
+#if HAS_FILAMENT_BASE_PRESET_PARAM()
+    MI_FILAMENT_BASE_PRESET,
+#endif
     MI_FILAMENT_NOZZLE_TEMPERATURE,
     MI_FILAMENT_NOZZLE_PREHEAT_TEMPERATURE,
     MI_FILAMENT_BED_TEMPERATURE,
@@ -154,6 +174,8 @@ using ScreenFilamentDetail_ = ScreenMenu<EFooter::Off,
 #endif
     MI_CONFIRM //
     >;
+
+static_assert(aggregate_arity<FilamentTypeParameters>() == 6 + HAS_FILAMENT_HEATBREAK_PARAM() * 1 + HAS_CHAMBER_API() * 4 + HAS_FILAMENT_BASE_PRESET_PARAM() * 1, "Revise ScreenFilamentDetail");
 
 /// Management of a specified filament type
 class ScreenFilamentDetail : public ScreenFilamentDetail_ {

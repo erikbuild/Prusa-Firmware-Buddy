@@ -62,6 +62,35 @@ void MI_FILAMENT_NAME::click(IWindowMenu &) {
     update_text();
 }
 
+#if HAS_FILAMENT_BASE_PRESET_PARAM()
+
+MI_FILAMENT_BASE_PRESET::MI_FILAMENT_BASE_PRESET()
+    : MenuItemSelectMenu(_("Base Preset")) {
+}
+
+MI_FILAMENT_BASE_PRESET::T MI_FILAMENT_BASE_PRESET::value() const {
+    const auto i = current_item();
+    return i == 0 ? T(std::nullopt) : static_cast<PresetFilamentType>(i - 1);
+}
+
+void MI_FILAMENT_BASE_PRESET::set_value(T set) {
+    set_current_item(set.has_value() ? static_cast<int>(set.value()) + 1 : 0);
+}
+
+int MI_FILAMENT_BASE_PRESET::item_count() const {
+    return static_cast<int>(PresetFilamentType::_count) + 1; // + "None"
+}
+
+string_view_utf8 MI_FILAMENT_BASE_PRESET::build_item_text(int index, ItemTextParams &) const {
+    if (index == 0) {
+        return _("None");
+    } else {
+        return string_view_utf8::MakeCPUFLASH(preset_filament_parameters[index - 1].name);
+    }
+}
+
+#endif
+
 // * MI_FILAMENT_NOZZLE_TEMPERATURE
 MI_FILAMENT_NOZZLE_TEMPERATURE::MI_FILAMENT_NOZZLE_TEMPERATURE()
     : WiSpin(0, numeric_input_config::filament_nozzle_temperature, HAS_MINI_DISPLAY() ? _("Nozzle Temp") : _("Nozzle Temperature")) {}
@@ -171,6 +200,13 @@ void ScreenFilamentDetail::setup(FilamentType filament_type, const FilamentTypeP
 #if HAS_CHAMBER_API()
         if constexpr (requires { T::is_chamber_item; }) {
             item.set_is_hidden(hide_chamber_items);
+        }
+#endif
+
+#if HAS_FILAMENT_BASE_PRESET_PARAM()
+        if constexpr (std::is_same_v<T, MI_FILAMENT_BASE_PRESET>) {
+            // Presets have the base_preset set as identity. No point in showing it
+            item.set_is_hidden(std::holds_alternative<PresetFilamentType>(filament_type));
         }
 #endif
 
