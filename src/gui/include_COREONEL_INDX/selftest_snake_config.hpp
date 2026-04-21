@@ -9,24 +9,24 @@ namespace SelftestSnake {
 
 // Order matters, snake and will be run in the same order, as well as menu items (with indices) will be
 enum class Action {
-    Fans,
     DoorSensor,
-    YCheck,
     XCheck,
+    YCheck,
 #if HAS_PRECISE_HOMING_COREXY()
     PreciseHoming,
 #endif
+    DockCalibration,
+    NozzleCleanerCalibration,
+    FilamentSensorCalibration,
     ZAlign, // also known as z_calib
     Loadcell, // Check loadcell before Z test, because it is used there
     ZCheck,
+    Fans,
     Heaters,
-    FilamentSensorCalibration,
-    DockCalibration,
-    NozzleCleanerCalibration,
     PhaseSteppingCalibration,
     _count,
     _last = _count - 1,
-    _first = Fans,
+    _first = DoorSensor,
 };
 
 template <Action action>
@@ -82,20 +82,20 @@ struct MenuItemText {
 
 // could have been done with an array of texts directly, but there would be an order dependancy
 inline constexpr MenuItemText blank_item_texts[] {
-    { Action::Fans, N_("%d Fan Test") },
-        { Action::DoorSensor, N_("%d Door Sensor") },
-        { Action::ZAlign, N_("%d Z Alignment Calibration") },
-        { Action::YCheck, N_("%d Y Axis Test") },
+    { Action::DoorSensor, N_("%d Door Sensor") },
         { Action::XCheck, N_("%d X Axis Test") },
+        { Action::YCheck, N_("%d Y Axis Test") },
 #if HAS_PRECISE_HOMING_COREXY()
         { Action::PreciseHoming, N_("%d Homing Calibration") },
 #endif
-        { Action::Loadcell, N_("%d Loadcell Test") },
-        { Action::ZCheck, N_("%d Z Axis Test") },
-        { Action::Heaters, N_("%d Heater Test") },
-        { Action::FilamentSensorCalibration, N_("%d Filament Sensor Calibration") },
         { Action::DockCalibration, N_("%d Dock Calibration") },
         { Action::NozzleCleanerCalibration, N_("%d Nozzle Cleaner Calibration") },
+        { Action::FilamentSensorCalibration, N_("%d Filament Sensor Calibration") },
+        { Action::ZAlign, N_("%d Z Alignment Calibration") },
+        { Action::Loadcell, N_("%d Loadcell Test") },
+        { Action::ZCheck, N_("%d Z Axis Test") },
+        { Action::Fans, N_("%d Fan Test") },
+        { Action::Heaters, N_("%d Heater Test") },
         { Action::PhaseSteppingCalibration, N_("%d Phase Stepping Calibration") },
 };
 
