@@ -3,6 +3,9 @@
 #include <nozzle_cleaner.hpp>
 #include <logging/log.hpp>
 
+#include <algorithm>
+#include <utility>
+
 #include <option/has_auto_retract.h>
 #if HAS_AUTO_RETRACT()
     #include <feature/auto_retract/auto_retract.hpp>
@@ -47,16 +50,34 @@ void PrusaGcodeSuite::G12() {
     }
 #endif
     {
-        uint16_t s_param = std::to_underlying(nozzle_cleaner::Sequence::clean);
+        static constexpr std::pair<uint16_t, nozzle_cleaner::Sequence> s_param_map[] = {
+            { 0, nozzle_cleaner::Sequence::clean },
+#if HAS_INDX()
+            { 1, nozzle_cleaner::Sequence::quick_clean },
+            { 2, nozzle_cleaner::Sequence::deep_clean },
+#endif
+            // Reserved for more cleaning sequences
+            { 10, nozzle_cleaner::Sequence::purge_clean },
+#if HAS_INDX()
+            // Reserved for more purge sequences
+            { 20, nozzle_cleaner::Sequence::eject_blob },
+            // Reserved for other sequences
+            { 90, nozzle_cleaner::Sequence::enter_cleaner },
+            { 91, nozzle_cleaner::Sequence::exit_cleaner },
+#endif
+        };
+        static_assert(std::size(s_param_map) == static_cast<size_t>(nozzle_cleaner::Sequence::_cnt));
+
+        uint16_t s_param = 0;
         (void)parser.store_option_if_present('S', s_param);
 
-        const auto seq = static_cast<nozzle_cleaner::Sequence>(s_param);
-        if (!nozzle_cleaner::is_valid_sequence(seq)) {
+        const auto it = std::ranges::find(s_param_map, s_param, &std::pair<uint16_t, nozzle_cleaner::Sequence>::first);
+        if (it == std::end(s_param_map)) {
             log_warning(PRUSA_GCODE, "G12 S%u: unknown sequence", s_param);
             return;
         }
 
-        (void)nozzle_cleaner::load_and_execute(seq);
+        (void)nozzle_cleaner::load_and_execute(it->second);
     }
 }
 

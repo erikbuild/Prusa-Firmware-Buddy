@@ -10,26 +10,21 @@
 namespace nozzle_cleaner {
 
 enum class Sequence : uint16_t {
-    clean = 0,
+    clean,
 #if HAS_INDX()
-    quick_clean = 1,
-    deep_clean = 2,
+    quick_clean,
+    deep_clean,
 #endif
-    // Reserved for more cleaning sequences
-    purge_clean = 20,
-// Reserved for more purge sequences
+    purge_clean,
 #if HAS_INDX()
-    eject_blob = 30,
-    // Reserved for other sequences
-
-    enter_cleaner = 90,
-    exit_cleaner = 91,
-// Feel free to add anything above 100, totaly free range
+    eject_blob,
+    enter_cleaner,
+    exit_cleaner,
 #endif
+    _cnt,
 };
 
 std::optional<Sequence> parse_sequence(std::string_view name);
-bool is_valid_sequence(Sequence seq);
 const GCodeFile &get_sequence(Sequence seq);
 void load_sequence(Sequence seq);
 
