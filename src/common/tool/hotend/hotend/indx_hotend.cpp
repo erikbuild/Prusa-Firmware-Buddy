@@ -27,8 +27,11 @@ void IndxHotend::manage() {
         nozzle_temp_ = 15; // INDX_TODO: Fix mintemp so that here can be temperature_invalid
         nozzle_heater_pwm_ = 0;
     } else {
-        nozzle_temp_ = buddy::puppies::indx.get_hotend_temp();
+        nozzle_temp_ = buddy::puppies::indx.get_hotend_temp_compensated();
     }
+
+    // TODO hotend temp compensation logic
+
     // !!! MUST be called after temps are set properly
     // BaseHotend::manage();
     manage_temp_residency();

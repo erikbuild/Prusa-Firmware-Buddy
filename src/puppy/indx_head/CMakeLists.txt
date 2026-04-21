@@ -33,6 +33,7 @@ target_sources(
           src/hal_tim.cpp
           src/hal_watchdog.cpp
           src/heater.cpp
+          src/hotend_temp_compensation.cpp
           src/main.cpp
           src/modbus.cpp
           src/rtt.cpp

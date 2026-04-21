@@ -21,7 +21,8 @@ namespace indx_head::modbus {
 struct Status {
     static constexpr uint16_t address = 0x8060;
     errors::FaultStatusMask fault_status = indx_head::errors::FaultStatusMask::no_fault;
-    uint16_t hotend_measured_temperature = 0;
+    uint16_t hotend_measured_temperature_uncompensated_c100 = 25 * 100; // In 1/100 °C, init to temperature that won't immediately trigger mintemp
+    uint16_t hotend_measured_temperature_compensated_c100 = 25 * 100; // In 1/100 °C, init to temperature that won't immediately trigger mintemp
     int16_t board_temperature = 0; // [int16_t degree C]
     int16_t mcu_temperature = 0; // [int16_t degree C]
     uint16_t print_fan_rpm = 0;
@@ -56,6 +57,7 @@ struct Config {
         uint8_t padding = 0;
     } print_fan_pwm;
     indx_head::leds::LedConfig leds;
+    int16_t hotend_temperature_compensation_c100 = 0; // In 1/100 °C
     uint16_t invalidate_nozzle_presence = 0;
     uint16_t loadcell_enabled = 0;
     uint16_t accelerometer_enabled = 0;

@@ -7,6 +7,7 @@
 
 #include "critical_section.hpp"
 #include "watchdog.hpp"
+#include "hotend_temp_compensation.hpp"
 
 #include <freertos/timing.hpp>
 
@@ -14,7 +15,11 @@
 #include <algorithm>
 
 namespace {
-std::atomic<int16_t> nozzle_temp = 25 * 100; // default 25*C stored in centiDeg - modbus reads before the first valid TPiS reading don't report 0°C,
+
+// default 25*C stored in centiDeg - modbus reads before the first valid TPiS reading don't report 0°C,
+std::atomic<int16_t> nozzle_temp_uncompensated_c100 = 25 * 100;
+std::atomic<int16_t> nozzle_temp_compensated_c100 = 25 * 100;
+
 constexpr float max_nozzle_temp = 330.f;
 constexpr float min_nozzle_temp = 5.f;
 constexpr uint32_t invalid_nozzle_temp_timeout_ms = 1000 * 2;
@@ -61,6 +66,8 @@ void run() {
 
         // Induction heater control loop
         if ((now - last_induction_control) >= control_delay_us) {
+            hotend_temp_compensation::step();
+
             last_induction_control = now;
             hal::FloatReading nozzle_temp_reading = hal::i2c::read_tpis_object_temp();
 
@@ -75,10 +82,13 @@ void run() {
                 hal::panic(indx_head::errors::FaultStatusMask::tpis_invalid_timeout);
             }
 
-            int16_t nzl_temp = static_cast<int16_t>(nozzle_temp_reading.value * 100.f);
-            nozzle_temp.store(nzl_temp);
+            const int16_t nozzle_temp_uncompensated_c100 = static_cast<int16_t>(nozzle_temp_reading.value * 100.f);
+            const int16_t nozzle_temp_compensated_c100 = nozzle_temp_uncompensated_c100 + hotend_temp_compensation::get_current_compensation_c100();
 
-            inductionHeater.heater_control(target_temp.load() * 100 /*centiDeg*/, nzl_temp);
+            ::nozzle_temp_uncompensated_c100.store(nozzle_temp_uncompensated_c100);
+            ::nozzle_temp_compensated_c100.store(nozzle_temp_compensated_c100);
+
+            inductionHeater.heater_control(target_temp.load() * 100 /*centiDeg*/, nozzle_temp_compensated_c100);
         }
 
         // Fans and leds control loop
@@ -92,7 +102,7 @@ void run() {
             {
                 // Auto mode - thermal loop controls fan
                 const bool is_heating = target_temp.load() > 0;
-                const bool nozzle_temp_threshold_reached = nozzle_temp.load() > 50 * 100; /*stored in centiDeg*/
+                const bool nozzle_temp_threshold_reached = get_nozzle_temp_compensated_c100() > 50 * 100; /*stored in centiDeg*/
                 const uint8_t pwm = (is_heating || nozzle_temp_threshold_reached || selftest_mode.load()) ? 255 : 0;
                 hal::tim::set_boardfan_pwm(pwm);
                 if (boardfan_pwm == 0) {
@@ -115,8 +125,12 @@ void run() {
     }
 }
 
-int16_t get_nozzle_temp() {
-    return nozzle_temp.load();
+int16_t get_nozzle_temp_uncompensated_c100() {
+    return nozzle_temp_uncompensated_c100.load();
+}
+
+int16_t get_nozzle_temp_compensated_c100() {
+    return nozzle_temp_compensated_c100.load();
 }
 
 void set_nozzle_present(indx_head::NozzlePresence state) {

@@ -6,6 +6,7 @@
 #include "watchdog.hpp"
 #include "spi_task.hpp"
 #include "app.hpp"
+#include "hotend_temp_compensation.hpp"
 
 #include <indx_head/modbus.hpp>
 #include <modbus/modbus.hpp>
@@ -39,7 +40,9 @@ namespace {
 
         state.status_regs.fault_status = hal::get_fault_status();
 
-        state.status_regs.hotend_measured_temperature = static_cast<uint16_t>(app::get_nozzle_temp());
+        state.status_regs.hotend_measured_temperature_uncompensated_c100 = static_cast<uint16_t>(app::get_nozzle_temp_uncompensated_c100());
+        state.status_regs.hotend_measured_temperature_compensated_c100 = static_cast<uint16_t>(app::get_nozzle_temp_compensated_c100());
+
         state.status_regs.board_temperature = hal::adc::get_board_temp();
         state.status_regs.mcu_temperature = hal::adc::get_mcu_temp();
 
@@ -84,6 +87,10 @@ namespace {
         // Update heater target temperature
         if (new_status.nozzle_target_temperature != state.config_regs.nozzle_target_temperature) {
             app::set_nozzle_target_temp(new_status.nozzle_target_temperature);
+        }
+
+        if (new_status.hotend_temperature_compensation_c100 != state.config_regs.hotend_temperature_compensation_c100) {
+            hotend_temp_compensation::set_target_compensation_c100(new_status.hotend_temperature_compensation_c100);
         }
 
         // Update fan PWMs

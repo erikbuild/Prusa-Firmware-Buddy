@@ -97,7 +97,9 @@ public:
     bool set_accelerometer(PuppyModbus &, bool active);
 
     CommunicationStatus set_hotend_target_temp(float target);
-    float get_hotend_temp();
+    CommunicationStatus set_hotend_temp_compensation(float offset);
+    [[nodiscard]] float get_hotend_temp_compensated() const;
+    [[nodiscard]] float get_hotend_temp_uncompensated() const;
 
     [[nodiscard]] int16_t get_mcu_temperature(); ///< Get MCU temperature [°C]
     [[nodiscard]] int16_t get_board_temperature(); ///< Get board temperature [°C]

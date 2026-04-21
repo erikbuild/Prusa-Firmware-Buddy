@@ -38,10 +38,6 @@ Indx::Indx(uint8_t modbus_address)
     , time_sync(1) // Just magic number for metric (unnecessary with single head)
     , loadcell_samplerate {} {
 
-    register_general_status.value.fault_status = indx_head::errors::FaultStatusMask::no_fault;
-    register_general_status.value.hotend_measured_temperature = (HEATER_0_MINTEMP + 1) * 100; // Hotend temp is sent as centiDeg. Init to temperature that won't immediately trigger mintemp
-    general_write.value.nozzle_target_temperature = 0;
-
     if (config_store().tool_leds_enabled.get()) {
         set_leds_color(COLOR_ORANGE, indx_head::leds::Mode::solid);
     } else {
@@ -239,20 +235,32 @@ CommunicationStatus Indx::write_general(PuppyModbus &bus) {
     return status;
 }
 
-float Indx::get_hotend_temp() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
+float Indx::get_hotend_temp_compensated() const {
+    Lock guard(*mutex);
 
-    // Sent as int16 in uint16 modbus register - sent in centiDeg (deg * 100) for percision on 2 decimal places
-    return static_cast<float>(static_cast<int16_t>(register_general_status.value.hotend_measured_temperature)) / 100.f;
+    // Sent as int16 in uint16 modbus register - sent in centiDeg (deg * 100) for precision on 2 decimal places
+    return static_cast<float>(static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_compensated_c100)) / 100.f;
+}
+
+float Indx::get_hotend_temp_uncompensated() const {
+    Lock guard(*mutex);
+
+    // Sent as int16 in uint16 modbus register - sent in centiDeg (deg * 100) for precision on 2 decimal places
+    return static_cast<float>(static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_uncompensated_c100)) / 100.f;
 }
 
 CommunicationStatus Indx::set_hotend_target_temp(float target) {
     Lock guard(*mutex);
 
     general_write.value.nozzle_target_temperature = (uint16_t)target;
+    general_write.dirty = true;
+    return CommunicationStatus::OK;
+}
+
+CommunicationStatus Indx::set_hotend_temp_compensation(float offset) {
+    Lock guard(*mutex);
+
+    general_write.value.hotend_temperature_compensation_c100 = static_cast<int16_t>(offset * 100.0f);
     general_write.dirty = true;
     return CommunicationStatus::OK;
 }
