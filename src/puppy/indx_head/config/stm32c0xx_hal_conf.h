@@ -39,14 +39,14 @@ extern "C" {
     // #define HAL_CRC_MODULE_ENABLED
     // #define HAL_CRYP_MODULE_ENABLED
     #define HAL_I2C_MODULE_ENABLED
-    #define HAL_I2S_MODULE_ENABLED
+    // #define HAL_I2S_MODULE_ENABLED
     // #define HAL_IWDG_MODULE_ENABLED
-    #define HAL_IRDA_MODULE_ENABLED
-    #define HAL_PCD_MODULE_ENABLED
-    #define HAL_RNG_MODULE_ENABLED
+    // #define HAL_IRDA_MODULE_ENABLED
+    // #define HAL_PCD_MODULE_ENABLED
+    // #define HAL_RNG_MODULE_ENABLED
     #define HAL_RTC_MODULE_ENABLED
-    #define HAL_SMARTCARD_MODULE_ENABLED
-    #define HAL_SMBUS_MODULE_ENABLED
+    // #define HAL_SMARTCARD_MODULE_ENABLED
+    // #define HAL_SMBUS_MODULE_ENABLED
     // #define HAL_SPI_MODULE_ENABLED
     #define HAL_TIM_MODULE_ENABLED
     #define HAL_UART_MODULE_ENABLED
@@ -57,9 +57,9 @@ extern "C" {
     #define HAL_DMA_MODULE_ENABLED
     #define HAL_RCC_MODULE_ENABLED
     #define HAL_FLASH_MODULE_ENABLED
-    #define HAL_PWR_MODULE_ENABLED
+    // #define HAL_PWR_MODULE_ENABLED
     #define HAL_CORTEX_MODULE_ENABLED
-    #define HAL_FDCAN_MODULE_ENABLED
+    // #define HAL_FDCAN_MODULE_ENABLED
     /* ########################## Register Callbacks selection ############################## */
     /**
      * @brief Set below the peripheral configuration  to "1U" to add the support
