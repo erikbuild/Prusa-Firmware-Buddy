@@ -11,9 +11,12 @@
 
 namespace nozzle_cleaner {
 
+constexpr ConstexprString directory { "nozzle_cleaner" };
+
 #if HAS_INDX()
 static const GCodeFile clean_gcode = {
     .filename = "clean_sequence",
+    .directory = directory,
     .default_gcode = "G750 Y98.5 F21000\n"
                      "G750 X-9 F21000\n"
                      "G750 X0.65 Y118.5 F18000\n"
@@ -28,6 +31,7 @@ static const GCodeFile clean_gcode = {
 
 static const GCodeFile quick_clean_gcode = {
     .filename = "quick_clean_sequence",
+    .directory = directory,
     .default_gcode = "G1 F21000\n"
                      "G750 Y98.5 X0.65\n"
                      "G750 Y118.5 X-0.35\n"
@@ -36,6 +40,7 @@ static const GCodeFile quick_clean_gcode = {
 
 static const GCodeFile deep_clean_gcode = {
     .filename = "deep_clean_sequence",
+    .directory = directory,
     .default_gcode = "G750 Y98.5 F21000\n"
                      "G750 Y118.5 F21000\n"
                      "G750 Y98.5 F21000\n"
@@ -66,6 +71,7 @@ static const GCodeFile deep_clean_gcode = {
 
 static const GCodeFile purge_clean_gcode = {
     .filename = "purge_clean_sequence",
+    .directory = directory,
     .default_gcode = "G750 Y87 F21000\n" // Eject poop and move back to purge position
                      "G750 Y91 F21000\n"
                      "G750 Y84 F21000\n"
@@ -89,6 +95,7 @@ static const GCodeFile purge_clean_gcode = {
 
 static const GCodeFile eject_blob_gcode = {
     .filename = "eject_blob_sequence",
+    .directory = directory,
     .default_gcode = "M204 T5000\n"
                      "G750 X-9 F21000\n" // Entry point (first in X) (to avoid hitting the nozzle cleaner with the nozzle)
                      "G750 Y98.5 F21000\n" // Entry point
@@ -104,12 +111,14 @@ static const GCodeFile eject_blob_gcode = {
 
 static const GCodeFile enter_cleaner_gcode = {
     .filename = "enter_cleaner_sequence",
+    .directory = directory,
     .default_gcode = "G750 Y98.5 F21000\n"
                      "G750 X0.65 F10000",
 };
 
 static const GCodeFile exit_cleaner_gcode = {
     .filename = "exit_cleaner_sequence",
+    .directory = directory,
     .default_gcode = "G750 Y98.5 F21000\n"
                      "G750 X-9 F10000",
 };
@@ -117,6 +126,7 @@ static const GCodeFile exit_cleaner_gcode = {
 #else
 static const GCodeFile clean_gcode = {
     .filename = "nozzle_cleaner_clean",
+    .directory = directory,
     .default_gcode = "M106 S80\n" // fan on
                      "G4 S2\n" // Wait for 2 seconds
                      "G1 X267.4 Y284.75 F3000\n"
@@ -151,6 +161,7 @@ static const GCodeFile clean_gcode = {
 
 static const GCodeFile purge_clean_gcode = {
     .filename = "nozzle_cleaner_purge_clean",
+    .directory = directory,
     .default_gcode = "M106 S200\n" // fan on
                      "G4 S4\n" // Wait for 4 seconds
                      "G1 X267.4 Y284.75 F3000\n"

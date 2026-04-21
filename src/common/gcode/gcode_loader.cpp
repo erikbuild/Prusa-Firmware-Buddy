@@ -101,9 +101,16 @@ void GCodeLoader::load_gcode(const GCodeFile &gcode_file) {
         bsod("GcodeLoader::load_gcode() while not idle");
     }
 
+    const char *delimiter = "";
+    const char *dir_to_use = "";
+    if (gcode_file.directory != nullptr) {
+        delimiter = "/";
+        dir_to_use = gcode_file.directory;
+    }
+
     // Abuse the buffer for building the file path before we load the gcode into it in the callback
     StringBuilder filepath(gcode_buffer);
-    filepath.append_printf("/usb/macros/%s.gcode", gcode_file.filename);
+    filepath.append_printf("/usb/macros/%s%s%s.gcode", dir_to_use, delimiter, gcode_file.filename);
     gcode_fallback = gcode_file.default_gcode;
 
     state = BufferState::buffering;

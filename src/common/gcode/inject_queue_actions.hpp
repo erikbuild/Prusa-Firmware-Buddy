@@ -5,6 +5,7 @@
 
 struct GCodeFile {
     const char *filename { nullptr };
+    ConstexprString directory { nullptr }; // An optional subdirectory under /usb/macros/
     ConstexprString default_gcode { nullptr };
 };
 
