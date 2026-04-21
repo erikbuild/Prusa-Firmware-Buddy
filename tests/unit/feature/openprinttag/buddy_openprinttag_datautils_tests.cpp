@@ -182,6 +182,7 @@ TEST_CASE("buddy::openprinttag::data_utils::FilamentParametersInfo") {
 
         CHECK(info.parameters.name == "TPU");
         CHECK(info.parameters.is_flexible == true);
+        CHECK(info.parameters.base_preset == PresetFilamentType::FLEX);
     }
 
     SECTION("Tags") {

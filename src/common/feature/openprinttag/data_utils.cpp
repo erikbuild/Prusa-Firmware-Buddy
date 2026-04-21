@@ -74,6 +74,12 @@ FilamentParametersInfo::FilamentParametersInfo(const RequestRef &req) {
 
         auto base_type = FilamentType::from_name(abbreviation.abbreviation);
 
+        // Necessary compatibility workaround. OPT uses actual chemistries for abbreviations,
+        // while the Buddy is stuck with the "FLEX" preset name for TPU
+        if (base_type == FilamentType::none && abbreviation.abbreviation == "TPU") {
+            base_type = PresetFilamentType::FLEX;
+        }
+
         // Use preset parameters as a basis to prefill/suggest missing data
         if (base_type != FilamentType::none) {
             parameters_unsafe = base_type.parameters();
