@@ -182,6 +182,13 @@ bool screen_home_data_t::need_check_wifi_credentials = true;
 }
 
 static void FilamentBtn_cb(window_t &) {
+#if HAS_INDX()
+    if (config_store().selftest_result_nozzle_cleaner_calibration.get() != TestResult::passed) {
+        if (MsgBoxWarning(_("Please calibrate nozzle cleaner first before loading/unloading filaments."), { Response::Ok, Response::Ignore }) != Response::Ignore) {
+            return;
+        }
+    }
+#endif
     Screens::Access()->Open(ScreenFactory::Screen<ScreenMenuFilament>);
 }
 
