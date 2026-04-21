@@ -408,10 +408,7 @@ I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, PhysicalToo
 }
 
 void I_MI_STS_SUBMENU::click(IWindowMenu &) {
-    snake_config.tool = PhysicalToolIndex::Iterator::make_all().skip_all_disabled();
-    while (!snake_config.tool.at_end() && *snake_config.tool != tool) {
-        ++snake_config.tool;
-    }
+    snake_config.tool = PhysicalToolIndex::Iterator::make_at(tool).skip_all_disabled();
     do_snake(action, tool);
 }
 

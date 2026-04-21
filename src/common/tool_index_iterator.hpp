@@ -37,6 +37,13 @@ public:
         return r;
     }
 
+    /// @returns iterator positioned at @p index, iterating over tools from there on
+    static constexpr ToolIndexIterator make_at(Index index) {
+        ToolIndexIterator r;
+        r.pos_ = index.to_raw();
+        return r;
+    }
+
     /// @returns an 'adjusted' iterator that skips disabled tools
     ToolIndexIterator skip_all_disabled() const {
         ToolIndexIterator r = *this;

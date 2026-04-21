@@ -52,6 +52,12 @@ TEST_CASE("ToolIndexIterator::physical") {
     CHECK(test_iterator(Iterator::make_single(Index::from_raw(1)).skip_all_disabled()) == Items { 1 });
     CHECK(test_iterator(Iterator::make_single(Index::from_raw(3)).skip_all_disabled()) == Items { 3 });
 
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(0))) == Items { 0, 1, 2, 3, 4 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(0)).skip_all_disabled()) == Items { 1, 3 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(2)).skip_all_disabled()) == Items { 3 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(3)).skip_all_disabled()) == Items { 3 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(Index::count - 1)).skip_all_disabled()) == Items {});
+
     CHECK_THROWS(Index::from_raw(5));
 }
 
@@ -69,6 +75,11 @@ TEST_CASE("ToolIndexIterator::virtual") {
     CHECK(test_iterator(Iterator::make_single(Index::from_raw(0))) == Items { 0 });
     CHECK(test_iterator(Iterator::make_single(Index::from_raw(0)).skip_all_disabled()) == Items { 0 });
     CHECK(test_iterator(Iterator::make_single(Index::from_raw(1)).skip_all_disabled()) == Items {});
+
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(0))) == Items { 0, 1, 2, 3 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(0)).skip_all_disabled()) == Items { 0, 3 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(1)).skip_all_disabled()) == Items { 3 });
+    CHECK(test_iterator(Iterator::make_at(Index::from_raw(Index::count - 1)).skip_all_disabled()) == Items { 3 });
 
     CHECK_THROWS(Index::from_raw(4));
 }
