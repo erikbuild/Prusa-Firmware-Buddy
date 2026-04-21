@@ -1069,6 +1069,7 @@ struct DeprecatedStore
 #endif
     };
     StoreItem<bool, fsensor_enabled_v2_default, journal::hash("FSensor Enabled V2")> fsensor_enabled_v2;
+    StoreItem<SelftestResult, defaults::selftest_result, journal::hash("Selftest Result INDX")> selftest_result;
 
     /*
         StoreItemArray<float, defaults::nozzle_diameter, ItemFlag::hw_config, journal::hash("Nozzle Diameter Array"), 16, HOTENDS> nozzle_diameters;
