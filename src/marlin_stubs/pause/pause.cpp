@@ -742,7 +742,6 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
     setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
     static constexpr uint32_t purge_nozzle_clean_duration_estimate_ms = 8'000;
     PauseFsmDurationNotifier progress_notifier(*this, purge_nozzle_clean_duration_estimate_ms);
-    mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge)); // park just to be sure
     planner.synchronize(); // Finish any pending moves before starting the purge
 
     ScopeGuard resetLoader = [&] {
@@ -760,6 +759,8 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
 
     float purged = 0.f;
     while (purged < settings.purge_length()) {
+        mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
+        planner.synchronize(); // Wait for the park to finish before continuing
     #if !HAS_INDX() // We do the purgue move in the gcode of the loader on INDX, so we don't want to do it here
         const auto purge_result = do_e_move_notify_progress_hotextrude(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE, StopConditions::All);
         purged += purge_length;
@@ -790,8 +791,6 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
             }
             return; // This exits the loop and method and does not change the state so the whole loop will begin again
         };
-        mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
-        planner.synchronize(); // Wait for the park to finish before continuing
 
     #if HAS_INDX() // INDX_TODO: clean up this :)
         break; // On INDX we do the purge in the gcode of the loader, so we only want to loop on the cleaner execution, but not do multiple purges
