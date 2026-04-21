@@ -12,7 +12,7 @@
 constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFilamentType::_count> preset_filament_parameters_constexpr {
     {
         PresetFilamentType::PLA,
-        {
+        FilamentTypeParameters {
             .name = "PLA",
             .nozzle_temperature = 215,
             .heatbed_temperature = 60,
@@ -28,7 +28,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::PETG,
-        {
+        FilamentTypeParameters {
             .name = "PETG",
             .nozzle_temperature = 230,
             .heatbed_temperature = 85,
@@ -44,7 +44,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::ASA,
-        {
+        FilamentTypeParameters {
             .name = "ASA",
             .nozzle_temperature = 260,
             .heatbed_temperature = 100,
@@ -61,7 +61,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::PC,
-        {
+        FilamentTypeParameters {
             .name = "PC",
             .nozzle_temperature = 275,
             .nozzle_preheat_temperature = HAS_LOADCELL() ? 275 - 25 : 170,
@@ -79,7 +79,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::PVB,
-        {
+        FilamentTypeParameters {
             .name = "PVB",
             .nozzle_temperature = 215,
             .heatbed_temperature = 75,
@@ -92,7 +92,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::ABS,
-        {
+        FilamentTypeParameters {
             .name = "ABS",
             .nozzle_temperature = 255,
             .heatbed_temperature = 100,
@@ -109,7 +109,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::HIPS,
-        {
+        FilamentTypeParameters {
             .name = "HIPS",
             .nozzle_temperature = 220,
             .heatbed_temperature = 100,
@@ -123,7 +123,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::PP,
-        {
+        FilamentTypeParameters {
             .name = "PP",
             .nozzle_temperature = 240,
             .heatbed_temperature = 100,
@@ -137,7 +137,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::FLEX,
-        {
+        FilamentTypeParameters {
             .name = "FLEX",
             .nozzle_temperature = 240,
             .nozzle_preheat_temperature = HAS_LOADCELL() ? 210 : 170,
@@ -153,7 +153,7 @@ constexpr const EnumArray<PresetFilamentType, FilamentTypeParameters, PresetFila
     },
     {
         PresetFilamentType::PA,
-        {
+        FilamentTypeParameters {
             .name = "PA",
             // MINI has slightly lower max nozzle temperature but it is still OK for polyamid
             .nozzle_temperature = PRINTER_IS_PRUSA_MINI() ? 280 : 285,
