@@ -9,13 +9,13 @@
 namespace compact_optional {
 /// Default has_value implementation that uses the comparison operator
 template <typename T, T nullopt_value>
-bool has_value_impl(const T &val) {
+constexpr bool has_value_impl(const T &val) {
     return val != nullopt_value;
 }
 
 /// For floats, NAN != NAN, so we have to use memcmp
 template <typename T, T nullopt_value>
-bool has_value_impl(const T &val)
+constexpr bool has_value_impl(const T &val)
     requires(std::is_floating_point_v<T> && std::isnan(nullopt_value))
 {
     static_assert(sizeof(T) == sizeof(nullopt_value));
@@ -25,7 +25,7 @@ bool has_value_impl(const T &val)
 
 /// Necessary wrapper so that compact_optional::has_value<T, nullopt_value_> wouldn't be ambiguous
 template <typename T, T nullopt_value>
-bool has_value(const T &val) {
+constexpr bool has_value(const T &val) {
     return has_value_impl<T, nullopt_value>(val);
 }
 
