@@ -39,7 +39,7 @@
  * - `E<val>` - Set maximum chamber temperature
  * - `F<val>` - Set requires filtration
  *
- * - `J"<preset>"` - Set base preset
+ * - `J"<preset>"` - Set base preset (empty "" = no base preset)
  *
  * - `N"<name>"` - Set name
  *
@@ -90,8 +90,13 @@ void PrusaGcodeSuite::M865() {
     FilamentTypeParameters::Name base_preset_name;
     if (auto str = p.option<std::string_view>('J', base_preset_name)) {
         const auto base_filament_type = FilamentType::from_name(*str);
-        if (const auto preset = std::get_if<PresetFilamentType>(&base_filament_type)) {
+
+        if (str->empty()) {
+            params.base_preset = std::nullopt;
+
+        } else if (const auto preset = std::get_if<PresetFilamentType>(&base_filament_type)) {
             params.base_preset = *preset;
+
         } else {
             p.report_option_error('J', "Needs to be a preset filament type");
         }
