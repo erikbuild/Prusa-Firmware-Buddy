@@ -100,6 +100,11 @@ void WindowMenuVirtualBase::windowEvent(window_t *sender, GUI_event_t event, voi
         for (int slot = 0; slot < item_buffer_size; slot++) {
             if (auto item = item_at_buffer_slot(slot)) {
                 item->Loop();
+
+                // WindowMenuVirtual does not support item hiding.
+                // The main principle of WindowMenuVirtual is to be able to create an item on a specified index
+                // If a preceding item could affect the indexing, this would not work.
+                assert(!item->IsHidden());
             }
         }
         break;
