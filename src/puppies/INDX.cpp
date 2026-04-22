@@ -126,27 +126,9 @@ void Indx::set_leds_enabled(bool set) {
     general_write.dirty = true;
 }
 
-CommunicationStatus Indx::fifo_refresh(PuppyModbus &bus, uint32_t cycle_ticks_ms) {
-    Lock guard(*mutex);
-    // pull fifo every 200 ms
-    if (last_pull_ms + DWARF_FIFO_PULL_PERIOD > cycle_ticks_ms) {
-        return CommunicationStatus::SKIPPED;
-    }
-
-    bool more;
-    CommunicationStatus status = pull_fifo_nolock(bus, more);
-    if (!more && status == CommunicationStatus::OK) {
-        last_pull_ms = cycle_ticks_ms; // Wait before next pull only if all is read
-    }
-    return status;
-}
-
 CommunicationStatus Indx::pull_fifo(PuppyModbus &bus, bool &more) {
     Lock guard(*mutex);
-    return pull_fifo_nolock(bus, more);
-}
 
-CommunicationStatus Indx::pull_fifo_nolock(PuppyModbus &bus, bool &more) {
     // Read coded FIFO
     std::array<uint16_t, MODBUS_FIFO_LEN> fifo;
     size_t read = 0;

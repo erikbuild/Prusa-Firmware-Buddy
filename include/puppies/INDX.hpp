@@ -35,8 +35,6 @@ public:
 
     static constexpr uint16_t ENCODED_FIFO_ADDRESS { std::to_underlying(SystemFIFO::encoded_stream) };
 
-    static constexpr uint32_t DWARF_READ_PERIOD = 200; ///< Read registers this often [ms]
-    static constexpr uint32_t DWARF_FIFO_PULL_PERIOD = 200; ///< Pull fifo of unselected dwarf this often [ms]
     static constexpr uint_fast8_t NUM_FANS = 2;
     static constexpr uint8_t FIFO_RETRIES = 3;
 
@@ -56,15 +54,6 @@ public:
      *   CommunicationStatus::SKIPPED on successful skip.
      */
     CommunicationStatus refresh(PuppyModbus &);
-
-    /**
-     * @brief Pulls data from dwarf fifo, but is timed for non-selected dwarf.
-     * @param cycle_ticks_ms ticks_ms() valid through current poll cycle [ms]
-     * @param[out] worked true if fifo was pulled, false if not yet
-     * @return CommunicationStatus::OK on success and
-     *   CommunicationStatus::SKIPPED on successful skip.
-     */
-    CommunicationStatus fifo_refresh(PuppyModbus &, uint32_t cycle_ticks_ms);
 
     /**
      * @brief Pulls data from dwarf fifo.
@@ -197,7 +186,6 @@ private:
     } loadcell_samplerate;
 
     CommunicationStatus write_general(PuppyModbus &);
-    CommunicationStatus pull_fifo_nolock(PuppyModbus &, bool &more);
     bool dispatch_log_event();
     CommunicationStatus run_time_sync(PuppyModbus &);
     CommunicationStatus read_general_status(PuppyModbus &);
