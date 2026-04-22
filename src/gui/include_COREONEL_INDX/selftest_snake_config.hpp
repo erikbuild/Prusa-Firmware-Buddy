@@ -4,11 +4,12 @@
 #include <printer_selftest.hpp>
 #include <option/has_precise_homing_corexy.h>
 #include "selftest_types.hpp"
+#include <utils/storage/enum_bitset.hpp>
 
 namespace SelftestSnake {
 
 // Order matters, snake and will be run in the same order, as well as menu items (with indices) will be
-enum class Action {
+enum class Action : uint8_t {
     DoorSensor,
     XCheck,
     YCheck,
@@ -79,4 +80,5 @@ consteval auto get_submenu_label(PhysicalToolIndex tool, Action action) -> const
 
 TestResult get_test_result(Action action, ToolMask tool);
 uint64_t get_test_mask(Action action);
+EnumBitset<Action, Action::_count> get_dependencies(Action action);
 } // namespace SelftestSnake

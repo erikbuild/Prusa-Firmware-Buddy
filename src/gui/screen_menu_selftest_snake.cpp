@@ -8,12 +8,14 @@
 #include <option/has_phase_stepping_selftest.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/has_indx.h>
+#include <string_builder.hpp>
 #include <option/has_toolchanger.h>
 #include <option/has_manual_belt_tuning.h>
 #include <option/has_loadcell.h>
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_gearbox_alignment.h>
 #include <option/has_input_shaper_calibration.h>
+#include <option/has_selftest_dependencies.h>
 #include <printers.h>
 #include <bsod/bsod.h>
 #include <option/has_side_fsensor_remap.h>
@@ -69,12 +71,6 @@ Action get_last_action() {
 Action get_next_action(Action action) {
     assert(get_last_action() != action && "Unhandled edge case");
     return _get_valid_action(static_cast<Action>(std::to_underlying(action) + 1), 1);
-}
-
-// Can't (shouldn't) be called with first action
-Action get_previous_action(Action action) {
-    assert(get_first_action() != action && "Unhandled edge case");
-    return _get_valid_action(static_cast<Action>(std::to_underlying(action) - 1), -1);
 }
 
 bool is_completed(TestResult test_result) {
@@ -164,6 +160,56 @@ const char *get_action_label(Action action) {
     bsod_unreachable();
 }
 
+#if HAS_SELFTEST_DEPENDENCIES()
+
+bool are_dependencies_met(Action action) {
+    const auto dependencies = get_dependencies(action);
+    for (Action dependency = get_first_action(); dependency <= Action::_last; dependency = get_next_action(dependency)) {
+        if (!dependencies.test(dependency)) {
+            continue;
+        }
+        if (!is_completed(get_test_result(dependency, AllTools {}))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool are_all_actions_completed() {
+    for (Action action = get_first_action(); action <= Action::_last; action = get_next_action(action)) {
+        if (!is_completed(get_test_result(action, AllTools {}))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void show_unmet_dependencies_warning(Action action) {
+    constexpr int msg_size = 2 * (sizeof("Complete these calibrations first:") + 4 * sizeof("Filament Sensor Calibration"));
+    char msg[msg_size];
+    StringBuilder sb(msg);
+    sb.append_string_view(_("Complete these calibrations first:"));
+    const auto dependencies = get_dependencies(action);
+    for (Action dependency = get_first_action(); dependency <= Action::_last; dependency = get_next_action(dependency)) {
+        if (!dependencies.test(dependency)) {
+            continue;
+        }
+        if (!is_completed(get_test_result(dependency, AllTools {}))) {
+            sb.append_printf("\n- ");
+            sb.append_string_view(_(get_action_label(dependency)));
+        }
+    }
+    MsgBoxWarning(string_view_utf8::MakeRAM(msg), Responses_Ok);
+}
+
+#else
+
+// Can't (shouldn't) be called with first action
+Action get_previous_action(Action action) {
+    assert(get_first_action() != action && "Unhandled edge case");
+    return _get_valid_action(static_cast<Action>(std::to_underlying(action) - 1), -1);
+}
+
 bool are_previous_completed(Action action) {
     for (Action act = action; act > get_first_action();) {
         act = get_previous_action(act);
@@ -174,6 +220,8 @@ bool are_previous_completed(Action action) {
 
     return true;
 }
+
+#endif
 
 PhysicalToolIndex get_last_enabled_tool() {
     auto result = PhysicalToolIndex::from_raw(0);
@@ -244,11 +292,21 @@ static SnakeConfig snake_config {};
 namespace {
 
 void do_snake(Action action, PhysicalToolIndex tool) {
-    if (!are_previous_completed(action) && !snake_config.in_progress) {
-        if (MsgBoxQuestion(_("Previous Calibrations & Tests are not all done. Continue anyway?"), Responses_YesNo, 1) == Response::No) {
+    if (!snake_config.in_progress) {
+#if HAS_SELFTEST_DEPENDENCIES()
+        if (!are_dependencies_met(action)) {
+            show_unmet_dependencies_warning(action);
             snake_config.reset();
             return;
         }
+#else
+        if (!are_previous_completed(action)) {
+            if (MsgBoxQuestion(_("Previous Calibrations & Tests are not all done. Continue anyway?"), Responses_YesNo, 1) == Response::No) {
+                snake_config.reset();
+                return;
+            }
+        }
+#endif
     }
 
     // Reset invocation state so continue_snake sees aborts only from THIS test, not a previous one.
@@ -283,11 +341,6 @@ void do_snake(Action action, PhysicalToolIndex tool) {
                 uint8_t mask = 0;
                 for (auto t : PhysicalToolIndex::all().skip_all_disabled()) {
                     mask |= (1 << t.to_raw());
-                }
-                if (mask == 0) {
-                    MsgBoxWarning(_("No tools enabled. Calibrate docks first."), Responses_Ok);
-                    snake_config.reset();
-                    return;
                 }
                 marlin_client::gcode_printf("M1981 F%d", mask);
             }
@@ -477,7 +530,11 @@ string_view_utf8 I_MI_STS::get_filled_menu_item_label(Action action) {
 I_MI_STS::I_MI_STS(Action action)
     : IWindowMenuItem(get_filled_menu_item_label(action), nullptr, is_enabled_t::yes, get_mainitem_hidden_state(action), get_expands(action))
     , action(action) {
+#if HAS_SELFTEST_DEPENDENCIES()
+    if (!are_dependencies_met(action)) {
+#else
     if (!are_previous_completed(action)) {
+#endif
         set_color_scheme(&not_yet_ready_scheme);
     }
 }
@@ -596,7 +653,11 @@ void ScreenMenuSTSWizard::windowEvent(window_t *sender, GUI_event_t event, void 
         draw_enabled = true;
     }
 
+#if HAS_SELFTEST_DEPENDENCIES()
+    if (are_all_actions_completed()) {
+#else
     if (is_completed(get_test_result(get_last_action(), AllTools {})) && are_previous_completed(get_last_action())) {
+#endif
         MsgBoxHappyPrinting();
         Screens::Access()->Close();
     }

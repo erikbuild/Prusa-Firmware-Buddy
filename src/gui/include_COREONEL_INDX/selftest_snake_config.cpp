@@ -149,4 +149,52 @@ uint64_t get_test_mask(Action action) {
     return stmNone;
 }
 
+EnumBitset<Action, Action::_count> get_dependencies(Action action) {
+    auto deps = EnumBitset<Action, Action::_count> {};
+
+    switch (action) {
+    case Action::DoorSensor:
+    case Action::XCheck:
+    case Action::YCheck:
+    case Action::ZAlign:
+    case Action::Fans:
+        break;
+    case Action::BeltTuning:
+        deps.set(Action::XCheck);
+        deps.set(Action::YCheck);
+        break;
+#if HAS_PRECISE_HOMING_COREXY()
+    case Action::PreciseHoming:
+        deps.set(Action::BeltTuning);
+        return deps;
+#endif
+    case Action::DockCalibration:
+        deps.set(Action::PreciseHoming);
+        break;
+    case Action::NozzleCleanerCalibration:
+    case Action::Heaters:
+        deps.set(Action::DockCalibration);
+        break;
+    case Action::Loadcell:
+        deps.set(Action::NozzleCleanerCalibration); // if nozzle is hot, it is parked above nozzle cleaner
+        break;
+    case Action::FilamentSensorCalibration:
+        deps.set(Action::NozzleCleanerCalibration); // if filament is loaded, we need to unload (above nozzle cleaner)
+        break;
+    case Action::ZCheck:
+        deps.set(Action::Loadcell);
+        deps.set(Action::ZAlign);
+        break;
+    case Action::PhaseSteppingCalibration:
+    case Action::InputShaper:
+        deps.set(Action::ZCheck);
+        break;
+    case Action::_count:
+        assert(false);
+        break;
+    }
+
+    return deps;
+}
+
 } // namespace SelftestSnake

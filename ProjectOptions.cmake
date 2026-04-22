@@ -345,6 +345,7 @@ set_feature_for_printers_master_board(
   )
 define_enum_option(NAME POWER_PANIC_STORAGE VALUE FLASH ALL_VALUES "FLASH;BKPSRAM")
 set_feature_for_printers(HAS_PRECISE_HOMING "MK4" "MK3.5")
+set_feature_for_printers(HAS_SELFTEST_DEPENDENCIES "COREONE_INDX" "COREONEL_INDX")
 set_feature_for_printers(
   HAS_PRECISE_HOMING_COREXY
   "iX"
