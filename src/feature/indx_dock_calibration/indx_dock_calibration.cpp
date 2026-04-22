@@ -241,7 +241,7 @@ private:
             }
 
             // Home XY (z_raise=0: Z is at the bottom, no need for Z clearance)
-            GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = false });
+            GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = true });
 
             // Record stepper positions after homing
             const ab_steps_t position_after = { { {
