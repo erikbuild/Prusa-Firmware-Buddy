@@ -357,7 +357,7 @@ MI_TOOLHEAD::MI_TOOLHEAD(Toolhead toolhead)
     } else {
         const PhysicalToolIndex ix = std::get<PhysicalToolIndex>(toolhead);
         SetLabel(ix.display_name(label_params));
-        set_is_hidden(!ix.is_enabled());
+        set_is_hidden(!ix.is_configurable());
     }
 }
 

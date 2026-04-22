@@ -3,6 +3,8 @@
 #include <module/motion.h>
 #include <utils/overloaded_visitor.hpp>
 
+#include <option/has_indx.h>
+
 #include <option/has_tool_mapping.h>
 #if HAS_TOOL_MAPPING()
     #include <module/prusa/tool_mapper.hpp>
@@ -77,6 +79,16 @@ bool PhysicalToolIndex::is_enabled() const {
 #else
     static_assert(PhysicalToolIndex::count == 1);
     return true;
+#endif
+}
+
+bool PhysicalToolIndexExtension::is_configurable() const {
+#if HAS_INDX()
+    // On INDX, tools are kept disabled until their docks are calibrated.
+    // The user still needs to configure the tools (nozzle type, offsets, ...)
+    return true;
+#else
+    return static_cast<const PhysicalToolIndex &>(*this).is_enabled();
 #endif
 }
 

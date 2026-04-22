@@ -20,6 +20,10 @@ bool PhysicalToolIndex::is_enabled() const {
     return enabled_physical_tools.contains(self.to_raw());
 }
 
+bool PhysicalToolIndexExtension::is_configurable() const {
+    return static_cast<const PhysicalToolIndex &>(*this).is_enabled();
+}
+
 template <>
 bool VirtualToolIndex::is_enabled() const {
     const auto &self = static_cast<const VirtualToolIndex &>(*this);

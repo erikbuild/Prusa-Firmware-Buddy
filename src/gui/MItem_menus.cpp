@@ -187,7 +187,7 @@ MI_TOOLHEAD_SETTINGS::MI_TOOLHEAD_SETTINGS()
 #endif
         nullptr,
 #if HAS_TOOLCHANGER()
-        prusa_toolchanger.get_num_enabled_tools() > 0 ? is_enabled_t::yes : is_enabled_t::no,
+        std::ranges::distance(PhysicalToolIndex::all().skip_all_unconfigurable()) > 0 ? is_enabled_t::yes : is_enabled_t::no,
 #else
         is_enabled_t::yes,
 #endif
@@ -198,7 +198,7 @@ void MI_TOOLHEAD_SETTINGS::click(IWindowMenu &) {
     ScreenFactory::Creator screen = ScreenFactory::Screen<ScreenToolheadDetail>;
 
 #if HAS_TOOLCHANGER()
-    if (prusa_toolchanger.is_toolchanger_enabled() && prusa_toolchanger.get_num_enabled_tools() > 1) {
+    if (prusa_toolchanger.is_toolchanger_enabled() && std::ranges::distance(PhysicalToolIndex::all().skip_all_unconfigurable()) > 1) {
         screen = ScreenFactory::Screen<ScreenToolheadSettingsList>;
     }
 #endif

@@ -199,6 +199,10 @@ private:
 };
 
 struct PhysicalToolIndexExtension {
+    /// @returns whether the tool should be configurable from the settings UI,
+    /// even if it is not yet enabled.
+    bool is_configurable() const;
+
     /// @returns virtual tool currently assigned to @p this physical tool
     std::variant<VirtualToolIndex, NoTool> currently_selected_virtual_tool() const;
 
