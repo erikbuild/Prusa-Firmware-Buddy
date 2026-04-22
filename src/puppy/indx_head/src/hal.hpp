@@ -8,7 +8,6 @@
 #include <freertos/binary_semaphore.hpp>
 
 #include <array>
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <span>
@@ -96,10 +95,5 @@ namespace peripherals {
     extern ADC_HandleTypeDef hadc1;
     extern freertos::BinarySemaphore adc_semaphore;
 } // namespace peripherals
-
-namespace diag {
-    // Bus-level counters (incremented on every recovery)
-    extern std::atomic<uint16_t> uart_errors;
-} // namespace diag
 
 } // namespace hal

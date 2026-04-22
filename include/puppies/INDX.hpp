@@ -118,9 +118,6 @@ public:
     [[nodiscard]] std::optional<bool> get_nozzle_present();
     void invalidate_nozzle_data(); ///< Invalidate after pickup/park
 
-    // Diagnostics counters (for testing)
-    [[nodiscard]] uint16_t get_diag_uart_errors();
-
     // Buddy-side communication error counters (since boot)
     std::atomic<uint16_t> fifo_error_count = 0;
     std::atomic<uint16_t> refresh_error_count = 0;

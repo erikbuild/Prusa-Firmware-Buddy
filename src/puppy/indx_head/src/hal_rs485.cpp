@@ -86,8 +86,6 @@ extern "C" void USART2_IRQHandler(void) {
     if (LL_USART_IsEnabledIT_RXNE(USART2) && LL_USART_IsActiveFlag_ORE(USART2)) {
         LL_USART_ClearFlag_ORE(USART2);
 
-        // keep track of errors and restart reception
-        ++hal::diag::uart_errors;
         state.data = state.buffer;
         state.size = sizeof(state.buffer);
     }

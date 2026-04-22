@@ -71,9 +71,6 @@ namespace {
 
         state.status_regs.nozzle_present = std::to_underlying(app::get_nozzle_present());
         state.status_regs.nozzle_invalidation_ack = app::get_nozzle_invalidation_ack();
-
-        // Diagnostics: bus-level error counters
-        state.status_regs.diag_uart_errors = hal::diag::uart_errors.load();
     }
 
     template <typename T>

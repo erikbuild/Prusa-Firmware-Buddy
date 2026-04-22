@@ -682,10 +682,6 @@ MI_INFO_MCU_TEMP::MI_INFO_MCU_TEMP()
     ) {}
 
 #if HAS_INDX()
-MI_INFO_INDX_DIAG_UART::MI_INFO_INDX_DIAG_UART()
-    : MenuItemAutoUpdatingLabel(
-        _("INDX UART Err"), "%u",
-        [](auto) { return buddy::puppies::indx.get_diag_uart_errors(); }) {}
 MI_INFO_INDX_PICKUP_FAIL::MI_INFO_INDX_PICKUP_FAIL()
     : MenuItemAutoUpdatingLabel(
         _("Pickup Fails"), "%u",

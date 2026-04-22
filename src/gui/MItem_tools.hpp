@@ -376,10 +376,6 @@ public:
 };
 
 #if HAS_INDX()
-class MI_INFO_INDX_DIAG_UART : public MenuItemAutoUpdatingLabel<uint16_t> {
-public:
-    MI_INFO_INDX_DIAG_UART();
-};
 class MI_INFO_INDX_PICKUP_FAIL : public MenuItemAutoUpdatingLabel<uint16_t> {
 public:
     MI_INFO_INDX_PICKUP_FAIL();

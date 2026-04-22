@@ -15,7 +15,6 @@
     #include "MItem_tools.hpp"
 
 using ScreenMenuIndxDiag__ = ScreenMenu<EFooter::On, MI_RETURN,
-    MI_INFO_INDX_DIAG_UART,
     MI_INFO_INDX_FIFO_ERR, MI_INFO_INDX_REFRESH_ERR,
     MI_INFO_XEXT_REFRESH_ERR>;
 

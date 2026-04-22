@@ -310,10 +310,6 @@ float Indx::get_24V() {
     return register_general_status.value.system_24V_mV / 1000.0f;
 }
 
-uint16_t Indx::get_diag_uart_errors() {
-    return register_general_status.value.diag_uart_errors;
-}
-
 std::optional<bool> Indx::get_nozzle_present() {
     // Called from Marlin - keep lockfree.
     const auto state = cached_nozzle_state.load();
