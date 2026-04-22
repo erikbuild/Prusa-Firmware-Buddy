@@ -57,10 +57,10 @@ void PrusaGcodeSuite::G12() {
             { 2, nozzle_cleaner::Sequence::deep_clean },
 #endif
             // Reserved for more cleaning sequences
-            { 10, nozzle_cleaner::Sequence::purge_clean },
+            { 20, nozzle_cleaner::Sequence::purge_clean },
 #if HAS_INDX()
             // Reserved for more purge sequences
-            { 20, nozzle_cleaner::Sequence::eject_blob },
+            { 30, nozzle_cleaner::Sequence::eject_blob },
             // Reserved for other sequences
             { 90, nozzle_cleaner::Sequence::enter_cleaner },
             { 91, nozzle_cleaner::Sequence::exit_cleaner },
