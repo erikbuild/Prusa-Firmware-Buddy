@@ -24,6 +24,11 @@ public:
         min_delay_ = set;
     }
 
+    /// @returns last time where check(time) returned true, or 0
+    T last_event() const {
+        return last_event_;
+    }
+
     /// Forget any previous events. Next event will not be limited
     void reset() {
         last_event_ = 0;
