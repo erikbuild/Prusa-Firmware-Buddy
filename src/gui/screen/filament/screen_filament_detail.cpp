@@ -70,6 +70,7 @@ MI_FILAMENT_BASE_PRESET::MI_FILAMENT_BASE_PRESET()
 
 MI_FILAMENT_BASE_PRESET::T MI_FILAMENT_BASE_PRESET::value() const {
     const auto i = current_item();
+    assert(i >= 0);
     return i == 0 ? T(std::nullopt) : static_cast<PresetFilamentType>(i - 1);
 }
 
