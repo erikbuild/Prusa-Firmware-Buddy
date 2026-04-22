@@ -19,7 +19,7 @@ struct EnumBitset final : public std::bitset<static_cast<size_t>(cnt)> {
     explicit consteval EnumBitset(std::initializer_list<std::pair<Enum, bool>> items) noexcept {
         // Check that the sizes match
         if (items.size() != static_cast<size_t>(cnt)) {
-            std::terminate();
+            std::abort();
         }
 
         size_t i = 0;
@@ -28,7 +28,7 @@ struct EnumBitset final : public std::bitset<static_cast<size_t>(cnt)> {
 
             // Check that indexes match
             if (static_cast<size_t>(pair.first) != i) {
-                std::terminate();
+                std::abort();
             }
 
             i++;
