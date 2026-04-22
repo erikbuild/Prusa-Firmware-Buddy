@@ -68,15 +68,19 @@ public:
 
 #if HAS_FILAMENT_BASE_PRESET_PARAM()
 // !!! DO NOT CHANGE - this is used in config store
-struct FilamentTypeParameters_EEPROM4 {
+struct __attribute__((packed)) FilamentTypeParameters_EEPROM4 {
 
 public:
-    using BasePreset = CompactOptional<PresetFilamentType, static_cast<PresetFilamentType>(0xff)>;
-    static_assert(PresetFilamentType::_count < BasePreset::nullopt_value);
-    static_assert(sizeof(BasePreset) == 1);
-    static_assert(std::is_same_v<BasePreset, FilamentTypeParameters::BasePreset>);
+    static constexpr uint8_t none_base_preset = 0xff;
+    uint8_t base_preset = none_base_preset;
 
-    BasePreset base_preset = std::nullopt;
+    FilamentTypeParameters::BasePreset decode_base_preset() const {
+        return base_preset == none_base_preset ? FilamentTypeParameters::BasePreset { std::nullopt } : static_cast<PresetFilamentType>(base_preset);
+    }
+
+    static uint8_t encode_base_preset(FilamentTypeParameters::BasePreset preset) {
+        return preset.has_value() ? static_cast<uint8_t>(preset.value()) : none_base_preset;
+    }
 
 public:
     constexpr bool operator==(const FilamentTypeParameters_EEPROM4 &) const = default;

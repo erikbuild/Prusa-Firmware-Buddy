@@ -128,7 +128,7 @@ FilamentTypeParameters FilamentType::parameters() const {
             .nozzle_preheat_temperature = static_cast<int16_t>(e1.nozzle_preheat_temperature),
             .heatbed_temperature = e1.heatbed_temperature,
 #if HAS_FILAMENT_BASE_PRESET_PARAM()
-            .base_preset = e4.base_preset,
+            .base_preset = e4.decode_base_preset(),
 #endif
 #if HAS_FILAMENT_HEATBREAK_PARAM()
             .heatbreak_temperature = e3.heatbreak_temperature,
@@ -224,7 +224,7 @@ void FilamentType::set_parameters(const FilamentTypeParameters &set) const {
 
 #if HAS_FILAMENT_BASE_PRESET_PARAM()
     const FilamentTypeParameters_EEPROM4 e4 {
-        .base_preset = set.base_preset,
+        .base_preset = FilamentTypeParameters_EEPROM4::encode_base_preset(set.base_preset),
     };
     static_assert(aggregate_arity<FilamentTypeParameters_EEPROM4>() == 1, "Revise the initializer");
 #endif
