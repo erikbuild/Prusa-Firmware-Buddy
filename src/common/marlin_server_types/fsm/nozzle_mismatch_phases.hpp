@@ -18,7 +18,7 @@ enum class PhaseNozzleMismatch : PhaseUnderlyingType {
     /// Warning: head hit something on the way to the dock
     dock_not_empty,
 
-    /// Tool expected by EEPROM but not detected by ping analysis
+    /// Tool expected by EEPROM but not detected
     tool_lost,
 
     /// Waiting while homing after tool loss

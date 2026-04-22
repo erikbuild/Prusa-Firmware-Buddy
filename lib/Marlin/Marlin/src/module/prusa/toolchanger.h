@@ -180,7 +180,7 @@ public:
     void persist_last_picked_tool(std::variant<PhysicalToolIndex, NoTool> tool, bool override_always = false);
 
     /**
-     * @brief Check nozzle presence (from ping analysis) against EEPROM last picked tool.
+     * @brief Check nozzle presence against EEPROM last picked tool.
      *
      * - EEPROM says no tool but nozzle detected -> warn user (tool unexpectedly present)
      * - EEPROM says tool picked but no nozzle detected -> auto-correct to no tool
@@ -253,7 +253,7 @@ private:
     void wiggle_and_partial_unlock();
 
     /**
-     * @brief Verify nozzle presence/absence via ping analysis.
+     * @brief Verify nozzle presence/absence.
      * @param prev_tool index of previous tool (for logs)
      * @param expect_present true after pickup (expect nozzle), false after park (expect no nozzle)
      * @return true if nozzle state matches expectation

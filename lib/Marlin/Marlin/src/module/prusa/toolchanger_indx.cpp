@@ -254,8 +254,8 @@ void PrusaToolChanger::check_nozzle_presence_vs_eeprom() {
     const bool eeprom_says_no_tool = !eeprom_valid || std::holds_alternative<NoTool>(eeprom_tool);
 
     if (eeprom_says_no_tool && nozzle_present) {
-        // EEPROM says no tool, but ping analysis detects a nozzle — ask user which dock it belongs to
-        log_error(PrusaToolChanger, "Nozzle detected by ping but EEPROM says no tool");
+        // EEPROM says no tool, but a nozzle is detected — ask user which dock it belongs to
+        log_error(PrusaToolChanger, "Nozzle detected but EEPROM says no tool");
 
         // Prevent re-entry: wait_for_response() runs the idle loop, which calls loop() -> check_nozzle_presence_vs_eeprom() again
         ResetOnReturn guard([this](bool state) { block_tool_check = state; });
@@ -297,7 +297,7 @@ void PrusaToolChanger::check_nozzle_presence_vs_eeprom() {
             marlin_server::wait_for_response(PhaseNozzleMismatch::dock_not_empty);
         }
     } else if (eeprom_says_tool && !nozzle_present) {
-        // EEPROM says tool is picked, but ping sees nothing — correct to no tool
+        // EEPROM says tool is picked, but no nozzle is detected — correct to no tool
         const auto tool_index = std::get<PhysicalToolIndex>(eeprom_tool);
         log_warning(PrusaToolChanger, "EEPROM says tool #%u but no nozzle detected, correcting to no tool", tool_index.to_raw());
         set_active_extruder(NoTool {}); // Should be already NoTool
@@ -472,7 +472,7 @@ void PrusaToolChanger::open_head(PhysicalToolIndex tool) {
 
 void PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     // Invalidate nozzle presence data during park — the physical state is changing,
-    // so the ping analysis result is stale until a fresh modbus read arrives.
+    // so the last reported result is stale until a fresh modbus read arrives.
     buddy::puppies::indx.invalidate_nozzle_data();
 
     auto &hotend = IndxHotend::indx_tool(tool).hotend();
@@ -525,7 +525,7 @@ bool PrusaToolChanger::park(PhysicalToolIndex tool) {
         park_procedure(tool);
 
         // Invalidate nozzle data that modbus reads may have re-validated with stale
-        // pre-park values during the procedure. Fresh ping analysis starts from here.
+        // pre-park values during the procedure. Fresh nozzle detection starts from here.
         buddy::puppies::indx.invalidate_nozzle_data();
 
         // Verify nozzle is gone (successfully released)
@@ -574,7 +574,7 @@ void PrusaToolChanger::z_shift(const float diff) {
 }
 
 bool PrusaToolChanger::verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present) {
-    // Wait until ping analysis confirms the expected post-pickup/park state.
+    // Wait until nozzle presence confirms the expected post-pickup/park state.
     // This avoids failing on an early stale-but-valid sample from before the mechanical transition settled.
     const bool data_ready = wait(
         [expect_present]() { return buddy::puppies::indx.get_nozzle_present() == std::optional<bool>(expect_present); },
