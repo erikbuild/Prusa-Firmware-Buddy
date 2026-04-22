@@ -28,7 +28,6 @@ public:
 
 public:
     constexpr bool operator==(const FilamentTypeParameters_EEPROM1 &) const = default;
-    constexpr bool operator!=(const FilamentTypeParameters_EEPROM1 &) const = default;
 };
 static_assert(sizeof(FilamentTypeParameters_EEPROM1) == 14);
 
