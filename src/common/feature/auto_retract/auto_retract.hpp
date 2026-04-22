@@ -5,6 +5,7 @@
 #include <optional>
 #include <bitset>
 #include <inplace_function.hpp>
+#include <option/has_indx.h>
 
 namespace buddy {
 /// Class for managing automatic retraction after print or load, so that the printer keeps the nozzle empty for MBL and non-printing to prevent oozing.
@@ -17,6 +18,11 @@ public:
     using ToolVariant = std::variant<PhysicalToolIndex, NoTool>;
 
     static constexpr float minimum_auto_retract_distance = 20.f; ///< Minimum retract distance for the filament to be considered auto-retracted. Auto-retracted filaments can be unloaded without heating.
+
+    /// Whether the printer supports cold unload.
+    ///
+    /// INDX has very short nozzle, not physically possible.
+    static constexpr bool supports_cold_unload = !option::has_indx;
 
     /// \returns whether the specified \param hotend is retracted (some amount > 0.0f) and is a known value -> will deretract on positive Z move
     bool will_deretract(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
