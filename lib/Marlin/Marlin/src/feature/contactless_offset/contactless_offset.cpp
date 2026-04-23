@@ -446,7 +446,7 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     tool_offset::Sensor &sensor,
     const tool_offset::ToolOffset &current_offset) {
 
-    constexpr float confidence_threshold = 0.95f;
+    constexpr float confidence_threshold = 0.90f;
     constexpr float precision_mm_threshold = 0.1f;
     constexpr float peak_width_mm = 0.6f;
     auto &hotend = Hotend::for_tool(PhysicalToolIndex::currently_selected());
