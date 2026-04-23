@@ -43,4 +43,8 @@ void transmit_and_then_start_receiving(std::span<std::byte>);
 /// Clear bus errors if needed.
 void housekeeping();
 
+/// Block until the MODBUS inter-frame silent interval since last received byte
+/// has elapsed. Called by the master before transmitting a response.
+void ensure_silent_interval();
+
 } // namespace hal::rs485
