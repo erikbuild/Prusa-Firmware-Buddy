@@ -316,12 +316,14 @@ bool run(uint8_t r_param, uint8_t probe_count) {
     if (mapped_tools.none()) {
         mapped_tools = collect_all_enabled_tools();
     }
-    if (mapped_tools.none()) {
+
+    const auto num_tools = static_cast<uint8_t>(mapped_tools.count());
+    if (num_tools == 0) {
         log_error(ToolOffsetCalib, "No tools found");
         return false;
     }
 
-    log_info(ToolOffsetCalib, "Calibrating %u tool(s)", mapped_tools.count());
+    log_info(ToolOffsetCalib, "Calibrating %u tool(s)", num_tools);
 
     const PhysicalToolIndex first = first_tool(mapped_tools);
 
@@ -329,8 +331,6 @@ bool run(uint8_t r_param, uint8_t probe_count) {
         float z;
         xy_pos_t pos;
     };
-
-    const uint8_t num_tools = static_cast<uint8_t>(mapped_tools.count());
     uint8_t step = 0;
 
     // Helper: probe Z at the given mapped index position (with jitter)
@@ -371,13 +371,14 @@ bool run(uint8_t r_param, uint8_t probe_count) {
         ref_first = *ref_first_opt;
         ref_last = ref_first;
 
-        if (mapped_tools.count() > 1) {
+        if (num_tools != 1) {
             // Probe at last position (with the same first tool)
             const auto ref_last_opt = probe_at(first, num_tools - 1);
             if (!ref_last_opt) {
                 return false;
             }
             ref_last = *ref_last_opt;
+
             log_info(ToolOffsetCalib, "Reference line: Z_first=%.3f at (%.1f,%.1f) Z_last=%.3f at (%.1f,%.1f)",
                 static_cast<double>(ref_first.z), static_cast<double>(ref_first.pos.x), static_cast<double>(ref_first.pos.y),
                 static_cast<double>(ref_last.z), static_cast<double>(ref_last.pos.x), static_cast<double>(ref_last.pos.y));
