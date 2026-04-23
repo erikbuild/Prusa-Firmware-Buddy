@@ -22,7 +22,6 @@ extern "C" {
 #include <FreeRTOSConfig.h>
 }
 static_assert(configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY == 2);
-static constexpr uint8_t ISR_PRIORITY_DEFAULT = 2; // default ISR priority, used by ISRs that don't need specific ISR priority
 static constexpr uint32_t system_clock = 48'000'000;
 
 using indx_head::errors::FaultStatusMask;

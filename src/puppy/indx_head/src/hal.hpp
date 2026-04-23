@@ -15,6 +15,9 @@
 
 namespace hal {
 
+/// default ISR priority, used by ISRs that don't need specific ISR priority
+static constexpr uint8_t ISR_PRIORITY_DEFAULT = 2;
+
 void init();
 void config_adc_default();
 void config_adc_induction_heater();
