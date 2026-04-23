@@ -32,6 +32,11 @@
   #include <feature/prusa/crash_recovery.hpp>
 #endif
 
+#include <option/has_cancel_object.h>
+#if HAS_CANCEL_OBJECT()
+  #include <feature/cancel_object/cancel_object.hpp>
+#endif
+
 extern xyze_pos_t destination;
 
 #if ENABLED(VARIABLE_G0_FEEDRATE)
@@ -80,6 +85,14 @@ void GcodeSuite::G0_G1(TERN_(HAS_FAST_MOVES, const bool fast_move/*=false*/)) {
   #endif
 
   get_destination_from_command();                 // Get X Y [Z[I[J[K]]]] [E] F (and set cutter power)
+
+  #if HAS_CANCEL_OBJECT()
+    // !!! MUST BE after get_destination_from_command
+    // get_destination_from_command can also change the feedrate, effect of which we should keep
+    if (buddy::cancel_object().is_current_object_cancelled()) {
+      return;
+    }
+  #endif
 
   #ifdef G0_FEEDRATE
     // #error dead code found by automatic analyses (see BFW-5461)
