@@ -30,8 +30,6 @@ void IndxHotend::manage() {
         nozzle_temp_ = buddy::puppies::indx.get_hotend_temp_compensated();
     }
 
-    // TODO hotend temp compensation logic
-
     // !!! MUST be called after temps are set properly
     // BaseHotend::manage();
     manage_temp_residency();
