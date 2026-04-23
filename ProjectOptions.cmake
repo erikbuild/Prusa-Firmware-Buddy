@@ -366,7 +366,7 @@ set_feature_for_printers_master_board(
   "MK4"
   )
 set_feature_for_printers_master_board(
-  HAS_PHASE_STEPPING_SELFTEST "iX" "XL" "COREONEL" "COREONEL_INDX"
+  HAS_PHASE_STEPPING_SELFTEST "iX" "XL" "COREONE_INDX" "COREONEL" "COREONEL_INDX"
   )
 set_feature_for_printers_master_board(
   HAS_PHASE_STEPPING_CALIBRATION
