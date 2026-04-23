@@ -316,7 +316,6 @@ DeviceState get_print_state(State state, bool ready) {
         // so make it Attention, so it in that rate occurrence still
         // kind of make sense.
         return DeviceState::Attention;
-    case State::PowerPanic_AwaitingResume:
     case State::CrashRecovery_Axis_NOK:
     case State::CrashRecovery_Repeated_Crash:
     case State::CrashRecovery_HOMEFAIL:
@@ -366,7 +365,7 @@ DeviceState get_print_state(State state, bool ready) {
     case State::Pausing_WaitIdle:
     case State::Pausing_ParkHead:
     case State::Paused:
-
+    case State::PowerPanic_AwaitingResume:
     case State::Resuming_BufferData:
     case State::MediaErrorRecovery_BufferData:
     case State::Resuming_Begin:
