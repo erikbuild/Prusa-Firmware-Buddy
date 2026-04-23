@@ -1,9 +1,11 @@
 #include "indx_nozzle_cleaner_calibration.hpp"
 #include <test_result.hpp>
 
+#include <bsod/bsod.h>
 #include <client_response.hpp>
 #include <common/fsm_base_types.hpp>
 #include <gcode/gcode.h>
+#include <gcode/temperature/M104_M109.hpp>
 #include <marlin_server.hpp>
 #include <module/endstops.h>
 #include <module/motion.h>
@@ -16,6 +18,8 @@
 #include <config_store/store_instance.hpp>
 #include <common/selftest_result.hpp>
 #include <common/mapi/parking.hpp>
+#include <tool/hotend/hotend.hpp>
+#include <utils/variant_utils.hpp>
 
 LOG_COMPONENT_DEF(NozzleCleanerCalibration, logging::Severity::info);
 
@@ -25,6 +29,9 @@ namespace indx_nozzle_cleaner_calibration {
 
 /// Feedrate for Z lowering [mm/s]
 static constexpr feedRate_t z_lower_feedrate = HOMING_FEEDRATE_INVERTED_Z;
+
+/// Hotend is considered cool enough to touch below this temperature [°C]
+static constexpr int16_t cooldown_safe_temperature_c = 50;
 
 /// Max tolerance (+/-) in both axes
 static constexpr float offset_tolerance_mm = 3.0f;
@@ -133,6 +140,11 @@ private:
             GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = false });
         }
 
+        // Wait for the nozzle to cool down before the user handles the head
+        if (const auto result = wait_for_nozzle_cooldown(); result != Result::success) {
+            return result;
+        }
+
         // Move close to the nozzle cleaner for Z-point alignment
         do_blocking_move_to_xy(X_WASTEBIN_SAFE_POINT, Y_BRUSH_AVOID_POINT, PrusaToolChanger::PARKING_FINAL_MAX_SPEED);
 
@@ -165,6 +177,42 @@ private:
         }
 
         return Result::success;
+    }
+
+    /// Wait until the currently selected hotend cools below a safe touch temperature.
+    /// Pushes the current temperature to the GUI each idle tick.
+    Result wait_for_nozzle_cooldown() {
+        const auto tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+        if (!tool.has_value()) {
+            bsod_unreachable();
+        }
+
+        fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown);
+
+        // Push current temp to the GUI and handle abort while M109 is blocking
+        Subscriber subscriber(marlin_server::idle_publisher, [tool] {
+            if (marlin_server::get_response_from_phase(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown) == Response::Abort) {
+                planner.quick_stop();
+                return;
+            }
+            const uint16_t t = static_cast<uint16_t>(Hotend::for_tool(*tool).nozzle_temp());
+            const fsm::PhaseData data = {
+                static_cast<uint8_t>((t >> 8) & 0xff),
+                static_cast<uint8_t>(t & 0xff),
+                0,
+                0,
+            };
+            marlin_server::fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, data);
+        });
+
+        const M109Flags flags {
+            .target_temp = cooldown_safe_temperature_c,
+            .wait_heat_or_cool = true,
+            .autotemp = true,
+        };
+        M109_no_parser(*tool, flags); // This is the temp we want to reach
+        thermalManager.setTargetHotend(0, *tool); // This is so that we dont accidentally re-heat to 50
+        return planner.draining() ? Result::aborted : Result::success;
     }
 
     /// @return success if axis calibrated, failed on measurement failure, aborted on user abort

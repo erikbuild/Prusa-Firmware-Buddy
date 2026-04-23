@@ -8,6 +8,7 @@
 #include <standard_frame/frame_title_text_image_prompt.hpp>
 #include <standard_frame/frame_text_prompt.hpp>
 #include <standard_frame/frame_wait.hpp>
+#include <standard_frame/frame_wait_temp.hpp>
 #include <common/fsm_base_types.hpp>
 #include <img_resources.hpp>
 #include <string_view_utf8.hpp>
@@ -17,6 +18,7 @@ namespace {
 
 constexpr auto txt_title_intro = N_("Nozzle Cleaner Calibration");
 constexpr auto txt_intro = N_("You will need to manually position the head at the nozzle cleaner and adjust the height screw.");
+constexpr auto txt_wait_for_nozzle_cooldown = N_("Wait!\n\nThe nozzle is still cooling down.");
 constexpr auto txt_picking_tool = N_("Picking tool\n\nPlease wait...");
 constexpr auto txt_homing = N_("Homing XY axes\n\nPlease wait...");
 constexpr auto txt_moving_away = N_("Raising Z axis for clearance\n\nPlease wait...");
@@ -71,6 +73,7 @@ static constexpr const img::Resource *img_ask_position_x = &img::cleaner_calibra
 
 using Frames = FrameDefinitionList<ScreenNozzleCleanerCalibration::FrameStorage,
     FrameDefinition<PhaseNozzleCleanerCalibration::intro, FramePrompt, PhaseNozzleCleanerCalibration::intro, txt_title_intro, txt_intro>,
+    FrameDefinition<PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, FrameWaitTemp, PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, txt_wait_for_nozzle_cooldown>,
     FrameDefinition<PhaseNozzleCleanerCalibration::picking_tool, FrameWait, txt_picking_tool>,
     FrameDefinition<PhaseNozzleCleanerCalibration::homing, FrameWait, txt_homing>,
     FrameDefinition<PhaseNozzleCleanerCalibration::moving_away, FrameWait, txt_moving_away>,

@@ -7,4 +7,5 @@ target_sources(
           frame_text_prompt.cpp
           frame_title_text_image_prompt.cpp
           frame_wait.cpp
+          frame_wait_temp.cpp
   )

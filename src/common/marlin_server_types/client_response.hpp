@@ -481,6 +481,7 @@ constexpr inline ClientFSM client_fsm_from_phase(PhaseDockCalibration) { return 
 
 enum class PhaseNozzleCleanerCalibration : PhaseUnderlyingType {
     intro,
+    wait_for_nozzle_cooldown,
     picking_tool,
     homing,
     moving_away,
@@ -786,6 +787,7 @@ inline constexpr EnumArray<PhaseDockCalibration, PhaseResponses, CountPhases<Pha
 
 inline constexpr EnumArray<PhaseNozzleCleanerCalibration, PhaseResponses, CountPhases<PhaseNozzleCleanerCalibration>()> nozzle_cleaner_calibration_responses {
     { PhaseNozzleCleanerCalibration::intro, { Response::Continue, Response::Abort } },
+    { PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, { Response::Abort } },
     { PhaseNozzleCleanerCalibration::picking_tool, {} },
     { PhaseNozzleCleanerCalibration::homing, {} },
     { PhaseNozzleCleanerCalibration::moving_away, {} },
