@@ -248,18 +248,29 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     };
 
     auto offset_for_measurement = current_ho;
+    offset_for_measurement.x = std::clamp(offset_for_measurement.x, static_cast<float>(X_MIN_OFFSET), static_cast<float>(X_MAX_OFFSET));
+    offset_for_measurement.y = std::clamp(offset_for_measurement.y, static_cast<float>(Y_MIN_OFFSET), static_cast<float>(Y_MAX_OFFSET));
     // Zero hotend offset and currently applied offset
     reset_hotend_offset(tool);
     hotend_currently_applied_offset = xyz_pos_t {};
 
+    // Check printer physical limits and shift the sensor position if needed to avoid crashes
+    tool_offset::ProbingConfig sensor_corrected_config = config;
+    sensor_corrected_config.sensor_position.x = std::max(sensor_corrected_config.sensor_position.x, X_MIN_POS + config.sensing_diameter / 2.0f + X_MAX_OFFSET);
+    sensor_corrected_config.sensor_position.x = std::min(sensor_corrected_config.sensor_position.x, X_MAX_POS - config.sensing_diameter / 2.0f - X_MAX_OFFSET);
+    offset_for_measurement.x += sensor_corrected_config.sensor_position.x - config.sensor_position.x;
+    sensor_corrected_config.sensor_position.y = std::max(sensor_corrected_config.sensor_position.y, Y_MIN_POS + config.sensing_diameter / 2.0f + Y_MAX_OFFSET);
+    sensor_corrected_config.sensor_position.y = std::min(sensor_corrected_config.sensor_position.y, Y_MAX_POS - config.sensing_diameter / 2.0f - Y_MAX_OFFSET);
+    offset_for_measurement.y += sensor_corrected_config.sensor_position.y - config.sensor_position.y;
+
     for (int i = 0; i < 3; i++) {
         log_info(ToolOffsetCalib, "XY offset measurement attempt %d", i + 1);
-        auto result = tool_offset::measure_current_tool_offset(config, *sensor, offset_for_measurement);
+        auto result = tool_offset::measure_current_tool_offset(sensor_corrected_config, *sensor, offset_for_measurement);
         if (result.has_value()) {
             log_info(ToolOffsetCalib, "Measured XY offset: X=%.3f Y=%.3f", static_cast<double>(result->x), static_cast<double>(result->y));
             // Store newly measured offsets only for XY, keep actual for Z
-            hotend_offset[tool].x = result->x;
-            hotend_offset[tool].y = result->y;
+            hotend_offset[tool].x = result->x + config.sensor_position.x - sensor_corrected_config.sensor_position.x; // Correct for any sensor position shift
+            hotend_offset[tool].y = result->y + config.sensor_position.y - sensor_corrected_config.sensor_position.y; // Correct for any sensor position shift
             hotend_offset[tool].z = current_ho.z;
             prusa_toolchanger.save_tool_offset(tool);
             hotend_currently_applied_offset = xyz_pos_t { result->x, result->y, current_ho.z };
@@ -267,8 +278,8 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
         } else {
             log_error(ToolOffsetCalib, "Measurement failed: %s", result.error());
             // retrials performed with 0 offsets
-            offset_for_measurement.x = 0;
-            offset_for_measurement.y = 0;
+            offset_for_measurement.x = sensor_corrected_config.sensor_position.x - config.sensor_position.x;
+            offset_for_measurement.y = sensor_corrected_config.sensor_position.y - config.sensor_position.y;
         }
     }
     // Calibration failed after retries, restore original offsets

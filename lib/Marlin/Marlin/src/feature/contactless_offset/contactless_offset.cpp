@@ -435,6 +435,7 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
 
     constexpr float confidence_threshold = 0.95f;
     constexpr float precision_mm_threshold = 0.1f;
+    constexpr float peak_width_mm = 0.6f;
     auto &hotend = Hotend::for_tool(PhysicalToolIndex::currently_selected());
 
     // Check nozzle temperature before probing
@@ -485,8 +486,8 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     // XY offset measurement via two-pass scanning
     float sensor_x = config.sensor_position.x;
     float sensor_y = config.sensor_position.y;
-    float actual_offset_x = std::clamp(current_offset.x, static_cast<float>(X_MIN_OFFSET), static_cast<float>(X_MAX_OFFSET));
-    float actual_offset_y = std::clamp(current_offset.y, static_cast<float>(Y_MIN_OFFSET), static_cast<float>(Y_MAX_OFFSET));
+    float actual_offset_x = std::clamp(current_offset.x, static_cast<float>(peak_width_mm - config.sensing_diameter / 2.0f), static_cast<float>(peak_width_mm + config.sensing_diameter / 2.0f));
+    float actual_offset_y = std::clamp(current_offset.y, static_cast<float>(peak_width_mm - config.sensing_diameter / 2.0f), static_cast<float>(peak_width_mm + config.sensing_diameter / 2.0f));
 
     // Pass 1: center detection — scans centered on sensor_position
     auto cd_x = run_scan(config, sensor, "center-detection-x", true, sensor_x, sensor_y - actual_offset_y);
@@ -504,8 +505,8 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
         return result;
     }
 
-    actual_offset_x = std::clamp(cd_x->offset, static_cast<float>(X_MIN_OFFSET), static_cast<float>(X_MAX_OFFSET));
-    actual_offset_y = std::clamp(cd_y->offset, static_cast<float>(Y_MIN_OFFSET), static_cast<float>(Y_MAX_OFFSET));
+    actual_offset_x = std::clamp(cd_x->offset, static_cast<float>(peak_width_mm - config.sensing_diameter / 2.0f), static_cast<float>(peak_width_mm + config.sensing_diameter / 2.0f));
+    actual_offset_y = std::clamp(cd_y->offset, static_cast<float>(peak_width_mm - config.sensing_diameter / 2.0f), static_cast<float>(peak_width_mm + config.sensing_diameter / 2.0f));
 
     debug_report_pass1_center(actual_offset_x, actual_offset_y);
 
