@@ -43,7 +43,7 @@ public:
     static constexpr StrongIndexArray<float, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::no> DOCK_DEFAULT_X_MM { indx_dock_position_defaults::x_mm };
     static constexpr auto DOCK_DEFAULT_Y_MM = indx_dock_position_defaults::y_mm;
     static constexpr auto DOCK_INVALID_OFFSET_X_MM = 2.0f;
-    static constexpr auto DOCK_INVALID_OFFSET_Y_MM = 1.0f;
+    static constexpr auto DOCK_INVALID_OFFSET_Y_MM = 2.0f;
 
     // Y offsets from dock_y (dock_y is the deepest/full-dock position)
     static constexpr float DOCK_SAFE_Y_OFFSET = 28.6f; ///< Collision-free distance in front of dock [mm]
