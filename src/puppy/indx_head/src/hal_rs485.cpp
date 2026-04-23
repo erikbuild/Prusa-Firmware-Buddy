@@ -1,7 +1,6 @@
 #include "hal.hpp"
 
 #include <freertos/binary_semaphore.hpp>
-#include <freertos/timing.hpp>
 #include <stm32c0xx_hal.h>
 #include <stm32c0xx_ll_usart.h>
 
@@ -13,9 +12,37 @@ struct State {
     volatile std::byte *data = nullptr;
     volatile std::size_t size = 0;
     freertos::BinarySemaphore semaphore {};
+    freertos::BinarySemaphore timer_semaphore {};
     alignas(uint16_t) std::byte buffer[256];
 };
 State state;
+
+// Modbus specifies that between received message and next transmission
+// there should be a silent interval of at least 3.5 character times.
+static constexpr uint32_t bauds_per_character = 10;
+static constexpr uint32_t baud_rate = 230'400;
+static constexpr uint32_t timer_tick_rate = 48'000'000;
+static constexpr uint32_t timer_ticks_per_baud = timer_tick_rate / baud_rate;
+static constexpr uint32_t timer_ticks_per_character = timer_ticks_per_baud * bauds_per_character;
+// Note that we use 2.5 instead of 3.5 here, because IDLE event is actually 1 character
+static constexpr uint16_t timer_ticks_per_silent_interval = static_cast<uint16_t>(2.5 * timer_ticks_per_character);
+
+void init() {
+    __HAL_RCC_TIM14_CLK_ENABLE();
+
+    // We are using TIM14 to ensure minimal pause between RX and TX.
+    // TIM14 is setup to run in one-pulse mode, always resetting the counter
+    // after line goes idle.
+    // If we are in fact transmiting in a response to received frame, we enable
+    // interrupt generation and wait for the semaphore.
+
+    static_assert(timer_tick_rate == HSE_VALUE); // We don't need any prescaler
+    WRITE_REG(TIM14->ARR, timer_ticks_per_silent_interval - 1);
+    WRITE_REG(TIM14->CR1, TIM_CR1_OPM | TIM_CR1_URS);
+
+    HAL_NVIC_SetPriority(TIM14_IRQn, ISR_PRIORITY_DEFAULT, 0);
+    HAL_NVIC_EnableIRQ(TIM14_IRQn);
+}
 
 std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> tx_data) {
     // clear possible overrun error
@@ -29,12 +56,9 @@ std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> tx_dat
         LL_USART_EnableIT_RXNE(USART2);
         LL_USART_EnableIT_IDLE(USART2);
     } else {
-        // Modbus specifies that between received message and next transmission
-        // there should be a silent interval of at least 3.5 character times.
-        // At 230400 baud, the wait is approximately 154 microseconds.
-        // We don't have sub-millisecond wait and don't want to spin, so we
-        // wait a bit longer, that is ~6.5 times longer.
-        freertos::delay(1);
+        // ensure silent interval
+        WRITE_REG(TIM14->DIER, TIM_DIER_UIE);
+        state.timer_semaphore.acquire();
 
         // setup transmitting
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET); // DE/RE high: Tx mode
@@ -92,6 +116,11 @@ extern "C" void USART2_IRQHandler(void) {
     if (LL_USART_IsEnabledIT_IDLE(USART2) && LL_USART_IsActiveFlag_IDLE(USART2)) {
         if (state.size < sizeof(state.buffer)) {
 
+            // immediately after receiving last byte, start the timer
+            WRITE_REG(TIM14->EGR, TIM_EGR_UG);
+            WRITE_REG(TIM14->SR, 0);
+            SET_BIT(TIM14->CR1, TIM_CR1_CEN);
+
             // something received, wake-up the task
             LL_USART_ClearFlag_IDLE(USART2);
             LL_USART_DisableIT_IDLE(USART2);
@@ -101,5 +130,14 @@ extern "C" void USART2_IRQHandler(void) {
             // idle expired and nothing received, keep waiting for another one
             LL_USART_ClearFlag_IDLE(USART2);
         }
+    }
+}
+
+extern "C" void TIM14_IRQHandler(void) {
+    using namespace hal::rs485;
+    if (READ_REG(TIM14->SR) & TIM_SR_UIF) {
+        WRITE_REG(TIM14->SR, 0);
+        WRITE_REG(TIM14->DIER, 0);
+        state.timer_semaphore.release_from_isr();
     }
 }

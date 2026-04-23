@@ -32,6 +32,7 @@ void set_ind_heater_pwr(bool enabled);
 void set_safe_state();
 
 namespace rs485 {
+    void init();
     std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> data);
 } // namespace rs485
 

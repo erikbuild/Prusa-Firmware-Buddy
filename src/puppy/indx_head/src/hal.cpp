@@ -217,6 +217,8 @@ void hal::init_rs485() {
 
     HAL_NVIC_SetPriority(USART2_IRQn, ISR_PRIORITY_DEFAULT - 1, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
+
+    hal::rs485::init();
 }
 
 void hal::init_spi() {

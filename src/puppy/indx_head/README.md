@@ -148,7 +148,7 @@ accelerometer sample period                      625 us
 FreeRTOS tick                                   1000 us      1 ms
 loadcell sample period                          2700 us    2.7 ms
 heater control loop period                      3300 us    3.3 ms
-MODBUS transaction                                          ~4 ms
+MODBUS transaction                                          ~3 ms
 software watchdog expiry                                   100 ms
 ringdown analysis period (idle)                            100 ms
 ringdown analysis period (heating)                         500 ms
