@@ -55,7 +55,13 @@ namespace puppies {
         static uint32_t last_operation_time_us;
 
         /// Minimal pause that EnsurePause will enforce
-        static constexpr uint32_t MINIMAL_PAUSE_BETWEEN_REQUESTS_US = 350;
+        /// Modbus specifies that between received message and next transmission
+        /// there should be a silent interval of at least 3.5 character times.
+        /// Due to IDLE event is actually 1 character, the time value corresponds to 2.5 character
+        static constexpr uint32_t baud_rate = 230'400;
+        static constexpr uint32_t bauds_per_character = 10; // 8N1
+        static constexpr float modbus_silence = 2.5f;
+        static constexpr uint32_t MINIMAL_PAUSE_BETWEEN_REQUESTS_US = static_cast<uint32_t>(1.0f + (modbus_silence * bauds_per_character * 1'000'000 / baud_rate));
     };
 
 } // namespace puppies
