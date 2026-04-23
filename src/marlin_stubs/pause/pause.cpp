@@ -581,8 +581,8 @@ void Pause::assist_insertion_process([[maybe_unused]] Response response) {
         return;
     }
 
-    // Load for at least 40 seconds before giving up.
-    if (ticks_diff(ticks_ms(), start_time_ms) > 40000) { /*Move for at least 40 seconds before giving up*/
+    // Load timeout before giving up
+    if (ticks_diff(ticks_ms(), start_time_ms) > 120 * 1000) {
         /*
          * Unstoppable processes should not be stopped. Neither by user, nor printer on itself without any serious failure.
          * The branch used here ensures the printer remains in an infinite loop, waiting in an alert state until the filament is properly loaded—an expected behavior for the printer.
