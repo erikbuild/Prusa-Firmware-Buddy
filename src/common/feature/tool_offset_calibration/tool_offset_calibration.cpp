@@ -395,10 +395,11 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             continue;
         }
         mapped_index++;
-        if (i == first.to_raw()) {
+
+        const auto tool = PhysicalToolIndex::from_raw(i);
+        if (tool == first) {
             continue;
         }
-        const auto tool = PhysicalToolIndex::from_raw(i);
 
         set_calib_status(status_guard, tool.to_raw(), ++step, num_tools);
         tool_change(stdext::to_variant(tool), tool_return_t::no_return);
