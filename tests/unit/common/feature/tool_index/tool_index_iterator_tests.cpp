@@ -12,7 +12,6 @@ using PhysicalExtension = PhysicalToolIndexExtension;
 using GcodeExtension = GcodeToolIndexExtension;
 
 std::set<uint8_t> enabled_physical_tools;
-std::set<uint8_t> configurable_physical_tools;
 std::set<uint8_t> enabled_virtual_tools;
 
 template <>
@@ -22,8 +21,7 @@ bool PhysicalToolIndex::is_enabled() const {
 }
 
 bool PhysicalToolIndexExtension::is_configurable() const {
-    const auto &self = static_cast<const PhysicalToolIndex &>(*this);
-    return configurable_physical_tools.contains(self.to_raw());
+    return static_cast<const PhysicalToolIndex &>(*this).is_enabled();
 }
 
 template <>
@@ -45,7 +43,6 @@ TEST_CASE("ToolIndexIterator::physical") {
     using Iterator = Index::Iterator;
 
     enabled_physical_tools = { 1, 3 };
-    configurable_physical_tools = { 1, 3 };
 
     CHECK(test_iterator(Iterator::make_empty()) == Items {});
     CHECK(test_iterator(Iterator::make_all()) == Items { 0, 1, 2, 3, 4 });
@@ -60,36 +57,6 @@ TEST_CASE("ToolIndexIterator::physical") {
     CHECK(test_iterator(Iterator::make_single(Index::from_raw(3)).skip_all_disabled()) == Items { 3 });
 
     CHECK_THROWS(Index::from_raw(5));
-}
-
-TEST_CASE("ToolIndexIterator::physical::skip_all_unconfigurable") {
-    using Index = PhysicalToolIndex;
-    using Iterator = Index::Iterator;
-
-    // Configurable is a superset of enabled (INDX-like: tools can be configured
-    // before they are enabled by dock calibration).
-    enabled_physical_tools = { 1 };
-    configurable_physical_tools = { 0, 1, 2, 3, 4 };
-
-    // All tools are configurable → yields all
-    CHECK(test_iterator(Iterator::make_all().skip_all_unconfigurable()) == Items { 0, 1, 2, 3, 4 });
-
-    // Combining with skip_all_disabled → intersection (enabled AND configurable)
-    CHECK(test_iterator(Iterator::make_all().skip_all_disabled().skip_all_unconfigurable()) == Items { 1 });
-
-    // Only a subset is configurable
-    configurable_physical_tools = { 0, 2, 4 };
-    CHECK(test_iterator(Iterator::make_all().skip_all_unconfigurable()) == Items { 0, 2, 4 });
-
-    // make_single is filtered by skip_all_unconfigurable too
-    CHECK(test_iterator(Iterator::make_single(Index::from_raw(0)).skip_all_unconfigurable()) == Items { 0 });
-    CHECK(test_iterator(Iterator::make_single(Index::from_raw(1)).skip_all_unconfigurable()) == Items {});
-    CHECK(test_iterator(Iterator::make_single(Index::from_raw(4)).skip_all_unconfigurable()) == Items { 4 });
-
-    // Nothing configurable
-    configurable_physical_tools = {};
-    CHECK(test_iterator(Iterator::make_all().skip_all_unconfigurable()) == Items {});
-    CHECK(test_iterator(Iterator::make_empty().skip_all_unconfigurable()) == Items {});
 }
 
 TEST_CASE("ToolIndexIterator::virtual") {
