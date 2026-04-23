@@ -260,7 +260,8 @@ static bool wait_for_first_sample(tool_offset::Sensor &sensor, uint32_t timeout_
 
 // Execute motion while recording sensor samples
 template <typename MotionSignal>
-static MotionExecutionResult execute_motion_with_recording(
+
+std::expected<MotionExecutionResult, const char *> execute_motion_with_recording(
     MotionSignal &&motion_signal,
     tool_offset::Sensor &sensor,
     const char *label,
@@ -272,7 +273,7 @@ static MotionExecutionResult execute_motion_with_recording(
     for (int ax = 0; ax < XYZE; ++ax) {
         if (planner.settings.axis_steps_per_mm[ax] <= 0) {
             result.raw_samples.clear();
-            return result;
+            return std::unexpected<const char *>("Invalid axis steps per mm");
         }
     }
     abce_pos_t mm_per_step;
@@ -287,7 +288,7 @@ static MotionExecutionResult execute_motion_with_recording(
     sensor.start();
     if (!wait_for_first_sample(sensor)) {
         sensor.stop();
-        return result;
+        return std::unexpected<const char *>("Failed to get first sensor sample");
     }
 
     enable_all_steppers();
@@ -365,10 +366,22 @@ static MotionExecutionResult execute_motion_with_recording(
 
     // Get sampling frequency before stopping the sensor
     result.sensor_sampling_freq_hz = sensor.sampling_freq();
+    auto error = sensor.get_last_error();
     sensor.stop();
     samples_reporter.finish(result.sensor_sampling_freq_hz);
 
-    return result;
+    switch (error) {
+    case tool_offset::Sensor::Error::HW_FAILURE:
+        log_error(ContactlessOffset, "Sensor reported hardware failure");
+        return std::unexpected<const char *>("Sensor reported hardware failure");
+        break;
+    case tool_offset::Sensor::Error::OVERFLOW:
+        log_error(ContactlessOffset, "Sensor sample overflow");
+        return std::unexpected<const char *>("Sensor samples overflow");
+    case tool_offset::Sensor::Error::NONE:
+        break;
+    }
+    return std::expected<MotionExecutionResult, const char *>(result);
 }
 
 // Project speed sources along (dir_x, dir_y) into XYZE motion signal
@@ -1318,8 +1331,13 @@ static std::expected<TwoSpeedAnalysisResult, const char *> execute_and_analyze_s
 
     // Execute motion and record samples with extended wait for full profile duration
     uint32_t expected_duration_us = static_cast<uint32_t>(profile.total_time() * 1e6f);
-    auto result = execute_motion_with_recording(
-        std::move(motion_signal), sensor, label, expected_duration_us);
+
+    auto result_exp = execute_motion_with_recording(std::move(motion_signal), sensor, label, expected_duration_us);
+    if (!result_exp.has_value()) {
+        debug_report_analysis_error(label, result_exp.error());
+        return std::unexpected(result_exp.error());
+    }
+    auto &result = *result_exp;
 
     uint32_t serial_output_start_us = ticks_us();
     debug_report_motion_profile(profile, motion_sampling_freq, label);
