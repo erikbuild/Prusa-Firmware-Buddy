@@ -149,12 +149,8 @@ using ToolSet = std::bitset<PhysicalToolIndex::count>;
 
 /// Collect the unique set of physical tools needed for the current print,
 /// based on tool mapping and spool join configuration.
-ToolSet collect_mapped_physical_tools() {
+ToolSet collect_used_physical_tools() {
     ToolSet seen;
-
-    auto mark_virtual = [&](VirtualToolIndex virt) {
-        seen.set(virt.to_physical().to_raw());
-    };
 
     // Walk each gcode tool that is used in the print
     auto &gcode_info = GCodeInfo::getInstance();
@@ -164,26 +160,16 @@ ToolSet collect_mapped_physical_tools() {
         }
 
         // Map gcode → virtual (respects tool mapper)
-        auto virt_result = gcode_tool.to_virtual();
-        auto *virt_ptr = std::get_if<VirtualToolIndex>(&virt_result);
-        if (!virt_ptr) {
-            continue;
-        }
-
-        // Mark the directly mapped physical tool
-        mark_virtual(*virt_ptr);
+        auto virtual_tool = stdext::get_optional<VirtualToolIndex>(gcode_tool.to_virtual());
+        while (virtual_tool) {
+            seen.set(virtual_tool->to_physical().to_raw());
 
 #if HAS_SPOOL_JOIN()
-        // Walk the spool join chain: when this virtual tool's filament runs out
-        VirtualToolIndex virt = *virt_ptr;
-        while (auto next = spool_join.get_spool_2(virt)) {
-            if (seen.test(next->to_physical().to_raw())) {
-                break; // already seen, avoid infinite loop
-            }
-            mark_virtual(*next);
-            virt = *next;
-        }
+            virtual_tool = spool_join.get_spool_2(*virtual_tool);
+#else
+            virtual_tool = std::nullopt;
 #endif
+        }
     }
 
     return seen;
@@ -312,7 +298,7 @@ bool run(uint8_t r_param, uint8_t probe_count) {
 
     // Collect the physical tools we need to calibrate from the active tool mapping.
     // Fall back to all enabled tools when no mapping is active (e.g. debug/standalone use).
-    ToolSet mapped_tools = collect_mapped_physical_tools();
+    ToolSet mapped_tools = collect_used_physical_tools();
     if (mapped_tools.none()) {
         mapped_tools = collect_all_enabled_tools();
     }
