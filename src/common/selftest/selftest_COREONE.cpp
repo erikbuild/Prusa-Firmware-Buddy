@@ -16,6 +16,7 @@
 #include "selftest_types.hpp"
 
 #include <Marlin/src/module/temperature.h>
+#include <bsod.h>
 #include <common/fanctl/fanctl.hpp>
 #include <common/marlin_server.hpp>
 #include <common/timing.h>
@@ -79,10 +80,30 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
     {
         .partname = "Nozzle",
         .type = heater_type_t::Nozzle,
-        .getTemp = []() { return Hotend::for_tool(PhysicalToolIndex::currently_selected_opt().value()).nozzle_temp(); },
-        .setTargetTemp = [](int target_temp) { Hotend::for_tool(PhysicalToolIndex::currently_selected_opt().value()).set_nozzle_target_temp(target_temp); },
-        .get_pid = []() { return Hotend::for_tool(PhysicalToolIndex::currently_selected_opt().value()).nozzle_pid_config_compat(); },
-        .set_pid = [](const PID_t &pid) { Hotend::for_tool(PhysicalToolIndex::currently_selected_opt().value()).set_nozzle_pid_config_compat(pid); },
+        .getTemp = []() {
+            auto tool = PhysicalToolIndex::currently_selected_opt();
+            if (!tool) {
+                bsod("Heater config getTemp called without active tool");
+            }
+            return Hotend::for_tool(*tool).nozzle_temp(); },
+        .setTargetTemp = [](int target_temp) {
+            auto tool = PhysicalToolIndex::currently_selected_opt();
+            if (!tool) {
+                bsod("Heater config setTargetTemp called without active tool");
+            }
+            Hotend::for_tool(*tool).set_nozzle_target_temp(target_temp); },
+        .get_pid = []() {
+            auto tool = PhysicalToolIndex::currently_selected_opt();
+            if (!tool) {
+                bsod("Heater config get_pid called without active tool");
+            }
+            return Hotend::for_tool(*tool).nozzle_pid_config_compat(); },
+        .set_pid = [](const PID_t &pid) {
+            auto tool = PhysicalToolIndex::currently_selected_opt();
+            if (!tool) {
+                bsod("Heater config set_pid called without active tool");
+            }
+            Hotend::for_tool(*tool).set_nozzle_pid_config_compat(pid); },
         .heatbreak_fan_fnc = Fans::heat_break,
         .print_fan_fnc = Fans::print,
         .heat_time_ms = 42000,
