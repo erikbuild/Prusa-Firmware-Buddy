@@ -19,6 +19,7 @@
 #include "queue.h"
 #include "Marlin/src/gcode/queue.h"
 #include "selftest/i_selftest.hpp"
+#include <selftest/selftest_invocation.hpp>
 
 #include <option/has_side_fsensor_remap.h>
 #if HAS_SIDE_FSENSOR_REMAP()
@@ -163,6 +164,9 @@ void do_snake(Action action, PhysicalToolIndex tool) {
         }
     }
 
+    // Reset invocation state so continue_snake sees aborts only from THIS test, not a previous one.
+    selftest_invocation::begin();
+
     // Note: "gcode" tests are handled separately, partly because
     //       there are not enough bits in the selftest mask.
     {
@@ -258,7 +262,7 @@ void do_snake(Action action, PhysicalToolIndex tool) {
 void continue_snake() {
     const TestResult last_test_result = get_test_result(snake_config.last_action, snake_config.last_tool);
     if (!is_completed(last_test_result)
-        || SelftestInstance().IsAborted()) { // last selftest didn't pass
+        || selftest_invocation::is_aborted()) { // last selftest didn't pass
         snake_config.reset();
         return;
     }

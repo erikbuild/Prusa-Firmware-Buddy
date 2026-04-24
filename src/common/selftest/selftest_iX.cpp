@@ -3,6 +3,7 @@
  */
 
 #include "printer_selftest.hpp"
+#include <selftest/selftest_invocation.hpp>
 #include <fcntl.h>
 #include <unistd.h>
 #include "selftest_axis.h"
@@ -343,6 +344,7 @@ bool CSelftest::Abort() {
     for (auto &loadcell : m_pLoadcell) {
         abort_part(&loadcell);
     }
+    selftest_invocation::mark_aborted();
     m_State = stsAborted;
 
     phaseFinish();

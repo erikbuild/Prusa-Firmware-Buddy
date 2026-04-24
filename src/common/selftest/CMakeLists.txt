@@ -21,6 +21,7 @@ target_sources(
           selftest_fans.cpp
           selftest_heater.cpp
           selftest_heaters_interface.cpp
+          selftest_invocation.cpp
           selftest_part.cpp
           selftest_result_evaluation.cpp
           selftest_revise_printer_setup.cpp

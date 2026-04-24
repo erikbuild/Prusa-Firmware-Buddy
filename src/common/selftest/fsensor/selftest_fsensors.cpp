@@ -1,6 +1,7 @@
 #include "selftest_fsensors.hpp"
 #include "selftest_fsensors_config.hpp"
 
+#include <selftest/selftest_invocation.hpp>
 #include <marlin_server_types/fsm/selftest_fsensors_phases.hpp>
 #include <marlin_server.hpp>
 #include <raii/scope_guard.hpp>
@@ -616,5 +617,9 @@ SelftestFSensorsResult SelftestFSensors::process_and_present_results(bool aborte
 
 SelftestFSensorsResult run_selftest_fsensors(const SelftestFSensorsParams &params) {
     SelftestFSensors test { params };
-    return test.run();
+    const auto result = test.run();
+    if (result == SelftestFSensorsResult::aborted) {
+        selftest_invocation::mark_aborted();
+    }
+    return result;
 }

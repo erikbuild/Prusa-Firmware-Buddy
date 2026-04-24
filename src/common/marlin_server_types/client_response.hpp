@@ -393,6 +393,7 @@ enum class PhasesPhaseStepping : PhaseUnderlyingType {
     calib_error,
     calib_nok,
     calib_ok,
+    abort, ///< Internal dispatch only — never fsm_changed to. Handler marks the invocation aborted then transitions to finish.
     finish,
     _last = finish,
 };
@@ -415,6 +416,7 @@ enum class PhasesInputShaperCalibration : PhaseUnderlyingType {
     computing,
     bad_results,
     results,
+    abort, ///< Internal dispatch only — never fsm_changed to. Handler marks the invocation aborted then transitions to finish.
     finish,
     _last = finish,
 };
@@ -726,6 +728,7 @@ inline constexpr EnumArray<PhasesPhaseStepping, PhaseResponses, CountPhases<Phas
         { PhasesPhaseStepping::calib_error, { Response::Ok } },
         { PhasesPhaseStepping::calib_nok, { Response::Ok } },
         { PhasesPhaseStepping::calib_ok, { Response::Ok } },
+        { PhasesPhaseStepping::abort, {} },
         { PhasesPhaseStepping::finish, {} },
 };
 #endif
@@ -746,6 +749,7 @@ inline constexpr EnumArray<PhasesInputShaperCalibration, PhaseResponses, CountPh
         { PhasesInputShaperCalibration::computing, { Response::Abort } },
         { PhasesInputShaperCalibration::bad_results, { Response::Ok } },
         { PhasesInputShaperCalibration::results, { Response::Yes, Response::No } },
+        { PhasesInputShaperCalibration::abort, {} },
         { PhasesInputShaperCalibration::finish, {} },
 };
 #endif

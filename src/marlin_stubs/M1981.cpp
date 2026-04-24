@@ -83,6 +83,7 @@ void M1981() {
 #endif
 
         case Result::aborted:
+            // Things are clear here - the test has been aborted, so stop right there
             return;
         }
     }

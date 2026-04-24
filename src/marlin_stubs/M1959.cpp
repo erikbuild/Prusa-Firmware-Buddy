@@ -9,6 +9,7 @@
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_attachable_accelerometer.h>
 #include <option/has_remote_accelerometer.h>
+#include <selftest/selftest_invocation.hpp>
 
 static_assert(HAS_INPUT_SHAPER_CALIBRATION());
 
@@ -142,7 +143,7 @@ static PhasesInputShaperCalibration info() {
         return info_proceed();
     case Response::Abort:
         // do not set_test_result()
-        return PhasesInputShaperCalibration::finish;
+        return PhasesInputShaperCalibration::abort;
     default:
         std::terminate();
     }
@@ -198,7 +199,7 @@ static PhasesInputShaperCalibration connect_to_board(Context &) {
     marlin_server::fsm_change(PhasesInputShaperCalibration::connect_to_board);
     switch (wait_for_response(PhasesInputShaperCalibration::connect_to_board)) {
     case Response::Abort:
-        return PhasesInputShaperCalibration::finish;
+        return PhasesInputShaperCalibration::abort;
     default:
         break;
     }
@@ -209,7 +210,7 @@ static PhasesInputShaperCalibration wait_for_extruder_temperature(Context &) {
     for (;;) {
         switch (marlin_server::get_response_from_phase(PhasesInputShaperCalibration::wait_for_extruder_temperature)) {
         case Response::Abort:
-            return PhasesInputShaperCalibration::finish;
+            return PhasesInputShaperCalibration::abort;
         case Response::_none:
             if (const float temperature = Temperature::degHotend(hotend); temperature > safe_temperature) {
                 const uint16_t uint16_temperature = static_cast<uint16_t>(temperature);
@@ -237,7 +238,7 @@ static PhasesInputShaperCalibration attach_to_extruder(Context &) {
     marlin_server::fsm_change(PhasesInputShaperCalibration::attach_to_extruder);
     switch (wait_for_response(PhasesInputShaperCalibration::attach_to_extruder)) {
     case Response::Abort:
-        return PhasesInputShaperCalibration::finish;
+        return PhasesInputShaperCalibration::abort;
     case Response::Continue:
         return PhasesInputShaperCalibration::measuring_x_axis;
     default:
@@ -250,7 +251,7 @@ static PhasesInputShaperCalibration attach_to_bed(Context &) {
     marlin_server::fsm_change(PhasesInputShaperCalibration::attach_to_bed);
     switch (wait_for_response(PhasesInputShaperCalibration::attach_to_bed)) {
     case Response::Abort:
-        return PhasesInputShaperCalibration::finish;
+        return PhasesInputShaperCalibration::abort;
     case Response::Continue:
         return PhasesInputShaperCalibration::measuring_y_axis;
     default:
@@ -322,7 +323,7 @@ static PhasesInputShaperCalibration measuring_axis(
 
     for (size_t i = 0; i < spectrum.size(); ++i) {
         if (was_abort_requested(phase) || progress_hook_data.aborted) {
-            return PhasesInputShaperCalibration::finish;
+            return PhasesInputShaperCalibration::abort;
         }
 
         if (!args.calibrate_accelerometer) {
@@ -393,7 +394,7 @@ static PhasesInputShaperCalibration measurement_failed(Context &context) {
         }
         std::terminate();
     case Response::Abort:
-        return PhasesInputShaperCalibration::finish;
+        return PhasesInputShaperCalibration::abort;
     default:
         std::terminate();
     }
@@ -491,6 +492,11 @@ static PhasesInputShaperCalibration finish(Context &context) {
     return PhasesInputShaperCalibration::finish;
 }
 
+static PhasesInputShaperCalibration do_abort() {
+    selftest_invocation::mark_aborted();
+    return PhasesInputShaperCalibration::finish;
+}
+
 static PhasesInputShaperCalibration get_next_phase(Context &context, const PhasesInputShaperCalibration phase) {
     switch (phase) {
 #if HAS_ATTACHABLE_ACCELEROMETER()
@@ -518,6 +524,8 @@ static PhasesInputShaperCalibration get_next_phase(Context &context, const Phase
     case PhasesInputShaperCalibration::bad_results:
     case PhasesInputShaperCalibration::results:
         return results(context);
+    case PhasesInputShaperCalibration::abort:
+        return do_abort();
     case PhasesInputShaperCalibration::finish:
         return finish(context);
     }

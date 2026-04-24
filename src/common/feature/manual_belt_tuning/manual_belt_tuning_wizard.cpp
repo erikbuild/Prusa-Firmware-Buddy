@@ -15,6 +15,7 @@
 #include <common/marlin_server.hpp>
 #include <bsod/bsod.h>
 #include <string_builder.hpp>
+#include <selftest/selftest_invocation.hpp>
 
 #include <Marlin/src/gcode/gcode.h>
 #include <Marlin/src/module/motion.h>
@@ -179,6 +180,7 @@ public:
         planner.finish_and_disable();
         FSM_Holder holder { PhaseManualBeltTuning::intro };
         if (!wait_for_continue(PhaseManualBeltTuning::intro)) {
+            selftest_invocation::mark_aborted();
             return;
         }
 
@@ -189,6 +191,7 @@ public:
         } while (res == Result::retry);
 
         if (res == Result::abort) {
+            selftest_invocation::mark_aborted();
             return;
         }
 

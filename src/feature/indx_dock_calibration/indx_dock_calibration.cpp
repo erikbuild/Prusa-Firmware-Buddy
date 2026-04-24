@@ -21,6 +21,7 @@
 #include <config_store/store_instance.hpp>
 #include <common/selftest_result.hpp>
 #include <raii/scope_guard.hpp>
+#include <selftest/selftest_invocation.hpp>
 
 LOG_COMPONENT_DEF(DockCalibration, logging::Severity::info);
 
@@ -66,6 +67,7 @@ public:
             sr.set_dock_offset(PhysicalToolIndex::from_raw(0), TestResult::failed);
             break;
         case Result::aborted:
+            selftest_invocation::mark_aborted();
             break;
         }
         config_store().selftest_result.set(sr);

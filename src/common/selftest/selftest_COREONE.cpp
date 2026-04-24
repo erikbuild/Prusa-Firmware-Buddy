@@ -2,6 +2,7 @@
  * @file
  */
 #include "i_selftest.hpp"
+#include <selftest/selftest_invocation.hpp>
 
 #include "calibration_z.hpp"
 #include "printer_selftest.hpp"
@@ -342,6 +343,7 @@ bool CSelftest::Abort() {
     for (auto &loadcell : m_pLoadcell) {
         abort_part(&loadcell);
     }
+    selftest_invocation::mark_aborted();
     m_State = stsAborted;
 
     phaseFinish();

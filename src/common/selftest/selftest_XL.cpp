@@ -1,6 +1,7 @@
 // selftest.cpp
 
 #include "printer_selftest.hpp"
+#include <selftest/selftest_invocation.hpp>
 #include <fcntl.h>
 #include <unistd.h>
 #include "selftest_axis.h"
@@ -414,6 +415,7 @@ bool CSelftest::Abort() {
         abort_part(&dock);
     }
     abort_part(&pToolOffsets);
+    selftest_invocation::mark_aborted();
     m_State = stsAborted;
 
     phaseFinish();

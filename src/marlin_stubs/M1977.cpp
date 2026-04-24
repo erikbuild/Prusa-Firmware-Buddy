@@ -10,6 +10,7 @@
 #include <Marlin/src/feature/phase_stepping/calibration.hpp>
 #include <Marlin/src/gcode/gcode.h>
 #include <option/developer_mode.h>
+#include <selftest/selftest_invocation.hpp>
 #include <sys/fcntl.h>
 #include <sys/unistd.h>
 #include <version/version.hpp>
@@ -232,8 +233,7 @@ namespace state {
         case Response::Continue:
             return intro_helper();
         case Response::Abort:
-            // No need to invalidate test result here
-            return PhasesPhaseStepping::finish;
+            return PhasesPhaseStepping::abort;
         default:
             bsod_unreachable();
         }
@@ -282,7 +282,7 @@ namespace state {
         marlin_server::fsm_change(PhasesPhaseStepping::connect_to_board);
         switch (wait_for_response(PhasesPhaseStepping::connect_to_board)) {
         case Response::Abort:
-            return PhasesPhaseStepping::finish;
+            return PhasesPhaseStepping::abort;
         default:
             break;
         }
@@ -293,7 +293,7 @@ namespace state {
         for (;;) {
             switch (marlin_server::get_response_from_phase(PhasesPhaseStepping::wait_for_extruder_temperature)) {
             case Response::Abort:
-                return PhasesPhaseStepping::finish;
+                return PhasesPhaseStepping::abort;
             case Response::_none:
                 if (const float temperature = Temperature::degHotend(hotend); temperature > safe_temperature) {
                     const uint16_t uint16_temperature = static_cast<uint16_t>(temperature);
@@ -321,7 +321,7 @@ namespace state {
         marlin_server::fsm_change(PhasesPhaseStepping::attach_to_extruder);
         switch (wait_for_response(PhasesPhaseStepping::attach_to_extruder)) {
         case Response::Abort:
-            return PhasesPhaseStepping::finish;
+            return PhasesPhaseStepping::abort;
         case Response::Continue:
             return PhasesPhaseStepping::calib_x;
         default:
@@ -334,7 +334,7 @@ namespace state {
         marlin_server::fsm_change(PhasesPhaseStepping::attach_to_bed);
         switch (wait_for_response(PhasesPhaseStepping::attach_to_bed)) {
         case Response::Abort:
-            return PhasesPhaseStepping::finish;
+            return PhasesPhaseStepping::abort;
         case Response::Continue:
             return PhasesPhaseStepping::calib_y;
         default:
@@ -356,7 +356,7 @@ namespace state {
             context.calibration_result_x = hooks.calibration_result;
             return PhasesPhaseStepping::calib_y;
         case State::aborted:
-            return PhasesPhaseStepping::finish;
+            return PhasesPhaseStepping::abort;
         }
         bsod_unreachable();
     }
@@ -372,9 +372,14 @@ namespace state {
             context.calibration_result_y = hooks.calibration_result;
             return evaluate_result(context);
         case State::aborted:
-            return PhasesPhaseStepping::finish;
+            return PhasesPhaseStepping::abort;
         }
         bsod_unreachable();
+    }
+
+    PhasesPhaseStepping abort() {
+        selftest_invocation::mark_aborted();
+        return PhasesPhaseStepping::finish;
     }
 
     PhasesPhaseStepping calib_ok(Context &context) {
@@ -442,6 +447,8 @@ PhasesPhaseStepping get_next_phase(Context &context, const PhasesPhaseStepping p
         return state::calib_nok();
     case PhasesPhaseStepping::calib_ok:
         return state::calib_ok(context);
+    case PhasesPhaseStepping::abort:
+        return state::abort();
     case PhasesPhaseStepping::finish:
         return PhasesPhaseStepping::finish;
     }

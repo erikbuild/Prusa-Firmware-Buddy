@@ -20,6 +20,7 @@
 #include <common/mapi/parking.hpp>
 #include <tool/hotend/hotend.hpp>
 #include <utils/variant_utils.hpp>
+#include <selftest/selftest_invocation.hpp>
 
 LOG_COMPONENT_DEF(NozzleCleanerCalibration, logging::Severity::info);
 
@@ -87,6 +88,7 @@ public:
             config_store().selftest_result_nozzle_cleaner_calibration.set(TestResult::failed);
             break;
         case Result::aborted:
+            selftest_invocation::mark_aborted();
             break;
         }
 

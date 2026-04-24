@@ -1,6 +1,7 @@
 // selftest.cpp
 
 #include "printer_selftest.hpp"
+#include <selftest/selftest_invocation.hpp>
 #include <fcntl.h>
 #include <unistd.h>
 #include "selftest_axis.h"
@@ -373,6 +374,7 @@ bool CSelftest::Abort() {
     abort_part((selftest::IPartHandler **)&pBed);
     abort_part((selftest::IPartHandler **)&pFirstLayer);
 
+    selftest_invocation::mark_aborted();
     m_State = stsAborted;
 
     phaseFinish();
