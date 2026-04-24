@@ -207,13 +207,16 @@ private:
             marlin_server::fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, data);
         });
 
-        const M109Flags flags {
-            .target_temp = cooldown_safe_temperature_c,
-            .wait_heat_or_cool = true,
-            .autotemp = true,
-        };
-        M109_no_parser(*tool, flags); // This is the temp we want to reach
-        thermalManager.setTargetHotend(0, *tool); // This is so that we dont accidentally re-heat to 50
+        if(thermalManager.degHotend(*tool) > cooldown_safe_temperature_c) {
+            const M109Flags flags {
+                .target_temp = cooldown_safe_temperature_c,
+                .wait_heat_or_cool = true,
+                .autotemp = true,
+            };
+            M109_no_parser(*tool, flags); // This is the temp we want to reach
+            thermalManager.setTargetHotend(0, *tool); // This is so that we dont accidentally re-heat to 50
+        }
+        
         return planner.draining() ? Result::aborted : Result::success;
     }
 
