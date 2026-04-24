@@ -11,6 +11,8 @@
 #include <Marlin/src/module/tool_change.h>
 #include <Marlin/src/module/probe.h>
 #include <Marlin/src/module/prusa/toolchanger.h>
+#include <marlin_server.hpp>
+#include <warning_type.hpp>
 #include <tool_index.hpp>
 #include <tools_mapping.hpp>
 #include <gcode/gcode_info.hpp>
@@ -239,32 +241,57 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     sensor_corrected_config.sensor_position.y = std::min(sensor_corrected_config.sensor_position.y, Y_MAX_POS - config.sensing_diameter / 2.0f - Y_MAX_OFFSET);
     offset_for_measurement.y += sensor_corrected_config.sensor_position.y - config.sensor_position.y;
 
-    for (int i = 0; i < 3; i++) {
-        log_info(ToolOffsetCalib, "XY offset measurement attempt %d", i + 1);
-        auto result = tool_offset::measure_current_tool_offset(sensor_corrected_config, *sensor, offset_for_measurement);
-        if (result.has_value()) {
-            log_info(ToolOffsetCalib, "Measured XY offset: X=%.3f Y=%.3f", static_cast<double>(result->x), static_cast<double>(result->y));
-            // Store newly measured offsets only for XY, keep actual for Z
-            hotend_offset[tool].x = result->x + config.sensor_position.x - sensor_corrected_config.sensor_position.x; // Correct for any sensor position shift
-            hotend_offset[tool].y = result->y + config.sensor_position.y - sensor_corrected_config.sensor_position.y; // Correct for any sensor position shift
+    while (true) {
+        for (int i = 0; i < 3; i++) {
+            log_info(ToolOffsetCalib, "XY offset measurement attempt %d", i + 1);
+            auto result = tool_offset::measure_current_tool_offset(sensor_corrected_config, *sensor, offset_for_measurement);
+            if (result.has_value()) {
+                log_info(ToolOffsetCalib, "Measured XY offset: X=%.3f Y=%.3f", static_cast<double>(result->x), static_cast<double>(result->y));
+                // Store newly measured offsets only for XY, keep actual for Z
+                hotend_offset[tool].x = result->x + config.sensor_position.x - sensor_corrected_config.sensor_position.x; // Correct for any sensor position shift
+                hotend_offset[tool].y = result->y + config.sensor_position.y - sensor_corrected_config.sensor_position.y; // Correct for any sensor position shift
+                hotend_offset[tool].z = current_ho.z;
+                prusa_toolchanger.save_tool_offset(tool);
+                hotend_currently_applied_offset = xyz_pos_t { result->x, result->y, current_ho.z };
+                return true;
+            } else {
+                log_error(ToolOffsetCalib, "Measurement failed: %s", result.error());
+                // retrials performed with 0 offsets
+                offset_for_measurement.x = sensor_corrected_config.sensor_position.x - config.sensor_position.x;
+                offset_for_measurement.y = sensor_corrected_config.sensor_position.y - config.sensor_position.y;
+            }
+        }
+
+        // All 3 inner retries failed. Park to front-middle with Z raised so the user has
+        // room to clean the nozzle, then block and ask for Retry/Abort. On Retry, move back
+        // to where we were parked from and re-run the inner loop. On Abort, stop the print
+        // outright — continuing with stale offsets would crash the tool.
+        constexpr float PARK_CLEAN_Z = 100.0f;
+        const xyze_pos_t pre_park_position = current_position;
+        const mapi::ParkingPosition park_cleaning_position = mapi::ParkingPosition::from_xyz_pos({ { (X_MIN_POS + X_MAX_POS) / 2.0f, 10, PARK_CLEAN_Z } });
+        mapi::park(mapi::ZAction::absolute_move, park_cleaning_position);
+
+        const auto response = marlin_server::prompt_warning(WarningType::ToolOffsetXyCalibrationFailed);
+        if (response == Response::Abort) {
+            // Restore the original offsets
+            hotend_offset[tool].x = current_ho.x;
+            hotend_offset[tool].y = current_ho.y;
             hotend_offset[tool].z = current_ho.z;
             prusa_toolchanger.save_tool_offset(tool);
-            hotend_currently_applied_offset = xyz_pos_t { result->x, result->y, current_ho.z };
-            return true;
-        } else {
-            log_error(ToolOffsetCalib, "Measurement failed: %s", result.error());
-            // retrials performed with 0 offsets
-            offset_for_measurement.x = sensor_corrected_config.sensor_position.x - config.sensor_position.x;
-            offset_for_measurement.y = sensor_corrected_config.sensor_position.y - config.sensor_position.y;
+            hotend_currently_applied_offset = xyz_pos_t { current_ho.x, current_ho.y, current_ho.z };
+            // Abort print
+            log_error(ToolOffsetCalib, "User aborted XY offset calibration for tool %u", tool.to_raw());
+            marlin_server::quick_stop();
+            marlin_server::print_abort();
+            return false;
         }
+        log_info(ToolOffsetCalib, "User requested XY offset retry for tool %u", tool.to_raw());
+
+        // Restore the pre-park position: lift/keep Z high, move XY, then drop Z.
+        do_blocking_move_to_z(std::max(current_position.z, pre_park_position.z));
+        do_blocking_move_to_xy(pre_park_position.x, pre_park_position.y);
+        do_blocking_move_to_z(pre_park_position.z);
     }
-    // Calibration failed after retries, restore original offsets
-    hotend_offset[tool].x = current_ho.x;
-    hotend_offset[tool].y = current_ho.y;
-    hotend_offset[tool].z = current_ho.z;
-    prusa_toolchanger.save_tool_offset(tool);
-    hotend_currently_applied_offset = xyz_pos_t { current_ho.x, current_ho.y, current_ho.z };
-    return false;
 }
 
 bool run(uint8_t r_param, uint8_t probe_count) {

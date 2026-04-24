@@ -31,6 +31,7 @@
 #include <option/has_human_interactions.h>
 #include <option/has_tool_crash_recovery.h>
 #include <option/has_extruder_fsensor.h>
+#include <option/has_tool_offset_sensor.h>
 #include <fsm/print_preview_mapper.hpp>
 
 #if HAS_LOADCELL()
@@ -716,6 +717,11 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 
     case WarningType::HomingCalibrationFromMenuNeeded:
         return ErrCode::ERR_MECHANICAL_HOMING_CALIBRATION_FROM_MENU_NEEDED;
+#endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    case WarningType::ToolOffsetXyCalibrationFailed:
+        return ErrCode::ERR_MECHANICAL_TOOL_OFFSET_XY_CALIBRATION_FAILED;
 #endif
 
 #if HAS_SELFTEST()

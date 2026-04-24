@@ -13,6 +13,7 @@
 #include <option/has_mmu2.h>
 #include <option/has_human_interactions.h>
 #include <option/has_anfc.h>
+#include <option/has_tool_offset_sensor.h>
 
 enum class WarningType : uint32_t {
 #if HAS_EMERGENCY_STOP()
@@ -98,6 +99,9 @@ enum class WarningType : uint32_t {
     HomingCalibrationFromMenuNeeded,
 #endif
     AccelerometerCommunicationFailed,
+#if HAS_TOOL_OFFSET_SENSOR()
+    ToolOffsetXyCalibrationFailed,
+#endif
 #if HAS_ANFC()
     /// OpenPrintTag has been assigned to the specified tool, will do filament tracking
     /// This is an info, not a warning

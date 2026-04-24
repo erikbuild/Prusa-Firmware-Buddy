@@ -2,6 +2,7 @@
 
 #include <bitset>
 #include <option/has_mmu2.h>
+#include <option/has_tool_offset_sensor.h>
 
 constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
     switch (warning) {
@@ -75,6 +76,11 @@ constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
 #if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     case WarningType::DisplayProblemDetected:
         return PhasesWarning::DisplayProblemDetected;
+#endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    case WarningType::ToolOffsetXyCalibrationFailed:
+        return PhasesWarning::ToolOffsetXyCalibrationFailed;
 #endif
 
         //

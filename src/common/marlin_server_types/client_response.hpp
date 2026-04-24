@@ -45,6 +45,7 @@
 #include <option/has_chamber_vents.h>
 #include <option/has_precise_homing_corexy.h>
 #include <option/has_side_fsensor.h>
+#include <option/has_tool_offset_sensor.h>
 #include <option/has_human_interactions.h>
 #include <option/has_tool_crash_recovery.h>
 
@@ -330,6 +331,11 @@ enum class PhasesWarning : PhaseUnderlyingType {
 
 #if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
     DisplayProblemDetected,
+#endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    /// Blocking dialog shown when XY tool offset calibration fails. Lets the user abort or retry.
+    ToolOffsetXyCalibrationFailed,
 #endif
 
     /// Shown when the M334 is attempting to change metrics configuration, prompting the user to confirm the change (security reasons)
@@ -666,6 +672,9 @@ inline constexpr EnumArray<PhasesWarning, PhaseResponses, CountPhases<PhasesWarn
 #endif
 #if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()
         { PhasesWarning::DisplayProblemDetected, { Response::Yes, Response::No } },
+#endif
+#if HAS_TOOL_OFFSET_SENSOR()
+        { PhasesWarning::ToolOffsetXyCalibrationFailed, { Response::Retry, Response::Abort } },
 #endif
         { PhasesWarning::MetricsConfigChangePrompt, { Response::Yes, Response::No } },
 };
