@@ -226,7 +226,7 @@ uint8_t get_heatbreak_fan_pwm() {
     return heatbreak_fan_pwm.load();
 }
 
-static constexpr uint32_t fan_startup_duration_ms = 2000;
+static constexpr uint32_t fan_startup_duration_ms = 5000;
 
 bool is_printfan_rpm_ok() {
     return printfan_pwm == 0 || hal::tim::get_printfan_rpm_counter() > 0 || freertos::millis() - printfan_start_ms < fan_startup_duration_ms;
