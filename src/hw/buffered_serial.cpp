@@ -202,8 +202,7 @@ size_t BufferedSerial::Read(char *buf, size_t len, bool terminate_on_idle /* = f
                 break;
             }
 
-            uint32_t timeout = std::min(budgetMs, 1);
-            TickType_t ticks = timeout / portTICK_PERIOD_MS;
+            TickType_t ticks = budgetMs / portTICK_PERIOD_MS;
             xEventGroupWaitBits(rxBuf.event_group,
                 UARTRXBUFF_EVT_FIRST_HALF_FULL | UARTRXBUFF_EVT_SECOND_HALF_FULL | UARTRXBUFF_EVT_OVERFLOW_DETECTED | UARTRXBUFF_EVT_IDLE,
                 /*xClearOnExit=*/pdFALSE,
