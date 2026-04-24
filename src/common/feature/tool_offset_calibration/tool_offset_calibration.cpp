@@ -71,14 +71,6 @@ ToolTemperatures get_tool_temperatures(PhysicalToolIndex tool) {
     return { params.nozzle_temperature, params.nozzle_preheat_temperature };
 }
 
-/// Update the print status message with tool offset calibration progress
-void set_calib_status(PrintStatusMessageGuard &guard, uint8_t tool, uint8_t current, uint8_t total) {
-    guard.update<PrintStatusMessage::Type::tool_offset_calibrating>({
-        .progress = { .current = static_cast<float>(current), .target = static_cast<float>(total) },
-        .tool = tool,
-    });
-}
-
 /// Return a random float in [-r_param, +r_param]
 float random_jitter(uint8_t r_param) {
     const float normalized = rand_f_from_u(rand_u()); // [0.0, 1.0]
@@ -356,7 +348,11 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             continue;
         }
 
-        set_calib_status(status_guard, tool.to_raw(), step + 1, num_tools);
+        status_guard.update<PrintStatusMessage::Type::tool_offset_calibrating>({
+            .progress = { .current = static_cast<float>(step + 1), .target = static_cast<float>(num_tools) },
+            .tool = i,
+        });
+
         tool_change(stdext::to_variant(tool), tool_return_t::no_return);
 
         const int16_t saved_temp = thermalManager.degTargetHotend(tool);
