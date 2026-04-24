@@ -55,6 +55,7 @@
 #include <option/has_heatbed_screws_during_transport.h>
 #include <option/has_anfc.h>
 #include <option/has_indx.h>
+#include <option/has_side_fsensor.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -190,6 +191,11 @@ struct CurrentStore
 
     /// Bitfield of enabled toolhead filament sensors
     StoreItem<uint8_t, 0xff, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Side FSensors enabled")> fsensor_extruder_enabled_bits;
+
+#if HAS_SIDE_FSENSOR()
+    /// Per-tool side filament sensor selftest result.
+    StoreItemArray<TestResult, defaults::side_fsensor_selftest_results, ItemFlag::calibrations, journal::hash("Selftest Result - Side FSensor"), 16, PhysicalToolIndex::count> selftest_result_side_fsensor;
+#endif
 
     // LAN settings
     // lan_flag & 1 -> On = 0/off = 1, lan_flag & 2 -> dhcp = 0/static = 1

@@ -31,13 +31,17 @@ constexpr TestResult merge_hotends(ToolMask tool_mask, stdext::inplace_function<
 inline TestResult map_fsensor_calibration_result(IFSensor *sensor) {
     if (sensor == nullptr) {
         return TestResult::passed;
-    } else if (sensor->is_calibrated()) {
-        return TestResult::passed;
-    } else if (!should_enable(sensor->id())) {
-        return TestResult::skipped;
-    } else {
-        return TestResult::unknown;
     }
+
+    const auto result = sensor->get_selftest_result();
+    if (result == TestResult::passed) {
+        return TestResult::passed;
+    }
+    if (!should_enable(sensor->id())) {
+        return TestResult::skipped;
+    }
+    // failed or unknown pass through as-is, so the snake menu can show a distinct
+    return result;
 }
 
 /// Map live filament sensor state to a TestResult for calibration checkmark display.

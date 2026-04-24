@@ -31,6 +31,9 @@ FooterItemFSValueSide::FooterItemFSValueSide(window_t *parent)
 }
 
 int FooterItemFSValueSide::static_readValue() {
+    if (IFSensor * override = selftest_override_.load()) {
+        return override->GetFilteredValue();
+    }
     if (IFSensor *sensor = FSensors_instance().sensor(LogicalFilamentSensor::side)) {
         return sensor->GetFilteredValue();
     }

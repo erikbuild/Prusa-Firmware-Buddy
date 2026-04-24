@@ -3,6 +3,7 @@
 
 #include <marlin_server_types/client_response.hpp>
 #include <option/has_side_fsensor.h>
+#include <option/has_indx.h>
 
 enum class PhaseSelftestFSensors : PhaseUnderlyingType {
     /// Parking, toolpicking, ... - wait state
@@ -57,7 +58,17 @@ inline constexpr EnumArray<PhaseSelftestFSensors, PhaseResponses, PhaseSelftestF
 #if PRINTER_IS_PRUSA_MINI()
         { PhaseSelftestFSensors::ask_mini_has_fsensor, { Response::Yes, Response::No } },
 #endif
-        { PhaseSelftestFSensors::offer_unload, { Response::Continue, Response::Unload, Response::Abort } },
+        {
+            PhaseSelftestFSensors::offer_unload,
+            {
+                Response::Continue,
+                Response::Unload,
+#if HAS_INDX()
+                Response::Skip,
+#endif
+                Response::Abort,
+            },
+        },
         { PhaseSelftestFSensors::ask_filament, { Response::Yes, Response::No, Response::Abort } },
         { PhaseSelftestFSensors::calibrating, {} },
         {

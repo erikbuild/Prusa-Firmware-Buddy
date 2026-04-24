@@ -2,10 +2,24 @@
 #include "filament_sensor_xbuddy_extension.hpp"
 
 #include <feature/xbuddy_extension/xbuddy_extension.hpp>
+#include <config_store/store_instance.hpp>
+#include <option/has_side_fsensor.h>
 
 FSensorXBuddyExtension::FSensorXBuddyExtension(FilamentSensorID id, Source source)
     : IFSensor(id)
     , source_(source) {}
+
+bool FSensorXBuddyExtension::is_calibrated() const {
+    return get_selftest_result() == TestResult::passed;
+}
+
+TestResult FSensorXBuddyExtension::get_selftest_result() const {
+#if HAS_SIDE_FSENSOR()
+    return config_store().selftest_result_side_fsensor.get(id_.index);
+#else
+    return TestResult::passed;
+#endif
+}
 
 void FSensorXBuddyExtension::cycle() {
     state = interpret_state();

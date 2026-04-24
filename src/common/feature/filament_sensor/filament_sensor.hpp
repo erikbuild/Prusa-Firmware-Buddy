@@ -15,6 +15,7 @@
 
 #include "filament_sensor_id.hpp"
 #include <feature/filament_sensor/calibrator/filament_sensor_calibrator.hpp>
+#include <test_result.hpp>
 
 class IFSensor {
     friend class FilamentSensors;
@@ -53,6 +54,11 @@ public:
     /// Whether this sensor has valid calibration data.
     /// Non-ADC sensors don't store calibration data and are always calibrated.
     virtual bool is_calibrated() const { return true; }
+
+    /// Last selftest outcome for this sensor. The default derives from \p is_calibrated() —
+    virtual TestResult get_selftest_result() const {
+        return is_calibrated() ? TestResult::passed : TestResult::unknown;
+    }
 
     /// Instantiates a class within the \param storage that handles the sensor calibration
     /// !!! Can return nullptr if the filament sensor cannot be checked in any way

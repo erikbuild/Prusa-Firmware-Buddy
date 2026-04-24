@@ -44,6 +44,7 @@ namespace config_store_ns {
 namespace defaults {
     // default values for variables that have distinct requirements
     inline constexpr TestResult test_result_unknown { TestResult::unknown };
+    inline constexpr std::array<TestResult, PhysicalToolIndex::count> side_fsensor_selftest_results {};
 
     inline constexpr std::array<char, lan_hostname_max_len + 1> net_hostname { LAN_HOSTNAME_DEF };
     inline constexpr int8_t lan_timezone { 1 };

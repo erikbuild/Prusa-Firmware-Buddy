@@ -3,6 +3,8 @@
 #include <selftest_result_evaluation.hpp>
 #include <config_store/store_instance.hpp>
 #include <option/has_switched_fan_test.h>
+#include <feature/filament_sensor/filament_sensors_handler.hpp>
+#include <feature/filament_sensor/filament_sensor_states.hpp>
 
 #include <option/has_chamber_filtration_api.h>
 
@@ -80,11 +82,24 @@ TestResult get_test_result(Action action, [[maybe_unused]] ToolMask tool) {
         return test_result::evaluate_results(sr.get_bed_heater(), sr.get_nozzle_heater(PhysicalToolIndex::from_raw(0)));
     case Action::DoorSensor:
         return test_result::evaluate_results(config_store().selftest_result_door_sensor.get());
-    case Action::FilamentSensorCalibration:
-        // No submenu on INDX — always check all enabled tools
-        return merge_hotends_evaluations([](const PhysicalToolIndex e) {
+    case Action::FilamentSensorCalibration: {
+        // 4-tool INDX has no secondary filament sensor board — report tools 5-8 as skipped.
+        static_assert(PhysicalToolIndex::count == 8);
+        bool is_4tool = true;
+        for (uint8_t i = 4; i < PhysicalToolIndex::count; ++i) {
+            auto *fs = GetSideFSensorIgnoreEnabled(i);
+            if (!fs || fs->get_state() != FilamentSensorState::NotConnected) {
+                is_4tool = false;
+                break;
+            }
+        }
+        return merge_hotends_evaluations([is_4tool](const PhysicalToolIndex e) {
+            if (is_4tool && e.to_raw() >= 4) {
+                return TestResult::skipped;
+            }
             return get_fsensor_calibration_result(e);
         });
+    }
     case Action::DockCalibration:
         return sr.get_dock_offset(PhysicalToolIndex::from_raw(0));
     case Action::NozzleCleanerCalibration:

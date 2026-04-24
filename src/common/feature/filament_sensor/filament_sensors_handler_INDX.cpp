@@ -2,7 +2,9 @@
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
 #include <feature/filament_sensor/filament_sensor_xbuddy_extension.hpp>
 
-FSensorXBuddyExtension *getSideFSensor(uint8_t index) {
+namespace {
+
+FSensorXBuddyExtension *get_side_sensor_slot(uint8_t index) {
     static std::array<FSensorXBuddyExtension, PhysicalToolIndex::count> sensors = { {
         { FilamentSensorID { .position = FilamentSensorID::Position::side, .index = 0 }, FSensorXBuddyExtension::Source::ext },
         { FilamentSensorID { .position = FilamentSensorID::Position::side, .index = 1 }, FSensorXBuddyExtension::Source::ext },
@@ -14,11 +16,13 @@ FSensorXBuddyExtension *getSideFSensor(uint8_t index) {
         { FilamentSensorID { .position = FilamentSensorID::Position::side, .index = 7 }, FSensorXBuddyExtension::Source::ext },
     } };
     static_assert(PhysicalToolIndex::count == 8);
-    if (index >= sensors.size() || !PhysicalToolIndex::from_raw(index).is_enabled()) {
+    if (index >= sensors.size()) {
         return nullptr;
     }
     return &sensors[index];
 }
+
+} // namespace
 
 // function returning abstract sensor - used in higher level api
 IFSensor *GetExtruderFSensor([[maybe_unused]] uint8_t index) {
@@ -27,6 +31,13 @@ IFSensor *GetExtruderFSensor([[maybe_unused]] uint8_t index) {
 }
 
 // function returning abstract sensor - used in higher level api
-IFSensor *GetSideFSensor([[maybe_unused]] uint8_t index) {
-    return getSideFSensor(index);
+IFSensor *GetSideFSensor(uint8_t index) {
+    if (index >= PhysicalToolIndex::count || !PhysicalToolIndex::from_raw(index).is_enabled()) {
+        return nullptr;
+    }
+    return get_side_sensor_slot(index);
+}
+
+IFSensor *GetSideFSensorIgnoreEnabled(uint8_t index) {
+    return get_side_sensor_slot(index);
 }

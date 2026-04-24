@@ -76,8 +76,15 @@ private:
     void finalize();
 
     [[nodiscard]] bool prepare();
-    [[nodiscard]] bool initial_remove_filament();
-    [[nodiscard]] bool remove_filament_early_check();
+
+    enum class InitialRemoveResult {
+        continue_,
+        aborted,
+        skipped,
+    };
+    [[nodiscard]] InitialRemoveResult initial_remove_filament();
+
+    [[nodiscard]] InitialRemoveResult remove_filament_early_check();
     void calibrate(FilamentSensorCalibrator::CalibrationPhase phase);
     [[nodiscard]] bool ask_insert_filament();
     [[nodiscard]] bool ask_remove_filament();
@@ -139,8 +146,14 @@ SelftestFSensorsResult SelftestFSensors::run() {
     }
 
     // Make sure there is no filament in the filament sensor before continuing
-    if (!initial_remove_filament()) {
+    switch (initial_remove_filament()) {
+    case InitialRemoveResult::continue_:
+        break;
+    case InitialRemoveResult::aborted:
         return Result::aborted;
+    case InitialRemoveResult::skipped:
+        // Leave the previous per-tool result untouched and move on.
+        return Result::skipped;
     }
 
     // Aborting from this point on means test failure, because it means that the user was likely not able to continue further
@@ -151,9 +164,15 @@ SelftestFSensorsResult SelftestFSensors::run() {
     };
 
     // If we detect straight on that there is something wrong with one of the sensors, give the user again an opportunity to do an unload
-    // Aborting here fails the selftest
-    if (!remove_filament_early_check()) {
+    // Aborting here fails the selftest; skipping leaves the previous result untouched.
+    switch (remove_filament_early_check()) {
+    case InitialRemoveResult::continue_:
+        break;
+    case InitialRemoveResult::aborted:
         return Result::aborted;
+    case InitialRemoveResult::skipped:
+        fail_guard.disarm();
+        return Result::skipped;
     }
 
     /// Reinserting the filament multiple times could give us better calibration data
@@ -167,6 +186,13 @@ SelftestFSensorsResult SelftestFSensors::run() {
 
         /// Calibrate the nins phase
         calibrate(FilamentSensorCalibrator::CalibrationPhase::not_inserted);
+
+        // No point asking the user to insert filament for a sensor that already failed.
+        // Fall through to process_and_present_results so the per-tool failure is recorded
+        // and the caller (M1981) can continue to the next tool.
+        if (std::ranges::all_of(calibrators_, [](const auto *c) { return c->failed(); })) {
+            break;
+        }
 
         if (!ask_insert_filament()) {
             return Result::aborted;
@@ -231,7 +257,8 @@ void SelftestFSensors::initialize() {
     if (!config_store().mmu2_enabled.get())
     #endif
     {
-        if (add_calibrator(GetSideFSensor(params_.tool))) {
+        auto *sensor = GetSideFSensor(params_.tool);
+        if (sensor && add_calibrator(sensor)) {
             config_store().fsensor_side_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool); });
         }
     }
@@ -275,7 +302,7 @@ bool SelftestFSensors::prepare() {
     return true;
 }
 
-bool SelftestFSensors::initial_remove_filament() {
+SelftestFSensors::InitialRemoveResult SelftestFSensors::initial_remove_filament() {
     while (true) {
         {
             fsm_change_with_tool(Phase::offer_unload);
@@ -299,8 +326,11 @@ bool SelftestFSensors::initial_remove_filament() {
                 filament_gcodes::M702_unload({}, Z_AXIS_LOAD_POS, RetAndCool_t::Neither, examined_virtual_tool, false);
             } break;
 
+            case Response::Skip:
+                return InitialRemoveResult::skipped;
+
             case Response::Abort:
-                return false;
+                return InitialRemoveResult::aborted;
 
             default:
                 bsod_unreachable();
@@ -318,10 +348,10 @@ bool SelftestFSensors::initial_remove_filament() {
 
             case Response::No:
                 // No filament confirmed -> return
-                return true;
+                return InitialRemoveResult::continue_;
 
             case Response::Abort:
-                return false;
+                return InitialRemoveResult::aborted;
 
             default:
                 bsod_unreachable();
@@ -330,21 +360,25 @@ bool SelftestFSensors::initial_remove_filament() {
     }
 }
 
-bool SelftestFSensors::remove_filament_early_check() {
+SelftestFSensors::InitialRemoveResult SelftestFSensors::remove_filament_early_check() {
     while (true) {
         switch (check_early_fail(FilamentSensorCalibrator::CalibrationPhase::not_inserted)) {
 
         case EarlyFailCheckResult::abort:
-            return false;
+            return InitialRemoveResult::aborted;
 
         case EarlyFailCheckResult::continue_:
-            return true;
+            return InitialRemoveResult::continue_;
 
         case EarlyFailCheckResult::retry:
-            if (!initial_remove_filament()) {
-                return false;
+            switch (initial_remove_filament()) {
+            case InitialRemoveResult::continue_:
+                break; // Continue the while loop to re-check.
+            case InitialRemoveResult::aborted:
+                return InitialRemoveResult::aborted;
+            case InitialRemoveResult::skipped:
+                return InitialRemoveResult::skipped;
             }
-            // Continue loop
             break;
         }
     }
@@ -422,14 +456,8 @@ SelftestFSensors::AskFilamentCommonResult SelftestFSensors::ask_filament_common(
 }
 
 SelftestFSensors::EarlyFailCheckResult SelftestFSensors::check_early_fail([[maybe_unused]] FilamentSensorCalibrator::CalibrationPhase calib_phase) {
-    const uint8_t cnt_failed = std::ranges::count_if(calibrators_, [](const auto *c) { return c->failed(); });
-
-    if (cnt_failed == calibrators_.size()) {
-        // Everything failed, nothing to save here
-        return EarlyFailCheckResult::abort;
-    }
-
 #if HAS_SIDE_FSENSOR()
+    const uint8_t cnt_failed = std::ranges::count_if(calibrators_, [](const auto *c) { return c->failed(); });
     const uint8_t cnt_not_ready = std::ranges::count_if(calibrators_, [&](const auto *c) { return !c->is_ready_for_calibration(calib_phase); });
 
     if (cnt_failed > 0 || cnt_not_ready > 0) {
@@ -452,17 +480,10 @@ SelftestFSensors::EarlyFailCheckResult SelftestFSensors::check_early_fail([[mayb
             }
         }
 
-        // Fail calibrators that are not ready
-        // Otherwise the selftest could be reported as OK is we're in the last ask_remove_filament phase (and no calibrate follows)
+        // Fail calibrators that are not ready; otherwise a missing calibrate() follow-up
+        // could cause the selftest to be reported as OK.
         for (auto *calibrator : calibrators_) {
             calibrator->fail_if(!calibrator->is_ready_for_calibration(calib_phase));
-        }
-
-        // We might have failed everything by our last fail_if - in that case also exit
-        // We could possibly create a different phase that wouldn't allow the user to "continue" in this case,
-        // but I feel like we would be overcomplicating it at that point.
-        if (std::ranges::all_of(calibrators_, [](const auto *c) { return c->failed(); })) {
-            return EarlyFailCheckResult::abort;
         }
     }
 #endif
@@ -567,6 +588,14 @@ SelftestFSensorsResult SelftestFSensors::process_and_present_results(bool aborte
         const bool result = !calibrator->failed();
         log_info(FSensor, "Calibration %i %i Result: %i", int(calibrator->sensor().id().position), int(calibrator->sensor().id().index), result);
         success &= result;
+
+#if HAS_SIDE_FSENSOR()
+        // Persist the side-sensor verification result so callers that don't store
+        // their own calibration data (XBuddy Extension sensors) can report it later.
+        if (calibrator->sensor().id().position == FilamentSensorID::Position::side) {
+            config_store().selftest_result_side_fsensor.set(calibrator->sensor().id().index, result ? TestResult::passed : TestResult::failed);
+        }
+#endif
     }
 
     // Make sure that the calibration results are reflected
@@ -578,8 +607,7 @@ SelftestFSensorsResult SelftestFSensors::process_and_present_results(bool aborte
     const auto phase = success ? Phase::success : Phase::failed;
     fsm_change_with_tool(phase);
 
-    // Wait for the user to press ok/done. If the selftest succeeded, automatically continue after a few seconds.
-    marlin_server::wait_for_response(phase, success ? 3000 : 0);
+    marlin_server::wait_for_response(phase);
 
     return success ? Result::success : Result::failed;
 }

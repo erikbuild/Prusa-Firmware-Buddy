@@ -16,6 +16,9 @@ public:
 
     FSensorXBuddyExtension(FilamentSensorID id, Source source);
 
+    bool is_calibrated() const override;
+    TestResult get_selftest_result() const override;
+
 protected:
     virtual void cycle() override;
     virtual int32_t GetFilteredValue() const override;

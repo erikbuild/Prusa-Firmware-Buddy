@@ -2,12 +2,17 @@
 
 #include <marlin_server_types/fsm/selftest_fsensors_phases.hpp>
 #include <gui/footer/footer_line.hpp>
+#include <gui/footer/footer_item_fsvalue.hpp>
 #include <img_resources.hpp>
 #include <guiconfig/wizard_config.hpp>
 #include <standard_frame/frame_wait.hpp>
 #include <standard_frame/frame_prompt.hpp>
 #include <selftest/fsensor/selftest_fsensors_config.hpp>
 #include <option/has_extruder_fsensor.h>
+#include <option/has_indx.h>
+#if HAS_INDX() && HAS_SIDE_FSENSOR()
+    #include <feature/filament_sensor/filament_sensors_handler.hpp>
+#endif
 
 namespace {
 
@@ -27,6 +32,16 @@ constexpr size_t text_right_width = WizardDefaults::X_space - icon_left_width - 
 constexpr size_t top_of_changeable_area = WizardDefaults::row_1 + WizardDefaults::progress_h;
 constexpr size_t height_of_changeable_area = WizardDefaults::RectRadioButton(1).Top() - top_of_changeable_area;
 constexpr Rect16 ChangeableRect = { col_0, top_of_changeable_area, WizardDefaults::X_space, height_of_changeable_area };
+
+// On INDX the topmost row of the text column is reserved for a "Tool N" label.
+// Icons keep their original rect so existing images render unchanged.
+#if HAS_INDX()
+constexpr size_t tool_label_height = 30;
+#else
+constexpr size_t tool_label_height = 0;
+#endif
+constexpr size_t text_top = top_of_changeable_area + tool_label_height;
+constexpr size_t text_height = height_of_changeable_area - tool_label_height;
 
 const char *selftest_title() {
 #if HAS_SIDE_FSENSOR() && HAS_EXTRUDER_FSENSOR()
@@ -70,7 +85,10 @@ class FrameTextAndImage : public FrameBase {
 public:
     FrameTextAndImage(window_frame_t *parent, Phase phase, const string_view_utf8 &text, const img::Resource *image)
         : FrameBase(parent, phase)
-        , text_left(parent, Rect16(col_0, top_of_changeable_area, text_left_width, height_of_changeable_area), is_multiline::yes)
+    #if HAS_INDX()
+        , tool_label_(parent, Rect16(col_0, top_of_changeable_area, text_left_width, tool_label_height), is_multiline::no)
+    #endif
+        , text_left(parent, Rect16(col_0, text_top, text_left_width, text_height), is_multiline::yes)
         , icon_right(parent, Rect16(col_0 + text_left_width + text_icon_space, top_of_changeable_area, icon_right_width, height_of_changeable_area), image)
 
     {
@@ -78,7 +96,17 @@ public:
         text_left.SetText(text);
     }
 
+    #if HAS_INDX()
+    void update(fsm::PhaseData data) {
+        tool_label_.SetText(_("Tool %d").formatted(params_, data[0] + 1));
+    }
+    #endif
+
 private:
+    #if HAS_INDX()
+    window_text_t tool_label_;
+    StringViewUtf8Parameters<4> params_;
+    #endif
     window_text_t text_left;
     window_icon_t icon_right;
 };
@@ -89,14 +117,27 @@ class FrameSpoolAndText : public FrameBase {
 public:
     FrameSpoolAndText(window_frame_t *parent, Phase phase, const string_view_utf8 &text)
         : FrameBase(parent, phase)
-        , text_right(parent, Rect16(col_0 + icon_left_width + text_icon_space, top_of_changeable_area, text_right_width, height_of_changeable_area), is_multiline::yes)
+    #if HAS_INDX()
+        , tool_label_(parent, Rect16(col_0 + icon_left_width + text_icon_space, top_of_changeable_area, text_right_width, tool_label_height), is_multiline::no)
+    #endif
+        , text_right(parent, Rect16(col_0 + icon_left_width + text_icon_space, text_top, text_right_width, text_height), is_multiline::yes)
         , icon_left(parent, Rect16(col_0, top_of_changeable_area, icon_left_width, height_of_changeable_area), &img::prusament_spool_white_100x100) {
 
         text_right.SetAlignment(Align_t::LeftCenter());
         text_right.SetText(text);
     }
 
+    #if HAS_INDX()
+    void update(fsm::PhaseData data) {
+        tool_label_.SetText(_("Tool %d").formatted(params_, data[0] + 1));
+    }
+    #endif
+
 private:
+    #if HAS_INDX()
+    window_text_t tool_label_;
+    StringViewUtf8Parameters<4> params_;
+    #endif
     window_text_t text_right;
     window_icon_t icon_left;
 };
@@ -216,7 +257,11 @@ using FrameRemoveFilamentReady = WithConstructorArgs<FrameTextAndImage,
     >;
 
 #if HAS_SIDE_FSENSOR()
+    #if HAS_INDX()
+using FrameNotReadyConfirmContinue = WithConstructorArgs<FrameSpoolAndText, N_("There is a problem with the sensor. You may retry the test or calibrate the rest, but the selftest will fail.")>;
+    #else
 using FrameNotReadyConfirmContinue = WithConstructorArgs<FrameSpoolAndText, N_("There is a problem with some of the sensors. You may calibrate the rest, but the selftest will fail.")>;
+    #endif
 #endif
 
 using FrameSuccess = WithConstructorArgs<FrameSpoolAndText, N_("Filament sensors calibrated!")>;
@@ -254,6 +299,9 @@ ScreenSelftestFSensors::ScreenSelftestFSensors()
 
 ScreenSelftestFSensors::~ScreenSelftestFSensors() {
     destroy_frame();
+#if HAS_INDX() && HAS_SIDE_FSENSOR()
+    FooterItemFSValueSide::set_selftest_override(nullptr);
+#endif
 }
 
 void ScreenSelftestFSensors::create_frame() {
@@ -266,7 +314,10 @@ void ScreenSelftestFSensors::destroy_frame() {
 }
 
 void ScreenSelftestFSensors::update_frame() {
-    const uint8_t tool = fsm_base_data.GetData()[0];
-    header.SetText(_("FS calibration - Tool %d").formatted(title_params_, tool + 1));
     Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
+#if HAS_INDX() && HAS_SIDE_FSENSOR()
+    // Point the footer's side-sensor value at the tool being calibrated (use the
+    // IgnoreEnabled variant so it works even before the tool's dock is calibrated).
+    FooterItemFSValueSide::set_selftest_override(GetSideFSensorIgnoreEnabled(fsm_base_data.GetData()[0]));
+#endif
 }

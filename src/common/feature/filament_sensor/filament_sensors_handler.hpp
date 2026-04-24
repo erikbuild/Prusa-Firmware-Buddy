@@ -16,6 +16,7 @@
 #include <tool_index.hpp>
 
 #include <inplace_function.hpp>
+#include <option/has_indx.h>
 
 /// Filament sensors manager
 /// All public functions are thread-safe
@@ -159,6 +160,11 @@ IFSensor *GetSideFSensor(uint8_t index);
 inline IFSensor *GetSideFSensor(PhysicalToolIndex tool) {
     return GetSideFSensor(tool.to_raw());
 }
+
+#if HAS_INDX()
+/// Like GetSideFSensor, but returns the sensor regardless of PhysicalToolIndex::is_enabled().
+IFSensor *GetSideFSensorIgnoreEnabled(uint8_t index);
+#endif
 
 bool hasActiveFilamentSensor(uint8_t index);
 
