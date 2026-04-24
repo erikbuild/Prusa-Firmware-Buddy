@@ -77,18 +77,6 @@ float random_jitter(uint8_t r_param) {
     return (normalized * 2.0f - 1.0f) * r_param; // [-r_param, +r_param]
 }
 
-/// Get the Z probe position based on the tool's order among mapped tools.
-/// @param index 0-based position among mapped tools
-/// @param total total number of mapped tools
-xy_pos_t probe_position(uint8_t index, uint8_t total, uint8_t r_param) {
-    // total without -1 is intentional - the last spot (index == count) is reserved for second reference measurement
-    const float t = (total <= 1) ? 0.0f : static_cast<float>(index) / static_cast<float>(total);
-    return {
-        std::clamp(POS_TOOL_0.x + (POS_TOOL_LAST.x - POS_TOOL_0.x) * t + random_jitter(r_param), static_cast<float>(X_MIN_POS), static_cast<float>(X_MAX_POS)),
-        std::clamp(POS_TOOL_0.y + (POS_TOOL_LAST.y - POS_TOOL_0.y) * t + random_jitter(r_param), static_cast<float>(Y_MIN_POS), static_cast<float>(Y_MAX_POS)),
-    };
-}
-
 /// Probe Z at a given XY position, averaging multiple measurements.
 /// Returns NaN on failure.
 /// Strips the currently applied hotend offset to avoid accumulating old offsets.
@@ -328,7 +316,13 @@ bool run(uint8_t r_param, uint8_t probe_count) {
 
     // Helper: probe Z at the given mapped index position (with jitter)
     auto probe_at = [&](PhysicalToolIndex tool, uint8_t probe_index) -> std::optional<ProbeResult> {
-        const xy_pos_t pos = probe_position(probe_index, num_tools, r_param);
+        // total without -1 is intentional - the last spot (probe_index == num_tools) is reserved for second reference measurement
+        const float t = static_cast<float>(probe_index) / static_cast<float>(num_tools);
+        const xy_pos_t pos {
+            std::clamp(POS_TOOL_0.x + (POS_TOOL_LAST.x - POS_TOOL_0.x) * t + random_jitter(r_param), static_cast<float>(X_MIN_POS), static_cast<float>(X_MAX_POS)),
+            std::clamp(POS_TOOL_0.y + (POS_TOOL_LAST.y - POS_TOOL_0.y) * t + random_jitter(r_param), static_cast<float>(Y_MIN_POS), static_cast<float>(Y_MAX_POS)),
+        };
+
         log_info(ToolOffsetCalib, "Probe count: %d", probe_count);
         const float z = probe_z_at(pos, probe_count);
         if (std::isnan(z)) {
