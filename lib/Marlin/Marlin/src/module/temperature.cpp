@@ -753,10 +753,9 @@ void Temperature::init() {
   HAL_timer_start(TEMP_TIMER_NUM, TEMP_TIMER_FREQUENCY);
   ENABLE_TEMPERATURE_INTERRUPT();
 
-  // Wait for the temperature readings to become available
   for(uint8_t retry = 0; !temp_meas_ready; retry++) {
     delay(10);
-    if(retry > 100) {
+    if(retry > 200) {
       bsod("Temps ded");
     }
   }
