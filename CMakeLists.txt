@@ -545,6 +545,7 @@ target_compile_options(
           $<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi>
           -Wdouble-promotion
   )
+target_link_options(firmware PRIVATE -Wno-psabi)
 
 if(ENABLE_HW_STD_RAND)
   # Wrap rand and replace the implementation with one using HW RNG
