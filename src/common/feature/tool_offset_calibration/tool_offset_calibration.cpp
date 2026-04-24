@@ -328,13 +328,10 @@ bool run(uint8_t r_param, uint8_t probe_count) {
 
     log_info(ToolOffsetCalib, "Calibrating %u tool(s)", num_tools);
 
-    const PhysicalToolIndex first = PhysicalToolIndex::from_raw(std::countr_zero(used_physical_tools.to_ulong()));
-
     struct ProbeResult {
         float z;
         xy_pos_t pos;
     };
-    uint8_t step = 0;
 
     // Helper: probe Z at the given mapped index position (with jitter)
     auto probe_at = [&](PhysicalToolIndex tool, uint8_t mapped_index) -> std::optional<ProbeResult> {
@@ -349,34 +346,56 @@ bool run(uint8_t r_param, uint8_t probe_count) {
         return ProbeResult { z, pos };
     };
 
-    // Establish reference line with the first mapped tool
-    set_calib_status(status_guard, first.to_raw(), ++step, num_tools);
-    tool_change(stdext::to_variant(first), tool_return_t::no_return);
-
     ProbeResult ref_first;
     ProbeResult ref_last;
-    {
-        const int16_t first_saved_temp = thermalManager.degTargetHotend(first);
+
+    uint8_t step = 0;
+    for (uint8_t i = 0; i < PhysicalToolIndex::count; i++) {
+        const auto tool = PhysicalToolIndex::from_raw(i);
+        if (!used_physical_tools.test(i)) {
+            continue;
+        }
+
+        set_calib_status(status_guard, tool.to_raw(), step + 1, num_tools);
+        tool_change(stdext::to_variant(tool), tool_return_t::no_return);
+
+        const int16_t saved_temp = thermalManager.degTargetHotend(tool);
         ScopeGuard restore_temp([&] {
-            // Restore first tool's target temperature before moving on
-            thermalManager.setTargetHotend(first_saved_temp, first);
+            thermalManager.setTargetHotend(saved_temp, tool);
         });
 
-        if (!prepare_tool(first)) {
+        if (!prepare_tool(tool)) {
             return false;
         }
 
-        // Probe at first position (index 0)
-        const auto ref_first_opt = probe_at(first, 0);
-        if (!ref_first_opt) {
+        if (num_tools == 1) {
+            // With one-tool print, we still need to do prepare_tool which runs the nozzle cleaner
+            // But we don't need to do any offset calibrations, so we can just quit now
+            // We don't need to be that precise for the nozzle cleaner
+            break;
+        }
+
+        // First calibrate XY offset, it should then give us more precise interpolation on the ghetto MBL line
+        if (!calibrate_xy_offset(tool, probing_config)) {
             return false;
         }
-        ref_first = *ref_first_opt;
-        ref_last = ref_first;
 
-        if (num_tools != 1) {
+        const auto result_opt = probe_at(tool, step);
+        if (!result_opt) {
+            return false;
+        }
+        const auto result = *result_opt;
+
+        if (step == 0) {
+            // Keep offset at zero as set by the reset at the beginning of the function
+
+            // If we're measuring more than one tool, we will be measuring all tools on a single X line.
+            // Use the first tool to probe both start and end of the line to interpolate from
+            // This is basically a ghetto MBL
+            ref_first = result;
+
             // Probe at last position (with the same first tool)
-            const auto ref_last_opt = probe_at(first, num_tools - 1);
+            const auto ref_last_opt = probe_at(tool, num_tools - 1);
             if (!ref_last_opt) {
                 return false;
             }
@@ -385,69 +404,17 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             log_info(ToolOffsetCalib, "Reference line: Z_first=%.3f at (%.1f,%.1f) Z_last=%.3f at (%.1f,%.1f)",
                 static_cast<double>(ref_first.z), static_cast<double>(ref_first.pos.x), static_cast<double>(ref_first.pos.y),
                 static_cast<double>(ref_last.z), static_cast<double>(ref_last.pos.x), static_cast<double>(ref_last.pos.y));
+
+        } else {
+            // Interpolate expected Z on the reference line at the actual probed X
+            const float t = result.pos.x - ref_first.pos.x;
+            const float z_expected = ref_first.z + (ref_last.z - ref_first.z) * (t / (ref_last.pos.x - ref_first.pos.x));
+            const float z_offset = z_expected - result.z; // Inverted, because +Z is down
+            hotend_offset[tool].z = z_offset;
+            log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", i, static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
         }
 
-        // XY calibration for the first tool
-        if (!calibrate_xy_offset(first, probing_config)) {
-            return false;
-        }
-    } // End of temp scope guard
-
-    if (used_physical_tools.count() == 1) {
-        hotend_offset[first].z = 0.0f;
-        prusa_toolchanger.save_tool_offsets();
-        return true;
-    }
-
-    // The interpolation parameter t is computed from the actual probed X positions
-    // to account for the random jitter applied to each probe point.
-    const float ref_x_span = ref_last.pos.x - ref_first.pos.x;
-
-    // First tool offset is 0 by definition
-    hotend_offset[first].z = 0.0f;
-
-    uint8_t mapped_index = 0; // first tool was index 0
-    for (uint8_t i = 0; i < PhysicalToolIndex::count; i++) {
-        if (!used_physical_tools.test(i)) {
-            continue;
-        }
-        mapped_index++;
-
-        const auto tool = PhysicalToolIndex::from_raw(i);
-        if (tool == first) {
-            continue;
-        }
-
-        set_calib_status(status_guard, tool.to_raw(), ++step, num_tools);
-        tool_change(stdext::to_variant(tool), tool_return_t::no_return);
-
-        ProbeResult result;
-        {
-            const int16_t saved_temp = thermalManager.degTargetHotend(tool);
-            ScopeGuard restore_temp([&] {
-                thermalManager.setTargetHotend(saved_temp, tool);
-            });
-
-            if (!prepare_tool(tool)) {
-                return false;
-            }
-
-            const auto result_opt = probe_at(tool, mapped_index - 1);
-            if (!result_opt) {
-                return false;
-            }
-            result = *result_opt;
-
-            if (!calibrate_xy_offset(tool, probing_config)) {
-                return false;
-            }
-        }
-        // Interpolate expected Z on the reference line at the actual probed X
-        const float t = result.pos.x - ref_first.pos.x;
-        const float z_expected = ref_first.z + (ref_last.z - ref_first.z) * (t / ref_x_span);
-        const float z_offset = z_expected - result.z; // Inverted, because +Z is down
-        hotend_offset[tool].z = z_offset;
-        log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", i, static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
+        step++;
     }
 
     prusa_toolchanger.save_tool_offsets();
