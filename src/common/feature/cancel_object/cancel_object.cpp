@@ -13,7 +13,7 @@ CancelObject &buddy::cancel_object() {
 }
 
 bool CancelObject::is_object_cancellable(ObjectID obj) const {
-    return (obj >= 0) && (obj <= max_object_count);
+    return (obj >= 0) && (obj < max_object_count);
 }
 
 bool CancelObject::is_object_cancelled(ObjectID obj) const {
