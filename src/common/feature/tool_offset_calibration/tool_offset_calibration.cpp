@@ -410,6 +410,9 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", i, static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
         }
 
+        // Apply the newly computes offset
+        hotend_currently_applied_offset = hotend_offset[tool];
+
         step++;
     }
 
