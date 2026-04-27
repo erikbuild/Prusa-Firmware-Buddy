@@ -49,7 +49,7 @@ static constexpr EnumArray<FanType, const char *, FanType::_count> fan_type_name
         { FanType::bed, N_("Bed") },
 #endif
 #if HAS_PSU_FAN()
-        { FanType::psu, N_("PSU") },
+        { FanType::psu, "PSU" },
 #endif
 };
 

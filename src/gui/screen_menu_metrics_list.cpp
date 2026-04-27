@@ -41,5 +41,5 @@ void WindowMenuMetricsList::setup_item(ItemVariant &variant, int index) {
 }
 
 ScreenMenuMetricsList::ScreenMenuMetricsList()
-    : ScreenMenuBase(nullptr, _("METRICS LIST"), EFooter::Off) {
+    : ScreenMenuBase(nullptr, string_view_utf8::MakeCPUFLASH("METRICS LIST"), EFooter::Off) {
 }

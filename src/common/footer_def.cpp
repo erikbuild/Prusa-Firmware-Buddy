@@ -14,9 +14,9 @@ const char *footer::to_string(Item item) {
         { Item::f_s_value, N_("FS Value") },
         { Item::f_sensor, N_("FSensor") },
         { Item::speed, N_("Speed") },
-        { Item::axis_x, N_("X") },
-        { Item::axis_y, N_("Y") },
-        { Item::axis_z, N_("Z") },
+        { Item::axis_x, "X" },
+        { Item::axis_y, "Y" },
+        { Item::axis_z, "Z" },
         { Item::z_height, N_("Z height") },
         { Item::print_fan, N_("Print fan") },
         { Item::heatbreak_fan, PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_MINI() ? N_("Hotend Fan") : N_("Heatbreak Fan") },
@@ -31,7 +31,7 @@ const char *footer::to_string(Item item) {
         },
         { Item::heatbreak_temp, N_("Heatbreak") },
         { Item::sheets, HAS_SHEET_PROFILES() ? (const char *)N_("Sheets") : nullptr },
-        { Item::finda, HAS_MMU2() ? (const char *)N_("Finda") : nullptr },
+        { Item::finda, HAS_MMU2() ? (const char *)"Finda" : nullptr },
         { Item::current_tool,
 #if FOOTER_HAS_TOOL_NR()
             N_("Current tool")

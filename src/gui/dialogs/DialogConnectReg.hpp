@@ -19,7 +19,7 @@ private:
     StringViewUtf8Parameters<connect_client::CODE_SIZE + 1> code_params;
 
     // TODO: Doesn't fit
-    constexpr static const char *const headerLabel = N_("PRUSA CONNECT");
+    constexpr static const char *const headerLabel = "PRUSA CONNECT";
     constexpr static const char *const moreDetailTxt = N_("More detail at");
 
     // TODO: Stolen from selftest_frame_esp_qr.hpp ‒ unify to a common place.

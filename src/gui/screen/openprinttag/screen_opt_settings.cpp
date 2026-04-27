@@ -37,7 +37,7 @@ public:
 };
 
 MI_OPT_SETTINGS::MI_OPT_SETTINGS()
-    : IWindowMenuItem(_("OpenPrintTag"), &img::openprinttag_white_16x16) {
+    : IWindowMenuItem(string_view_utf8::MakeCPUFLASH("OpenPrintTag"), &img::openprinttag_white_16x16) {
     set_show_expand_icon();
 }
 

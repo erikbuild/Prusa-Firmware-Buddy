@@ -258,7 +258,7 @@ MI_MMU_TOTAL_GENERAL_FAILS::MI_MMU_TOTAL_GENERAL_FAILS()
 
 static constexpr std::array mmu_rework_items = std::to_array<const char *>({
     N_("Stock"),
-    N_("MMU"),
+    "MMU",
 });
 /**********************************************************************************************/
 
@@ -271,7 +271,7 @@ void MI_MMU_INVOKE_MAINTENANCE::click(IWindowMenu & /*window_menu*/) {
 }
 
 MI_MMU_NEXTRUDER_REWORK::MI_MMU_NEXTRUDER_REWORK()
-    : MenuItemSelectMenu(_(HAS_LOADCELL() ? N_("Nextruder") : N_("Extruder"))) {
+    : MenuItemSelectMenu(HAS_LOADCELL() ? string_view_utf8::MakeCPUFLASH("Nextruder") : _("Extruder")) {
     set_current_item(config_store().is_mmu_rework.get());
 }
 
@@ -302,7 +302,7 @@ bool MI_MMU_NEXTRUDER_REWORK::on_item_selected([[maybe_unused]] int old_index, i
 // MI_INFO_FINDA
 MI_INFO_FINDA::MI_INFO_FINDA()
     : MenuItemAutoUpdatingLabel(
-        _("FINDA"),
+        string_view_utf8::MakeCPUFLASH("FINDA"),
         [this](const std::span<char> &buffer) {
             // TODO: change of visualization scheme is expected soon, some unification with fsensor visualization will happen as a result.
             // For now, FINDA is visualized the same way like filament sensors' states

@@ -8,7 +8,7 @@ static constexpr NumericInputConfig fs_ref_spin_config = {
     .min_value = std::numeric_limits<FSensorADCEval::Value>::min(),
     .max_value = static_cast<float>(std::numeric_limits<FSensorADCEval::Value>::max()),
     .special_value = FSensorADCEval::ref_value_not_calibrated,
-    .special_value_str = N_("-"),
+    .special_value_str = "-",
 };
 
 // * MI_FS_REF_NINS

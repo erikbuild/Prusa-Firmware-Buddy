@@ -86,7 +86,7 @@ public:
 protected:
     virtual void click(IWindowMenu &) {
         std::array<char, config_store_ns::wifi_max_ssid_len + 1> ssid = config_store().wifi_ap_ssid.get();
-        if (!DialogTextInput::exec(_("SSID"), ssid)) {
+        if (!DialogTextInput::exec(string_view_utf8::MakeCPUFLASH("SSID"), ssid)) {
             return;
         }
 
@@ -310,7 +310,7 @@ class FrameConnectingNonfinishable : public FrameTextWithSSID {
 
 public:
     FrameConnectingNonfinishable(window_frame_t *parent)
-        : FrameTextWithSSID(parent, Phase::connecting_nonfinishable, _("Connecting"), _("SSID: %s")) {}
+        : FrameTextWithSSID(parent, Phase::connecting_nonfinishable, _("Connecting"), string_view_utf8::MakeCPUFLASH("SSID: %s")) {}
 };
 
 class FrameESPError : public FramePrompt {

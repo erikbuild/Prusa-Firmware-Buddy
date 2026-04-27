@@ -64,7 +64,7 @@ MI_CONNECT_ERROR::MI_CONNECT_ERROR()
 void MI_CONNECT_ERROR::Loop() {
     using S = connect_client::OnlineError;
     static constexpr EnumArray<S, const char *, connect_client::online_error_cnt> strings {
-        { S::NoError, N_("---") },
+        { S::NoError, "---" },
         { S::Dns, N_("DNS error") },
         { S::Connection, N_("Refused") },
         { S::Tls, N_("TLS error") },

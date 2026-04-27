@@ -214,7 +214,7 @@ template struct MI_SCREEN_CTOR<ScreenChamberFiltration>;
     #include <feature/prusa/MMU2/mmu2_mk4.h>
 
 MI_HW_MMU::MI_HW_MMU()
-    : IWindowMenuItem(_("MMU"), nullptr, is_enabled_t::yes, MMU2::mmu2.Enabled() ? is_hidden_t::no : is_hidden_t::yes, expands_t::yes) {
+    : IWindowMenuItem(string_view_utf8::MakeCPUFLASH("MMU"), nullptr, is_enabled_t::yes, MMU2::mmu2.Enabled() ? is_hidden_t::no : is_hidden_t::yes, expands_t::yes) {
 }
 
 void MI_HW_MMU::click(IWindowMenu &) {

@@ -51,7 +51,7 @@ const char *ChamberFiltration::backend_name(Backend backend) {
         return N_("Adv. filtration");
 
     case Backend::xbe_filter_on_cooling_fans:
-        return N_("DIY");
+        return "DIY";
 #endif
     }
 

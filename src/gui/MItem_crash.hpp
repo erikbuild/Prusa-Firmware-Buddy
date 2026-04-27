@@ -12,7 +12,7 @@
 #include "config_features.h"
 
 class MI_CRASH_DETECTION : public WI_ICON_SWITCH_OFF_ON_t {
-    constexpr static const char *const label = N_("Crash Detection");
+    constexpr static const char *const label = "Crash Detection";
 
 public:
     MI_CRASH_DETECTION();
@@ -40,7 +40,7 @@ public:
 
 class MI_CRASH_SENSITIVITY_XY : public WiSpin {
 private:
-    constexpr static const char *const label = N_("Crash Sensitivity XY");
+    constexpr static const char *const label = "Crash Sensitivity XY";
 
 public:
     MI_CRASH_SENSITIVITY_XY();
@@ -68,42 +68,42 @@ public:
 };
 
 class MI_POWER_PANICS : public WI_INFO_t {
-    constexpr static const char *const label = N_("Power Failures");
+    constexpr static const char *const label = "Power Failures";
 
 public:
     MI_POWER_PANICS();
 };
 
 class MI_CRASHES_X_LAST : public WI_INFO_t {
-    constexpr static const char *const label = N_("Last Print Crashes on X Axis");
+    constexpr static const char *const label = "Last Print Crashes on X Axis";
 
 public:
     MI_CRASHES_X_LAST();
 };
 
 class MI_CRASHES_Y_LAST : public WI_INFO_t {
-    constexpr static const char *const label = N_("Last Print Crashes on Y Axis");
+    constexpr static const char *const label = "Last Print Crashes on Y Axis";
 
 public:
     MI_CRASHES_Y_LAST();
 };
 
 class MI_CRASHES_X : public WI_INFO_t {
-    constexpr static const char *const label = N_("Crashes on X Axis");
+    constexpr static const char *const label = "Crashes on X Axis";
 
 public:
     MI_CRASHES_X();
 };
 
 class MI_CRASHES_Y : public WI_INFO_t {
-    constexpr static const char *const label = N_("Crashes on Y Axis");
+    constexpr static const char *const label = "Crashes on Y Axis";
 
 public:
     MI_CRASHES_Y();
 };
     #if HAS_DRIVER(TMC2130)
 class MI_CRASH_FILTERING : public WI_ICON_SWITCH_OFF_ON_t {
-    constexpr static const char *const label = N_("Crash Detection Filter");
+    constexpr static const char *const label = "Crash Detection Filter";
 
 public:
     MI_CRASH_FILTERING();

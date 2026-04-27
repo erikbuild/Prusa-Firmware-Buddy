@@ -163,7 +163,7 @@ void SelftestFrameDock::set_prologue() {
     icon_info.SetRes(&img::hand_qr_59x72);
     icon_info.Show();
     qr.Show();
-    text_link.SetText(_("prusa.io/dock-setup"));
+    text_link.SetText(string_view_utf8::MakeCPUFLASH("prusa.io/dock-setup"));
     text_link.SetAlignment(Align_t::Right());
     text_link.Show();
     text_estimate.Show();

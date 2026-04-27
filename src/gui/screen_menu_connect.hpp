@@ -72,6 +72,6 @@ using ScreenMenuConnect__ = ScreenMenu<EFooter::Off, MI_RETURN, MI_CONNECT_ENABL
 class ScreenMenuConnect : public ScreenMenuConnect__ {
 
 public:
-    constexpr static const char *label = N_("PRUSA CONNECT");
+    constexpr static const char *label = "PRUSA CONNECT";
     ScreenMenuConnect();
 };

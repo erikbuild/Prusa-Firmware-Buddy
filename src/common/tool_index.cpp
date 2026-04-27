@@ -228,7 +228,7 @@ string_view_utf8 GcodeToolIndex::display_name(StringViewUtf8ParamBase &params) c
 
 template <>
 string_view_utf8 PhysicalToolIndex::compact_display_name(StringViewUtf8ParamBase &params) const {
-    return _("T%i").formatted(params, display_index());
+    return string_view_utf8::MakeCPUFLASH("T%i").formatted(params, display_index());
 }
 
 template <>
@@ -238,13 +238,13 @@ string_view_utf8 VirtualToolIndex::compact_display_name(StringViewUtf8ParamBase 
         // So in that case, refer to the virtual tools same as to the physical ones, because they're are 1:1.
         return to_physical().compact_display_name(params);
     } else {
-        return _("F%i").formatted(params, display_index());
+        return string_view_utf8::MakeCPUFLASH("F%i").formatted(params, display_index());
     }
 }
 
 template <>
 string_view_utf8 GcodeToolIndex::compact_display_name(StringViewUtf8ParamBase &params) const {
-    return _("G%i").formatted(params, display_index());
+    return string_view_utf8::MakeCPUFLASH("G%i").formatted(params, display_index());
 }
 
 static void build_physical_details(StringBuilder &sb, const PhysicalToolIndex &self) {

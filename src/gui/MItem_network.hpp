@@ -55,7 +55,7 @@ public:
 };
 
 class MI_WIFI_SSID final : public WiInfoString {
-    constexpr static const char *const label = N_("SSID");
+    constexpr static const char *const label = "SSID";
 
 public:
     MI_WIFI_SSID();
@@ -133,7 +133,7 @@ protected:
 
 /// Use WMI_NET as a wrapper to provide the device_id
 class MI_IP4_ADDR : public IMI_IP4_ADDR {
-    static constexpr const char *const label = GuiDefaults::ScreenWidth > 240 ? N_("IPv4 Address") : N_("IP");
+    static constexpr const char *const label = GuiDefaults::ScreenWidth > 240 ? N_("IPv4 Address") : "IP";
 
 public:
     inline MI_IP4_ADDR(NetDeviceID device_id = {})
@@ -160,7 +160,7 @@ public:
 
 /// Use WMI_NET as a wrapper to provide the device_id
 class MI_IP4_DNS1 : public WiInfo<ADDR_LEN> {
-    static constexpr const char *const label = HAS_MINI_DISPLAY() ? N_("DNS") : N_("DNS Server");
+    static constexpr const char *const label = HAS_MINI_DISPLAY() ? "DNS" : N_("DNS Server");
 
 public:
     MI_IP4_DNS1();
@@ -169,7 +169,7 @@ public:
 };
 
 class MI_MAC_ADDR : public WiInfo<MAC_LEN> {
-    static constexpr const char *const label = HAS_MINI_DISPLAY() ? N_("MAC") : N_("MAC Address");
+    static constexpr const char *const label = HAS_MINI_DISPLAY() ? "MAC" : N_("MAC Address");
 
 public:
     MI_MAC_ADDR(NetDeviceID device_id = {});

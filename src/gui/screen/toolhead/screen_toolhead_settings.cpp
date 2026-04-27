@@ -21,7 +21,7 @@ using namespace screen_toolhead_settings;
 static constexpr NumericInputConfig nozzle_diameter_spin_config_with_special = [] {
     NumericInputConfig result = nozzle_diameter_spin_config;
     result.special_value = 0;
-    result.special_value_str = N_("-");
+    result.special_value_str = "-";
     return result;
 }();
 

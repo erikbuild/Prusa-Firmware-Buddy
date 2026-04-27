@@ -17,7 +17,7 @@ const char *hotend_type_name(HotendType t) {
 
 #if PRINTER_IS_PRUSA_MK3_5()
     case HotendType::e3d_revo:
-        return N_("E3D Revo");
+        return "E3D Revo";
 #endif
     }
 

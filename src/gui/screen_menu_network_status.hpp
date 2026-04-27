@@ -30,7 +30,7 @@ public:
 };
 
 class MI_STATS_DNS_SERVER : public WiInfo<stats_text_size> {
-    static constexpr const char *label = HAS_MINI_DISPLAY() ? N_("DNS") : N_("- DNS Server");
+    static constexpr const char *label = HAS_MINI_DISPLAY() ? "DNS" : N_("- DNS Server");
 
 public:
     MI_STATS_DNS_SERVER();

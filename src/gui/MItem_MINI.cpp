@@ -9,7 +9,7 @@
 #include "fonts.hpp"
 
 MI_MINDA::MI_MINDA()
-    : MenuItemAutoUpdatingLabel(_("M.I.N.D.A."), "%i", [](auto) {
+    : MenuItemAutoUpdatingLabel(string_view_utf8::MakeCPUFLASH("M.I.N.D.A."), "%i", [](auto) {
         return buddy::hw::zMin.read() == buddy::hw::Pin::State::high;
     }) //
 {}

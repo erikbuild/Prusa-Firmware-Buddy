@@ -11,7 +11,7 @@ ScreenMenuIndxDiag::ScreenMenuIndxDiag()
 }
 
 MI_INDX_DIAG::MI_INDX_DIAG()
-    : MI_SCREEN_BASE(ScreenFactory::Screen<ScreenMenuIndxDiag>, N_("INDX Diagnostics"), nullptr, is_hidden_t::dev) {
+    : MI_SCREEN_BASE(ScreenFactory::Screen<ScreenMenuIndxDiag>, "INDX Diagnostics", nullptr, is_hidden_t::dev) {
 }
 #endif
 

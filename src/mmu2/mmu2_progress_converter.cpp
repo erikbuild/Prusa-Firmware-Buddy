@@ -4,7 +4,7 @@
 namespace MMU2 {
 // clang-format off
                                                        //01234567890123456789
-static constexpr const char *MSG_PROGRESS_OK                = N_("OK"); ////MSG_PROGRESS_OK c=4
+static constexpr const char *MSG_PROGRESS_OK                = "OK"; ////MSG_PROGRESS_OK c=4
 static constexpr const char *MSG_PROGRESS_ENGAGE_IDLER      = N_("Engaging idler"); ////MSG_PROGRESS_ENGAGE_IDLER c=20
 static constexpr const char *MSG_PROGRESS_DISENGAGE_IDLER   = N_("Disengaging idler"); ////MSG_PROGRESS_DISENGAGE_IDLER c=20
 static constexpr const char *MSG_PROGRESS_UNLOAD_FINDA      = N_("Unloading to FINDA"); ////MSG_PROGRESS_UNLOAD_FINDA c=20
