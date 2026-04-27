@@ -1404,6 +1404,7 @@ void Temperature::isr() {
 
         float start_target = temp_bed.target;
         float start_diff = fabs(start_target - bed_frame_est_celsius);
+        float progress = 0.f;
         while (fabs(temp_bed.target - bed_frame_est_celsius) > 0.5f && !skippable_operation.is_skip_requested()) {
             // Check if we're aborting
             if (planner.draining()) {
@@ -1417,7 +1418,7 @@ void Temperature::isr() {
 
             idle(true);
 
-            auto progress = std::clamp(100 - (fabs(temp_bed.target - bed_frame_est_celsius) / start_diff) * 100, 0.f, 100.f);
+            progress = std::max(progress, std::clamp(100 - (fabs(temp_bed.target - bed_frame_est_celsius) / start_diff) * 100, 0.f, 100.f));
 
             status_guard.update<PrintStatusMessage::absorbing_heat>({ .current = progress, .target = 100 });
         }
