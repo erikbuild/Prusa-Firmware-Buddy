@@ -6,6 +6,7 @@
 #include <option/has_spool_join.h>
 #include <option/has_tool_offset_sensor.h>
 #include <option/has_indx.h>
+#include <option/has_nozzle_cleaner.h>
 
 #include "print_status_message_data.hpp"
 #include <inc/MarlinConfigPre.h>
@@ -54,6 +55,9 @@ struct PrintStatusMessage {
 #endif
 #if HAS_TOOL_OFFSET_SENSOR()
         tool_offset_calibrating,
+#endif
+#if HAS_NOZZLE_CLEANER()
+        nozzle_cleaner,
 #endif
 
         _cnt
@@ -126,6 +130,9 @@ struct PrintStatusMessage {
 #endif
 #if HAS_TOOL_OFFSET_SENSOR()
         TypeRecord<Type::tool_offset_calibrating, PrintStatusMessageDataToolProgress>,
+#endif
+#if HAS_NOZZLE_CLEANER()
+        TypeRecord<Type::nozzle_cleaner, std::monostate>,
 #endif
 
         TypeRecord<Type::none, std::monostate>>;

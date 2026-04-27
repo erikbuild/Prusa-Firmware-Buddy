@@ -53,6 +53,9 @@ static constexpr EnumArray<Message::Type, const char *, Message::Type::_cnt> mes
 #if HAS_TOOL_OFFSET_SENSOR()
         { Message::Type::tool_offset_calibrating, N_("Calibrating tool offsets") },
 #endif
+#if HAS_NOZZLE_CLEANER()
+        { Message::Type::nozzle_cleaner, N_("Nozzle cleaning") },
+#endif
 };
 
 void PrintStatusMessageFormatterBuddy::format(StringBuilder &target, const Message &msg) {
@@ -81,6 +84,9 @@ void PrintStatusMessageFormatterBuddy::format(StringBuilder &target, const Messa
 #if HAS_CHAMBER_VENTS()
     case Message::Type::opening_chamber_vents:
     case Message::Type::closing_chamber_vents:
+#endif
+#if HAS_NOZZLE_CLEANER()
+    case Message::Type::nozzle_cleaner:
 #endif
         // No extra data to show
         break;

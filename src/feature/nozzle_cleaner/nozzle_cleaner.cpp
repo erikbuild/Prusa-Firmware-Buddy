@@ -8,6 +8,7 @@
 #include <Marlin/src/module/planner.h>
 #include <Marlin/src/module/temperature.h>
 #include <option/has_indx.h>
+#include <feature/print_status_message/print_status_message_guard.hpp>
 
 namespace nozzle_cleaner {
 
@@ -188,6 +189,9 @@ void load_sequence(Sequence seq) {
 }
 
 bool load_and_execute(Sequence seq) {
+    PrintStatusMessageGuard status_message;
+    status_message.update<PrintStatusMessage::nozzle_cleaner>({});
+
     while (true) {
         if (planner.draining()) {
             return false;
@@ -229,6 +233,9 @@ bool execute() {
         reset();
         return true;
     }
+
+    PrintStatusMessageGuard status_message;
+    status_message.update<PrintStatusMessage::nozzle_cleaner>({});
 
     auto loader_result = nozzle_cleaner_gcode_loader_instance().get_result();
     ScopeGuard resetLoader = [&] { // Ensure the loader is always reset (the exception is if we are buffering or not idle, which is handled above)
