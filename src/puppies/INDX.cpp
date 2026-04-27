@@ -14,7 +14,6 @@
 #include "timing.h"
 #include <logging/log_dest_bufflog.hpp>
 #include <assert.h>
-#include "metric.h"
 #include <puppies/PuppyBootstrap.hpp>
 #include <i18n.h>
 #include <config_store/store_instance.hpp>
@@ -30,8 +29,6 @@ namespace buddy::puppies {
 using Lock = std::unique_lock<freertos::Mutex>;
 
 LOG_COMPONENT_DEF(INDX, logging::Severity::info);
-
-METRIC_DEF(metric_fast_refresh_delay, "dwarf_fast_refresh_delay", METRIC_VALUE_INTEGER, 0, METRIC_DISABLED);
 
 Indx::Indx(uint8_t modbus_address)
     : ModbusDevice(modbus_address)
@@ -176,12 +173,6 @@ CommunicationStatus Indx::pull_fifo(PuppyModbus &bus, bool &more) {
         PrusaAccelerometer::set_possible_overflow();
         return status;
     }
-
-    // calculate metric of read latency
-    static uint32_t time_last_read = 0;
-    auto now = ticks_ms();
-    metric_record_integer(&metric_fast_refresh_delay, now - time_last_read);
-    time_last_read = now;
 
     if (!read) {
         more = false;
