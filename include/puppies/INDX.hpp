@@ -192,6 +192,7 @@ private:
     bool dispatch_log_event();
     CommunicationStatus run_time_sync(PuppyModbus &);
     CommunicationStatus read_general_status(PuppyModbus &);
+    void handle_fault_status();
     void handle_nozzle_presence(); ///< Update cached_nozzle_state from latest modbus data
 
     // Register refresh control

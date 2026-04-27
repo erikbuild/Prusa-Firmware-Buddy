@@ -59,6 +59,21 @@ CommunicationStatus Indx::refresh(PuppyModbus &bus) {
     return (this->*funcs[refresh_nr])(bus);
 }
 
+void Indx::handle_fault_status() {
+    const auto fault = register_general_status.value.fault_status;
+    if (fault == indx_head::errors::FaultStatusMask::no_fault) {
+        // nothing to do
+        return;
+    }
+
+    // handle the fault
+    log_error(INDX, "Fault status: %d", std::to_underlying(fault));
+
+    // acknowledge the fault
+    general_write.value.clear_fault_status = std::to_underlying(fault);
+    general_write.dirty = true;
+}
+
 void Indx::handle_nozzle_presence() {
     // Trust nozzle data only when both are true:
     //  1. Head echoed back our invalidation token (debouncer was reset)
@@ -76,12 +91,7 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
     // read general status registers
     CommunicationStatus status = bus.read(unit, register_general_status, 250);
     if (status == CommunicationStatus::OK) {
-        const auto fault = register_general_status.value.fault_status;
-        if (fault != indx_head::errors::FaultStatusMask::no_fault) {
-            log_error(INDX, "Fault status: %d", std::to_underlying(fault));
-            general_write.value.clear_fault_status = std::to_underlying(fault);
-            general_write.dirty = true;
-        }
+        handle_fault_status();
         handle_nozzle_presence();
     }
     return status;
