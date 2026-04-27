@@ -149,7 +149,7 @@ static void init_step_generator_internal(
     axis_state.initial_count_position = Stepper::get_axis_steps(AxisEnum(axis)) - initial_steps_made;
     axis_state.initial_count_position_from_startup = Stepper::get_axis_steps_from_startup(AxisEnum(axis)) - initial_steps_made;
 
-    axis_state.active = true;
+    axis_state.active.store(true, std::memory_order_seq_cst);
 }
 
 void phase_stepping::init_step_generator_classic(
@@ -159,7 +159,7 @@ void phase_stepping::init_step_generator_classic(
     assert(is_beginning_empty_move(move));
 
     auto &axis_state = *step_generator.phase_step_state;
-    axis_state.active = false;
+    axis_state.active.store(false, std::memory_order_seq_cst);
 
     const uint8_t axis = step_generator.axis;
     axis_state.current_print_time_ticks = convert_absolute_time_to_ticks(move.print_time);
@@ -189,7 +189,7 @@ void phase_stepping::init_step_generator_input_shaping(
     assert(is_beginning_empty_move(move));
 
     auto &axis_state = *step_generator.phase_step_state;
-    axis_state.active = false;
+    axis_state.active.store(false, std::memory_order_seq_cst);
 
     // Inherit input shaper initialization...
     input_shaper_step_generator_init(move, step_generator, step_generator_state);
@@ -424,8 +424,7 @@ void phase_stepping::jump_to_position(AxisEnum axis, float pos, bool set_origin)
     auto &axis_state = axis_states[axis];
     assert(axis_state.pending_targets.isEmpty() && !axis_state.has_current_target);
 
-    bool was_active = axis_state.active;
-    axis_state.active = false;
+    bool was_active = axis_state.active.exchange(false, std::memory_order_seq_cst);
 
     if (set_origin) {
         // If phase stepping isn't already active, we must fetch the current rotor position
@@ -447,7 +446,7 @@ void phase_stepping::jump_to_position(AxisEnum axis, float pos, bool set_origin)
             bsod("phase-jump axis=%d delta=%d", static_cast<int>(axis), delta);
         }
     }
-    axis_state.active = was_active;
+    axis_state.active.store(was_active, std::memory_order_seq_cst);
 }
 
 namespace phase_stepping {
@@ -514,7 +513,7 @@ static void enable_phase_stepping(AxisEnum axis_num) {
 
     axis_state.missed_tx_cnt = 0;
     axis_state.enabled = true;
-    axis_state.active = true;
+    axis_state.active.store(true, std::memory_order_seq_cst);
     axis_state.is_slowed_down = true;
 
     auto enable_mask = PHASE_STEPPING_GENERATOR_X << axis_num;
@@ -584,7 +583,7 @@ static void disable_phase_stepping(AxisEnum axis_num) {
     auto &stepper = static_cast<TMC2130Stepper &>(stepper_axis(axis_num));
     auto &axis_state = axis_states[axis_num];
 
-    axis_state.active = false;
+    axis_state.active.store(false, std::memory_order_seq_cst);
     motor_serial_lock_clear_isr_starved();
     auto enable_mask = PHASE_STEPPING_GENERATOR_X << axis_num;
     PreciseStepping::physical_axis_step_generator_types &= ~enable_mask;
@@ -643,15 +642,14 @@ void phase_stepping::enable(AxisEnum axis_num, bool enable) {
 
 void phase_stepping::clear_targets() {
     for (auto &axis_state : axis_states) {
-        bool was_active = axis_state.active;
-        axis_state.active = false;
+        bool was_active = axis_state.active.exchange(false, std::memory_order_seq_cst);
 
         axis_state.has_current_target = false;
         while (!axis_state.pending_targets.isEmpty()) {
             axis_state.pending_targets.dequeue();
         }
 
-        axis_state.active = was_active;
+        axis_state.active.store(was_active, std::memory_order_seq_cst);
     }
 }
 
@@ -725,13 +723,10 @@ static FORCE_INLINE FORCE_OFAST void refresh_axis(
 
     static constexpr float speed_diff_threshold = 20.0f;
 
-    // In theory, this is UB (data race, the variables written when enabling aren't
-    // properly synchronized).
-    //
-    // In practice, it probably doesn't matter, as there's a lot of happening
-    // between enabling it and actually getting some segments to step. But the
-    // performance difference matters.
-    if (!axis_state.active.load(std::memory_order_relaxed)) {
+    // Acquire - "synchronize"/pull values protected by the active "lock" (yes,
+    // it works as kind of a lock on certain writers, like clear_targets or
+    // jump_to_position).
+    if (!axis_state.active.load(std::memory_order_acquire)) {
         return;
     }
 
