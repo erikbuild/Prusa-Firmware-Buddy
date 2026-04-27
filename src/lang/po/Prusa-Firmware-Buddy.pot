@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Prusa-Firmware-Buddy 4.1\n"
 "Report-Msgid-Bugs-To: info@prusa3d.com\n"
-"POT-Creation-Date: 2026-04-26 18:41+0200\n"
+"POT-Creation-Date: 2026-04-27 09:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,18 +17,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: src/gui/version_info_ST7789V.cpp:61
-#, c-format
-msgid ""
-"\n"
-"Bootloader Version\n"
-"%d.%d.%d\n"
-"\n"
-"Buddy Board\n"
-"%d\n"
-"%s"
-msgstr ""
 
 #: src/gui/MItem_tools.cpp:801
 msgid ""
@@ -281,11 +269,6 @@ msgstr ""
 msgid "%u %% / unknown"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings.cpp:24
-#: src/gui/screen/toolhead/screen_toolhead_settings_fs.cpp:11
-msgid "-"
-msgstr ""
-
 #: src/gui/screen_menu_network_status.hpp:41
 msgid "- Connect"
 msgstr ""
@@ -308,10 +291,6 @@ msgstr ""
 msgid ""
 "- Remove heatbed sheet.\n"
 "- Install calibration pin."
-msgstr ""
-
-#: src/gui/screen_menu_connect.cpp:67
-msgid "---"
 msgstr ""
 
 #: src/gui/screen_network_setup.cpp:374
@@ -541,10 +520,6 @@ msgstr ""
 msgid "All tests passed successfully."
 msgstr ""
 
-#: src/gui/MItem_experimental_tools.hpp:25
-msgid "Alt fan correction"
-msgstr ""
-
 #: src/gui/MItem_tools.cpp:871
 msgid "Always"
 msgstr ""
@@ -671,10 +646,6 @@ msgstr ""
 
 #: src/gui/screen_menu_bed_level_correction.hpp:102
 msgid "BED LEVEL CORRECTION"
-msgstr ""
-
-#: src/gui/screen_menu_board_info.cpp:111
-msgid "BOARD INFO"
 msgstr ""
 
 #: src/gui/dialogs/resolution_480x320/radio_button_preview.cpp:15
@@ -1372,32 +1343,12 @@ msgstr ""
 msgid "Cooling the nozzle"
 msgstr ""
 
-#: src/gui/MItem_crash.hpp:15
-msgid "Crash Detection"
-msgstr ""
-
-#: src/gui/MItem_crash.hpp:106
-msgid "Crash Detection Filter"
-msgstr ""
-
-#: src/gui/MItem_crash.hpp:43
-msgid "Crash Sensitivity XY"
-msgstr ""
-
 #: src/gui/screen_home.cpp:339
 msgid ""
 "Crash detected. Save it to USB?\n"
 "\n"
 "Do not share the file publicly, the crash dump may include unencrypted "
 "sensitive information. Send it to: reports@prusa3d.com"
-msgstr ""
-
-#: src/gui/MItem_crash.hpp:92
-msgid "Crashes on X Axis"
-msgstr ""
-
-#: src/gui/MItem_crash.hpp:99
-msgid "Crashes on Y Axis"
 msgstr ""
 
 #: src/gui/screen_network_setup.cpp:349
@@ -1461,14 +1412,6 @@ msgstr ""
 
 #: tmp_error_headers/error_list.hpp:701
 msgid "DISPLAY PROBLEM DETECTED"
-msgstr ""
-
-#: src/common/feature/chamber_filtration/chamber_filtration.cpp:54
-msgid "DIY"
-msgstr ""
-
-#: src/gui/MItem_network.hpp:163 src/gui/screen_menu_network_status.hpp:33
-msgid "DNS"
 msgstr ""
 
 #: src/gui/screen_menu_network_status.cpp:98
@@ -1645,10 +1588,6 @@ msgstr ""
 msgid "Do you want to reset the extruder maintenance reminder?"
 msgstr ""
 
-#: src/gui/screen_menu_experimental_settings.hpp:15
-msgid "Do you want to save changes and reboot the printer?"
-msgstr ""
-
 #: src/gui/wizard/selftest_frame_firstlayer_questions.cpp:18
 #, c-format
 msgid ""
@@ -1798,10 +1737,6 @@ msgstr ""
 msgid "Dynamic"
 msgstr ""
 
-#: src/common/hotend_type.cpp:20
-msgid "E3D Revo"
-msgstr ""
-
 #: src/gui/screen_menu_mmu_eject_filament.hpp:22
 msgid "EJECT FROM MMU"
 msgstr ""
@@ -1854,10 +1789,6 @@ msgstr ""
 
 #: src/gui/screen_menu_network_settings.hpp:24
 msgid "ETHERNET SETTINGS"
-msgstr ""
-
-#: src/gui/screen_menu_experimental_settings.hpp:16
-msgid "EXPERIMENTAL SETTINGS"
 msgstr ""
 
 #: src/gui/screen_menu_statistics.cpp:87
@@ -1919,10 +1850,6 @@ msgstr ""
 msgid "Enable Filaments"
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:60
-msgid "Enable Metrics"
-msgstr ""
-
 #: src/gui/screen_menu_connect.hpp:12 src/gui/screen_prusa_link.hpp:29
 msgid "Enabled"
 msgstr ""
@@ -1958,6 +1885,8 @@ msgstr ""
 msgid "End of test"
 msgstr ""
 
+#. clang-format off
+#. 01234567890123456789
 #. //MSG_PROGRESS_OK c=4
 #. MMU-related
 #: src/mmu2/mmu2_progress_converter.cpp:8
@@ -1999,10 +1928,6 @@ msgstr ""
 msgid ""
 "Error saving crash dump report to the USB drive. Please reinsert the USB "
 "drive and try again."
-msgstr ""
-
-#: src/gui/MItem_menus.hpp:88
-msgid "Ethernet"
 msgstr ""
 
 #: src/gui/wizard/selftest_result_eth.cpp:15
@@ -2051,35 +1976,14 @@ msgstr ""
 msgid "Extruder Maintenance"
 msgstr ""
 
-#: src/gui/MItem_experimental_tools.cpp:189
-msgid "Extruder current"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:139
-msgid "Extruder direction"
-msgstr ""
-
 #: tmp_error_headers/error_list.hpp:975
 #, c-format
 msgid "Extruder motor is not spinning on tool %d"
 msgstr ""
 
-#: src/gui/MItem_experimental_tools.cpp:84
-msgid "Extruder steps per unit"
-msgstr ""
-
-#: src/common/tool_index.cpp:241
-#, c-format
-msgid "F%i"
-msgstr ""
-
 #: src/gui/screen/screen_factory_reset.cpp:153
 #: src/gui/screen/screen_factory_reset.cpp:213
 msgid "FACTORY RESET"
-msgstr ""
-
-#: src/gui/screen_menu_fail_stat.hpp:55
-msgid "FAILURE STATISTICS"
 msgstr ""
 
 #. translation: Header text of the screen showing information about fans.
@@ -2143,10 +2047,6 @@ msgstr ""
 
 #: src/gui/screen_change_filter.cpp:45
 msgid "FILTER CHANGE"
-msgstr ""
-
-#: src/gui/MItem_mmu.cpp:305
-msgid "FINDA"
 msgstr ""
 
 #: tmp_error_headers/error_list_mmu.hpp:10
@@ -2288,10 +2188,6 @@ msgid ""
 "Failed to calibrate homing. Continuing can cause layer shifts after rehoming."
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:67
-msgid "Failed to enable metrics. Check your settings."
-msgstr ""
-
 #: src/gui/screen_menu_e2ee.cpp:60
 msgid "Failed to export the public key. Make sure USB Flash disk is inserted."
 msgstr ""
@@ -2384,11 +2280,6 @@ msgstr ""
 
 #: src/gui/wizard/screen_fan_selftest.cpp:61
 msgid "Fan RPM tests"
-msgstr ""
-
-#. translation: experimental menu item enabling faster display routines
-#: src/gui/MItem_experimental_tools.cpp:224
-msgid "Fast Draw"
 msgstr ""
 
 #. //MSG_PROGRESS_UNLOAD_PULLEY c=20
@@ -2640,10 +2531,6 @@ msgstr ""
 msgid "Filtration fan"
 msgstr ""
 
-#: src/common/footer_def.cpp:34
-msgid "Finda"
-msgstr ""
-
 #: src/gui/dialogs/DialogLoadUnload.cpp:23
 msgid "Finishing buffered gcodes"
 msgstr ""
@@ -2674,10 +2561,6 @@ msgstr ""
 
 #: src/common/hw_check.cpp:8 src/gui/MItem_tools.hpp:231
 msgid "Firmware Version"
-msgstr ""
-
-#: src/gui/version_info_ST7789V.cpp:38
-msgid "Firmware Version\n"
 msgstr ""
 
 #: tmp_error_headers/error_list.hpp:1052
@@ -2835,11 +2718,6 @@ msgstr ""
 
 #: src/gui/screen/openprinttag/screen_opt_info.cpp:215
 msgid "Full Weight"
-msgstr ""
-
-#: src/common/tool_index.cpp:247
-#, c-format
-msgid "G%i"
 msgstr ""
 
 #: tmp_error_headers/error_list.hpp:785
@@ -3417,10 +3295,6 @@ msgstr ""
 msgid "Homing..."
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:18
-msgid "Host"
-msgstr ""
-
 #. Printer's name within network
 #: src/gui/screen_menu_connect.hpp:42 src/gui/MItem_network.hpp:83
 #: src/gui/MItem_network.cpp:166
@@ -3509,14 +3383,6 @@ msgstr ""
 msgid "IMPOSTER! FAKE SIGNATURE"
 msgstr ""
 
-#: src/gui/screen_menu_fail_stat.hpp:22
-msgid "INDX DIAGNOSTICS"
-msgstr ""
-
-#: src/gui/screen_menu_fail_stat.cpp:14
-msgid "INDX Diagnostics"
-msgstr ""
-
 #: src/gui/MItem_tools.cpp:695
 msgid "INDX FIFO Err"
 msgstr ""
@@ -3555,10 +3421,6 @@ msgstr ""
 
 #: tmp_error_headers/error_list_mmu.hpp:276
 msgid "INVALID TOOL"
-msgstr ""
-
-#: src/gui/MItem_network.hpp:136
-msgid "IP"
 msgstr ""
 
 #: src/gui/MItem_network.hpp:136
@@ -3830,14 +3692,6 @@ msgstr ""
 msgid "Language & Time"
 msgstr ""
 
-#: src/gui/MItem_crash.hpp:78
-msgid "Last Print Crashes on X Axis"
-msgstr ""
-
-#: src/gui/MItem_crash.hpp:85
-msgid "Last Print Crashes on Y Axis"
-msgstr ""
-
 #. TODO: How does this thing get translated/marked for translation?
 #: src/gui/dialogs/DialogConnectReg.cpp:18
 msgid "Leave"
@@ -4072,14 +3926,6 @@ msgstr ""
 msgid "Lower belt actual frequency"
 msgstr ""
 
-#: src/gui/MItem_MINI.cpp:12
-msgid "M.I.N.D.A."
-msgstr ""
-
-#: src/gui/MItem_network.hpp:172
-msgid "MAC"
-msgstr ""
-
 #: src/gui/MItem_network.hpp:172
 msgid "MAC Address"
 msgstr ""
@@ -4140,21 +3986,8 @@ msgstr ""
 msgid "MESSAGES"
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:81
-msgid "METRICS & LOG"
-msgstr ""
-
-#: src/gui/screen_menu_metrics_list.cpp:44
-msgid "METRICS LIST"
-msgstr ""
-
 #: tmp_error_headers/error_list.hpp:323 tmp_error_headers/error_list.hpp:330
 msgid "MINTEMP ERROR"
-msgstr ""
-
-#: src/gui/MItem_mmu.cpp:261 src/gui/screen/screen_hw_mmu.cpp:4
-#: src/gui/MItem_menus.cpp:217
-msgid "MMU"
 msgstr ""
 
 #: src/gui/MItem_mmu.hpp:302
@@ -4414,14 +4247,6 @@ msgstr ""
 msgid "Metrics & Log"
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:73
-msgid "Metrics List"
-msgstr ""
-
-#: src/gui/screen_menu_metrics.cpp:36
-msgid "Metrics Port"
-msgstr ""
-
 #: tmp_error_headers/error_list.hpp:471
 #, c-format
 msgid "Microcontroller unit of %s is overheating."
@@ -4675,10 +4500,6 @@ msgstr ""
 
 #: src/gui/screen_printing.cpp:617
 msgid "Next change in"
-msgstr ""
-
-#: src/gui/MItem_mmu.cpp:274
-msgid "Nextruder"
 msgstr ""
 
 #: src/gui/MItem_mmu.hpp:310
@@ -4939,13 +4760,6 @@ msgstr ""
 msgid "OFF "
 msgstr ""
 
-#. clang-format off
-#. 01234567890123456789
-#: src/mmu2/mmu2_progress_converter.cpp:7
-#: src/common/client_response_texts.hpp:64
-msgid "OK"
-msgstr ""
-
 #. @@TODO there is a strange comment in FooterItemFSensor::static_makeView about the last character not being rendered
 #. Not sure why but using the same workaround.
 #. Another funny thing is that the LED in FINDA shows the exact opposite - this needs to be discussed with Content ;)
@@ -5060,10 +4874,6 @@ msgid ""
 "close the door and confirm."
 msgstr ""
 
-#: src/gui/screen/openprinttag/screen_opt_settings.cpp:40
-msgid "OpenPrintTag"
-msgstr ""
-
 #: src/gui/dialogs/DialogLoadUnload.cpp:470
 msgid "OpenPrintTag Pending Write"
 msgstr ""
@@ -5110,10 +4920,6 @@ msgstr ""
 #. / Remove all personal configuration, keep HW config, stats, calibrations
 #: src/gui/screen/screen_factory_reset.cpp:27
 msgid "Ownership Transfer"
-msgstr ""
-
-#: src/gui/MItem_MK3.5.cpp:4
-msgid "P.I.N.D.A."
 msgstr ""
 
 #: src/common/client_response_texts.hpp:66
@@ -5183,19 +4989,6 @@ msgstr ""
 
 #: src/gui/screen_filebrowser.cpp:26
 msgid "PROJECTS"
-msgstr ""
-
-#. TODO: Doesn't fit
-#: src/gui/screen_menu_connect.hpp:75 src/gui/dialogs/DialogConnectReg.hpp:22
-msgid "PRUSA CONNECT"
-msgstr ""
-
-#: src/gui/screen_prusa_link.cpp:84
-msgid "PRUSALINK"
-msgstr ""
-
-#: src/common/selftest/selftest_fans.hpp:52
-msgid "PSU"
 msgstr ""
 
 #. translation: menu item showing info about power supply unit cooling fan
@@ -5432,10 +5225,6 @@ msgstr ""
 
 #: src/gui/MItem_mmu.hpp:194
 msgid "Power Cycle"
-msgstr ""
-
-#: src/gui/MItem_crash.hpp:71
-msgid "Power Failures"
 msgstr ""
 
 #: tmp_error_headers/error_list.hpp:667
@@ -5705,14 +5494,6 @@ msgstr ""
 msgid "Protocol err"
 msgstr ""
 
-#: src/gui/MItem_experimental_tools.cpp:102
-msgid "Prusa"
-msgstr ""
-
-#: src/gui/MItem_menus.hpp:99
-msgid "Prusa Connect"
-msgstr ""
-
 #: src/gui/dialogs/DialogConnectReg.cpp:40
 msgid "Prusa Connect - printer setup"
 msgstr ""
@@ -5721,10 +5502,6 @@ msgstr ""
 msgid ""
 "Prusa Connect setup is not finished. Do you want to exit and abort the "
 "process?"
-msgstr ""
-
-#: src/gui/MItem_menus.hpp:102
-msgid "PrusaLink"
 msgstr ""
 
 #: tmp_error_headers/error_list_mmu.hpp:39
@@ -6050,24 +5827,8 @@ msgstr ""
 msgid "Reset"
 msgstr ""
 
-#: src/gui/MItem_experimental_tools.cpp:43
-msgid "Reset Z-length"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:198
-msgid "Reset currents"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:148
-msgid "Reset directions"
-msgstr ""
-
 #: src/gui/menu_item/specific/menu_items_chamber_filtration.cpp:155
 msgid "Reset filter usage?"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:93
-msgid "Reset steps per unit"
 msgstr ""
 
 #: tmp_error_headers/error_list.hpp:723
@@ -6204,15 +5965,6 @@ msgstr ""
 msgid "SPOOL JOIN"
 msgstr ""
 
-#: src/gui/MItem_network.hpp:58 src/gui/screen_network_setup.cpp:89
-msgid "SSID"
-msgstr ""
-
-#: src/gui/screen_network_setup.cpp:313
-#, c-format
-msgid "SSID: %s"
-msgstr ""
-
 #: src/gui/screen_network_setup.cpp:336
 #, c-format
 msgid ""
@@ -6272,10 +6024,6 @@ msgstr ""
 
 #: src/gui/MItem_tools.cpp:960
 msgid "Save Logs To File"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:207
-msgid "Save and return"
 msgstr ""
 
 #: src/gui/screen_home.cpp:345
@@ -6621,41 +6369,8 @@ msgstr ""
 msgid "Switched fans"
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:44
-msgid "Syslog Port"
-msgstr ""
-
 #: src/gui/MItem_menus.hpp:131
 msgid "System"
-msgstr ""
-
-#: src/common/tool_index.cpp:231
-#, c-format
-msgid "T%i"
-msgstr ""
-
-#: src/gui/screen_crash_recovery.cpp:224
-msgid "T1"
-msgstr ""
-
-#: src/gui/screen_crash_recovery.cpp:225
-msgid "T2"
-msgstr ""
-
-#: src/gui/screen_crash_recovery.cpp:226
-msgid "T3"
-msgstr ""
-
-#: src/gui/screen_crash_recovery.cpp:227
-msgid "T4"
-msgstr ""
-
-#: src/gui/screen_crash_recovery.cpp:228
-msgid "T5"
-msgstr ""
-
-#: src/gui/screen_crash_recovery.cpp:229
-msgid "T6"
 msgstr ""
 
 #: src/gui/screen_menu_temperature.cpp:19
@@ -7160,13 +6875,6 @@ msgid ""
 "This error code is not found\n"
 "in our database.\n"
 "Contact the support."
-msgstr ""
-
-#: src/gui/screen_menu_metrics.cpp:56
-msgid ""
-"This feature allows you to gather diagnostic data to show in Grafana.\n"
-"\n"
-"Be careful, it can send unencrypted data to the internet."
 msgstr ""
 
 #: src/gui/screen/screen_factory_reset.cpp:186
@@ -7739,11 +7447,6 @@ msgstr ""
 msgid "User Presets"
 msgstr ""
 
-#: src/gui/screen_menu_version_info_non_mini.hpp:19
-#: src/gui/screen_menu_version_info_mini.hpp:17
-msgid "VERSION INFO"
-msgstr ""
-
 #: src/gui/wizard/selftest_frame_loadcell.cpp:89
 msgid "Validity check"
 msgstr ""
@@ -7907,16 +7610,8 @@ msgid ""
 "follow the instructions. For more details, visit:"
 msgstr ""
 
-#: src/gui/screen_menu_metrics.cpp:53
-msgid "What is this?"
-msgstr ""
-
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:44
 msgid "What nozzle diameter do I have?"
-msgstr ""
-
-#: src/gui/MItem_menus.hpp:92
-msgid "Wi-Fi"
 msgstr ""
 
 #: src/gui/MItem_network.hpp:44
@@ -7970,10 +7665,6 @@ msgid ""
 "It will then retract to prevent oozing. Be careful, the nozzle is hot!"
 msgstr ""
 
-#: src/gui/MItem_experimental_tools.cpp:103
-msgid "Wrong"
-msgstr ""
-
 #: src/common/gcode/gcode_compatibility.cpp:170
 msgid "Wrong filament type"
 msgstr ""
@@ -7986,16 +7677,8 @@ msgstr ""
 msgid "Wrong tool"
 msgstr ""
 
-#: src/common/footer_def.cpp:17
-msgid "X"
-msgstr ""
-
 #: src/gui/screen_menu_statistics.cpp:104
 msgid "X Axis Travel"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:162
-msgid "X current (0 default)"
 msgstr ""
 
 #: src/gui/screen_crash_recovery.cpp:94
@@ -8008,14 +7691,6 @@ msgstr ""
 
 #: src/gui/MItem_input_shaper.hpp:35
 msgid "X-axis Freq."
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:112
-msgid "X-axis direction"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:57
-msgid "X-axis steps per unit"
 msgstr ""
 
 #: src/gui/MItem_tools.cpp:703
@@ -8052,16 +7727,8 @@ msgid ""
 "it may be hot."
 msgstr ""
 
-#: src/common/footer_def.cpp:18
-msgid "Y"
-msgstr ""
-
 #: src/gui/screen_menu_statistics.cpp:108
 msgid "Y Axis Travel"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:171
-msgid "Y current (0 default)"
 msgstr ""
 
 #: src/gui/screen_crash_recovery.cpp:95
@@ -8074,14 +7741,6 @@ msgstr ""
 
 #: src/gui/MItem_input_shaper.hpp:44
 msgid "Y-axis Freq."
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:121
-msgid "Y-axis direction"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:66
-msgid "Y-axis steps per unit"
 msgstr ""
 
 #: src/common/client_response_texts.hpp:104
@@ -8125,20 +7784,12 @@ msgid ""
 "Switch to Wi-Fi and continue?"
 msgstr ""
 
-#: src/common/footer_def.cpp:19
-msgid "Z"
-msgstr ""
-
 #: src/gui/screen_move_z.hpp:14
 msgid "Z AXIS MOVE"
 msgstr ""
 
 #: src/gui/screen_menu_statistics.cpp:112
 msgid "Z Axis Travel"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:180
-msgid "Z current"
 msgstr ""
 
 #: src/common/footer_def.cpp:20
@@ -8155,18 +7806,6 @@ msgstr ""
 
 #: src/gui/wizard/selftest_frame_calib_z.cpp:15
 msgid "Z-axis calibration"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:130
-msgid "Z-axis direction"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:34
-msgid "Z-axis length"
-msgstr ""
-
-#: src/gui/MItem_experimental_tools.cpp:75
-msgid "Z-axis steps per unit"
 msgstr ""
 
 #: src/gui/wizard/selftest_result_axis.cpp:14
@@ -8209,10 +7848,6 @@ msgstr ""
 
 #: src/gui/wizard/selftest_frame_calib_z.cpp:16
 msgid "please wait"
-msgstr ""
-
-#: src/gui/wizard/selftest_frame_dock.cpp:166
-msgid "prusa.io/dock-setup"
 msgstr ""
 
 #: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:47
