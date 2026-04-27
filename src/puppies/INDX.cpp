@@ -103,6 +103,11 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
     if (status == CommunicationStatus::OK) {
         handle_fault_status();
         handle_nozzle_presence();
+        cached_hotend_temp_compensated_c100.store(
+            static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_compensated_c100));
+        cached_hotend_temp_uncompensated_c100.store(
+            static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_uncompensated_c100));
+        cached_hotend_temp_raw_c100_dt_s.store(register_general_status.value.hotend_temp_raw_c100_dt_s);
     }
     return status;
 }
@@ -203,6 +208,9 @@ CommunicationStatus Indx::write_general(PuppyModbus &bus) {
     };
     write(general_write.value.print_fan_pwm.value, fan_pwm_desired[fans::PRINTFAN_INDEX].load());
     write(general_write.value.selftest_mode, selftest_mode_.load() ? 1 : 0);
+    write(general_write.value.nozzle_target_temperature, nozzle_target_temperature_desired.load());
+    write(general_write.value.hotend_temperature_compensation_c100, hotend_temperature_compensation_c100_desired.load());
+    write(general_write.value.invalidate_nozzle_presence, nozzle_invalidation_token.load());
 
     CommunicationStatus status = bus.write(unit, general_write);
     if (status == CommunicationStatus::ERROR) {
@@ -215,39 +223,27 @@ CommunicationStatus Indx::write_general(PuppyModbus &bus) {
 }
 
 float Indx::get_hotend_temp_compensated() const {
-    Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register - sent in centiDeg (deg * 100) for precision on 2 decimal places
-    return static_cast<float>(static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_compensated_c100)) / 100.f;
+    // Sent in centiDeg (deg * 100) for precision on 2 decimal places
+    return static_cast<float>(cached_hotend_temp_compensated_c100.load()) / 100.f;
 }
 
 float Indx::get_hotend_temp_uncompensated() const {
-    Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register - sent in centiDeg (deg * 100) for precision on 2 decimal places
-    return static_cast<float>(static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_uncompensated_c100)) / 100.f;
+    // Sent in centiDeg (deg * 100) for precision on 2 decimal places
+    return static_cast<float>(cached_hotend_temp_uncompensated_c100.load()) / 100.f;
 }
 
 float Indx::get_hotend_temp_raw_c_dt_s() const {
-    Lock guard(*mutex);
-
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
-    return static_cast<float>(register_general_status.value.hotend_temp_raw_c100_dt_s) / 100.f;
+    return static_cast<float>(cached_hotend_temp_raw_c100_dt_s.load()) / 100.f;
 }
 
 CommunicationStatus Indx::set_hotend_target_temp(float target) {
-    Lock guard(*mutex);
-
-    general_write.value.nozzle_target_temperature = (uint16_t)target;
-    general_write.dirty = true;
+    nozzle_target_temperature_desired.store(static_cast<uint16_t>(target));
     return CommunicationStatus::OK;
 }
 
 CommunicationStatus Indx::set_hotend_temp_compensation(float offset) {
-    Lock guard(*mutex);
-
-    general_write.value.hotend_temperature_compensation_c100 = static_cast<int16_t>(offset * 100.0f);
-    general_write.dirty = true;
+    hotend_temperature_compensation_c100_desired.store(static_cast<int16_t>(offset * 100.0f));
     return CommunicationStatus::OK;
 }
 
@@ -330,18 +326,16 @@ std::optional<bool> Indx::get_nozzle_present() {
 }
 
 void Indx::invalidate_nozzle_data() {
-    Lock guard(*mutex);
     cached_nozzle_state.store(indx_head::NozzlePresence::unknown);
 
-    // Generate a new token and send it to the head. The head will reset its
-    // debouncer and echo the token back in nozzle_invalidation_ack.
-    // handle_nozzle_presence() won't re-validate until the ack matches.
-    nozzle_invalidation_token = static_cast<uint16_t>(ticks_ms());
-    if (nozzle_invalidation_token == 0) {
-        nozzle_invalidation_token = 1; // Avoid 0 — it's the head's initial ack value
+    // Generate a new token. The head will reset its debouncer and echo the
+    // token back in nozzle_invalidation_ack. handle_nozzle_presence() won't
+    // re-validate until the ack matches.
+    uint16_t token = static_cast<uint16_t>(ticks_ms());
+    if (token == 0) {
+        token = 1; // Avoid 0 — it's the head's initial ack value
     }
-    general_write.value.invalidate_nozzle_presence = nozzle_invalidation_token;
-    general_write.dirty = true;
+    nozzle_invalidation_token.store(token);
 }
 
 void Indx::set_fan(uint8_t fan, uint16_t target) {

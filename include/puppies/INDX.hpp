@@ -159,7 +159,7 @@ private:
     std::atomic<indx_head::NozzlePresence> cached_nozzle_state { indx_head::NozzlePresence::unknown };
     static_assert(std::atomic<indx_head::NozzlePresence>::is_always_lock_free);
 
-    uint16_t nozzle_invalidation_token = 0; ///< Token sent to head; data is valid only after head echoes it back nozzle_invalidation_ack from INDX_HEAD
+    std::atomic<uint16_t> nozzle_invalidation_token { 0 }; ///< Token sent to head; data is valid only after head echoes it back nozzle_invalidation_ack from INDX_HEAD
 
     MODBUS_REGISTER TimeSync_t {
         uint32_t dwarf_time_us {};
@@ -167,6 +167,17 @@ private:
     ModbusInputRegisterBlock<indx_head::modbus::Status::time_sync_address(), TimeSync_t> TimeSync {};
 
     ModbusHoldingRegisterBlock<indx_head::modbus::Config::address, indx_head::modbus::Config> general_write;
+    // Cached hotend temperature fields — populated from read_general_status(), read lock-free by Marlin.
+    std::atomic<int16_t> cached_hotend_temp_compensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
+    std::atomic<int16_t> cached_hotend_temp_uncompensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
+    std::atomic<int16_t> cached_hotend_temp_raw_c100_dt_s { 0 };
+    static_assert(std::atomic<int16_t>::is_always_lock_free);
+    static_assert(std::atomic<uint16_t>::is_always_lock_free);
+
+    // Desired values for temperature control — written lock-free by Marlin, applied in write_general().
+    std::atomic<uint16_t> nozzle_target_temperature_desired { 0 };
+    std::atomic<int16_t> hotend_temperature_compensation_c100_desired { 0 };
+
     // Because they can be set from an interrupt.
     std::array<std::atomic<uint16_t>, NUM_FANS> fan_pwm_desired { 0, 0 };
     std::atomic<bool> selftest_mode_ { false };
