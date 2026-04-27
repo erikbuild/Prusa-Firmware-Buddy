@@ -50,7 +50,7 @@ static constexpr EnumArray<Message::Type, const char *, Message::Type::_cnt> mes
         { Message::Type::opening_chamber_vents, N_("Opening chamber vents") },
         { Message::Type::closing_chamber_vents, N_("Closing chamber vents") },
 #endif
-#if HAS_INDX()
+#if HAS_TOOL_OFFSET_SENSOR()
         { Message::Type::tool_offset_calibrating, N_("Calibrating tool offsets") },
 #endif
 };
@@ -145,7 +145,7 @@ void PrintStatusMessageFormatterBuddy::format(StringBuilder &target, const Messa
         break;
     }
 
-#if HAS_INDX()
+#if HAS_TOOL_OFFSET_SENSOR()
     case Message::Type::tool_offset_calibrating: {
         const auto d = std::get<PrintStatusMessageDataToolProgress>(msg.data);
         target.append_printf("\nT%i (%i/%i)", (int)(d.tool + 1), (int)d.progress.current, (int)d.progress.target);

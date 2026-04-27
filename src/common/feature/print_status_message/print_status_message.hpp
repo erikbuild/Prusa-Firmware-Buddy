@@ -4,6 +4,7 @@
 #include <option/has_chamber_api.h>
 #include <option/has_auto_retract.h>
 #include <option/has_spool_join.h>
+#include <option/has_tool_offset_sensor.h>
 #include <option/has_indx.h>
 
 #include "print_status_message_data.hpp"
@@ -51,7 +52,7 @@ struct PrintStatusMessage {
         opening_chamber_vents,
         closing_chamber_vents,
 #endif
-#if HAS_INDX()
+#if HAS_TOOL_OFFSET_SENSOR()
         tool_offset_calibrating,
 #endif
 
@@ -123,7 +124,7 @@ struct PrintStatusMessage {
         TypeRecord<Type::opening_chamber_vents, std::monostate>,
         TypeRecord<Type::closing_chamber_vents, std::monostate>,
 #endif
-#if HAS_INDX()
+#if HAS_TOOL_OFFSET_SENSOR()
         TypeRecord<Type::tool_offset_calibrating, PrintStatusMessageDataToolProgress>,
 #endif
 
