@@ -51,10 +51,6 @@ struct Status {
     uint16_t time_sync_hi = 0;
     uint16_t nozzle_present = 0; // indx_head::NozzlePresence::unknown
     uint16_t nozzle_invalidation_ack = 0; // Echoed from xBuddy invalidate_nozzle_presence, returned after debouncer reset
-
-    static constexpr uint16_t time_sync_address() {
-        return address + (offsetof(Status, time_sync_lo) / sizeof(Status::time_sync_lo));
-    }
 };
 static_assert(sizeof(Status) % 2 == 0);
 static_assert(std::alignment_of_v<Status> == 2);

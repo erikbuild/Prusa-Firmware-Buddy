@@ -162,11 +162,6 @@ private:
 
     std::atomic<uint16_t> nozzle_invalidation_token { 0 }; ///< Token sent to head; data is valid only after head echoes it back nozzle_invalidation_ack from INDX_HEAD
 
-    MODBUS_REGISTER TimeSync_t {
-        uint32_t dwarf_time_us {};
-    };
-    ModbusInputRegisterBlock<indx_head::modbus::Status::time_sync_address(), TimeSync_t> TimeSync {};
-
     ModbusHoldingRegisterBlock<indx_head::modbus::Config::address, indx_head::modbus::Config> general_write;
     // Cached hotend temperature fields — populated from read_general_status(), read lock-free by Marlin.
     std::atomic<int16_t> cached_hotend_temp_compensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
@@ -202,10 +197,10 @@ private:
 
     CommunicationStatus write_general(PuppyModbus &);
     bool dispatch_log_event();
-    CommunicationStatus run_time_sync(PuppyModbus &);
     CommunicationStatus read_general_status(PuppyModbus &);
     void handle_fault_status();
     void handle_nozzle_presence(); ///< Update cached_nozzle_state from latest modbus data
+    void handle_time_sync(const RequestTiming &);
 
     // Register refresh control
     uint32_t last_update_ms = 0; ///< Last time we updated registers

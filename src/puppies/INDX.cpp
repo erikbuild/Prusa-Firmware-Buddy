@@ -52,7 +52,6 @@ CommunicationStatus Indx::refresh(PuppyModbus &bus) {
     static constexpr MethodType funcs[] = {
         &Indx::read_general_status,
         &Indx::write_general,
-        &Indx::run_time_sync,
     };
     if (++refresh_nr >= std::size(funcs)) {
         refresh_nr = 0;
@@ -103,9 +102,17 @@ void Indx::handle_nozzle_presence() {
     cached_nozzle_state.store(valid ? nozzle_state : NozzlePresence::unknown);
 }
 
+void Indx::handle_time_sync(const RequestTiming &timing) {
+    const uint32_t time_sync_hi = register_general_status.value.time_sync_hi;
+    const uint32_t time_sync_lo = register_general_status.value.time_sync_lo;
+    const uint32_t puppy_time_us = time_sync_hi << 16 | time_sync_lo;
+    time_sync.sync(puppy_time_us, timing);
+}
+
 CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
     // read general status registers
-    CommunicationStatus status = bus.read(unit, register_general_status, 250);
+    RequestTiming timing;
+    CommunicationStatus status = bus.read(unit, register_general_status, 250, &timing);
     if (status == CommunicationStatus::OK) {
         handle_fault_status();
         handle_nozzle_presence();
@@ -114,6 +121,7 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
         cached_hotend_temp_uncompensated_c100.store(
             static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_uncompensated_c100));
         cached_hotend_temp_raw_c100_dt_s.store(register_general_status.value.hotend_temp_raw_c100_dt_s);
+        handle_time_sync(timing);
     }
     return status;
 }
@@ -127,7 +135,6 @@ CommunicationStatus Indx::ping(PuppyModbus &bus) {
 CommunicationStatus Indx::initial_scan(PuppyModbus &bus) {
     Lock guard(*mutex);
     time_sync.init();
-    run_time_sync(bus);
 
     general_write.value.loadcell_enabled = true;
     general_write.dirty = true;
@@ -251,21 +258,6 @@ CommunicationStatus Indx::set_hotend_target_temp(float target) {
 CommunicationStatus Indx::set_hotend_temp_compensation(float offset) {
     hotend_temperature_compensation_c100_desired.store(static_cast<int16_t>(offset * 100.0f));
     return CommunicationStatus::OK;
-}
-
-CommunicationStatus Indx::run_time_sync(PuppyModbus &bus) {
-    RequestTiming timing;
-    CommunicationStatus status = bus.read(unit, TimeSync, 1000, &timing);
-    if (status == CommunicationStatus::ERROR) {
-        log_error(INDX, "Failed to read fault status register");
-        return status;
-    }
-
-    if (status != CommunicationStatus::SKIPPED) {
-        time_sync.sync(TimeSync.value.dwarf_time_us, timing);
-    }
-
-    return status;
 }
 
 bool Indx::set_accelerometer(PuppyModbus &bus, bool active) {
