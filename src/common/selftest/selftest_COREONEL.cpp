@@ -23,6 +23,7 @@
 #include <common/timing.h>
 #include <config_store/store_instance.hpp>
 #include <guiconfig/wizard_config.hpp>
+#include <option/has_indx.h>
 
 #include <cstdarg>
 #include <fcntl.h>
@@ -44,7 +45,7 @@ const AxisConfig_t selftest::Config_XAxis = {
     .length_max = 307,
     .axis = X_AXIS,
     .steps = XYfr_table.size(),
-    .movement_dir = -1,
+    .movement_dir = option::has_indx ? 1 : -1,
     .park = true,
     .park_pos = 15,
 };
