@@ -20,6 +20,8 @@ enum class FaultStatusMask : uint16_t {
     watchdog_reset = (1 << 8),
     pin_reset = (1 << 9),
     power_reset = (1 << 10),
+    board_min_temp = (1 << 11),
+    board_max_temp = (1 << 12),
 };
 
 } // namespace indx_head::errors

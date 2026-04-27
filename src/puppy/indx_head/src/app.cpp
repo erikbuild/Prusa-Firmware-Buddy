@@ -52,6 +52,18 @@ std::atomic<indx_head::leds::LedConfig> leds_config = {};
 std::atomic<bool> leds_changed = true;
 
 std::atomic<bool> selftest_mode = false;
+
+void validate_board_temperature() {
+    constexpr int16_t min_board_temp_degC = 0;
+    constexpr int16_t max_board_temp_degC = 65;
+    const int16_t board_temp_degC = hal::adc::get_board_temp();
+    if (board_temp_degC < min_board_temp_degC) {
+        hal::panic(indx_head::errors::FaultStatusMask::board_min_temp);
+    } else if (board_temp_degC > max_board_temp_degC) {
+        hal::panic(indx_head::errors::FaultStatusMask::board_max_temp);
+    }
+}
+
 } // namespace
 
 namespace app {
@@ -148,6 +160,8 @@ void run() {
                 hal::i2c::set_led_pwm(cfg.r, cfg.g, cfg.b);
                 hal::i2c::set_led_mode(cfg.mode);
             }
+
+            validate_board_temperature();
         }
 
         freertos::delay(1);

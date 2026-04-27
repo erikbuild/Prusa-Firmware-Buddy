@@ -3,6 +3,7 @@
 #include <cassert>
 #include <utility>
 
+#include <bsod/bsod.h>
 #include <fifo_coder/fifo_decoder.hpp>
 #include <freertos/mutex.hpp>
 #include <indx_head/errors.hpp>
@@ -68,6 +69,15 @@ void Indx::handle_fault_status() {
 
     // handle the fault
     log_error(INDX, "Fault status: %d", std::to_underlying(fault));
+    auto has_fault = [=](indx_head::errors::FaultStatusMask tested) {
+        return std::to_underlying(fault) & std::to_underlying(tested);
+    };
+    if (has_fault(indx_head::errors::FaultStatusMask::board_min_temp)) {
+        fatal_error(ErrCode::ERR_TEMPERATURE_INDX_HEAD_BOARD_MINTEMP_ERR);
+    }
+    if (has_fault(indx_head::errors::FaultStatusMask::board_max_temp)) {
+        fatal_error(ErrCode::ERR_TEMPERATURE_INDX_HEAD_BOARD_MAXTEMP_ERR);
+    }
 
     // acknowledge the fault
     general_write.value.clear_fault_status = std::to_underlying(fault);
