@@ -46,6 +46,15 @@ bool FilamentSensorCalibratorBasic::is_ready_for_calibration(CalibrationPhase ph
     return classify(sensor_.get_state(), phase) == Reading::correct;
 }
 
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+void FilamentSensorCalibratorBasic::calibrate_polarity() {
+    // The user has just confirmed no filament. If the sensor disagrees, the magnet polarity is reversed — flip it.
+    if (sensor_.get_state() == FilamentSensorState::HasFilament) {
+        sensor_.set_polarity_inverted(!sensor_.is_polarity_inverted());
+    }
+}
+#endif
+
 void FilamentSensorCalibratorBasic::calibrate(CalibrationPhase phase) {
     Stats *stats = nullptr;
     switch (phase) {
@@ -69,11 +78,17 @@ void FilamentSensorCalibratorBasic::calibrate(CalibrationPhase phase) {
 }
 
 void FilamentSensorCalibratorBasic::finish() {
-    // We require 75% of samples to be correct and 25% can be opposite (wiggle in the filament sensor)
-    const auto mostly_correct = [](const Stats &s) { return s.total > 0 && s.correct * 4 >= s.total * 3; };
-    const auto few_opposite = [](const Stats &s) { return s.opposite * 4 <= s.total; };
-    fail_if(!mostly_correct(not_inserted_));
-    fail_if(!mostly_correct(inserted_));
-    fail_if(!few_opposite(not_inserted_));
-    fail_if(!few_opposite(inserted_));
+    const auto all_correct = [](const Stats &s) { return s.total > 0 && s.correct == s.total; };
+
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    const auto all_opposite = [](const Stats &s) { return s.total > 0 && s.opposite == s.total; };
+    // Both phases consistently inverted -> magnet polarity got swapped between calibrate_polarity() and now. Persist the flip.
+    if (all_opposite(not_inserted_) && all_opposite(inserted_)) {
+        sensor_.set_polarity_inverted(!sensor_.is_polarity_inverted());
+        return;
+    }
+#endif
+
+    fail_if(!all_correct(not_inserted_));
+    fail_if(!all_correct(inserted_));
 }

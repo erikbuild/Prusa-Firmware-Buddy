@@ -2,6 +2,7 @@
 
 #include <feature/filament_sensor/filament_sensor.hpp>
 #include <xbuddy_extension/shared_enums.hpp>
+#include <option/has_side_fsensor_invertible.h>
 
 class FSensorXBuddyExtension : public IFSensor {
 
@@ -18,7 +19,10 @@ public:
 
     bool is_calibrated() const override;
     TestResult get_selftest_result() const override;
-
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    bool is_polarity_inverted() const override;
+    void set_polarity_inverted(bool inverted) override;
+#endif
 protected:
     virtual void cycle() override;
     virtual int32_t GetFilteredValue() const override;

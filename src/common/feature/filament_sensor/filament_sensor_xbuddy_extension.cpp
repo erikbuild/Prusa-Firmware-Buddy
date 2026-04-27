@@ -21,6 +21,16 @@ TestResult FSensorXBuddyExtension::get_selftest_result() const {
 #endif
 }
 
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+bool FSensorXBuddyExtension::is_polarity_inverted() const {
+    return config_store().side_fsensor_polarity_inverted_bits.get().test(id_.index);
+}
+
+void FSensorXBuddyExtension::set_polarity_inverted(bool inverted) {
+    config_store().side_fsensor_polarity_inverted_bits.transform([&](auto val) { return val.set(id_.index, inverted); });
+}
+#endif
+
 void FSensorXBuddyExtension::cycle() {
     state = interpret_state();
 }
@@ -57,6 +67,11 @@ FilamentSensorState FSensorXBuddyExtension::interpret_state() const {
 
     raw_state_ = hw_state.value_or(buddy::XBuddyExtension::FilamentSensorState::uninitialized);
 
+    bool inverted = false;
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    inverted = is_polarity_inverted();
+#endif
+
     switch (raw_state_) {
 
     case buddy::XBuddyExtension::FilamentSensorState::disconnected:
@@ -66,10 +81,10 @@ FilamentSensorState FSensorXBuddyExtension::interpret_state() const {
         return FilamentSensorState::NotInitialized;
 
     case buddy::XBuddyExtension::FilamentSensorState::has_filament:
-        return FilamentSensorState::HasFilament;
+        return inverted ? FilamentSensorState::NoFilament : FilamentSensorState::HasFilament;
 
     case buddy::XBuddyExtension::FilamentSensorState::no_filament:
-        return FilamentSensorState::NoFilament;
+        return inverted ? FilamentSensorState::HasFilament : FilamentSensorState::NoFilament;
     }
 
     return FilamentSensorState::NotInitialized;

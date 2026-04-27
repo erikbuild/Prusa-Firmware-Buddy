@@ -10,6 +10,9 @@ public:
     FilamentSensorCalibratorBasic(IFSensor &sensor);
 
     bool is_ready_for_calibration(CalibrationPhase phase) const final;
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    void calibrate_polarity() final;
+#endif
     void calibrate(CalibrationPhase phase) final;
     void finish() final;
 

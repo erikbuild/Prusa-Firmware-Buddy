@@ -16,6 +16,7 @@
 #include "filament_sensor_id.hpp"
 #include <feature/filament_sensor/calibrator/filament_sensor_calibrator.hpp>
 #include <test_result.hpp>
+#include <option/has_side_fsensor_invertible.h>
 
 class IFSensor {
     friend class FilamentSensors;
@@ -63,6 +64,14 @@ public:
     /// Instantiates a class within the \param storage that handles the sensor calibration
     /// !!! Can return nullptr if the filament sensor cannot be checked in any way
     virtual FilamentSensorCalibrator *create_calibrator(FilamentSensorCalibrator::Storage &storage);
+
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    /// Whether HasFilament/NoFilament outputs are swapped (reversed magnet polarity).
+    virtual bool is_polarity_inverted() const { return false; }
+
+    /// Persist polarity inversion to EEPROM.
+    virtual void set_polarity_inverted(bool /*inverted*/) {}
+#endif
 
 protected:
     // Protected functions are only to be called from FilamentSensors to prevent race conditions

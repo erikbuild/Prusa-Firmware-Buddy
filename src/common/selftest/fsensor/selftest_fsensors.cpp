@@ -16,6 +16,7 @@
 #include <option/has_nextruder.h>
 #include <mapi/cold_extrude.hpp>
 #include <option/has_indx.h>
+#include <option/has_side_fsensor_invertible.h>
 
 #include <option/has_mmu2.h>
 #if HAS_MMU2()
@@ -348,7 +349,12 @@ SelftestFSensors::InitialRemoveResult SelftestFSensors::initial_remove_filament(
                 continue;
 
             case Response::No:
-                // No filament confirmed -> return
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+                // No filament confirmed -> let polarity-aware calibrators align their inversion bit, then return
+                for (auto *calibrator : calibrators_) {
+                    calibrator->calibrate_polarity();
+                }
+#endif
                 return InitialRemoveResult::continue_;
 
             case Response::Abort:

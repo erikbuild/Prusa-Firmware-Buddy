@@ -2,6 +2,7 @@
 #pragma once
 
 #include <utils/storage/inplace_any.hpp>
+#include <option/has_side_fsensor_invertible.h>
 
 class IFSensor;
 
@@ -28,6 +29,11 @@ public:
 
     /// \returns whether the readings from the sensor are within the expected limits for the provided calibration step
     virtual bool is_ready_for_calibration(CalibrationPhase phase) const = 0;
+
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    /// Called once the user has confirmed no filament. Lets polarity-aware sensors fix their inversion bit before sampling.
+    virtual void calibrate_polarity() {}
+#endif
 
     /// Take a sample from the sensor and process it
     /// This function can (and should) be called multiple times for each phase
