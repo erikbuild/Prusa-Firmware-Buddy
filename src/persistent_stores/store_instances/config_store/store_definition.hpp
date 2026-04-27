@@ -56,6 +56,7 @@
 #include <option/has_anfc.h>
 #include <option/has_indx.h>
 #include <option/has_side_fsensor.h>
+#include <option/has_side_fsensor_invertible.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
 #include <pwm_utils.hpp>
@@ -195,6 +196,11 @@ struct CurrentStore
 #if HAS_SIDE_FSENSOR()
     /// Per-tool side filament sensor selftest result.
     StoreItemArray<TestResult, defaults::side_fsensor_selftest_results, ItemFlag::calibrations, journal::hash("Selftest Result - Side FSensor"), 16, PhysicalToolIndex::count> selftest_result_side_fsensor;
+#endif
+
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
+    /// Per-tool bitset: side filament sensor has its HasFilament/NoFilament outputs swapped (reversed magnet polarity).
+    StoreItem<EncodedBitset<PhysicalToolIndex::count>, 0, ItemFlag::calibrations, journal::hash("Side FSensor Polarity Inverted")> side_fsensor_polarity_inverted_bits;
 #endif
 
     // LAN settings
