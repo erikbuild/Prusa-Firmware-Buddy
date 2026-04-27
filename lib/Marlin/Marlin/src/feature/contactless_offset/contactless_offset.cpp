@@ -802,11 +802,9 @@ static std::optional<int> find_rough_time_alignment(
     constexpr size_t min_rough_align_samples = 20;
     constexpr int decimation = 4;
     constexpr float energy_lowpass_cutoff_hz = 4.0f;
-    constexpr float threshold_fraction = 0.15f;
-    constexpr float hysteresis_ratio = 0.5f;
     constexpr float min_gap_s = 0.05f;
     constexpr float min_region_s = 0.1f;
-    constexpr float duration_tolerance = 0.8f;
+    constexpr float duration_tolerance = 0.95f;
 
     const size_t n = raw_samples.size();
     if (n < min_rough_align_samples) {
@@ -841,13 +839,16 @@ static std::optional<int> find_rough_time_alignment(
         }
     }
 
-    float max_energy = *std::max_element(energy.begin(), energy.end());
+    const float max_energy = *std::max_element(energy.begin(), energy.end());
     if (max_energy < 1e-10f) {
         return std::nullopt;
     }
-
-    const float threshold_high = threshold_fraction * max_energy;
-    const float threshold_low = threshold_high * hysteresis_ratio;
+    const float min_energy = *std::min_element(energy.begin(), energy.end());
+    if (min_energy < 1e-10f) {
+        return std::nullopt;
+    }
+    const float threshold_high = min_energy + 0.2f * (max_energy - min_energy);
+    const float threshold_low = min_energy + 0.1f * (max_energy - min_energy);
 
     constexpr size_t max_regions = 8;
     EnergyRegion regions[max_regions];

@@ -28,7 +28,7 @@ tool_offset::ProbingConfig tool_offset::get_default_probing_config() {
         .sensing_diameter = detail::sensing_diameter,
         .sensing_speed_slow = 20.f,
         .sensing_speed_fast = 30.f,
-        .sweep_rest_time = 0.15f,
+        .sweep_rest_time = 0.35f,
         .max_safe_temp = 180.f
     };
 }
