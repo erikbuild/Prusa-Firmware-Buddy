@@ -791,28 +791,25 @@ static SymmetryPeakResult detect_symmetry_peak(
     return { peak_time, confidence, best_combined };
 }
 
-// Rough alignment: find the sample offset that best aligns the expected
-// peak spacing pattern with the actual signal.
+// Find the time shift τ that maximises the sum of energy at the four
+// expected pass times — a 1-D matched filter against the motion profile.
 static std::optional<int> find_rough_time_alignment(
     const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples,
     float dt,
     const SweepSpeedProfile &profile,
     const char *label) {
-
-    constexpr size_t min_rough_align_samples = 20;
+    // As we do rough alignment, we can decimate it to make the computation faster...
     constexpr int decimation = 4;
-    constexpr float energy_lowpass_cutoff_hz = 4.0f;
-    constexpr float min_gap_s = 0.05f;
-    constexpr float min_region_s = 0.1f;
-    constexpr float duration_tolerance = 0.95f;
+    // ...and we don't need to search for large shifts:
+    constexpr float max_shift_s = 0.5f;
+    // We want to detect clear peaks above the noise floor, so require the score
+    // to be at least this factor above the baseline.
+    constexpr float min_score_over_baseline = 2.0f;
 
     const size_t n = raw_samples.size();
-    if (n < min_rough_align_samples) {
-        return std::nullopt;
-    }
-
     const float dt_dec = dt * decimation;
     const size_t n_dec = n / decimation;
+
     sfl::segmented_vector<float, 256> energy;
     {
         sp::MedianFilter<float, 5> med;
@@ -830,103 +827,69 @@ static std::optional<int> find_rough_time_alignment(
 
     sp::linear_detrend(energy);
 
-    // Square, lowpass, and find peak in a single pass
-    {
-        auto lp_coeffs = sp::butterworth_lowpass_biquad_1st(energy_lowpass_cutoff_hz, 1.0f / dt_dec);
-        sp::Biquad<float> lp(lp_coeffs);
-        for (size_t i = 0; i < n_dec; ++i) {
-            energy[i] = lp.process(energy[i] * energy[i]);
-        }
-    }
-
-    const float max_energy = *std::max_element(energy.begin(), energy.end());
-    if (max_energy < 1e-10f) {
-        return std::nullopt;
-    }
-    const float min_energy = *std::min_element(energy.begin(), energy.end());
-    if (min_energy < 1e-10f) {
-        return std::nullopt;
-    }
-    const float threshold_high = min_energy + 0.2f * (max_energy - min_energy);
-    const float threshold_low = min_energy + 0.1f * (max_energy - min_energy);
-
-    constexpr size_t max_regions = 8;
-    EnergyRegion regions[max_regions];
-    size_t num_regions = 0;
-    bool in_active = false;
-    size_t region_start = 0;
-
+    float energy_sum = 0;
     for (size_t i = 0; i < n_dec; ++i) {
-        if (!in_active) {
-            if (energy[i] >= threshold_high) {
-                in_active = true;
-                region_start = i;
-            }
-        } else {
-            if (energy[i] < threshold_low) {
-                in_active = false;
-                if (num_regions < max_regions) {
-                    regions[num_regions++] = { region_start, i };
-                }
-            }
-        }
-    }
-    if (in_active && num_regions < max_regions) {
-        regions[num_regions++] = { region_start, n_dec };
+        energy[i] = energy[i] * energy[i];
+        energy_sum += energy[i];
     }
 
-    // Merge regions with small gaps (handles W-shape dip splitting), then discard tiny ones
-    const size_t min_gap_samples = static_cast<size_t>(min_gap_s / dt_dec);
-    const size_t min_region_samples = static_cast<size_t>(min_region_s / dt_dec);
-    {
-        size_t write = 0;
-        for (size_t r = 0; r < num_regions; ++r) {
-            if (write > 0 && (regions[r].start - regions[write - 1].end) < min_gap_samples) {
-                regions[write - 1].end = regions[r].end;
-            } else {
-                regions[write++] = regions[r];
-            }
-        }
-        num_regions = write;
-
-        write = 0;
-        for (size_t r = 0; r < num_regions; ++r) {
-            if ((regions[r].end - regions[r].start) >= min_region_samples) {
-                regions[write++] = regions[r];
-            }
-        }
-        num_regions = write;
+    // Prepare the stencil of expected pass times, in decimated-sample units.
+    // This is the set of indices we want to maximise energy at.
+    const auto t_peaks = profile.expected_peak_times();
+    std::array<int, std::tuple_size_v<decltype(t_peaks)>> offset_template;
+    for (size_t i = 0; i < offset_template.size(); ++i) {
+        offset_template[i] = static_cast<int>(t_peaks[i] / dt_dec + 0.5f);
     }
 
-    auto fail = [&](int offset = 0) -> std::optional<int> {
-        debug_report_rough_align_energy(label, decimation, dt_dec, threshold_high, offset, regions, num_regions, energy);
+    // Sweep over candidate shifts, compute the stencil sum for each, find the best.
+    const int k_search = static_cast<int>(max_shift_s / dt_dec + 0.5f);
+    sfl::segmented_vector<float, 256> score_curve;
+    score_curve.reserve(static_cast<size_t>(2 * k_search + 1));
+    int k_best = 0;
+    float s_best = -std::numeric_limits<float>::infinity();
+    for (int k = -k_search; k <= k_search; ++k) {
+        float s = 0;
+        for (const int ci : offset_template) {
+            const int idx = ci + k;
+            if (idx >= 0 && idx < static_cast<int>(n_dec)) {
+                s += energy[idx];
+            }
+        }
+        score_curve.push_back(s);
+        if (s > s_best) {
+            s_best = s;
+            k_best = k;
+        }
+    }
+
+    // Check that the best score is sufficiently above the baseline (mean energy
+    // per sample, scaled by the number of taps in the stencil).
+    const float baseline = energy_sum * (static_cast<float>(offset_template.size()) / static_cast<float>(n_dec));
+    const float score_over_baseline = (baseline > 1e-10f) ? s_best / baseline : 0.0f;
+
+    // Regions for debug plot — full pass duration around each tap.
+    const int hw1 = std::max(1, static_cast<int>(profile.pass_time1() / (2.0f * dt_dec) + 0.5f));
+    const int hw2 = std::max(1, static_cast<int>(profile.pass_time2() / (2.0f * dt_dec) + 0.5f));
+    std::array<EnergyRegion, offset_template.size()> regions;
+    for (size_t i = 0; i < offset_template.size(); ++i) {
+        const int hw = (i < 2) ? hw1 : hw2;
+        const int center = offset_template[i] + k_best;
+        regions[i] = {
+            static_cast<size_t>(std::clamp(center - hw, 0, static_cast<int>(n_dec))),
+            static_cast<size_t>(std::clamp(center + hw, 0, static_cast<int>(n_dec))),
+        };
+    }
+
+    debug_report_rough_align_score(label, dt_dec, -k_search, k_search, k_best,
+        score_over_baseline, score_curve);
+    debug_report_rough_align_energy(label, decimation, dt_dec, /*threshold=*/0.0f,
+        /*offset=*/k_best * decimation,
+        regions.data(), regions.size(), energy);
+
+    if (score_over_baseline < min_score_over_baseline) {
         return std::nullopt;
-    };
-
-    if (num_regions != 4) {
-        return fail();
     }
-
-    for (int i = 0; i < 4; ++i) {
-        float detected = static_cast<float>(regions[i].end - regions[i].start) * dt_dec;
-        float expected = (i < 2) ? profile.pass_time1() : profile.pass_time2();
-        if (detected < expected * (1.0f - duration_tolerance)
-            || detected > expected * (1.0f + duration_tolerance)) {
-            return fail();
-        }
-    }
-
-    // Average shift of region centers relative to expected peak times
-    auto t_peaks = profile.expected_peak_times();
-    float offset_sum = 0;
-    for (int i = 0; i < 4; ++i) {
-        float region_center_time = static_cast<float>(regions[i].start + regions[i].end) / 2.0f * dt_dec;
-        offset_sum += (region_center_time - t_peaks[i]);
-    }
-    int offset_original = static_cast<int>((offset_sum / 4.0f) / dt);
-
-    debug_report_rough_align_energy(label, decimation, dt_dec, threshold_high, offset_original, regions, num_regions, energy);
-    return offset_original;
+    return k_best * decimation;
 }
 
 // Detect peaks in 4 passes of two-speed sweep motion

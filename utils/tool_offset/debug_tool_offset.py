@@ -361,6 +361,29 @@ class RoughAlignEnergy:
         )
 
 
+@dataclass
+class RoughAlignScore:
+    label: str
+    dt_dec: float
+    k_min: int
+    k_max: int
+    k_best: int
+    score_over_baseline: float
+    score_curve: List[float]
+
+    @staticmethod
+    def from_json(data: Dict[str, Any]) -> RoughAlignScore:
+        return RoughAlignScore(
+            label=data.get("label", ""),
+            dt_dec=float(data.get("dt_dec", 0)),
+            k_min=int(data.get("k_min", 0)),
+            k_max=int(data.get("k_max", 0)),
+            k_best=int(data.get("k_best", 0)),
+            score_over_baseline=float(data.get("score_over_baseline", 0)),
+            score_curve=[float(s) for s in data.get("score_curve", [])],
+        )
+
+
 OFFSET_RE = re.compile(
     r"([XYZ]) offset:\s*([-\d.]+)\s*mm(?:\s*\(confidence:\s*([-\d.]+)\))?")
 
@@ -381,6 +404,7 @@ _PARSERS = [
     ("# pass_raw_chunk", "pass_raw_chunk",
      lambda d: _from_json(PassRawChunk, d)),
     ("# rough_align_energy", "rough_align_energy", RoughAlignEnergy.from_json),
+    ("# rough_align_score", "rough_align_score", RoughAlignScore.from_json),
 ]
 
 _NOISE_RE = re.compile(r'echo:busy: processing'
@@ -805,6 +829,7 @@ def plot_sweep_analysis(
     correlations: Optional[List[PassCorrelation]] = None,
     raw_chunks: Optional[List[PassRawChunk]] = None,
     energy_data: Optional[RoughAlignEnergy] = None,
+    score_data: Optional[RoughAlignScore] = None,
     tool_label: Optional[str] = None,
 ) -> Optional[go.Figure]:
     """Single complex figure per sweep with all analysis panels."""
@@ -838,6 +863,7 @@ def plot_sweep_analysis(
                     f"conf={peaks.confidence:.3f})")
 
     has_energy = energy_data is not None and bool(energy_data.energy)
+    has_score = score_data is not None and bool(score_data.score_curve)
     has_preprocessed = bool(preprocessed)
     has_detail = bool(correlations) and bool(raw_chunks)
     pp_by_pass = {
@@ -859,6 +885,8 @@ def plot_sweep_analysis(
         panels.append((list(quad_row), list(titles), height))
 
     _add_full("Time Domain + Velocity", 0.25)
+    if has_score:
+        _add_full("Rough-Align Matched-Filter Score", 0.15)
     if has_preprocessed:
         _add_full("Per-Pass Preprocessed (overlaid)", 0.20)
     if has_detail:
@@ -1028,12 +1056,6 @@ def plot_sweep_analysis(
         ed_time_ms = [i * ed.dt_dec * 1000 for i in range(ed_n)]
         ed_norm = _normalize(ed.energy)
 
-        e_min = min(ed.energy)
-        e_max = max(ed.energy)
-        e_range = e_max - e_min if e_max != e_min else 1.0
-        e_mid = (e_min + e_max) / 2.0
-        thr_norm = (ed.threshold - e_mid) / (e_range / 2.0)
-
         fig.add_trace(go.Scatter(x=ed_time_ms,
                                  y=ed_norm,
                                  name="Rough align energy",
@@ -1047,13 +1069,7 @@ def plot_sweep_analysis(
                       row=cur_row,
                       col=1)
 
-        fig.add_hline(y=thr_norm,
-                      line_dash="dot",
-                      line_color="darkblue",
-                      opacity=0.4,
-                      row=cur_row,
-                      col=1)
-
+        # The four template windows the matched filter aligned with.
         for region in ed.regions:
             r_start_ms = region[0] * ed.dt_dec * 1000
             r_end_ms = region[1] * ed.dt_dec * 1000
@@ -1071,6 +1087,36 @@ def plot_sweep_analysis(
     fig.update_xaxes(title_text="Time (ms)", row=cur_row, col=1)
     fig.update_yaxes(title_text="Normalized", row=cur_row, col=1)
     cur_row += 1
+
+    if has_score:
+        sc = score_data
+        ks = list(range(sc.k_min, sc.k_max + 1))
+        ks_ms = [k * sc.dt_dec * 1000 for k in ks]
+        fig.add_trace(go.Scatter(x=ks_ms,
+                                 y=sc.score_curve,
+                                 name="Matched-filter score",
+                                 mode="lines+markers",
+                                 line=dict(color="black", width=1),
+                                 marker=dict(size=3),
+                                 showlegend=False),
+                      row=cur_row,
+                      col=1)
+        k_best_ms = sc.k_best * sc.dt_dec * 1000
+        fig.add_vline(
+            x=k_best_ms,
+            line_color="red",
+            line_width=2,
+            annotation_text=(f"k_best={sc.k_best} "
+                             f"({k_best_ms:+.0f}ms), "
+                             f"score/baseline={sc.score_over_baseline:.2f}"),
+            annotation_position="top",
+            annotation_font_size=10,
+            annotation_font_color="red",
+            row=cur_row,
+            col=1)
+        fig.update_xaxes(title_text="Shift τ (ms)", row=cur_row, col=1)
+        fig.update_yaxes(title_text="Σ energy at 4 taps", row=cur_row, col=1)
+        cur_row += 1
 
     if has_preprocessed:
         for i in range(4):
@@ -1542,6 +1588,8 @@ def _gather_scan_data(data: Dict[str, Any], frag: str) -> Dict[str, Any]:
         _filter("pass_raw_chunk"),
         "energy_data":
         next((e for e in data["rough_align_energy"] if frag in e.label), None),
+        "score_data":
+        next((s for s in data["rough_align_score"] if frag in s.label), None),
     }
 
 
@@ -1557,7 +1605,8 @@ def process_single(response: List[str],
           f"{len(data['peaks'])} peak sets, "
           f"{len(data['pass_preprocessed'])} preprocessed, "
           f"{len(data['pass_correlation'])} correlations, "
-          f"{len(data['rough_align_energy'])} energy")
+          f"{len(data['rough_align_energy'])} energy, "
+          f"{len(data['rough_align_score'])} score")
 
     for axis, frag, pass_name in _get_scan_configs(data):
         sd = _gather_scan_data(data, frag)
@@ -1579,6 +1628,7 @@ def process_single(response: List[str],
                                   correlations=sd["correlations"],
                                   raw_chunks=sd["raw_chunks"],
                                   energy_data=sd["energy_data"],
+                                  score_data=sd["score_data"],
                                   tool_label=tool_label)
         if fig:
             figures.append(fig)

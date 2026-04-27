@@ -248,6 +248,30 @@ static void debug_report_pass_correlation(
 }
 
 template <typename Container>
+static void debug_report_rough_align_score(
+    [[maybe_unused]] const char *label,
+    [[maybe_unused]] float dt_dec,
+    [[maybe_unused]] int k_min,
+    [[maybe_unused]] int k_max,
+    [[maybe_unused]] int k_best,
+    [[maybe_unused]] float score_over_baseline,
+    [[maybe_unused]] const Container &score_curve) {
+#ifdef SERIAL_DEBUG
+    serial_printf("# rough_align_score {\"label\": \"%s\", \"dt_dec\": %.6f, "
+                  "\"k_min\": %d, \"k_max\": %d, \"k_best\": %d, "
+                  "\"score_over_baseline\": %.4f, \"score_curve\": [",
+        label, dt_dec, k_min, k_max, k_best, score_over_baseline);
+    for (size_t i = 0; i < score_curve.size(); ++i) {
+        if (i > 0) {
+            serial_printf(", ");
+        }
+        serial_printf("%.4e", static_cast<float>(score_curve[i]));
+    }
+    serial_printf("]}\n");
+#endif
+}
+
+template <typename Container>
 static void debug_report_rough_align_energy(
     [[maybe_unused]] const char *label,
     [[maybe_unused]] int decimation,
