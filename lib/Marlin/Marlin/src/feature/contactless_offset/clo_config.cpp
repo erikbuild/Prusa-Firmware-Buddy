@@ -6,7 +6,7 @@
 namespace tool_offset::detail {
 static constexpr float sensor_x = 257.f;
 static constexpr float sensor_y = 10.0f;
-static constexpr float sensing_diameter = 10.f;
+static constexpr float sensing_diameter = 6.f;
 } // namespace tool_offset::detail
 #elif PRINTER_IS_PRUSA_COREONEL()
 // So far only copy from COREONE INDX
