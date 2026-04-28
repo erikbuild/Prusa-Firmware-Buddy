@@ -34,6 +34,10 @@ def replace_characters(file_path):
         '～': '~',  # Japanese ~
         '℃':
         '\u00B0C',  # Divide degree Celsius (unknown) to 2 known characters
+        'Î': 'I',  # LATIN CAPITAL LETTER I WITH CIRCUMFLEX (not in font set)
+        'ì':
+        'í',  # LATIN SMALL LETTER I WITH GRAVE -> acute (already in font set)
+        'û': 'u',  # LATIN SMALL LETTER U WITH CIRCUMFLEX (not in font set)
     }
 
     # Read the contents of the file

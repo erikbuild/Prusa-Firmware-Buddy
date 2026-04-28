@@ -8587,7 +8587,7 @@ msgstr "SI"
 #: src/feature/indx_dock_calibration/dialog_dock_select.cpp:37
 #: src/gui/screen/openprinttag/screen_opt_info.cpp:19
 msgid "Yes"
-msgstr "Sì"
+msgstr "Sí"
 
 #: src/gui/screen_cold_pull.cpp:313
 msgid ""

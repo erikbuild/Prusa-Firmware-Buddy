@@ -1363,7 +1363,7 @@ msgstr "Fermer ventilation chambre"
 msgid ""
 "Close the door to prevent air drafts, burns and other undesirable effects."
 msgstr ""
-"Fermez la porte pour éviter les courants d'air, brûlures et autres effets "
+"Fermez la porte pour éviter les courants d'air, brulures et autres effets "
 "indésirables."
 
 #: src/feature/gearbox_alignment/screen_gearbox_alignment.cpp:85
@@ -3160,7 +3160,7 @@ msgstr "ALIGNEMENT DES ENGRENAGES"
 
 #: src/feature/gearbox_alignment/screen_gearbox_alignment.cpp:11
 msgid "GEARBOX ALIGNMENT"
-msgstr "ALIGNEMENT BOÎTE D'ENGRENAGES"
+msgstr "ALIGNEMENT BOITE D'ENGRENAGES"
 
 #: src/gui/MItem_network.hpp:154 src/gui/screen_menu_network_status.hpp:26
 msgid "Gateway"
