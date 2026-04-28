@@ -82,6 +82,8 @@ void phaseHeaters_noz_ena(std::array<IPartHandler *, PhysicalToolIndex::count> &
 
             auto pNoz = selftest::Factory::CreateDynamical<CSelftestPart_Heater>(config_nozzle[i],
                 resultHeaters.noz[PhysicalToolIndex::from_raw(i)],
+                &CSelftestPart_Heater::stateShowPickupScreen,
+                &CSelftestPart_Heater::stateInit,
                 &CSelftestPart_Heater::stateCheckHbrPassed,
                 &CSelftestPart_Heater::stateShowSkippedDialog,
                 &CSelftestPart_Heater::stateSetup,
@@ -152,6 +154,7 @@ void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed)
         auto pBed_ = selftest::Factory::CreateDynamical<CSelftestPart_Heater>(
             config_bed,
             resultHeaters.bed,
+            &CSelftestPart_Heater::stateInit,
             &CSelftestPart_Heater::stateSetup,
             &CSelftestPart_Heater::stateCooldownInit, &CSelftestPart_Heater::stateCooldown,
             &CSelftestPart_Heater::stateTargetTemp, &CSelftestPart_Heater::stateWait,

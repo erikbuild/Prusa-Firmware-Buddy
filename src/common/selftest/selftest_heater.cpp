@@ -7,6 +7,7 @@
 #include "../../Marlin/src/module/temperature.h"
 #include "i_selftest.hpp"
 #include "algorithm_scale.hpp"
+#include <common/marlin_server.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
@@ -31,16 +32,19 @@ CSelftestPart_Heater::CSelftestPart_Heater(IPartHandler &state_machine, const He
     : state_machine(state_machine)
     , m_config(config)
     , rResult(result)
-    , original_pid { config.get_pid() }
     , last_progress(0)
     , log(2000)
     , check_log(3000) {}
 
+// teardown lives in the destructor because the selftest FSM has no "finally" state
+// stateSetup don't touch the heater config (which would bsod on INDX without a picked tool).
 CSelftestPart_Heater::~CSelftestPart_Heater() {
+    if (!teardown_needed) {
+        return;
+    }
     log_info(Selftest, "%s finish, target: %d current: %f", m_config.partname,
         static_cast<int>(m_config.target_temp), static_cast<double>(m_config.getTemp()));
     m_config.setTargetTemp(0);
-
     m_config.set_pid(original_pid);
     log_info(Selftest, "%s heater PID regulator restored", m_config.partname);
 }
@@ -89,9 +93,19 @@ LoopResult CSelftestPart_Heater::stateShowSkippedDialog() {
     return LoopResult::RunCurrent;
 }
 
-LoopResult CSelftestPart_Heater::stateSetup() {
+LoopResult CSelftestPart_Heater::stateShowPickupScreen() {
 #if HAS_INDX()
     if (m_config.type == heater_type_t::Nozzle && std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
+        IPartHandler::SetFsmPhase(PhasesSelftest::Heaters_PickingTool);
+        need_pickup = true;
+    }
+#endif
+    return LoopResult::RunNext;
+}
+
+LoopResult CSelftestPart_Heater::stateInit() {
+#if HAS_INDX()
+    if (need_pickup) {
         bool picked = prusa_toolchanger.pick_any_tool(tool_return_t::no_return, {}, tool_change_lift_t::no_lift, false);
         if (!picked) {
             rResult.prep_state = SelftestSubtestState_t::undef;
@@ -101,7 +115,7 @@ LoopResult CSelftestPart_Heater::stateSetup() {
     }
 #elif HAS_TOOLCHANGER()
     // if this tool is not enabled, end this test immediately and set result to undefined
-    if (!m_config.tool_nr.is_enabled()) {
+    if (m_config.type == heater_type_t::Nozzle && !m_config.tool_nr.is_enabled()) {
         m_StartTime = m_EndTime = SelftestInstance().GetTime();
         rResult.prep_state = SelftestSubtestState_t::undef;
         rResult.heat_state = SelftestSubtestState_t::undef;
@@ -109,11 +123,21 @@ LoopResult CSelftestPart_Heater::stateSetup() {
     }
 #endif
 
-#if HAS_TOOLCHANGER()
+    return LoopResult::RunNext;
+}
+
+LoopResult CSelftestPart_Heater::stateSetup() {
+    if (!teardown_needed) {
+        // snapshot before set_pid below - teardown is now necessary
+        original_pid = m_config.get_pid();
+        teardown_needed = true;
+    }
+    // INDX has multiple docks but a single hotend, so it behaves like singletool here.
+    // XL multitool runs per-tool tests with phases driven by the orchestrator (pretty ugly imo)
+#if HAS_TOOLCHANGER() && !HAS_INDX()
     if (prusa_toolchanger.get_num_enabled_tools() <= 1)
 #endif
     {
-        // do this for singletool configurations, multitool has special handling
         IPartHandler::SetFsmPhase(PhasesSelftest::Heaters);
     }
 

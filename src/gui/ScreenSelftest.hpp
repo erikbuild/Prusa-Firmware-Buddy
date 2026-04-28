@@ -10,10 +10,14 @@
 #include "static_alocation_ptr.hpp"
 #include "printer_selftest.hpp" // SelftestMask_t
 #include <selftest_frame.hpp>
+#include <option/has_indx.h>
 
 class ScreenSelftest : public screen_t {
 #if PRINTER_IS_PRUSA_XL()
     static constexpr size_t storage_size = 2048;
+#elif HAS_INDX()
+    // INDX adds a screen for picking up tool
+    static constexpr size_t storage_size = 1578;
 #else
     static constexpr size_t storage_size = 1560;
 #endif

@@ -5,8 +5,29 @@
 #include "window_wizard_progress.hpp"
 #include "status_footer.hpp"
 #include <option/has_heatbreak_temp.h>
+#include <option/has_indx.h>
+#if HAS_INDX()
+    #include <gui/standard_frame/frame_wait.hpp>
+#endif
 
 class ScreenSelftestTemp : public SelftestFrameWithRadio {
+#if HAS_INDX()
+    /// Heaters_PickingTool phase. INDX-only.
+    struct WaitFrame : public FrameWait {
+        using FrameWait::FrameWait;
+        void Hide() {
+            text_wait.Hide();
+            text_custom.Hide();
+            animation.Hide();
+        }
+        void Show() {
+            text_wait.Show();
+            text_custom.Show();
+            animation.Show();
+        }
+    };
+#endif
+
     FooterLine footer;
 
     window_frame_t test_frame;
@@ -32,6 +53,10 @@ class ScreenSelftestTemp : public SelftestFrameWithRadio {
     window_text_t text_info;
 
     window_text_t text_dialog;
+
+#if HAS_INDX()
+    WaitFrame wait_frame;
+#endif
 
     // result per each HOTEND
 

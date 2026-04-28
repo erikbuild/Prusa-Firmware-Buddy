@@ -67,6 +67,9 @@ constexpr const char *en_text_heatbreak = N_("Heatbreak status");
 constexpr const char *en_text_dialog_noz_disabled = N_("The heater test will be skipped due to the failed hotend fan check. You may continue, but we strongly recommend resolving this issue before you start printing.");
 // info text without a dialog is for >1 tool ToolChanger
 constexpr const char *en_text_info_noz_disabled = N_("Some nozzle heater checks were disabled due to their hotend fan checks not having passed.");
+#if HAS_INDX()
+constexpr const char *en_text_picking_tool = N_("Picking up tool");
+#endif
 } // namespace
 
 static bool is_tested(SelftestHeaters_t &dt, SelftestHeaters_t::TestedParts part) {
@@ -100,6 +103,9 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
 #endif
     , text_info(&test_frame, info_text_rect, is_multiline::yes)
     , text_dialog(this, GetRect() + Rect16::X_t(WizardDefaults::MarginLeft) + Rect16::Y_t(GuiDefaults::FramePadding) - Rect16::H_t(80) - Rect16::W_t(2 * WizardDefaults::MarginLeft), is_multiline::yes, is_closed_on_click_t::no, {})
+#if HAS_INDX()
+    , wait_frame(this, _(en_text_picking_tool))
+#endif
     // results
     , icons_noz_prep(&test_frame, { .x = tool_icons_x, .y = row_noz_2 }, tool_icon_count)
     , icons_noz_heat(&test_frame, { .x = tool_icons_x, .y = row_noz_3 }, tool_icon_count)
@@ -223,7 +229,20 @@ ScreenSelftestTemp::ScreenSelftestTemp(window_t *parent, PhasesSelftest ph, fsm:
 void ScreenSelftestTemp::change() {
     switch (phase_current) {
 
+#if HAS_INDX()
+    case PhasesSelftest::Heaters_PickingTool: {
+        test_frame.Hide();
+        text_dialog.Hide();
+        radio.Hide();
+        wait_frame.Show();
+        break;
+    }
+#endif
+
     case PhasesSelftest::Heaters_AskBedSheetAfterFail: {
+#if HAS_INDX()
+        wait_frame.Hide();
+#endif
         test_frame.Hide();
         text_dialog.Show();
         text_dialog.SetText(_("Bed heater selftest failed.\n\nIf you forgot to put the steel sheet on the heatbed, place it on and press Retry."));
@@ -238,6 +257,9 @@ void ScreenSelftestTemp::change() {
         } else
 #endif
         {
+#if HAS_INDX()
+            wait_frame.Hide();
+#endif
             test_frame.Hide();
             text_dialog.Show();
             text_dialog.SetText(_(en_text_dialog_noz_disabled));
@@ -246,6 +268,9 @@ void ScreenSelftestTemp::change() {
         }
 
     case PhasesSelftest::Heaters: {
+#if HAS_INDX()
+        wait_frame.Hide();
+#endif
         text_dialog.Hide();
         test_frame.Show();
         radio.Hide();

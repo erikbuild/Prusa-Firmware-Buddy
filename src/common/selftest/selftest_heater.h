@@ -20,7 +20,9 @@ public:
 
 private:
     SelftestHeater_t &rResult;
-    PID_t original_pid;
+    PID_t original_pid {};
+    bool teardown_needed = false;
+    bool need_pickup = false;
     uint32_t m_StartTime;
     uint32_t m_EndTime;
     uint32_t m_MeasureStartTime;
@@ -58,6 +60,10 @@ public:
 
     PhysicalToolIndex get_picked_tool();
 
+    /// Check if the pickup is necessary
+    LoopResult stateShowPickupScreen();
+    /// Picks up a tool on INDX, validates tool enablement on XL.
+    LoopResult stateInit();
     /// Checks that hotend fan test passed for the tool that is being tested.
     /// Changes FSM state if it hasn't, which shows a dialog on non-XL printers
     /// and a notice on XL (on which only the failed tools are skipped and the
