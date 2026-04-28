@@ -11,7 +11,6 @@ namespace {
 struct IntervalLUTItem {
     float factor_pre;
     float factor_post;
-    float power;
 };
 
 // Values were found experimentally to switch MOSFET in zero voltage
@@ -22,85 +21,71 @@ constexpr std::array intervalLUT = {
     IntervalLUTItem {
         .factor_pre = 0.00f,
         .factor_post = 0.17f,
-        .power = 12.48f,
     },
     // 1
     IntervalLUTItem {
         .factor_pre = 0.12f,
         .factor_post = 0.20f,
-        .power = 16.56f,
     },
     // 2
     IntervalLUTItem {
         .factor_pre = 0.18f,
         .factor_post = 0.25f,
-        .power = 20.16f,
     },
     // 3
     IntervalLUTItem {
         .factor_pre = 0.20f,
         .factor_post = 0.30f,
-        .power = 24.24f,
     },
     // 4
     IntervalLUTItem {
         .factor_pre = 0.24f,
         .factor_post = 0.35f,
-        .power = 28.08f,
     },
     // 5
     IntervalLUTItem {
         .factor_pre = 0.27f,
         .factor_post = 0.40f,
-        .power = 31.92f,
     },
     // 6
     IntervalLUTItem {
         .factor_pre = 0.28f,
         .factor_post = 0.45f,
-        .power = 35.52f,
     },
     // 7
     IntervalLUTItem {
         .factor_pre = 0.29f,
         .factor_post = 0.50f,
-        .power = 38.40f,
     },
     // 8
     IntervalLUTItem {
         .factor_pre = 0.30f,
         .factor_post = 0.55f,
-        .power = 46.08f,
     },
     // 9
     IntervalLUTItem {
         .factor_pre = 0.31f,
         .factor_post = 0.60f,
-        .power = 46.08f,
     },
     // 10
     IntervalLUTItem {
         .factor_pre = 0.32f,
         .factor_post = 0.65f,
-        .power = 49.68f,
     },
     // 11
     IntervalLUTItem {
         .factor_pre = 0.33f,
         .factor_post = 0.70f,
-        .power = 54.24f,
     },
     // 12
     IntervalLUTItem {
         .factor_pre = 0.34f,
         .factor_post = 0.75f,
-        .power = 58.32f,
     },
     // 13
     IntervalLUTItem {
         .factor_pre = 0.34f,
         .factor_post = 0.80f,
-        .power = 62.16f,
     },
 };
 
