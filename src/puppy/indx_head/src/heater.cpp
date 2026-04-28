@@ -17,24 +17,94 @@ struct IntervalLUTItem {
 // Values were found experimentally to switch MOSFET in zero voltage
 // crossing. Do not mess with them without measuring changes with
 // oscilloscope, or the MOSFET WILL BURN!
-constexpr IntervalLUTItem intervalLUT[] = {
-    { 0.00f, 0.17f, 12.48f }, // 0
-    { 0.12f, 0.20f, 16.56f }, // 1
-    { 0.18f, 0.25f, 20.16f }, // 2
-    { 0.20f, 0.30f, 24.24f }, // 3
-    { 0.24f, 0.35f, 28.08f }, // 4
-    { 0.27f, 0.40f, 31.92f }, // 5
-    { 0.28f, 0.45f, 35.52f }, // 6
-    { 0.29f, 0.50f, 38.40f }, // 7
-    { 0.30f, 0.55f, 46.08f }, // 8
-    { 0.31f, 0.60f, 46.08f }, // 9
-    { 0.32f, 0.65f, 49.68f }, // 10
-    { 0.33f, 0.70f, 54.24f }, // 11
-    { 0.34f, 0.75f, 58.32f }, // 12
-    { 0.34f, 0.80f, 62.16f }, // 13
+constexpr std::array intervalLUT = {
+    // 0
+    IntervalLUTItem {
+        .factor_pre = 0.00f,
+        .factor_post = 0.17f,
+        .power = 12.48f,
+    },
+    // 1
+    IntervalLUTItem {
+        .factor_pre = 0.12f,
+        .factor_post = 0.20f,
+        .power = 16.56f,
+    },
+    // 2
+    IntervalLUTItem {
+        .factor_pre = 0.18f,
+        .factor_post = 0.25f,
+        .power = 20.16f,
+    },
+    // 3
+    IntervalLUTItem {
+        .factor_pre = 0.20f,
+        .factor_post = 0.30f,
+        .power = 24.24f,
+    },
+    // 4
+    IntervalLUTItem {
+        .factor_pre = 0.24f,
+        .factor_post = 0.35f,
+        .power = 28.08f,
+    },
+    // 5
+    IntervalLUTItem {
+        .factor_pre = 0.27f,
+        .factor_post = 0.40f,
+        .power = 31.92f,
+    },
+    // 6
+    IntervalLUTItem {
+        .factor_pre = 0.28f,
+        .factor_post = 0.45f,
+        .power = 35.52f,
+    },
+    // 7
+    IntervalLUTItem {
+        .factor_pre = 0.29f,
+        .factor_post = 0.50f,
+        .power = 38.40f,
+    },
+    // 8
+    IntervalLUTItem {
+        .factor_pre = 0.30f,
+        .factor_post = 0.55f,
+        .power = 46.08f,
+    },
+    // 9
+    IntervalLUTItem {
+        .factor_pre = 0.31f,
+        .factor_post = 0.60f,
+        .power = 46.08f,
+    },
+    // 10
+    IntervalLUTItem {
+        .factor_pre = 0.32f,
+        .factor_post = 0.65f,
+        .power = 49.68f,
+    },
+    // 11
+    IntervalLUTItem {
+        .factor_pre = 0.33f,
+        .factor_post = 0.70f,
+        .power = 54.24f,
+    },
+    // 12
+    IntervalLUTItem {
+        .factor_pre = 0.34f,
+        .factor_post = 0.75f,
+        .power = 58.32f,
+    },
+    // 13
+    IntervalLUTItem {
+        .factor_pre = 0.34f,
+        .factor_post = 0.80f,
+        .power = 62.16f,
+    },
 };
 
-static_assert(InductionHeater::max_power == sizeof(intervalLUT) / sizeof(IntervalLUTItem));
+static_assert(intervalLUT.size() == InductionHeater::max_power);
 
 // Induction heater PID constants
 static constexpr fpm::fixed_16_16 Tu = static_cast<fpm::fixed_16_16>(0.3345f); // in seconds
