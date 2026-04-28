@@ -13,10 +13,25 @@ struct IntervalLUTItem {
     float factor_post;
 };
 
+struct IntervalLUTItemExt {
+    float factor_pre;
+    float factor_post;
+
+    /// Squared duty cycle, calculated as factor_post + 0.25 * factor_pre
+    fpm::fixed_16_16 duty_cycle_sq;
+
+    constexpr IntervalLUTItemExt(const IntervalLUTItem &i)
+        : factor_pre { i.factor_pre }
+        , factor_post { i.factor_post }
+        , duty_cycle_sq(i.factor_post + 0.25f * i.factor_pre) {
+    }
+};
+
 // Values were found experimentally to switch MOSFET in zero voltage
 // crossing. Do not mess with them without measuring changes with
 // oscilloscope, or the MOSFET WILL BURN!
-constexpr std::array intervalLUT = {
+// !!! INDEX intervalLUT[0] ~ (current_power = 1), current_power 0 is not in this table
+constexpr std::array<IntervalLUTItemExt, InductionHeater::max_power> intervalLUT {
     // 0
     IntervalLUTItem {
         .factor_pre = 0.00f,
@@ -88,8 +103,6 @@ constexpr std::array intervalLUT = {
         .factor_post = 0.80f,
     },
 };
-
-static_assert(intervalLUT.size() == InductionHeater::max_power);
 
 // Induction heater PID constants
 static constexpr fpm::fixed_16_16 Tu = static_cast<fpm::fixed_16_16>(0.3345f); // in seconds
@@ -181,6 +194,10 @@ void InductionHeater::heater_control(int32_t target_centideg, int32_t current_ce
     }
 
     update(pwr_i);
+}
+
+fpm::fixed_16_16 InductionHeater::current_duty_cycle_sq() const {
+    return current_power == 0 ? fpm::fixed_16_16 { 0 } : intervalLUT[current_power - 1].duty_cycle_sq;
 }
 
 bool InductionHeater::should_measure() const {
@@ -406,7 +423,7 @@ void InductionHeater::ringdown_analysis(void) {
 
     for (int power = 0; power < max_power; ++power) {
         const uint16_t period = (uint16_t)interval;
-        const IntervalLUTItem intervals = intervalLUT[power];
+        const auto &intervals = intervalLUT[power];
         const uint16_t duration_pre = static_cast<int16_t>(period * intervals.factor_pre);
         const uint16_t duration_post = static_cast<int16_t>(period * intervals.factor_post);
 

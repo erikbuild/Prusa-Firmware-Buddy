@@ -33,6 +33,9 @@ public:
 
     void heater_control(int32_t target_centideg, int32_t current_centideg);
 
+    /// @returns current square of the duty cycle (0-1)
+    fpm::fixed_16_16 current_duty_cycle_sq() const;
+
 private:
     RingdownAnalysis last_analysis;
     uint16_t dcOffset;
@@ -46,6 +49,8 @@ private:
         uint16_t ARR; // auto-reload register
         uint16_t CCR1; // capture/compare register 1
     };
+
+    // !!! INDEX timer_config[0] ~ intervalLUT[0] ~ (current_power = 1), current_power 0 is not in this table
     std::array<TimerConfig, max_power> timer_config;
 
     /// Apply precomputed timer configuration for given power.
