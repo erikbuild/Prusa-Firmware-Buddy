@@ -848,6 +848,9 @@ bool PrusaToolChanger::bump_to_dock(PhysicalToolIndex tool) {
 
     current_position.y = info.dock_y;
     sync_plan_position();
+    // do_homing_move() unconditionally sets the axis to not_homed; restore it,
+    // otherwise the next ensure_safe_move() forces a G28 from inside the dock pocket.
+    axes_home_level[Y_AXIS] = AxisHomeLevel::full;
     planner.synchronize();
     return true;
 }
