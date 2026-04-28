@@ -22,6 +22,8 @@ enum class FaultStatusMask : uint16_t {
     power_reset = (1 << 10),
     board_min_temp = (1 << 11),
     board_max_temp = (1 << 12),
+    tpis_ambient_min_temp = (1 << 13),
+    tpis_ambient_max_temp = (1 << 14),
 };
 
 } // namespace indx_head::errors

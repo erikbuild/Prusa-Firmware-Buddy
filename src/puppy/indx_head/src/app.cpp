@@ -27,6 +27,8 @@ bool can_calculate_nozzle_temp_slope = false;
 
 constexpr float max_nozzle_temp = 330.f;
 constexpr float min_nozzle_temp = 5.f;
+constexpr float max_tpis_ambient_temp = 85.f;
+constexpr float min_tpis_ambient_temp = 10.f;
 constexpr uint32_t invalid_nozzle_temp_timeout_ms = 1000 * 2;
 /// Target nozzle temperature in DegC
 std::atomic<uint16_t> target_temp = 0;
@@ -97,6 +99,12 @@ void run() {
                     hal::panic(indx_head::errors::FaultStatusMask::nozzle_max_temp);
                 } else if (nozzle_temp_reading.object_temperature_celsius < min_nozzle_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::nozzle_min_temp);
+                }
+
+                if (nozzle_temp_reading.ambient_temperature_celsius > max_tpis_ambient_temp) {
+                    hal::panic(indx_head::errors::FaultStatusMask::tpis_ambient_max_temp);
+                } else if (nozzle_temp_reading.ambient_temperature_celsius < min_tpis_ambient_temp) {
+                    hal::panic(indx_head::errors::FaultStatusMask::tpis_ambient_min_temp);
                 }
 
                 last_valid_nozzle_temp_ms = now_ms;

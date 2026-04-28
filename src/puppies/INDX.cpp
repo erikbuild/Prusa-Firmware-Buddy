@@ -78,6 +78,12 @@ void Indx::handle_fault_status() {
     if (has_fault(indx_head::errors::FaultStatusMask::board_max_temp)) {
         fatal_error(ErrCode::ERR_TEMPERATURE_INDX_HEAD_BOARD_MAXTEMP_ERR);
     }
+    if (has_fault(indx_head::errors::FaultStatusMask::tpis_ambient_min_temp)) {
+        fatal_error(ErrCode::ERR_TEMPERATURE_INDX_HEAD_TPIS_AMBIENT_MINTEMP_ERR);
+    }
+    if (has_fault(indx_head::errors::FaultStatusMask::tpis_ambient_max_temp)) {
+        fatal_error(ErrCode::ERR_TEMPERATURE_INDX_HEAD_TPIS_AMBIENT_MAXTEMP_ERR);
+    }
 
     // acknowledge the fault
     general_write.value.clear_fault_status = std::to_underlying(fault);
