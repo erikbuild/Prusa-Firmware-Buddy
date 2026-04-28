@@ -429,6 +429,7 @@ extern "C" void main_cpp(void) {
 #endif
 
 #if HAS_PUPPIES()
+    hw_tim4_init();
     uart_init_puppies(running_in_tester_mode());
     if (!running_in_tester_mode()) {
         buddy::puppies::PuppyBus::Open();

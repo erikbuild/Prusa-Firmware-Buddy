@@ -5,6 +5,7 @@
 #include <device/peripherals_uart.hpp>
 #include "hwio_pindef.h"
 #include "timing.h"
+#include <freertos/binary_semaphore.hpp>
 
 namespace buddy {
 namespace puppies {
@@ -15,6 +16,7 @@ namespace puppies {
     osMutexDef(puppyMutex);
     static osMutexId puppyMutexId;
     uint32_t PuppyBus::last_operation_time_us = 0;
+    freertos::BinarySemaphore delay_semaphore;
 
     void PuppyBus::Open() {
         assert(puppyMutexId == nullptr);
@@ -83,9 +85,26 @@ namespace puppies {
     }
 
     void PuppyBus::EnsurePause() {
-        while (ticks_us() - PuppyBus::last_operation_time_us < PuppyBus::MINIMAL_PAUSE_BETWEEN_REQUESTS_US) {
-            osDelay(1);
+        assert(!xPortIsInsideInterrupt());
+        const uint32_t elapsed_us = ticks_us() - last_operation_time_us;
+        if (MINIMAL_PAUSE_BETWEEN_REQUESTS_US <= elapsed_us) {
+            return;
         }
+        const uint32_t remaining_us = MINIMAL_PAUSE_BETWEEN_REQUESTS_US - elapsed_us;
+        assert(remaining_us < 0xFFFF);
+
+        // Delays shorter than 2 us would be more difficult to handle.
+        // When ARR is set to N-1, it will take exactly N cycles to generate update event.
+        const auto arr = std::max<uint32_t>(2, remaining_us) - 1;
+
+        // Arm TIM4 in one-pulse mode: counter runs once from 0 to ARR (~us),
+        // fires the update IRQ, and self-disables (CR1.CEN cleared by OPM).
+        __HAL_TIM_SET_COUNTER(&htim4, 0);
+        __HAL_TIM_SET_AUTORELOAD(&htim4, arr);
+        __HAL_TIM_CLEAR_FLAG(&htim4, TIM_FLAG_UPDATE);
+        __HAL_TIM_ENABLE(&htim4);
+
+        delay_semaphore.acquire();
     }
 
     PuppyBus::LockGuard::LockGuard() {
@@ -110,3 +129,8 @@ namespace puppies {
     }
 } // namespace puppies
 } // namespace buddy
+
+extern "C" void TIM4_IRQHandler() {
+    __HAL_TIM_CLEAR_FLAG(&htim4, TIM_FLAG_UPDATE);
+    buddy::puppies::delay_semaphore.release_from_isr();
+}

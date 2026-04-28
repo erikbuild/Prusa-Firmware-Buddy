@@ -60,6 +60,7 @@ ADC_HandleTypeDef hadc3;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim13;
@@ -887,6 +888,26 @@ void hw_tim3_init() {
 
     HAL_TIM_MspPostInit(&htim3);
     __HAL_TIM_ENABLE(&htim3);
+}
+
+void hw_tim4_init() {
+    // Configure TIM as a one-pulse delay generator for os_delay_us().
+    // Prescaler yields 1 MHz tick (1 us per count).
+    // 16-bit ARR => max 65535 us
+    __HAL_RCC_TIM4_CLK_ENABLE();
+    htim4.Instance = TIM4;
+    htim4.Init.Prescaler = TIM_BASE_CLK_MHZ - 1; // 84-1 -> 1 MHz -> 1 us/tick
+    htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim4.Init.Period = 0xFFFF; // reset value, updated on each use
+    htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_OnePulse_Init(&htim4, TIM_OPMODE_SINGLE) != HAL_OK) {
+        bsod_system();
+    }
+    __HAL_TIM_CLEAR_FLAG(&htim4, TIM_FLAG_UPDATE);
+    __HAL_TIM_ENABLE_IT(&htim4, TIM_IT_UPDATE);
+    HAL_NVIC_SetPriority(TIM4_IRQn, ISR_PRIORITY_DEFAULT, 0);
+    HAL_NVIC_EnableIRQ(TIM4_IRQn);
 }
 
 #if HAS_BURST_STEPPING()
