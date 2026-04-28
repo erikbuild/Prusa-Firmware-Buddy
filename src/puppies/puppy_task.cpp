@@ -6,6 +6,7 @@
 #include <cmsis_os.h>
 #include <common/bsod.h>
 #include <common/timing.h>
+#include <freertos/timing.hpp>
 #include <logging/log.hpp>
 #include <option/has_toolchanger.h>
 #include <tasks.hpp>
@@ -347,7 +348,11 @@ static void puppy_task_loop(PuppyModbus &bus) {
 #if HAS_TOOLCHANGER() && HAS_DWARF()
         } while (!worked && slow_stage != orig_stage); // End if we did some work or if no stage has anything to do
 #endif
-        osDelay(worked ? 1 : 2); // Longer delay if we did no work
+        if (worked) {
+            freertos::yield();
+        } else {
+            freertos::delay(1);
+        }
     }
 }
 

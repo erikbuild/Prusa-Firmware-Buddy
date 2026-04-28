@@ -46,7 +46,7 @@ static_assert(configLIBRARY_LOWEST_INTERRUPT_PRIORITY == 15);
     /************************************************
      * Task priorities
      *************************************************/
-    #define TASK_PRIORITY_PUPPY_TASK          osPriorityRealtime
+    #define TASK_PRIORITY_PUPPY_TASK          osPriorityHigh
     #define TASK_PRIORITY_USB_DEVICE          osPriorityNormal
     #define TASK_PRIORITY_AC_FAULT            osPriorityRealtime
     #define TASK_PRIORITY_DEFAULT_TASK        osPriorityHigh
