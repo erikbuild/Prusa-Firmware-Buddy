@@ -1,10 +1,9 @@
 #
-#: src/gui/dialogs/DialogLoadUnload.cpp:83
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: info@prusa3d.com\n"
-"POT-Creation-Date: 2026-04-27 09:48+0200\n"
+"POT-Creation-Date: 2026-04-28 09:23+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -15,7 +14,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.4.4\n"
 
-#: src/gui/MItem_tools.cpp:801
+#: src/gui/MItem_tools.cpp:800
 msgid ""
 "\n"
 "Loading settings finished.\n"
@@ -33,7 +32,8 @@ msgstr ""
 "\n"
 "Очищення сопла не вдалося."
 
-#. TODO: change of visualization scheme is expected soon, some unification with fsensor visualization will happen as a result.
+#. TODO: change of visualization scheme is expected soon, some unification
+#. with fsensor visualization will happen as a result.
 #. For now, FINDA is visualized the same way like filament sensors' states
 #: src/gui/MItem_mmu.cpp:309
 msgid " INS / 1"
@@ -230,18 +230,18 @@ msgstr "%d Калібрування вирівнювання осі Z"
 msgid "%d Z Axis Test"
 msgstr "%d Тест осі Z"
 
-#: tmp_error_headers/error_list.hpp:688
+#: tmp_error_headers/error_list.hpp:702
 #, c-format
 msgid "%s Check hotend heater and control electronics for possible damage"
 msgstr ""
 "%s Перевірте нагрівач хотенду та електроніку керування на можливі пошкодження"
 
-#: tmp_error_headers/error_list.hpp:716
+#: tmp_error_headers/error_list.hpp:730
 #, c-format
 msgid "%s lost a link to parent system."
 msgstr "%s втратив зв'язок із головною системою."
 
-#: tmp_error_headers/error_list.hpp:709
+#: tmp_error_headers/error_list.hpp:723
 #, c-format
 msgid "%s stopped receiving data."
 msgstr "%s припинив отримувати дані."
@@ -266,7 +266,6 @@ msgstr "%u %% / зупинено"
 msgid "%u %% / stuck"
 msgstr "%u %% / заклинило"
 
-#.
 #: src/guiapi/include/WindowItemFanLabel.hpp:35
 #, c-format
 msgid "%u %% / unknown"
@@ -353,7 +352,7 @@ msgstr ""
 msgid "4 DOCKS"
 msgstr "4 ДОКИ"
 
-#: src/gui/MItem_tools.cpp:636
+#: src/gui/MItem_tools.cpp:635
 msgid "5V Voltage"
 msgstr "Напруга 5V"
 
@@ -362,15 +361,15 @@ msgid "8 DOCKS"
 msgstr "8 ДОКІВ"
 
 #. window_menu
-#: src/gui/MItem_tools.cpp:283
+#: src/gui/MItem_tools.cpp:282
 msgid "A crash dump is being saved."
 msgstr "Зберігається дамп аварії."
 
-#: src/gui/MItem_tools.cpp:287
+#: src/gui/MItem_tools.cpp:286
 msgid "A crash dump report (file dump.bin) has been saved to the USB drive."
 msgstr "Звіт про аварію (файл dump.bin) збережено на USB-накопичувач."
 
-#: tmp_error_headers/error_list.hpp:1185
+#: tmp_error_headers/error_list.hpp:1199
 msgid "A filament specified in the G-code is either not loaded or wrong type."
 msgstr ""
 "Філамент, вказаний у G-коді, або не завантажено, або він неправильного типу."
@@ -378,14 +377,6 @@ msgstr ""
 #: tmp_error_headers/error_list.hpp:100
 msgid "A movement command risks causing the model to collide with the ceiling."
 msgstr "Команда руху може спричинити зіткнення моделі зі стелею."
-
-#: tmp_error_headers/error_list.hpp:191
-msgid ""
-"A nozzle was detected but its identity is unknown. Please select the dock it "
-"belongs to."
-msgstr ""
-"Сопло виявлено, але його ідентифікатор невідомий. Виберіть док, до якого "
-"воно належить."
 
 #: src/gui/screen_crash_recovery.cpp:91
 msgid ""
@@ -405,6 +396,14 @@ msgstr ""
 "\n"
 "Зніміть його вручну та повторіть."
 
+#: tmp_error_headers/error_list.hpp:191
+msgid ""
+"A tool was detected, but its identity is unknown. Please select the "
+"corresponding dock."
+msgstr ""
+"Інструмент виявлено, але його ідентифікатор невідомий. Виберіть відповідний "
+"док."
+
 #: src/common/client_response_texts.hpp:12
 #: src/common/client_response_texts.hpp:14
 msgid "ABORT"
@@ -415,14 +414,14 @@ msgid "ABORTING ..."
 msgstr "ПЕРЕРИВАЄТЬСЯ ..."
 
 #: tmp_error_headers/error_list.hpp:484 tmp_error_headers/error_list.hpp:491
-#: tmp_error_headers/error_list.hpp:722 tmp_error_headers/error_list.hpp:729
 #: tmp_error_headers/error_list.hpp:736 tmp_error_headers/error_list.hpp:743
 #: tmp_error_headers/error_list.hpp:750 tmp_error_headers/error_list.hpp:757
 #: tmp_error_headers/error_list.hpp:764 tmp_error_headers/error_list.hpp:771
+#: tmp_error_headers/error_list.hpp:778 tmp_error_headers/error_list.hpp:785
 msgid "AC CONTROLLER FAULT"
 msgstr "ЗБІЙ КОНТРОЛЕРА AC"
 
-#: tmp_error_headers/error_list.hpp:694
+#: tmp_error_headers/error_list.hpp:708
 msgid "ACCELEROMETER COMMUNICATION FAILED"
 msgstr "ЗБІЙ ЗВ'ЯЗКУ З АКСЕЛЕРОМЕТРОМ"
 
@@ -486,7 +485,7 @@ msgstr "Додати принтер до Connect"
 msgid "Additional probing"
 msgstr "Додаткове зондування"
 
-#: tmp_error_headers/error_list.hpp:835
+#: tmp_error_headers/error_list.hpp:849
 msgid "Address assignment error"
 msgstr "Помилка призначення адреси"
 
@@ -538,7 +537,7 @@ msgstr "Вирівнювання інструменту"
 msgid "Alignment issue detected"
 msgstr "Виявлено проблему вирівнювання"
 
-#: src/gui/MItem_tools.cpp:729
+#: src/gui/MItem_tools.cpp:728
 msgid "All"
 msgstr "Все"
 
@@ -558,7 +557,7 @@ msgstr "Усі сопла"
 msgid "All tests passed successfully."
 msgstr "Усі тести успішно пройдено."
 
-#: src/gui/MItem_tools.cpp:871
+#: src/gui/MItem_tools.cpp:870
 msgid "Always"
 msgstr "Завжди"
 
@@ -571,7 +570,7 @@ msgstr "Приблизно %d хв"
 msgid "Are you sure to stop this printing?"
 msgstr "Ви впевнені, що хочете зупинити друк?"
 
-#: tmp_error_headers/error_list.hpp:1507
+#: tmp_error_headers/error_list.hpp:1521
 msgid ""
 "Are you sure you want to abort the print?\n"
 "\n"
@@ -598,7 +597,7 @@ msgstr "Точно пропустити калібрування датчика 
 msgid "Ask"
 msgstr "Запитати"
 
-#: src/gui/MItem_tools.cpp:342
+#: src/gui/MItem_tools.cpp:341
 msgid "Assist"
 msgstr "Допомога"
 
@@ -632,7 +631,7 @@ msgstr ""
 msgid "Auto"
 msgstr "Авто"
 
-#: src/gui/MItem_tools.cpp:208
+#: src/gui/MItem_tools.cpp:207
 msgid "Auto Home"
 msgstr "Автоматичне паркування"
 
@@ -685,15 +684,15 @@ msgstr ""
 msgid "BACK"
 msgstr "НАЗАД"
 
-#: tmp_error_headers/error_list.hpp:946
+#: tmp_error_headers/error_list.hpp:960
 msgid "BBF ALLOCATION FAILED"
 msgstr "ПОМИЛКА ВИДІЛЕННЯ BBF"
 
-#: tmp_error_headers/error_list.hpp:953
+#: tmp_error_headers/error_list.hpp:967
 msgid "BBF INITIALIZATION FAILED"
 msgstr "ПОМИЛКА ІНІЦІАЛІЗАЦІЇ BBF"
 
-#: tmp_error_headers/error_list.hpp:954
+#: tmp_error_headers/error_list.hpp:968
 msgid "BBF initialization failed, repeat the action or try another USB drive."
 msgstr ""
 "Не вдалося ініціалізувати BBF, повторіть дію або спробуйте інший USB-"
@@ -702,6 +701,14 @@ msgstr ""
 #: src/gui/screen_menu_bed_level_correction.hpp:102
 msgid "BED LEVEL CORRECTION"
 msgstr "КОРЕКЦІЯ РІВНЯ СТОЛУ"
+
+#: tmp_error_headers/error_list.hpp:505
+msgid "BOARD MAXTEMP ERROR"
+msgstr "ПОМИЛКА МАКС ТЕМП ПЛАТИ"
+
+#: tmp_error_headers/error_list.hpp:498
+msgid "BOARD MINTEMP ERROR"
+msgstr "ПОМИЛКА МІН ТЕМП ПЛАТИ"
 
 #: src/gui/dialogs/resolution_480x320/radio_button_preview.cpp:15
 msgid "Back"
@@ -727,7 +734,8 @@ msgstr "Стіл"
 msgid "Bed Fan 1"
 msgstr "Вентилятор столу 1"
 
-#. translation: menu item showing info about heated bed fan (there are two of them)
+#. translation: menu item showing info about heated bed fan (there are two of
+#. them)
 #: src/gui/screen_menu_fan_info.cpp:34
 msgid "Bed Fan 2"
 msgstr "Вентилятор столу 2"
@@ -745,11 +753,11 @@ msgid "Bed Temp"
 msgstr "Темп столу"
 
 #: src/gui/screen/filament/screen_filament_detail.cpp:105
-#: src/gui/MItem_tools.cpp:517
+#: src/gui/MItem_tools.cpp:516
 msgid "Bed Temperature"
 msgstr "Температура столу"
 
-#: src/gui/MItem_tools.cpp:609
+#: src/gui/MItem_tools.cpp:608
 msgid "Bed Voltage"
 msgstr "Напруга столу"
 
@@ -769,7 +777,7 @@ msgstr ""
 "Якщо ви забули покласти сталеву пластину на нагрівальний стіл, зробіть це та "
 "натисніть «Повторити»."
 
-#: tmp_error_headers/error_list.hpp:1409
+#: tmp_error_headers/error_list.hpp:1423
 msgid "Bed leveling failed. Try again?"
 msgstr "Не вдалося вирівняти стіл. Спробувати знову?"
 
@@ -809,7 +817,8 @@ msgstr ""
 "Перш ніж продовжити, переконайтеся, що PLA-пластик завантажено безпосередньо "
 "в екструдер."
 
-#. Now show always, bed heater selftest can fail if there is no sheet on the bed
+#. Now show always, bed heater selftest can fail if there is no sheet on the
+#. bed
 #: src/gui/screen_menu_selftest_snake.cpp:505
 msgid ""
 "Before you continue, make sure the print sheet is installed on the heatbed."
@@ -847,7 +856,7 @@ msgstr "Чорний"
 msgid "Board Info"
 msgstr "Інфо про плату"
 
-#: src/gui/MItem_tools.cpp:652
+#: src/gui/MItem_tools.cpp:651
 msgid "Board Temperature"
 msgstr "Температура плати"
 
@@ -919,7 +928,7 @@ msgstr "ХОЛОДНЕ ВИТЯГУВАННЯ"
 msgid "COMMUNICATION ERROR"
 msgstr "ПОМИЛКА ЗВ'ЯЗКУ"
 
-#: tmp_error_headers/error_list.hpp:778
+#: tmp_error_headers/error_list.hpp:792
 msgid "CONNECT REGISTRATION FAILED"
 msgstr "ПОМИЛКА РЕЄСТРАЦІЇ ПІДКЛЮЧЕННЯ"
 
@@ -936,9 +945,9 @@ msgid "COOLDOWN"
 msgstr "ОХОЛОДИТИ"
 
 #. don't close on menu timeout
-#: src/gui/screen_crash_recovery.cpp:266 tmp_error_headers/error_list.hpp:1212
-#: tmp_error_headers/error_list.hpp:1219 tmp_error_headers/error_list.hpp:1226
+#: src/gui/screen_crash_recovery.cpp:266 tmp_error_headers/error_list.hpp:1226
 #: tmp_error_headers/error_list.hpp:1233 tmp_error_headers/error_list.hpp:1240
+#: tmp_error_headers/error_list.hpp:1247 tmp_error_headers/error_list.hpp:1254
 msgid "CRASH DETECTED"
 msgstr "ВИЯВЛЕНО ЗІТКНЕННЯ"
 
@@ -1106,7 +1115,7 @@ msgstr "По центру N та менше елементів"
 msgid "Chamber"
 msgstr "Камера"
 
-#: tmp_error_headers/error_list.hpp:1450
+#: tmp_error_headers/error_list.hpp:1464
 msgid "Chamber Cooling Fan Error"
 msgstr "Помилка вентилятора охолодження камери"
 
@@ -1135,7 +1144,7 @@ msgstr "Ліміт вентиляторів камери"
 msgid "Chamber Filtration"
 msgstr "Фільтрація камери"
 
-#: tmp_error_headers/error_list.hpp:1457
+#: tmp_error_headers/error_list.hpp:1471
 msgid "Chamber Filtration Fan Error"
 msgstr "Помилка вентилятора фільтрації камери"
 
@@ -1165,7 +1174,7 @@ msgstr "Температура камери критична"
 msgid "Chamber Vent Control"
 msgstr "Керування вентиляцією камери"
 
-#: tmp_error_headers/error_list.hpp:1451
+#: tmp_error_headers/error_list.hpp:1465
 msgid ""
 "Chamber cooling fan is not spinning. Check it for possible debris, then "
 "inspect the wiring."
@@ -1173,7 +1182,7 @@ msgstr ""
 "Вентилятор охолодження камери не обертається. Перевірте на сміття та "
 "огляньте проводку."
 
-#: tmp_error_headers/error_list.hpp:1458
+#: tmp_error_headers/error_list.hpp:1472
 msgid ""
 "Chamber filtration fan is not spinning. Check it for possible debris, then "
 "inspect the wiring."
@@ -1181,7 +1190,6 @@ msgstr ""
 "Вентилятор фільтрації камери не обертається. Перевірте на сміття та огляньте "
 "проводку."
 
-#.
 #: src/common/footer_def.cpp:55
 msgid "Chamber temperature"
 msgstr "Температура камери"
@@ -1228,7 +1236,7 @@ msgstr ""
 msgid "Change to %s"
 msgstr "Змінити на %s"
 
-#: tmp_error_headers/error_list.hpp:1248
+#: tmp_error_headers/error_list.hpp:1262
 msgid ""
 "Changes of mapping available only in the Printer UI. Select Print to start "
 "the print with defaults."
@@ -1249,7 +1257,7 @@ msgid "Check all tools if they are properly parked or picked."
 msgstr ""
 "Перевірте, чи всі інструменти належним чином запарковані або підібрані."
 
-#: tmp_error_headers/error_list.hpp:695
+#: tmp_error_headers/error_list.hpp:709
 msgid "Check that the accelerometer cable is plugged in and not damaged."
 msgstr "Перевірте, чи кабель акселерометра під'єднано і не пошкоджено."
 
@@ -1319,9 +1327,9 @@ msgstr "Очистьте сталевий лист."
 msgid "Cleaning nozzle"
 msgstr "Очищення сопла"
 
-#: tmp_error_headers/error_list.hpp:1464 tmp_error_headers/error_list.hpp:1471
 #: tmp_error_headers/error_list.hpp:1478 tmp_error_headers/error_list.hpp:1485
-#: tmp_error_headers/error_list.hpp:1492
+#: tmp_error_headers/error_list.hpp:1492 tmp_error_headers/error_list.hpp:1499
+#: tmp_error_headers/error_list.hpp:1506
 msgid "Cleaning the nozzle"
 msgstr "Очищення сопла"
 
@@ -1329,7 +1337,7 @@ msgstr "Очищення сопла"
 msgid "Click the knob to close"
 msgstr "Натисніть на ручку, щоб закрити"
 
-#: tmp_error_headers/error_list.hpp:1443
+#: tmp_error_headers/error_list.hpp:1457
 msgid "Close Chamber Ventilation"
 msgstr "Закрити вентиляцію камери"
 
@@ -1355,7 +1363,7 @@ msgstr "Закриття вентиляції камери"
 msgid "Code: %s"
 msgstr "Код: %s"
 
-#: src/gui/MItem_tools.hpp:434 tmp_error_headers/error_list.hpp:1128
+#: src/gui/MItem_tools.hpp:434 tmp_error_headers/error_list.hpp:1142
 msgid "Cold Pull"
 msgstr "Холодне витягування"
 
@@ -1406,7 +1414,7 @@ msgstr "Обчислення найкращого шейпера..."
 msgid "Confirm"
 msgstr "Підтвердити"
 
-#: src/gui/MItem_tools.cpp:810 src/gui/screen_menu_network_status.hpp:41
+#: src/gui/MItem_tools.cpp:809 src/gui/screen_menu_network_status.hpp:41
 msgid "Connect"
 msgstr "Підключити"
 
@@ -1453,7 +1461,7 @@ msgstr "Охолодження"
 msgid "Cooling down. Do not touch the nozzle!"
 msgstr "Охолодження. Не торкайтеся сопла!"
 
-#: tmp_error_headers/error_list.hpp:737
+#: tmp_error_headers/error_list.hpp:751
 msgid ""
 "Cooling fan of the power supply unit is operating outside of specification."
 msgstr "Вентилятор охолодження блока живлення працює поза специфікацією."
@@ -1502,7 +1510,8 @@ msgstr ""
 "Виявлений OpenPrintTag відрізняється від призначеного під час завантаження "
 "філаменту."
 
-#. Used in filament type context (user-defined ad-hoc), for example: "XX (User)". Please try to fit the text in 6 characters.
+#. Used in filament type context (user-defined ad-hoc), for example: "XX
+#. (User)". Please try to fit the text in 6 characters.
 #: src/common/filament.cpp:93 src/gui/screen/screen_preheat.cpp:240
 msgid "Custom"
 msgstr "Власн."
@@ -1519,7 +1528,7 @@ msgstr "Різак"
 msgid "Cutting filament"
 msgstr "Обрізання філаменту"
 
-#: tmp_error_headers/error_list.hpp:708
+#: tmp_error_headers/error_list.hpp:722
 msgid "DATA TIMEOUT"
 msgstr "ТАЙМ-АУТ ДАНИХ"
 
@@ -1539,7 +1548,7 @@ msgstr "Вимкнути датчик філаменту"
 msgid "DISABLE MMU"
 msgstr "Вимкнути MMU"
 
-#: tmp_error_headers/error_list.hpp:701
+#: tmp_error_headers/error_list.hpp:715
 msgid "DISPLAY PROBLEM DETECTED"
 msgstr "ВИЯВЛЕНО ПРОБЛЕМУ ДИСПЛЕЯ"
 
@@ -1584,7 +1593,7 @@ msgstr "КАЛІБРУВАННЯ ДАТЧИКА ДВЕРЕЙ"
 msgid "DOWN"
 msgstr "ВНИЗ"
 
-#: tmp_error_headers/error_list.hpp:820
+#: tmp_error_headers/error_list.hpp:834
 msgid "DWARF ERROR"
 msgstr "ПОМИЛКА DWARF"
 
@@ -1637,11 +1646,11 @@ msgstr "Від'єднати"
 msgid "Disengaging idler"
 msgstr "Від'єднання холостого ходу"
 
-#: src/gui/MItem_tools.cpp:950
+#: src/gui/MItem_tools.cpp:949
 msgid "Display Refresh Speed"
 msgstr "Швидкість оновлення дисплея"
 
-#: tmp_error_headers/error_list.hpp:702
+#: tmp_error_headers/error_list.hpp:716
 msgid ""
 "Display issues detected. Reducing the refresh rate will possibly solve the "
 "problem. Proceed?"
@@ -1838,7 +1847,7 @@ msgstr "Не торкайтеся екструдера."
 msgid "Done"
 msgstr "Готово"
 
-#: src/gui/MItem_tools.cpp:660 src/gui/MItem_hardware.hpp:69
+#: src/gui/MItem_tools.cpp:659 src/gui/MItem_hardware.hpp:69
 msgid "Door Sensor"
 msgstr "Датчик дверей"
 
@@ -1876,15 +1885,7 @@ msgstr ""
 "Принтер може вібрувати та бути шумнішим під час калібрування початкових "
 "позицій."
 
-#: src/gui/screen_menu_tools.cpp:21
-msgid "Dwarf Board Temp"
-msgstr "Температура плати Dwarf"
-
-#: src/gui/screen_menu_tools.cpp:29
-msgid "Dwarf MCU Temp"
-msgstr "Температура MCU Dwarf"
-
-#: tmp_error_headers/error_list.hpp:821
+#: tmp_error_headers/error_list.hpp:835
 #, c-format
 msgid ""
 "Dwarf board encountered the following problem: \n"
@@ -1905,7 +1906,7 @@ msgstr "Динамічний"
 msgid "EJECT FROM MMU"
 msgstr "ВИЙНЯТИ З MMU"
 
-#: tmp_error_headers/error_list.hpp:827
+#: tmp_error_headers/error_list.hpp:841
 msgid "EMERGENCY STOP"
 msgstr "АВАРІЙНА ЗУПИНКА"
 
@@ -1959,7 +1960,7 @@ msgstr "НАЛАШТУВАННЯ ETHERNET"
 msgid "EXTRUDED FILAMENT"
 msgstr "ВИТИСНЕНИЙ ФІЛАМЕНТ"
 
-#: tmp_error_headers/error_list.hpp:974
+#: tmp_error_headers/error_list.hpp:988
 msgid "EXTRUDER ERROR"
 msgstr "ПОМИЛКА ЕКСТРУДЕРА"
 
@@ -1971,7 +1972,7 @@ msgstr "ПОМИЛКА МАКСИМАЛЬНОЇ ТЕМПЕРАТУРИ ЕКСТ�
 msgid "EXTRUDER MINTEMP ERROR"
 msgstr "ПОМИЛКА МІНІМАЛЬНОЇ ТЕМПЕРАТУРИ ЕКСТРУДЕРА"
 
-#: tmp_error_headers/error_list.hpp:1100
+#: tmp_error_headers/error_list.hpp:1114
 msgid "EXTRUDER NOT DETECTED"
 msgstr "ЕКСТРУДЕР НЕ ВИЯВЛЕНО"
 
@@ -2002,7 +2003,7 @@ msgstr "Виймання"
 msgid "Ejecting filament"
 msgstr "Виймання філаменту"
 
-#: tmp_error_headers/error_list.hpp:828
+#: tmp_error_headers/error_list.hpp:842
 msgid "Emergency stop invoked by G-code (M112)."
 msgstr "Аварійна зупинка, викликана G-кодом (M112)."
 
@@ -2031,7 +2032,7 @@ msgstr "Налаштування корпусу"
 msgid "Enclosure fan"
 msgstr "Вентилятор корпусу"
 
-#: tmp_error_headers/error_list.hpp:1374
+#: tmp_error_headers/error_list.hpp:1388
 msgid ""
 "Enclosure fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -2060,14 +2061,14 @@ msgstr "Кінець тесту"
 msgid "Engaging idler"
 msgstr "Зачеплення холостого ходу"
 
-#: tmp_error_headers/error_list.hpp:1444
+#: tmp_error_headers/error_list.hpp:1458
 msgid ""
 "Ensure the top ventilation grille is closed for optimal chamber temperature."
 msgstr ""
 "Переконайтеся, що верхня вентиляційна решітка закрита для оптимальної "
 "температури."
 
-#: tmp_error_headers/error_list.hpp:1437
+#: tmp_error_headers/error_list.hpp:1451
 msgid "Ensure the top ventilation grille is open for proper airflow."
 msgstr ""
 "Переконайтеся, що верхня вентиляційна решітка відкрита для належного потоку "
@@ -2082,7 +2083,7 @@ msgstr "Ввести облікові дані вручну"
 msgid "Error"
 msgstr "Помилка"
 
-#: tmp_error_headers/error_list.hpp:1024
+#: tmp_error_headers/error_list.hpp:1038
 msgid ""
 "Error erasing\n"
 " flash! Restart\n"
@@ -2098,7 +2099,7 @@ msgstr ""
 msgid "Error invalid selftest state"
 msgstr "Помилка: недійсний стан самотесту"
 
-#: src/gui/MItem_tools.cpp:289
+#: src/gui/MItem_tools.cpp:288
 msgid ""
 "Error saving crash dump report to the USB drive. Please reinsert the USB "
 "drive and try again."
@@ -2146,7 +2147,7 @@ msgstr "Витиснений філамент"
 msgid "Extruder"
 msgstr "Екструдер"
 
-#: src/gui/screen_menu_sensor_info.hpp:91
+#: src/gui/screen_menu_sensor_info.hpp:102
 msgid "Extruder Filament Sensors"
 msgstr "Датчики філаменту екструдера"
 
@@ -2154,7 +2155,7 @@ msgstr "Датчики філаменту екструдера"
 msgid "Extruder Maintenance"
 msgstr "Обслуговування екструдера"
 
-#: tmp_error_headers/error_list.hpp:975
+#: tmp_error_headers/error_list.hpp:989
 #, c-format
 msgid "Extruder motor is not spinning on tool %d"
 msgstr "Двигун екструдера не обертається на інструменті %d"
@@ -2271,11 +2272,11 @@ msgstr ""
 msgid "FINISHED"
 msgstr "ЗАВЕРШЕНО"
 
-#: tmp_error_headers/error_list.hpp:1079
+#: tmp_error_headers/error_list.hpp:1093
 msgid "FIRMWARE MISSING"
 msgstr "ВІДСУТНЯ ПРОШИВКА"
 
-#: tmp_error_headers/error_list.hpp:1051 tmp_error_headers/error_list.hpp:1058
+#: tmp_error_headers/error_list.hpp:1065 tmp_error_headers/error_list.hpp:1072
 msgid "FIRMWARExPRINTER MISMATCH"
 msgstr "НЕВІДПОВІДНІСТЬ FIRMWARE x ПРИНТЕР"
 
@@ -2283,7 +2284,7 @@ msgstr "НЕВІДПОВІДНІСТЬ FIRMWARE x ПРИНТЕР"
 msgid "FIRST LAYER CALIBRATION"
 msgstr "КАЛІБРУВАННЯ ПЕРШОГО ШАРУ"
 
-#: tmp_error_headers/error_list.hpp:1023
+#: tmp_error_headers/error_list.hpp:1037
 msgid "FLASH ERASE ERROR"
 msgstr "ПОМИЛКА ВИДАЛЕННЯ FLASH-ПАМ'ЯТІ"
 
@@ -2331,7 +2332,7 @@ msgstr "Бічний датчик філаменту"
 msgid "FSensors Disabled"
 msgstr "FSenosori вимкнено"
 
-#: tmp_error_headers/error_list.hpp:1044
+#: tmp_error_headers/error_list.hpp:1058
 msgid "FW IN INTERNAL FLASH CORRUPTED"
 msgstr "ПОШКОДЖЕНО ПРОШИВКУ У ВНУТРІШНІЙ FLASH-ПАМ'ЯТІ"
 
@@ -2359,7 +2360,7 @@ msgstr "Скинути до заводських налаштувань"
 msgid "Fail Stats"
 msgstr "Статистика збоїв"
 
-#: src/gui/MItem_tools.cpp:796
+#: src/gui/MItem_tools.cpp:795
 msgid "Failed"
 msgstr "Не вдалося"
 
@@ -2388,7 +2389,7 @@ msgstr ""
 msgid "Failed to generate the encryption key."
 msgstr "Не вдалося згенерувати ключ шифрування."
 
-#: tmp_error_headers/error_list.hpp:548
+#: tmp_error_headers/error_list.hpp:562
 msgid ""
 "Failed to home the X-axis, make sure there is no obstacle on X-axis or Y-"
 "axis."
@@ -2396,7 +2397,7 @@ msgstr ""
 "Не вдалося виконати калібрування початкової позиції осі X. Переконайтеся, що "
 "на осі X або Y немає перешкод."
 
-#: tmp_error_headers/error_list.hpp:569
+#: tmp_error_headers/error_list.hpp:583
 msgid ""
 "Failed to home the Y-axis, make sure there is no obstacle on X-axis or Y-"
 "axis."
@@ -2404,19 +2405,19 @@ msgstr ""
 "Не вдалося виконати калібрування початкової позиції осі Y. Переконайтеся, що "
 "на осі X або Y немає перешкод."
 
-#: tmp_error_headers/error_list.hpp:555
+#: tmp_error_headers/error_list.hpp:569
 msgid "Failed to home the Y-axis, make sure there is no obstacle on Y-axis."
 msgstr ""
 "Не вдалося виконати калібрування початкової позиції осі Y. Переконайтеся, що "
 "на осі Y немає перешкод."
 
-#: tmp_error_headers/error_list.hpp:513
+#: tmp_error_headers/error_list.hpp:527
 msgid "Failed to home the Z-axis, make sure the loadcell is working."
 msgstr ""
 "Не вдалося виконати калібрування початкової позиції осі Z. Переконайтеся, що "
 "датчик навантаження працює."
 
-#: tmp_error_headers/error_list.hpp:541
+#: tmp_error_headers/error_list.hpp:555
 msgid ""
 "Failed to home the extruder in X-axis, make sure there is no obstacle on X-"
 "axis."
@@ -2424,7 +2425,7 @@ msgstr ""
 "Не вдалося виконати калібрування початкової позиції екструдера по осі X. "
 "Переконайтеся, що на осі X немає перешкод."
 
-#: tmp_error_headers/error_list.hpp:562
+#: tmp_error_headers/error_list.hpp:576
 msgid ""
 "Failed to home the extruder in Y-axis, make sure there is no obstacle on Y-"
 "axis."
@@ -2432,14 +2433,14 @@ msgstr ""
 "Не вдалося виконати калібрування початкової позиції екструдера по осі Y. "
 "Переконайтеся, що на осі Y немає перешкод."
 
-#: tmp_error_headers/error_list.hpp:506
+#: tmp_error_headers/error_list.hpp:520
 msgid ""
 "Failed to home the extruder in Z-axis, make sure the loadcell is working."
 msgstr ""
 "Не вдалося виконати калібрування початкової позиції екструдера по осі Z. "
 "Переконайтеся, що датчик навантаження працює."
 
-#: tmp_error_headers/error_list.hpp:520
+#: tmp_error_headers/error_list.hpp:534
 msgid "Failed to home the extruder in Z-axis."
 msgstr ""
 "Не вдалося виконати калібрування початкової позиції екструдера по осі Z."
@@ -2456,7 +2457,7 @@ msgstr ""
 msgid "Failed to open file"
 msgstr "Не вдалося відкрити файл"
 
-#: src/gui/MItem_tools.cpp:979
+#: src/gui/MItem_tools.cpp:978
 #, c-format
 msgid "Failed to open file '%s' for writing."
 msgstr "Не вдалося відкрити файл '%s' для запису."
@@ -2465,7 +2466,7 @@ msgstr "Не вдалося відкрити файл '%s' для запису."
 msgid "Failed to read data from the tag."
 msgstr "Не вдалося зчитати дані з мітки."
 
-#: tmp_error_headers/error_list.hpp:807
+#: tmp_error_headers/error_list.hpp:821
 msgid ""
 "Failed to write usage data to OpenPrintTag. Make sure it has not been "
 "removed from the reader."
@@ -2473,11 +2474,11 @@ msgstr ""
 "Не вдалося записати дані використання на OpenPrintTag. Переконайтесь, що "
 "його не вийнято зі зчитувача."
 
-#: tmp_error_headers/error_list.hpp:744
+#: tmp_error_headers/error_list.hpp:758
 msgid "Fan 0 of the heated bed is operating outside of specification."
 msgstr "Вентилятор 0 нагрітого столу працює поза специфікацією."
 
-#: tmp_error_headers/error_list.hpp:751
+#: tmp_error_headers/error_list.hpp:765
 msgid "Fan 1 of the heated bed is operating outside of specification."
 msgstr "Вентилятор 1 нагрітого столу працює поза специфікацією."
 
@@ -2549,12 +2550,13 @@ msgstr "Автозавантаження філаменту"
 msgid "Filament Change"
 msgstr "Заміна філаменту"
 
-#. If the printer has filament sensors menu, this item is inside it and is supposed to be called differently (BFW-4973)
+#. If the printer has filament sensors menu, this item is inside it and is
+#. supposed to be called differently (BFW-4973)
 #: src/gui/MItem_tools.hpp:39
 msgid "Filament Sensing"
 msgstr "Розпізнавання філаменту"
 
-#: src/gui/MItem_tools.hpp:39 src/gui/MItem_tools.cpp:573
+#: src/gui/MItem_tools.hpp:39 src/gui/MItem_tools.cpp:572
 msgid "Filament Sensor"
 msgstr "Датчик філаменту"
 
@@ -2591,7 +2593,7 @@ msgstr ""
 "Неочікувано виявлено філамент. Переконайтеся, що філамент не завантажено. "
 "Перевірте датчики та проводку."
 
-#: tmp_error_headers/error_list.hpp:1192
+#: tmp_error_headers/error_list.hpp:1206
 msgid ""
 "Filament detected. Unload filament now? Select NO to start the print with "
 "the currently loaded filament."
@@ -2607,7 +2609,7 @@ msgstr "Філамент вставлено, натисніть «Продовж
 msgid "Filament is not customizable"
 msgstr "Філамент не можна налаштувати"
 
-#: tmp_error_headers/error_list.hpp:1430
+#: tmp_error_headers/error_list.hpp:1444
 msgid "Filament loading timed out."
 msgstr "Тайм-аут завантаження філаменту."
 
@@ -2615,7 +2617,7 @@ msgstr "Тайм-аут завантаження філаменту."
 msgid "Filament needs to be heated and pushed back to the nozzle."
 msgstr "Філамент потрібно нагріти та повернути назад у сопло."
 
-#: tmp_error_headers/error_list.hpp:1171
+#: tmp_error_headers/error_list.hpp:1185
 msgid ""
 "Filament not detected. Load filament now?\n"
 "Select NO to cancel the print.\n"
@@ -2720,7 +2722,7 @@ msgstr "Файл пошкоджено"
 msgid "File doesn't contain any print instructions"
 msgstr "Файл не містить інструкцій друку"
 
-#: tmp_error_headers/error_list.hpp:1198 tmp_error_headers/error_list.hpp:1199
+#: tmp_error_headers/error_list.hpp:1212 tmp_error_headers/error_list.hpp:1213
 msgid "File error"
 msgstr "Помилка файлу"
 
@@ -2732,7 +2734,7 @@ msgstr "Помилка читання файлу"
 msgid "File removed or transfer aborted"
 msgstr "Файл видалено або передачу перервано"
 
-#: tmp_error_headers/error_list.hpp:1087
+#: tmp_error_headers/error_list.hpp:1101
 msgid ""
 "File system error!\n"
 "Try a different USB\n"
@@ -2796,8 +2798,8 @@ msgstr ""
 "Міцно прикріпіть акселерометр до нагрітого столу. Далі стіл почне рухатися і "
 "збиратимуться дані калібрування."
 
-#: tmp_error_headers/error_list.hpp:1107 tmp_error_headers/error_list.hpp:1114
-#: tmp_error_headers/error_list.hpp:1121
+#: tmp_error_headers/error_list.hpp:1121 tmp_error_headers/error_list.hpp:1128
+#: tmp_error_headers/error_list.hpp:1135
 msgid "Firmware Update Required"
 msgstr "ПОТРІБНО ОНОВИТИ ПРОШИВКУ"
 
@@ -2805,7 +2807,7 @@ msgstr "ПОТРІБНО ОНОВИТИ ПРОШИВКУ"
 msgid "Firmware Version"
 msgstr "Версія прошивки"
 
-#: tmp_error_headers/error_list.hpp:1052
+#: tmp_error_headers/error_list.hpp:1066
 msgid ""
 "Firmware and hardware\n"
 "versions do not\n"
@@ -2821,7 +2823,7 @@ msgstr ""
 "правильний файл прошивки\n"
 "для вашого принтера."
 
-#: tmp_error_headers/error_list.hpp:1059
+#: tmp_error_headers/error_list.hpp:1073
 msgid ""
 "Firmware and hardware versions do\n"
 "not match. Make sure you have\n"
@@ -2832,7 +2834,7 @@ msgstr ""
 "Переконайтеся, що у вас правильний файл прошивки\n"
 "для вашої моделі принтера."
 
-#: tmp_error_headers/error_list.hpp:1017
+#: tmp_error_headers/error_list.hpp:1031
 msgid ""
 "Firmware file\n"
 "missing in the USB\n"
@@ -2842,7 +2844,7 @@ msgstr ""
 "відсутній на USB-\n"
 "накопичувачі!"
 
-#: tmp_error_headers/error_list.hpp:1010
+#: tmp_error_headers/error_list.hpp:1024
 msgid ""
 "Firmware file has\n"
 "invalid size!\n"
@@ -2856,7 +2858,7 @@ msgstr ""
 "USB-накопичувачі\n"
 "та спробуйте знову."
 
-#: tmp_error_headers/error_list.hpp:1038
+#: tmp_error_headers/error_list.hpp:1052
 msgid ""
 "Firmware hash\n"
 "verification failed!\n"
@@ -2874,7 +2876,7 @@ msgstr ""
 "скопіювати його на\n"
 "USB-накопичувач знову."
 
-#: tmp_error_headers/error_list.hpp:1045
+#: tmp_error_headers/error_list.hpp:1059
 msgid ""
 "Firmware in the\n"
 "internal flash\n"
@@ -2888,7 +2890,7 @@ msgstr ""
 "Будь ласка, перепрошийте\n"
 "прошивку."
 
-#: tmp_error_headers/error_list.hpp:1031
+#: tmp_error_headers/error_list.hpp:1045
 msgid ""
 "Firmware signature\n"
 "verification failed!\n"
@@ -2906,7 +2908,7 @@ msgstr ""
 msgid "Firmware update required"
 msgstr "Потрібне оновлення прошивки"
 
-#: tmp_error_headers/error_list.hpp:1066
+#: tmp_error_headers/error_list.hpp:1080
 msgid ""
 "Firmware/printer\n"
 "types do not match.\n"
@@ -2922,7 +2924,7 @@ msgstr ""
 "для вашої моделі\n"
 "принтера."
 
-#: tmp_error_headers/error_list.hpp:1073
+#: tmp_error_headers/error_list.hpp:1087
 msgid ""
 "Firmware/printer\n"
 "versions do not\n"
@@ -2943,7 +2945,8 @@ msgstr ""
 msgid "First Layer Calibration"
 msgstr "КАЛІБРУВАННЯ ПЕРШОГО ШАРУ"
 
-#. / Keep most things, reset only possible trouble makers (experimental settings, tweaks, ...)
+#. / Keep most things, reset only possible trouble makers (experimental
+#. settings, tweaks, ...)
 #: src/gui/screen/screen_factory_reset.cpp:30
 msgid "Fix Common Misconfigurations"
 msgstr "Виправити поширені помилки конфігурації"
@@ -2978,7 +2981,7 @@ msgstr "Коефіцієнти потоку"
 msgid "Footer"
 msgstr "Нижня панель"
 
-#: src/gui/MItem_tools.cpp:733
+#: src/gui/MItem_tools.cpp:732
 msgid "For Filament Change, Preheat"
 msgstr "Для заміни філаменту, попередній нагрів"
 
@@ -2999,7 +3002,8 @@ msgstr "Передня сторона"
 msgid "Front Side [um]"
 msgstr "Передня сторона [мкм]"
 
-#. / Full wipe with firmware clear is a special case handlded a slightly different way
+#. / Full wipe with firmware clear is a special case handlded a slightly
+#. different way
 #: src/gui/screen/screen_factory_reset.cpp:39
 msgid "Full Reset"
 msgstr "Повне скидання"
@@ -3008,7 +3012,7 @@ msgstr "Повне скидання"
 msgid "Full Weight"
 msgstr "Повна вага"
 
-#: tmp_error_headers/error_list.hpp:785
+#: tmp_error_headers/error_list.hpp:799
 msgid "G-CODE METRICS CONFIG CHANGE"
 msgstr "ЗМІНА КОНФІГУРАЦІЇ МЕТРИК G-КОДУ"
 
@@ -3110,7 +3114,7 @@ msgstr "G-Code потребує більше інструментів, ніж з
 msgid "G-Code requires some features the printer does not have."
 msgstr "G-Code потребує функцій, яких немає в принтері."
 
-#: tmp_error_headers/error_list.hpp:1514
+#: tmp_error_headers/error_list.hpp:1528
 #, c-format
 msgid ""
 "G-Code signed by an identity not trusted by this printer. Do you want to "
@@ -3129,7 +3133,7 @@ msgstr ""
 msgid "G-Code tool is not mapped."
 msgstr "Інструмент G-Code не зіставлено."
 
-#: tmp_error_headers/error_list.hpp:1332
+#: tmp_error_headers/error_list.hpp:1346
 msgid ""
 "G-Code transfer running too slow. Check your network for issues or use "
 "different USB drive. Press Continue to resume printing."
@@ -3142,7 +3146,7 @@ msgstr ""
 msgid "G-Code version mismatch"
 msgstr "Невідповідність версії G-Code"
 
-#: tmp_error_headers/error_list.hpp:968
+#: tmp_error_headers/error_list.hpp:982
 msgid ""
 "G-code command was too long and did not fit in the internal buffers. As a "
 "result, it may have been executed incorrectly."
@@ -3167,15 +3171,15 @@ msgstr "ВИРІВНЮВАННЯ РЕДУКТОРА"
 msgid "Gateway"
 msgstr "Шлюз"
 
-#: tmp_error_headers/error_list.hpp:960
+#: tmp_error_headers/error_list.hpp:974
 msgid "Gcode Corruption"
 msgstr "Пошкодження G-коду"
 
-#: tmp_error_headers/error_list.hpp:967
+#: tmp_error_headers/error_list.hpp:981
 msgid "Gcode Cropped"
 msgstr "Gcode обрізано"
 
-#: tmp_error_headers/error_list.hpp:786
+#: tmp_error_headers/error_list.hpp:800
 msgid ""
 "Gcode is trying to change metrics configuration.\n"
 "\n"
@@ -3185,7 +3189,7 @@ msgstr ""
 "\n"
 "Дозволити зміни?"
 
-#: tmp_error_headers/error_list.hpp:961
+#: tmp_error_headers/error_list.hpp:975
 msgid "Gcode on the USB drive is corrupt. Fix manually before resuming."
 msgstr ""
 "G-код на USB-накопичувачі пошкоджено. Виправте вручну перед продовженням."
@@ -3222,35 +3226,35 @@ msgstr ""
 "Візьміть дверцята посередині, помістіть пальці позаду і закрийте як "
 "показано. Потім підтвердіть."
 
-#: tmp_error_headers/error_list.hpp:646
+#: tmp_error_headers/error_list.hpp:660
 msgid "HAL detected an I2C busy state when receiving data via I2C."
 msgstr "HAL виявив зайнятий стан шини I2C під час отримання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:618
+#: tmp_error_headers/error_list.hpp:632
 msgid "HAL detected an I2C busy state when sending data via I2C."
 msgstr "HAL виявив зайнятий стан шини I2C під час надсилання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:639
+#: tmp_error_headers/error_list.hpp:653
 msgid "HAL detected an I2C error when receiving data via I2C."
 msgstr "HAL виявив помилку I2C під час отримання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:611
+#: tmp_error_headers/error_list.hpp:625
 msgid "HAL detected an I2C error when sending data via I2C."
 msgstr "HAL виявив помилку I2C під час надсилання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:653
+#: tmp_error_headers/error_list.hpp:667
 msgid "HAL detected an I2C timeout when receiving data via I2C."
 msgstr "HAL виявив тайм-аут I2C під час отримання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:625
+#: tmp_error_headers/error_list.hpp:639
 msgid "HAL detected an I2C timeout when sending data via I2C."
 msgstr "HAL виявив тайм-аут I2C під час надсилання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:660
+#: tmp_error_headers/error_list.hpp:674
 msgid "HAL detected an I2C undefined error when receiving data via I2C."
 msgstr "HAL виявив невизначену помилку I2C під час отримання даних через I2C."
 
-#: tmp_error_headers/error_list.hpp:632
+#: tmp_error_headers/error_list.hpp:646
 msgid "HAL detected an I2C undefined error when sending data via I2C."
 msgstr "HAL виявив невизначену помилку I2C під час надсилання даних через I2C."
 
@@ -3259,11 +3263,11 @@ msgid "HARD RESET"
 msgstr "ЖОРСТКИЙ СКИД"
 
 #: src/gui/screen_menu_hardware_tune.hpp:24
-#: src/gui/screen_menu_hardware.hpp:108
+#: src/gui/screen_menu_hardware.hpp:105
 msgid "HARDWARE"
 msgstr "ОБЛАДНАННЯ"
 
-#: tmp_error_headers/error_list.hpp:1037
+#: tmp_error_headers/error_list.hpp:1051
 msgid "HASH VERIFICATION FAILED"
 msgstr "ПОМИЛКА ПЕРЕВІРКИ ХЕШ-СУМИ"
 
@@ -3287,11 +3291,11 @@ msgstr "НАГРІВАННЯ"
 msgid "HELP"
 msgstr "ДОПОМОГА"
 
-#: tmp_error_headers/error_list.hpp:1401
+#: tmp_error_headers/error_list.hpp:1415
 msgid "HEPA Filter Expired"
 msgstr "Фільтр HEPA закінчився"
 
-#: tmp_error_headers/error_list.hpp:1387
+#: tmp_error_headers/error_list.hpp:1401
 msgid "HEPA Filter Expiring"
 msgstr "Фільтр HEPA закінчується"
 
@@ -3299,21 +3303,21 @@ msgstr "Фільтр HEPA закінчується"
 msgid "HOMING CALIBRATION NEEDED"
 msgstr "ПОТРІБНЕ КАЛІБРУВАННЯ ХОМІНГУ"
 
-#: tmp_error_headers/error_list.hpp:540 tmp_error_headers/error_list.hpp:547
+#: tmp_error_headers/error_list.hpp:554 tmp_error_headers/error_list.hpp:561
 msgid "HOMING ERROR X"
 msgstr "ПОМИЛКА КАЛІБРУВАННЯ ПОЧАТКОВОЇ ПОЗИЦІЇ ОСІ X"
 
-#: tmp_error_headers/error_list.hpp:554 tmp_error_headers/error_list.hpp:561
-#: tmp_error_headers/error_list.hpp:568
+#: tmp_error_headers/error_list.hpp:568 tmp_error_headers/error_list.hpp:575
+#: tmp_error_headers/error_list.hpp:582
 msgid "HOMING ERROR Y"
 msgstr "ПОМИЛКА КАЛІБРУВАННЯ ПОЧАТКОВОЇ ПОЗИЦІЇ ОСІ Y"
 
-#: tmp_error_headers/error_list.hpp:498 tmp_error_headers/error_list.hpp:505
 #: tmp_error_headers/error_list.hpp:512 tmp_error_headers/error_list.hpp:519
+#: tmp_error_headers/error_list.hpp:526 tmp_error_headers/error_list.hpp:533
 msgid "HOMING ERROR Z"
 msgstr "ПОМИЛКА КАЛІБРУВАННЯ ПОЧАТКОВОЇ ПОЗИЦІЇ ОСІ Z"
 
-#: tmp_error_headers/error_list.hpp:687
+#: tmp_error_headers/error_list.hpp:701
 msgid "HOTEND HEATER OVERCURRENT"
 msgstr "ПЕРЕВАНТАЖЕННЯ СТРУМУ НАГРІВАЧА ЕКСТРУДЕРА"
 
@@ -3364,6 +3368,14 @@ msgstr "Жорстке скидання (потрібен USB з прошивк�
 #: src/gui/MItem_menus.hpp:125 src/gui/MItem_menus.hpp:128
 msgid "Hardware"
 msgstr "Обладнання"
+
+#: src/gui/screen_menu_sensor_info.cpp:18
+msgid "Head MCU Temperature"
+msgstr "Температура MCU головки"
+
+#: src/gui/screen_menu_sensor_info.cpp:11
+msgid "Head PCB Temperature"
+msgstr "Температура PCB головки"
 
 #: src/gui/screen_menu_modular_bed.cpp:9
 msgid "Heat Entire Bed"
@@ -3428,7 +3440,7 @@ msgstr ""
 "Плитка нагрівального столу н.%d:\n"
 "Помилка тестування нагріву."
 
-#: tmp_error_headers/error_list.hpp:814
+#: tmp_error_headers/error_list.hpp:828
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
@@ -3472,7 +3484,7 @@ msgstr "Температура термобар'єру"
 msgid "Heatbreak Temperature"
 msgstr "Температура heatbreak"
 
-#: src/gui/screen_menu_sensor_info.hpp:72
+#: src/gui/screen_menu_sensor_info.hpp:83
 msgid "Heatbreak Temperatures"
 msgstr "Температури heatbreak"
 
@@ -3480,19 +3492,19 @@ msgstr "Температури heatbreak"
 msgid "Heatbreak status"
 msgstr "Стан термобар'єру"
 
-#: tmp_error_headers/error_list.hpp:1318
+#: tmp_error_headers/error_list.hpp:1332
 msgid "Heatbreak thermistor is disconnected. Inspect the wiring."
 msgstr "Термістор термобар'єру від'єднано. Перевірте проводку."
 
-#: tmp_error_headers/error_list.hpp:765
+#: tmp_error_headers/error_list.hpp:779
 msgid "Heated bed is operating outside of specification."
 msgstr "Нагрітий стіл працює поза специфікацією."
 
-#: src/gui/MItem_tools.cpp:619
+#: src/gui/MItem_tools.cpp:618
 msgid "Heater Current"
 msgstr "Струм нагрівача"
 
-#: src/gui/MItem_tools.cpp:614
+#: src/gui/MItem_tools.cpp:613
 msgid "Heater Voltage"
 msgstr "Напруга нагрівача"
 
@@ -3508,11 +3520,11 @@ msgstr "Перевірка нагрівачів"
 msgid "Heating"
 msgstr "Нагрівання"
 
-#: tmp_error_headers/error_list.hpp:1269 tmp_error_headers/error_list.hpp:1290
+#: tmp_error_headers/error_list.hpp:1283 tmp_error_headers/error_list.hpp:1304
 msgid "Heating disabled due to 10 minutes of inactivity."
 msgstr "Нагрівання вимкнено через 10 хв бездіяльності."
 
-#: tmp_error_headers/error_list.hpp:1276 tmp_error_headers/error_list.hpp:1297
+#: tmp_error_headers/error_list.hpp:1290 tmp_error_headers/error_list.hpp:1311
 msgid "Heating disabled due to 30 minutes of inactivity."
 msgstr "Нагрівання вимкнено через 30 хвилин бездіяльності."
 
@@ -3576,7 +3588,8 @@ msgstr ""
 "Я проведу вас\n"
 "через процес налаштування."
 
-#. The MK4 is left out intentionally - it could be MK4, MK4S or MK3.9, we don't know yet
+#. The MK4 is left out intentionally - it could be MK4, MK4S or MK3.9, we
+#. don't know yet
 #: src/gui/screen_splash.cpp:184
 msgid ""
 "Hi, this is your\n"
@@ -3613,7 +3626,7 @@ msgstr ""
 "Я проведу вас\n"
 "через налаштування."
 
-#: src/gui/MItem_tools.cpp:946
+#: src/gui/MItem_tools.cpp:945
 msgid "High"
 msgstr "Висока"
 
@@ -3634,24 +3647,15 @@ msgid "Homing Calibration"
 msgstr "Калібрування хомінгу"
 
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:25
-msgid ""
-"Homing XY axes\n"
-"\n"
-"Please wait"
-msgstr ""
-"Хомінг осей XY\n"
-"\n"
-"Зачекайте"
-
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:23
 msgid ""
-"Homing XY axes\n"
+"Homing XY axes...\n"
 "\n"
-"Please wait..."
+"Please wait."
 msgstr ""
-"Хомінг осей XY\n"
+"Хомінг осей XY...\n"
 "\n"
-"Зачекайте..."
+"Зачекайте."
 
 #: tmp_error_headers/error_list.hpp:170
 msgid "Homing calibration is needed to ensure repeatable homing."
@@ -3691,7 +3695,7 @@ msgstr "Тип екструдера"
 msgid "Hotend fan"
 msgstr "Вентилятор екструдера"
 
-#: tmp_error_headers/error_list.hpp:1360
+#: tmp_error_headers/error_list.hpp:1374
 msgid ""
 "Hotend fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -3707,35 +3711,35 @@ msgstr "Скільки доків має ваш принтер?"
 msgid "How to update firmware?"
 msgstr "Як оновити прошивку?"
 
-#: tmp_error_headers/error_list.hpp:645
+#: tmp_error_headers/error_list.hpp:659
 msgid "I2C RECEIVE BUSY"
 msgstr "ШИНА I2C ЗАЙНЯТА (ОТРИМАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:638
+#: tmp_error_headers/error_list.hpp:652
 msgid "I2C RECEIVE FAILED"
 msgstr "ПОМИЛКА I2C (ОТРИМАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:652
+#: tmp_error_headers/error_list.hpp:666
 msgid "I2C RECEIVE TIMEOUT"
 msgstr "ТАЙМ-АУТ I2C (ОТРИМАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:659
+#: tmp_error_headers/error_list.hpp:673
 msgid "I2C RECEIVE UNDEFINED"
 msgstr "НЕВИЗНАЧЕНА ПОМИЛКА I2C (ОТРИМАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:617
+#: tmp_error_headers/error_list.hpp:631
 msgid "I2C SEND BUSY"
 msgstr "ШИНА I2C ЗАЙНЯТА (НАДСИЛАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:610
+#: tmp_error_headers/error_list.hpp:624
 msgid "I2C SEND FAILED"
 msgstr "ПОМИЛКА I2C (НАДСИЛАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:624
+#: tmp_error_headers/error_list.hpp:638
 msgid "I2C SEND TIMEOUT"
 msgstr "ТАЙМ-АУТ I2C (НАДСИЛАННЯ)"
 
-#: tmp_error_headers/error_list.hpp:631
+#: tmp_error_headers/error_list.hpp:645
 msgid "I2C SEND UNDEFINED"
 msgstr "НЕВИЗНАЧЕНА ПОМИЛКА I2C (НАДСИЛАННЯ)"
 
@@ -3751,23 +3755,31 @@ msgstr "ХОЛОСТИЙ ХІД НЕ МОЖЕ РУХАТИСЯ"
 msgid "IGNORE"
 msgstr "ІГНОРУВАТИ"
 
-#: tmp_error_headers/error_list.hpp:1030
+#: tmp_error_headers/error_list.hpp:1044
 msgid "IMPOSTER! FAKE SIGNATURE"
 msgstr "ІМІТАТОР! ПІДРОБНИЙ ПІДПИС"
 
-#: src/gui/MItem_tools.cpp:695
+#: src/gui/MItem_tools.cpp:694
 msgid "INDX FIFO Err"
 msgstr "Помилка FIFO INDX"
 
-#: src/gui/MItem_tools.cpp:699
+#: src/gui/MItem_tools.cpp:698
 msgid "INDX Refresh Err"
 msgstr "Помилка оновлення INDX"
+
+#: tmp_error_headers/error_list.hpp:499 tmp_error_headers/error_list.hpp:506
+msgid ""
+"INDX head board temperature is out of range. Let the printer cool down and "
+"try again. If the issue persists, contact support."
+msgstr ""
+"Температура плати голівки INDX поза діапазоном. Дайте принтеру охолонути та "
+"спробуйте знову. Якщо проблема не зникає, зверніться до підтримки."
 
 #: src/gui/screen_menu_info.hpp:21
 msgid "INFO"
 msgstr "ІНФОРМАЦІЯ"
 
-#: tmp_error_headers/error_list.hpp:596
+#: tmp_error_headers/error_list.hpp:610
 msgid "INPUT PORT OVERCURRENT"
 msgstr "ПЕРЕВАНТАЖЕННЯ ВХІДНОГО ПОРТА"
 
@@ -3783,11 +3795,11 @@ msgstr "КАЛІБРУВАННЯ ФОРМУВАЧА ВХІДНОГО СИГНА�
 msgid "INSPECT FINDA"
 msgstr "ОГЛЯНЬТЕ FINDA"
 
-#: tmp_error_headers/error_list.hpp:988
+#: tmp_error_headers/error_list.hpp:1002
 msgid "INTERNAL ERROR"
 msgstr "ВНУТРІШНЯ ПОМИЛКА"
 
-#: tmp_error_headers/error_list.hpp:1009
+#: tmp_error_headers/error_list.hpp:1023
 msgid "INVALID FW SIZE ON USB FLASH DRIVE"
 msgstr "НЕДІЙСНИЙ РОЗМІР ПРОШИВКИ НА USB-НАКОПИЧУВАЧІ"
 
@@ -3853,7 +3865,7 @@ msgstr "Збільшення відстані до столу"
 msgid "Info"
 msgstr "Інформація"
 
-#: src/guiapi/src/window_msgbox.cpp:349 src/gui/MItem_tools.cpp:94
+#: src/guiapi/src/window_msgbox.cpp:349 src/gui/MItem_tools.cpp:93
 msgid "Information"
 msgstr "Інформація"
 
@@ -3863,7 +3875,7 @@ msgstr "Інформація"
 msgid "Initialized"
 msgstr "Ініціалізовано"
 
-#: src/gui/MItem_tools.cpp:624
+#: src/gui/MItem_tools.cpp:623
 msgid "Input Current"
 msgstr "Вхідний струм"
 
@@ -3879,7 +3891,7 @@ msgstr "Формувач вхідного сигналу X"
 msgid "Input Shaper Y"
 msgstr "Формувач вхідного сигналу Y"
 
-#: tmp_error_headers/error_list.hpp:1108
+#: tmp_error_headers/error_list.hpp:1122
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the MK4 firmware."
@@ -3887,7 +3899,7 @@ msgstr ""
 "Вставте USB-носій з комплекту, перезавантажте принтер і клацніть колесом під "
 "час завантаження. Встановиться прошивка MK4."
 
-#: tmp_error_headers/error_list.hpp:1122
+#: tmp_error_headers/error_list.hpp:1136
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the MK4/MK3.9 firmware."
@@ -3895,7 +3907,7 @@ msgstr ""
 "Вставте комплектний USB-накопичувач, перезавантажте принтер і один раз "
 "натисніть на ручку під час завантаження. Це встановить прошивку MK4/MK3.9."
 
-#: tmp_error_headers/error_list.hpp:1115
+#: tmp_error_headers/error_list.hpp:1129
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the correct firmware for your hardware."
@@ -4031,7 +4043,7 @@ msgstr "МОВА ТА ЧАС"
 msgid "LANGUAGES"
 msgstr "МОВИ"
 
-#: tmp_error_headers/error_list.hpp:932
+#: tmp_error_headers/error_list.hpp:946
 msgid "LED MEMORY ERROR"
 msgstr "ПОМИЛКА ПАМ'ЯТІ LED"
 
@@ -4043,7 +4055,7 @@ msgstr "ЛІВОРУЧ"
 msgid "LIGHTS SETTINGS"
 msgstr "НАЛАШТУВАННЯ ОСВІТЛЕННЯ"
 
-#: tmp_error_headers/error_list.hpp:715
+#: tmp_error_headers/error_list.hpp:729
 msgid "LINK LOST"
 msgstr "ЗВ'ЯЗОК ВТРАЧЕНО"
 
@@ -4055,7 +4067,7 @@ msgstr "ЗАВАНТАЖИТИ"
 msgid "LOAD TO EXTR. FAILED"
 msgstr "НЕ ВДАЛОСЯ ЗАВАНТАЖИТИ В ЕКСТРУДЕР"
 
-#: tmp_error_headers/error_list.hpp:918
+#: tmp_error_headers/error_list.hpp:932
 msgid "LOADCELL MEASURE FAILED"
 msgstr "НЕ ВДАЛОСЯ ВИМІРЯТИ ДАТЧИКОМ НАВАНТАЖЕННЯ"
 
@@ -4063,7 +4075,7 @@ msgstr "НЕ ВДАЛОСЯ ВИМІРЯТИ ДАТЧИКОМ НАВАНТАЖЕ
 msgid "LOADCELL TEST"
 msgstr "ТЕСТ LOADCELL"
 
-#: tmp_error_headers/error_list.hpp:925
+#: tmp_error_headers/error_list.hpp:939
 msgid "LOADCELL TIMEOUT"
 msgstr "ТАЙМ-АУТ ДАТЧИКА НАВАНТАЖЕННЯ"
 
@@ -4096,7 +4108,7 @@ msgstr "Ліва сторона"
 msgid "Left Side [um]"
 msgstr "Ліва сторона [мкм]"
 
-#: tmp_error_headers/error_list.hpp:1213
+#: tmp_error_headers/error_list.hpp:1227
 msgid ""
 "Length of an axis is too long.\n"
 "Motor current is too low, probably.\n"
@@ -4106,7 +4118,7 @@ msgstr ""
 "Ймовірно, занадто низький струм двигуна.\n"
 "Повторити перевірку, призупинити чи відновити друк?"
 
-#: tmp_error_headers/error_list.hpp:1220
+#: tmp_error_headers/error_list.hpp:1234
 msgid ""
 "Length of an axis is too short.\n"
 "There's an obstacle or bearing issue.\n"
@@ -4214,7 +4226,7 @@ msgstr ""
 "Шумні дані Loadcell. Переконайтесь, що принтер на стабільній поверхні. "
 "Повторити?"
 
-#: tmp_error_headers/error_list.hpp:919
+#: tmp_error_headers/error_list.hpp:933
 msgid "Loadcell measured an inifinite or undefined load value."
 msgstr ""
 "Датчик навантаження виміряв нескінченне або невизначене значення "
@@ -4253,7 +4265,7 @@ msgstr "Успішно завантажено. Увімкніть Prusa Connect 
 msgid "Loading Test"
 msgstr "Тест завантаження"
 
-#: tmp_error_headers/error_list.hpp:1429
+#: tmp_error_headers/error_list.hpp:1443
 msgid "Loading Timeout"
 msgstr "Тайм-аут завантаження"
 
@@ -4288,7 +4300,7 @@ msgstr "Завантаження..."
 msgid "Lock the tool"
 msgstr "Зафіксувати інструмент"
 
-#: src/gui/MItem_tools.cpp:965
+#: src/gui/MItem_tools.cpp:964
 msgid "Logging has been turned off. You can now safely remove the USB drive."
 msgstr "Журналювання вимкнено. Тепер можна безпечно вийняти USB."
 
@@ -4322,11 +4334,11 @@ msgstr ""
 "Послабте два гвинти з правого боку опори док-станції (позначені "
 "помаранчевим) за допомогою універсального ключа."
 
-#: src/gui/MItem_tools.cpp:340
+#: src/gui/MItem_tools.cpp:339
 msgid "Loud"
 msgstr "Гучно"
 
-#: src/gui/MItem_tools.cpp:946
+#: src/gui/MItem_tools.cpp:945
 msgid "Low"
 msgstr "Низька"
 
@@ -4351,7 +4363,7 @@ msgstr "ПОПЕРЕДЖЕННЯ ПРО НЕСПРАВНІСТЬ"
 msgid "MAINTENANCE WARNING"
 msgstr "ПОПЕРЕДЖЕННЯ ПРО ОБСЛУГОВУВАННЯ"
 
-#: tmp_error_headers/error_list.hpp:939
+#: tmp_error_headers/error_list.hpp:953
 msgid "MARLIN REQUEST TIMEOUT"
 msgstr "ТАЙМ-АУТ ЗАПИТУ MARLIN"
 
@@ -4367,7 +4379,7 @@ msgstr "ПОМИЛКА МАКСИМАЛЬНОЇ ТЕМПЕРАТУРИ MCU"
 msgid "MCU OVERHEAT"
 msgstr "ПЕРЕГРІВ MCU"
 
-#: src/gui/MItem_tools.cpp:680
+#: src/gui/MItem_tools.cpp:679
 msgid "MCU Temperature"
 msgstr "Температура MCU"
 
@@ -4376,7 +4388,7 @@ msgstr "Температура MCU"
 msgid "MCU in %s is overheated."
 msgstr "MCU в %s перегрівся."
 
-#: tmp_error_headers/error_list.hpp:1339
+#: tmp_error_headers/error_list.hpp:1353
 msgid ""
 "MCU in Buddy is overheated, likely due to exceeding the printer's operating "
 "temperature. Prevent overheating for optimal performance."
@@ -4384,13 +4396,13 @@ msgstr ""
 "MCU в Buddy перегріто, ймовірно через перевищення робочої температури. "
 "Уникайте перегріву."
 
-#: tmp_error_headers/error_list.hpp:1346
+#: tmp_error_headers/error_list.hpp:1360
 msgid ""
 "MCU in Dwarf is overheated, likely due to exceeding the printer's operating "
 "temperature. Prevent overheating for optimal performance."
 msgstr "MCU в Dwarf перегріто. Уникайте перегріву."
 
-#: tmp_error_headers/error_list.hpp:1353
+#: tmp_error_headers/error_list.hpp:1367
 msgid ""
 "MCU in Modular Bed is overheated, likely due to exceeding the printer's "
 "operating temperature. Prevent overheating for optimal performance."
@@ -4409,11 +4421,11 @@ msgstr "ПОМИЛКА МІНІМАЛЬНОЇ ТЕМПЕРАТУРИ"
 msgid "MMU BL Status"
 msgstr "Статус MMU BL"
 
-#: src/gui/MItem_tools.cpp:629
+#: src/gui/MItem_tools.cpp:628
 msgid "MMU Current"
 msgstr "Струм MMU"
 
-#: tmp_error_headers/error_list.hpp:1254
+#: tmp_error_headers/error_list.hpp:1268
 msgid "MMU Error"
 msgstr "Помилка MMU"
 
@@ -4449,7 +4461,7 @@ msgstr ""
 msgid "MMU NOT RESPONDING"
 msgstr "MMU НЕ ВІДПОВІДАЄ"
 
-#: tmp_error_headers/error_list.hpp:603
+#: tmp_error_headers/error_list.hpp:617
 msgid "MMU OVERCURRENT"
 msgstr "ПЕРЕВАНТАЖЕННЯ СТРУМУ MMU"
 
@@ -4520,9 +4532,9 @@ msgstr ""
 #: tmp_error_headers/error_list.hpp:400 tmp_error_headers/error_list.hpp:407
 #: tmp_error_headers/error_list.hpp:414 tmp_error_headers/error_list.hpp:421
 #: tmp_error_headers/error_list.hpp:428 tmp_error_headers/error_list.hpp:435
-#: tmp_error_headers/error_list.hpp:442 tmp_error_headers/error_list.hpp:526
-#: tmp_error_headers/error_list.hpp:533 tmp_error_headers/error_list.hpp:666
-#: tmp_error_headers/error_list.hpp:673 tmp_error_headers/error_list.hpp:813
+#: tmp_error_headers/error_list.hpp:442 tmp_error_headers/error_list.hpp:540
+#: tmp_error_headers/error_list.hpp:547 tmp_error_headers/error_list.hpp:680
+#: tmp_error_headers/error_list.hpp:687 tmp_error_headers/error_list.hpp:827
 msgid "MODULAR BED ERROR"
 msgstr "ПОМИЛКА МОДУЛЬНОГО СТОЛУ"
 
@@ -4572,6 +4584,16 @@ msgstr "Переконайтеся, що філамент вставлено ч�
 msgid "Make sure the tool is in the dock, then press Continue."
 msgstr "Переконайтесь, що інструмент у доку, натисніть Продовжити."
 
+#: src/gui/screen/selftest/screen_selftest_fsensors.cpp:182
+msgid ""
+"Make sure there is no filament in the filament sensor.\n"
+"\n"
+"You will need filament to complete this test later."
+msgstr ""
+"Переконайтесь, що у датчику немає філаменту.\n"
+"\n"
+"Філамент знадобиться пізніше для завершення цього тесту."
+
 #: src/gui/MItem_menus.hpp:52
 msgid "Manage Filaments"
 msgstr "Керування філаментами"
@@ -4584,7 +4606,13 @@ msgstr "Ручний"
 msgid "Manual Belt Tuning"
 msgstr "Ручне налаштування ременів"
 
-#: tmp_error_headers/error_list.hpp:940
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:20
+msgid ""
+"Manually position the head at the nozzle cleaner and adjust the height screw"
+msgstr ""
+"Вручну розмістіть голівку над очисником сопла та налаштуйте гвинт висоти"
+
+#: tmp_error_headers/error_list.hpp:954
 msgid ""
 "Marlin client could not send message to Marlin server and timeout was "
 "reached."
@@ -4617,7 +4645,7 @@ msgstr ""
 "Виміряні частоти ременів поза очікуваним діапазоном.\n"
 "Перевірте вирівнювання порталу і повторіть калібрування."
 
-#: tmp_error_headers/error_list.hpp:1283
+#: tmp_error_headers/error_list.hpp:1297
 msgid ""
 "Measured temperature is not matching expected value. Check the thermistor is "
 "in contact with hotend. In case of damage, replace it."
@@ -4657,7 +4685,8 @@ msgstr ""
 msgid "Measuring Y resonance..."
 msgstr "Вимірювання резонансу Y..."
 
-#. Prepare for measuring actual frequencies, QR, prerequisites PHASE: intro_measure
+#. Prepare for measuring actual frequencies, QR, prerequisites PHASE:
+#. intro_measure
 #: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:31
 msgid "Measuring actual belt frequency"
 msgstr "Вимірювання фактичної частоти ременя"
@@ -4672,7 +4701,7 @@ msgstr ""
 "\n"
 "Не торкайтесь принтера"
 
-#: tmp_error_headers/error_list.hpp:933
+#: tmp_error_headers/error_list.hpp:947
 msgid "Memory allocation failed for scheduled LED animation"
 msgstr "Не вдалося виділити пам'ять для запланованої LED-анімації."
 
@@ -4732,14 +4761,14 @@ msgid ""
 "\n"
 "Ensure your hands are outside the printer enclosure.\n"
 "\n"
-"Check that the head is at the correct X position, then press Continue to "
-"start measuring."
+"Verify the head is at the correct X position, then press Continue to start "
+"measuring."
 msgstr ""
 "Двигуни заблоковано.\n"
 "\n"
 "Тримайте руки поза корпусом.\n"
 "\n"
-"Перевірте позицію X та натисніть Продовжити."
+"Перевірте, що голівка в правильній позиції X, та натисніть Продовжити."
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:30
 msgid ""
@@ -4747,14 +4776,14 @@ msgid ""
 "\n"
 "Ensure your hands are outside the printer enclosure.\n"
 "\n"
-"Check that the head is at the correct Y position, then press Continue to "
-"start measuring."
+"Verify the head is at the correct Y position, then press Continue to start "
+"measuring."
 msgstr ""
 "Двигуни заблоковано.\n"
 "\n"
 "Тримайте руки поза корпусом.\n"
 "\n"
-"Перевірте позицію Y та натисніть Продовжити."
+"Перевірте, що голівка в правильній позиції Y, та натисніть Продовжити."
 
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:27
 msgid ""
@@ -4762,14 +4791,14 @@ msgid ""
 "\n"
 "Ensure your hands are outside the printer enclosure.\n"
 "\n"
-"Check that the head is at the correct position, then press Continue to start "
+"Verify the head is in the correct position, then press Continue to start "
 "measuring."
 msgstr ""
 "Двигуни заблоковано.\n"
 "\n"
 "Тримайте руки поза корпусом.\n"
 "\n"
-"Перевірте позицію голівки та натисніть Продовжити."
+"Перевірте правильну позицію голівки та натисніть Продовжити."
 
 #: src/gui/MItem_menus.hpp:82
 msgid "Move Axis"
@@ -4791,7 +4820,7 @@ msgstr "Рух по осі Y"
 msgid "Move Z"
 msgstr "Рух по осі Z"
 
-#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:26
+#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:24
 msgid ""
 "Move printhead to the back. Check there's no gap between gantry and "
 "tensioner on both ends. If there is, follow the guide."
@@ -4799,7 +4828,7 @@ msgstr ""
 "Перемістіть голівку назад. Переконайтесь, що немає зазору між порталом і "
 "натягувачем з обох сторін. Якщо є, дотримуйтесь інструкції."
 
-#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:24
+#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:26
 msgid ""
 "Move printhead to the front. Check there's no gap between gantry and "
 "tensioner on both ends. If there is, follow the guide."
@@ -4809,36 +4838,36 @@ msgstr ""
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:26
 msgid ""
-"Move the head above the nozzle cleaner as shown on the picture.\n"
+"Move the head precisely to the nozzle cleaner as shown on the picture.\n"
 "\n"
 "Rotate the adjustment screw until the nozzle is aligned with the cleaner in "
 "the Z axis."
 msgstr ""
-"Перемістіть голівку над очисник сопла, як показано.\n"
+"Перемістіть голівку точно до очисника сопла, як показано.\n"
 "\n"
 "Крутіть регулювальний гвинт, поки сопло не вирівняється з очисником по осі Z."
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:31
 msgid ""
-"Move the head precisely to the nozzle cleaner X-axis calibration indent in "
+"Move the nozzle precisely to the nozzle cleaner X-axis calibration indent in "
 "front of the bin.\n"
 "\n"
-"When in position, press Continue."
+"Then press Continue."
 msgstr ""
-"Перемістіть голівку точно до калібрувальної заглибини X перед контейнером.\n"
+"Перемістіть сопло точно до калібрувальної заглибини X перед контейнером.\n"
 "\n"
-"У позиції натисніть Продовжити."
+"Потім натисніть Продовжити."
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:32
 msgid ""
-"Move the head precisely to the nozzle cleaner Y-axis calibration indent on "
+"Move the nozzle precisely to the nozzle cleaner Y-axis calibration indent on "
 "the side of the bin.\n"
 "\n"
-"When in position, press Continue."
+"Then press Continue."
 msgstr ""
-"Перемістіть голівку точно до калібрувальної заглибини Y збоку контейнера.\n"
+"Перемістіть сопло точно до калібрувальної заглибини Y збоку контейнера.\n"
 "\n"
-"У позиції натисніть Продовжити."
+"Потім натисніть Продовжити."
 
 #: src/gui/wizard/selftest_frame_tool_offsets.cpp:76
 msgid "Moving away."
@@ -4898,7 +4927,7 @@ msgstr "NINS / 0"
 msgid "NO"
 msgstr "НІ"
 
-#: tmp_error_headers/error_list.hpp:1016
+#: tmp_error_headers/error_list.hpp:1030
 msgid "NO FW ON USB FLASH DRIVE"
 msgstr "НА USB-НАКОПИЧУВАЧІ ВІДСУТНЯ ПРОШИВКА"
 
@@ -4914,20 +4943,16 @@ msgstr "ЗАРАЗ"
 msgid "NOZZLE CLEANER CALIBRATION"
 msgstr "КАЛІБРУВАННЯ ОЧИСНИКА СОПЛА"
 
-#: tmp_error_headers/error_list.hpp:589
+#: tmp_error_headers/error_list.hpp:603
 msgid "NOZZLE HEATER OVERCURRENT"
 msgstr "ПЕРЕВАНТАЖЕННЯ СТРУМУ НАГРІВАЧА СОПЛА"
-
-#: src/gui/screen/screen_nozzle_mismatch.cpp:97
-msgid "NOZZLE MISMATCH"
-msgstr "НЕВІДПОВІДНІСТЬ СОПЛА"
 
 #: src/gui/screen/toolhead/screen_toolhead_settings_nozzle_offset.cpp:49
 msgid "NOZZLE_OFFSET"
 msgstr "OFFSET СОПЛА"
 
 #: src/gui/screen/filament/screen_filament_detail.cpp:21
-#: src/gui/MItem_tools.cpp:376
+#: src/gui/MItem_tools.cpp:375
 msgid "Name"
 msgstr "Назва"
 
@@ -4947,7 +4972,7 @@ msgstr "Назва не може бути порожньою"
 msgid "Net fail"
 msgstr "Помилка мережі"
 
-#: src/gui/MItem_menus.hpp:119 src/gui/MItem_tools.cpp:807
+#: src/gui/MItem_menus.hpp:119 src/gui/MItem_tools.cpp:806
 msgid "Network"
 msgstr "Мережа"
 
@@ -4959,15 +4984,15 @@ msgstr "Налаштування мережі"
 msgid "Network Status"
 msgstr "Стан мережі"
 
-#: src/gui/MItem_hardware.cpp:166 src/gui/MItem_tools.cpp:870
+#: src/gui/MItem_hardware.cpp:166 src/gui/MItem_tools.cpp:869
 msgid "Never"
 msgstr "Ніколи"
 
-#: tmp_error_headers/error_list.hpp:1150
+#: tmp_error_headers/error_list.hpp:1164
 msgid "New FW available"
 msgstr "Доступна нова прошивка"
 
-#: tmp_error_headers/error_list.hpp:1157
+#: tmp_error_headers/error_list.hpp:1171
 msgid "New firmware available"
 msgstr "Доступна нова прошивка"
 
@@ -5009,11 +5034,11 @@ msgstr "OpenPrintTag не виявлено для інструменту/сло�
 msgid "No USB"
 msgstr "Немає USB"
 
-#: src/gui/MItem_tools.cpp:285
+#: src/gui/MItem_tools.cpp:284
 msgid "No crash dump to save."
 msgstr "Немає дампа аварії для збереження."
 
-#: tmp_error_headers/error_list.hpp:1080
+#: tmp_error_headers/error_list.hpp:1094
 msgid ""
 "No firmware found\n"
 "in the internal\n"
@@ -5116,7 +5141,7 @@ msgid ""
 msgstr "Тепер відкалібруймо відстань між кінчиком сопла та друкованим листом."
 
 #: src/common/footer_def.cpp:11 src/common/hw_check.cpp:6
-#: src/gui/MItem_print.cpp:20 src/gui/MItem_tools.cpp:728
+#: src/gui/MItem_print.cpp:20 src/gui/MItem_tools.cpp:727
 #: src/gui/wizard/selftest_result_heaters.cpp:13
 msgid "Nozzle"
 msgstr "Сопло"
@@ -5125,7 +5150,7 @@ msgstr "Сопло"
 msgid "Nozzle Cleaner Calibration"
 msgstr "Калібрування очисника сопла"
 
-#: src/gui/MItem_tools.cpp:993
+#: src/gui/MItem_tools.cpp:992
 msgid "Nozzle Cleaning Retraction"
 msgstr "Ретракт очищення сопла"
 
@@ -5163,11 +5188,6 @@ msgstr "Темп сопла"
 msgid "Nozzle Temperature"
 msgstr "Температура сопла"
 
-#: src/gui/screen_menu_sensor_info.hpp:67
-#: src/gui/screen_menu_temperature.hpp:37 src/gui/screen_menu_tune.hpp:57
-msgid "Nozzle Temperatures"
-msgstr "Температури сопел"
-
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:27
 msgid "Nozzle X-Axis Alignment"
 msgstr "Вирівнювання сопла по X"
@@ -5192,11 +5212,11 @@ msgstr "Позицію очисника сопла відкалібровано 
 msgid "Nozzle cleaning"
 msgstr "Очищення сопла"
 
-#: tmp_error_headers/error_list.hpp:1499
+#: tmp_error_headers/error_list.hpp:1513
 msgid "Nozzle cleaning failed"
 msgstr "Очищення сопла не вдалося"
 
-#: tmp_error_headers/error_list.hpp:1416
+#: tmp_error_headers/error_list.hpp:1430
 msgid "Nozzle cleaning failed."
 msgstr "Не вдалося очистити сопло."
 
@@ -5204,7 +5224,7 @@ msgstr "Не вдалося очистити сопло."
 msgid "Nozzle diameter"
 msgstr "Діаметр сопла"
 
-#: tmp_error_headers/error_list.hpp:1325
+#: tmp_error_headers/error_list.hpp:1339
 msgid ""
 "Nozzle doesn't seem to have round cross section. Make sure it is clean and "
 "perpendicular to the bed."
@@ -5241,32 +5261,26 @@ msgstr "Сопло не загартоване"
 msgid "Nozzle not high-flow"
 msgstr "Сопло не high-flow"
 
-#: tmp_error_headers/error_list.hpp:219
-msgid "Nozzle was not detected after tool pickup."
-msgstr "Сопло не виявлено після підіймання інструменту."
-
-#: tmp_error_headers/error_list.hpp:233
-msgid "Nozzle was still detected after parking."
-msgstr "Сопло все ще виявляється після паркування."
-
 #: src/gui/footer/footer_item_fsensor.cpp:49
 #: src/gui/footer/footer_item_multitool.cpp:29
 msgid "OFF "
 msgstr "ВИМК."
 
-#. @@TODO there is a strange comment in FooterItemFSensor::static_makeView about the last character not being rendered
+#. @@TODO there is a strange comment in FooterItemFSensor::static_makeView
+#. about the last character not being rendered
 #. Not sure why but using the same workaround.
-#. Another funny thing is that the LED in FINDA shows the exact opposite - this needs to be discussed with Content ;)
+#. Another funny thing is that the LED in FINDA shows the exact opposite -
+#. this needs to be discussed with Content ;)
 #: src/gui/footer/footer_item_fsensor.cpp:46
 #: src/gui/footer/footer_item_multitool.cpp:29
 msgid "ON "
 msgstr "УВІМК."
 
-#: tmp_error_headers/error_list.hpp:792
+#: tmp_error_headers/error_list.hpp:806
 msgid "OPENPRINTTAG ASSIGNED"
 msgstr "OPENPRINTTAG ПРИЗНАЧЕНО"
 
-#: tmp_error_headers/error_list.hpp:799
+#: tmp_error_headers/error_list.hpp:813
 msgid "OPENPRINTTAG CANNOT TRACK"
 msgstr "OPENPRINTTAG НЕ ВІДСТЕЖУЄ"
 
@@ -5283,7 +5297,7 @@ msgstr "СПИСОК OPENPRINTTAG"
 msgid "OPENPRINTTAG SETTINGS"
 msgstr "НАЛАШТУВАННЯ OPENPRINTTAG"
 
-#: tmp_error_headers/error_list.hpp:806
+#: tmp_error_headers/error_list.hpp:820
 msgid "OPENPRINTTAG WRITE FAILED"
 msgstr "ЗАПИС OPENPRINTTAG НЕ ВДАВСЯ"
 
@@ -5314,7 +5328,7 @@ msgstr "Зміщення"
 msgid "Offset %c"
 msgstr "Зміщення %c"
 
-#: src/gui/MItem_tools.cpp:796
+#: src/gui/MItem_tools.cpp:795
 msgid "Ok"
 msgstr "OK"
 
@@ -5322,11 +5336,11 @@ msgstr "OK"
 msgid "On Filament Load"
 msgstr "При завантаженні філаменту"
 
-#: src/gui/MItem_tools.cpp:872
+#: src/gui/MItem_tools.cpp:871
 msgid "On Idle"
 msgstr "При бездіяльності"
 
-#: src/gui/MItem_tools.cpp:339
+#: src/gui/MItem_tools.cpp:338
 msgid "Once"
 msgstr "Один раз"
 
@@ -5349,7 +5363,7 @@ msgstr ""
 msgid "Online"
 msgstr "Онлайн"
 
-#: tmp_error_headers/error_list.hpp:1436
+#: tmp_error_headers/error_list.hpp:1450
 msgid "Open Chamber Ventilation"
 msgstr "Відкрити вентиляцію камери"
 
@@ -5381,7 +5395,7 @@ msgstr ""
 msgid "OpenPrintTag Pending Write"
 msgstr "OpenPrintTag очікує запису"
 
-#: tmp_error_headers/error_list.hpp:793
+#: tmp_error_headers/error_list.hpp:807
 msgid ""
 "OpenPrintTag has been linked with the filament. Filament usage data will be "
 "stored on the tag."
@@ -5398,29 +5412,29 @@ msgstr "OpenPrintTag перепризначено інструменту %i"
 msgid "Opening chamber vents"
 msgstr "Відкриття вентиляції камери"
 
-#: tmp_error_headers/error_list.hpp:576
+#: tmp_error_headers/error_list.hpp:590
 msgid "Overcurrent detected on USB port."
 msgstr "Виявлено перевантаження струму на USB-порті."
 
-#: tmp_error_headers/error_list.hpp:590
+#: tmp_error_headers/error_list.hpp:604
 msgid "Overcurrent detected on nozzle heater."
 msgstr "Виявлено перевантаження струму на нагрівачі сопла."
 
-#: tmp_error_headers/error_list.hpp:604
+#: tmp_error_headers/error_list.hpp:618
 msgid "Overcurrent detected on the MMU port, disconnect the device."
 msgstr "Виявлено перевантаження струму на порту MMU, від'єднайте пристрій."
 
-#: tmp_error_headers/error_list.hpp:583
+#: tmp_error_headers/error_list.hpp:597
 msgid "Overcurrent detected on the connected USB device, disconnect it."
 msgstr ""
 "Виявлено перевантаження струму на підключеному USB-пристрої, від'єднайте "
 "його."
 
-#: tmp_error_headers/error_list.hpp:597
+#: tmp_error_headers/error_list.hpp:611
 msgid "Overcurrent detected on xBuddy input port, disconnect the device."
 msgstr "Виявлено перевантаження на вході xBuddy, від'єднайте пристрій."
 
-#: tmp_error_headers/error_list.hpp:527
+#: tmp_error_headers/error_list.hpp:541
 msgid "Overcurrent detected."
 msgstr "Виявлено перевантаження струму."
 
@@ -5461,7 +5475,7 @@ msgstr "ШТИФТ НЕ ДОСЯГНУТО"
 msgid "POSTPONE"
 msgstr "ВІДКЛАСТИ"
 
-#: tmp_error_headers/error_list.hpp:680
+#: tmp_error_headers/error_list.hpp:694
 msgid "POWER PANIC"
 msgstr "ВІДКЛЮЧЕННЯ ЖИВЛЕННЯ"
 
@@ -5511,12 +5525,12 @@ msgstr "Вентилятор PSU"
 msgid "PULLEY CANNOT MOVE"
 msgstr "ШКІВ НЕ МОЖЕ РУХАТИСЯ"
 
-#: tmp_error_headers/error_list.hpp:834 tmp_error_headers/error_list.hpp:841
 #: tmp_error_headers/error_list.hpp:848 tmp_error_headers/error_list.hpp:855
 #: tmp_error_headers/error_list.hpp:862 tmp_error_headers/error_list.hpp:869
 #: tmp_error_headers/error_list.hpp:876 tmp_error_headers/error_list.hpp:883
 #: tmp_error_headers/error_list.hpp:890 tmp_error_headers/error_list.hpp:897
 #: tmp_error_headers/error_list.hpp:904 tmp_error_headers/error_list.hpp:911
+#: tmp_error_headers/error_list.hpp:918 tmp_error_headers/error_list.hpp:925
 msgid "PUPPY ERROR"
 msgstr "ПОМИЛКА PUPPY"
 
@@ -5532,11 +5546,12 @@ msgstr "Рух param sweep не вдався."
 msgid "Park Current Tool"
 msgstr "Запаркувати поточний інструмент"
 
-#: src/gui/MItem_tools.cpp:691
+#: src/gui/MItem_tools.cpp:690
 msgid "Park Fails"
 msgstr "Невдалі паркування"
 
-#. Do not show "Pick Tool" at all for all_toolheads, only "Park Tool" that gets disabled when no tool is selected
+#. Do not show "Pick Tool" at all for all_toolheads, only "Park Tool" that
+#. gets disabled when no tool is selected
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:234
 msgid "Park Tool"
 msgstr "Припаркувати інструмент"
@@ -5641,15 +5656,15 @@ msgstr "Вибрати/Запаркувати інструмент"
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:22
 msgid ""
-"Picking tool\n"
+"Picking up tool...\n"
 "\n"
-"Please wait..."
+"Please wait."
 msgstr ""
-"Узяття інструменту\n"
+"Узяття інструменту...\n"
 "\n"
-"Зачекайте..."
+"Зачекайте."
 
-#: src/gui/MItem_tools.cpp:687
+#: src/gui/MItem_tools.cpp:686
 msgid "Pickup Fails"
 msgstr "Невдалі підіймання"
 
@@ -5662,7 +5677,7 @@ msgid ""
 "Please calibrate nozzle cleaner first before loading/unloading filaments."
 msgstr "Спершу відкалібруйте очисник сопла перед завантаженням філаменту."
 
-#: src/gui/MItem_tools.cpp:928
+#: src/gui/MItem_tools.cpp:927
 msgid "Please calibrate the docks first."
 msgstr "Спершу відкалібруйте доки."
 
@@ -5670,7 +5685,7 @@ msgstr "Спершу відкалібруйте доки."
 msgid "Please calibrate the nozzle cleaner first."
 msgstr "Спершу відкалібруйте очисник сопла."
 
-#: tmp_error_headers/error_list.hpp:1143
+#: tmp_error_headers/error_list.hpp:1157
 msgid "Please complete Calibrations & Tests before using the printer."
 msgstr ""
 "Будь ласка, завершіть калібрування та тести перед використанням принтера."
@@ -5684,16 +5699,6 @@ msgstr ""
 "Будь ласка, вставте флеш-накопичувач із файлом конфігурації мережі.\n"
 "\n"
 "Файл конфігурації можна створити в PrusaSlicer."
-
-#: src/gui/screen/selftest/screen_selftest_fsensors.cpp:182
-msgid ""
-"Please make sure there is no filament in the filament sensor.\n"
-"\n"
-"You will need filament to finish this test later."
-msgstr ""
-"Переконайтесь, що у датчику немає філаменту.\n"
-"\n"
-"Філамент знадобиться пізніше для завершення тесту."
 
 #: src/gui/screen/selftest/screen_selftest_fsensors.cpp:180
 msgid ""
@@ -5729,7 +5734,7 @@ msgstr "Будь ласка, відкрийте холостий хід і ви�
 msgid "Please remove filament from filament sensor."
 msgstr "Будь ласка, видаліть філамент із датчика філаменту."
 
-#: tmp_error_headers/error_list.hpp:1367
+#: tmp_error_headers/error_list.hpp:1381
 msgid "Please replace filament."
 msgstr "Замініть філамент."
 
@@ -5761,28 +5766,28 @@ msgstr "Потужність після друку"
 msgid "Power Cycle"
 msgstr "Цикл живлення"
 
-#: tmp_error_headers/error_list.hpp:667
+#: tmp_error_headers/error_list.hpp:681
 msgid "Power failure"
 msgstr "Збій живлення"
 
-#: tmp_error_headers/error_list.hpp:758
+#: tmp_error_headers/error_list.hpp:772
 msgid "Power grid is operating outside of specification."
 msgstr "Електромережа працює поза специфікацією."
 
-#: tmp_error_headers/error_list.hpp:674
+#: tmp_error_headers/error_list.hpp:688
 msgid "Power panic"
 msgstr "Аварія живлення"
 
-#: tmp_error_headers/error_list.hpp:681
+#: tmp_error_headers/error_list.hpp:695
 msgid "Power panic detected on startup. Check power panic cable."
 msgstr ""
 "Виявлено аварію живлення під час запуску. Перевірте кабель аварії живлення."
 
-#: tmp_error_headers/error_list.hpp:730
+#: tmp_error_headers/error_list.hpp:744
 msgid "Power panic situation detected."
 msgstr "Виявлено ситуацію power panic."
 
-#: tmp_error_headers/error_list.hpp:772
+#: tmp_error_headers/error_list.hpp:786
 msgid "Power supply unit is operating outside of specification."
 msgstr "Блок живлення працює поза специфікацією."
 
@@ -5840,7 +5845,8 @@ msgstr "Підготовка до встановлення калібрувал�
 msgid "Preparing for filament sensor calibration"
 msgstr "Підготовка до калібрування датчика філаменту"
 
-#. Used in filament type context, for example: "PLA (Preset)". Please try to fit the text in 6 characters.
+#. Used in filament type context, for example: "PLA (Preset)". Please try to
+#. fit the text in 6 characters.
 #: src/common/filament.cpp:85
 msgid "Preset"
 msgstr "Пресет"
@@ -5908,7 +5914,7 @@ msgstr "Друк завершено"
 msgid "Print fan"
 msgstr "Вентилятор друку"
 
-#: tmp_error_headers/error_list.hpp:1262
+#: tmp_error_headers/error_list.hpp:1276
 msgid ""
 "Print fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -5965,7 +5971,7 @@ msgstr ""
 "Виявлено кілька послідовних помилок завантаження. Перевірте екструдер. prusa."
 "io/mmu-care."
 
-#: src/gui/MItem_tools.cpp:101
+#: src/gui/MItem_tools.cpp:100
 msgid "Printer is busy. Please try repeating the action later."
 msgstr "Принтер зайнятий. Будь ласка, повторіть дію пізніше."
 
@@ -5974,7 +5980,7 @@ msgstr "Принтер зайнятий. Будь ласка, повторіть
 msgid "Printer is homing, please wait."
 msgstr "Принтер виконує хомінг, зачекайте."
 
-#: src/gui/MItem_tools.cpp:100 src/gui/dialogs/window_dlg_wait.cpp:10
+#: src/gui/MItem_tools.cpp:99 src/gui/dialogs/window_dlg_wait.cpp:10
 msgid "Printer may vibrate and be noisier during homing."
 msgstr ""
 "Під час калібрування початкових позицій принтер може вібрувати та бути "
@@ -6059,31 +6065,31 @@ msgstr ""
 "Двигун шківа зупинився. Переконайтеся, що шків може рухатися, і перевірте "
 "проводку."
 
-#: tmp_error_headers/error_list.hpp:898
+#: tmp_error_headers/error_list.hpp:912
 #, c-format
 msgid "Puppy %s firmware fingerprint mismatch"
 msgstr "Не збігається відбиток прошивки Puppy %s"
 
-#: tmp_error_headers/error_list.hpp:884
+#: tmp_error_headers/error_list.hpp:898
 #, c-format
 msgid "Puppy %s firmware not found"
 msgstr "Прошивку Puppy %s не знайдено"
 
-#: tmp_error_headers/error_list.hpp:891
+#: tmp_error_headers/error_list.hpp:905
 #, c-format
 msgid "Puppy %s flash writing failed"
 msgstr "Не вдалося записати флеш-пам'ять Puppy %s"
 
-#: tmp_error_headers/error_list.hpp:856
+#: tmp_error_headers/error_list.hpp:870
 #, c-format
 msgid "Puppy %s not responding"
 msgstr "Puppy %s не відповідає"
 
-#: tmp_error_headers/error_list.hpp:849
+#: tmp_error_headers/error_list.hpp:863
 msgid "Puppy discovery error. No puppy found"
 msgstr "Помилка виявлення Puppy. Puppy не знайдено"
 
-#: tmp_error_headers/error_list.hpp:863
+#: tmp_error_headers/error_list.hpp:877
 #, c-format
 msgid ""
 "Puppy uses incompatible bootloader protocol %04x, Buddy FW requires %04x"
@@ -6103,7 +6109,7 @@ msgstr "Продування"
 msgid "Purging filament"
 msgstr "Продування філаменту"
 
-#: tmp_error_headers/error_list.hpp:1479
+#: tmp_error_headers/error_list.hpp:1493
 msgid ""
 "Purging the filament.\n"
 "\n"
@@ -6173,7 +6179,7 @@ msgstr "ВИЙТИ"
 msgid "Question"
 msgstr "Питання"
 
-#: tmp_error_headers/error_list.hpp:1422
+#: tmp_error_headers/error_list.hpp:1436
 msgid "Quick Pause"
 msgstr "Швидка пауза"
 
@@ -6241,13 +6247,13 @@ msgstr ""
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:24
 msgid ""
-"Raising Z axis for clearance\n"
+"Raising Z axis for clearance...\n"
 "\n"
-"Please wait..."
+"Please wait."
 msgstr ""
-"Підняття осі Z\n"
+"Підняття осі Z...\n"
 "\n"
-"Зачекайте..."
+"Зачекайте."
 
 #: src/gui/dialogs/DialogLoadUnload.cpp:28
 msgid "Ramming"
@@ -6274,7 +6280,7 @@ msgstr "Перепризначити виявлену мітку філамен�
 msgid "Recalibrating home. This may take some time."
 msgstr "Повторне калібрування хомінгу. Може зайняти деякий час."
 
-#: tmp_error_headers/error_list.hpp:1149 tmp_error_headers/error_list.hpp:1156
+#: tmp_error_headers/error_list.hpp:1163 tmp_error_headers/error_list.hpp:1170
 msgid "Recommendation"
 msgstr "Рекомендація"
 
@@ -6314,7 +6320,7 @@ msgstr "Реєстрація принтера в Prusa Connect..."
 msgid "Registration successful, continue at connect.prusa3d.com"
 msgstr "Реєстрацію успішно завершено, продовжте на connect.prusa3d.com"
 
-#: tmp_error_headers/error_list.hpp:779
+#: tmp_error_headers/error_list.hpp:793
 msgid "Registration to Prusa Connect failed due to:"
 msgstr "Не вдалася реєстрація в Prusa Connect через:"
 
@@ -6352,7 +6358,7 @@ msgstr "Зніміть філамент з датчика."
 msgid "Remove the filament manually"
 msgstr "Видаліть філамент вручну"
 
-#: tmp_error_headers/error_list.hpp:1493
+#: tmp_error_headers/error_list.hpp:1507
 msgid ""
 "Remove the purged filament and ensure the nozzle is clean and ready.\n"
 "\n"
@@ -6370,7 +6376,7 @@ msgstr "Перейменувати"
 msgid "Reorder Filaments"
 msgstr "Змінити порядок філаментів"
 
-#: tmp_error_headers/error_list.hpp:1227
+#: tmp_error_headers/error_list.hpp:1241
 msgid ""
 "Repeated collision has been detected.\n"
 "Do you want to resume or pause the print?"
@@ -6378,7 +6384,7 @@ msgstr ""
 "Виявлено повторне зіткнення.\n"
 "Бажаєте відновити або призупинити друк?"
 
-#: tmp_error_headers/error_list.hpp:1366
+#: tmp_error_headers/error_list.hpp:1380
 msgid "Replace filament"
 msgstr "Замінити філамент"
 
@@ -6409,7 +6415,7 @@ msgstr "Скинути"
 msgid "Reset filter usage?"
 msgstr "Скинути використання фільтра?"
 
-#: tmp_error_headers/error_list.hpp:723
+#: tmp_error_headers/error_list.hpp:737
 msgid "Residual-current device tripped."
 msgstr "Спрацював диференційний автомат."
 
@@ -6448,13 +6454,13 @@ msgstr "Витягнути з FINDA"
 msgid "Retracting from FINDA"
 msgstr "Витягування з FINDA"
 
+#: tmp_error_headers/error_list.hpp:239
+msgid "Retry parking"
+msgstr "Повторити паркування"
+
 #: tmp_error_headers/error_list.hpp:225
 msgid "Retry pickup"
 msgstr "Повторити підіймання"
-
-#: tmp_error_headers/error_list.hpp:239
-msgid "Retry tool park"
-msgstr "Повторити паркування інструменту"
 
 #: src/guiapi/include/WindowMenuItems.hpp:46
 #: src/gui/screen/screen_preheat.cpp:203 src/gui/screen_network_setup.cpp:32
@@ -6520,11 +6526,11 @@ msgstr "СЕЛЕКТОР НЕ МОЖЕ РУХАТИСЯ"
 msgid "SELFTEST"
 msgstr "САМОТЕСТ"
 
-#: tmp_error_headers/error_list.hpp:981
+#: tmp_error_headers/error_list.hpp:995
 msgid "SELFTEST NOT PASSED"
 msgstr "САМОТЕСТ НЕ ПРОЙДЕНО"
 
-#: src/gui/screen_menu_sensor_info.cpp:6
+#: src/gui/screen_menu_sensor_info.cpp:26
 msgid "SENSOR INFO"
 msgstr "ІНФОРМАЦІЯ ПРО ДАТЧИКИ"
 
@@ -6598,7 +6604,7 @@ msgstr "Скинути"
 msgid "SYSTEM"
 msgstr "СИСТЕМА"
 
-#: src/gui/MItem_tools.cpp:641
+#: src/gui/MItem_tools.cpp:640
 msgid "Sandwich 5V Current"
 msgstr "Струм 5V плати Sandwich"
 
@@ -6611,7 +6617,7 @@ msgstr "Сб"
 msgid "Save Crash Dump"
 msgstr "Зберегти дамп аварії"
 
-#: src/gui/MItem_tools.cpp:960
+#: src/gui/MItem_tools.cpp:959
 msgid "Save Logs To File"
 msgstr "Зберегти журнали у файл"
 
@@ -6675,8 +6681,8 @@ msgid "Select printer tool to connect/disconnect on the right."
 msgstr "Праворуч виберіть інструмент для з'єднання/від'єднання."
 
 #: tmp_error_headers/error_list.hpp:198
-msgid "Select the dock the nozzle belongs to."
-msgstr "Виберіть док, до якого належить сопло."
+msgid "Select the dock for this tool."
+msgstr "Виберіть док для цього інструменту."
 
 #. //MSG_PROGRESS_UNLOADING_FILAMENT c=20
 #: src/mmu2/mmu2_progress_converter.cpp:23
@@ -6794,7 +6800,7 @@ msgstr ""
 "(калібрування буде пізніше)\n"
 "Перепризначити?"
 
-#: src/gui/screen_menu_sensor_info.hpp:96
+#: src/gui/screen_menu_sensor_info.hpp:107
 msgid "Side Filament Sensors"
 msgstr "Бічні датчики філаменту"
 
@@ -6808,11 +6814,12 @@ msgstr ""
 "(калібрування буде пізніше)\n"
 "Перепризначити?"
 
-#: src/gui/MItem_tools.cpp:596
+#: src/gui/MItem_tools.cpp:595
 msgid "Side Filament sensor"
 msgstr "Бічний датчик філаменту"
 
-#. Only side sensors are not connected, not that tragic, show message but keep on going
+#. Only side sensors are not connected, not that tragic, show message but keep
+#. on going
 #: src/common/feature/filament_sensor/filament_sensors_handler.cpp:101
 msgid "Side filament sensor not connected, check wiring."
 msgstr "Бічний датчик філаменту не підключено, перевірте проводку."
@@ -6821,7 +6828,7 @@ msgstr "Бічний датчик філаменту не підключено, 
 msgid "Signal"
 msgstr "Сигнал"
 
-#: src/gui/MItem_tools.cpp:341
+#: src/gui/MItem_tools.cpp:340
 msgid "Silent"
 msgstr "Тихо"
 
@@ -6857,11 +6864,11 @@ msgid ""
 msgstr ""
 "Деякі параметри OpenPrintTag відсутні або недійсні. Перевірте виділені поля."
 
-#: src/gui/MItem_tools.cpp:380
+#: src/gui/MItem_tools.cpp:379
 msgid "Sort Files"
 msgstr "Сортувати файли"
 
-#: src/gui/MItem_tools.hpp:157 src/gui/MItem_tools.cpp:350
+#: src/gui/MItem_tools.hpp:157 src/gui/MItem_tools.cpp:349
 msgid "Sound Mode"
 msgstr "Режим звуку"
 
@@ -6869,7 +6876,7 @@ msgstr "Режим звуку"
 msgid "Sound Volume"
 msgstr "Гучність звуку"
 
-#: tmp_error_headers/error_list.hpp:947
+#: tmp_error_headers/error_list.hpp:961
 msgid ""
 "Space allocation for firmware BBF file failed. Repeat the action or try "
 "another USB drive."
@@ -6931,7 +6938,7 @@ msgid ""
 "damage."
 msgstr "Сталевий аркуш не виявлено. Покладіть аркуш, щоб уникнути пошкоджень."
 
-#: tmp_error_headers/error_list.hpp:1304
+#: tmp_error_headers/error_list.hpp:1318
 msgid "Steppers disabled due to inactivity."
 msgstr "Крокові двигуни вимкнено через бездіяльність."
 
@@ -6964,7 +6971,7 @@ msgstr "Успішно підключено"
 msgid "Sun"
 msgstr "Нд"
 
-#: tmp_error_headers/error_list.hpp:499
+#: tmp_error_headers/error_list.hpp:513
 msgid ""
 "SuperPINDA sensor is probably broken or disconnected, could not home Z-axis "
 "properly."
@@ -7131,6 +7138,14 @@ msgstr ""
 msgid "TOOL %d"
 msgstr "ІНСТРУМЕНТ %d"
 
+#: src/gui/screen_menu_statistics.cpp:95
+msgid "TOOL CHANGES"
+msgstr "ЗМІНИ ІНСТРУМЕНТА"
+
+#: src/gui/screen/screen_nozzle_mismatch.cpp:97
+msgid "TOOL MISMATCH"
+msgstr "НЕВІДПОВІДНІСТЬ ІНСТРУМЕНТА"
+
 #: tmp_error_headers/error_list.hpp:43
 msgid "TOOL OFFSET OUT OF BOUNDS"
 msgstr "ЗМІЩЕННЯ ІНСТРУМЕНТА ЗА МЕЖАМИ ДІАПАЗОНУ"
@@ -7142,10 +7157,6 @@ msgstr "ВИБІР ІНСТРУМЕНТУ"
 #: tmp_error_headers/error_list.hpp:15
 msgid "TOOLCHANGER ERROR"
 msgstr "ПОМИЛКА ЗМІНЮВАЧА ІНСТРУМЕНТІВ"
-
-#: src/gui/screen_menu_statistics.cpp:95
-msgid "TOOLCHANGES"
-msgstr "ЗМІНИ ІНСТРУМЕНТА"
 
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:301
 msgid "TOOLHEAD"
@@ -7233,16 +7244,16 @@ msgstr "Тест вентилятора на 40% power, зачекайте."
 msgid "Testing filament"
 msgstr "Тестування філаменту"
 
-#: tmp_error_headers/error_list.hpp:1164
+#: tmp_error_headers/error_list.hpp:1178
 msgid "The G-code isn't fully compatible"
 msgstr "G-код не повністю сумісний"
 
-#: tmp_error_headers/error_list.hpp:1402
+#: tmp_error_headers/error_list.hpp:1416
 msgid ""
 "The HEPA filter has expired. Change the HEPA filter before your next print."
 msgstr "Фільтр HEPA закінчився. Замініть перед наступним друком."
 
-#: tmp_error_headers/error_list.hpp:1395
+#: tmp_error_headers/error_list.hpp:1409
 msgid ""
 "The HEPA filter has expired. Change the HEPA filter before your next print. "
 "Visit prusa.io/xl-filter for more information."
@@ -7250,7 +7261,7 @@ msgstr ""
 "Термін дії HEPA-фільтра закінчився. Замініть HEPA-фільтр перед наступним "
 "друком. Перейдіть на prusa.io/xl-filter для отримання додаткової інформації."
 
-#: tmp_error_headers/error_list.hpp:1381
+#: tmp_error_headers/error_list.hpp:1395
 msgid ""
 "The HEPA filter is nearing the end of its life span (100 hours of printing "
 "time remaining). We recommend purchasing a new one. Visit prusa.io/xl-filter "
@@ -7260,7 +7271,7 @@ msgstr ""
 "Рекомендуємо придбати новий. Перейдіть на prusa.io/xl-filter для отримання "
 "додаткової інформації."
 
-#: tmp_error_headers/error_list.hpp:1388
+#: tmp_error_headers/error_list.hpp:1402
 msgid ""
 "The HEPA filter is nearing the end of its life span. We recommend purchasing "
 "a new one."
@@ -7289,7 +7300,7 @@ msgstr ""
 "Версія прошивки MMU несумісна з прошивкою принтера. Оновіть до сумісної "
 "версії."
 
-#: tmp_error_headers/error_list.hpp:800
+#: tmp_error_headers/error_list.hpp:814
 msgid ""
 "The OpenPrintTag does not allow filament usage tracking. Filament "
 "consumption will not be saved."
@@ -7329,7 +7340,7 @@ msgstr ""
 "Вставте модуль, спробуйте перезавантажити принтер або скористайтеся кабелем "
 "Ethernet."
 
-#: tmp_error_headers/error_list.hpp:1500
+#: tmp_error_headers/error_list.hpp:1514
 msgid ""
 "The auto-retract feature is disabled, which might have caused the failure.\n"
 "\n"
@@ -7366,7 +7377,7 @@ msgstr "Калібрування займе трохи більше 7 хвили
 msgid "The door sensor is successfully calibrated now."
 msgstr "Датчик дверей успішно відкалібровано."
 
-#: tmp_error_headers/error_list.hpp:1486
+#: tmp_error_headers/error_list.hpp:1500
 msgid ""
 "The filament has been purged.\n"
 "\n"
@@ -7400,7 +7411,8 @@ msgstr "Філамент буде вивантажено автоматично.
 msgid "The file disappeared"
 msgstr "Файл зник"
 
-#. This is a bit hacky way, but the error reporting is done through gcode_info, so we gotta put the error there.
+#. This is a bit hacky way, but the error reporting is done through
+#. gcode_info, so we gotta put the error there.
 #: src/common/marlin_print_preview.cpp:356
 #: src/common/marlin_print_preview.cpp:398
 msgid "The file is corrupt."
@@ -7424,13 +7436,13 @@ msgstr ""
 
 #: tmp_error_headers/error_list.hpp:205
 msgid ""
-"The head hit something on the way to the dock. Make sure the correct dock is "
-"selected and empty, then retry."
+"The head encountered an obstruction on the way to the dock. Make sure the "
+"correct dock is selected and empty, then try again."
 msgstr ""
-"Голівка зіткнулася з чимось на шляху до доку. Переконайтесь, що правильний "
-"док порожній, та повторіть."
+"Голівка зіткнулася з перешкодою на шляху до доку. Переконайтесь, що "
+"правильний док порожній, та спробуйте знову."
 
-#: tmp_error_headers/error_list.hpp:1206
+#: tmp_error_headers/error_list.hpp:1220
 msgid ""
 "The heatbed cooled down during the power outage, printed object might have "
 "detached. Inspect it before continuing."
@@ -7453,7 +7465,7 @@ msgstr ""
 msgid "The path does not exist"
 msgstr "Шлях не існує"
 
-#: tmp_error_headers/error_list.hpp:982
+#: tmp_error_headers/error_list.hpp:996
 msgid "The previous tests must be completed before this one."
 msgstr "Попередні тести треба завершити перед цим."
 
@@ -7465,7 +7477,7 @@ msgstr ""
 "Принтер проведе вас через калібрування доків. Перемістіть голівку вручну до "
 "кожного доку зліва направо."
 
-#: src/gui/MItem_tools.cpp:987
+#: src/gui/MItem_tools.cpp:986
 #, c-format
 msgid ""
 "The printer will now save all logs to file until restart.\n"
@@ -7532,7 +7544,7 @@ msgstr ""
 "Може виникнути невеликий опір.\n"
 "Якщо філамент застряг, відкрийте важіль холостого ходу."
 
-#: tmp_error_headers/error_list.hpp:926
+#: tmp_error_headers/error_list.hpp:940
 msgid ""
 "There was a timeout while waiting for measurement sample, please repeat the "
 "action."
@@ -7565,7 +7577,7 @@ msgstr ""
 "\n"
 "ЗАМІНИТИ з'єднання чи додати до SPOOL JOIN?"
 
-#: tmp_error_headers/error_list.hpp:1178
+#: tmp_error_headers/error_list.hpp:1192
 msgid "This G-code was set up for another filament type."
 msgstr "Цей G-код було налаштовано для іншого типу філаменту."
 
@@ -7573,7 +7585,7 @@ msgstr "Цей G-код було налаштовано для іншого ти
 msgid "This change will apply to all toolheads. Do you want to continue?"
 msgstr "Ця зміна стосуватиметься всіх голівок. Продовжити?"
 
-#: tmp_error_headers/error_list.hpp:996
+#: tmp_error_headers/error_list.hpp:1010
 msgid ""
 "This error code is not found\n"
 "in our database.\n"
@@ -7621,9 +7633,8 @@ msgstr "Це змінить поведінку датчика філаменту
 
 #: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:87
 msgid ""
-"This will invalidate calibration for this tool. The tool will not be "
-"available for printing until its dock is calibrated again via Calibrations. "
-"Proceed?"
+"This will invalidate the calibration for this tool. The tool will not be "
+"available for printing until its dock is calibrated again. Proceed?"
 msgstr ""
 "Це анулює калібрування інструменту. Інструмент буде недоступний до "
 "повторного калібрування доку. Продовжити?"
@@ -7673,11 +7684,11 @@ msgstr ""
 "\n"
 "Будьте обережні на наступному кроці, принтер рухатиметься."
 
-#: src/gui/MItem_tools.cpp:375 src/gui/MItem_tools.cpp:452
+#: src/gui/MItem_tools.cpp:374 src/gui/MItem_tools.cpp:451
 msgid "Time"
 msgstr "Час"
 
-#: src/gui/MItem_tools.cpp:440
+#: src/gui/MItem_tools.cpp:439
 msgid "Time Format"
 msgstr "Формат часу"
 
@@ -7685,7 +7696,7 @@ msgstr "Формат часу"
 msgid "Time Zone Hour Offset"
 msgstr "Зміщення часової зони (години)"
 
-#: src/gui/MItem_tools.cpp:414
+#: src/gui/MItem_tools.cpp:413
 msgid "Time Zone Minute Offset"
 msgstr "Зміщення часової зони (хвилини)"
 
@@ -7734,7 +7745,8 @@ msgid "To setup or troubleshoot your Wi-Fi, please visit:"
 msgstr "Щоб налаштувати або усунути несправності Wi-Fi, відвідайте:"
 
 #. Used in "The print will end:", keep it up to 10 characters
-#. here the "at" will be inconsistent with FormatMsgPrintWillEndOnDay_i18n @@TODO
+#. here the "at" will be inconsistent with FormatMsgPrintWillEndOnDay_i18n
+#. @@TODO
 #: src/lang/format_print_will_end.cpp:30
 msgid "Today at"
 msgstr "Сьогодні о"
@@ -7815,7 +7827,7 @@ msgstr "Вирівнювання редуктора інстр. 5"
 msgid "Tool 5 Loadcell Test"
 msgstr "Тест датчика навантаження інструмента 5"
 
-#: src/gui/MItem_tools.cpp:571
+#: src/gui/MItem_tools.cpp:570
 msgid "Tool Filament sensor"
 msgstr "Датчик філаменту інструмента"
 
@@ -7827,6 +7839,15 @@ msgstr "Освітлення інструмента"
 msgid "Tool Offsets Calibration"
 msgstr "Калібрування зміщень інструментів"
 
+#: src/gui/screen_menu_sensor_info.hpp:78
+#: src/gui/screen_menu_temperature.hpp:37 src/gui/screen_menu_tune.hpp:57
+msgid "Tool Temperatures"
+msgstr "Температури інструментів"
+
+#: src/gui/screen_menu_statistics.cpp:128
+msgid "Tool changes"
+msgstr "Зміни інструмента"
+
 #: src/common/gcode/gcode_compatibility.cpp:123
 msgid "Tool is disabled or of a different type."
 msgstr "Інструмент вимкнено або іншого типу."
@@ -7835,7 +7856,7 @@ msgstr "Інструмент вимкнено або іншого типу."
 msgid "Tool lost"
 msgstr "Інструмент втрачено"
 
-#: tmp_error_headers/error_list.hpp:1247
+#: tmp_error_headers/error_list.hpp:1261
 msgid "Tool mapping"
 msgstr "Відображення інструментів"
 
@@ -7847,7 +7868,15 @@ msgstr "Паркування інструменту не вдалося"
 msgid "Tool pickup failed"
 msgstr "Підіймання інструменту не вдалося"
 
-#: tmp_error_headers/error_list.hpp:1241
+#: tmp_error_headers/error_list.hpp:219
+msgid "Tool was not detected after pickup."
+msgstr "Інструмент не виявлено після підіймання."
+
+#: tmp_error_headers/error_list.hpp:233
+msgid "Tool was still detected after parking."
+msgstr "Інструмент все ще виявляється після паркування."
+
+#: tmp_error_headers/error_list.hpp:1255
 msgid ""
 "Toolchanger problem has been detected.\n"
 "Park all tools to docks\n"
@@ -7856,10 +7885,6 @@ msgstr ""
 "Виявлено проблему зі зміною інструментів.\n"
 "Запаркуйте всі інструменти в док-станціях\n"
 "і звільніть каретку."
-
-#: src/gui/screen_menu_statistics.cpp:128
-msgid "Toolchanges"
-msgstr "Зміни інструмента"
 
 #: src/gui/MItem_menus.cpp:184
 msgid "Toolhead"
@@ -7964,7 +7989,7 @@ msgstr "Обертайте ручку, щоб перемістити нагрі�
 msgid "Turn the knob to move Z-axis"
 msgstr "Обертайте ручку, щоб перемістити вісь Z"
 
-#: src/gui/MItem_tools.cpp:988
+#: src/gui/MItem_tools.cpp:987
 msgid ""
 "Turn the logging off before disconnecting the USB drive, or you risk "
 "damaging the filesystem!"
@@ -7980,7 +8005,7 @@ msgstr "Налаштування UI"
 msgid "UNEVEN BED"
 msgstr "НЕРІВНИЙ СТІЛ"
 
-#: tmp_error_headers/error_list.hpp:995
+#: tmp_error_headers/error_list.hpp:1009
 #: tmp_error_headers/error_list_mmu.hpp:318
 msgid "UNKNOWN ERROR"
 msgstr "НЕВІДОМА ПОМИЛКА"
@@ -7993,19 +8018,19 @@ msgstr "ВИВАНТАЖИТИ"
 msgid "UNLOAD MANUALLY"
 msgstr "ВИВАНТАЖИТИ ВРУЧНУ"
 
-#: tmp_error_headers/error_list.hpp:1072
+#: tmp_error_headers/error_list.hpp:1086
 msgid "UNSUPPORTED BUDDY FW"
 msgstr "НЕПІДТРИМУВАНА ПРОШИВКА BUDDY"
 
-#: tmp_error_headers/error_list.hpp:1093
+#: tmp_error_headers/error_list.hpp:1107
 msgid "UNSUPPORTED FIRMWARE BBF FILE"
 msgstr "НЕПІДТРИМУВАНИЙ ФАЙЛ ПРОШИВКИ BBF"
 
-#: tmp_error_headers/error_list.hpp:1065
+#: tmp_error_headers/error_list.hpp:1079
 msgid "UNSUPPORTED PRINTER MODEL"
 msgstr "НЕПІДТРИМУВАНА МОДЕЛЬ ПРИНТЕРА"
 
-#: tmp_error_headers/error_list.hpp:1513
+#: tmp_error_headers/error_list.hpp:1527
 msgid "UNTRUSTED IDENTITY"
 msgstr "НЕДОВІРЕНА ІДЕНТИФІКАЦІЯ"
 
@@ -8013,23 +8038,23 @@ msgstr "НЕДОВІРЕНА ІДЕНТИФІКАЦІЯ"
 msgid "UP"
 msgstr "ВГОРУ"
 
-#: tmp_error_headers/error_list.hpp:582
+#: tmp_error_headers/error_list.hpp:596
 msgid "USB DEVICE OVERCURRENT"
 msgstr "ПЕРЕВАНТАЖЕННЯ СТРУМУ USB-ПРИСТРОЮ"
 
-#: tmp_error_headers/error_list.hpp:1002
+#: tmp_error_headers/error_list.hpp:1016
 msgid "USB FLASH DRIVE NOT CONNECTED"
 msgstr "USB-НАКОПИЧУВАЧ НЕ ПІДКЛЮЧЕНО"
 
-#: tmp_error_headers/error_list.hpp:1086
+#: tmp_error_headers/error_list.hpp:1100
 msgid "USB FLASH ERROR"
 msgstr "ПОМИЛКА USB-НАКОПИЧУВАЧА"
 
-#: tmp_error_headers/error_list.hpp:575
+#: tmp_error_headers/error_list.hpp:589
 msgid "USB PORT OVERCURRENT"
 msgstr "ПЕРЕВАНТАЖЕННЯ СТРУМУ USB-ПОРТУ"
 
-#: tmp_error_headers/error_list.hpp:1003
+#: tmp_error_headers/error_list.hpp:1017
 msgid ""
 "USB drive not\n"
 "connected! Please\n"
@@ -8043,13 +8068,13 @@ msgstr ""
 "з дійсним файлом\n"
 "прошивки."
 
-#: tmp_error_headers/error_list.hpp:1311
+#: tmp_error_headers/error_list.hpp:1325
 msgid "USB drive or file error, the print is now paused. Reconnect the drive."
 msgstr ""
 "Помилка USB-накопичувача або файлу, друк призупинено. Перепідключіть "
 "накопичувач."
 
-#: tmp_error_headers/error_list.hpp:1094
+#: tmp_error_headers/error_list.hpp:1108
 msgid ""
 "USB flash drive contains\n"
 "unsupported firmware BBF file."
@@ -8061,7 +8086,7 @@ msgstr ""
 msgid "USER INTERFACE"
 msgstr "ІНТЕРФЕЙС КОРИСТУВАЧА"
 
-#: tmp_error_headers/error_list.hpp:1234
+#: tmp_error_headers/error_list.hpp:1248
 msgid ""
 "Unable to home the printer.\n"
 "Do you want to try again?"
@@ -8069,15 +8094,15 @@ msgstr ""
 "Не вдалося виконати калібрування початкових позицій принтера.\n"
 "Бажаєте спробувати знову?"
 
-#: tmp_error_headers/error_list.hpp:877
+#: tmp_error_headers/error_list.hpp:891
 msgid "Unable to start puppy application"
 msgstr "Не вдалося запустити застосунок puppy"
 
-#: tmp_error_headers/error_list.hpp:1101
+#: tmp_error_headers/error_list.hpp:1115
 msgid "Unable to verify the extruder type, check the wiring and connectors."
 msgstr "Не вдалося перевірити тип екструдера, перевірте проводку та роз'єми."
 
-#: tmp_error_headers/error_list.hpp:842
+#: tmp_error_headers/error_list.hpp:856
 msgid "Unassigned puppy found"
 msgstr "Знайдено непризначений puppy"
 
@@ -8089,7 +8114,7 @@ msgstr "Не авторизовано"
 msgid "Unexpected error occurred."
 msgstr "Сталася неочікувана помилка."
 
-#: tmp_error_headers/error_list.hpp:534
+#: tmp_error_headers/error_list.hpp:548
 msgid "Unexpected invalid current."
 msgstr "Виявлено неочікуваний недійсний струм."
 
@@ -8106,17 +8131,17 @@ msgstr "Невідомо"
 msgid "Unknown file error"
 msgstr "Невідома помилка файлу"
 
-#: tmp_error_headers/error_list.hpp:1135
+#: tmp_error_headers/error_list.hpp:1149
 msgid "Unknown file system"
 msgstr "Невідома файлова система"
 
-#: tmp_error_headers/error_list.hpp:190 tmp_error_headers/error_list.hpp:197
-msgid "Unknown nozzle"
-msgstr "Невідоме сопло"
-
-#: tmp_error_headers/error_list.hpp:870
+#: tmp_error_headers/error_list.hpp:884
 msgid "Unknown puppy type"
 msgstr "Невідомий тип puppy"
+
+#: tmp_error_headers/error_list.hpp:190 tmp_error_headers/error_list.hpp:197
+msgid "Unknown tool"
+msgstr "Невідомий інструмент"
 
 #: src/gui/screen_menu_filament_changeall.cpp:75
 msgid "Unload"
@@ -8189,7 +8214,7 @@ msgstr ""
 "Готово до розрахунку.\n"
 "Натисніть Продовжити."
 
-#: tmp_error_headers/error_list.hpp:1136
+#: tmp_error_headers/error_list.hpp:1150
 msgid ""
 "Use a different USB drive or reformat this one to the supported FAT32 file "
 "system."
@@ -8200,7 +8225,8 @@ msgstr "Використовуйте інший USB або переформат�
 msgid "Used Amount"
 msgstr "Використано"
 
-#. Used in filament type context (user-defined preset), for example: "PCCF (User)". Please try to fit the text in 6 characters.
+#. Used in filament type context (user-defined preset), for example: "PCCF
+#. (User)". Please try to fit the text in 6 characters.
 #: src/common/filament.cpp:89 src/gui/screen_prusa_link.hpp:56
 msgid "User"
 msgstr "Користувач"
@@ -8273,7 +8299,7 @@ msgstr "Очікування столу"
 msgid "Waiting for chamber"
 msgstr "Очікування камери"
 
-#: tmp_error_headers/error_list.hpp:905
+#: tmp_error_headers/error_list.hpp:919
 msgid "Waiting for fingerprint timed out"
 msgstr "Вийшов час очікування відбитка пальця"
 
@@ -8286,7 +8312,7 @@ msgid "Waiting for hotends to stabilize at calibration temperature:"
 msgstr ""
 "Очікування стабілізації температури екструдерів на температурі калібрування:"
 
-#: tmp_error_headers/error_list.hpp:1472
+#: tmp_error_headers/error_list.hpp:1486
 msgid "Waiting for nozzle temperature..."
 msgstr "Очікування температури сопла..."
 
@@ -8294,7 +8320,7 @@ msgstr "Очікування температури сопла..."
 msgid "Waiting for nozzle to cool down"
 msgstr "Очікування охолодження сопла"
 
-#: tmp_error_headers/error_list.hpp:912
+#: tmp_error_headers/error_list.hpp:926
 msgid "Waiting for puppies to start timed out"
 msgstr "Вийшов час очікування запуску puppy"
 
@@ -8302,12 +8328,12 @@ msgstr "Вийшов час очікування запуску puppy"
 msgid "Waiting for temperature"
 msgstr "Очікування температури"
 
-#: tmp_error_headers/error_list.hpp:1423
+#: tmp_error_headers/error_list.hpp:1437
 msgid "Waiting for the user. Press \"Resume\" once the printer is ready."
 msgstr ""
 "Очікування дій користувача. Натисніть «Відновити», коли принтер буде готовий."
 
-#: tmp_error_headers/error_list.hpp:1255
+#: tmp_error_headers/error_list.hpp:1269
 msgid "Waiting for user input"
 msgstr "Очікування введення користувача"
 
@@ -8315,21 +8341,21 @@ msgstr "Очікування введення користувача"
 msgid "Warn"
 msgstr "Попередження"
 
-#: src/guiapi/src/window_msgbox.cpp:341 tmp_error_headers/error_list.hpp:1142
-#: tmp_error_headers/error_list.hpp:1163 tmp_error_headers/error_list.hpp:1170
+#: src/guiapi/src/window_msgbox.cpp:341 tmp_error_headers/error_list.hpp:1156
 #: tmp_error_headers/error_list.hpp:1177 tmp_error_headers/error_list.hpp:1184
-#: tmp_error_headers/error_list.hpp:1191 tmp_error_headers/error_list.hpp:1205
-#: tmp_error_headers/error_list.hpp:1261 tmp_error_headers/error_list.hpp:1268
+#: tmp_error_headers/error_list.hpp:1191 tmp_error_headers/error_list.hpp:1198
+#: tmp_error_headers/error_list.hpp:1205 tmp_error_headers/error_list.hpp:1219
 #: tmp_error_headers/error_list.hpp:1275 tmp_error_headers/error_list.hpp:1282
 #: tmp_error_headers/error_list.hpp:1289 tmp_error_headers/error_list.hpp:1296
 #: tmp_error_headers/error_list.hpp:1303 tmp_error_headers/error_list.hpp:1310
 #: tmp_error_headers/error_list.hpp:1317 tmp_error_headers/error_list.hpp:1324
 #: tmp_error_headers/error_list.hpp:1331 tmp_error_headers/error_list.hpp:1338
 #: tmp_error_headers/error_list.hpp:1345 tmp_error_headers/error_list.hpp:1352
-#: tmp_error_headers/error_list.hpp:1359 tmp_error_headers/error_list.hpp:1373
-#: tmp_error_headers/error_list.hpp:1380 tmp_error_headers/error_list.hpp:1394
-#: tmp_error_headers/error_list.hpp:1408 tmp_error_headers/error_list.hpp:1415
-#: tmp_error_headers/error_list.hpp:1506
+#: tmp_error_headers/error_list.hpp:1359 tmp_error_headers/error_list.hpp:1366
+#: tmp_error_headers/error_list.hpp:1373 tmp_error_headers/error_list.hpp:1387
+#: tmp_error_headers/error_list.hpp:1394 tmp_error_headers/error_list.hpp:1408
+#: tmp_error_headers/error_list.hpp:1422 tmp_error_headers/error_list.hpp:1429
+#: tmp_error_headers/error_list.hpp:1520
 msgid "Warning"
 msgstr "Попередження"
 
@@ -8337,7 +8363,7 @@ msgstr "Попередження"
 msgid "Was filament unload successful?"
 msgstr "Вивантаження філаменту пройшло успішно?"
 
-#: tmp_error_headers/error_list.hpp:989
+#: tmp_error_headers/error_list.hpp:1003
 msgid ""
 "We are actively working on resolving these issues. Please send the crash "
 "dump, saved upon reset, to our support team."
@@ -8382,7 +8408,7 @@ msgstr ""
 msgid "Wed"
 msgstr "Ср"
 
-#: tmp_error_headers/error_list.hpp:1129
+#: tmp_error_headers/error_list.hpp:1143
 msgid ""
 "Welcome to the Cold Pull wizard. Prepare a 30cm piece of PLA filament and "
 "follow the instructions. For more details, visit:"
@@ -8444,7 +8470,7 @@ msgstr "З чохлом"
 msgid "Wizard"
 msgstr "Майстер"
 
-#: tmp_error_headers/error_list.hpp:1465
+#: tmp_error_headers/error_list.hpp:1479
 msgid ""
 "Would you like to purge the filament?\n"
 "\n"
@@ -8482,11 +8508,11 @@ msgstr "Фільтр осі X"
 msgid "X-axis Freq."
 msgstr "Частота осі X"
 
-#: src/gui/MItem_tools.cpp:703
+#: src/gui/MItem_tools.cpp:702
 msgid "XBE Refresh Err"
 msgstr "Помилка оновлення XBE"
 
-#: src/gui/MItem_tools.cpp:646
+#: src/gui/MItem_tools.cpp:645
 msgid "XL Buddy 5V Current"
 msgstr "Струм 5V плати Buddy XL"
 
@@ -8572,14 +8598,6 @@ msgstr ""
 msgid "You did not tap the nozzle or you tapped it too soon. Retry?"
 msgstr "Ви не торкнулися сопла або торкнулися занадто рано. Спробувати знову?"
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:20
-msgid ""
-"You will need to manually position the head at the nozzle cleaner and adjust "
-"the height screw."
-msgstr ""
-"Голівку треба вручну розмістити над очисником сопла і налаштувати гвинт "
-"висоти."
-
 #: src/gui/screen_network_setup.cpp:287
 msgid ""
 "You're already successfully connected through the ethernet cable.\n"
@@ -8639,11 +8657,11 @@ msgstr ""
 "Занадто низька частота осі.\n"
 "Будь ласка, затягніть пасок."
 
-#: src/gui/MItem_tools.cpp:670
+#: src/gui/MItem_tools.cpp:669
 msgid "closed"
 msgstr "закрито"
 
-#: src/gui/MItem_tools.cpp:668
+#: src/gui/MItem_tools.cpp:667
 msgid "detached"
 msgstr "від'єднано"
 
@@ -8651,7 +8669,7 @@ msgstr "від'єднано"
 msgid "loosen"
 msgstr "послабити"
 
-#: src/gui/MItem_tools.cpp:669
+#: src/gui/MItem_tools.cpp:668
 msgid "open"
 msgstr "відкрито"
 

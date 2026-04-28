@@ -1,8 +1,8 @@
-#: src/gui/dialogs/DialogLoadUnload.cpp:83
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: info@prusa3d.com\n"
-"POT-Creation-Date: 2026-04-27 09:48+0200\n"
+"POT-Creation-Date: 2026-04-28 09:23+0200\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,7 +12,7 @@ msgstr ""
 "n%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3);\n"
 "X-Generator: Prusalator\n"
 
-#: src/gui/MItem_tools.cpp:801
+#: src/gui/MItem_tools.cpp:800
 msgid ""
 "\n"
 "Loading settings finished.\n"
@@ -30,7 +30,8 @@ msgstr ""
 "\n"
 "Czyszczenie dyszy nie powiodło się."
 
-#. TODO: change of visualization scheme is expected soon, some unification with fsensor visualization will happen as a result.
+#. TODO: change of visualization scheme is expected soon, some unification
+#. with fsensor visualization will happen as a result.
 #. For now, FINDA is visualized the same way like filament sensors' states
 #: src/gui/MItem_mmu.cpp:309
 msgid " INS / 1"
@@ -227,19 +228,19 @@ msgstr "%d Kalibracja wyrównania Z"
 msgid "%d Z Axis Test"
 msgstr "%d Test osi Z"
 
-#: tmp_error_headers/error_list.hpp:688
+#: tmp_error_headers/error_list.hpp:702
 #, c-format
 msgid "%s Check hotend heater and control electronics for possible damage"
 msgstr ""
 "%s Sprawdź grzałkę hotendu i elektronikę sterującą pod kątem możliwych "
 "uszkodzeń"
 
-#: tmp_error_headers/error_list.hpp:716
+#: tmp_error_headers/error_list.hpp:730
 #, c-format
 msgid "%s lost a link to parent system."
 msgstr "%s utracił połączenie z systemem nadrzędnym."
 
-#: tmp_error_headers/error_list.hpp:709
+#: tmp_error_headers/error_list.hpp:723
 #, c-format
 msgid "%s stopped receiving data."
 msgstr "%s przestał odbierać dane."
@@ -264,7 +265,6 @@ msgstr "%u %% / zatrzymano"
 msgid "%u %% / stuck"
 msgstr "%u %% / utknął"
 
-#.
 #: src/guiapi/include/WindowItemFanLabel.hpp:35
 #, c-format
 msgid "%u %% / unknown"
@@ -350,7 +350,7 @@ msgstr ""
 msgid "4 DOCKS"
 msgstr "4 DOKI"
 
-#: src/gui/MItem_tools.cpp:636
+#: src/gui/MItem_tools.cpp:635
 msgid "5V Voltage"
 msgstr "Napięcie 5V"
 
@@ -359,15 +359,15 @@ msgid "8 DOCKS"
 msgstr "8 DOKÓW"
 
 #. window_menu
-#: src/gui/MItem_tools.cpp:283
+#: src/gui/MItem_tools.cpp:282
 msgid "A crash dump is being saved."
 msgstr "Zrzut pamięci jest zapisywany."
 
-#: src/gui/MItem_tools.cpp:287
+#: src/gui/MItem_tools.cpp:286
 msgid "A crash dump report (file dump.bin) has been saved to the USB drive."
 msgstr "Raport zrzutu pamięci (plik dump.bin) został zapisany w pamięci USB."
 
-#: tmp_error_headers/error_list.hpp:1185
+#: tmp_error_headers/error_list.hpp:1199
 msgid "A filament specified in the G-code is either not loaded or wrong type."
 msgstr ""
 "Filament podany w G-code nie jest załadowany lub załadowany jest "
@@ -376,14 +376,6 @@ msgstr ""
 #: tmp_error_headers/error_list.hpp:100
 msgid "A movement command risks causing the model to collide with the ceiling."
 msgstr "Polecenie ruchu może spowodować kolizję modelu z sufitem."
-
-#: tmp_error_headers/error_list.hpp:191
-msgid ""
-"A nozzle was detected but its identity is unknown. Please select the dock it "
-"belongs to."
-msgstr ""
-"Wykryto dyszę, ale jej tożsamość jest nieznana. Wybierz dok, do którego "
-"należy."
 
 #: src/gui/screen_crash_recovery.cpp:91
 msgid ""
@@ -401,6 +393,13 @@ msgstr ""
 "\n"
 "Usuń narzędzie ręcznie i spróbuj ponownie."
 
+#: tmp_error_headers/error_list.hpp:191
+msgid ""
+"A tool was detected, but its identity is unknown. Please select the "
+"corresponding dock."
+msgstr ""
+"Wykryto narzędzie, ale jego tożsamość jest nieznana. Wybierz odpowiedni dok."
+
 #: src/common/client_response_texts.hpp:12
 #: src/common/client_response_texts.hpp:14
 msgid "ABORT"
@@ -411,14 +410,14 @@ msgid "ABORTING ..."
 msgstr "ANULOWANIE ..."
 
 #: tmp_error_headers/error_list.hpp:484 tmp_error_headers/error_list.hpp:491
-#: tmp_error_headers/error_list.hpp:722 tmp_error_headers/error_list.hpp:729
 #: tmp_error_headers/error_list.hpp:736 tmp_error_headers/error_list.hpp:743
 #: tmp_error_headers/error_list.hpp:750 tmp_error_headers/error_list.hpp:757
 #: tmp_error_headers/error_list.hpp:764 tmp_error_headers/error_list.hpp:771
+#: tmp_error_headers/error_list.hpp:778 tmp_error_headers/error_list.hpp:785
 msgid "AC CONTROLLER FAULT"
 msgstr "BŁĄD STEROWNIKA AC"
 
-#: tmp_error_headers/error_list.hpp:694
+#: tmp_error_headers/error_list.hpp:708
 msgid "ACCELEROMETER COMMUNICATION FAILED"
 msgstr "BŁĄD KOMUNIKACJI Z AKCELEROMETREM"
 
@@ -482,7 +481,7 @@ msgstr "Dodaj drukarkę do Connect"
 msgid "Additional probing"
 msgstr "Dodatkowe próbkowanie"
 
-#: tmp_error_headers/error_list.hpp:835
+#: tmp_error_headers/error_list.hpp:849
 msgid "Address assignment error"
 msgstr "Błąd przypisania adresu"
 
@@ -534,7 +533,7 @@ msgstr "Wyrównywanie narzędzia"
 msgid "Alignment issue detected"
 msgstr "Wykryto problem wyrównania"
 
-#: src/gui/MItem_tools.cpp:729
+#: src/gui/MItem_tools.cpp:728
 msgid "All"
 msgstr "Wszystko"
 
@@ -554,7 +553,7 @@ msgstr "Wszystkie dysze"
 msgid "All tests passed successfully."
 msgstr "Wszystkie testy zakończone pomyślnie."
 
-#: src/gui/MItem_tools.cpp:871
+#: src/gui/MItem_tools.cpp:870
 msgid "Always"
 msgstr "Zawsze"
 
@@ -567,7 +566,7 @@ msgstr "Około %d min"
 msgid "Are you sure to stop this printing?"
 msgstr "Czy na pewno chcesz przerwać wydruk?"
 
-#: tmp_error_headers/error_list.hpp:1507
+#: tmp_error_headers/error_list.hpp:1521
 msgid ""
 "Are you sure you want to abort the print?\n"
 "\n"
@@ -594,7 +593,7 @@ msgstr "Czy na pewno pominąć teraz kalibrację czujnika drzwi?"
 msgid "Ask"
 msgstr "Pytaj"
 
-#: src/gui/MItem_tools.cpp:342
+#: src/gui/MItem_tools.cpp:341
 msgid "Assist"
 msgstr "Wsparcie"
 
@@ -628,7 +627,7 @@ msgstr ""
 msgid "Auto"
 msgstr "Auto"
 
-#: src/gui/MItem_tools.cpp:208
+#: src/gui/MItem_tools.cpp:207
 msgid "Auto Home"
 msgstr "Auto bazowanie"
 
@@ -680,15 +679,15 @@ msgstr "Pominięto kontrolę osi, ponieważ kontrola tensometru nie powiodła si
 msgid "BACK"
 msgstr "WSTECZ"
 
-#: tmp_error_headers/error_list.hpp:946
+#: tmp_error_headers/error_list.hpp:960
 msgid "BBF ALLOCATION FAILED"
 msgstr "NIEPOWODZENIE ALOKACJI BBF"
 
-#: tmp_error_headers/error_list.hpp:953
+#: tmp_error_headers/error_list.hpp:967
 msgid "BBF INITIALIZATION FAILED"
 msgstr "INICJALIZACJA BBF NIE POWIODŁA SIĘ"
 
-#: tmp_error_headers/error_list.hpp:954
+#: tmp_error_headers/error_list.hpp:968
 msgid "BBF initialization failed, repeat the action or try another USB drive."
 msgstr ""
 "Inicjalizacja BBF nie powiodła się, powtórz czynność lub spróbuj użyć innej "
@@ -697,6 +696,14 @@ msgstr ""
 #: src/gui/screen_menu_bed_level_correction.hpp:102
 msgid "BED LEVEL CORRECTION"
 msgstr "KOREKTA POZIOMOWANIA STOŁU"
+
+#: tmp_error_headers/error_list.hpp:505
+msgid "BOARD MAXTEMP ERROR"
+msgstr "BŁĄD MAX TEMP PŁYTY"
+
+#: tmp_error_headers/error_list.hpp:498
+msgid "BOARD MINTEMP ERROR"
+msgstr "BŁĄD MIN TEMP PŁYTY"
 
 #: src/gui/dialogs/resolution_480x320/radio_button_preview.cpp:15
 msgid "Back"
@@ -722,7 +729,8 @@ msgstr "Stół"
 msgid "Bed Fan 1"
 msgstr "Wentylator stołu 1"
 
-#. translation: menu item showing info about heated bed fan (there are two of them)
+#. translation: menu item showing info about heated bed fan (there are two of
+#. them)
 #: src/gui/screen_menu_fan_info.cpp:34
 msgid "Bed Fan 2"
 msgstr "Wentylator stołu 2"
@@ -740,11 +748,11 @@ msgid "Bed Temp"
 msgstr "Temp stołu"
 
 #: src/gui/screen/filament/screen_filament_detail.cpp:105
-#: src/gui/MItem_tools.cpp:517
+#: src/gui/MItem_tools.cpp:516
 msgid "Bed Temperature"
 msgstr "Temperatura stołu"
 
-#: src/gui/MItem_tools.cpp:609
+#: src/gui/MItem_tools.cpp:608
 msgid "Bed Voltage"
 msgstr "Napięcie stołu"
 
@@ -763,7 +771,7 @@ msgstr ""
 "\n"
 "Jeśli płyty nie ma na stole grzewczym, połóż ją i naciśnij przycisk Ponów."
 
-#: tmp_error_headers/error_list.hpp:1409
+#: tmp_error_headers/error_list.hpp:1423
 msgid "Bed leveling failed. Try again?"
 msgstr "Niepowodzenie poziomowania. Spróbować ponownie?"
 
@@ -803,7 +811,8 @@ msgstr ""
 "Przed kontynuowaniem upewnij się, że filament PLA jest załadowany "
 "bezpośrednio do ekstrudera."
 
-#. Now show always, bed heater selftest can fail if there is no sheet on the bed
+#. Now show always, bed heater selftest can fail if there is no sheet on the
+#. bed
 #: src/gui/screen_menu_selftest_snake.cpp:505
 msgid ""
 "Before you continue, make sure the print sheet is installed on the heatbed."
@@ -842,7 +851,7 @@ msgstr "Czarny"
 msgid "Board Info"
 msgstr "Info o płycie"
 
-#: src/gui/MItem_tools.cpp:652
+#: src/gui/MItem_tools.cpp:651
 msgid "Board Temperature"
 msgstr "Temperatura płyty"
 
@@ -914,7 +923,7 @@ msgstr "COLD PULL"
 msgid "COMMUNICATION ERROR"
 msgstr "BŁĄD KOMUNIKACJI"
 
-#: tmp_error_headers/error_list.hpp:778
+#: tmp_error_headers/error_list.hpp:792
 msgid "CONNECT REGISTRATION FAILED"
 msgstr "REJESTRACJA W CONNECT NIE POWIODŁA SIĘ"
 
@@ -931,9 +940,9 @@ msgid "COOLDOWN"
 msgstr "CHŁODZENIE"
 
 #. don't close on menu timeout
-#: src/gui/screen_crash_recovery.cpp:266 tmp_error_headers/error_list.hpp:1212
-#: tmp_error_headers/error_list.hpp:1219 tmp_error_headers/error_list.hpp:1226
+#: src/gui/screen_crash_recovery.cpp:266 tmp_error_headers/error_list.hpp:1226
 #: tmp_error_headers/error_list.hpp:1233 tmp_error_headers/error_list.hpp:1240
+#: tmp_error_headers/error_list.hpp:1247 tmp_error_headers/error_list.hpp:1254
 msgid "CRASH DETECTED"
 msgstr "WYKRYTO ZDERZENIE"
 
@@ -1101,7 +1110,7 @@ msgstr "Centruj N i mniej elementów"
 msgid "Chamber"
 msgstr "Komora"
 
-#: tmp_error_headers/error_list.hpp:1450
+#: tmp_error_headers/error_list.hpp:1464
 msgid "Chamber Cooling Fan Error"
 msgstr "Błąd wentylatora chłodzącego komory"
 
@@ -1130,7 +1139,7 @@ msgstr "Limit wentylatorów komory"
 msgid "Chamber Filtration"
 msgstr "Filtracja komory"
 
-#: tmp_error_headers/error_list.hpp:1457
+#: tmp_error_headers/error_list.hpp:1471
 msgid "Chamber Filtration Fan Error"
 msgstr "Błąd wentylatora filtracji komory"
 
@@ -1160,7 +1169,7 @@ msgstr "Temperatura komory krytyczna"
 msgid "Chamber Vent Control"
 msgstr "Sterowanie wentylacją komory"
 
-#: tmp_error_headers/error_list.hpp:1451
+#: tmp_error_headers/error_list.hpp:1465
 msgid ""
 "Chamber cooling fan is not spinning. Check it for possible debris, then "
 "inspect the wiring."
@@ -1168,7 +1177,7 @@ msgstr ""
 "Wentylator chłodzący komory nie obraca się. Sprawdź zanieczyszczenia i "
 "okablowanie."
 
-#: tmp_error_headers/error_list.hpp:1458
+#: tmp_error_headers/error_list.hpp:1472
 msgid ""
 "Chamber filtration fan is not spinning. Check it for possible debris, then "
 "inspect the wiring."
@@ -1176,7 +1185,6 @@ msgstr ""
 "Wentylator filtracji komory nie obraca się. Sprawdź zanieczyszczenia i "
 "okablowanie."
 
-#.
 #: src/common/footer_def.cpp:55
 msgid "Chamber temperature"
 msgstr "Temperatura komory"
@@ -1222,7 +1230,7 @@ msgstr ""
 msgid "Change to %s"
 msgstr "Zmień na %s"
 
-#: tmp_error_headers/error_list.hpp:1248
+#: tmp_error_headers/error_list.hpp:1262
 msgid ""
 "Changes of mapping available only in the Printer UI. Select Print to start "
 "the print with defaults."
@@ -1243,7 +1251,7 @@ msgid "Check all tools if they are properly parked or picked."
 msgstr ""
 "Sprawdź, czy wszystkie narzędzia są prawidłowo zaparkowane lub pobrane."
 
-#: tmp_error_headers/error_list.hpp:695
+#: tmp_error_headers/error_list.hpp:709
 msgid "Check that the accelerometer cable is plugged in and not damaged."
 msgstr "Sprawdź, czy kabel akcelerometru jest podłączony i nieuszkodzony."
 
@@ -1308,9 +1316,9 @@ msgstr "Wyczyść arkusz druku."
 msgid "Cleaning nozzle"
 msgstr "Czyszczenie dyszy"
 
-#: tmp_error_headers/error_list.hpp:1464 tmp_error_headers/error_list.hpp:1471
 #: tmp_error_headers/error_list.hpp:1478 tmp_error_headers/error_list.hpp:1485
-#: tmp_error_headers/error_list.hpp:1492
+#: tmp_error_headers/error_list.hpp:1492 tmp_error_headers/error_list.hpp:1499
+#: tmp_error_headers/error_list.hpp:1506
 msgid "Cleaning the nozzle"
 msgstr "Czyszczenie dyszy"
 
@@ -1318,7 +1326,7 @@ msgstr "Czyszczenie dyszy"
 msgid "Click the knob to close"
 msgstr "Naciśnij pokrętło, aby zamknąć"
 
-#: tmp_error_headers/error_list.hpp:1443
+#: tmp_error_headers/error_list.hpp:1457
 msgid "Close Chamber Ventilation"
 msgstr "Zamknij wentylację komory"
 
@@ -1345,7 +1353,7 @@ msgstr "Zamykanie wentylacji komory"
 msgid "Code: %s"
 msgstr "Kod: %s"
 
-#: src/gui/MItem_tools.hpp:434 tmp_error_headers/error_list.hpp:1128
+#: src/gui/MItem_tools.hpp:434 tmp_error_headers/error_list.hpp:1142
 msgid "Cold Pull"
 msgstr "Cold pull"
 
@@ -1396,7 +1404,7 @@ msgstr "Obliczanie najlepszego shapera..."
 msgid "Confirm"
 msgstr "Potwierdź"
 
-#: src/gui/MItem_tools.cpp:810 src/gui/screen_menu_network_status.hpp:41
+#: src/gui/MItem_tools.cpp:809 src/gui/screen_menu_network_status.hpp:41
 msgid "Connect"
 msgstr "Połącz"
 
@@ -1443,7 +1451,7 @@ msgstr "Chłodzenie"
 msgid "Cooling down. Do not touch the nozzle!"
 msgstr "Chłodzenie. Nie dotykaj dyszy!"
 
-#: tmp_error_headers/error_list.hpp:737
+#: tmp_error_headers/error_list.hpp:751
 msgid ""
 "Cooling fan of the power supply unit is operating outside of specification."
 msgstr "Wentylator chłodzący zasilacza pracuje poza specyfikacją."
@@ -1492,7 +1500,8 @@ msgstr ""
 "Aktualnie wykryty OpenPrintTag różni się od przypisanego przy ładowaniu "
 "filamentu."
 
-#. Used in filament type context (user-defined ad-hoc), for example: "XX (User)". Please try to fit the text in 6 characters.
+#. Used in filament type context (user-defined ad-hoc), for example: "XX
+#. (User)". Please try to fit the text in 6 characters.
 #: src/common/filament.cpp:93 src/gui/screen/screen_preheat.cpp:240
 msgid "Custom"
 msgstr "Własne"
@@ -1509,7 +1518,7 @@ msgstr "Obcinak"
 msgid "Cutting filament"
 msgstr "Obcinanie filamentu"
 
-#: tmp_error_headers/error_list.hpp:708
+#: tmp_error_headers/error_list.hpp:722
 msgid "DATA TIMEOUT"
 msgstr "TIMEOUT DANYCH"
 
@@ -1529,7 +1538,7 @@ msgstr "WYŁ. CZ. FIL."
 msgid "DISABLE MMU"
 msgstr "WYŁĄCZ MMU"
 
-#: tmp_error_headers/error_list.hpp:701
+#: tmp_error_headers/error_list.hpp:715
 msgid "DISPLAY PROBLEM DETECTED"
 msgstr "WYKRYTO PROBLEM EKRANU"
 
@@ -1574,7 +1583,7 @@ msgstr "KALIBRACJA CZUJNIKA DRZWI"
 msgid "DOWN"
 msgstr "DÓŁ"
 
-#: tmp_error_headers/error_list.hpp:820
+#: tmp_error_headers/error_list.hpp:834
 msgid "DWARF ERROR"
 msgstr "BŁĄD DWARF"
 
@@ -1629,11 +1638,11 @@ msgstr "Rozłącz"
 msgid "Disengaging idler"
 msgstr "Zwalnianie docisku"
 
-#: src/gui/MItem_tools.cpp:950
+#: src/gui/MItem_tools.cpp:949
 msgid "Display Refresh Speed"
 msgstr "Prędkość odświeżania ekranu"
 
-#: tmp_error_headers/error_list.hpp:702
+#: tmp_error_headers/error_list.hpp:716
 msgid ""
 "Display issues detected. Reducing the refresh rate will possibly solve the "
 "problem. Proceed?"
@@ -1827,7 +1836,7 @@ msgstr "Nie dotykaj ekstrudera."
 msgid "Done"
 msgstr "Gotowe"
 
-#: src/gui/MItem_tools.cpp:660 src/gui/MItem_hardware.hpp:69
+#: src/gui/MItem_tools.cpp:659 src/gui/MItem_hardware.hpp:69
 msgid "Door Sensor"
 msgstr "Czujnik drzwi"
 
@@ -1863,15 +1872,7 @@ msgstr ""
 "\n"
 "Drukarka może wibrować i być głośniejsza podczas bazowania."
 
-#: src/gui/screen_menu_tools.cpp:21
-msgid "Dwarf Board Temp"
-msgstr "Temperatura płyty Dwarf"
-
-#: src/gui/screen_menu_tools.cpp:29
-msgid "Dwarf MCU Temp"
-msgstr "Temp. Dwarf MCU"
-
-#: tmp_error_headers/error_list.hpp:821
+#: tmp_error_headers/error_list.hpp:835
 #, c-format
 msgid ""
 "Dwarf board encountered the following problem: \n"
@@ -1892,7 +1893,7 @@ msgstr "Dynamiczny"
 msgid "EJECT FROM MMU"
 msgstr "WYSUŃ Z MMU"
 
-#: tmp_error_headers/error_list.hpp:827
+#: tmp_error_headers/error_list.hpp:841
 msgid "EMERGENCY STOP"
 msgstr "AWARYJNE WYŁĄCZENIE"
 
@@ -1946,7 +1947,7 @@ msgstr "USTAWIENIA ETHERNET"
 msgid "EXTRUDED FILAMENT"
 msgstr "WYTŁOCZONY FILAMENT"
 
-#: tmp_error_headers/error_list.hpp:974
+#: tmp_error_headers/error_list.hpp:988
 msgid "EXTRUDER ERROR"
 msgstr "BŁĄD EKSTRUDERA"
 
@@ -1958,7 +1959,7 @@ msgstr "BŁĄD MAXTEMP EKSTRUDERA"
 msgid "EXTRUDER MINTEMP ERROR"
 msgstr "BŁĄD MINTEMP EKSTRUDERA"
 
-#: tmp_error_headers/error_list.hpp:1100
+#: tmp_error_headers/error_list.hpp:1114
 msgid "EXTRUDER NOT DETECTED"
 msgstr "NIE WYKRYTO EKSTRUDERA"
 
@@ -1989,7 +1990,7 @@ msgstr "Wysuwanie"
 msgid "Ejecting filament"
 msgstr "Wysuwanie filamentu"
 
-#: tmp_error_headers/error_list.hpp:828
+#: tmp_error_headers/error_list.hpp:842
 msgid "Emergency stop invoked by G-code (M112)."
 msgstr "Zatrzymanie awaryjne wywołane z G-code (M112)."
 
@@ -2018,7 +2019,7 @@ msgstr "Ustawienia obudowy"
 msgid "Enclosure fan"
 msgstr "Wentylator obudowy"
 
-#: tmp_error_headers/error_list.hpp:1374
+#: tmp_error_headers/error_list.hpp:1388
 msgid ""
 "Enclosure fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -2047,14 +2048,14 @@ msgstr "Koniec testu"
 msgid "Engaging idler"
 msgstr "Urucham. docisku"
 
-#: tmp_error_headers/error_list.hpp:1444
+#: tmp_error_headers/error_list.hpp:1458
 msgid ""
 "Ensure the top ventilation grille is closed for optimal chamber temperature."
 msgstr ""
 "Upewnij się, że górna kratka wentylacyjna jest zamknięta dla optymalnej "
 "temperatury."
 
-#: tmp_error_headers/error_list.hpp:1437
+#: tmp_error_headers/error_list.hpp:1451
 msgid "Ensure the top ventilation grille is open for proper airflow."
 msgstr ""
 "Upewnij się, że górna kratka wentylacyjna jest otwarta dla prawidłowego "
@@ -2069,7 +2070,7 @@ msgstr "Wpisz dane logowania ręcznie"
 msgid "Error"
 msgstr "Błąd"
 
-#: tmp_error_headers/error_list.hpp:1024
+#: tmp_error_headers/error_list.hpp:1038
 msgid ""
 "Error erasing\n"
 " flash! Restart\n"
@@ -2085,7 +2086,7 @@ msgstr ""
 msgid "Error invalid selftest state"
 msgstr "Błąd: Nieprawidłowy stan Selftestu"
 
-#: src/gui/MItem_tools.cpp:289
+#: src/gui/MItem_tools.cpp:288
 msgid ""
 "Error saving crash dump report to the USB drive. Please reinsert the USB "
 "drive and try again."
@@ -2132,7 +2133,7 @@ msgstr "Wytłoczony filament"
 msgid "Extruder"
 msgstr "Ekstruder"
 
-#: src/gui/screen_menu_sensor_info.hpp:91
+#: src/gui/screen_menu_sensor_info.hpp:102
 msgid "Extruder Filament Sensors"
 msgstr "Czujniki filamentu ekstrudera"
 
@@ -2140,7 +2141,7 @@ msgstr "Czujniki filamentu ekstrudera"
 msgid "Extruder Maintenance"
 msgstr "Konserwacja ekstrudera"
 
-#: tmp_error_headers/error_list.hpp:975
+#: tmp_error_headers/error_list.hpp:989
 #, c-format
 msgid "Extruder motor is not spinning on tool %d"
 msgstr "Silnik ekstrudera nie obraca się na narzędziu %d"
@@ -2257,11 +2258,11 @@ msgstr ""
 msgid "FINISHED"
 msgstr "ZAKOŃCZONO"
 
-#: tmp_error_headers/error_list.hpp:1079
+#: tmp_error_headers/error_list.hpp:1093
 msgid "FIRMWARE MISSING"
 msgstr "BRAK FIRMWARE"
 
-#: tmp_error_headers/error_list.hpp:1051 tmp_error_headers/error_list.hpp:1058
+#: tmp_error_headers/error_list.hpp:1065 tmp_error_headers/error_list.hpp:1072
 msgid "FIRMWARExPRINTER MISMATCH"
 msgstr "NIEDOPASOWANIE FIRMWARE x DRUKARKA"
 
@@ -2269,7 +2270,7 @@ msgstr "NIEDOPASOWANIE FIRMWARE x DRUKARKA"
 msgid "FIRST LAYER CALIBRATION"
 msgstr "KALIBRACJA PIERWSZEJ WARSTWY"
 
-#: tmp_error_headers/error_list.hpp:1023
+#: tmp_error_headers/error_list.hpp:1037
 msgid "FLASH ERASE ERROR"
 msgstr "BŁĄD WYMAZYWANIA PAMIĘCI FLASH"
 
@@ -2317,7 +2318,7 @@ msgstr "Boczny czujnik filamentu"
 msgid "FSensors Disabled"
 msgstr "Czujniki F wyłączone"
 
-#: tmp_error_headers/error_list.hpp:1044
+#: tmp_error_headers/error_list.hpp:1058
 msgid "FW IN INTERNAL FLASH CORRUPTED"
 msgstr "FW W WEWNĘTRZNEJ PAMIĘCI FLASH USZKODZONY"
 
@@ -2345,7 +2346,7 @@ msgstr "Ustawienia fabryczne"
 msgid "Fail Stats"
 msgstr "Statystyki błędów"
 
-#: src/gui/MItem_tools.cpp:796
+#: src/gui/MItem_tools.cpp:795
 msgid "Failed"
 msgstr "Niepowodzenie"
 
@@ -2374,7 +2375,7 @@ msgstr ""
 msgid "Failed to generate the encryption key."
 msgstr "Generowanie klucza szyfrowania nieudane."
 
-#: tmp_error_headers/error_list.hpp:548
+#: tmp_error_headers/error_list.hpp:562
 msgid ""
 "Failed to home the X-axis, make sure there is no obstacle on X-axis or Y-"
 "axis."
@@ -2382,7 +2383,7 @@ msgstr ""
 "Bazowanie w osi X nie powiodło się. Upewnij się, że na osi X oraz Y nie ma "
 "żadnych przeszkód."
 
-#: tmp_error_headers/error_list.hpp:569
+#: tmp_error_headers/error_list.hpp:583
 msgid ""
 "Failed to home the Y-axis, make sure there is no obstacle on X-axis or Y-"
 "axis."
@@ -2390,19 +2391,19 @@ msgstr ""
 "Bazowanie w osi Y nie powiodło się. Upewnij się, że na osi X oraz Y nie ma "
 "żadnych przeszkód."
 
-#: tmp_error_headers/error_list.hpp:555
+#: tmp_error_headers/error_list.hpp:569
 msgid "Failed to home the Y-axis, make sure there is no obstacle on Y-axis."
 msgstr ""
 "Bazowanie osi Y nie powiodło się. Upewnij się, że na osi Y nie ma żadnych "
 "przeszkód."
 
-#: tmp_error_headers/error_list.hpp:513
+#: tmp_error_headers/error_list.hpp:527
 msgid "Failed to home the Z-axis, make sure the loadcell is working."
 msgstr ""
 "Bazowanie w osi Z nie powiodło się. Upewnij się, że czujnik tensometryczny "
 "działa poprawnie."
 
-#: tmp_error_headers/error_list.hpp:541
+#: tmp_error_headers/error_list.hpp:555
 msgid ""
 "Failed to home the extruder in X-axis, make sure there is no obstacle on X-"
 "axis."
@@ -2410,7 +2411,7 @@ msgstr ""
 "Bazowanie ekstrudera w osi X nie powiodło się. Upewnij się, że na osi X nie "
 "ma żadnych przeszkód."
 
-#: tmp_error_headers/error_list.hpp:562
+#: tmp_error_headers/error_list.hpp:576
 msgid ""
 "Failed to home the extruder in Y-axis, make sure there is no obstacle on Y-"
 "axis."
@@ -2418,14 +2419,14 @@ msgstr ""
 "Bazowanie ekstrudera w osi Y nie powiodło się. Upewnij się, że na osi Y nie "
 "ma żadnych przeszkód."
 
-#: tmp_error_headers/error_list.hpp:506
+#: tmp_error_headers/error_list.hpp:520
 msgid ""
 "Failed to home the extruder in Z-axis, make sure the loadcell is working."
 msgstr ""
 "Bazowanie ekstrudera w osi Z nie powiodło się. Upewnij się, że na osi Z nie "
 "ma żadnych przeszkód."
 
-#: tmp_error_headers/error_list.hpp:520
+#: tmp_error_headers/error_list.hpp:534
 msgid "Failed to home the extruder in Z-axis."
 msgstr "Bazowanie ekstrudera w osi Z nie powiodło się."
 
@@ -2441,7 +2442,7 @@ msgstr ""
 msgid "Failed to open file"
 msgstr "Nie udało się otworzyć pliku"
 
-#: src/gui/MItem_tools.cpp:979
+#: src/gui/MItem_tools.cpp:978
 #, c-format
 msgid "Failed to open file '%s' for writing."
 msgstr "Nie udało się otworzyć pliku '%s' do zapisu."
@@ -2450,7 +2451,7 @@ msgstr "Nie udało się otworzyć pliku '%s' do zapisu."
 msgid "Failed to read data from the tag."
 msgstr "Nie udało się odczytać danych z tagu."
 
-#: tmp_error_headers/error_list.hpp:807
+#: tmp_error_headers/error_list.hpp:821
 msgid ""
 "Failed to write usage data to OpenPrintTag. Make sure it has not been "
 "removed from the reader."
@@ -2458,11 +2459,11 @@ msgstr ""
 "Nie udało się zapisać danych użytkowania na OpenPrintTag. Upewnij się, że "
 "nie został usunięty z czytnika."
 
-#: tmp_error_headers/error_list.hpp:744
+#: tmp_error_headers/error_list.hpp:758
 msgid "Fan 0 of the heated bed is operating outside of specification."
 msgstr "Wentylator 0 podgrzewanego stołu pracuje poza specyfikacją."
 
-#: tmp_error_headers/error_list.hpp:751
+#: tmp_error_headers/error_list.hpp:765
 msgid "Fan 1 of the heated bed is operating outside of specification."
 msgstr "Wentylator 1 podgrzewanego stołu pracuje poza specyfikacją."
 
@@ -2534,12 +2535,13 @@ msgstr "Autoładowanie filamentu"
 msgid "Filament Change"
 msgstr "Wymiana filamentu"
 
-#. If the printer has filament sensors menu, this item is inside it and is supposed to be called differently (BFW-4973)
+#. If the printer has filament sensors menu, this item is inside it and is
+#. supposed to be called differently (BFW-4973)
 #: src/gui/MItem_tools.hpp:39
 msgid "Filament Sensing"
 msgstr "Wykrywanie filamentu"
 
-#: src/gui/MItem_tools.hpp:39 src/gui/MItem_tools.cpp:573
+#: src/gui/MItem_tools.hpp:39 src/gui/MItem_tools.cpp:572
 msgid "Filament Sensor"
 msgstr "Czujnik filamentu"
 
@@ -2575,7 +2577,7 @@ msgstr ""
 "Nieoczekiwane wykrycie filamentu. Upewnij się, że filament nie jest "
 "załadowany. Sprawdź czujniki i okablowanie."
 
-#: tmp_error_headers/error_list.hpp:1192
+#: tmp_error_headers/error_list.hpp:1206
 msgid ""
 "Filament detected. Unload filament now? Select NO to start the print with "
 "the currently loaded filament."
@@ -2591,7 +2593,7 @@ msgstr "Filament wprowadzony, naciśnij Kontynuuj."
 msgid "Filament is not customizable"
 msgstr "Filamentu nie można dostosować"
 
-#: tmp_error_headers/error_list.hpp:1430
+#: tmp_error_headers/error_list.hpp:1444
 msgid "Filament loading timed out."
 msgstr "Przekroczono czas ładowania filamentu."
 
@@ -2599,7 +2601,7 @@ msgstr "Przekroczono czas ładowania filamentu."
 msgid "Filament needs to be heated and pushed back to the nozzle."
 msgstr "Filament musi być podgrzany i wepchnięty z powrotem do dyszy."
 
-#: tmp_error_headers/error_list.hpp:1171
+#: tmp_error_headers/error_list.hpp:1185
 msgid ""
 "Filament not detected. Load filament now?\n"
 "Select NO to cancel the print.\n"
@@ -2703,7 +2705,7 @@ msgstr "Plik uszkodzony"
 msgid "File doesn't contain any print instructions"
 msgstr "Plik nie zawiera instrukcji drukowania"
 
-#: tmp_error_headers/error_list.hpp:1198 tmp_error_headers/error_list.hpp:1199
+#: tmp_error_headers/error_list.hpp:1212 tmp_error_headers/error_list.hpp:1213
 msgid "File error"
 msgstr "Błąd pliku"
 
@@ -2715,7 +2717,7 @@ msgstr "Błąd odczytu pliku"
 msgid "File removed or transfer aborted"
 msgstr "Plik usunięty lub przesyłanie przerwane"
 
-#: tmp_error_headers/error_list.hpp:1087
+#: tmp_error_headers/error_list.hpp:1101
 msgid ""
 "File system error!\n"
 "Try a different USB\n"
@@ -2780,8 +2782,8 @@ msgstr ""
 "Mocno przymocuj akcelerometr do podgrzewanego stołu. W następnym kroku stół "
 "zacznie się poruszać i zostaną zebrane dane."
 
-#: tmp_error_headers/error_list.hpp:1107 tmp_error_headers/error_list.hpp:1114
-#: tmp_error_headers/error_list.hpp:1121
+#: tmp_error_headers/error_list.hpp:1121 tmp_error_headers/error_list.hpp:1128
+#: tmp_error_headers/error_list.hpp:1135
 msgid "Firmware Update Required"
 msgstr "Wymagana jest aktualizacja firmware"
 
@@ -2789,7 +2791,7 @@ msgstr "Wymagana jest aktualizacja firmware"
 msgid "Firmware Version"
 msgstr "Wersja firmware"
 
-#: tmp_error_headers/error_list.hpp:1052
+#: tmp_error_headers/error_list.hpp:1066
 msgid ""
 "Firmware and hardware\n"
 "versions do not\n"
@@ -2805,7 +2807,7 @@ msgstr ""
 "plik firmware dla\n"
 "drukarki."
 
-#: tmp_error_headers/error_list.hpp:1059
+#: tmp_error_headers/error_list.hpp:1073
 msgid ""
 "Firmware and hardware versions do\n"
 "not match. Make sure you have\n"
@@ -2815,7 +2817,7 @@ msgstr ""
 "Wersje firmware i hardware nie są zgodne. Upewnij się, że masz właściwy\n"
 "plik firmware dla drukarki."
 
-#: tmp_error_headers/error_list.hpp:1017
+#: tmp_error_headers/error_list.hpp:1031
 msgid ""
 "Firmware file\n"
 "missing in the USB\n"
@@ -2825,7 +2827,7 @@ msgstr ""
 "w pamięci USB\n"
 "flash!"
 
-#: tmp_error_headers/error_list.hpp:1010
+#: tmp_error_headers/error_list.hpp:1024
 msgid ""
 "Firmware file has\n"
 "invalid size!\n"
@@ -2839,7 +2841,7 @@ msgstr ""
 "w pamięci USB\n"
 "i spróbuj ponownie."
 
-#: tmp_error_headers/error_list.hpp:1038
+#: tmp_error_headers/error_list.hpp:1052
 msgid ""
 "Firmware hash\n"
 "verification failed!\n"
@@ -2857,7 +2859,7 @@ msgstr ""
 "skopiować go na\n"
 "USB ponownie."
 
-#: tmp_error_headers/error_list.hpp:1045
+#: tmp_error_headers/error_list.hpp:1059
 msgid ""
 "Firmware in the\n"
 "internal flash\n"
@@ -2871,7 +2873,7 @@ msgstr ""
 "firmware \n"
 "ponownie."
 
-#: tmp_error_headers/error_list.hpp:1031
+#: tmp_error_headers/error_list.hpp:1045
 msgid ""
 "Firmware signature\n"
 "verification failed!\n"
@@ -2889,7 +2891,7 @@ msgstr ""
 msgid "Firmware update required"
 msgstr "Wymagana aktualizacja firmware'u"
 
-#: tmp_error_headers/error_list.hpp:1066
+#: tmp_error_headers/error_list.hpp:1080
 msgid ""
 "Firmware/printer\n"
 "types do not match.\n"
@@ -2905,7 +2907,7 @@ msgstr ""
 "dla danego\n"
 "modelu drukarki."
 
-#: tmp_error_headers/error_list.hpp:1073
+#: tmp_error_headers/error_list.hpp:1087
 msgid ""
 "Firmware/printer\n"
 "versions do not\n"
@@ -2927,7 +2929,8 @@ msgstr ""
 msgid "First Layer Calibration"
 msgstr "Kalibracja pierwszej warstwy"
 
-#. / Keep most things, reset only possible trouble makers (experimental settings, tweaks, ...)
+#. / Keep most things, reset only possible trouble makers (experimental
+#. settings, tweaks, ...)
 #: src/gui/screen/screen_factory_reset.cpp:30
 msgid "Fix Common Misconfigurations"
 msgstr "Napraw powszechne błędne konfiguracje"
@@ -2962,7 +2965,7 @@ msgstr "Współczynniki przepływu"
 msgid "Footer"
 msgstr "Stopka"
 
-#: src/gui/MItem_tools.cpp:733
+#: src/gui/MItem_tools.cpp:732
 msgid "For Filament Change, Preheat"
 msgstr "Przy wymianie filamentu, nagrzej"
 
@@ -2983,7 +2986,8 @@ msgstr "Przód"
 msgid "Front Side [um]"
 msgstr "Przód [um]"
 
-#. / Full wipe with firmware clear is a special case handlded a slightly different way
+#. / Full wipe with firmware clear is a special case handlded a slightly
+#. different way
 #: src/gui/screen/screen_factory_reset.cpp:39
 msgid "Full Reset"
 msgstr "Pełny reset"
@@ -2992,7 +2996,7 @@ msgstr "Pełny reset"
 msgid "Full Weight"
 msgstr "Pełna waga"
 
-#: tmp_error_headers/error_list.hpp:785
+#: tmp_error_headers/error_list.hpp:799
 msgid "G-CODE METRICS CONFIG CHANGE"
 msgstr "ZMIANA KONGIF. DANYCH DIAGN. Z G-CODE"
 
@@ -3094,7 +3098,7 @@ msgstr "G-Code wymaga więcej narzędzi niż obecnie włączone."
 msgid "G-Code requires some features the printer does not have."
 msgstr "G-Code wymaga funkcji, których drukarka nie posiada."
 
-#: tmp_error_headers/error_list.hpp:1514
+#: tmp_error_headers/error_list.hpp:1528
 #, c-format
 msgid ""
 "G-Code signed by an identity not trusted by this printer. Do you want to "
@@ -3113,7 +3117,7 @@ msgstr ""
 msgid "G-Code tool is not mapped."
 msgstr "Narzędzie G-Code nie jest zmapowane."
 
-#: tmp_error_headers/error_list.hpp:1332
+#: tmp_error_headers/error_list.hpp:1346
 msgid ""
 "G-Code transfer running too slow. Check your network for issues or use "
 "different USB drive. Press Continue to resume printing."
@@ -3125,7 +3129,7 @@ msgstr ""
 msgid "G-Code version mismatch"
 msgstr "Niezgodność wersji G-Code"
 
-#: tmp_error_headers/error_list.hpp:968
+#: tmp_error_headers/error_list.hpp:982
 msgid ""
 "G-code command was too long and did not fit in the internal buffers. As a "
 "result, it may have been executed incorrectly."
@@ -3150,15 +3154,15 @@ msgstr "WYRÓWNANIE PRZEKŁADNI"
 msgid "Gateway"
 msgstr "Bramka"
 
-#: tmp_error_headers/error_list.hpp:960
+#: tmp_error_headers/error_list.hpp:974
 msgid "Gcode Corruption"
 msgstr "Uszkodzenie G-code"
 
-#: tmp_error_headers/error_list.hpp:967
+#: tmp_error_headers/error_list.hpp:981
 msgid "Gcode Cropped"
 msgstr "Gcode obcięty"
 
-#: tmp_error_headers/error_list.hpp:786
+#: tmp_error_headers/error_list.hpp:800
 msgid ""
 "Gcode is trying to change metrics configuration.\n"
 "\n"
@@ -3168,7 +3172,7 @@ msgstr ""
 "\n"
 "Zezwolić na zmiany?"
 
-#: tmp_error_headers/error_list.hpp:961
+#: tmp_error_headers/error_list.hpp:975
 msgid "Gcode on the USB drive is corrupt. Fix manually before resuming."
 msgstr ""
 "G-code w pamięci USB jest uszkodzony. Napraw ręcznie przed wznowieniem."
@@ -3205,36 +3209,36 @@ msgstr ""
 "Chwyć drzwi pośrodku, umieść palce za nimi i zamknij jak na obrazku. "
 "Potwierdź."
 
-#: tmp_error_headers/error_list.hpp:646
+#: tmp_error_headers/error_list.hpp:660
 msgid "HAL detected an I2C busy state when receiving data via I2C."
 msgstr "HAL wykrył zajętość I2C podczas odbierania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:618
+#: tmp_error_headers/error_list.hpp:632
 msgid "HAL detected an I2C busy state when sending data via I2C."
 msgstr "HAL wykrył zajętość I2C podczas wysyłania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:639
+#: tmp_error_headers/error_list.hpp:653
 msgid "HAL detected an I2C error when receiving data via I2C."
 msgstr "HAL wykrył błąd I2C podczas odbierania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:611
+#: tmp_error_headers/error_list.hpp:625
 msgid "HAL detected an I2C error when sending data via I2C."
 msgstr "HAL wykrył błąd I2C podczas wysyłania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:653
+#: tmp_error_headers/error_list.hpp:667
 msgid "HAL detected an I2C timeout when receiving data via I2C."
 msgstr "HAL wykrył timeout I2C podczas odbierania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:625
+#: tmp_error_headers/error_list.hpp:639
 msgid "HAL detected an I2C timeout when sending data via I2C."
 msgstr "HAL wykrył timeout I2C podczas wysłania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:660
+#: tmp_error_headers/error_list.hpp:674
 msgid "HAL detected an I2C undefined error when receiving data via I2C."
 msgstr ""
 "HAL wykrył niezdefiniowany błąd I2C podczas odbierania danych przez I2C."
 
-#: tmp_error_headers/error_list.hpp:632
+#: tmp_error_headers/error_list.hpp:646
 msgid "HAL detected an I2C undefined error when sending data via I2C."
 msgstr ""
 "HAL wykrył niezdefiniowany błąd I2C podczas wysyłania danych przez I2C."
@@ -3244,11 +3248,11 @@ msgid "HARD RESET"
 msgstr "TWARDY RESET"
 
 #: src/gui/screen_menu_hardware_tune.hpp:24
-#: src/gui/screen_menu_hardware.hpp:108
+#: src/gui/screen_menu_hardware.hpp:105
 msgid "HARDWARE"
 msgstr "HARDWARE"
 
-#: tmp_error_headers/error_list.hpp:1037
+#: tmp_error_headers/error_list.hpp:1051
 msgid "HASH VERIFICATION FAILED"
 msgstr "WERYFIKACJA HASH NIE POWIODŁA SIĘ"
 
@@ -3272,11 +3276,11 @@ msgstr "GRZANIE"
 msgid "HELP"
 msgstr "POMOC"
 
-#: tmp_error_headers/error_list.hpp:1401
+#: tmp_error_headers/error_list.hpp:1415
 msgid "HEPA Filter Expired"
 msgstr "Filtr HEPA wygasł"
 
-#: tmp_error_headers/error_list.hpp:1387
+#: tmp_error_headers/error_list.hpp:1401
 msgid "HEPA Filter Expiring"
 msgstr "Filtr HEPA wygasa"
 
@@ -3284,21 +3288,21 @@ msgstr "Filtr HEPA wygasa"
 msgid "HOMING CALIBRATION NEEDED"
 msgstr "WYMAGANA KALIBRACJA BAZOWANIA"
 
-#: tmp_error_headers/error_list.hpp:540 tmp_error_headers/error_list.hpp:547
+#: tmp_error_headers/error_list.hpp:554 tmp_error_headers/error_list.hpp:561
 msgid "HOMING ERROR X"
 msgstr "BŁĄD BAZOWANIA X"
 
-#: tmp_error_headers/error_list.hpp:554 tmp_error_headers/error_list.hpp:561
-#: tmp_error_headers/error_list.hpp:568
+#: tmp_error_headers/error_list.hpp:568 tmp_error_headers/error_list.hpp:575
+#: tmp_error_headers/error_list.hpp:582
 msgid "HOMING ERROR Y"
 msgstr "BŁĄD BAZOWANIA Y"
 
-#: tmp_error_headers/error_list.hpp:498 tmp_error_headers/error_list.hpp:505
 #: tmp_error_headers/error_list.hpp:512 tmp_error_headers/error_list.hpp:519
+#: tmp_error_headers/error_list.hpp:526 tmp_error_headers/error_list.hpp:533
 msgid "HOMING ERROR Z"
 msgstr "BŁĄD BAZOWANIA Z"
 
-#: tmp_error_headers/error_list.hpp:687
+#: tmp_error_headers/error_list.hpp:701
 msgid "HOTEND HEATER OVERCURRENT"
 msgstr "ZBYT DUŻY PRĄD NA GRZAŁCE DYSZY"
 
@@ -3349,6 +3353,14 @@ msgstr "Twardy reset (wymagane USB z FW)"
 #: src/gui/MItem_menus.hpp:125 src/gui/MItem_menus.hpp:128
 msgid "Hardware"
 msgstr "Sprzęt"
+
+#: src/gui/screen_menu_sensor_info.cpp:18
+msgid "Head MCU Temperature"
+msgstr "Temperatura MCU głowicy"
+
+#: src/gui/screen_menu_sensor_info.cpp:11
+msgid "Head PCB Temperature"
+msgstr "Temperatura PCB głowicy"
 
 #: src/gui/screen_menu_modular_bed.cpp:9
 msgid "Heat Entire Bed"
@@ -3413,7 +3425,7 @@ msgstr ""
 "Kafelek stołu %d: \n"
 "Błąd grzania testowego."
 
-#: tmp_error_headers/error_list.hpp:814
+#: tmp_error_headers/error_list.hpp:828
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
@@ -3457,7 +3469,7 @@ msgstr "Temperatura bariery cieplnej"
 msgid "Heatbreak Temperature"
 msgstr "Temperatura heatbreak"
 
-#: src/gui/screen_menu_sensor_info.hpp:72
+#: src/gui/screen_menu_sensor_info.hpp:83
 msgid "Heatbreak Temperatures"
 msgstr "Temperatury heatbreak"
 
@@ -3465,19 +3477,19 @@ msgstr "Temperatury heatbreak"
 msgid "Heatbreak status"
 msgstr "Stan bariery cieplnej"
 
-#: tmp_error_headers/error_list.hpp:1318
+#: tmp_error_headers/error_list.hpp:1332
 msgid "Heatbreak thermistor is disconnected. Inspect the wiring."
 msgstr "Termistor bariery cieplnej jest odłączony. Sprawdź okablowanie."
 
-#: tmp_error_headers/error_list.hpp:765
+#: tmp_error_headers/error_list.hpp:779
 msgid "Heated bed is operating outside of specification."
 msgstr "Podgrzewany stół pracuje poza specyfikacją."
 
-#: src/gui/MItem_tools.cpp:619
+#: src/gui/MItem_tools.cpp:618
 msgid "Heater Current"
 msgstr "Prąd grzałki"
 
-#: src/gui/MItem_tools.cpp:614
+#: src/gui/MItem_tools.cpp:613
 msgid "Heater Voltage"
 msgstr "Napięcie grzałek"
 
@@ -3493,11 +3505,11 @@ msgstr "Kontrola grzałek"
 msgid "Heating"
 msgstr "Nagrzewanie"
 
-#: tmp_error_headers/error_list.hpp:1269 tmp_error_headers/error_list.hpp:1290
+#: tmp_error_headers/error_list.hpp:1283 tmp_error_headers/error_list.hpp:1304
 msgid "Heating disabled due to 10 minutes of inactivity."
 msgstr "Grzanie wyłączone z powodu 10 min bezczynności."
 
-#: tmp_error_headers/error_list.hpp:1276 tmp_error_headers/error_list.hpp:1297
+#: tmp_error_headers/error_list.hpp:1290 tmp_error_headers/error_list.hpp:1311
 msgid "Heating disabled due to 30 minutes of inactivity."
 msgstr "Grzanie wyłączone po 30-minutowej bezczynności."
 
@@ -3561,7 +3573,8 @@ msgstr ""
 "Chcę przeprowadzić Cię przez \n"
 "proces konfiguracji."
 
-#. The MK4 is left out intentionally - it could be MK4, MK4S or MK3.9, we don't know yet
+#. The MK4 is left out intentionally - it could be MK4, MK4S or MK3.9, we
+#. don't know yet
 #: src/gui/screen_splash.cpp:184
 msgid ""
 "Hi, this is your\n"
@@ -3598,7 +3611,7 @@ msgstr ""
 "Poprowadzę cię\n"
 "przez konfigurację."
 
-#: src/gui/MItem_tools.cpp:946
+#: src/gui/MItem_tools.cpp:945
 msgid "High"
 msgstr "Wysoka"
 
@@ -3619,24 +3632,15 @@ msgid "Homing Calibration"
 msgstr "Kalibracja bazowania"
 
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:25
-msgid ""
-"Homing XY axes\n"
-"\n"
-"Please wait"
-msgstr ""
-"Bazowanie osi XY\n"
-"\n"
-"Proszę czekać"
-
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:23
 msgid ""
-"Homing XY axes\n"
+"Homing XY axes...\n"
 "\n"
-"Please wait..."
+"Please wait."
 msgstr ""
-"Bazowanie osi XY\n"
+"Bazowanie osi XY...\n"
 "\n"
-"Proszę czekać..."
+"Proszę czekać."
 
 #: tmp_error_headers/error_list.hpp:170
 msgid "Homing calibration is needed to ensure repeatable homing."
@@ -3676,7 +3680,7 @@ msgstr "Rodzaj hotendu"
 msgid "Hotend fan"
 msgstr "Went. hotendu"
 
-#: tmp_error_headers/error_list.hpp:1360
+#: tmp_error_headers/error_list.hpp:1374
 msgid ""
 "Hotend fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -3692,35 +3696,35 @@ msgstr "Ile doków ma twoja drukarka?"
 msgid "How to update firmware?"
 msgstr "Jak zaktualizować firmware?"
 
-#: tmp_error_headers/error_list.hpp:645
+#: tmp_error_headers/error_list.hpp:659
 msgid "I2C RECEIVE BUSY"
 msgstr "I2C ODBIÓR ZAJĘTY"
 
-#: tmp_error_headers/error_list.hpp:638
+#: tmp_error_headers/error_list.hpp:652
 msgid "I2C RECEIVE FAILED"
 msgstr "I2C ODBIÓR NIE POWIÓDŁ SIĘ"
 
-#: tmp_error_headers/error_list.hpp:652
+#: tmp_error_headers/error_list.hpp:666
 msgid "I2C RECEIVE TIMEOUT"
 msgstr "I2C TIMEOUT ODBIORU"
 
-#: tmp_error_headers/error_list.hpp:659
+#: tmp_error_headers/error_list.hpp:673
 msgid "I2C RECEIVE UNDEFINED"
 msgstr "I2C ODBIÓR NIEOKREŚLONY"
 
-#: tmp_error_headers/error_list.hpp:617
+#: tmp_error_headers/error_list.hpp:631
 msgid "I2C SEND BUSY"
 msgstr "I2C WYSYŁANIE ZAJĘTE"
 
-#: tmp_error_headers/error_list.hpp:610
+#: tmp_error_headers/error_list.hpp:624
 msgid "I2C SEND FAILED"
 msgstr "I2C WYSYŁANIE NIE POWIODŁO SIĘ"
 
-#: tmp_error_headers/error_list.hpp:624
+#: tmp_error_headers/error_list.hpp:638
 msgid "I2C SEND TIMEOUT"
 msgstr "I2C TIMEOUT WYSYŁANIA"
 
-#: tmp_error_headers/error_list.hpp:631
+#: tmp_error_headers/error_list.hpp:645
 msgid "I2C SEND UNDEFINED"
 msgstr "I2C WYSYŁANIE NIEZDEFINIOWANE"
 
@@ -3736,23 +3740,31 @@ msgstr "DOCISK NIE RUSZA SIĘ"
 msgid "IGNORE"
 msgstr "IGNORUJ"
 
-#: tmp_error_headers/error_list.hpp:1030
+#: tmp_error_headers/error_list.hpp:1044
 msgid "IMPOSTER! FAKE SIGNATURE"
 msgstr "IMPOSTOR! FAŁSZYWA SYGNATURA"
 
-#: src/gui/MItem_tools.cpp:695
+#: src/gui/MItem_tools.cpp:694
 msgid "INDX FIFO Err"
 msgstr "Błąd FIFO INDX"
 
-#: src/gui/MItem_tools.cpp:699
+#: src/gui/MItem_tools.cpp:698
 msgid "INDX Refresh Err"
 msgstr "Błąd odświeżania INDX"
+
+#: tmp_error_headers/error_list.hpp:499 tmp_error_headers/error_list.hpp:506
+msgid ""
+"INDX head board temperature is out of range. Let the printer cool down and "
+"try again. If the issue persists, contact support."
+msgstr ""
+"Temperatura płyty głowicy INDX poza zakresem. Pozwól drukarce ostygnąć i "
+"spróbuj ponownie. Jeśli problem nadal występuje, skontaktuj się ze wsparciem."
 
 #: src/gui/screen_menu_info.hpp:21
 msgid "INFO"
 msgstr "INFO"
 
-#: tmp_error_headers/error_list.hpp:596
+#: tmp_error_headers/error_list.hpp:610
 msgid "INPUT PORT OVERCURRENT"
 msgstr "PRZECIĄŻENIE PORTU WEJŚCIA"
 
@@ -3768,11 +3780,11 @@ msgstr "KALIBRACJA INPUT SHAPER"
 msgid "INSPECT FINDA"
 msgstr "SPRAWDŹ FINDĘ"
 
-#: tmp_error_headers/error_list.hpp:988
+#: tmp_error_headers/error_list.hpp:1002
 msgid "INTERNAL ERROR"
 msgstr "BŁĄD WEWNĘTRZNY"
 
-#: tmp_error_headers/error_list.hpp:1009
+#: tmp_error_headers/error_list.hpp:1023
 msgid "INVALID FW SIZE ON USB FLASH DRIVE"
 msgstr "NIEPRAWIDŁOWY ROZMIAR FW NA USB"
 
@@ -3838,7 +3850,7 @@ msgstr "Zwiększanie odległości od stołu"
 msgid "Info"
 msgstr "Info"
 
-#: src/guiapi/src/window_msgbox.cpp:349 src/gui/MItem_tools.cpp:94
+#: src/guiapi/src/window_msgbox.cpp:349 src/gui/MItem_tools.cpp:93
 msgid "Information"
 msgstr "Informacje"
 
@@ -3848,7 +3860,7 @@ msgstr "Informacje"
 msgid "Initialized"
 msgstr "Zainicjowany"
 
-#: src/gui/MItem_tools.cpp:624
+#: src/gui/MItem_tools.cpp:623
 msgid "Input Current"
 msgstr "Prąd wejściowy"
 
@@ -3864,7 +3876,7 @@ msgstr "Input Shaper X"
 msgid "Input Shaper Y"
 msgstr "Input Shaper Y"
 
-#: tmp_error_headers/error_list.hpp:1108
+#: tmp_error_headers/error_list.hpp:1122
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the MK4 firmware."
@@ -3872,7 +3884,7 @@ msgstr ""
 "Włóż dołączony pendrive USB, uruchom ponownie drukarkę i kliknij pokrętło "
 "raz podczas startu. Zainstaluje to firmware MK4."
 
-#: tmp_error_headers/error_list.hpp:1122
+#: tmp_error_headers/error_list.hpp:1136
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the MK4/MK3.9 firmware."
@@ -3880,7 +3892,7 @@ msgstr ""
 "Podłącz dołączoną pamięć USB, uruchom ponownie drukarkę i kliknij pokrętło "
 "raz podczas uruchamiania. Spowoduje to zainstalowanie firmware MK4/MK3.9."
 
-#: tmp_error_headers/error_list.hpp:1115
+#: tmp_error_headers/error_list.hpp:1129
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the correct firmware for your hardware."
@@ -4017,7 +4029,7 @@ msgstr "JĘZYK I CZAS"
 msgid "LANGUAGES"
 msgstr "JĘZYKI"
 
-#: tmp_error_headers/error_list.hpp:932
+#: tmp_error_headers/error_list.hpp:946
 msgid "LED MEMORY ERROR"
 msgstr "BŁĄD PAMIĘCI LED"
 
@@ -4029,7 +4041,7 @@ msgstr "LEWO"
 msgid "LIGHTS SETTINGS"
 msgstr "USTAWIENIA OŚWIETLENIA"
 
-#: tmp_error_headers/error_list.hpp:715
+#: tmp_error_headers/error_list.hpp:729
 msgid "LINK LOST"
 msgstr "UTRACONO POŁĄCZENIE"
 
@@ -4041,7 +4053,7 @@ msgstr "ZAŁADUJ"
 msgid "LOAD TO EXTR. FAILED"
 msgstr "ŁADOWANIE DO EKSTRUDERA NIE POWIODŁO SIĘ"
 
-#: tmp_error_headers/error_list.hpp:918
+#: tmp_error_headers/error_list.hpp:932
 msgid "LOADCELL MEASURE FAILED"
 msgstr "POMIAR TENSOMETREM NIEUDANY"
 
@@ -4049,7 +4061,7 @@ msgstr "POMIAR TENSOMETREM NIEUDANY"
 msgid "LOADCELL TEST"
 msgstr "TEST LOADCELL"
 
-#: tmp_error_headers/error_list.hpp:925
+#: tmp_error_headers/error_list.hpp:939
 msgid "LOADCELL TIMEOUT"
 msgstr "TIMEOUT TENSOMETRU"
 
@@ -4082,7 +4094,7 @@ msgstr "Lewa"
 msgid "Left Side [um]"
 msgstr "Lewa [um]"
 
-#: tmp_error_headers/error_list.hpp:1213
+#: tmp_error_headers/error_list.hpp:1227
 msgid ""
 "Length of an axis is too long.\n"
 "Motor current is too low, probably.\n"
@@ -4092,7 +4104,7 @@ msgstr ""
 "Prawdopodobnie prąd silnika jest zbyt niski.\n"
 "Sprawdzić ponownie, wstrzymać czy wznowić drukowanie?"
 
-#: tmp_error_headers/error_list.hpp:1220
+#: tmp_error_headers/error_list.hpp:1234
 msgid ""
 "Length of an axis is too short.\n"
 "There's an obstacle or bearing issue.\n"
@@ -4200,7 +4212,7 @@ msgstr ""
 "Dane Loadcell zaszumione. Upewnij się, że drukarka jest na stabilnej "
 "powierzchni. Powtórzyć?"
 
-#: tmp_error_headers/error_list.hpp:919
+#: tmp_error_headers/error_list.hpp:933
 msgid "Loadcell measured an inifinite or undefined load value."
 msgstr "Tensometr zmierzył nieskończoną lub nieokreśloną wartość obciążenia."
 
@@ -4237,7 +4249,7 @@ msgstr "Załadowano pomyślnie. Włącz Connect, aby aktywować."
 msgid "Loading Test"
 msgstr "Test ładowania"
 
-#: tmp_error_headers/error_list.hpp:1429
+#: tmp_error_headers/error_list.hpp:1443
 msgid "Loading Timeout"
 msgstr "Timeout ładowania"
 
@@ -4272,7 +4284,7 @@ msgstr "Ładowanie..."
 msgid "Lock the tool"
 msgstr "Zablokuj narzędzie"
 
-#: src/gui/MItem_tools.cpp:965
+#: src/gui/MItem_tools.cpp:964
 msgid "Logging has been turned off. You can now safely remove the USB drive."
 msgstr "Logowanie wyłączone. Można bezpiecznie wyjąć USB."
 
@@ -4306,11 +4318,11 @@ msgstr ""
 "Za pomocą klucza wielofunkcyjnego poluzuj dwie śruby z boku słupka doku "
 "(zaznaczone na pomarańczowo)."
 
-#: src/gui/MItem_tools.cpp:340
+#: src/gui/MItem_tools.cpp:339
 msgid "Loud"
 msgstr "Głośno"
 
-#: src/gui/MItem_tools.cpp:946
+#: src/gui/MItem_tools.cpp:945
 msgid "Low"
 msgstr "Niska"
 
@@ -4335,7 +4347,7 @@ msgstr "OSTRZEŻENIE AWARII KONSERWACJI"
 msgid "MAINTENANCE WARNING"
 msgstr "OSTRZEŻENIE KONSERWACJI"
 
-#: tmp_error_headers/error_list.hpp:939
+#: tmp_error_headers/error_list.hpp:953
 msgid "MARLIN REQUEST TIMEOUT"
 msgstr "TIMEOUT ŻĄDANIA MARLINA"
 
@@ -4351,7 +4363,7 @@ msgstr "BŁĄD MAXTEMP MCU"
 msgid "MCU OVERHEAT"
 msgstr "PRZEGRZANIE MCU"
 
-#: src/gui/MItem_tools.cpp:680
+#: src/gui/MItem_tools.cpp:679
 msgid "MCU Temperature"
 msgstr "Temperatura MCU"
 
@@ -4360,7 +4372,7 @@ msgstr "Temperatura MCU"
 msgid "MCU in %s is overheated."
 msgstr "MCU %s jest przegrzany."
 
-#: tmp_error_headers/error_list.hpp:1339
+#: tmp_error_headers/error_list.hpp:1353
 msgid ""
 "MCU in Buddy is overheated, likely due to exceeding the printer's operating "
 "temperature. Prevent overheating for optimal performance."
@@ -4368,13 +4380,13 @@ msgstr ""
 "MCU w Buddy przegrzana, prawdopodobnie przez przekroczenie temperatury. "
 "Zapobiegaj przegrzaniu."
 
-#: tmp_error_headers/error_list.hpp:1346
+#: tmp_error_headers/error_list.hpp:1360
 msgid ""
 "MCU in Dwarf is overheated, likely due to exceeding the printer's operating "
 "temperature. Prevent overheating for optimal performance."
 msgstr "MCU w Dwarf przegrzana. Zapobiegaj przegrzaniu."
 
-#: tmp_error_headers/error_list.hpp:1353
+#: tmp_error_headers/error_list.hpp:1367
 msgid ""
 "MCU in Modular Bed is overheated, likely due to exceeding the printer's "
 "operating temperature. Prevent overheating for optimal performance."
@@ -4393,11 +4405,11 @@ msgstr "BŁĄD MINTEMP"
 msgid "MMU BL Status"
 msgstr "Status MMU BL"
 
-#: src/gui/MItem_tools.cpp:629
+#: src/gui/MItem_tools.cpp:628
 msgid "MMU Current"
 msgstr "Prąd MMU"
 
-#: tmp_error_headers/error_list.hpp:1254
+#: tmp_error_headers/error_list.hpp:1268
 msgid "MMU Error"
 msgstr "Błąd MMU"
 
@@ -4433,7 +4445,7 @@ msgstr ""
 msgid "MMU NOT RESPONDING"
 msgstr "MMU NIE ODPOWIADA"
 
-#: tmp_error_headers/error_list.hpp:603
+#: tmp_error_headers/error_list.hpp:617
 msgid "MMU OVERCURRENT"
 msgstr "ZBYT DUŻY PRĄD MMU"
 
@@ -4505,9 +4517,9 @@ msgstr ""
 #: tmp_error_headers/error_list.hpp:400 tmp_error_headers/error_list.hpp:407
 #: tmp_error_headers/error_list.hpp:414 tmp_error_headers/error_list.hpp:421
 #: tmp_error_headers/error_list.hpp:428 tmp_error_headers/error_list.hpp:435
-#: tmp_error_headers/error_list.hpp:442 tmp_error_headers/error_list.hpp:526
-#: tmp_error_headers/error_list.hpp:533 tmp_error_headers/error_list.hpp:666
-#: tmp_error_headers/error_list.hpp:673 tmp_error_headers/error_list.hpp:813
+#: tmp_error_headers/error_list.hpp:442 tmp_error_headers/error_list.hpp:540
+#: tmp_error_headers/error_list.hpp:547 tmp_error_headers/error_list.hpp:680
+#: tmp_error_headers/error_list.hpp:687 tmp_error_headers/error_list.hpp:827
 msgid "MODULAR BED ERROR"
 msgstr "BŁĄD STOŁU MODUŁOWEGO"
 
@@ -4557,6 +4569,16 @@ msgstr "Upewnij się, że filament przechodzi przez czujnik filamentu."
 msgid "Make sure the tool is in the dock, then press Continue."
 msgstr "Upewnij się, że narzędzie jest w doku, naciśnij Kontynuuj."
 
+#: src/gui/screen/selftest/screen_selftest_fsensors.cpp:182
+msgid ""
+"Make sure there is no filament in the filament sensor.\n"
+"\n"
+"You will need filament to complete this test later."
+msgstr ""
+"Upewnij się, że w czujniku filamentu nie ma filamentu.\n"
+"\n"
+"Filament będzie potrzebny do ukończenia tego testu później."
+
 #: src/gui/MItem_menus.hpp:52
 msgid "Manage Filaments"
 msgstr "Zarządzaj filamentami"
@@ -4569,7 +4591,13 @@ msgstr "Ręczne"
 msgid "Manual Belt Tuning"
 msgstr "Ręczne strojenie pasków"
 
-#: tmp_error_headers/error_list.hpp:940
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:20
+msgid ""
+"Manually position the head at the nozzle cleaner and adjust the height screw"
+msgstr ""
+"Ręcznie ustaw głowicę nad czyszczakiem dyszy i wyreguluj śrubę wysokości"
+
+#: tmp_error_headers/error_list.hpp:954
 msgid ""
 "Marlin client could not send message to Marlin server and timeout was "
 "reached."
@@ -4602,7 +4630,7 @@ msgstr ""
 "Zmierzone częstotliwości pasków poza zakresem.\n"
 "Sprawdź wyrównanie portalu i powtórz kalibrację."
 
-#: tmp_error_headers/error_list.hpp:1283
+#: tmp_error_headers/error_list.hpp:1297
 msgid ""
 "Measured temperature is not matching expected value. Check the thermistor is "
 "in contact with hotend. In case of damage, replace it."
@@ -4642,7 +4670,8 @@ msgstr ""
 msgid "Measuring Y resonance..."
 msgstr "Pomiar rezonansu Y..."
 
-#. Prepare for measuring actual frequencies, QR, prerequisites PHASE: intro_measure
+#. Prepare for measuring actual frequencies, QR, prerequisites PHASE:
+#. intro_measure
 #: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:31
 msgid "Measuring actual belt frequency"
 msgstr "Pomiar rzeczywistej częstotliwości paska"
@@ -4657,7 +4686,7 @@ msgstr ""
 "\n"
 "Nie dotykaj drukarki"
 
-#: tmp_error_headers/error_list.hpp:933
+#: tmp_error_headers/error_list.hpp:947
 msgid "Memory allocation failed for scheduled LED animation"
 msgstr "Alokacja pamięci dla zaplanowanej animacji LED nie powiodła się."
 
@@ -4717,14 +4746,14 @@ msgid ""
 "\n"
 "Ensure your hands are outside the printer enclosure.\n"
 "\n"
-"Check that the head is at the correct X position, then press Continue to "
-"start measuring."
+"Verify the head is at the correct X position, then press Continue to start "
+"measuring."
 msgstr ""
 "Silniki zablokowane.\n"
 "\n"
 "Trzymaj ręce poza obudową.\n"
 "\n"
-"Sprawdź pozycję X i naciśnij Kontynuuj."
+"Zweryfikuj, że głowica jest w prawidłowej pozycji X i naciśnij Kontynuuj."
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:30
 msgid ""
@@ -4732,14 +4761,14 @@ msgid ""
 "\n"
 "Ensure your hands are outside the printer enclosure.\n"
 "\n"
-"Check that the head is at the correct Y position, then press Continue to "
-"start measuring."
+"Verify the head is at the correct Y position, then press Continue to start "
+"measuring."
 msgstr ""
 "Silniki zablokowane.\n"
 "\n"
 "Trzymaj ręce poza obudową.\n"
 "\n"
-"Sprawdź pozycję Y i naciśnij Kontynuuj."
+"Zweryfikuj, że głowica jest w prawidłowej pozycji Y i naciśnij Kontynuuj."
 
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:27
 msgid ""
@@ -4747,14 +4776,14 @@ msgid ""
 "\n"
 "Ensure your hands are outside the printer enclosure.\n"
 "\n"
-"Check that the head is at the correct position, then press Continue to start "
+"Verify the head is in the correct position, then press Continue to start "
 "measuring."
 msgstr ""
 "Silniki zablokowane.\n"
 "\n"
 "Trzymaj ręce poza obudową.\n"
 "\n"
-"Sprawdź pozycję głowicy i naciśnij Kontynuuj."
+"Zweryfikuj prawidłową pozycję głowicy i naciśnij Kontynuuj."
 
 #: src/gui/MItem_menus.hpp:82
 msgid "Move Axis"
@@ -4776,7 +4805,7 @@ msgstr "Ruch Y"
 msgid "Move Z"
 msgstr "Ruch Z"
 
-#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:26
+#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:24
 msgid ""
 "Move printhead to the back. Check there's no gap between gantry and "
 "tensioner on both ends. If there is, follow the guide."
@@ -4784,7 +4813,7 @@ msgstr ""
 "Przesuń głowicę do tyłu. Sprawdź, czy nie ma luzu między bramą a napinaczem. "
 "Jeśli jest, postępuj wg instrukcji."
 
-#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:24
+#: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:26
 msgid ""
 "Move printhead to the front. Check there's no gap between gantry and "
 "tensioner on both ends. If there is, follow the guide."
@@ -4794,36 +4823,36 @@ msgstr ""
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:26
 msgid ""
-"Move the head above the nozzle cleaner as shown on the picture.\n"
+"Move the head precisely to the nozzle cleaner as shown on the picture.\n"
 "\n"
 "Rotate the adjustment screw until the nozzle is aligned with the cleaner in "
 "the Z axis."
 msgstr ""
-"Przesuń głowicę nad czyszczak dyszy jak na obrazku.\n"
+"Przesuń głowicę precyzyjnie do czyszczaka dyszy jak na obrazku.\n"
 "\n"
 "Obracaj śrubę regulacyjną, aż dysza wyrówna się z czyszczakiem w osi Z."
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:31
 msgid ""
-"Move the head precisely to the nozzle cleaner X-axis calibration indent in "
+"Move the nozzle precisely to the nozzle cleaner X-axis calibration indent in "
 "front of the bin.\n"
 "\n"
-"When in position, press Continue."
+"Then press Continue."
 msgstr ""
-"Przesuń głowicę dokładnie do wgłębienia kalibracyjnego osi X przed koszem.\n"
+"Przesuń dyszę precyzyjnie do wgłębienia kalibracyjnego osi X przed koszem.\n"
 "\n"
-"W pozycji naciśnij Kontynuuj."
+"Następnie naciśnij Kontynuuj."
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:32
 msgid ""
-"Move the head precisely to the nozzle cleaner Y-axis calibration indent on "
+"Move the nozzle precisely to the nozzle cleaner Y-axis calibration indent on "
 "the side of the bin.\n"
 "\n"
-"When in position, press Continue."
+"Then press Continue."
 msgstr ""
-"Przesuń głowicę dokładnie do wgłębienia kalibracyjnego osi Y z boku kosza.\n"
+"Przesuń dyszę precyzyjnie do wgłębienia kalibracyjnego osi Y z boku kosza.\n"
 "\n"
-"W pozycji naciśnij Kontynuuj."
+"Następnie naciśnij Kontynuuj."
 
 #: src/gui/wizard/selftest_frame_tool_offsets.cpp:76
 msgid "Moving away."
@@ -4883,7 +4912,7 @@ msgstr "Niezał. / 0"
 msgid "NO"
 msgstr "NIE"
 
-#: tmp_error_headers/error_list.hpp:1016
+#: tmp_error_headers/error_list.hpp:1030
 msgid "NO FW ON USB FLASH DRIVE"
 msgstr "BRAK PLIKU FIRMWARE W PAMIĘCI USB FLASH"
 
@@ -4899,20 +4928,16 @@ msgstr "TERAZ"
 msgid "NOZZLE CLEANER CALIBRATION"
 msgstr "KALIBRACJA CZYSZCZAKA DYSZY"
 
-#: tmp_error_headers/error_list.hpp:589
+#: tmp_error_headers/error_list.hpp:603
 msgid "NOZZLE HEATER OVERCURRENT"
 msgstr "ZBYT DUŻY PRĄD NA GRZAŁCE DYSZY"
-
-#: src/gui/screen/screen_nozzle_mismatch.cpp:97
-msgid "NOZZLE MISMATCH"
-msgstr "NIEZGODNOŚĆ DYSZY"
 
 #: src/gui/screen/toolhead/screen_toolhead_settings_nozzle_offset.cpp:49
 msgid "NOZZLE_OFFSET"
 msgstr "OFFSET DYSZY"
 
 #: src/gui/screen/filament/screen_filament_detail.cpp:21
-#: src/gui/MItem_tools.cpp:376
+#: src/gui/MItem_tools.cpp:375
 msgid "Name"
 msgstr "Nazwa"
 
@@ -4932,7 +4957,7 @@ msgstr "Nazwa nie może być pusta"
 msgid "Net fail"
 msgstr "Błąd sieci"
 
-#: src/gui/MItem_menus.hpp:119 src/gui/MItem_tools.cpp:807
+#: src/gui/MItem_menus.hpp:119 src/gui/MItem_tools.cpp:806
 msgid "Network"
 msgstr "Sieć"
 
@@ -4944,15 +4969,15 @@ msgstr "Ustawienia sieci"
 msgid "Network Status"
 msgstr "Stan sieci"
 
-#: src/gui/MItem_hardware.cpp:166 src/gui/MItem_tools.cpp:870
+#: src/gui/MItem_hardware.cpp:166 src/gui/MItem_tools.cpp:869
 msgid "Never"
 msgstr "Nigdy"
 
-#: tmp_error_headers/error_list.hpp:1150
+#: tmp_error_headers/error_list.hpp:1164
 msgid "New FW available"
 msgstr "Dostępna jest aktualizacja FW"
 
-#: tmp_error_headers/error_list.hpp:1157
+#: tmp_error_headers/error_list.hpp:1171
 msgid "New firmware available"
 msgstr "Dostępna jest nowa wersja firmware"
 
@@ -4994,11 +5019,11 @@ msgstr "Brak wykrytego OpenPrintTag dla narzędzia/slotu."
 msgid "No USB"
 msgstr "Brak USB"
 
-#: src/gui/MItem_tools.cpp:285
+#: src/gui/MItem_tools.cpp:284
 msgid "No crash dump to save."
 msgstr "Brak zrzutu pamięci do zapisania."
 
-#: tmp_error_headers/error_list.hpp:1080
+#: tmp_error_headers/error_list.hpp:1094
 msgid ""
 "No firmware found\n"
 "in the internal\n"
@@ -5100,7 +5125,7 @@ msgid ""
 msgstr "Teraz ustawimy odległość końcówki dyszy od powierzchni płyty."
 
 #: src/common/footer_def.cpp:11 src/common/hw_check.cpp:6
-#: src/gui/MItem_print.cpp:20 src/gui/MItem_tools.cpp:728
+#: src/gui/MItem_print.cpp:20 src/gui/MItem_tools.cpp:727
 #: src/gui/wizard/selftest_result_heaters.cpp:13
 msgid "Nozzle"
 msgstr "Dysza"
@@ -5109,7 +5134,7 @@ msgstr "Dysza"
 msgid "Nozzle Cleaner Calibration"
 msgstr "Kalibracja czyszczaka dyszy"
 
-#: src/gui/MItem_tools.cpp:993
+#: src/gui/MItem_tools.cpp:992
 msgid "Nozzle Cleaning Retraction"
 msgstr "Retrakcja czyszczenia dyszy"
 
@@ -5147,11 +5172,6 @@ msgstr "Temp dyszy"
 msgid "Nozzle Temperature"
 msgstr "Temperatura dyszy"
 
-#: src/gui/screen_menu_sensor_info.hpp:67
-#: src/gui/screen_menu_temperature.hpp:37 src/gui/screen_menu_tune.hpp:57
-msgid "Nozzle Temperatures"
-msgstr "Temperatury dysz"
-
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:27
 msgid "Nozzle X-Axis Alignment"
 msgstr "Wyrównanie dyszy w osi X"
@@ -5176,11 +5196,11 @@ msgstr "Pozycja czyszczaka dyszy skalibrowana i zapisana."
 msgid "Nozzle cleaning"
 msgstr "Czyszczenie dyszy"
 
-#: tmp_error_headers/error_list.hpp:1499
+#: tmp_error_headers/error_list.hpp:1513
 msgid "Nozzle cleaning failed"
 msgstr "Czyszczenie dyszy nieudane"
 
-#: tmp_error_headers/error_list.hpp:1416
+#: tmp_error_headers/error_list.hpp:1430
 msgid "Nozzle cleaning failed."
 msgstr "Czyszczenie dyszy nieudane."
 
@@ -5188,7 +5208,7 @@ msgstr "Czyszczenie dyszy nieudane."
 msgid "Nozzle diameter"
 msgstr "Średnica dyszy"
 
-#: tmp_error_headers/error_list.hpp:1325
+#: tmp_error_headers/error_list.hpp:1339
 msgid ""
 "Nozzle doesn't seem to have round cross section. Make sure it is clean and "
 "perpendicular to the bed."
@@ -5224,32 +5244,26 @@ msgstr "Dysza niehartowana"
 msgid "Nozzle not high-flow"
 msgstr "Dysza nie high-flow"
 
-#: tmp_error_headers/error_list.hpp:219
-msgid "Nozzle was not detected after tool pickup."
-msgstr "Nie wykryto dyszy po podniesieniu narzędzia."
-
-#: tmp_error_headers/error_list.hpp:233
-msgid "Nozzle was still detected after parking."
-msgstr "Dysza nadal wykryta po zaparkowaniu."
-
 #: src/gui/footer/footer_item_fsensor.cpp:49
 #: src/gui/footer/footer_item_multitool.cpp:29
 msgid "OFF "
 msgstr "WYŁ "
 
-#. @@TODO there is a strange comment in FooterItemFSensor::static_makeView about the last character not being rendered
+#. @@TODO there is a strange comment in FooterItemFSensor::static_makeView
+#. about the last character not being rendered
 #. Not sure why but using the same workaround.
-#. Another funny thing is that the LED in FINDA shows the exact opposite - this needs to be discussed with Content ;)
+#. Another funny thing is that the LED in FINDA shows the exact opposite -
+#. this needs to be discussed with Content ;)
 #: src/gui/footer/footer_item_fsensor.cpp:46
 #: src/gui/footer/footer_item_multitool.cpp:29
 msgid "ON "
 msgstr "WŁ "
 
-#: tmp_error_headers/error_list.hpp:792
+#: tmp_error_headers/error_list.hpp:806
 msgid "OPENPRINTTAG ASSIGNED"
 msgstr "OPENPRINTTAG PRZYPISANY"
 
-#: tmp_error_headers/error_list.hpp:799
+#: tmp_error_headers/error_list.hpp:813
 msgid "OPENPRINTTAG CANNOT TRACK"
 msgstr "OPENPRINTTAG NIE ŚLEDZI"
 
@@ -5266,7 +5280,7 @@ msgstr "LISTA OPENPRINTTAG"
 msgid "OPENPRINTTAG SETTINGS"
 msgstr "USTAWIENIA OPENPRINTTAG"
 
-#: tmp_error_headers/error_list.hpp:806
+#: tmp_error_headers/error_list.hpp:820
 msgid "OPENPRINTTAG WRITE FAILED"
 msgstr "ZAPIS OPENPRINTTAG NIEUDANY"
 
@@ -5297,7 +5311,7 @@ msgstr "Odsunięcie"
 msgid "Offset %c"
 msgstr "Offset %c"
 
-#: src/gui/MItem_tools.cpp:796
+#: src/gui/MItem_tools.cpp:795
 msgid "Ok"
 msgstr "Ok"
 
@@ -5305,11 +5319,11 @@ msgstr "Ok"
 msgid "On Filament Load"
 msgstr "Przy ładowaniu filamentu"
 
-#: src/gui/MItem_tools.cpp:872
+#: src/gui/MItem_tools.cpp:871
 msgid "On Idle"
 msgstr "W bezczynności"
 
-#: src/gui/MItem_tools.cpp:339
+#: src/gui/MItem_tools.cpp:338
 msgid "Once"
 msgstr "Pojedynczo"
 
@@ -5333,7 +5347,7 @@ msgstr ""
 msgid "Online"
 msgstr "Online"
 
-#: tmp_error_headers/error_list.hpp:1436
+#: tmp_error_headers/error_list.hpp:1450
 msgid "Open Chamber Ventilation"
 msgstr "Otwórz wentylację komory"
 
@@ -5365,7 +5379,7 @@ msgstr ""
 msgid "OpenPrintTag Pending Write"
 msgstr "OpenPrintTag oczekuje na zapis"
 
-#: tmp_error_headers/error_list.hpp:793
+#: tmp_error_headers/error_list.hpp:807
 msgid ""
 "OpenPrintTag has been linked with the filament. Filament usage data will be "
 "stored on the tag."
@@ -5380,27 +5394,27 @@ msgstr "OpenPrintTag przypisany do narzędzia %i"
 msgid "Opening chamber vents"
 msgstr "Otwieranie wentylacji komory"
 
-#: tmp_error_headers/error_list.hpp:576
+#: tmp_error_headers/error_list.hpp:590
 msgid "Overcurrent detected on USB port."
 msgstr "ZBYT DUŻY PRĄD NA PORCIE USB"
 
-#: tmp_error_headers/error_list.hpp:590
+#: tmp_error_headers/error_list.hpp:604
 msgid "Overcurrent detected on nozzle heater."
 msgstr "Wykryto zbyt duży prąd na grzałce dyszy."
 
-#: tmp_error_headers/error_list.hpp:604
+#: tmp_error_headers/error_list.hpp:618
 msgid "Overcurrent detected on the MMU port, disconnect the device."
 msgstr "Wykryto zbyt duży prąd na porcie MMU. Odłącz urządzenie."
 
-#: tmp_error_headers/error_list.hpp:583
+#: tmp_error_headers/error_list.hpp:597
 msgid "Overcurrent detected on the connected USB device, disconnect it."
 msgstr "Wykryto zbyt duży prąd na podłączonym urządzeniu USB. Odłącz je."
 
-#: tmp_error_headers/error_list.hpp:597
+#: tmp_error_headers/error_list.hpp:611
 msgid "Overcurrent detected on xBuddy input port, disconnect the device."
 msgstr "Wykryto przeciążenie na porcie xBuddy, odłącz urządzenie."
 
-#: tmp_error_headers/error_list.hpp:527
+#: tmp_error_headers/error_list.hpp:541
 msgid "Overcurrent detected."
 msgstr "Wykryto zbyt duży prąd."
 
@@ -5441,7 +5455,7 @@ msgstr "TRZPIEŃ NIE ZNALEZIONY"
 msgid "POSTPONE"
 msgstr "ODŁÓŻ"
 
-#: tmp_error_headers/error_list.hpp:680
+#: tmp_error_headers/error_list.hpp:694
 msgid "POWER PANIC"
 msgstr "POWER PANIC"
 
@@ -5491,12 +5505,12 @@ msgstr "Wentylator PSU"
 msgid "PULLEY CANNOT MOVE"
 msgstr "RADEŁKO NIE RUSZA SIĘ"
 
-#: tmp_error_headers/error_list.hpp:834 tmp_error_headers/error_list.hpp:841
 #: tmp_error_headers/error_list.hpp:848 tmp_error_headers/error_list.hpp:855
 #: tmp_error_headers/error_list.hpp:862 tmp_error_headers/error_list.hpp:869
 #: tmp_error_headers/error_list.hpp:876 tmp_error_headers/error_list.hpp:883
 #: tmp_error_headers/error_list.hpp:890 tmp_error_headers/error_list.hpp:897
 #: tmp_error_headers/error_list.hpp:904 tmp_error_headers/error_list.hpp:911
+#: tmp_error_headers/error_list.hpp:918 tmp_error_headers/error_list.hpp:925
 msgid "PUPPY ERROR"
 msgstr "PUPPY ERROR"
 
@@ -5512,11 +5526,12 @@ msgstr "Ruch param sweep nieudany."
 msgid "Park Current Tool"
 msgstr "Zaparkuj narzędzie"
 
-#: src/gui/MItem_tools.cpp:691
+#: src/gui/MItem_tools.cpp:690
 msgid "Park Fails"
 msgstr "Niepowodzenia parkowania"
 
-#. Do not show "Pick Tool" at all for all_toolheads, only "Park Tool" that gets disabled when no tool is selected
+#. Do not show "Pick Tool" at all for all_toolheads, only "Park Tool" that
+#. gets disabled when no tool is selected
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:234
 msgid "Park Tool"
 msgstr "Zaparkuj narzędzie"
@@ -5620,15 +5635,15 @@ msgstr "Wybierz/parkuj narzędzie"
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:22
 msgid ""
-"Picking tool\n"
+"Picking up tool...\n"
 "\n"
-"Please wait..."
+"Please wait."
 msgstr ""
-"Pobieranie narzędzia\n"
+"Pobieranie narzędzia...\n"
 "\n"
-"Proszę czekać..."
+"Proszę czekać."
 
-#: src/gui/MItem_tools.cpp:687
+#: src/gui/MItem_tools.cpp:686
 msgid "Pickup Fails"
 msgstr "Niepowodzenia pobierania"
 
@@ -5641,7 +5656,7 @@ msgid ""
 "Please calibrate nozzle cleaner first before loading/unloading filaments."
 msgstr "Najpierw skalibruj czyszczak dyszy przed ładowaniem filamentu."
 
-#: src/gui/MItem_tools.cpp:928
+#: src/gui/MItem_tools.cpp:927
 msgid "Please calibrate the docks first."
 msgstr "Najpierw skalibruj doki."
 
@@ -5649,7 +5664,7 @@ msgstr "Najpierw skalibruj doki."
 msgid "Please calibrate the nozzle cleaner first."
 msgstr "Najpierw skalibruj czyszczak dyszy."
 
-#: tmp_error_headers/error_list.hpp:1143
+#: tmp_error_headers/error_list.hpp:1157
 msgid "Please complete Calibrations & Tests before using the printer."
 msgstr "Przed użyciem drukarki należy przeprowadzić kalibracje i testy."
 
@@ -5662,16 +5677,6 @@ msgstr ""
 "Włóż pamięć USB z plikiem konfiguracyjnym sieci.\n"
 "\n"
 "Plik konfiguracyjny możesz wygenerować w PrusaSlicerze."
-
-#: src/gui/screen/selftest/screen_selftest_fsensors.cpp:182
-msgid ""
-"Please make sure there is no filament in the filament sensor.\n"
-"\n"
-"You will need filament to finish this test later."
-msgstr ""
-"Upewnij się, że w czujniku nie ma filamentu.\n"
-"\n"
-"Filament będzie potrzebny później."
 
 #: src/gui/screen/selftest/screen_selftest_fsensors.cpp:180
 msgid ""
@@ -5707,7 +5712,7 @@ msgstr "Otwórz docisk i wyciągnij filament ręcznie"
 msgid "Please remove filament from filament sensor."
 msgstr "Wyciągnij filament z czujnika filamentu."
 
-#: tmp_error_headers/error_list.hpp:1367
+#: tmp_error_headers/error_list.hpp:1381
 msgid "Please replace filament."
 msgstr "Wymień filament."
 
@@ -5739,27 +5744,27 @@ msgstr "Moc po druku"
 msgid "Power Cycle"
 msgstr "Cykl zasilania"
 
-#: tmp_error_headers/error_list.hpp:667
+#: tmp_error_headers/error_list.hpp:681
 msgid "Power failure"
 msgstr "Zanik zasilania"
 
-#: tmp_error_headers/error_list.hpp:758
+#: tmp_error_headers/error_list.hpp:772
 msgid "Power grid is operating outside of specification."
 msgstr "Sieć energetyczna pracuje poza specyfikacją."
 
-#: tmp_error_headers/error_list.hpp:674
+#: tmp_error_headers/error_list.hpp:688
 msgid "Power panic"
 msgstr "Power Panic"
 
-#: tmp_error_headers/error_list.hpp:681
+#: tmp_error_headers/error_list.hpp:695
 msgid "Power panic detected on startup. Check power panic cable."
 msgstr "Wykryto power panic podczas uruchamiania. Sprawdź przewód Power Panic."
 
-#: tmp_error_headers/error_list.hpp:730
+#: tmp_error_headers/error_list.hpp:744
 msgid "Power panic situation detected."
 msgstr "Wykryto sytuację power panic."
 
-#: tmp_error_headers/error_list.hpp:772
+#: tmp_error_headers/error_list.hpp:786
 msgid "Power supply unit is operating outside of specification."
 msgstr "Zasilacz pracuje poza specyfikacją."
 
@@ -5817,7 +5822,8 @@ msgstr "Przygotowywanie do montażu trzpienia kalibracyjnego"
 msgid "Preparing for filament sensor calibration"
 msgstr "Przygotowanie do kalibracji czujnika filamentu"
 
-#. Used in filament type context, for example: "PLA (Preset)". Please try to fit the text in 6 characters.
+#. Used in filament type context, for example: "PLA (Preset)". Please try to
+#. fit the text in 6 characters.
 #: src/common/filament.cpp:85
 msgid "Preset"
 msgstr "Preset"
@@ -5885,7 +5891,7 @@ msgstr "Druk zakończony"
 msgid "Print fan"
 msgstr "Wentylator wydruku"
 
-#: tmp_error_headers/error_list.hpp:1262
+#: tmp_error_headers/error_list.hpp:1276
 msgid ""
 "Print fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -5942,7 +5948,7 @@ msgstr ""
 "Wykryto wiele kolejnych błędów ładowania. Sprawdź ekstruder. prusa.io/mmu-"
 "care."
 
-#: src/gui/MItem_tools.cpp:101
+#: src/gui/MItem_tools.cpp:100
 msgid "Printer is busy. Please try repeating the action later."
 msgstr "Drukarka jest zajęta. Spróbuj powtórzyć akcję później."
 
@@ -5951,7 +5957,7 @@ msgstr "Drukarka jest zajęta. Spróbuj powtórzyć akcję później."
 msgid "Printer is homing, please wait."
 msgstr "Drukarka bazuje, proszę czekać."
 
-#: src/gui/MItem_tools.cpp:100 src/gui/dialogs/window_dlg_wait.cpp:10
+#: src/gui/MItem_tools.cpp:99 src/gui/dialogs/window_dlg_wait.cpp:10
 msgid "Printer may vibrate and be noisier during homing."
 msgstr "Drukarka może wibrować i być głośniejsza podczas bazowania."
 
@@ -6035,31 +6041,31 @@ msgstr ""
 "Silnik kół radełkowanych utknął. Upewnij się, że radełko może się poruszać i "
 "sprawdź okablowanie."
 
-#: tmp_error_headers/error_list.hpp:898
+#: tmp_error_headers/error_list.hpp:912
 #, c-format
 msgid "Puppy %s firmware fingerprint mismatch"
 msgstr "Puppy %s firmware fingerprint mismatch"
 
-#: tmp_error_headers/error_list.hpp:884
+#: tmp_error_headers/error_list.hpp:898
 #, c-format
 msgid "Puppy %s firmware not found"
 msgstr "Puppy %s firmware not found"
 
-#: tmp_error_headers/error_list.hpp:891
+#: tmp_error_headers/error_list.hpp:905
 #, c-format
 msgid "Puppy %s flash writing failed"
 msgstr "Puppy %s flash writing failed"
 
-#: tmp_error_headers/error_list.hpp:856
+#: tmp_error_headers/error_list.hpp:870
 #, c-format
 msgid "Puppy %s not responding"
 msgstr "Szczeniak %s nie odpowiada"
 
-#: tmp_error_headers/error_list.hpp:849
+#: tmp_error_headers/error_list.hpp:863
 msgid "Puppy discovery error. No puppy found"
 msgstr "Puppy discovery error. No puppy found"
 
-#: tmp_error_headers/error_list.hpp:863
+#: tmp_error_headers/error_list.hpp:877
 #, c-format
 msgid ""
 "Puppy uses incompatible bootloader protocol %04x, Buddy FW requires %04x"
@@ -6078,7 +6084,7 @@ msgstr "Czyszczenie"
 msgid "Purging filament"
 msgstr "Czyszczenie filamentu"
 
-#: tmp_error_headers/error_list.hpp:1479
+#: tmp_error_headers/error_list.hpp:1493
 msgid ""
 "Purging the filament.\n"
 "\n"
@@ -6143,7 +6149,7 @@ msgstr "WYJŚCIE"
 msgid "Question"
 msgstr "Pytanie"
 
-#: tmp_error_headers/error_list.hpp:1422
+#: tmp_error_headers/error_list.hpp:1436
 msgid "Quick Pause"
 msgstr "Szybka pauza"
 
@@ -6211,13 +6217,13 @@ msgstr ""
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:24
 msgid ""
-"Raising Z axis for clearance\n"
+"Raising Z axis for clearance...\n"
 "\n"
-"Please wait..."
+"Please wait."
 msgstr ""
-"Podnoszenie osi Z\n"
+"Podnoszenie osi Z...\n"
 "\n"
-"Proszę czekać..."
+"Proszę czekać."
 
 #: src/gui/dialogs/DialogLoadUnload.cpp:28
 msgid "Ramming"
@@ -6244,7 +6250,7 @@ msgstr "Przypisać wykryty tag do filamentu?"
 msgid "Recalibrating home. This may take some time."
 msgstr "Ponowna kalibracja bazowania. Może chwilę potrwać."
 
-#: tmp_error_headers/error_list.hpp:1149 tmp_error_headers/error_list.hpp:1156
+#: tmp_error_headers/error_list.hpp:1163 tmp_error_headers/error_list.hpp:1170
 msgid "Recommendation"
 msgstr "Rekomendacja"
 
@@ -6284,7 +6290,7 @@ msgstr "Rejestracja drukarki w Prusa Connect..."
 msgid "Registration successful, continue at connect.prusa3d.com"
 msgstr "Rejestracja zakończona powodzeniem, kontynuuj na connect.prusa3d.com"
 
-#: tmp_error_headers/error_list.hpp:779
+#: tmp_error_headers/error_list.hpp:793
 msgid "Registration to Prusa Connect failed due to:"
 msgstr "Rejestracja w Prusa Connect nie powiodła się:"
 
@@ -6323,7 +6329,7 @@ msgstr "Wyjmij filament z czujnika."
 msgid "Remove the filament manually"
 msgstr "Wyciągnij filament ręcznie"
 
-#: tmp_error_headers/error_list.hpp:1493
+#: tmp_error_headers/error_list.hpp:1507
 msgid ""
 "Remove the purged filament and ensure the nozzle is clean and ready.\n"
 "\n"
@@ -6341,7 +6347,7 @@ msgstr "Zmień nazwę"
 msgid "Reorder Filaments"
 msgstr "Zmień kolejność filamentów"
 
-#: tmp_error_headers/error_list.hpp:1227
+#: tmp_error_headers/error_list.hpp:1241
 msgid ""
 "Repeated collision has been detected.\n"
 "Do you want to resume or pause the print?"
@@ -6349,7 +6355,7 @@ msgstr ""
 "Wykryto powtarzającą się kolizję.\n"
 "Chcesz wznowić lub wstrzymać drukowanie?"
 
-#: tmp_error_headers/error_list.hpp:1366
+#: tmp_error_headers/error_list.hpp:1380
 msgid "Replace filament"
 msgstr "Wymień filament"
 
@@ -6380,7 +6386,7 @@ msgstr "Reset"
 msgid "Reset filter usage?"
 msgstr "Zresetować użycie filtra?"
 
-#: tmp_error_headers/error_list.hpp:723
+#: tmp_error_headers/error_list.hpp:737
 msgid "Residual-current device tripped."
 msgstr "Wyłącznik różnicowoprądowy zadziałał."
 
@@ -6419,13 +6425,13 @@ msgstr "Wycofaj z FINDY"
 msgid "Retracting from FINDA"
 msgstr "Wycofywanie z FINDY"
 
+#: tmp_error_headers/error_list.hpp:239
+msgid "Retry parking"
+msgstr "Ponów parkowanie"
+
 #: tmp_error_headers/error_list.hpp:225
 msgid "Retry pickup"
 msgstr "Ponów pobieranie"
-
-#: tmp_error_headers/error_list.hpp:239
-msgid "Retry tool park"
-msgstr "Ponów parkowanie narzędzia"
 
 #: src/guiapi/include/WindowMenuItems.hpp:46
 #: src/gui/screen/screen_preheat.cpp:203 src/gui/screen_network_setup.cpp:32
@@ -6489,11 +6495,11 @@ msgstr "WYBIERAK NIE RUSZA SIĘ"
 msgid "SELFTEST"
 msgstr "SELFTEST"
 
-#: tmp_error_headers/error_list.hpp:981
+#: tmp_error_headers/error_list.hpp:995
 msgid "SELFTEST NOT PASSED"
 msgstr "SELFTEST NIE ZALICZONY"
 
-#: src/gui/screen_menu_sensor_info.cpp:6
+#: src/gui/screen_menu_sensor_info.cpp:26
 msgid "SENSOR INFO"
 msgstr "INFO O CZUJNIKACH"
 
@@ -6567,7 +6573,7 @@ msgstr "Reset SW"
 msgid "SYSTEM"
 msgstr "SYSTEM"
 
-#: src/gui/MItem_tools.cpp:641
+#: src/gui/MItem_tools.cpp:640
 msgid "Sandwich 5V Current"
 msgstr "Prąd 5V Sandwich"
 
@@ -6580,7 +6586,7 @@ msgstr "Sob"
 msgid "Save Crash Dump"
 msgstr "Zapisz zrzut pamięci"
 
-#: src/gui/MItem_tools.cpp:960
+#: src/gui/MItem_tools.cpp:959
 msgid "Save Logs To File"
 msgstr "Zapisz logi do pliku"
 
@@ -6643,8 +6649,8 @@ msgid "Select printer tool to connect/disconnect on the right."
 msgstr "Po prawej wybierz narzędzie do podłączenia."
 
 #: tmp_error_headers/error_list.hpp:198
-msgid "Select the dock the nozzle belongs to."
-msgstr "Wybierz dok, do którego należy dysza."
+msgid "Select the dock for this tool."
+msgstr "Wybierz dok dla tego narzędzia."
 
 #. //MSG_PROGRESS_UNLOADING_FILAMENT c=20
 #: src/mmu2/mmu2_progress_converter.cpp:23
@@ -6762,7 +6768,7 @@ msgstr ""
 "(wywoła to kalibrację).\n"
 "Zamienić?"
 
-#: src/gui/screen_menu_sensor_info.hpp:96
+#: src/gui/screen_menu_sensor_info.hpp:107
 msgid "Side Filament Sensors"
 msgstr "Boczne czujniki filamentu"
 
@@ -6776,11 +6782,12 @@ msgstr ""
 "(wywoła to kalibrację).\n"
 "Zamienić?"
 
-#: src/gui/MItem_tools.cpp:596
+#: src/gui/MItem_tools.cpp:595
 msgid "Side Filament sensor"
 msgstr "Boczny czujnik filamentu"
 
-#. Only side sensors are not connected, not that tragic, show message but keep on going
+#. Only side sensors are not connected, not that tragic, show message but keep
+#. on going
 #: src/common/feature/filament_sensor/filament_sensors_handler.cpp:101
 msgid "Side filament sensor not connected, check wiring."
 msgstr "Boczny czujnik filamentu nie jest podłączony, sprawdź okablowanie."
@@ -6789,7 +6796,7 @@ msgstr "Boczny czujnik filamentu nie jest podłączony, sprawdź okablowanie."
 msgid "Signal"
 msgstr "Sygnał"
 
-#: src/gui/MItem_tools.cpp:341
+#: src/gui/MItem_tools.cpp:340
 msgid "Silent"
 msgstr "Cicho"
 
@@ -6826,11 +6833,11 @@ msgstr ""
 "Niektóre parametry OpenPrintTag są brakujące lub nieprawidłowe. Sprawdź "
 "podświetlone pola."
 
-#: src/gui/MItem_tools.cpp:380
+#: src/gui/MItem_tools.cpp:379
 msgid "Sort Files"
 msgstr "Sortuj pliki"
 
-#: src/gui/MItem_tools.hpp:157 src/gui/MItem_tools.cpp:350
+#: src/gui/MItem_tools.hpp:157 src/gui/MItem_tools.cpp:349
 msgid "Sound Mode"
 msgstr "Tryb dźwięku"
 
@@ -6838,7 +6845,7 @@ msgstr "Tryb dźwięku"
 msgid "Sound Volume"
 msgstr "Głośność dźwięku"
 
-#: tmp_error_headers/error_list.hpp:947
+#: tmp_error_headers/error_list.hpp:961
 msgid ""
 "Space allocation for firmware BBF file failed. Repeat the action or try "
 "another USB drive."
@@ -6900,7 +6907,7 @@ msgid ""
 "damage."
 msgstr "Nie wykryto blachy. Połóż blachę, aby uniknąć uszkodzenia."
 
-#: tmp_error_headers/error_list.hpp:1304
+#: tmp_error_headers/error_list.hpp:1318
 msgid "Steppers disabled due to inactivity."
 msgstr "Silniki krokowe wyłączone z powodu bezczynności."
 
@@ -6933,7 +6940,7 @@ msgstr "Pomyślnie połączono"
 msgid "Sun"
 msgstr "Nd"
 
-#: tmp_error_headers/error_list.hpp:499
+#: tmp_error_headers/error_list.hpp:513
 msgid ""
 "SuperPINDA sensor is probably broken or disconnected, could not home Z-axis "
 "properly."
@@ -7099,6 +7106,14 @@ msgstr ""
 msgid "TOOL %d"
 msgstr "NARZĘDZIE %d"
 
+#: src/gui/screen_menu_statistics.cpp:95
+msgid "TOOL CHANGES"
+msgstr "WYMIANY NARZĘDZIA"
+
+#: src/gui/screen/screen_nozzle_mismatch.cpp:97
+msgid "TOOL MISMATCH"
+msgstr "NIEZGODNOŚĆ NARZĘDZIA"
+
 #: tmp_error_headers/error_list.hpp:43
 msgid "TOOL OFFSET OUT OF BOUNDS"
 msgstr "PRZESUNĘCIE NARZĘDZIA POZA ZAKRESEM"
@@ -7110,10 +7125,6 @@ msgstr "WYBÓR NARZĘDZIA"
 #: tmp_error_headers/error_list.hpp:15
 msgid "TOOLCHANGER ERROR"
 msgstr "BŁĄD ZMIENIARKI NARZĘDZI"
-
-#: src/gui/screen_menu_statistics.cpp:95
-msgid "TOOLCHANGES"
-msgstr "WYMIANY NARZĘDZIA"
 
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:301
 msgid "TOOLHEAD"
@@ -7201,16 +7212,16 @@ msgstr "Test wentylatora przy 40% pełnej mocy, proszę czekać."
 msgid "Testing filament"
 msgstr "Test filamentu"
 
-#: tmp_error_headers/error_list.hpp:1164
+#: tmp_error_headers/error_list.hpp:1178
 msgid "The G-code isn't fully compatible"
 msgstr "G-code nie jest w pełni kompatybilny"
 
-#: tmp_error_headers/error_list.hpp:1402
+#: tmp_error_headers/error_list.hpp:1416
 msgid ""
 "The HEPA filter has expired. Change the HEPA filter before your next print."
 msgstr "Filtr HEPA wygasł. Wymień przed następnym drukiem."
 
-#: tmp_error_headers/error_list.hpp:1395
+#: tmp_error_headers/error_list.hpp:1409
 msgid ""
 "The HEPA filter has expired. Change the HEPA filter before your next print. "
 "Visit prusa.io/xl-filter for more information."
@@ -7218,7 +7229,7 @@ msgstr ""
 "Upłynął termin eksploatacji filtra HEPA. Wymień filtr HEPA przed następnym "
 "wydrukiem. Odwiedź prusa.io/xl-filter, aby uzyskać więcej informacji."
 
-#: tmp_error_headers/error_list.hpp:1381
+#: tmp_error_headers/error_list.hpp:1395
 msgid ""
 "The HEPA filter is nearing the end of its life span (100 hours of printing "
 "time remaining). We recommend purchasing a new one. Visit prusa.io/xl-filter "
@@ -7228,7 +7239,7 @@ msgstr ""
 "drukowania). Zalecamy zakup nowego. Odwiedź prusa.io/xl-filter, aby uzyskać "
 "więcej informacji."
 
-#: tmp_error_headers/error_list.hpp:1388
+#: tmp_error_headers/error_list.hpp:1402
 msgid ""
 "The HEPA filter is nearing the end of its life span. We recommend purchasing "
 "a new one."
@@ -7257,7 +7268,7 @@ msgstr ""
 "Wersja firmware MMU jest niezgodna z FW drukarki. Zaktualizuj do zgodnej "
 "wersji."
 
-#: tmp_error_headers/error_list.hpp:800
+#: tmp_error_headers/error_list.hpp:814
 msgid ""
 "The OpenPrintTag does not allow filament usage tracking. Filament "
 "consumption will not be saved."
@@ -7295,7 +7306,7 @@ msgstr ""
 "Moduł Wi-Fi ESP nie działa prawidłowo lub nie jest obecny. Podłącz moduł, "
 "spróbuj ponownie uruchomić drukarkę lub użyj przewodu Ethernet."
 
-#: tmp_error_headers/error_list.hpp:1500
+#: tmp_error_headers/error_list.hpp:1514
 msgid ""
 "The auto-retract feature is disabled, which might have caused the failure.\n"
 "\n"
@@ -7333,7 +7344,7 @@ msgstr "Kalibracja powinna zająć niewiele ponad 7 minut."
 msgid "The door sensor is successfully calibrated now."
 msgstr "Czujnik drzwi pomyślnie skalibrowany."
 
-#: tmp_error_headers/error_list.hpp:1486
+#: tmp_error_headers/error_list.hpp:1500
 msgid ""
 "The filament has been purged.\n"
 "\n"
@@ -7366,7 +7377,8 @@ msgstr "Filament zostanie rozładowany automatycznie"
 msgid "The file disappeared"
 msgstr "Plik zniknął"
 
-#. This is a bit hacky way, but the error reporting is done through gcode_info, so we gotta put the error there.
+#. This is a bit hacky way, but the error reporting is done through
+#. gcode_info, so we gotta put the error there.
 #: src/common/marlin_print_preview.cpp:356
 #: src/common/marlin_print_preview.cpp:398
 msgid "The file is corrupt."
@@ -7390,12 +7402,13 @@ msgstr ""
 
 #: tmp_error_headers/error_list.hpp:205
 msgid ""
-"The head hit something on the way to the dock. Make sure the correct dock is "
-"selected and empty, then retry."
+"The head encountered an obstruction on the way to the dock. Make sure the "
+"correct dock is selected and empty, then try again."
 msgstr ""
-"Głowica uderzyła w coś w drodze do doku. Sprawdź wybrany pusty dok i powtórz."
+"Głowica napotkała przeszkodę w drodze do doku. Sprawdź wybrany pusty dok i "
+"spróbuj ponownie."
 
-#: tmp_error_headers/error_list.hpp:1206
+#: tmp_error_headers/error_list.hpp:1220
 msgid ""
 "The heatbed cooled down during the power outage, printed object might have "
 "detached. Inspect it before continuing."
@@ -7418,7 +7431,7 @@ msgstr ""
 msgid "The path does not exist"
 msgstr "Ścieżka nie istnieje"
 
-#: tmp_error_headers/error_list.hpp:982
+#: tmp_error_headers/error_list.hpp:996
 msgid "The previous tests must be completed before this one."
 msgstr "Poprzednie testy muszą być zakończone wcześniej."
 
@@ -7430,7 +7443,7 @@ msgstr ""
 "Drukarka poprowadzi cię przez kalibrację doków. Umieść głowicę ręcznie w "
 "każdym doku od lewej."
 
-#: src/gui/MItem_tools.cpp:987
+#: src/gui/MItem_tools.cpp:986
 #, c-format
 msgid ""
 "The printer will now save all logs to file until restart.\n"
@@ -7497,7 +7510,7 @@ msgstr ""
 "Może występować niewielki opór.\n"
 "Jeśli filament jest zablokowany, otwórz docisk."
 
-#: tmp_error_headers/error_list.hpp:926
+#: tmp_error_headers/error_list.hpp:940
 msgid ""
 "There was a timeout while waiting for measurement sample, please repeat the "
 "action."
@@ -7530,7 +7543,7 @@ msgstr ""
 "\n"
 "ZASTĄPIĆ połączenie czy dodać do SPOOL JOIN?"
 
-#: tmp_error_headers/error_list.hpp:1178
+#: tmp_error_headers/error_list.hpp:1192
 msgid "This G-code was set up for another filament type."
 msgstr "Ten G-code został pocięty dla innego rodzaju filamentu."
 
@@ -7538,7 +7551,7 @@ msgstr "Ten G-code został pocięty dla innego rodzaju filamentu."
 msgid "This change will apply to all toolheads. Do you want to continue?"
 msgstr "Zmiana zostanie zastosowana do wszystkich głowic. Kontynuować?"
 
-#: tmp_error_headers/error_list.hpp:996
+#: tmp_error_headers/error_list.hpp:1010
 msgid ""
 "This error code is not found\n"
 "in our database.\n"
@@ -7586,9 +7599,8 @@ msgstr "Zmieni to zachowanie czujnika filamentu. Czy chcesz kontynuować?"
 
 #: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:87
 msgid ""
-"This will invalidate calibration for this tool. The tool will not be "
-"available for printing until its dock is calibrated again via Calibrations. "
-"Proceed?"
+"This will invalidate the calibration for this tool. The tool will not be "
+"available for printing until its dock is calibrated again. Proceed?"
 msgstr ""
 "Unieważnia kalibrację narzędzia. Niedostępne do ponownej kalibracji doku. "
 "Kontynuować?"
@@ -7638,11 +7650,11 @@ msgstr ""
 "\n"
 "Zachowaj ostrożność w następnym kroku, ponieważ drukarka będzie się poruszać."
 
-#: src/gui/MItem_tools.cpp:375 src/gui/MItem_tools.cpp:452
+#: src/gui/MItem_tools.cpp:374 src/gui/MItem_tools.cpp:451
 msgid "Time"
 msgstr "Czas"
 
-#: src/gui/MItem_tools.cpp:440
+#: src/gui/MItem_tools.cpp:439
 msgid "Time Format"
 msgstr "Format czasu"
 
@@ -7650,7 +7662,7 @@ msgstr "Format czasu"
 msgid "Time Zone Hour Offset"
 msgstr "Przes. godzinowe strefy czasowej"
 
-#: src/gui/MItem_tools.cpp:414
+#: src/gui/MItem_tools.cpp:413
 msgid "Time Zone Minute Offset"
 msgstr "Przes. minutowe strefy czasowej"
 
@@ -7698,7 +7710,8 @@ msgid "To setup or troubleshoot your Wi-Fi, please visit:"
 msgstr "Aby skonfigurować Wi-Fi lub rozwiązać problem, wejdź na:"
 
 #. Used in "The print will end:", keep it up to 10 characters
-#. here the "at" will be inconsistent with FormatMsgPrintWillEndOnDay_i18n @@TODO
+#. here the "at" will be inconsistent with FormatMsgPrintWillEndOnDay_i18n
+#. @@TODO
 #: src/lang/format_print_will_end.cpp:30
 msgid "Today at"
 msgstr "Dziś o"
@@ -7779,7 +7792,7 @@ msgstr "Wyrównanie przekładni narzędzia 5"
 msgid "Tool 5 Loadcell Test"
 msgstr "Test tensometru 5"
 
-#: src/gui/MItem_tools.cpp:571
+#: src/gui/MItem_tools.cpp:570
 msgid "Tool Filament sensor"
 msgstr "Czujnik filamentu narzędzia"
 
@@ -7791,6 +7804,15 @@ msgstr "Podświetlenie narzędzia"
 msgid "Tool Offsets Calibration"
 msgstr "Kalibracja przesunięcia narzędzi"
 
+#: src/gui/screen_menu_sensor_info.hpp:78
+#: src/gui/screen_menu_temperature.hpp:37 src/gui/screen_menu_tune.hpp:57
+msgid "Tool Temperatures"
+msgstr "Temperatury narzędzi"
+
+#: src/gui/screen_menu_statistics.cpp:128
+msgid "Tool changes"
+msgstr "Wymiany narzędzia"
+
 #: src/common/gcode/gcode_compatibility.cpp:123
 msgid "Tool is disabled or of a different type."
 msgstr "Narzędzie wyłączone lub innego typu."
@@ -7799,7 +7821,7 @@ msgstr "Narzędzie wyłączone lub innego typu."
 msgid "Tool lost"
 msgstr "Utracone narzędzie"
 
-#: tmp_error_headers/error_list.hpp:1247
+#: tmp_error_headers/error_list.hpp:1261
 msgid "Tool mapping"
 msgstr "Mapowanie narzędzi"
 
@@ -7811,7 +7833,15 @@ msgstr "Niepowodzenie parkowania"
 msgid "Tool pickup failed"
 msgstr "Niepowodzenie pobierania"
 
-#: tmp_error_headers/error_list.hpp:1241
+#: tmp_error_headers/error_list.hpp:219
+msgid "Tool was not detected after pickup."
+msgstr "Nie wykryto narzędzia po podniesieniu."
+
+#: tmp_error_headers/error_list.hpp:233
+msgid "Tool was still detected after parking."
+msgstr "Narzędzie nadal wykryte po zaparkowaniu."
+
+#: tmp_error_headers/error_list.hpp:1255
 msgid ""
 "Toolchanger problem has been detected.\n"
 "Park all tools to docks\n"
@@ -7820,10 +7850,6 @@ msgstr ""
 "Wykryto problem ze zmieniarką narzędzi.\n"
 "Zaparkuj wszystkie narzędzia w dokach\n"
 "i pozostaw wózek wolny."
-
-#: src/gui/screen_menu_statistics.cpp:128
-msgid "Toolchanges"
-msgstr "Wymiany narzędzia"
 
 #: src/gui/MItem_menus.cpp:184
 msgid "Toolhead"
@@ -7927,7 +7953,7 @@ msgstr "Obróć pokrętło, aby ruszyć stół"
 msgid "Turn the knob to move Z-axis"
 msgstr "Obróć pokrętło, aby ruszyć oś Z"
 
-#: src/gui/MItem_tools.cpp:988
+#: src/gui/MItem_tools.cpp:987
 msgid ""
 "Turn the logging off before disconnecting the USB drive, or you risk "
 "damaging the filesystem!"
@@ -7943,7 +7969,7 @@ msgstr "Ustawienia UI"
 msgid "UNEVEN BED"
 msgstr "NIERÓWNY STÓŁ"
 
-#: tmp_error_headers/error_list.hpp:995
+#: tmp_error_headers/error_list.hpp:1009
 #: tmp_error_headers/error_list_mmu.hpp:318
 msgid "UNKNOWN ERROR"
 msgstr "NIEZNANY BŁĄD"
@@ -7956,19 +7982,19 @@ msgstr "ROZŁADUJ"
 msgid "UNLOAD MANUALLY"
 msgstr "ROZŁADUJ RĘCZNIE"
 
-#: tmp_error_headers/error_list.hpp:1072
+#: tmp_error_headers/error_list.hpp:1086
 msgid "UNSUPPORTED BUDDY FW"
 msgstr "NIEOBŁUGIWANE FW BUDDY"
 
-#: tmp_error_headers/error_list.hpp:1093
+#: tmp_error_headers/error_list.hpp:1107
 msgid "UNSUPPORTED FIRMWARE BBF FILE"
 msgstr "NIEOBSŁUGIWANY PLIK BBF Z FIRMWARE"
 
-#: tmp_error_headers/error_list.hpp:1065
+#: tmp_error_headers/error_list.hpp:1079
 msgid "UNSUPPORTED PRINTER MODEL"
 msgstr "NIEOBSŁUGIWANY MODEL DRUKARKI"
 
-#: tmp_error_headers/error_list.hpp:1513
+#: tmp_error_headers/error_list.hpp:1527
 msgid "UNTRUSTED IDENTITY"
 msgstr "TOŻSAMOŚĆ NIE ZAUFANA"
 
@@ -7976,23 +8002,23 @@ msgstr "TOŻSAMOŚĆ NIE ZAUFANA"
 msgid "UP"
 msgstr "GÓRA"
 
-#: tmp_error_headers/error_list.hpp:582
+#: tmp_error_headers/error_list.hpp:596
 msgid "USB DEVICE OVERCURRENT"
 msgstr "ZBYT DUŻY PRĄD W URZĄDZENIU USB"
 
-#: tmp_error_headers/error_list.hpp:1002
+#: tmp_error_headers/error_list.hpp:1016
 msgid "USB FLASH DRIVE NOT CONNECTED"
 msgstr "NIE PODŁĄCZONO USB"
 
-#: tmp_error_headers/error_list.hpp:1086
+#: tmp_error_headers/error_list.hpp:1100
 msgid "USB FLASH ERROR"
 msgstr "BŁĄD PAMIĘCI USB FLASH"
 
-#: tmp_error_headers/error_list.hpp:575
+#: tmp_error_headers/error_list.hpp:589
 msgid "USB PORT OVERCURRENT"
 msgstr "ZBYT DUŻY PRĄD NA PORCIE USB"
 
-#: tmp_error_headers/error_list.hpp:1003
+#: tmp_error_headers/error_list.hpp:1017
 msgid ""
 "USB drive not\n"
 "connected! Please\n"
@@ -8006,13 +8032,13 @@ msgstr ""
 "z prawidłowym\n"
 "plikiem firmware."
 
-#: tmp_error_headers/error_list.hpp:1311
+#: tmp_error_headers/error_list.hpp:1325
 msgid "USB drive or file error, the print is now paused. Reconnect the drive."
 msgstr ""
 "Błąd pamięci USB lub pliku. Drukowanie zostało wstrzymane. Odłącz i ponownie "
 "podłącz pamięć."
 
-#: tmp_error_headers/error_list.hpp:1094
+#: tmp_error_headers/error_list.hpp:1108
 msgid ""
 "USB flash drive contains\n"
 "unsupported firmware BBF file."
@@ -8024,7 +8050,7 @@ msgstr ""
 msgid "USER INTERFACE"
 msgstr "INTERFEJS UŻYTKOWNIKA"
 
-#: tmp_error_headers/error_list.hpp:1234
+#: tmp_error_headers/error_list.hpp:1248
 msgid ""
 "Unable to home the printer.\n"
 "Do you want to try again?"
@@ -8032,15 +8058,15 @@ msgstr ""
 "Nie można zbazować drukarki.\n"
 "Czy chcesz spróbować ponownie?"
 
-#: tmp_error_headers/error_list.hpp:877
+#: tmp_error_headers/error_list.hpp:891
 msgid "Unable to start puppy application"
 msgstr "Unable to start puppy application"
 
-#: tmp_error_headers/error_list.hpp:1101
+#: tmp_error_headers/error_list.hpp:1115
 msgid "Unable to verify the extruder type, check the wiring and connectors."
 msgstr "Nie można zweryfikować typu ekstrudera. Sprawdź okablowanie i złącza."
 
-#: tmp_error_headers/error_list.hpp:842
+#: tmp_error_headers/error_list.hpp:856
 msgid "Unassigned puppy found"
 msgstr "Unassigned puppy found"
 
@@ -8052,7 +8078,7 @@ msgstr "Brak autoryzacji"
 msgid "Unexpected error occurred."
 msgstr "Wystąpił nieoczekiwany błąd."
 
-#: tmp_error_headers/error_list.hpp:534
+#: tmp_error_headers/error_list.hpp:548
 msgid "Unexpected invalid current."
 msgstr "Nieoczekiwany, błędny prąd"
 
@@ -8069,17 +8095,17 @@ msgstr "Nieznane"
 msgid "Unknown file error"
 msgstr "Nieznany błąd pliku"
 
-#: tmp_error_headers/error_list.hpp:1135
+#: tmp_error_headers/error_list.hpp:1149
 msgid "Unknown file system"
 msgstr "Nieznany system plików"
 
-#: tmp_error_headers/error_list.hpp:190 tmp_error_headers/error_list.hpp:197
-msgid "Unknown nozzle"
-msgstr "Nieznana dysza"
-
-#: tmp_error_headers/error_list.hpp:870
+#: tmp_error_headers/error_list.hpp:884
 msgid "Unknown puppy type"
 msgstr "Unknown puppy type"
+
+#: tmp_error_headers/error_list.hpp:190 tmp_error_headers/error_list.hpp:197
+msgid "Unknown tool"
+msgstr "Nieznane narzędzie"
 
 #: src/gui/screen_menu_filament_changeall.cpp:75
 msgid "Unload"
@@ -8152,7 +8178,7 @@ msgstr ""
 "Gotowe do obliczenia regulacji.\n"
 "Naciśnij Kontynuuj."
 
-#: tmp_error_headers/error_list.hpp:1136
+#: tmp_error_headers/error_list.hpp:1150
 msgid ""
 "Use a different USB drive or reformat this one to the supported FAT32 file "
 "system."
@@ -8163,7 +8189,8 @@ msgstr "Użyj innego USB lub sformatuj ten do FAT32."
 msgid "Used Amount"
 msgstr "Wykorzystana ilość"
 
-#. Used in filament type context (user-defined preset), for example: "PCCF (User)". Please try to fit the text in 6 characters.
+#. Used in filament type context (user-defined preset), for example: "PCCF
+#. (User)". Please try to fit the text in 6 characters.
 #: src/common/filament.cpp:89 src/gui/screen_prusa_link.hpp:56
 msgid "User"
 msgstr "Użytkownik"
@@ -8236,7 +8263,7 @@ msgstr "Czekanie na stół"
 msgid "Waiting for chamber"
 msgstr "Czekanie na komorę"
 
-#: tmp_error_headers/error_list.hpp:905
+#: tmp_error_headers/error_list.hpp:919
 msgid "Waiting for fingerprint timed out"
 msgstr "Oczekiwanie na odcisk palca przekroczyło limit czasu"
 
@@ -8248,7 +8275,7 @@ msgstr "Czekanie na hotend"
 msgid "Waiting for hotends to stabilize at calibration temperature:"
 msgstr "Czekam na ustabilizowanie temperatury hotendów do kalibracji:"
 
-#: tmp_error_headers/error_list.hpp:1472
+#: tmp_error_headers/error_list.hpp:1486
 msgid "Waiting for nozzle temperature..."
 msgstr "Czekanie na temperaturę dyszy..."
 
@@ -8256,7 +8283,7 @@ msgstr "Czekanie na temperaturę dyszy..."
 msgid "Waiting for nozzle to cool down"
 msgstr "Oczekiwanie na schłodzenie dyszy"
 
-#: tmp_error_headers/error_list.hpp:912
+#: tmp_error_headers/error_list.hpp:926
 msgid "Waiting for puppies to start timed out"
 msgstr "Waiting for puppies to start timed out"
 
@@ -8264,12 +8291,12 @@ msgstr "Waiting for puppies to start timed out"
 msgid "Waiting for temperature"
 msgstr "Czekam na temperaturę"
 
-#: tmp_error_headers/error_list.hpp:1423
+#: tmp_error_headers/error_list.hpp:1437
 msgid "Waiting for the user. Press \"Resume\" once the printer is ready."
 msgstr ""
 "Oczekiwanie na użytkownika. Naciśnij \"Wznów\", gdy drukarka będzie gotowa."
 
-#: tmp_error_headers/error_list.hpp:1255
+#: tmp_error_headers/error_list.hpp:1269
 msgid "Waiting for user input"
 msgstr "Czekam na użytkownika"
 
@@ -8277,21 +8304,21 @@ msgstr "Czekam na użytkownika"
 msgid "Warn"
 msgstr "Ostrzegaj"
 
-#: src/guiapi/src/window_msgbox.cpp:341 tmp_error_headers/error_list.hpp:1142
-#: tmp_error_headers/error_list.hpp:1163 tmp_error_headers/error_list.hpp:1170
+#: src/guiapi/src/window_msgbox.cpp:341 tmp_error_headers/error_list.hpp:1156
 #: tmp_error_headers/error_list.hpp:1177 tmp_error_headers/error_list.hpp:1184
-#: tmp_error_headers/error_list.hpp:1191 tmp_error_headers/error_list.hpp:1205
-#: tmp_error_headers/error_list.hpp:1261 tmp_error_headers/error_list.hpp:1268
+#: tmp_error_headers/error_list.hpp:1191 tmp_error_headers/error_list.hpp:1198
+#: tmp_error_headers/error_list.hpp:1205 tmp_error_headers/error_list.hpp:1219
 #: tmp_error_headers/error_list.hpp:1275 tmp_error_headers/error_list.hpp:1282
 #: tmp_error_headers/error_list.hpp:1289 tmp_error_headers/error_list.hpp:1296
 #: tmp_error_headers/error_list.hpp:1303 tmp_error_headers/error_list.hpp:1310
 #: tmp_error_headers/error_list.hpp:1317 tmp_error_headers/error_list.hpp:1324
 #: tmp_error_headers/error_list.hpp:1331 tmp_error_headers/error_list.hpp:1338
 #: tmp_error_headers/error_list.hpp:1345 tmp_error_headers/error_list.hpp:1352
-#: tmp_error_headers/error_list.hpp:1359 tmp_error_headers/error_list.hpp:1373
-#: tmp_error_headers/error_list.hpp:1380 tmp_error_headers/error_list.hpp:1394
-#: tmp_error_headers/error_list.hpp:1408 tmp_error_headers/error_list.hpp:1415
-#: tmp_error_headers/error_list.hpp:1506
+#: tmp_error_headers/error_list.hpp:1359 tmp_error_headers/error_list.hpp:1366
+#: tmp_error_headers/error_list.hpp:1373 tmp_error_headers/error_list.hpp:1387
+#: tmp_error_headers/error_list.hpp:1394 tmp_error_headers/error_list.hpp:1408
+#: tmp_error_headers/error_list.hpp:1422 tmp_error_headers/error_list.hpp:1429
+#: tmp_error_headers/error_list.hpp:1520
 msgid "Warning"
 msgstr "Ostrzeżenie"
 
@@ -8299,7 +8326,7 @@ msgstr "Ostrzeżenie"
 msgid "Was filament unload successful?"
 msgstr "Czy udało się rozładować filament?"
 
-#: tmp_error_headers/error_list.hpp:989
+#: tmp_error_headers/error_list.hpp:1003
 msgid ""
 "We are actively working on resolving these issues. Please send the crash "
 "dump, saved upon reset, to our support team."
@@ -8343,7 +8370,7 @@ msgstr ""
 msgid "Wed"
 msgstr "Śr"
 
-#: tmp_error_headers/error_list.hpp:1129
+#: tmp_error_headers/error_list.hpp:1143
 msgid ""
 "Welcome to the Cold Pull wizard. Prepare a 30cm piece of PLA filament and "
 "follow the instructions. For more details, visit:"
@@ -8405,7 +8432,7 @@ msgstr "Ze skarpetą"
 msgid "Wizard"
 msgstr "Kreator"
 
-#: tmp_error_headers/error_list.hpp:1465
+#: tmp_error_headers/error_list.hpp:1479
 msgid ""
 "Would you like to purge the filament?\n"
 "\n"
@@ -8443,11 +8470,11 @@ msgstr "Filtr osi X"
 msgid "X-axis Freq."
 msgstr "Częstotliwość osi X"
 
-#: src/gui/MItem_tools.cpp:703
+#: src/gui/MItem_tools.cpp:702
 msgid "XBE Refresh Err"
 msgstr "Błąd odświeżania XBE"
 
-#: src/gui/MItem_tools.cpp:646
+#: src/gui/MItem_tools.cpp:645
 msgid "XL Buddy 5V Current"
 msgstr "Prąd 5V XL Buddy"
 
@@ -8531,14 +8558,6 @@ msgstr ""
 msgid "You did not tap the nozzle or you tapped it too soon. Retry?"
 msgstr "Nie dotknięto dyszy lub dotknięto za wcześnie. Spróbować ponownie?"
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:20
-msgid ""
-"You will need to manually position the head at the nozzle cleaner and adjust "
-"the height screw."
-msgstr ""
-"Trzeba ręcznie ustawić głowicę nad czyszczakiem i wyregulować śrubę "
-"wysokości."
-
 #: src/gui/screen_network_setup.cpp:287
 msgid ""
 "You're already successfully connected through the ethernet cable.\n"
@@ -8598,11 +8617,11 @@ msgstr ""
 ": częstotliwość osi jest zbyt niska.\n"
 "Naciągnij pasek."
 
-#: src/gui/MItem_tools.cpp:670
+#: src/gui/MItem_tools.cpp:669
 msgid "closed"
 msgstr "zamknięte"
 
-#: src/gui/MItem_tools.cpp:668
+#: src/gui/MItem_tools.cpp:667
 msgid "detached"
 msgstr "odłączone"
 
@@ -8610,7 +8629,7 @@ msgstr "odłączone"
 msgid "loosen"
 msgstr "poluzuj"
 
-#: src/gui/MItem_tools.cpp:669
+#: src/gui/MItem_tools.cpp:668
 msgid "open"
 msgstr "otwarte"
 
