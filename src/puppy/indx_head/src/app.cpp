@@ -244,7 +244,11 @@ uint8_t get_heatbreak_fan_pwm() {
 static constexpr uint32_t fan_startup_duration_ms = 5000;
 
 bool is_printfan_rpm_ok() {
-    return printfan_pwm == 0 || hal::tim::get_printfan_rpm_counter() > 0 || freertos::millis() - printfan_start_ms < fan_startup_duration_ms;
+    // TODO Workaround: RPM measurement doesn't work when PWM is off (need to
+    // measure in the periods when PWM is high). Until this is fixed, consider
+    // the fan always OK if PWM is not high enough. After RPM measurement is
+    // fixed, the printfan_pwm check below should be printfan_pwm == 0.
+    return printfan_pwm < 230 || hal::tim::get_printfan_rpm_counter() > 0 || freertos::millis() - printfan_start_ms < fan_startup_duration_ms;
 }
 
 bool is_heatbreak_fan_rpm_ok() {
