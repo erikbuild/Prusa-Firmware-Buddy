@@ -191,14 +191,16 @@ struct ChannelState {
     }
 
     bool read_and_publish(LDC1612 &ldc, LDC1612::Channel channel, uint32_t now_us) {
-        auto data = ldc.read_channel_data(channel);
-        if (!data.has_value()) {
+        auto data_opt = ldc.read_channel_data(channel);
+        if (!data_opt.has_value()) {
             return false;
         }
 
+        // 28 bit resolution has too large dynamic range to fit into delta compression used during transfer
+        // reducing resolution to 24bits keeps needed precision and allows data to be transferred reliably
         rate.record(now_us);
         uint32_t freq = rate.get_frequency_16_8();
-        int32_t sample = static_cast<int32_t>(data.value());
+        int32_t sample = static_cast<int32_t>(data_opt.value() >> 4);
 
         if (delta.feed(sample, freq)) {
             publish(delta.flush(seq, sample, freq));
