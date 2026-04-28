@@ -92,9 +92,9 @@ void run() {
             hal::FloatReading nozzle_temp_reading = hal::i2c::read_tpis_object_temp();
 
             if (nozzle_temp_reading.valid) {
-                if (nozzle_temp_reading.value > max_nozzle_temp) {
+                if (nozzle_temp_reading.object_temperature_celsius > max_nozzle_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::nozzle_max_temp);
-                } else if (nozzle_temp_reading.value < min_nozzle_temp) {
+                } else if (nozzle_temp_reading.object_temperature_celsius < min_nozzle_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::nozzle_min_temp);
                 }
 
@@ -104,9 +104,9 @@ void run() {
                 hal::panic(indx_head::errors::FaultStatusMask::tpis_invalid_timeout);
             }
 
-            // Note: If !nozzle_temp_reading.valid, nozzle_temp_reading.value returns last valid value
+            // Note: If !nozzle_temp_reading.valid, nozzle_temp_reading contains last valid value
 
-            const int16_t nozzle_temp_uncompensated_c100 = static_cast<int16_t>(nozzle_temp_reading.value * 100.f);
+            const int16_t nozzle_temp_uncompensated_c100 = static_cast<int16_t>(nozzle_temp_reading.object_temperature_celsius * 100.f);
             const int16_t nozzle_temp_compensated_c100 = nozzle_temp_uncompensated_c100 - hotend_temp_compensation::get_current_compensation_c100();
 
             // Calculate slope
@@ -127,7 +127,7 @@ void run() {
 
             // Start calculating slope only after the nozzle_temps store actual readouts
             // to prevent a slope spike on first valid readout
-            // Note: If !nozzle_temp_reading.valid, nozzle_temp_reading.value returns last valid value
+            // Note: If !nozzle_temp_reading.valid, nozzle_temp_reading contains last valid value
             can_calculate_nozzle_temp_slope |= nozzle_temp_reading.valid;
 
             inductionHeater.heater_control(target_temp.load() * 100 /*centiDeg*/, nozzle_temp_compensated_c100);

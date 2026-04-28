@@ -352,7 +352,7 @@ void init_comm() {
 }
 
 FloatReading read_tpis_object_temp() {
-    static float last_valid_temp = 25.0f; // Default to room temperature
+    static float last_valid_object_temperature_celsius = 25.0f; // Default to room temperature
 
     // A jump > 50°C between consecutive readings is physically impossible
     static constexpr int32_t max_plausible_jump = 50; // °C, integer compare
@@ -370,36 +370,51 @@ FloatReading read_tpis_object_temp() {
                 rtt::print("i2c: thermo init failed\n");
             }
         }
-        return { .value = last_valid_temp, .valid = false };
+        return {
+            .object_temperature_celsius = last_valid_object_temperature_celsius,
+            .valid = false
+        };
     }
     // FIXME: Use scaled integers
     const auto sensor_data = thermometer::read_sensor_data();
     if (!sensor_data.valid) {
         rtt::print("i2c: thermo read failed\n");
         // Return last valid temperature on error
-        return { .value = last_valid_temp, .valid = false };
+        return {
+            .object_temperature_celsius = last_valid_object_temperature_celsius,
+            .valid = false,
+        };
     }
     const auto t_ambient_k = thermometer::calculate_ambient_kelvin(sensor_data.tp_ambient);
     const auto val = static_cast<float>(static_cast<int32_t>(sensor_data.tp_object) - static_cast<int32_t>(thermometer::eeprom_data.u0)) * thermometer::eeprom_data.k_inv;
     const float t_obj_k = thermometer::F(val + thermometer::f_mapped(t_ambient_k));
-    const float raw_temp = t_obj_k - thermometer::degC0asKf;
+    const float object_temperature_celsius = t_obj_k - thermometer::degC0asKf;
 
-    const int32_t diff = static_cast<int32_t>(raw_temp) - static_cast<int32_t>(last_valid_temp);
+    const int32_t diff = static_cast<int32_t>(object_temperature_celsius) - static_cast<int32_t>(last_valid_object_temperature_celsius);
     const bool plausible = (diff > -max_plausible_jump) && (diff < max_plausible_jump);
     temp_debouncer.push(plausible);
 
     if (plausible) {
-        last_valid_temp = raw_temp;
-        return { .value = last_valid_temp, .valid = true };
+        last_valid_object_temperature_celsius = object_temperature_celsius;
+        return {
+            .object_temperature_celsius = last_valid_object_temperature_celsius,
+            .valid = true,
+        };
     }
 
     if (temp_debouncer.is_stable() && !temp_debouncer.value()) {
-        last_valid_temp = raw_temp;
-        return { .value = raw_temp, .valid = true };
+        last_valid_object_temperature_celsius = object_temperature_celsius;
+        return {
+            .object_temperature_celsius = object_temperature_celsius,
+            .valid = true,
+        };
     }
 
     // Transient glitch — return last known good value
-    return { .value = last_valid_temp, .valid = true };
+    return {
+        .object_temperature_celsius = last_valid_object_temperature_celsius,
+        .valid = true,
+    };
 }
 
 void set_led_pwm(uint8_t r, uint8_t g, uint8_t b) {
