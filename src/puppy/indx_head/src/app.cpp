@@ -19,6 +19,7 @@ namespace {
 // default 25*C stored in centiDeg - modbus reads before the first valid TPiS reading don't report 0°C,
 std::atomic<int16_t> nozzle_temp_uncompensated_c100 = 25 * 100;
 std::atomic<int16_t> nozzle_temp_compensated_c100 = 25 * 100;
+std::atomic<int16_t> tpis_ambient_temp_c100 = 25 * 100;
 
 /// See indx_head::modbus::Status::hotend_temp_raw_c100_dt_s
 std::atomic<int16_t> hotend_temp_raw_c100_dt_s = 0;
@@ -124,6 +125,7 @@ void run() {
 
             ::nozzle_temp_uncompensated_c100.store(nozzle_temp_uncompensated_c100);
             ::nozzle_temp_compensated_c100.store(nozzle_temp_compensated_c100);
+            ::tpis_ambient_temp_c100.store(static_cast<int16_t>(nozzle_temp_reading.ambient_temperature_celsius * 100.f));
 
             // Start calculating slope only after the nozzle_temps store actual readouts
             // to prevent a slope spike on first valid readout
@@ -179,6 +181,10 @@ int16_t get_nozzle_temp_compensated_c100() {
 
 int16_t get_hotend_temp_raw_c100_dt_s() {
     return hotend_temp_raw_c100_dt_s.load();
+}
+
+int16_t get_tpis_ambient_temp_c100() {
+    return tpis_ambient_temp_c100.load();
 }
 
 void set_nozzle_present(indx_head::NozzlePresence state) {

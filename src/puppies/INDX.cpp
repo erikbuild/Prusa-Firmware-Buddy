@@ -306,6 +306,11 @@ int16_t Indx::get_board_temperature() {
     return static_cast<int16_t>(register_general_status.value.board_temperature);
 }
 
+float Indx::get_tpis_ambient_temperature() {
+    // Sent in centiDeg (deg * 100) for precision on 2 decimal places
+    return static_cast<float>(static_cast<int16_t>(register_general_status.value.tpis_ambient_temperature_c100)) / 100.f;
+}
+
 float Indx::get_24V() {
     // FIXME:
     // Called from interrupts, can't lock :-(

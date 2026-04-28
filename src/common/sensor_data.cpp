@@ -158,4 +158,7 @@ float SensorData::head_pcb_temperature() {
 float SensorData::head_mcu_temperature() {
     return buddy::puppies::indx.get_mcu_temperature();
 }
+float SensorData::head_ambient_temperature() {
+    return buddy::puppies::indx.get_tpis_ambient_temperature();
+}
 #endif

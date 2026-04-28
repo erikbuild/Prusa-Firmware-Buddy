@@ -53,6 +53,15 @@ public:
 
 #endif
 
+#if HAS_INDX()
+
+class MI_INFO_HEAD_AMBIENT_TEMPERATURE : public MenuItemAutoUpdatingLabel<float> {
+public:
+    MI_INFO_HEAD_AMBIENT_TEMPERATURE();
+};
+
+#endif
+
 using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
     MI_RETURN,
 
@@ -86,6 +95,9 @@ using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
     #if HAS_DWARF() || HAS_INDX()
     MI_INFO_HEAD_PCB_TEMPERATURE,
     MI_INFO_HEAD_MCU_TEMPERATURE,
+    #endif
+    #if HAS_INDX()
+    MI_INFO_HEAD_AMBIENT_TEMPERATURE,
     #endif
     #if HAS_REMOTE_BED()
     MI_INFO_REMOTE_BED_MCU_TEMPERATURE,

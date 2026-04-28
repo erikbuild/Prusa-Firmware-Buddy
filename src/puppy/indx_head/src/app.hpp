@@ -18,6 +18,9 @@ int16_t get_nozzle_temp_compensated_c100();
 /// In 1/100 °C/s
 int16_t get_hotend_temp_raw_c100_dt_s();
 
+/// In 1/100 °C
+int16_t get_tpis_ambient_temp_c100();
+
 void set_nozzle_present(indx_head::NozzlePresence state);
 indx_head::NozzlePresence get_nozzle_present();
 void invalidate_nozzle_presence(uint16_t ack_value); ///< Reset debouncer and set nozzle state to unknown, store ack for buddy to read

@@ -33,6 +33,9 @@ struct Status {
     /// !!! Does not correspond to the compensated readings
     int16_t hotend_temp_raw_c100_dt_s = 0;
 
+    /// Ambient temperature reported by the TPiS sensor [int16_t in 1/100 °C]
+    int16_t tpis_ambient_temperature_c100 = default_hotend_temperature_c100;
+
     int16_t board_temperature = 0; // [int16_t degree C]
     int16_t mcu_temperature = 0; // [int16_t degree C]
     uint16_t print_fan_rpm = 0;

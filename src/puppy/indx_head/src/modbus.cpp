@@ -43,6 +43,7 @@ namespace {
         state.status_regs.hotend_measured_temperature_uncompensated_c100 = static_cast<uint16_t>(app::get_nozzle_temp_uncompensated_c100());
         state.status_regs.hotend_measured_temperature_compensated_c100 = static_cast<uint16_t>(app::get_nozzle_temp_compensated_c100());
         state.status_regs.hotend_temp_raw_c100_dt_s = app::get_hotend_temp_raw_c100_dt_s();
+        state.status_regs.tpis_ambient_temperature_c100 = app::get_tpis_ambient_temp_c100();
 
         state.status_regs.board_temperature = hal::adc::get_board_temp();
         state.status_regs.mcu_temperature = hal::adc::get_mcu_temp();

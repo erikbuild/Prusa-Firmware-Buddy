@@ -103,6 +103,7 @@ public:
 
     [[nodiscard]] int16_t get_mcu_temperature(); ///< Get MCU temperature [°C]
     [[nodiscard]] int16_t get_board_temperature(); ///< Get board temperature [°C]
+    [[nodiscard]] float get_tpis_ambient_temperature(); ///< Get TPiS sensor ambient temperature [°C]
     [[nodiscard]] float get_24V(); ///< Get 24V power supply voltage [V]
     /** Get nozzle presence (debounced on the INDX_HEAD side).
      *  @returns nullopt until the head reports a definitive value, true if nozzle is present, false otherwise

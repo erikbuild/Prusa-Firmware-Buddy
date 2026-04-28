@@ -54,6 +54,9 @@ public:
     static float head_pcb_temperature();
     static float head_mcu_temperature();
 #endif
+#if HAS_INDX()
+    static float head_ambient_temperature();
+#endif
 
 #if HAS_DOOR_SENSOR()
     RelaxedAtomic<buddy::DoorSensor::DetailedState> door_sensor_detailed_state;

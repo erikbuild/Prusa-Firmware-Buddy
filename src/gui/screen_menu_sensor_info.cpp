@@ -22,6 +22,17 @@ MI_INFO_HEAD_MCU_TEMPERATURE::MI_INFO_HEAD_MCU_TEMPERATURE()
 
 #endif
 
+#if HAS_INDX()
+
+MI_INFO_HEAD_AMBIENT_TEMPERATURE::MI_INFO_HEAD_AMBIENT_TEMPERATURE()
+    : MenuItemAutoUpdatingLabel {
+        _("Head Ambient Temperature"),
+        standard_print_format::temp_c,
+        [](auto) { return SensorData::head_ambient_temperature(); },
+    } {}
+
+#endif
+
 ScreenMenuSensorInfo::ScreenMenuSensorInfo()
     : ScreenMenuSensorInfo_(_("SENSOR INFO")) //
 {
