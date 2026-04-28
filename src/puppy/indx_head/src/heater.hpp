@@ -24,8 +24,9 @@ struct RingdownAnalysis {
 class InductionHeater {
 public:
     InductionHeater(void);
-    void update(uint16_t target_power);
+
     void ramp_isr();
+
     static constexpr uint8_t avg_peaks = 3; // number of ring-down cycles to average
     static constexpr uint16_t max_power = 14;
     static constexpr uint16_t limited_max_power = 10; // ~46W
@@ -70,6 +71,8 @@ private:
 
     /// Measure LC response and perform ringdown analysis.
     void measure();
+
+    void update(uint16_t target_power);
 
     // Heater control
     enum class HeaterControlMode {
