@@ -752,14 +752,13 @@ void PrusaToolChanger::unpark_to(const xy_pos_t &destination) {
 }
 
 bool PrusaToolChanger::bump_to_dock(PhysicalToolIndex tool) {
-    // Move Z down before any XY moves
-    z_shift(10.0f);
-
-    // Home if needed
+    // Home if needed (mapi::park below requires XY homed)
     if (!ensure_safe_move()) {
         return false;
     }
     planner.synchronize();
+
+    mapi::park(mapi::ZAction::move_to_at_least, { .x = mapi::ParkingPosition::unchanged, .y = mapi::ParkingPosition::unchanged, .z = 2.0f });
 
     // Get dock info
     const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/true);
