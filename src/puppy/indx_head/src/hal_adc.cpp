@@ -62,15 +62,20 @@ int16_t get_board_temp() {
     return prev->second - temp_diff;
 }
 
-uint16_t get_input_voltage() {
-    static constexpr auto r1 = 2 * fpm::fixed_24_8 { 4.7f }; // kOhm
-    static constexpr uint32_t r2 = 1; // kOhm
-    static constexpr fpm::fixed_24_8 vref_nominal { 3.3f };
+uint16_t get_input_voltage_mV() {
+    // Calculate actual reference voltage of the chip [mV]
+    const uint32_t v_ref_mv = __LL_ADC_CALC_VREFANALOG_VOLTAGE(get_raw(Channel::vref_int), LL_ADC_RESOLUTION_12B);
 
-    // Voltage at ADC pin
-    const auto v_adc_pin = (get_raw(Channel::input_voltage) * vref_nominal) / get_raw(Channel::vref_int);
-    // Scaled back to ~24V
-    return static_cast<uint16_t>(((v_adc_pin * (r1 + r2)) / r2) * 100);
+    // Voltage at ADC pin [mV]
+    const uint32_t v_adc_pin_mv = __LL_ADC_CALC_DATA_TO_VOLTAGE(v_ref_mv, get_raw(Channel::input_voltage), LL_ADC_RESOLUTION_12B);
+
+    // The measured pin voltage is behind a resistor divider, calculate original voltage [mV]
+    constexpr float r1 = 2 * 4700; // Ohm
+    constexpr float r2 = 1000; // Ohm
+
+    constexpr fpm::fixed_16_16 adj_coef { (r1 + r2) / r2 };
+
+    return uint16_t { fpm::fixed_16_16 { v_adc_pin_mv } * adj_coef };
 }
 
 } // namespace hal::adc

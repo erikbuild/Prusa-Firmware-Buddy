@@ -81,8 +81,8 @@ namespace adc {
     int16_t get_mcu_temp();
     /// Calculates board temp in degC
     int16_t get_board_temp();
-    /// Calculates input volatage in V * 100
-    uint16_t get_input_voltage();
+    /// Calculates input volatage in mV
+    uint16_t get_input_voltage_mV();
 
     namespace impl {
         alignas(uint32_t) extern std::array<uint16_t, std::to_underlying(Channel::_cnt)> buffer;

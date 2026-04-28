@@ -49,7 +49,7 @@ namespace {
         state.status_regs.mcu_temperature = hal::adc::get_mcu_temp();
 
         // System monitoring
-        state.status_regs.system_24V_mV = hal::adc::get_input_voltage();
+        state.status_regs.system_24V_mV = hal::adc::get_input_voltage_mV();
 
         // Print fan status
         const uint8_t print_pwm = app::get_printfan_pwm();
