@@ -254,6 +254,13 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
         return;
     }
 
+#if HAS_INDX()
+    // Park the tool back to its dock after autoload (covers all early-return paths)
+    ScopeGuard park_after_autoload = [&] {
+        tool_change(NoTool {}, tool_return_t::no_return);
+    };
+#endif
+
     pause::Settings settings;
     settings.SetExtruder(target_extruder);
     settings.SetFastLoadLength(fast_load_length);
