@@ -310,6 +310,55 @@ void PrusaToolChanger::check_nozzle_presence_vs_eeprom() {
     }
 }
 
+void PrusaToolChanger::check_nozzle_presence_during_print() {
+    if (!marlin_server::is_printing()) {
+        return; // not actively printing (paused/pausing/finishing/idle)
+    }
+
+    const uint32_t now = ticks_ms();
+    if (ticks_diff(now, last_print_nozzle_check_ms) < int32_t(PRINT_NOZZLE_CHECK_PERIOD_MS)) {
+        return;
+    }
+    last_print_nozzle_check_ms = now;
+
+    const auto maybe_nozzle = buddy::puppies::indx.get_nozzle_present();
+    if (!maybe_nozzle.has_value()) {
+        return; // no debounced sample yet
+    }
+
+    const bool nozzle_present = *maybe_nozzle;
+    const auto selected = PhysicalToolIndex::currently_selected();
+
+    if (!std::holds_alternative<PhysicalToolIndex>(selected)) {
+        if (nozzle_present) {
+            // Odd state but not the failure mode we care about (tool falling off).
+            log_warning(PrusaToolChanger, "In-print nozzle detected with no tool selected (ignored)");
+        }
+        return;
+    }
+
+    if (nozzle_present) {
+        return; // expected tool, nozzle there — all good
+    }
+
+    // Tool selected but nozzle missing — likely tool fell off mid-print.
+    const auto tool_index = std::get<PhysicalToolIndex>(selected);
+    log_error(PrusaToolChanger, "In-print nozzle missing for tool #%u — pausing print", tool_index.to_raw());
+
+    // wait_for_response()/synchronize() run idle loops which call back into loop() → us; block re-entry.
+    ResetOnReturn guard([this](bool state) { block_tool_check = state; });
+
+    // Stop motion immediately so we don't keep printing without a nozzle while the dialog is up.
+    planner.quick_stop();
+    planner.synchronize();
+
+    marlin_server::print_pause();
+
+    marlin_server::FSM_Holder fsm(PhaseNozzleMismatch::tool_lost);
+    marlin_server::wait_for_response(PhaseNozzleMismatch::tool_lost);
+    // INDX_TODO: real recovery path (rehome, repick / dock select, etc.)
+}
+
 void PrusaToolChanger::invalidate_xy_homing() {
     axes_home_level[X_AXIS] = AxisHomeLevel::not_homed;
     axes_home_level[Y_AXIS] = AxisHomeLevel::not_homed;
@@ -332,7 +381,12 @@ void PrusaToolChanger::loop(bool printing, bool paused) {
     }
 
     if (!nozzle_check_disabled) {
-        check_nozzle_presence_vs_eeprom();
+        if (printing && !paused) {
+            // EEPROM is invalidated during prints, so use the in-RAM active tool instead.
+            check_nozzle_presence_during_print();
+        } else {
+            check_nozzle_presence_vs_eeprom();
+        }
     }
 
     // Update the currently applied offset when idling (so that a manual swap is reflected), but

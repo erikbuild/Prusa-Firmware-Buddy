@@ -189,6 +189,18 @@ public:
      */
     void check_nozzle_presence_vs_eeprom();
 
+    /**
+     * @brief Periodically verify the picked tool's nozzle is still present during print.
+     *
+     * Compares the in-RAM active tool against the nozzle presence sensor. On mismatch,
+     * pauses the print and opens the NozzleMismatch FSM. EEPROM is intentionally not
+     * consulted here — it is invalidated during prints.
+     *
+     * Self-throttled to PRINT_NOZZLE_CHECK_PERIOD_MS; safe to call every cycle.
+     * @warning Must be called from the main (default) thread, with block_tool_check clear.
+     */
+    void check_nozzle_presence_during_print();
+
     /// @brief Disable nozzle presence checking (e.g. during dock calibration)
     void set_nozzle_check_disabled(bool disabled) { nozzle_check_disabled = disabled; }
     bool is_nozzle_check_disabled() const { return nozzle_check_disabled; }
@@ -226,6 +238,9 @@ private:
     bool nozzle_check_disabled = false; ///< When true, skip nozzle presence vs EEPROM check (session-only, resets on reboot)
     std::atomic<uint16_t> pickup_fail_count = 0; ///< Number of failed pickup attempts since boot
     std::atomic<uint16_t> park_fail_count = 0; ///< Number of failed park attempts since boot
+
+    static constexpr uint32_t PRINT_NOZZLE_CHECK_PERIOD_MS = 5000; ///< Period of in-print nozzle presence check
+    uint32_t last_print_nozzle_check_ms = 0; ///< Tick of last in-print nozzle presence check
 
     /**
      * @brief Invalidate XY homing state, forcing a rehome before next toolchange.
