@@ -434,7 +434,9 @@ void resume_loop() {
         }
 
 #if HAS_NOZZLE_CLEANER()
+        marlin_server::enqueue_gcode("G12 S90"); // enter cleaner
         marlin_server::enqueue_gcode("G12"); // clean nozzle
+        marlin_server::enqueue_gcode("G12 S91"); // exit cleaner
 #endif
         resume_state = ResumeState::Unpark;
         break;
