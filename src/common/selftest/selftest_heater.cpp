@@ -67,7 +67,9 @@ PhysicalToolIndex CSelftestPart_Heater::get_picked_tool() {
 
 LoopResult CSelftestPart_Heater::stateCheckHbrPassed() {
     SelftestResult eeres = config_store().selftest_result.get();
-    if (!eeres.has_heatbreak_fan_passed(m_config.tool_nr)) {
+    // Hotfix: skip only on fail so unknown/not-run doesn't abort the test
+    // Proper fix: declare fan selftest as a dependency of heater selftest in selftest_snake_config for all printers
+    if (eeres.get_heatbreak_fan(m_config.tool_nr) == TestResult::failed) {
         IPartHandler::SetFsmPhase(PhasesSelftest::HeatersDisabledDialog);
         nozzle_test_skipped = true;
     }

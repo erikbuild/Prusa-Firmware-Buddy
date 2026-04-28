@@ -137,7 +137,8 @@ void phaseHeaters_bed_ena(IPartHandler *&pBed, const HeaterConfig_t &config_bed)
         // as the nozzle selftest takes care of showing the dialog and this one
         // running in parallel would just make a mess.
         auto sr = config_store().selftest_result.get();
-        if (!sr.has_heatbreak_fan_passed(0)) {
+        // hotfix: see stateCheckHbrPassed in selftest_heater.cpp, skip only on explicit fail.
+        if (sr.get_heatbreak_fan(0) == TestResult::failed) {
             return;
         }
     }
