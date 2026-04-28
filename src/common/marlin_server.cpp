@@ -3196,10 +3196,7 @@ void unpark_head_XY(void) {
         return;
     }
 
-    current_position.x = server.resume.pos.x;
-    current_position.y = server.resume.pos.y;
-    NOMORE(current_position.y, Y_BED_SIZE); // Prevent crashing into parked tools
-    line_to_current_position(NOZZLE_PARK_XY_FEEDRATE);
+    mapi::park(mapi::ZAction::no_move, { .x = server.resume.pos.x, .y = std::min<float>(server.resume.pos.y, Y_BED_SIZE), .z = {} });
 }
 
 void unpark_head_ZE(void) {
