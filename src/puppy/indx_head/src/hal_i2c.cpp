@@ -351,7 +351,7 @@ void init_comm() {
     leds::init();
 }
 
-FloatReading read_tpis_object_temp() {
+TemperatureReading read_tpis_temperature() {
     static float last_valid_object_temperature_celsius = 25.0f; // Default to room temperature
     static float last_valid_ambient_temperature_celsius = last_valid_object_temperature_celsius;
 

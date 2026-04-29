@@ -89,7 +89,7 @@ void run() {
             hotend_temp_compensation::step();
 
             last_induction_control_us = now_us;
-            hal::FloatReading nozzle_temp_reading = hal::i2c::read_tpis_object_temp();
+            hal::TemperatureReading nozzle_temp_reading = hal::i2c::read_tpis_temperature();
 
             if (nozzle_temp_reading.valid) {
                 if (nozzle_temp_reading.object_temperature_celsius > max_nozzle_temp) {

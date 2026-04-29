@@ -36,7 +36,7 @@ namespace rs485 {
     std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> data);
 } // namespace rs485
 
-struct FloatReading {
+struct TemperatureReading {
     float object_temperature_celsius;
     float ambient_temperature_celsius;
     bool valid;
@@ -49,7 +49,7 @@ namespace i2c {
     using fixed = fpm::fixed<int32_t, int64_t, 7>;
 
     /// Returns ambient and object temperatures
-    FloatReading read_tpis_object_temp();
+    TemperatureReading read_tpis_temperature();
     void set_led_pwm(uint8_t r, uint8_t g, uint8_t b);
     void set_led_mode(indx_head::leds::Mode mode);
 } // namespace i2c
