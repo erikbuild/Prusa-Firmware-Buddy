@@ -111,7 +111,7 @@ static void get_fingerprint(
 
     // ask puppy to compute fw fingerprint
     if (bootloader_protocol.compute_fingerprint(salt) != command_ok) {
-        fatal_error(ErrCode::ERR_SYSTEM_PUPPY_NOT_RESPONDING);
+        fatal_error(ErrCode::ERR_SYSTEM_PUPPY_NOT_RESPONDING, puppy_name);
     }
     const auto fingerprint_wait_start = ticks_ms();
 
