@@ -73,18 +73,6 @@ void GcodeSuite::M104() {
       if (!stdext::holds_value(PhysicalToolIndex::currently_selected(), *tool)) return;
     #endif
     thermalManager.setTargetHotend(temp, *tool);
-
-    #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
-      /*
-       * Stop the timer at the end of print. Start is managed by 'heat and wait' M109.
-       * We use half EXTRUDE_MINTEMP here to allow nozzles to be put into hot
-       * standby mode, for instance in a dual extruder setup, without affecting
-       * the running print timer.
-       */
-      if (temp <= (EXTRUDE_MINTEMP) / 2) {
-        print_job_timer.pause();
-      }
-    #endif
   }
 
   if(parser.seenval('D')) {
@@ -143,21 +131,7 @@ void M109_no_parser(PhysicalToolIndex tool, const M109Flags& flags) {
       // This is a legit use
       marlin_server::call_manually::set_temp_to_display(*flags.display_temp, tool);
     }
-
-    #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
-    // TODO: this doesn't work properly for multitool, temperature of last tool decides whenever printjob timer is started or not
-      /*
-       * Use half EXTRUDE_MINTEMP to allow nozzles to be put into hot
-       * standby mode, (e.g., in a dual extruder setup) without affecting
-       * the running print timer.
-       */
-      if (temp <= (EXTRUDE_MINTEMP) / 2) {
-        print_job_timer.pause();
-      }
-      else
-        print_job_timer.start();
-    #endif
-    }
+  }
 
   if (set_temp) {
     (void)thermalManager.wait_for_hotend(tool, no_wait_for_cooling, flags.autotemp);
