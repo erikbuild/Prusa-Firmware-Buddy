@@ -165,12 +165,17 @@ public:
      */
     bool ensure_head_open(std::variant<PhysicalToolIndex, NoTool> tool = NoTool {});
 
+    enum class BumpError : uint8_t {
+        unsafe_move,
+        hit
+    };
+
     /**
      * @brief Try bumping to a dock position to see if its empty.
      * @param tool this tool
      * @return true if empty
      */
-    bool bump_to_dock(PhysicalToolIndex tool);
+    std::expected<void, BumpError> bump_to_dock(PhysicalToolIndex tool);
 
     /**
      * @brief Updates/invalidates the last picked tool (only when not printing if not overriden)

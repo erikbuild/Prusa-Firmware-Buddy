@@ -789,6 +789,8 @@ bool PrusaToolChanger::pickup(PhysicalToolIndex tool) {
             return false;
         }
 
+        // TODO: What if we are trying to pick unmapped tool? A fallback procedure rather than print pause would make more sense here
+
         switch (apply_failure_action(handle_pickup_failure())) {
         case ToolchangeFailureAction::abort:
             return false;
@@ -817,10 +819,10 @@ void PrusaToolChanger::unpark_to(const xy_pos_t &destination) {
     move(destination.x, destination.y, travel_fr);
 }
 
-bool PrusaToolChanger::bump_to_dock(PhysicalToolIndex tool) {
+std::expected<void, PrusaToolChanger::BumpError> PrusaToolChanger::bump_to_dock(PhysicalToolIndex tool) {
     // Home if needed (mapi::park below requires XY homed)
     if (!ensure_safe_move()) {
-        return false;
+        return std::unexpected<BumpError>(BumpError::unsafe_move);
     }
     planner.synchronize();
 
@@ -849,11 +851,11 @@ bool PrusaToolChanger::bump_to_dock(PhysicalToolIndex tool) {
     }
     // We've hit endstops so back off a bit and warn user probably
     if (hit) {
-        move(info.dock_x, safe_y + 5.0f, target_fr); // back off a bit
+        do_blocking_move_to_xy(info.dock_x, safe_y + 25.f, target_fr);
         log_warning(PrusaToolChanger, "Bump to dock of tool #%u detected endstop hit, dock probably occupied", tool.to_raw());
         // Invalidate homing state to trigger rehome before next toolchaínge attempt, to be sure we have correct position of the dock in the future
         invalidate_xy_homing();
-        return false;
+        return std::unexpected<BumpError>(BumpError::hit);
     }
 
     current_position.y = info.dock_y;
@@ -862,7 +864,7 @@ bool PrusaToolChanger::bump_to_dock(PhysicalToolIndex tool) {
     // otherwise the next ensure_safe_move() forces a G28 from inside the dock pocket.
     axes_home_level[Y_AXIS] = AxisHomeLevel::full;
     planner.synchronize();
-    return true;
+    return std::expected<void, BumpError>();
 }
 
 void PrusaToolChanger::persist_last_picked_tool(std::variant<PhysicalToolIndex, NoTool> tool, bool override_always) {

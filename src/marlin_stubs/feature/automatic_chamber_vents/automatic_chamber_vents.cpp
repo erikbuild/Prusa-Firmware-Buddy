@@ -89,7 +89,12 @@ namespace {
         if (!prusa_toolchanger.pick_any_tool(tool_return_t::no_return, {}, tool_change_lift_t::full_lift, false)) {
             return false;
         }
-        return prusa_toolchanger.bump_to_dock(VENT_DOCK);
+        auto bump_res = prusa_toolchanger.bump_to_dock(VENT_DOCK);
+        if (!bump_res.has_value() && bump_res.error() == PrusaToolChanger::BumpError::hit) {
+            fatal_error(ErrCode::ERR_MECHANICAL_UNEXPECTED_TOOL);
+            return false;
+        }
+        return true;
     }
 
     void open_vents_move_sequence() {
