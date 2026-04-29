@@ -101,6 +101,10 @@ public:
     /// In °C/s
     [[nodiscard]] float get_hotend_temp_raw_c_dt_s() const;
 
+    /// In (duty cycle 0-1)^2 * us
+    /// !!! Overflows periodically
+    [[nodiscard]] uint32_t get_hotend_duty_cycle_sq_integral_us() const;
+
     [[nodiscard]] int16_t get_mcu_temperature(); ///< Get MCU temperature [°C]
     [[nodiscard]] int16_t get_board_temperature(); ///< Get board temperature [°C]
     [[nodiscard]] float get_tpis_ambient_temperature(); ///< Get TPiS sensor ambient temperature [°C]
@@ -167,6 +171,8 @@ private:
     std::atomic<int16_t> cached_hotend_temp_compensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
     std::atomic<int16_t> cached_hotend_temp_uncompensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
     std::atomic<int16_t> cached_hotend_temp_raw_c100_dt_s { 0 };
+    std::atomic<uint32_t> cached_hotend_duty_cycle_sq_integral_us { 0 };
+
     static_assert(std::atomic<int16_t>::is_always_lock_free);
     static_assert(std::atomic<uint16_t>::is_always_lock_free);
 

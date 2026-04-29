@@ -33,6 +33,13 @@ struct Status {
     /// !!! Does not correspond to the compensated readings
     int16_t hotend_temp_raw_c100_dt_s = 0;
 
+    /// Integral of (heater duty cycle)^2 over time (us)
+    /// Expect overflows. Since duty cycle is 0-1, overflows at most once in 4294967295/1000000 = 4300 s
+    /// We need to send this as uint32_t, uint16_t would overflow too fast
+    /// and dividing by 1000 to ms would screw up the overflows
+    uint16_t hotend_duty_cycle_sq_integral_us_lo = 0;
+    uint16_t hotend_duty_cycle_sq_integral_us_hi = 0;
+
     /// Ambient temperature reported by the TPiS sensor [int16_t in 1/100 °C]
     int16_t tpis_ambient_temperature_c100 = default_hotend_temperature_c100;
 

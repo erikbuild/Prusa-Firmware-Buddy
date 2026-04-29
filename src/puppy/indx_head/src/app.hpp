@@ -18,6 +18,10 @@ int16_t get_nozzle_temp_compensated_c100();
 /// In 1/100 °C/s
 int16_t get_hotend_temp_raw_c100_dt_s();
 
+/// In (duty cycle 0-1)^2 * us
+/// Expect overflows. Since duty cycle is 0-1, overflows at most once in 4294967295/1000000 = 4300 s
+uint32_t get_hotend_duty_cycle_sq_integral_us();
+
 /// In 1/100 °C
 int16_t get_tpis_ambient_temp_c100();
 

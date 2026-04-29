@@ -113,11 +113,18 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
     if (status == CommunicationStatus::OK) {
         handle_fault_status();
         handle_nozzle_presence();
+
         cached_hotend_temp_compensated_c100.store(
             static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_compensated_c100));
         cached_hotend_temp_uncompensated_c100.store(
             static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_uncompensated_c100));
         cached_hotend_temp_raw_c100_dt_s.store(register_general_status.value.hotend_temp_raw_c100_dt_s);
+
+        cached_hotend_duty_cycle_sq_integral_us.store( //
+            register_general_status.value.hotend_duty_cycle_sq_integral_us_lo //
+            | (uint32_t(register_general_status.value.hotend_duty_cycle_sq_integral_us_hi) << 16) //
+        );
+
         handle_time_sync(timing);
     }
     return status;
@@ -239,6 +246,10 @@ float Indx::get_hotend_temp_uncompensated() const {
 float Indx::get_hotend_temp_raw_c_dt_s() const {
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
     return static_cast<float>(cached_hotend_temp_raw_c100_dt_s.load()) / 100.f;
+}
+
+uint32_t Indx::get_hotend_duty_cycle_sq_integral_us() const {
+    return cached_hotend_duty_cycle_sq_integral_us.load();
 }
 
 CommunicationStatus Indx::set_hotend_target_temp(float target) {

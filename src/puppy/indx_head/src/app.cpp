@@ -56,6 +56,10 @@ std::atomic<bool> leds_changed = true;
 
 std::atomic<bool> selftest_mode = false;
 
+/// Integrates (hotend duty cycle 0-1)^2 over time - in us units
+/// Overflows are expected
+std::atomic<uint32_t> hotend_duty_cycle_sq_integral_us { 0 };
+
 int16_t validate_board_temperature() {
     constexpr int16_t min_board_temp_degC = 10;
     constexpr int16_t max_board_temp_degC = 95;
@@ -141,6 +145,13 @@ void run() {
             can_calculate_nozzle_temp_slope |= nozzle_temp_reading.valid;
 
             inductionHeater.heater_control(target_temp.load() * 100 /*centiDeg*/, nozzle_temp_compensated_c100);
+
+            // Integrate duty cycle
+            hotend_duty_cycle_sq_integral_us += uint32_t(inductionHeater.current_duty_cycle_sq() * induction_control_dt_us);
+
+            // Just to give scope what numbers we're dealing with
+            // Duty cycle is 0-1, control_delay_us is in thousands - so when we cast to uint32_t after the duty cycle multiplication, we should get reasonably precise values
+            static_assert(control_delay_us >= 1000 && control_delay_us <= 10000);
         }
 
         // Fans and leds control loop
@@ -189,6 +200,10 @@ int16_t get_nozzle_temp_compensated_c100() {
 
 int16_t get_hotend_temp_raw_c100_dt_s() {
     return hotend_temp_raw_c100_dt_s.load();
+}
+
+uint32_t get_hotend_duty_cycle_sq_integral_us() {
+    return hotend_duty_cycle_sq_integral_us.load();
 }
 
 int16_t get_tpis_ambient_temp_c100() {
