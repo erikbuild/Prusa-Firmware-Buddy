@@ -240,7 +240,14 @@ void set_led_config(const indx_head::leds::LedConfig cfg) {
 }
 
 void set_printfan_pwm(uint8_t pwm) {
-    if (printfan_pwm == 0) {
+    // INDX_TODO: The RPM measuring doesn't work for PWM below ~90%. We do want
+    // to check the RPM at least when PWM is close to 100%, but at the point of
+    // a new, higher PWM being set the RPM may have not caught up, hence we use
+    // this timer any time we're increasing PWM as a grace period before
+    // starting to check the RPM.
+    // The original condition was:
+    // if (printfan_pwm == 0) {
+    if (pwm > printfan_pwm) {
         // MUST be before setting the PWM to avoid race conditions
         printfan_start_ms = freertos::millis();
     }
@@ -255,14 +262,14 @@ uint8_t get_heatbreak_fan_pwm() {
     return heatbreak_fan_pwm.load();
 }
 
-static constexpr uint32_t fan_startup_duration_ms = 5000;
+static constexpr uint32_t fan_startup_duration_ms = 2000;
 
 bool is_printfan_rpm_ok() {
     // TODO Workaround: RPM measurement doesn't work when PWM is off (need to
     // measure in the periods when PWM is high). Until this is fixed, consider
     // the fan always OK if PWM is not high enough. After RPM measurement is
     // fixed, the printfan_pwm check below should be printfan_pwm == 0.
-    return printfan_pwm < 230 || hal::tim::get_printfan_rpm_counter() > 0 || freertos::millis() - printfan_start_ms < fan_startup_duration_ms;
+    return printfan_pwm < 250 || hal::tim::get_printfan_rpm_counter() > 0 || freertos::millis() - printfan_start_ms < fan_startup_duration_ms;
 }
 
 bool is_heatbreak_fan_rpm_ok() {
