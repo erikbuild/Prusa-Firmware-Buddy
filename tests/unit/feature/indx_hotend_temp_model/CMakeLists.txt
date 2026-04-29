@@ -7,3 +7,13 @@ add_executable(
 target_include_directories(indx_hotend_temp_compensation_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(indx_hotend_temp_compensation_tests buddy_utils)
 add_catch_test(indx_hotend_temp_compensation_tests)
+
+# indx_hotend_thermal_model_tests
+add_executable(
+  indx_hotend_thermal_model_tests
+  ${CMAKE_SOURCE_DIR}/src/feature/indx_hotend_temp_model/indx_hotend_thermal_model.cpp
+  indx_hotend_thermal_model_tests.cpp
+  )
+target_include_directories(indx_hotend_thermal_model_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(indx_hotend_thermal_model_tests buddy_utils)
+add_catch_test(indx_hotend_thermal_model_tests)
