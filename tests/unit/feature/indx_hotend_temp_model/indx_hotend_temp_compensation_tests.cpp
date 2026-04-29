@@ -3,10 +3,10 @@
 
 #include <cstdlib>
 
-#include <feature/indx_hotend_temp_compensation/indx_hotend_temp_compensation.hpp>
+#include <feature/indx_hotend_temp_model/indx_hotend_temp_compensation.hpp>
 
 using namespace indx_hotend_temp_compensation;
 
-TEST_CASE("indx_hoten_temp_compensation") {
+TEST_CASE("indx_hotend_temp_compensation") {
     // TODO
 }

@@ -12,12 +12,12 @@
 // To compensate for this, we calculate a rudimentary filament model on the motherboard
 // and send a compensation parameter over the modbus to the head.
 // BFW-8630
-namespace buddy::indx_hotend_temp_compensation {
+namespace buddy {
 
-/// Wrapper over the platform-invariant compensator that wraps ::indx_hotend_temp_compensation::HotendTempCompensator
+/// Wrapper over the platform-invariant compensator that wraps indx_hotend_temp_compensation::HotendTempCompensator
 /// Works directly on the INDX-head, going around the IndxHotend. This makes sense to be a singleton.
 /// !!! To be accessed from marlin thread only
-class TempCompensator {
+class INDXHotendTempModel {
 
 public:
     /// To be called in regular intervals from marlin thread
@@ -42,6 +42,6 @@ private:
 
 /// Singleton
 /// !!! To be accessed from marlin thread only
-TempCompensator &temp_compensator();
+INDXHotendTempModel &hotend_temp_model();
 
-} // namespace buddy::indx_hotend_temp_compensation
+} // namespace buddy

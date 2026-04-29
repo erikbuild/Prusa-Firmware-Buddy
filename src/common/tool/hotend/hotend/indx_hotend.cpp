@@ -4,7 +4,7 @@
 #include <puppies/INDX.hpp>
 #include <common/aggregate_arity.hpp>
 #include <logging/log.hpp>
-#include <feature/indx_hotend_temp_compensation/buddy_indx_hotend_temp_compensation.hpp>
+#include <feature/indx_hotend_temp_model/hotend_temp_model.hpp>
 
 LOG_COMPONENT_REF(Marlin);
 
@@ -32,7 +32,7 @@ void IndxHotend::set_nozzle_target_temp_unchecked(TargetTemperature set) {
 
     // Changing target temp indicates filament or tool change
     // In both cases, we want the compensator to fetch the new filament parameters
-    buddy::indx_hotend_temp_compensation::temp_compensator().reset_state();
+    buddy::hotend_temp_model().reset_state();
 }
 
 void IndxHotend::manage() {

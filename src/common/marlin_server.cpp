@@ -123,7 +123,7 @@
 
 #include <option/has_indx.h>
 #if HAS_INDX()
-    #include <feature/indx_hotend_temp_compensation/buddy_indx_hotend_temp_compensation.hpp>
+    #include <feature/indx_hotend_temp_model/hotend_temp_model.hpp>
 #endif
 
 #if HAS_DWARF()
@@ -875,7 +875,7 @@ static void cycle() {
 #endif
 
 #if HAS_INDX()
-    buddy::indx_hotend_temp_compensation::temp_compensator().step();
+    buddy::hotend_temp_model().step();
 #endif
 
     record_fanctl_metrics();

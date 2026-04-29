@@ -1,5 +1,5 @@
 /// @file
-#include "buddy_indx_hotend_temp_compensation.hpp"
+#include "hotend_temp_model.hpp"
 
 #include <freertos/timing.hpp>
 #include <raii/scope_guard.hpp>
@@ -12,15 +12,15 @@
 #include <marlin_server.hpp>
 #include <module/stepper.h>
 
-namespace buddy::indx_hotend_temp_compensation {
+namespace buddy {
 
-TempCompensator &temp_compensator() {
+INDXHotendTempModel &hotend_temp_model() {
     assert(osThreadGetId() == marlin_server::server_task);
-    static TempCompensator instance;
+    static INDXHotendTempModel instance;
     return instance;
 }
 
-void TempCompensator::step() {
+void INDXHotendTempModel::step() {
     auto &indx_head = buddy::puppies::indx;
     const auto now_ms = freertos::millis();
 
@@ -127,8 +127,8 @@ void TempCompensator::step() {
     final_compensation_c = compensator_.step(step_params);
 }
 
-void TempCompensator::reset_state() {
+void INDXHotendTempModel::reset_state() {
     is_initialized_ = false;
 }
 
-} // namespace buddy::indx_hotend_temp_compensation
+} // namespace buddy
