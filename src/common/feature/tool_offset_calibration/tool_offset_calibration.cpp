@@ -346,6 +346,11 @@ bool run(uint8_t r_param, uint8_t probe_count) {
     float min_z_offset = std::numeric_limits<float>::max();
     float max_z_offset = std::numeric_limits<float>::lowest();
 
+    float min_x_offset = std::numeric_limits<float>::max();
+    float max_x_offset = std::numeric_limits<float>::lowest();
+    float min_y_offset = std::numeric_limits<float>::max();
+    float max_y_offset = std::numeric_limits<float>::lowest();
+
     uint8_t step = 0;
     for (uint8_t i = 0; i < PhysicalToolIndex::count; i++) {
         const auto tool = PhysicalToolIndex::from_raw(i);
@@ -422,7 +427,29 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             return false;
         }
 
+        min_x_offset = std::min(min_x_offset, hotend_offset[tool].x);
+        max_x_offset = std::max(max_x_offset, hotend_offset[tool].x);
+        min_y_offset = std::min(min_y_offset, hotend_offset[tool].y);
+        max_y_offset = std::max(max_y_offset, hotend_offset[tool].y);
+
         step++;
+    }
+
+    // Normalize XY offsets so the midpoint between min and max sits at zero.
+    // The ScopeGuard at function exit persists hotend_offset to EEPROM.
+    if (num_tools > 1) {
+        const float avg_x_offset = (min_x_offset + max_x_offset) / 2.0f;
+        const float avg_y_offset = (min_y_offset + max_y_offset) / 2.0f;
+        log_info(ToolOffsetCalib, "Normalizing XY offsets: subtracting X=%.3f Y=%.3f",
+            static_cast<double>(avg_x_offset), static_cast<double>(avg_y_offset));
+        for (uint8_t i = 0; i < PhysicalToolIndex::count; i++) {
+            if (!used_physical_tools.test(i)) {
+                continue;
+            }
+            const auto tool = PhysicalToolIndex::from_raw(i);
+            hotend_offset[tool].x -= avg_x_offset;
+            hotend_offset[tool].y -= avg_y_offset;
+        }
     }
 
     if (max_z_offset - min_z_offset > MAX_Z_OFFSET_DIFFERENCE) {
