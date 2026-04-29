@@ -237,7 +237,7 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
                 hotend_offset[tool].y = result->y + config.sensor_position.y - sensor_corrected_config.sensor_position.y; // Correct for any sensor position shift
                 hotend_offset[tool].z = current_ho.z;
                 prusa_toolchanger.save_tool_offset(tool);
-                hotend_currently_applied_offset = xyz_pos_t { result->x, result->y, current_ho.z };
+                hotend_currently_applied_offset = hotend_offset[tool];
                 return true;
             } else {
                 log_error(ToolOffsetCalib, "Measurement failed: %s", result.error());
