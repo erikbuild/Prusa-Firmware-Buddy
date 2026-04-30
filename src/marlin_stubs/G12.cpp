@@ -30,8 +30,8 @@ LOG_COMPONENT_REF(PRUSA_GCODE);
  *
  * - `R` - Ensure filament is (auto-)retracted before cleaning
  * - `S` - (INDX only) Cleaning sequence number (default: 0 = clean)
- *         0 = clean, 1 = quick_clean, 2 = deep_clean, 10 = purge_clean,
- *         20 = eject_blob, 90 = enter_cleaner, 91 = exit_cleaner
+ *         0 = clean, 1 = quick_clean, 2 = deep_clean, 20 = purge_clean,
+ *         21 = power_panic_purge, 30 = eject_blob, 90 = enter_cleaner, 91 = exit_cleaner
  *
  */
 
@@ -59,6 +59,7 @@ void PrusaGcodeSuite::G12() {
             // Reserved for more cleaning sequences
             { 20, nozzle_cleaner::Sequence::purge_clean },
 #if HAS_INDX()
+            { 21, nozzle_cleaner::Sequence::power_panic_purge },
             // Reserved for more purge sequences
             { 30, nozzle_cleaner::Sequence::eject_blob },
             // Reserved for other sequences

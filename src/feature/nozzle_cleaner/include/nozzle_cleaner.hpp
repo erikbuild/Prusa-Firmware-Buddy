@@ -17,6 +17,7 @@ enum class Sequence : uint16_t {
 #endif
     purge_clean,
 #if HAS_INDX()
+    power_panic_purge,
     eject_blob,
     enter_cleaner,
     exit_cleaner,

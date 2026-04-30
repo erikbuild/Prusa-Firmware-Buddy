@@ -85,6 +85,30 @@ static constexpr EnumArray<Sequence, GCodeFile, static_cast<int>(Sequence::_cnt)
                                                       "G750 Y98.5 F21000\n"
                                                       "G750 Y91.5 F21000",
                                  } },
+        // Like purge_clean, but without the retract at the end.
+        { Sequence::power_panic_purge, {
+                                           .filename = "power_panic_purge",
+                                           .directory = directory,
+                                           .default_gcode = "G750 Y87 F21000\n" // Eject poop and move back to purge position
+                                                            "G750 Y91 F21000\n"
+                                                            "G750 Y84 F21000\n"
+                                                            "G750 Y91 F21000\n"
+                                                            "G750 Y77 F21000\n"
+                                                            "G750 Y91 F21000\n"
+                                                            "G750 Y86.5 F21000\n"
+                                                            "M906 P1\n" // Increase E current for purge
+                                                            "G1 E25 F250\n"
+                                                            "M400\n" // planner.synchronize()
+                                                            "M906 P0\n" // Restore E current
+                                                            "G750 X0.65 Y118.5 F18000\n"
+                                                            "G750 X0.0 Y98.5 F18000\n"
+                                                            "G750 X-0.5 Y118.5 F18000\n"
+                                                            "G750 X-0.1 Y98.5 F18000\n"
+                                                            "G750 X-1.5 Y118.5 F18000\n"
+                                                            "G750 X-2 Y98.5 F18000\n"
+                                                            "G750 X-2 Y118.5 F18000\n"
+                                                            "G750 X0.65 Y96.5 F18000",
+                                       } },
         { Sequence::eject_blob, {
                                     .filename = "eject_blob",
                                     .directory = directory,
