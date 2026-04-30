@@ -360,6 +360,20 @@ void resume_loop() {
         planner.junction_deviation_mm = state_buf.planner.junction_deviation_mm;
 #endif
 
+#if HAS_INDX()
+        // Outside the toolchange area: tool is physically still on the head, but
+        // active_extruder wasn't restored from EEPROM (the cache is invalidated
+        // mid-print). Apply the saved tool so subsequent E moves are valid,
+        // including its tool offset.
+        if (state_buf.planner.active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+            const PhysicalToolIndex tool = PhysicalToolIndex::from_raw(state_buf.planner.active_tool);
+            prusa_toolchanger.set_active_extruder(tool);
+            hotend_currently_applied_offset = hotend_offset[tool];
+        } else {
+            prusa_toolchanger.set_active_extruder(NoTool {});
+            hotend_currently_applied_offset = xyz_pos_t {};
+        }
+#endif
         // initial planner state (order is relevant!)
         assert(!planner.leveling_active);
         current_position[Z_AXIS] = state_buf.planner.z_position;
@@ -399,16 +413,6 @@ void resume_loop() {
             resume_state = ResumeState::Finish; // Do not reheat, do not unpark
             break; // Skip lift and rehome
             // Will continue with toolcrash recovery
-        }
-#endif
-
-#if HAS_INDX()
-        // Outside the toolchange area: tool is physically still on the head, but
-        // active_extruder wasn't restored from EEPROM (the cache is invalidated
-        // mid-print). Apply the saved tool so subsequent E moves are valid.
-        if (state_buf.planner.active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
-            prusa_toolchanger.set_active_extruder(
-                PhysicalToolIndex::from_raw(state_buf.planner.active_tool));
         }
 #endif
 
