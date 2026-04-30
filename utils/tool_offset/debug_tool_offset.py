@@ -253,6 +253,9 @@ class CppSymmetry:
     peak_time: float
     confidence: float
     correlation_peak: float
+    # First-pass (untrimmed) correlation score; defaults to correlation_peak
+    # when older firmware did not emit it separately.
+    correlation_peak_full: float = 0.0
     name: str = ""
 
 
@@ -330,6 +333,37 @@ class PassCorrelation:
 
 
 @dataclass
+class PassTrimRefine:
+    label: str
+    pass_num: int
+    n_full: int
+    n_kept: int
+    trim_start: int
+    pass1_lag: int
+    pass1_score: float
+    pass1_refined: float
+    pass2_lag: int
+    pass2_score: float
+    pass2_refined: float
+
+    @staticmethod
+    def from_json(data: Dict[str, Any]) -> PassTrimRefine:
+        return PassTrimRefine(
+            label=data.get("label", ""),
+            pass_num=int(data.get("pass", 0)),
+            n_full=int(data.get("n_full", 0)),
+            n_kept=int(data.get("n_kept", 0)),
+            trim_start=int(data.get("trim_start", 0)),
+            pass1_lag=int(data.get("pass1_lag", 0)),
+            pass1_score=float(data.get("pass1_score", 0.0)),
+            pass1_refined=float(data.get("pass1_refined", 0.0)),
+            pass2_lag=int(data.get("pass2_lag", 0)),
+            pass2_score=float(data.get("pass2_score", 0.0)),
+            pass2_refined=float(data.get("pass2_refined", 0.0)),
+        )
+
+
+@dataclass
 class PassRawChunk:
     label: str
     pass_num: int
@@ -401,6 +435,7 @@ _PARSERS = [
     ("# pass_derivative", "pass_derivative",
      lambda d: _from_json(PassDerivative, d)),
     ("# pass_correlation", "pass_correlation", PassCorrelation.from_json),
+    ("# pass_trim_refine", "pass_trim_refine", PassTrimRefine.from_json),
     ("# pass_raw_chunk", "pass_raw_chunk",
      lambda d: _from_json(PassRawChunk, d)),
     ("# rough_align_energy", "rough_align_energy", RoughAlignEnergy.from_json),
@@ -604,6 +639,7 @@ def print_axis_results(
     samples: Optional[LineSamples],
     profile: Optional[MotionProfile],
     diameter: float,
+    trim_refines: Optional[List[PassTrimRefine]] = None,
 ):
     center = diameter / 2.0
     title = _scan_title(axis, peaks)
@@ -657,15 +693,34 @@ def print_axis_results(
 
     if symmetry:
         print(
-            f"\n  {'Pass':<8} {'Peak time (s)':<16} {'Confidence':<14} {'Corr peak'}"
+            f"\n  {'Pass':<8} {'Peak time (s)':<16} {'Confidence':<14} {'Corr full':<12} {'Corr trimmed':<14} {'Δ'}"
         )
-        print(f"  {'-' * 50}")
+        print(f"  {'-' * 70}")
         for s in symmetry:
-            corr_str = f"{s.correlation_peak:.4f}" if s.correlation_peak != float(
-                "-inf") else "-inf"
+
+            def _fmt(v: float) -> str:
+                return f"{v:.4f}" if v != float("-inf") else "-inf"
+
+            full_str = _fmt(s.correlation_peak_full)
+            trim_str = _fmt(s.correlation_peak)
+            delta_str = (f"{s.correlation_peak - s.correlation_peak_full:+.4f}"
+                         if s.correlation_peak_full != 0.0
+                         and s.correlation_peak != float("-inf") else "—")
             print(
-                f"  {s.pass_num:<8} {s.peak_time:<16.6f} {s.confidence:<14.3f} {corr_str}"
-            )
+                f"  {s.pass_num:<8} {s.peak_time:<16.6f} {s.confidence:<14.3f} "
+                f"{full_str:<12} {trim_str:<14} {delta_str}")
+
+    if trim_refines:
+        print(
+            f"\n  {'Pass':<6} {'n_full':<8} {'n_kept':<8} {'lag1':<8} {'lag1_ref':<10} "
+            f"{'lag2':<8} {'lag2_ref':<10} {'Δlag':<10}")
+        print(f"  {'-' * 72}")
+        for tr in trim_refines:
+            d_lag = tr.pass2_refined - tr.pass1_refined
+            print(
+                f"  {tr.pass_num:<6} {tr.n_full:<8} {tr.n_kept:<8} "
+                f"{tr.pass1_lag:<8} {tr.pass1_refined:<10.3f} "
+                f"{tr.pass2_lag:<8} {tr.pass2_refined:<10.3f} {d_lag:<+10.3f}")
 
 
 def print_final_offset(final: FinalOffset) -> None:
@@ -1584,6 +1639,8 @@ def _gather_scan_data(data: Dict[str, Any], frag: str) -> Dict[str, Any]:
         _filter("pass_derivative"),
         "correlations":
         _filter("pass_correlation"),
+        "trim_refines":
+        _filter("pass_trim_refine"),
         "raw_chunks":
         _filter("pass_raw_chunk"),
         "energy_data":
@@ -1605,6 +1662,7 @@ def process_single(response: List[str],
           f"{len(data['peaks'])} peak sets, "
           f"{len(data['pass_preprocessed'])} preprocessed, "
           f"{len(data['pass_correlation'])} correlations, "
+          f"{len(data['pass_trim_refine'])} trim_refines, "
           f"{len(data['rough_align_energy'])} energy, "
           f"{len(data['rough_align_score'])} score")
 
@@ -1612,9 +1670,16 @@ def process_single(response: List[str],
         sd = _gather_scan_data(data, frag)
 
         print(f"\n--- {pass_name} / {axis}-Axis [{frag}] ---")
-        print_axis_results(axis, sd["peaks"], sd["est"], sd["deltas"],
-                           sd["symmetry"], sd["timing"], sd["samples"],
-                           sd["profile"], diameter)
+        print_axis_results(axis,
+                           sd["peaks"],
+                           sd["est"],
+                           sd["deltas"],
+                           sd["symmetry"],
+                           sd["timing"],
+                           sd["samples"],
+                           sd["profile"],
+                           diameter,
+                           trim_refines=sd["trim_refines"])
 
         fig = plot_sweep_analysis(f"{pass_name} / {axis}",
                                   sd["samples"],

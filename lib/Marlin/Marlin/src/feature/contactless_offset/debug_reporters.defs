@@ -304,6 +304,36 @@ static void debug_report_rough_align_energy(
 #endif
 }
 
+// Reports the second-pass (trimmed) symmetry refinement.
+// pass1_lag/pass1_score = full-signal first-pass result (integer lag, parabolic-refined value not used).
+// pass2_lag/pass2_score = trimmed-signal second-pass result, in original-signal lag coordinates.
+// pass1_refined_full / pass2_refined_full = parabolic-refined floats in original lag coordinates.
+static void debug_report_pass_trim_refine(
+    [[maybe_unused]] const char *label,
+    [[maybe_unused]] int pass_num,
+    [[maybe_unused]] size_t n_full,
+    [[maybe_unused]] size_t n_kept,
+    [[maybe_unused]] size_t trim_start,
+    [[maybe_unused]] int pass1_lag,
+    [[maybe_unused]] float pass1_score,
+    [[maybe_unused]] float pass1_refined,
+    [[maybe_unused]] int pass2_lag,
+    [[maybe_unused]] float pass2_score,
+    [[maybe_unused]] float pass2_refined) {
+#ifdef SERIAL_DEBUG
+    serial_printf("# pass_trim_refine {\"label\": \"%s\", \"pass\": %d, "
+                  "\"n_full\": %u, \"n_kept\": %u, \"trim_start\": %u, "
+                  "\"pass1_lag\": %d, \"pass1_score\": %.4f, \"pass1_refined\": %.4f, "
+                  "\"pass2_lag\": %d, \"pass2_score\": %.4f, \"pass2_refined\": %.4f}\n",
+        label, pass_num,
+        static_cast<unsigned>(n_full),
+        static_cast<unsigned>(n_kept),
+        static_cast<unsigned>(trim_start),
+        pass1_lag, pass1_score, pass1_refined,
+        pass2_lag, pass2_score, pass2_refined);
+#endif
+}
+
 static void debug_report_pass_raw_chunk(
     [[maybe_unused]] const char *label,
     [[maybe_unused]] int pass_num,
@@ -422,11 +452,13 @@ static void debug_report_twospeed_analysis(
         serial_printf("# twospeed_symmetry {\"label\": \"%s\", \"name\": \"%s\", "
                       "\"pass\": %d, "
                       "\"peak_time\": %.6f, \"confidence\": %.3f, "
-                      "\"correlation_peak\": %.3f}\n",
+                      "\"correlation_peak\": %.3f, "
+                      "\"correlation_peak_full\": %.3f}\n",
             label, name, i + 1,
             pass.peak_time_s,
             pass.confidence,
-            pass.correlation_peak);
+            pass.correlation_peak,
+            pass.correlation_peak_full);
     }
 #endif
 }

@@ -87,12 +87,16 @@ struct LineMotionConfig {
     float speed2 = 15.0f;
     float accel = 2000.0f;
     float rest_time = 0.0f;
+    float symmetry_trim_fraction;
 };
 
 struct SymmetryPeakResult {
     float peak_time_s;
     float confidence;
     float correlation_peak;
+    // Pass-1 (full signal) correlation peak. Equals correlation_peak when no
+    // tail trimming is performed; otherwise the pre-trim score for diagnostics.
+    float correlation_peak_full = 0.0f;
 };
 
 struct FourPassPeaks {
@@ -430,6 +434,7 @@ static std::expected<ScanOutcome, const char *> run_scan(
     cfg.speed = config.sensing_speed_slow;
     cfg.speed2 = config.sensing_speed_fast;
     cfg.rest_time = config.sweep_rest_time;
+    cfg.symmetry_trim_fraction = config.symmetry_trim_fraction;
 
     debug_report_scan_start(name);
     auto scan_result = execute_and_analyze_sweep(cfg, sensor, name);
@@ -744,6 +749,121 @@ static float refine_lag_parabolic(
     return static_cast<float>(best_lag) + sp::parabolic_peak_offset(y0, y1, y2);
 }
 
+// Trim value/derivative buffers symmetrically around the pass-1 symmetry axis,
+// keeping the central `trim_fraction` of samples. Returns trim_start (offset
+// into the original buffer where the trimmed region begins). Output buffers
+// are populated with trim_start..trim_start+n_kept-1 from the inputs.
+static size_t trim_around_symmetry_axis(
+    const sfl::segmented_vector<float, 256> &signal_value,
+    const sfl::segmented_vector<float, 256> &signal_deriv,
+    int pass1_lag,
+    float trim_fraction,
+    sfl::segmented_vector<float, 256> &out_value,
+    sfl::segmented_vector<float, 256> &out_deriv) {
+
+    const size_t n = signal_value.size();
+    // Symmetry axis (sample index) under pass-1 lag
+    const float axis = (static_cast<float>(n) - 1.0f - static_cast<float>(pass1_lag)) * 0.5f;
+    size_t n_kept = static_cast<size_t>(static_cast<float>(n) * trim_fraction + 0.5f);
+    if (n_kept < 4) {
+        n_kept = std::min(n, static_cast<size_t>(4));
+    }
+    if (n_kept > n) {
+        n_kept = n;
+    }
+    // Centre n_kept samples on the axis (use ceil-style start to keep symmetry tight)
+    int start_signed = static_cast<int>(axis - static_cast<float>(n_kept - 1) * 0.5f + 0.5f);
+    if (start_signed < 0) {
+        start_signed = 0;
+    }
+    if (start_signed + static_cast<int>(n_kept) > static_cast<int>(n)) {
+        start_signed = static_cast<int>(n) - static_cast<int>(n_kept);
+    }
+    const size_t trim_start = static_cast<size_t>(start_signed);
+
+    out_value.reserve(n_kept);
+    for (size_t i = 0; i < n_kept; ++i) {
+        out_value.push_back(signal_value[trim_start + i]);
+    }
+    // Derivative is one shorter than signal_value; keep matching range, clamped.
+    const size_t deriv_n = signal_deriv.size();
+    if (deriv_n > 0) {
+        size_t d_end = std::min(trim_start + n_kept, deriv_n);
+        size_t d_start = std::min(trim_start, d_end);
+        out_deriv.reserve(d_end - d_start);
+        for (size_t i = d_start; i < d_end; ++i) {
+            out_deriv.push_back(signal_deriv[i]);
+        }
+    }
+    return trim_start;
+}
+
+struct Pass2Result {
+    int lag; // pass-2 best lag in original-signal coordinates
+    float refined_lag; // parabolic-refined, original-signal coordinates
+    float score; // combined correlation score on the trimmed window
+    size_t n_kept;
+    size_t trim_start;
+};
+
+// Pass-2 symmetry refinement: trim tails around the pass-1 axis and re-correlate
+// over a small window. Returns nullopt when trim_fraction is outside (0, 1) or
+// the trimmed window is too small to correlate.
+static std::optional<Pass2Result> refine_with_trimmed_window(
+    const sfl::segmented_vector<float, 256> &signal_value,
+    const sfl::segmented_vector<float, 256> &signal_deriv,
+    int pass1_lag,
+    float dt,
+    float trim_fraction) {
+
+    if (!(trim_fraction > 0.0f && trim_fraction < 1.0f)) {
+        return std::nullopt;
+    }
+
+    sfl::segmented_vector<float, 256> trimmed_value;
+    sfl::segmented_vector<float, 256> trimmed_deriv;
+    const size_t trim_start = trim_around_symmetry_axis(
+        signal_value, signal_deriv, pass1_lag,
+        trim_fraction, trimmed_value, trimmed_deriv);
+    const size_t n_kept = trimmed_value.size();
+
+    if (n_kept < 4 || trimmed_deriv.size() < 4) {
+        return std::nullopt;
+    }
+
+    // In trimmed coordinates the symmetry axis is at the centre; expected lag ~0.
+    // Search ±5 samples around 0.
+    constexpr int search_radius = 5;
+    const size_t trimmed_max_lag = std::min(n_kept / 2, static_cast<size_t>(0.5f / dt));
+    const int t_lag_min = std::max(-search_radius, -static_cast<int>(trimmed_max_lag));
+    const int t_lag_max = std::min(search_radius, static_cast<int>(trimmed_max_lag));
+
+    auto t_value_corr = [&](int lag) { return sp::symmetry_correlation(trimmed_value, lag, 1.0f); };
+    auto t_deriv_corr = [&](int lag) { return sp::symmetry_correlation(trimmed_deriv, lag, -1.0f); };
+
+    int trimmed_best_lag = 0;
+    float trimmed_best_combined = 0;
+    find_best_correlation_lag(t_lag_min, t_lag_max, t_value_corr, t_deriv_corr,
+        trimmed_best_lag, trimmed_best_combined);
+
+    const float trimmed_refined = refine_lag_parabolic(trimmed_value, trimmed_deriv,
+        trimmed_best_lag, trimmed_max_lag);
+
+    // Convert trimmed lag back to original-signal lag coordinates.
+    // For symmetric trim, the same physical axis corresponds to:
+    //   original_lag = (n - 2*trim_start - n_kept) + trimmed_lag
+    const size_t n = signal_value.size();
+    const int lag_offset = static_cast<int>(n) - 2 * static_cast<int>(trim_start) - static_cast<int>(n_kept);
+
+    return Pass2Result {
+        .lag = lag_offset + trimmed_best_lag,
+        .refined_lag = static_cast<float>(lag_offset) + trimmed_refined,
+        .score = trimmed_best_combined,
+        .n_kept = n_kept,
+        .trim_start = trim_start,
+    };
+}
+
 // Detect symmetry peak using value + derivative correlations.
 static SymmetryPeakResult detect_symmetry_peak(
     const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples,
@@ -751,16 +871,17 @@ static SymmetryPeakResult detect_symmetry_peak(
     size_t chunk_size,
     float chunk_start_time_s,
     float dt,
+    float symmetry_trim_fraction,
     const char *label,
     int pass_num) {
 
     if (chunk_size < 10) {
-        return { chunk_start_time_s + (chunk_size / 2) * dt, 0.0f, 0.0f };
+        return { chunk_start_time_s + (chunk_size / 2) * dt, 0.0f, 0.0f, 0.0f };
     }
 
     sfl::segmented_vector<float, 256> signal_value;
     if (!preprocess_signal(raw_samples, chunk_start_idx, chunk_size, dt, signal_value)) {
-        return { chunk_start_time_s + (chunk_size / 2) * dt, 0.0f, 0.0f };
+        return { chunk_start_time_s + (chunk_size / 2) * dt, 0.0f, 0.0f, 0.0f };
     }
 
     debug_report_pass_raw_chunk(label, pass_num, chunk_start_idx, chunk_size, raw_samples);
@@ -780,15 +901,31 @@ static SymmetryPeakResult detect_symmetry_peak(
 
     debug_report_pass_correlation(label, pass_num, fine_min, fine_max, best_lag, signal_value, signal_deriv);
 
-    float refined_lag = refine_lag_parabolic(signal_value, signal_deriv, best_lag, max_lag);
+    const float refined_lag_full = refine_lag_parabolic(signal_value, signal_deriv, best_lag, max_lag);
+
+    // Pass 2: trim tails symmetrically around the pass-1 symmetry axis and
+    // re-correlate over a small window. This suppresses contributions from
+    // saturated/flat tails that pull the peak.
+    const auto pass2 = refine_with_trimmed_window(
+        signal_value, signal_deriv, best_lag, dt, symmetry_trim_fraction);
+
+    const float refined_lag = pass2 ? pass2->refined_lag : refined_lag_full;
+    const float final_score = pass2 ? pass2->score : best_combined;
+
+    debug_report_pass_trim_refine(label, pass_num,
+        n, pass2 ? pass2->n_kept : 0, pass2 ? pass2->trim_start : 0,
+        best_lag, best_combined, refined_lag_full,
+        pass2 ? pass2->lag : best_lag,
+        pass2 ? pass2->score : best_combined,
+        pass2 ? pass2->refined_lag : refined_lag_full);
 
     // Convert refined lag to peak time
     float center_idx = (static_cast<float>(n - 1) - refined_lag) / 2.0f;
     center_idx = std::max(0.0f, std::min(static_cast<float>(n - 1), center_idx));
     float peak_time = chunk_start_time_s + center_idx * dt;
 
-    float confidence = std::max(0.0f, std::min(1.0f, best_combined / 2.0f));
-    return { peak_time, confidence, best_combined };
+    float confidence = std::max(0.0f, std::min(1.0f, final_score / 2.0f));
+    return { peak_time, confidence, final_score, best_combined };
 }
 
 // Find the time shift τ that maximises the sum of energy at the four
@@ -898,6 +1035,7 @@ static FourPassPeaks detect_four_peaks(
     float dt,
     const SweepSpeedProfile &profile,
     uint32_t motion_profile_start_us,
+    float symmetry_trim_fraction,
     const char *label) {
     constexpr uint8_t peaks_number = 4;
     FourPassPeaks result;
@@ -1005,6 +1143,7 @@ static FourPassPeaks detect_four_peaks(
             *pass_results[i] = {
                 chunk_start_time_s + static_cast<float>(chunk_size) * dt / 2.0f,
                 0.0f,
+                0.0f,
                 0.0f
             };
             continue;
@@ -1018,6 +1157,7 @@ static FourPassPeaks detect_four_peaks(
             chunk_size,
             chunk_start_time_s,
             dt,
+            symmetry_trim_fraction,
             label,
             i + 1);
 
@@ -1228,6 +1368,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> analyze_twospeed_swee
     const SweepSpeedProfile &profile,
     sp::SamplingFreq motion_sampling_freq,
     uint32_t motion_profile_start_us,
+    float symmetry_trim_fraction,
     const char *label) {
 
     constexpr size_t min_analysis_samples = 100;
@@ -1243,7 +1384,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> analyze_twospeed_swee
     uint32_t analysis_start_us = ticks_us();
 
     uint32_t peaks_start_us = ticks_us();
-    FourPassPeaks peaks = detect_four_peaks(raw_samples, dt, profile, motion_profile_start_us, label);
+    FourPassPeaks peaks = detect_four_peaks(raw_samples, dt, profile, motion_profile_start_us, symmetry_trim_fraction, label);
     uint32_t peaks_us = ticks_us() - peaks_start_us;
 
     uint32_t final_result_start_us = ticks_us();
@@ -1315,6 +1456,7 @@ static std::expected<TwoSpeedAnalysisResult, const char *> execute_and_analyze_s
         profile,
         motion_sampling_freq,
         result.motion_profile_start_us,
+        config.symmetry_trim_fraction,
         label);
     uint32_t analysis_us = ticks_us() - analysis_start_us;
 

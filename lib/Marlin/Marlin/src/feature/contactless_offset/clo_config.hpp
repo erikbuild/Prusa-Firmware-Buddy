@@ -14,6 +14,9 @@ struct ProbingConfig {
     float sensing_speed_fast;
     float sweep_rest_time; // Pause between sweep passes (seconds)
     float max_safe_temp; // Maximum nozzle temperature allowed for probing
+    float symmetry_trim_fraction; // Per-pass second-correlation: keep this central fraction
+                                  // (around the first-pass symmetry axis) and re-correlate.
+                                  // 1.0 disables, 0.5 keeps central 50%.
 };
 
 ProbingConfig get_default_probing_config();
