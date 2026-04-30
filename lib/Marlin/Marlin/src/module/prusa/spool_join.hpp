@@ -92,13 +92,8 @@ public:
         return joins[join_nr];
     }
 
-    [[deprecated("Use the overload with ToolIndex")]]
-    bool do_join(uint8_t current_tool);
-
     /// Execute join
-    inline bool do_join(VirtualToolIndex current_tool) {
-        return do_join(current_tool.to_raw());
-    }
+    bool do_join(VirtualToolIndex current_virtual_tool);
 
     struct __attribute__((packed)) serialized_state_t {
         join_config_t joins[EXTRUDERS];

@@ -216,15 +216,15 @@ std::optional<uint8_t> SpoolJoin::get_spool_2_unlocked(uint8_t tool) const {
     return std::nullopt;
 }
 
-bool SpoolJoin::do_join(uint8_t current_tool) {
+bool SpoolJoin::do_join(VirtualToolIndex current_virtual_tool) {
     std::unique_lock lock(mutex);
-    auto join_settings = spool_join.get_spool_2_unlocked(current_tool);
-    if (!join_settings.has_value()) {
+    auto new_raw_virtual_tool = spool_join.get_spool_2_unlocked(current_virtual_tool.to_raw());
+    if (!new_raw_virtual_tool.has_value()) {
         return false;
     }
+    const auto new_virtual_tool = VirtualToolIndex::from_raw(new_raw_virtual_tool.value());
 
-    uint8_t new_tool = join_settings.value();
-    log_info(Marlin, "Spool join from %d to %d (z=%f)", current_tool, new_tool, planner.get_axis_position_mm(AxisEnum::Z_AXIS));
+    log_info(Marlin, "Spool join from %d to %d (z=%f)", current_virtual_tool.to_raw(), new_virtual_tool.to_raw(), planner.get_axis_position_mm(AxisEnum::Z_AXIS));
     PrintStatusMessageGuard statusGuard;
     statusGuard.update<PrintStatusMessage::joining_spool>({});
 
@@ -234,64 +234,75 @@ bool SpoolJoin::do_join(uint8_t current_tool) {
 
     // set up new tool mapping, so that next Tx will use spool we are joining to
     // but do mapping of logical->physical, so first convert current_tool to its logical tool
-    if (!tool_mapper.set_mapping(tool_mapper.to_gcode(current_tool), new_tool)) {
+    const auto gcode_tool = stdext::get_optional<GcodeToolIndex>(tool_mapper.to_gcode(current_virtual_tool));
+    if (!gcode_tool.has_value()) {
+        return false;
+    }
+    if (!tool_mapper.set_mapping(*gcode_tool, new_virtual_tool)) {
         return false;
     }
     tool_mapper.set_enable(true);
 
-    [[maybe_unused]] auto target_temp = thermalManager.degTargetHotend(current_tool);
+    const auto current_physical_tool = current_virtual_tool.to_physical();
+    [[maybe_unused]] const auto new_physical_tool = new_virtual_tool.to_physical();
+
+    [[maybe_unused]] auto target_temp = thermalManager.degTargetHotend(current_physical_tool);
 
     static_assert((HAS_INDX() + PRINTER_IS_PRUSA_XL() + HAS_MMU2()) == 1);
 
 #if HAS_INDX()
     // cool down current tool
-    thermalManager.setTargetHotend(0, current_tool);
+    thermalManager.setTargetHotend(0, current_physical_tool);
 
     // change to new tool
-    tool_change(VirtualToolIndex::from_raw(new_tool), tool_return_t::no_return, tool_change_lift_t::full_lift, false);
+    tool_change(new_virtual_tool, tool_return_t::no_return, tool_change_lift_t::full_lift, false);
 
     // transfer target temperature from one tool to another
-    thermalManager.setTargetHotend(target_temp, new_tool);
+    thermalManager.setTargetHotend(target_temp, new_physical_tool);
 
     // We intentinally keep loaded filament type in EEPROM. That makes it possible for user to click "Change Filament" and printer will know what temperature to preheat to.
     // Filament sensor should say that there is no filament, so it will not be possible to start print in this state.
 
+    #if HAS_NOZZLE_CLEANER()
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::enter_cleaner);
+    #endif
 
     if (target_temp != 0) {
-        thermalManager.wait_for_hotend(new_tool, false, true);
+        thermalManager.wait_for_hotend(new_physical_tool, false, true);
     }
 
+    #if HAS_NOZZLE_CLEANER()
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::purge_clean);
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::clean);
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::exit_cleaner);
+    #endif
 
     // return to original print position
     do_blocking_move_to(return_pos);
 
 #elif PRINTER_IS_PRUSA_XL()
     // cool down current tool
-    thermalManager.setTargetHotend(0, current_tool);
+    thermalManager.setTargetHotend(0, current_physical_tool);
 
     // Park current tool, to get away from print
     tool_change(NoTool {}, tool_return_t::no_return);
 
     // transfer target temperature from one tool to another
-    thermalManager.setTargetHotend(target_temp, new_tool);
+    thermalManager.setTargetHotend(target_temp, new_physical_tool);
 
     // We intentinally keep loaded filament type in EEPROM. That makes it possible for user to click "Change Filament" and printer will know what temperature to preheat to.
     // Filament sensor should say that there is no filament, so it will not be possible to start print in this state.
 
     if (target_temp != 0) {
-        thermalManager.wait_for_hotend(new_tool, false, true);
+        thermalManager.wait_for_hotend(new_physical_tool, false, true);
     }
 
     // change to new tool
     destination = return_pos;
-    tool_change(VirtualToolIndex::from_raw(new_tool), tool_return_t::purge_and_to_destination /* For MMU unused */);
+    tool_change(new_virtual_tool, tool_return_t::purge_and_to_destination /* For MMU unused */);
 
 #elif HAS_MMU2()
-    MMU2::mmu2.tool_change_full(new_tool);
+    MMU2::mmu2.tool_change_full(new_virtual_tool.to_raw());
 #else
     #error "unknown printer"
 #endif
