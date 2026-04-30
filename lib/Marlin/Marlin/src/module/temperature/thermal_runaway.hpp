@@ -12,6 +12,10 @@ public:
     /// Kills the printer if it detects a problem
     void step(float current, float target, heater_ind_t heater_id, uint16_t period_seconds, uint16_t hysteresis_degc);
 
+    /// Re-arm from scratch. Call when heater control is (re)entered after being inactive
+    /// (e.g. INDX tool pickup), otherwise stale timer/state can trip immediately.
+    void reset(float target = 0.0f);
+
 private:
     enum State : uint8_t {
         TRInactive,

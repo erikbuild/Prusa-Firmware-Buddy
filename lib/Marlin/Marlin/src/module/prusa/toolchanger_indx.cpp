@@ -489,7 +489,8 @@ void PrusaToolChanger::wiggle_and_partial_unlock() {
 }
 
 void PrusaToolChanger::open_head(PhysicalToolIndex tool) {
-    IndxHotend::indx_tool(tool).hotend().set_nozzle_target_temp_unchecked(0);
+    // Sanity check: no tool should be thermally managed while we open the head
+    IndxHotend::assert_thermally_managed_invariant(NoTool {});
 
     const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/true);
     const float safe_y = info.dock_y + DOCK_SAFE_Y_OFFSET;
@@ -540,9 +541,7 @@ bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     // so the last reported result is stale until a fresh modbus read arrives.
     buddy::puppies::indx.invalidate_nozzle_data();
 
-    auto &hotend = IndxHotend::indx_tool(tool).hotend();
-    hotend.stored_nozzle_target_temp_ = hotend.nozzle_target_temp();
-    hotend.set_nozzle_target_temp(0);
+    IndxHotend::indx_tool(tool).hotend().stop_heating();
 
     const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/true);
     const float safe_y = info.dock_y + DOCK_SAFE_Y_OFFSET;
@@ -775,9 +774,8 @@ bool PrusaToolChanger::pickup_procedure(PhysicalToolIndex tool) {
         return false;
     }
 
-    // Restore heater target
-    auto &hotend = IndxHotend::indx_tool(tool).hotend();
-    hotend.set_nozzle_target_temp_unchecked(hotend.stored_nozzle_target_temp_);
+    // at this point the tool is thermally managed
+    IndxHotend::indx_tool(tool).hotend().start_heating();
 
     return true;
 }
@@ -797,8 +795,7 @@ bool PrusaToolChanger::pickup(PhysicalToolIndex tool) {
 
         // Nozzle not detected — recovery path
         ++pickup_fail_count;
-        auto &hotend = IndxHotend::indx_tool(tool).hotend();
-        hotend.set_nozzle_target_temp_unchecked(0); // turn off heater to prevent damage while we are trying to recover
+        IndxHotend::indx_tool(tool).hotend().stop_heating(); // prevent damage while we are trying to recover
 
         // Outside of a print there is no toolchange recovery UX to run
         // (the failure dialog assumes printing). Bail out

@@ -36,29 +36,32 @@ void BaseHotend::set_nozzle_target_temp(TargetTemperature set) {
 
     const int16_t new_temp = std::min<int16_t>(set, base_config_.max_nozzle_temp - HEATER_MAXTEMP_SAFETY_MARGIN);
 
+    if (nozzle_target_temp_ != new_temp) {
+        nozzle_target_temp_ = new_temp;
+
+#if BOARD_IS_MASTER_BOARD()
+        marlin_server::call_manually::set_temp_to_display(new_temp, tool_);
+#endif
+
+        if (is_thermally_managed()) {
+            handle_nozzle_target_change();
+        }
+    }
+}
+
+void BaseHotend::handle_nozzle_target_change() {
+    nozzle_temp_residency_start_ms_ = 0;
+    nozzle_temp_reached_ = false;
 #if ENABLED(AUTO_POWER_CONTROL)
-    if (set) {
+    if (nozzle_target_temp_ > 0) {
         powerManager.power_on();
     }
 #endif
-
-    if (nozzle_target_temp_ == new_temp) {
-        return;
-    }
-
-    // target changed, reset time when it reached target
-    nozzle_temp_residency_start_ms_ = 0;
-
-    nozzle_temp_reached_ = false;
-    nozzle_target_temp_ = new_temp;
-
-#if BOARD_IS_MASTER_BOARD()
-    // This is a legit use
-    marlin_server::call_manually::set_temp_to_display(new_temp, tool_);
-#endif
-
 #if WATCH_HOTENDS
-    heater_watch_.reset(heater_watch_config, nozzle_temp(), new_temp);
+    heater_watch_.reset(heater_watch_config, nozzle_temp(), nozzle_target_temp_);
+#endif
+#if ENABLED(THERMAL_PROTECTION_HOTENDS)
+    thermal_runaway_.reset(nozzle_target_temp_);
 #endif
 }
 

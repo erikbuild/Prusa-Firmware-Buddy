@@ -11,6 +11,7 @@
 #include "Marlin.h"
 #include <logging/log.hpp>
 #include "timing.h"
+#include <tool/hotend/hotend/indx_hotend.hpp>
 
 #include <config_store/store_instance.hpp>
 
@@ -31,10 +32,21 @@ float PrusaToolChangerUtils::limit_stealth_feedrate(float feedrate) {
 }
 
 void PrusaToolChangerUtils::set_active_extruder(std::variant<PhysicalToolIndex, NoTool> maybe_tool) {
+    // thermally_managed mostly tracks active_extruder, but pickup/park flip it earlier for finer
+    // timing. Boot and PP resume skip pickup_procedure, so handle that case here.
     match(
         maybe_tool,
-        [&](PhysicalToolIndex tool) { active_extruder = tool.to_raw(); },
+        [&](PhysicalToolIndex tool) {
+            active_extruder = tool.to_raw();
+
+            IndxHotend &to_be_active_hotend = IndxHotend::indx_tool(tool).hotend();
+            if (!to_be_active_hotend.is_thermally_managed()) {
+                to_be_active_hotend.start_heating();
+            }
+        },
         [&](NoTool) { active_extruder = MARLIN_NO_TOOL_PICKED; });
+
+    IndxHotend::assert_thermally_managed_invariant(maybe_tool);
 }
 
 PrusaToolChangerUtils::PrusaToolChangerUtils() {

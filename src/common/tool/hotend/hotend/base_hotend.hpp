@@ -31,6 +31,10 @@ public:
 #endif
 
 protected:
+    /// Re-arms protection state machines on heating-change events: nozzle target
+    /// temperature change while managed, or transition into managed state.
+    virtual void handle_nozzle_target_change();
+
     /// !!! Careful, the config pointer is stored, so make sure the config is persistent!
     explicit BaseHotend(PhysicalToolIndex tool, const Config *config);
 

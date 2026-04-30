@@ -42,9 +42,14 @@ public:
         return nozzle_temp_;
     }
 
-    /// @returns whether the nozzle temperature has stabilized on the target
+    /// @returns true when this hotend is currently being thermally controlled.
+    /// Hotends that aren't thermally managed are excluded from temp wait/reached checks.
+    bool is_thermally_managed() const { return is_thermally_managed_; }
+
+    /// @returns whether the nozzle temperature has stabilized on the target,
+    /// or the hotend is not thermally managed (so it shouldn't block global waits).
     bool is_nozzle_temp_reached() const {
-        return nozzle_temp_reached_;
+        return !is_thermally_managed() || nozzle_temp_reached_;
     }
 
     /// Target temperature of the nozzle
@@ -142,6 +147,7 @@ protected:
 #endif
 
     bool nozzle_temp_reached_ : 1 = false;
+    bool is_thermally_managed_ : 1 = true;
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
     bool thermal_model_protection_ok_ : 1 = false;
