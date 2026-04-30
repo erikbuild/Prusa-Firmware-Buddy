@@ -5,7 +5,7 @@
 #if PRINTER_IS_PRUSA_COREONE()
 namespace tool_offset::detail {
 static constexpr float sensor_x = 257.f;
-static constexpr float sensor_y = 10.0f;
+static constexpr float sensor_y = Y_MAX_PRINT_POS - 197.5f; // CAD position 197.5mm from the homing position, Y homing position is Y_MAX_PRINT_POS
 static constexpr float sensing_diameter = 6.f;
 } // namespace tool_offset::detail
 #elif PRINTER_IS_PRUSA_COREONEL()
@@ -13,7 +13,7 @@ static constexpr float sensing_diameter = 6.f;
 // TODO update values for Core ONEL INDX once the values are known
 namespace tool_offset::detail {
 static constexpr float sensor_x = 257.f;
-static constexpr float sensor_y = 10.0f;
+static constexpr float sensor_y = Y_MAX_PRINT_POS - 197.5f;
 static constexpr float sensing_diameter = 10.f;
 } // namespace tool_offset::detail
 #else
