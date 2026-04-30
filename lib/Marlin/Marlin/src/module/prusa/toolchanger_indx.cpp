@@ -521,7 +521,7 @@ void PrusaToolChanger::open_head(PhysicalToolIndex tool) {
     log_info(PrusaToolChanger, "Head locking mechanism opened");
 }
 
-void PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
+bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     // Invalidate nozzle presence data during park — the physical state is changing,
     // so the last reported result is stale until a fresh modbus read arrives.
     buddy::puppies::indx.invalidate_nozzle_data();
@@ -565,6 +565,15 @@ void PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     // Fast move to safe position
     move(info.dock_x, safe_y, FAST_EXIT_FEEDRATE);
     planner.synchronize();
+
+    buddy::puppies::indx.invalidate_nozzle_data();
+
+    // Verify nozzle is gone (successfully released)
+    if (nozzle_check_disabled || verify_nozzle_state(tool, false)) {
+        return false;
+    }
+
+    return true;
 }
 
 bool PrusaToolChanger::park(PhysicalToolIndex tool) {
@@ -574,15 +583,8 @@ bool PrusaToolChanger::park(PhysicalToolIndex tool) {
         if (!ensure_safe_move()) {
             return false; // We cannot even home, abort the print
         }
-        park_procedure(tool);
-
-        // Invalidate nozzle data that modbus reads may have re-validated with stale
-        // pre-park values during the procedure. Fresh nozzle detection starts from here.
-        buddy::puppies::indx.invalidate_nozzle_data();
-
-        // Verify nozzle is gone (successfully released)
-        if (nozzle_check_disabled || verify_nozzle_state(tool, false)) {
-            break; // success
+        if (park_procedure(tool)) {
+            break; // Successful park, nozzle verified gone
         }
         head_open = false;
         ensure_tool_homeable(tool);
@@ -722,18 +724,6 @@ bool PrusaToolChanger::pickup_procedure(PhysicalToolIndex tool) {
     move(info.dock_x, info.dock_y, PICKUP_APPROACH_FEEDRATE);
     planner.synchronize();
 
-    buddy::puppies::indx.invalidate_nozzle_data();
-    if (!nozzle_check_disabled && !verify_nozzle_state(tool, true)) {
-        // Full exit to safe position
-        move(info.dock_x, safe_y, FAST_EXIT_FEEDRATE);
-        planner.synchronize();
-        return false;
-    }
-
-    // Restore heater target
-    auto &hotend = IndxHotend::indx_tool(tool).hotend();
-    hotend.set_nozzle_target_temp_unchecked(hotend.stored_nozzle_target_temp_);
-
     {
         EMotorGuard guard;
 
@@ -751,6 +741,15 @@ bool PrusaToolChanger::pickup_procedure(PhysicalToolIndex tool) {
     // Full exit to safe position
     move(info.dock_x, safe_y, FAST_EXIT_FEEDRATE);
     planner.synchronize();
+
+    buddy::puppies::indx.invalidate_nozzle_data();
+    if (!nozzle_check_disabled && !verify_nozzle_state(tool, true)) {
+        return false;
+    }
+
+    // Restore heater target
+    auto &hotend = IndxHotend::indx_tool(tool).hotend();
+    hotend.set_nozzle_target_temp_unchecked(hotend.stored_nozzle_target_temp_);
 
     return true;
 }

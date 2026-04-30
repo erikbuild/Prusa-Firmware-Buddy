@@ -325,7 +325,7 @@ private:
      * @param tool this tool
      * INDX_TODO: Do homing moves to makes sure we dont crash and crash the printer
      */
-    void park_procedure(PhysicalToolIndex tool);
+    bool park_procedure(PhysicalToolIndex tool);
     #else
     /**
      * @brief Check if powerpanic happened.
