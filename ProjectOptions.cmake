@@ -736,7 +736,7 @@ set_feature_for_printers_master_board(HAS_BED_FAN "COREONEL" "COREONEL_INDX")
 set_feature_for_printers_master_board(HAS_PSU_FAN "COREONEL" "COREONEL_INDX")
 set_feature_for_printers(HAS_AC_CONTROLLER "COREONEL" "COREONEL_INDX")
 
-set_feature_for_printers(HAS_TOOL_OFFSET_SENSOR "COREONE_INDX")
+set_feature_for_printers(HAS_TOOL_OFFSET_SENSOR "COREONE_INDX" "COREONEL_INDX")
 
 set_feature_for_printers(HAS_ANFC "COREONE" "COREONEL") # TODO: Add INDX once HAS_FILAMENT_TRACKER
                                                         # is sorted out

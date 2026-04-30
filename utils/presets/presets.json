@@ -373,9 +373,18 @@
         },
         {
             "name": "coreone_indx-tool_offset_sensor",
-            "description": "Firmware for tool_offset_sensor",
+            "description": "Firmware for Tool Offset Sensor for CoreOne printer with INDX",
             "cacheVariables": {
-                "PRINTER": "NONE",
+                "PRINTER": "COREONE_INDX",
+                "BOARD": "TOOL_OFFSET_SENSOR",
+                "CAN_BUS_TYPE": "PUB6"
+            }
+        },
+        {
+            "name": "coreonel_indx-tool_offset_sensor",
+            "description": "Firmware for Tool Offset Sensor for CoreOneL printer with INDX",
+            "cacheVariables": {
+                "PRINTER": "COREONEL_INDX",
                 "BOARD": "TOOL_OFFSET_SENSOR",
                 "CAN_BUS_TYPE": "PUB6"
             }
