@@ -4,6 +4,7 @@
 #include <gcode/gcode_parser.hpp>
 #include <module/motion.h>
 #include <module/prusa/toolchanger_utils.h>
+#include <raii/scope_guard.hpp>
 
 void PrusaGcodeSuite::G750() {
     GCodeParser2 p;
@@ -20,6 +21,13 @@ void PrusaGcodeSuite::G750() {
     if (!target_x && !target_y && !target_e) {
         return;
     }
+
+    // Purge gcode sequences use relative E moves — save and restore the original mode
+    const uint8_t saved_axis_relative = GcodeSuite::axis_relative;
+    GcodeSuite::set_e_relative();
+    ScopeGuard restore_e_mode = [saved_axis_relative] {
+        GcodeSuite::axis_relative = saved_axis_relative;
+    };
 
     // Subtract hotend offset to convert from physical cleaner position to native (carriage) coordinates,
     // so the nozzle tip ends up at the cleaner regardless of which tool is active.
