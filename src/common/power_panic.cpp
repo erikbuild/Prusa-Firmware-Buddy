@@ -448,9 +448,13 @@ void resume_loop() {
         }
 
 #if HAS_NOZZLE_CLEANER()
+    #if PRINTER_IS_PRUSA_COREONE() || PRINTER_IS_PRUSA_COREONEL()
         marlin_server::enqueue_gcode("G12 S90"); // enter cleaner
-        marlin_server::enqueue_gcode("G12"); // clean nozzle
+        marlin_server::enqueue_gcode("G12 S21"); // purge (no retract) and brush wipe
         marlin_server::enqueue_gcode("G12 S91"); // exit cleaner
+    #else
+        marlin_server::enqueue_gcode("G12"); // clean nozzle on the brush
+    #endif
 #endif
         resume_state = ResumeState::Unpark;
         break;
