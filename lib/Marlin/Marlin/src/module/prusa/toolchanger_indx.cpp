@@ -356,7 +356,15 @@ void PrusaToolChanger::check_nozzle_presence_during_print() {
 
     marlin_server::FSM_Holder fsm(PhaseNozzleMismatch::tool_lost);
     marlin_server::wait_for_response(PhaseNozzleMismatch::tool_lost);
-    // INDX_TODO: real recovery path (rehome, repick / dock select, etc.)
+
+    // Ask the user to verify the tool is in its dock before we attempt re-pickup.
+    marlin_server::fsm_change(PhaseNozzleMismatch::pickup_failed_confirm_retry);
+    marlin_server::wait_for_response(PhaseNozzleMismatch::pickup_failed_confirm_retry);
+
+    // Try to re-pick the expected tool. pickup() does its own homing, dock approach,
+    // nozzle verification, and on failure opens its own pickup_failed retry/abort dialog.
+    (void)pickup(tool_index);
+    // INDX_TODO: resume print on success / clean up on abort.
 }
 
 void PrusaToolChanger::invalidate_xy_homing() {
