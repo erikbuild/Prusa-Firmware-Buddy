@@ -9,6 +9,7 @@
 #include <printers.h>
 #include <option/has_indx.h>
 #include <raii/scope_guard.hpp>
+#include <marlin_server.hpp>
 
 #include <feature/chamber/chamber.hpp>
 
@@ -158,6 +159,7 @@ bool execute_control(VentState target_state) {
     } else {
         psm_guard.update<PrintStatusMessage::Type::closing_chamber_vents>({});
     }
+    marlin_server::FSM_Holder fsm_holder { PhaseWait::generic };
 
     if (!GcodeSuite::G28_no_parser(true, true, false, { .only_if_needed = true, .precise = false })) {
         return false;
