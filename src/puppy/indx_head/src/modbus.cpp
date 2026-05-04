@@ -40,6 +40,9 @@ namespace {
 
         state.status_regs.fault_status = hal::get_fault_status();
 
+        // !!! MUST be before reading the temperatures themselves to avoid race condition
+        state.status_regs.temps_valid = app::get_temps_valid();
+
         state.status_regs.hotend_measured_temperature_uncompensated_c100 = app::get_nozzle_temp_uncompensated_c100();
         state.status_regs.hotend_measured_temperature_compensated_c100 = app::get_nozzle_temp_compensated_c100();
         state.status_regs.hotend_temp_raw_c100_dt_s = app::get_hotend_temp_raw_c100_dt_s();

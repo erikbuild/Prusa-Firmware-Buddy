@@ -58,6 +58,11 @@ struct Status {
     uint16_t time_sync_hi = 0;
     uint16_t nozzle_present = 0; // indx_head::NozzlePresence::unknown
     uint16_t nozzle_invalidation_ack = 0; // Echoed from xBuddy invalidate_nozzle_presence, returned after debouncer reset
+
+    /// Whether hotend_measured_temperature_uncompensated_c100, hotend_measured_temperature_compensated_c100 and tpis_ambient_temperature_c100 values are valid.
+    /// It takes a while to get these values after the head bootup, so we're initially sending garbage.
+    /// Once the temps get valid, they can only become invalid if the puppy is reset.
+    uint16_t temps_valid = 0;
 };
 static_assert(sizeof(Status) % 2 == 0);
 static_assert(std::alignment_of_v<Status> == 2);

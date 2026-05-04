@@ -101,6 +101,13 @@ public:
     /// In °C/s
     [[nodiscard]] float get_hotend_temp_raw_c_dt_s() const;
 
+    /// @returns whether get_nozzle_temp_uncompensated_c100, and get_tpis_ambient_temp_c100 contain valid values instead of initial garbage
+    /// Once the temps get valid, they can only become invalid if the puppy is reset.
+    /// Read before the get_temp_XX to avoid race conditions.
+    [[nodiscard]] bool get_temps_valid() const {
+        return cached_temps_valid.load();
+    }
+
     /// In (duty cycle 0-1)^2 * us
     /// !!! Overflows periodically
     [[nodiscard]] uint32_t get_hotend_duty_cycle_sq_integral_us() const;
@@ -175,6 +182,7 @@ private:
     std::atomic<int16_t> cached_hotend_temp_uncompensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
     std::atomic<int16_t> cached_hotend_temp_raw_c100_dt_s { 0 };
     std::atomic<uint32_t> cached_hotend_duty_cycle_sq_integral_us { 0 };
+    std::atomic<bool> cached_temps_valid { false };
 
     static_assert(std::atomic<int16_t>::is_always_lock_free);
     static_assert(std::atomic<uint16_t>::is_always_lock_free);

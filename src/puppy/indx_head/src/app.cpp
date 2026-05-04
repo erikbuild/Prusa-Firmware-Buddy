@@ -21,9 +21,11 @@ std::atomic<int16_t> nozzle_temp_uncompensated_c100 = 25 * 100;
 std::atomic<int16_t> nozzle_temp_compensated_c100 = 25 * 100;
 std::atomic<int16_t> tpis_ambient_temp_c100 = 25 * 100;
 
+// Whether nozzle_temp_uncompensated_c100, nozzle_temp_compensated_c100 and tpis_ambient_temp_c100 contain valid values instead of initial garbage
+std::atomic<uint8_t> temps_valid = false;
+
 /// See indx_head::modbus::Status::hotend_temp_raw_c100_dt_s
 std::atomic<int16_t> hotend_temp_raw_c100_dt_s = 0;
-bool can_calculate_nozzle_temp_slope = false;
 
 constexpr float max_nozzle_temp = 330.f;
 constexpr float min_nozzle_temp = 5.f;
@@ -123,7 +125,7 @@ void run() {
             const int16_t nozzle_temp_compensated_c100 = nozzle_temp_uncompensated_c100 - hotend_temp_compensation::get_current_compensation_c100();
 
             // Calculate slope
-            if (can_calculate_nozzle_temp_slope) {
+            if (temps_valid) {
                 const int64_t uncompensated_raw_slope = int64_t(nozzle_temp_uncompensated_c100 - ::nozzle_temp_uncompensated_c100.load()) * 1000000 / int64_t(induction_control_dt_us);
 
                 // Clamp to sane values to prevent too big spikes
@@ -142,7 +144,7 @@ void run() {
             // Start calculating slope only after the nozzle_temps store actual readouts
             // to prevent a slope spike on first valid readout
             // Note: If !nozzle_temp_reading.valid, nozzle_temp_reading contains last valid value
-            can_calculate_nozzle_temp_slope |= nozzle_temp_reading.valid;
+            temps_valid |= nozzle_temp_reading.valid;
 
             inductionHeater.heater_control(target_temp.load() * 100 /*centiDeg*/, nozzle_temp_compensated_c100);
 
@@ -208,6 +210,10 @@ uint32_t get_hotend_duty_cycle_sq_integral_us() {
 
 int16_t get_tpis_ambient_temp_c100() {
     return tpis_ambient_temp_c100.load();
+}
+
+bool get_temps_valid() {
+    return temps_valid.load();
 }
 
 void set_nozzle_present(indx_head::NozzlePresence state) {

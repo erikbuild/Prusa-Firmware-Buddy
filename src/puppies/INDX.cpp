@@ -127,6 +127,9 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
             | (uint32_t(register_general_status.value.hotend_duty_cycle_sq_integral_us_hi) << 16) //
         );
 
+        // !!! MUST be stored after reading the temperatures to avoid race conditions
+        cached_temps_valid.store(register_general_status.value.temps_valid);
+
         handle_time_sync(timing);
 
         // 0 has a special meaning, report one ms less if we would try to set zero

@@ -25,6 +25,11 @@ uint32_t get_hotend_duty_cycle_sq_integral_us();
 /// In 1/100 °C
 int16_t get_tpis_ambient_temp_c100();
 
+/// @returns whether get_nozzle_temp_uncompensated_c100, and get_tpis_ambient_temp_c100 contain valid values instead of initial garbage
+/// Once the temps get valid, they can only become invalid if the puppy is reset.
+/// Read before the get_temp_XX to avoid race conditions.
+bool get_temps_valid();
+
 void set_nozzle_present(indx_head::NozzlePresence state);
 indx_head::NozzlePresence get_nozzle_present();
 void invalidate_nozzle_presence(uint16_t ack_value); ///< Reset debouncer and set nozzle state to unknown, store ack for buddy to read
