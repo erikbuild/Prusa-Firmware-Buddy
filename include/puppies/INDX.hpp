@@ -115,6 +115,9 @@ public:
     [[nodiscard]] std::optional<bool> get_nozzle_present();
     void invalidate_nozzle_data(); ///< Invalidate after pickup/park
 
+    /// @returns ticks_ms of the last successful read of register_general_status
+    std::optional<uint32_t> get_register_general_status_last_read_ms() const;
+
     // Buddy-side communication error counters (since boot)
     std::atomic<uint16_t> fifo_error_count = 0;
     std::atomic<uint16_t> refresh_error_count = 0;
@@ -183,6 +186,10 @@ private:
     // Because they can be set from an interrupt.
     std::array<std::atomic<uint16_t>, NUM_FANS> fan_pwm_desired { 0, 0 };
     std::atomic<bool> selftest_mode_ { false };
+
+    /// ticks_ms of the last successful read of register_general_status
+    /// 0 = not read at all yet. 0 is guaranteed to never happen afterwards (-1 is used instead to avoid conflict)
+    std::atomic<uint32_t> register_general_status_last_read_ms { 0 };
 
 private:
     // FIXME: Need to be forward-declared, because this header file is included

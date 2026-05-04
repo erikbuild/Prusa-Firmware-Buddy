@@ -128,6 +128,11 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
         );
 
         handle_time_sync(timing);
+
+        // 0 has a special meaning, report one ms less if we would try to set zero
+        // !!! MUST be updated as the last thing to avoid race conditions
+        const auto now_ms = last_ticks_ms();
+        register_general_status_last_read_ms.store((now_ms != 0) ? now_ms : uint32_t(-1));
     }
     return status;
 }
@@ -311,6 +316,7 @@ int16_t Indx::get_board_temperature() {
 
 float Indx::get_tpis_ambient_temperature() {
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
+    // FIXME: No mutex
     return static_cast<float>(static_cast<int16_t>(register_general_status.value.tpis_ambient_temperature_c100)) / 100.f;
 }
 
@@ -344,6 +350,11 @@ void Indx::invalidate_nozzle_data() {
         token = 1; // Avoid 0 — it's the head's initial ack value
     }
     nozzle_invalidation_token.store(token);
+}
+
+std::optional<uint32_t> Indx::get_register_general_status_last_read_ms() const {
+    const auto val = register_general_status_last_read_ms.load();
+    return val ? std::optional { val } : std::nullopt;
 }
 
 void Indx::set_fan(uint8_t fan, uint16_t target) {
