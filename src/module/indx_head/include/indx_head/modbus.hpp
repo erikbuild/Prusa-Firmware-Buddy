@@ -25,8 +25,8 @@ constexpr uint16_t default_hotend_temperature_c100 = 25 * 100;
 struct Status {
     static constexpr uint16_t address = 0x8060;
     errors::FaultStatusMask fault_status = indx_head::errors::FaultStatusMask::no_fault;
-    uint16_t hotend_measured_temperature_uncompensated_c100 = default_hotend_temperature_c100;
-    uint16_t hotend_measured_temperature_compensated_c100 = default_hotend_temperature_c100;
+    int16_t hotend_measured_temperature_uncompensated_c100 = default_hotend_temperature_c100;
+    int16_t hotend_measured_temperature_compensated_c100 = default_hotend_temperature_c100;
 
     /// In 1/100 °C/s. Derivation of the temperature measured by the hotend temp sensor
     /// Evaluated before temperature compensation

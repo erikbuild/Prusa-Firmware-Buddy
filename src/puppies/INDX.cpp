@@ -115,9 +115,11 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
         handle_nozzle_presence();
 
         cached_hotend_temp_compensated_c100.store(
-            static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_compensated_c100));
+            register_general_status.value.hotend_measured_temperature_compensated_c100);
+
         cached_hotend_temp_uncompensated_c100.store(
-            static_cast<int16_t>(register_general_status.value.hotend_measured_temperature_uncompensated_c100));
+            register_general_status.value.hotend_measured_temperature_uncompensated_c100);
+
         cached_hotend_temp_raw_c100_dt_s.store(register_general_status.value.hotend_temp_raw_c100_dt_s);
 
         cached_hotend_duty_cycle_sq_integral_us.store( //
