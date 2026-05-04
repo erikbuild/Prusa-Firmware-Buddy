@@ -78,7 +78,73 @@ consteval auto get_submenu_label(PhysicalToolIndex tool, Action action) -> const
     }
 }
 
+constexpr EnumBitset<Action, Action::_count> get_dependencies(Action action) {
+    auto deps = EnumBitset<Action, Action::_count> {};
+
+    switch (action) {
+    case Action::DoorSensor:
+    case Action::XCheck:
+    case Action::YCheck:
+    case Action::ZAlign:
+    case Action::Fans:
+        break;
+    case Action::BeltTuning:
+        deps.set(Action::XCheck);
+        deps.set(Action::YCheck);
+        break;
+#if HAS_PRECISE_HOMING_COREXY()
+    case Action::PreciseHoming:
+        deps.set(Action::BeltTuning);
+        break;
+#endif
+    case Action::DockCalibration:
+        deps.set(Action::PreciseHoming);
+        break;
+    case Action::NozzleCleanerCalibration:
+    case Action::Heaters:
+        deps.set(Action::DockCalibration);
+        break;
+    case Action::Loadcell:
+        deps.set(Action::NozzleCleanerCalibration); // if nozzle is hot, it is parked above nozzle cleaner
+        break;
+    case Action::FilamentSensorCalibration:
+        // if filament is loaded, we need to unload (above nozzle cleaner)
+        deps.set(Action::Heaters);
+        deps.set(Action::NozzleCleanerCalibration);
+        break;
+    case Action::ZCheck:
+        deps.set(Action::Loadcell);
+        deps.set(Action::ZAlign);
+        break;
+    case Action::PhaseSteppingCalibration:
+    case Action::InputShaper:
+        deps.set(Action::ZCheck);
+        break;
+    case Action::_count:
+        assert(false);
+        break;
+    }
+
+    return deps;
+}
+
+namespace {
+    consteval bool check_selftest_ordering() {
+        for (auto i = 0; i < static_cast<int>(Action::_count); i++) {
+            const auto deps = get_dependencies(static_cast<Action>(i));
+            for (auto j = i; j < static_cast<int>(Action::_count); j++) {
+                // selftest j goes after i -> if j has dependency on i the ordering is wrong
+                if (deps.test(static_cast<Action>(j))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    static_assert(check_selftest_ordering(), "selftests ordering does not satisfy dependencies");
+} // namespace
+
 TestResult get_test_result(Action action, ToolMask tool);
 uint64_t get_test_mask(Action action);
-EnumBitset<Action, Action::_count> get_dependencies(Action action);
 } // namespace SelftestSnake
