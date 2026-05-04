@@ -115,8 +115,6 @@ public:
 enum class PhaseWait : PhaseUnderlyingType {
     /// PhaseWait::generic shows PrintStatusMessage if available, otherwise empty text
     generic,
-    homing,
-    homing_calibration,
     _cnt,
     _last = _cnt - 1,
 };

@@ -489,7 +489,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
 
   PrintStatusMessageGuard statusGuard;
   statusGuard.update<PrintStatusMessage::homing>({});
-  marlin_server::FSM_Holder fsm_holder{PhaseWait::homing};
+  marlin_server::FSM_Holder fsm_holder{PhaseWait::generic};
 
   #if HAS_CEILING_CLEARANCE()
   buddy::CeilingClearanceCheckDisabler ccd;
@@ -1002,9 +1002,6 @@ RefineResult corexy_calibrate_homing_during_G28(float xy_mm_s, const G28Flags &f
 
   PrintStatusMessageGuard status_guard;
   status_guard.update<PrintStatusMessage::recalibrating_home>({});
-
-  /// Wait holder should be part of the homing procedure
-  marlin_server::fsm_change(PhaseWait::homing_calibration);
 
 #if HAS_TRINAMIC && defined(XY_HOMING_MEASURE_SENS_MIN)
   // Try calibrating motor sensitivity before calibration

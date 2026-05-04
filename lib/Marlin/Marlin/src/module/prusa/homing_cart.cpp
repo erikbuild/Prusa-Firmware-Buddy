@@ -140,7 +140,6 @@ static int32_t home_and_get_calibration_offset(AxisEnum axis, int axis_home_dir,
             SERIAL_ECHOLNPAIR(" calibration offset: ", calibration_offset);
         } else {
             status_guard.update<PrintStatusMessage::calibrating_axis>({ .axis = axis });
-            marlin_server::fsm_change(PhaseWait::homing_calibration);
             // I _could_ use SERIAL_ECHOLN(), but that somehow cuts off the end
             // of the printed string. Very nice.
             SERIAL_ECHOLNPAIR(" Not yet", " calibrated.");
@@ -390,7 +389,6 @@ float home_axis_precise(AxisEnum axis, int axis_home_dir, bool can_calibrate, fl
         SensitivityCalibration sens_calibration { axis, reset_sens_calibration };
 
         while (can_calibrate && !sens_calibration.is_calibrated()) {
-            marlin_server::fsm_change(PhaseWait::homing_calibration);
             status_guard.update<PrintStatusMessage::calibrating_axis>({ .axis = axis });
             home_and_get_calibration_offset(axis, axis_home_dir, probe_offset, false, fr_mm_s);
             if (planner.draining()) {
