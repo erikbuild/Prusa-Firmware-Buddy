@@ -131,7 +131,6 @@
  *           Use 'H' to set the height between Mesh points. If omitted, Z_CLEARANCE_BETWEEN_PROBES is used.
  *           Smaller values will be quicker. Move the nozzle down till it barely touches the bed. Make sure the
  *           nozzle is clean and unobstructed. Use caution and move slowly. This can damage your printer!
- *           (Uses SIZE_OF_LITTLE_RAISE mm if the nozzle is moving less than BIG_RAISE_NOT_NEEDED mm.)
  *
  *           The 'H' value can be negative if the Mesh dips in a large area. Press and hold the
  *           controller button to terminate the current Phase 2 command. You can then re-issue "G29 P 2"

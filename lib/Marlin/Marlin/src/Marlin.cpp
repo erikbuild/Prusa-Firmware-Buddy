@@ -266,13 +266,6 @@ void manage_inactivity() {
 
   [[maybe_unused]] const millis_t ms = millis();
 
-  // Prevent steppers timing-out in the middle of M600
-  #if HAS_PAUSE()
-    #define MOVE_AWAY_TEST !did_pause_print
-  #else
-    #define MOVE_AWAY_TEST true
-  #endif
-
   #if HAS_KILL
     // #error dead code found by automatic analyses (see BFW-5461)
 

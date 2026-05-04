@@ -76,13 +76,6 @@
   #include "servo.h"
 #endif
 
-#if HAS_SERVOS && HAS_SERVO_ANGLES
-  // #error dead code found by automatic analyses (see BFW-5461)
-  #define EEPROM_NUM_SERVOS NUM_SERVOS
-#else
-  #define EEPROM_NUM_SERVOS NUM_SERVO_PLUGS
-#endif
-
 #include "../feature/pause.h"
 
 #if ENABLED(BACKLASH_COMPENSATION)
