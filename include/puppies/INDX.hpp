@@ -209,7 +209,6 @@ private:
     void handle_time_sync(const RequestTiming &);
 
     // Register refresh control
-    uint32_t last_update_ms = 0; ///< Last time we updated registers
     uint32_t refresh_nr = 0; ///< Switch of different refresh cases
     uint32_t last_pull_ms = 0; ///< Last time we pulled data from fifo
 
