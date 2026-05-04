@@ -62,8 +62,8 @@ bool download_dump_into_file(std::span<uint8_t> buffer,
 }
 
 bool is_a_dump_in_filesystem() {
-    for (const auto &info : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_dock_info)) {
-        if (file_exists(info.crash_dump_path)) {
+    for (auto crash_dump_path : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_crash_dump_path)) {
+        if (file_exists(crash_dump_path)) {
             return true;
         }
     }
@@ -72,11 +72,11 @@ bool is_a_dump_in_filesystem() {
 
 bool save_dumps_to_usb() {
     bool rc { false };
-    for (const auto &info : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_dock_info)) {
-        if (!file_exists(info.crash_dump_path)) {
+    for (auto crash_dump_path : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_crash_dump_path)) {
+        if (!file_exists(crash_dump_path)) {
             continue;
         }
-        unique_file_ptr dump_file(fopen(info.crash_dump_path, "rb"));
+        unique_file_ptr dump_file(fopen(crash_dump_path, "rb"));
         if (!dump_file) {
             continue; // unable to open
         }
@@ -85,8 +85,8 @@ bool save_dumps_to_usb() {
 
         static constexpr size_t max_dump_path_length { []() {
             size_t max_size { 0 };
-            for (const auto &info : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_dock_info)) {
-                max_size = std::max(max_size, std::char_traits<char>::length(info.crash_dump_path));
+            for (auto crash_dump_path : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_crash_dump_path)) {
+                max_size = std::max(max_size, std::char_traits<char>::length(crash_dump_path));
             }
             return max_size;
         }() };
@@ -94,7 +94,7 @@ bool save_dumps_to_usb() {
         static_assert(buffer_size >= max_dump_path_length + sizeof("/usb/") - sizeof("/internal/"));
 
         char buffer[buffer_size] { "/usb/" };
-        strcat(buffer, info.crash_dump_path + strlen("/internal/")); // concatenate the path after /internal/
+        strcat(buffer, crash_dump_path + strlen("/internal/")); // concatenate the path after /internal/
 
         unique_file_ptr usb_file(fopen(buffer, "wb"));
         if (!usb_file) {
@@ -124,8 +124,8 @@ bool save_dumps_to_usb() {
 
 bool remove_dumps_from_filesystem() {
     bool rc { false };
-    for (const auto &info : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_dock_info)) {
-        if (remove(info.crash_dump_path) == 0) {
+    for (auto crash_dump_path : buddy::puppies::DOCKS | std::views::transform(buddy::puppies::get_crash_dump_path)) {
+        if (remove(crash_dump_path) == 0) {
             rc = true;
         }
     }

@@ -91,7 +91,7 @@ bool PuppyBootstrap::attempt_crash_dump_download(Dock dock, BootloaderProtocol::
 
     return crash_dump::download_dump_into_file(buffer, flasher,
         get_puppy_info(to_puppy_type(dock)).name,
-        get_dock_info(dock).crash_dump_path);
+        get_crash_dump_path(dock));
 }
 
 PuppyBootstrap::BootstrapResult PuppyBootstrap::run(

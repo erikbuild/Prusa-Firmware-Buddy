@@ -191,53 +191,30 @@ inline constexpr PuppyInfo get_puppy_info(PuppyType puppy) {
     std::unreachable();
 }
 
-struct DockInfo {
-    const char *crash_dump_path; // internal path where crash dump is stored
-};
-
-/**
- * @brief Data about each dock, indexed by the enum Dock
- *
- */
-inline constexpr DockInfo get_dock_info(Dock dock) {
+/// Get path on filesystem associated with given dock.
+inline constexpr const char *get_crash_dump_path(Dock dock) {
     switch (dock) {
 #if HAS_PUPPY_MODULARBED()
     case Dock::MODULAR_BED:
-        return {
-            "/internal/dump_modularbed.dmp",
-        };
+        return "/internal/dump_modularbed.dmp";
 #endif
 #if HAS_DWARF()
     case Dock::DWARF_1:
-        return {
-            "/internal/dump_dwarf1.dmp",
-        };
+        return "/internal/dump_dwarf1.dmp";
     case Dock::DWARF_2:
-        return {
-            "/internal/dump_dwarf2.dmp",
-        };
+        return "/internal/dump_dwarf2.dmp";
     case Dock::DWARF_3:
-        return {
-            "/internal/dump_dwarf3.dmp",
-        };
+        return "/internal/dump_dwarf3.dmp";
     case Dock::DWARF_4:
-        return {
-            "/internal/dump_dwarf4.dmp",
-        };
+        return "/internal/dump_dwarf4.dmp";
     case Dock::DWARF_5:
-        return {
-            "/internal/dump_dwarf5.dmp",
-        };
+        return "/internal/dump_dwarf5.dmp";
     case Dock::DWARF_6:
-        return {
-            "/internal/dump_dwarf6.dmp",
-        };
+        return "/internal/dump_dwarf6.dmp";
 #endif
 #if HAS_INDX_HEAD()
     case Dock::INDX_HEAD:
-        return {
-            "/internal/dump_indx.dmp",
-        };
+        return "/internal/dump_indx.dmp";
 #endif
     default:
         std::abort();
