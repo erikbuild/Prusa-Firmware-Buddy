@@ -6,6 +6,33 @@ target_link_options(firmware PUBLIC "-L" "${CMAKE_CURRENT_SOURCE_DIR}/link")
 if(BOOTLOADER STREQUAL "EMPTY" OR BOOTLOADER)
   target_set_linker_script(firmware "${CMAKE_CURRENT_SOURCE_DIR}/link/link_boot.ld")
   set(BOOTLOADER_SIZE 8192)
+
+  get_dependency_directory("bootloader-indx_head" _indx_head_bootloader_dir)
+  set(_indx_head_bootloader_bin "${_indx_head_bootloader_dir}/bootloader.bin")
+  set(_bootloader_code_o "${CMAKE_CURRENT_BINARY_DIR}/bootloader_code.o")
+  file(SIZE "${_indx_head_bootloader_bin}" _indx_head_bootloader_bin_size)
+  if(_indx_head_bootloader_bin_size EQUAL BOOTLOADER_SIZE)
+    add_custom_command(
+      OUTPUT "${_bootloader_code_o}"
+      COMMAND
+        "${CMAKE_OBJCOPY}" -I binary -O elf32-littlearm -B arm --rename-section
+        .data=.rodata.bootloader_code,alloc,load,readonly,data,contents --set-section-alignment
+        .rodata.bootloader_code=4 --redefine-sym _binary_bootloader_bin_start=bootloader_code
+        --redefine-sym _binary_bootloader_bin_end=bootloader_code_end --redefine-sym
+        _binary_bootloader_bin_size=bootloader_code_size bootloader.bin "${_bootloader_code_o}"
+      WORKING_DIRECTORY "${_indx_head_bootloader_dir}"
+      DEPENDS "${_indx_head_bootloader_bin}"
+      VERBATIM
+      )
+    add_custom_target(indx_head_bootloader_code DEPENDS "${_bootloader_code_o}")
+    add_dependencies(firmware indx_head_bootloader_code)
+    set_source_files_properties(
+      "${_bootloader_code_o}" PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE
+      )
+    target_sources(firmware PRIVATE "${_bootloader_code_o}")
+  else()
+    message(FATAL_ERROR "bootloader size mismatch")
+  endif()
 else()
   target_set_linker_script(firmware "${CMAKE_CURRENT_SOURCE_DIR}/link/link_noboot.ld")
   set(BOOTLOADER_SIZE 0)
@@ -23,6 +50,7 @@ add_library(STM32C0_HAL_Config ALIAS HAL_Config)
 target_sources(
   firmware
   PRIVATE src/app.cpp
+          src/bootloader_update.cpp
           src/hal.cpp
           src/hal_adc.cpp
           src/hal_clk.cpp

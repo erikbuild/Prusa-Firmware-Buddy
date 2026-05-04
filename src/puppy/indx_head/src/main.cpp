@@ -1,4 +1,5 @@
 #pragma GCC poison printf
+#include "bootloader_update.hpp"
 #include "modbus.hpp"
 #include "hal.hpp"
 #include "rtt.hpp"
@@ -33,6 +34,8 @@ StaticTask_t spi_task_control_block;
 extern "C" int main() {
     rtt::init();
     rtt::print("indx_head started\n");
+
+    bootloader_update::run();
 
     hal::init();
 
