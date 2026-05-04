@@ -19,12 +19,12 @@ enum class Action : uint8_t {
 #endif
     DockCalibration,
     NozzleCleanerCalibration,
-    FilamentSensorCalibration,
     ZAlign, // also known as z_calib
     Loadcell, // Check loadcell before Z test, because it is used there
     ZCheck,
     Fans,
     Heaters,
+    FilamentSensorCalibration,
     PhaseSteppingCalibration,
     InputShaper,
     _count,
