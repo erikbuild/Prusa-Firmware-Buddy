@@ -41,6 +41,10 @@ static constexpr float LAST_DOCK_EXIT_X_MM = 40.0f;
 /// Distance to bump into the docks before measurnig
 static constexpr float DOCK_BUMP_MM = 10;
 
+/// Back off before bumping [mm]
+/// Homing moves don't trigger if they're already at the end
+static constexpr float DOCK_BUMP_BACKOFF_MM = 2;
+
 /// Serialize dock index into PhaseData (4 bytes)
 static fsm::PhaseData serialize_dock_data(PhysicalToolIndex tool) {
     fsm::PhaseData data {};
@@ -237,10 +241,19 @@ private:
             // Measuring
             fsm_change(PhaseDockCalibration::measuring, serialize_dock_data(tool));
 
+            // Back off a bit
+            const bool back_off_hit = do_homing_move(Y_AXIS, DOCK_BUMP_BACKOFF_MM, homing_feedrate(Y_AXIS));
+
+            if (back_off_hit) {
+                // Hitting something during a backoff would be very unexpected
+                // Ask the user to position the head again if this happens
+                continue;
+            }
+
             // Bump further in the dock
             // The dock unlocking magnet pushes the head out of the docks when the motors are off,
             // so if the user stops pressing before the motors are engaged, we would get a wrong reading
-            const bool dock_bump_hit = do_homing_move(Y_AXIS, -DOCK_BUMP_MM, PrusaToolChanger::SLOW_MOVE_MM_S);
+            const bool dock_bump_hit = do_homing_move(Y_AXIS, -(DOCK_BUMP_MM + DOCK_BUMP_BACKOFF_MM), homing_feedrate(Y_AXIS));
 
             // Wait a bit after the bump, the sudden move-forth-then-back might scare the user
             // Don't be afraid, users, we love you!
@@ -249,7 +262,7 @@ private:
             if (!dock_bump_hit) {
                 // If the homing move didn't hit anything, it means that the head is completely at the wrong position
                 // Just move back and ask the user to position the head again
-                do_homing_move(Y_AXIS, DOCK_BUMP_MM, PrusaToolChanger::SLOW_MOVE_MM_S);
+                do_homing_move(Y_AXIS, DOCK_BUMP_MM, homing_feedrate(Y_AXIS));
                 continue;
             }
 
