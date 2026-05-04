@@ -85,6 +85,10 @@ static BootstrapStage check_fingerprint_stage(PuppyType puppy_type) {
     bsod_unreachable();
 }
 
+bool PuppyBootstrap::any_dock_supports_crash_dump() {
+    return std::ranges::any_of(DOCKS, [](Dock dock) { return get_crash_dump_path(dock).has_value(); });
+}
+
 bool PuppyBootstrap::attempt_crash_dump_download(Dock dock, BootloaderProtocol::Address address) {
     const auto crash_dump_path = get_crash_dump_path(dock);
     if (!crash_dump_path) {

@@ -77,6 +77,8 @@ public:
 #endif
     };
 
+    [[nodiscard]] static bool any_dock_supports_crash_dump();
+
 private:
     using fingerprint_t = BootloaderProtocol::fingerprint_t;
 

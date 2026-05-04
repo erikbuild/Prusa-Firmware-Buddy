@@ -599,7 +599,11 @@ void run() {
         }
 
         log_error(Puppies, "Communication error, going to recovery puppies");
-        osDelay(1300); // Needs to be here to give puppies time to finish dumping
+#if HAS_PUPPY_BOOTSTRAP()
+        if (PuppyBootstrap::any_dock_supports_crash_dump()) {
+            osDelay(1300); // give puppies time to finish dumping
+        }
+#endif
     } while (true);
 }
 
