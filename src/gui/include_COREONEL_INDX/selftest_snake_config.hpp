@@ -83,10 +83,12 @@ constexpr EnumBitset<Action, Action::_count> get_dependencies(Action action) {
 
     switch (action) {
     case Action::DoorSensor:
+    case Action::Fans:
+        break;
     case Action::XCheck:
     case Action::YCheck:
     case Action::ZAlign:
-    case Action::Fans:
+        deps.set(Action::DoorSensor);
         break;
     case Action::BeltTuning:
         deps.set(Action::XCheck);
