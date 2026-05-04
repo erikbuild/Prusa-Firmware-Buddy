@@ -215,7 +215,7 @@ inline constexpr std::optional<const char *> get_crash_dump_path(Dock dock) {
 #endif
 #if HAS_INDX_HEAD()
     case Dock::INDX_HEAD:
-        return "/internal/dump_indx.dmp";
+        return {};
 #endif
     default:
         std::abort();
