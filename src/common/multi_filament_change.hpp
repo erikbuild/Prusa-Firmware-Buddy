@@ -1,11 +1,13 @@
 #pragma once
 
 #include <optional>
-#include <array>
 
 #include <filament.hpp>
 #include <tool_index.hpp>
 #include <color.hpp>
+#include <utils/compact_optional.hpp>
+#include <utils/storage/strong_index_array.hpp>
+#include <gcode_basic_parser.hpp>
 
 namespace multi_filament_change {
 
@@ -23,14 +25,26 @@ enum class Action : uint8_t {
 struct ConfigItem {
     Action action = Action::keep;
     FilamentType new_filament = FilamentType::none;
-    std::optional<Color> color;
+    CompactOptional<Color, COLOR_NONE> color;
 };
 
 using Config = StrongIndexArray<ConfigItem, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static>;
 
-/// Constructs a ChangeAll screen configuration based on current print setup - that is GCodeInfo, ToolMapping and SpoolJoin
+/// GCode command used to represent the gcode
+inline constexpr GCodeCommand gcode_command {
+    .letter = 'M',
+    .codenum = 9934,
+};
+
+/// Constructs a MultiFilamentChange screen configuration based on current print setup - that is GCodeInfo, ToolMapping and SpoolJoin
 /// That is, it suggests changing filaments so that they would match the current configuration for the print
 Config config_from_current_print_setup();
+
+/// Constructs a MultiFilamentChange configuration from gcode parameters
+std::optional<Config> config_from_gcode(GCodeBasicParser &parser);
+
+/// Generates a MultiFilamentChange gcode from the provided configuration
+void config_to_gcode(const Config &config, StringBuilder &sb);
 
 } // namespace multi_filament_change
 

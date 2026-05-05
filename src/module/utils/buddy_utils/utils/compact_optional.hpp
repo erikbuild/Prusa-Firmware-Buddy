@@ -81,6 +81,11 @@ public:
         return value_;
     }
 
+    constexpr const T *operator->() const {
+        enforce_has_value();
+        return &value_;
+    }
+
     constexpr CompactOptional &operator=(const CompactOptional &) = default;
     constexpr CompactOptional &operator=(CompactOptional &&) = default;
 

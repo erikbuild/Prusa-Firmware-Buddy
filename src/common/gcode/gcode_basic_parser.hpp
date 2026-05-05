@@ -19,10 +19,9 @@ struct GCodeCommand {
     Codenum codenum = 0;
 
     /// "G123.1" -> 1
-    std::optional<Subcode> subcode;
+    std::optional<Subcode> subcode = std::nullopt;
 
-    bool operator==(const GCodeCommand &) const = default;
-    bool operator!=(const GCodeCommand &) const = default;
+    constexpr bool operator==(const GCodeCommand &) const = default;
 };
 
 class GCodeParserHelper;
