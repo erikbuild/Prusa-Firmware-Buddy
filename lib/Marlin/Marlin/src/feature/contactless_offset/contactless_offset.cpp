@@ -932,6 +932,11 @@ static SymmetryPeakResult detect_symmetry_peak(
     return { peak_time, confidence, final_score, best_combined };
 }
 
+// Round a duration in seconds to the nearest sample count at the given dt.
+static constexpr int seconds_to_samples(float seconds, float dt) {
+    return static_cast<int>(seconds / dt + 0.5f);
+}
+
 // Find the time shift τ that maximises the sum of energy at the four
 // expected pass times — a 1-D matched filter against the motion profile.
 static std::optional<int> find_rough_time_alignment(
@@ -979,21 +984,32 @@ static std::optional<int> find_rough_time_alignment(
     const auto t_peaks = profile.expected_peak_times();
     std::array<int, std::tuple_size_v<decltype(t_peaks)>> offset_template;
     for (size_t i = 0; i < offset_template.size(); ++i) {
-        offset_template[i] = static_cast<int>(t_peaks[i] / dt_dec + 0.5f);
+        offset_template[i] = seconds_to_samples(t_peaks[i], dt_dec);
     }
 
-    // Sweep over candidate shifts, compute the stencil sum for each, find the best.
-    const int k_search = static_cast<int>(max_shift_s / dt_dec + 0.5f);
+    // Pass-window half-widths in decimated samples — used both as the scoring
+    // stencil and as the debug regions reported below. Integrating over the
+    // full pass duration is much more robust than sampling four single
+    // points, which is hypersensitive to small timing errors and noise spikes.
+    const int hw1 = std::max(1, seconds_to_samples(profile.pass_time1() / 2.0f, dt_dec));
+    const int hw2 = std::max(1, seconds_to_samples(profile.pass_time2() / 2.0f, dt_dec));
+
+    // Sweep over candidate shifts, compute integrated energy in the four
+    // pass windows for each shift, find the best.
+    const int k_search = seconds_to_samples(max_shift_s, dt_dec);
     sfl::segmented_vector<float, 256> score_curve;
     score_curve.reserve(static_cast<size_t>(2 * k_search + 1));
     int k_best = 0;
     float s_best = -std::numeric_limits<float>::infinity();
     for (int k = -k_search; k <= k_search; ++k) {
         float s = 0;
-        for (const int ci : offset_template) {
-            const int idx = ci + k;
-            if (idx >= 0 && idx < static_cast<int>(n_dec)) {
-                s += energy[idx];
+        for (size_t t = 0; t < offset_template.size(); ++t) {
+            const int hw = (t < 2) ? hw1 : hw2;
+            const int center = offset_template[t] + k;
+            const int j0 = std::max(0, center - hw);
+            const int j1 = std::min(static_cast<int>(n_dec), center + hw);
+            for (int j = j0; j < j1; ++j) {
+                s += energy[j];
             }
         }
         score_curve.push_back(s);
@@ -1004,13 +1020,13 @@ static std::optional<int> find_rough_time_alignment(
     }
 
     // Check that the best score is sufficiently above the baseline (mean energy
-    // per sample, scaled by the number of taps in the stencil).
-    const float baseline = energy_sum * (static_cast<float>(offset_template.size()) / static_cast<float>(n_dec));
+    // per sample, scaled by the number of samples summed in the stencil:
+    // 2·hw per window × 2 slow + 2 fast windows = 4·(hw1 + hw2)).
+    const float taps_total = 4.0f * static_cast<float>(hw1 + hw2);
+    const float baseline = energy_sum * (taps_total / static_cast<float>(n_dec));
     const float score_over_baseline = (baseline > 1e-10f) ? s_best / baseline : 0.0f;
 
     // Regions for debug plot — full pass duration around each tap.
-    const int hw1 = std::max(1, static_cast<int>(profile.pass_time1() / (2.0f * dt_dec) + 0.5f));
-    const int hw2 = std::max(1, static_cast<int>(profile.pass_time2() / (2.0f * dt_dec) + 0.5f));
     std::array<EnergyRegion, offset_template.size()> regions;
     for (size_t i = 0; i < offset_template.size(); ++i) {
         const int hw = (i < 2) ? hw1 : hw2;
@@ -1026,6 +1042,13 @@ static std::optional<int> find_rough_time_alignment(
     debug_report_rough_align_energy(label, decimation, dt_dec, /*threshold=*/0.0f,
         /*offset=*/k_best * decimation,
         regions.data(), regions.size(), energy);
+
+    // k_best at the edge of the search window means the true optimum likely
+    // lies outside it; what we have is just a boundary clamp, not a real
+    // alignment.
+    if (std::abs(k_best) >= k_search - 1) {
+        return std::nullopt;
+    }
 
     if (score_over_baseline < min_score_over_baseline) {
         return std::nullopt;
