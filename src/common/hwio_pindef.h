@@ -377,7 +377,7 @@ inline constexpr SPI_HandleTypeDef *hw_get_spi_side_strip() {
     #elif (BOARD_IS_XBUDDY())
         #if HAS_INDX_HEAD()
             #define PIN_TABLE_BOARD_SPECIFIC_INDX(MACRO_FUNCTION) \
-                MACRO_FUNCTION(buddy::hw::OutputPin, indx_head_reset, buddy::hw::IoPort::E COMMA buddy::hw::IoPin::p9, Pin::State::high COMMA OMode::pushPull COMMA OSpeed::low, buddy::hw::noHandler)
+                MACRO_FUNCTION(buddy::hw::OutputPin_Inverted, indx_head_reset, buddy::hw::IoPort::E COMMA buddy::hw::IoPin::p9, Pin::State::high COMMA OMode::pushPull COMMA OSpeed::low, buddy::hw::noHandler)
         #else
             #define PIN_TABLE_BOARD_SPECIFIC_INDX(MACRO_FUNCTION)
         #endif
