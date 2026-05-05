@@ -13,6 +13,8 @@
 #include <gui/menu_item/menu_item_select_menu.hpp>
 #include <utils/compact_optional.hpp>
 
+class DialogChangeAllFilaments;
+
 namespace multi_filament_change {
 
 class MI_ActionSelect : public MenuItemSelectMenu {
@@ -64,6 +66,7 @@ struct MenuMultiFilamentChange__<std::index_sequence<ix...>> {
 using MenuMultiFilamentChange_ = MenuMultiFilamentChange__<std::make_index_sequence<VirtualToolIndex::count>>;
 
 class MenuMultiFilamentChange : public WindowMenu {
+    friend class ::DialogChangeAllFilaments;
 
 public:
     MenuMultiFilamentChange(window_t *parent, const Rect16 &rect);
@@ -84,6 +87,8 @@ private:
 private:
     MenuMultiFilamentChange_::Container container;
     bool is_carrying_out_changes_ = false;
+    bool close_screen_on_media_disconnect_ = false;
+    bool closed_by_media_disconnect_ = false;
 };
 
 } // namespace multi_filament_change
@@ -104,17 +109,10 @@ public:
     /// \returns true if extited because of media error/disconnect
     static bool exec(const MultiFilamentChangeConfig &initial_config, bool exit_on_media = false);
 
-protected:
-    void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
-
 private:
     DialogChangeAllFilaments(const MultiFilamentChangeConfig &initial_configuration);
 
 private:
     window_header_t header;
     WindowExtendedMenu<multi_filament_change::MenuMultiFilamentChange> menu;
-
-private:
-    bool exit_on_media = false;
-    bool exited_by_media = false;
 };

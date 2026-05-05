@@ -103,10 +103,30 @@ void MenuMultiFilamentChange::set_configuration(const MultiFilamentChangeConfig 
 }
 
 void MenuMultiFilamentChange::windowEvent(window_t *sender, GUI_event_t event, void *param) {
-    if (event == GUI_event_t::CHILD_CLICK) {
+    switch (event) {
+
+    case GUI_event_t::CHILD_CLICK: {
         carry_out_changes();
         Screens::Access()->Close();
         return;
+    }
+
+    case GUI_event_t::MEDIA: {
+        const MediaState_t media_state = MediaState_t(reinterpret_cast<int>(param));
+        if (media_state == MediaState_t::removed || media_state == MediaState_t::error) {
+            // USB was removed
+            if (close_screen_on_media_disconnect_ && !is_carrying_out_changes()) {
+                // Blocked if filament change screens are open
+                Screens::Access()->Close();
+                closed_by_media_disconnect_ = true;
+                return;
+            }
+        }
+        break;
+    }
+
+    default:
+        break;
     }
 
     WindowMenu::windowEvent(sender, event, param);
@@ -236,9 +256,9 @@ ScreenChangeAllFilaments::ScreenChangeAllFilaments()
 
 bool DialogChangeAllFilaments::exec(const MultiFilamentChangeConfig &initial_config, bool exit_on_media) {
     DialogChangeAllFilaments dlg(initial_config);
-    dlg.exit_on_media = exit_on_media;
+    dlg.menu.menu.close_screen_on_media_disconnect_ = exit_on_media;
     Screens::Access()->gui_loop_until_dialog_closed();
-    return dlg.exited_by_media;
+    return dlg.menu.menu.closed_by_media_disconnect_;
 }
 
 DialogChangeAllFilaments::DialogChangeAllFilaments(const MultiFilamentChangeConfig &initial_configuration)
@@ -248,19 +268,4 @@ DialogChangeAllFilaments::DialogChangeAllFilaments(const MultiFilamentChangeConf
 {
     CaptureNormalWindow(menu);
     menu.menu.set_configuration(initial_configuration);
-}
-
-void DialogChangeAllFilaments::windowEvent(window_t *sender, GUI_event_t event, void *param) {
-    if (event == GUI_event_t::MEDIA) {
-        const MediaState_t media_state = MediaState_t(reinterpret_cast<int>(param));
-        if (media_state == MediaState_t::removed || media_state == MediaState_t::error) {
-            // USB was removed
-            if (exit_on_media && !menu.menu.is_carrying_out_changes()) { // Blocked if filament change screens are open
-                Screens::Access()->Close();
-            }
-            exited_by_media = true; // Mark exit by USB for return of the dialog box
-        }
-    }
-
-    IDialog::windowEvent(sender, event, param);
 }
