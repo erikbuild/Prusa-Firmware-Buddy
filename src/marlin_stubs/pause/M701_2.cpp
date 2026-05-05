@@ -73,6 +73,15 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     return res;
 }
 
+#if HAS_INDX()
+// Park the active tool back to its dock and back off in Y so the dock area is
+// accessible (e.g. for the user to reach the spool after a filament operation).
+static void park_to_dock_and_back_off() {
+    tool_change(NoTool {}, tool_return_t::no_return);
+    mapi::park(mapi::ZAction::no_move, { .x = mapi::ParkingPosition::unchanged, .y = current_position.y + 50.0f, .z = mapi::ParkingPosition::unchanged });
+}
+#endif
+
 void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::optional<float> &fast_load_length, float z_min_pos, std::optional<RetAndCool_t> op_preheat, VirtualToolIndex virtual_tool, int8_t mmu_slot, std::optional<Color> color_to_be_loaded, ResumePrint_t resume_print_request) {
     InProgress progress;
 
@@ -135,7 +144,7 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
 #if HAS_INDX()
     // Park the tool back to its dock after load
     if (!do_resume_print) {
-        tool_change(NoTool {}, tool_return_t::no_return);
+        park_to_dock_and_back_off();
     }
 #endif
 
@@ -193,7 +202,7 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
 
 #if HAS_INDX()
     // Park the tool back to its dock after unload
-    tool_change(NoTool {}, tool_return_t::no_return);
+    park_to_dock_and_back_off();
 #endif
 }
 
@@ -257,7 +266,7 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
 #if HAS_INDX()
     // Park the tool back to its dock after autoload (covers all early-return paths)
     ScopeGuard park_after_autoload = [&] {
-        tool_change(NoTool {}, tool_return_t::no_return);
+        park_to_dock_and_back_off();
     };
 #endif
 
@@ -438,6 +447,6 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
 
 #if HAS_INDX()
     // Park the tool back to its dock after change filament
-    tool_change(NoTool {}, tool_return_t::no_return);
+    park_to_dock_and_back_off();
 #endif
 }
