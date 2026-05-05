@@ -21,11 +21,8 @@
 // requiring any clock synchronization between the motion system and the
 // sensor.
 //
-// Each axis (X, Y) is measured independently. We do it in two rounds:
-// first a rough "center detection" scan centered on the nominal sensor
-// position, then a refined "nozzle offset" scan where the cross-axis
-// position is corrected by the first round's result, so the nozzle passes
-// through the strongest part of the sensor field.
+// Each axis (X, Y) is measured independently.
+// There is a FSM driving the process described later.
 //
 // Motion is driven via signal2step (direct step enqueueing) rather than the
 // Marlin planner. The planner would buffer and reshape the moves in ways we
@@ -67,6 +64,7 @@
 #include <puppies/INDX.hpp>
 #include <puppies/PuppyModbus.hpp>
 #include <printers.h>
+#include <cstdint>
 
 LOG_COMPONENT_DEF(ContactlessOffset, logging::Severity::debug);
 
@@ -76,6 +74,10 @@ LOG_COMPONENT_DEF(ContactlessOffset, logging::Severity::debug);
 
 // Margin (in samples) added around each chunk to suppress filter edge artifacts.
 static constexpr size_t preprocess_edge_margin = 10;
+
+static constexpr uint8_t max_retries = 3;
+static constexpr float peak_width_mm = 0.6f;
+static constexpr float high_confidence_threshold = 0.9f;
 
 struct EnergyRegion {
     size_t start;
@@ -408,9 +410,29 @@ static auto create_motion_signal(
         | signal2step::cartesian_to_printer_kinematics();
 }
 
+namespace {
+
+// Measurement orchestration is structured as a small finite state machine.
+// Each scan can produce one of three outcomes (Event), and the next_state
+// run the action function that performs the transition.
+enum class FsmState : size_t {
+    offset_measurement_x,
+    offset_measurement_y,
+    offset_measurement_x_when_y_confident,
+    offset_measurement_y_when_x_confident,
+    finished,
+};
+
+enum class FsmEvent : size_t {
+    measurement_failed,
+    measurement_low_confidence,
+    measurement_high_confidence,
+};
+
 struct ScanOutcome {
     float offset;
     float confidence;
+    FsmEvent event;
 };
 
 struct ScanParams {
@@ -422,10 +444,24 @@ struct ScanParams {
     float cross_pos;
 };
 
-static std::expected<ScanOutcome, const char *> run_scan(const ScanParams &p) {
+ScanOutcome run_scan(const ScanParams &p) {
     const float scan_half_width = p.along_x ? p.config.sensing_distance_x / 2.0f : p.config.sensing_distance_y / 2.0f;
     const float scan_start = p.center - scan_half_width;
     const float scan_end = p.center + scan_half_width;
+
+    // Before move, check all physical limits to avoid crashes
+    if (p.along_x) {
+        // On C1_INDX we are also limited by the bed sheet
+        if (scan_start < (X_BED_SIZE + peak_width_mm) || scan_end > X_MAX_POS) {
+            log_error(ContactlessOffset, "Scan along X axis exceeds physical limits");
+            return { 0.0f, 0.0f, FsmEvent::measurement_low_confidence }; // dont' return failed to allow retry with different center position
+        }
+    } else {
+        if (scan_start < Y_MIN_POS || scan_end > Y_MAX_POS) {
+            log_error(ContactlessOffset, "Scan along Y axis exceeds physical limits");
+            return { 0.0f, 0.0f, FsmEvent::measurement_low_confidence }; // dont' return failed to allow retry with different center position
+        }
+    }
 
     LineMotionConfig cfg;
     if (p.along_x) {
@@ -443,21 +479,346 @@ static std::expected<ScanOutcome, const char *> run_scan(const ScanParams &p) {
     debug_report_scan_start(p.name);
     auto scan_result = execute_and_analyze_sweep(cfg, p.sensor, p.name);
     if (!scan_result.has_value()) {
-        return std::unexpected(scan_result.error());
+        log_error(ContactlessOffset, "scan '%s' failed: %s", p.name, scan_result.error());
+        return { 0.0f, 0.0f, FsmEvent::measurement_failed };
     }
     const float offset = scan_half_width - scan_result->estimate_all.position_mm;
-    debug_report_scan_result(p.name, scan_result->confidence, offset);
-    return ScanOutcome { offset, scan_result->confidence };
+    const float confidence = scan_result->confidence;
+    debug_report_scan_result(p.name, confidence, offset);
+
+    const FsmEvent event = (confidence < high_confidence_threshold)
+        ? FsmEvent::measurement_low_confidence
+        : FsmEvent::measurement_high_confidence;
+    return { offset, confidence, event };
 }
+
+// Per-run state shared across FSM iterations. The dispatcher updates the
+// cross-axis position cache (offset_for_measurement.x/y) so each scan passes
+// through the strongest part of the sensor field discovered by the previous
+// scan, and tracks retry counters used by the FSM actions.
+//
+// `scan_center` is the sensor position clamped to physical reach (so the scan
+// sweep stays within machine limits). It may differ from
+// `config.sensor_position` when the sensor sits near the edge of travel — the
+// caller compensates for that delta when interpreting the FSM result.
+struct FsmContext {
+    const tool_offset::ProbingConfig &config;
+    tool_offset::Sensor &sensor;
+    xy_pos_t scan_center;
+    xy_pos_t offset_for_measurement {};
+    uint8_t generic_retry_count {};
+    uint8_t scan_count_y {};
+    ScanOutcome om_x {};
+    ScanOutcome om_y {};
+};
+
+// Per-state scan launchers. Each builds the ScanParams for its state, runs
+// the scan, stashes the outcome into the context, and (for center-detection
+// passes) updates the cross-axis position cache. Hard errors are reported by
+// run_scan as FsmEvent::measurement_failed; in that case we skip the cache
+// update so a transient failure can't poison the next iteration's geometry.
+ScanOutcome scan_offset_measurement_x(FsmContext &ctx) {
+    auto r = run_scan({
+        .config = ctx.config,
+        .sensor = ctx.sensor,
+        .name = "nozzle-offset-x",
+        .along_x = true,
+        .center = ctx.scan_center.x,
+        .cross_pos = ctx.scan_center.y - ctx.offset_for_measurement.y,
+    });
+    if (r.event == FsmEvent::measurement_high_confidence) {
+        ctx.offset_for_measurement.x = r.offset;
+    }
+    return r;
+}
+
+ScanOutcome scan_offset_measurement_y(FsmContext &ctx) {
+    auto r = run_scan({
+        .config = ctx.config,
+        .sensor = ctx.sensor,
+        .name = "nozzle-offset-y",
+        .along_x = false,
+        .center = ctx.scan_center.y,
+        .cross_pos = ctx.scan_center.x - ctx.offset_for_measurement.x,
+    });
+    if (r.event == FsmEvent::measurement_high_confidence) {
+        ctx.offset_for_measurement.y = r.offset;
+    }
+    return r;
+}
+
+// Transition rule: given (current state, scan outcome), produce the next state.
+//
+// Overall arc: start with an X scan; once one axis is confident, refine the
+// other in the matching _when_*_confident state, which uses the known axis as
+// its cross-axis reference. Specifics per state are commented at the case.
+//
+// Execution failures arrive as measurement_failed;
+// geometric limit violations are intentionally surfaced as measurement_low_confidence
+// so the cross-axis hunt can move them back into range.
+FsmState next_state(FsmState state, FsmEvent event, FsmContext &ctx) {
+    auto proceed = [&](FsmState target) {
+        ctx.generic_retry_count = 0;
+        ctx.scan_count_y = 0;
+        return target;
+    };
+
+    auto helper_retry = [&](FsmState target, const char axis) -> FsmState {
+        if (++ctx.generic_retry_count > max_retries) {
+            log_error(ContactlessOffset, "%c failed after %d retries, giving up", axis, max_retries);
+            return FsmState::finished;
+        }
+        log_warning(ContactlessOffset, "%c failed, retrying (%d/%d)", axis, ctx.generic_retry_count, max_retries);
+        return target;
+    };
+    // Retry an X scan, capped at max_retries
+    auto retry_x = [&](FsmState target) -> FsmState {
+        return helper_retry(target, 'X');
+    };
+
+    // Plain retry of a Y scan after a hard failure, capped at max_retries.
+    auto retry_y_on_error = [&](FsmState target) -> FsmState {
+        return helper_retry(target, 'Y');
+    };
+
+    // Low-confidence Y: sensor probably isn't under the swept line. Step the
+    // cross-axis X across sensing_distance_x and rescan; up to max_count_y tries.
+    constexpr uint8_t max_count_y = 10;
+    auto retry_y_low_conf = [&](FsmState target) -> FsmState {
+        if (ctx.scan_count_y > max_count_y) {
+            return FsmState::finished;
+        }
+        const float x_offset_step = ctx.config.sensing_distance_x / max_count_y;
+        ctx.offset_for_measurement.x = ctx.scan_count_y * x_offset_step - ctx.config.sensing_distance_x / 2;
+        ctx.scan_count_y++;
+        log_warning(ContactlessOffset, "Y not confident, retrying (%d/%d)", ctx.scan_count_y, max_count_y);
+        return target;
+    };
+
+    switch (state) {
+    case FsmState::offset_measurement_x:
+        // Initial X. Low confidence skips ahead to Y — Y has the longer sweep
+        // and a wider chance of locating the sensor; we return to refine X once
+        // Y is confident.
+        // Hard failure retries X.
+        switch (event) {
+        case FsmEvent::measurement_failed:
+            return retry_x(FsmState::offset_measurement_x);
+        case FsmEvent::measurement_low_confidence:
+            return proceed(FsmState::offset_measurement_y);
+        case FsmEvent::measurement_high_confidence:
+            return proceed(FsmState::offset_measurement_y_when_x_confident);
+        }
+        break;
+
+    case FsmState::offset_measurement_y:
+        // Initial Y. Low confidence means we're off-sensor in X
+        // Hunt by stepping the cross-axis X.
+        // Success: refine X using this Y.
+        // Hard failure: plain retry.
+        switch (event) {
+        case FsmEvent::measurement_failed:
+            return retry_y_on_error(FsmState::offset_measurement_y);
+        case FsmEvent::measurement_low_confidence:
+            return retry_y_low_conf(FsmState::offset_measurement_y);
+        case FsmEvent::measurement_high_confidence:
+            return proceed(FsmState::offset_measurement_x_when_y_confident);
+        }
+        break;
+
+    case FsmState::offset_measurement_x_when_y_confident:
+        // Refinement pass with known Y. Retry on either weak outcome (Y stays
+        // pinned as confident); finish on success.
+        switch (event) {
+        case FsmEvent::measurement_failed:
+            return retry_x(FsmState::offset_measurement_x_when_y_confident);
+        case FsmEvent::measurement_low_confidence:
+            return retry_x(FsmState::offset_measurement_x_when_y_confident);
+        case FsmEvent::measurement_high_confidence:
+            return proceed(FsmState::finished);
+        }
+        break;
+
+    case FsmState::offset_measurement_y_when_x_confident:
+        // Refinement pass with known X. Retry on either weak outcome (Y probably just needs a nudge); finish on success.
+        switch (event) {
+        case FsmEvent::measurement_failed:
+            return retry_y_on_error(FsmState::offset_measurement_y_when_x_confident);
+        case FsmEvent::measurement_low_confidence:
+            return retry_y_on_error(FsmState::offset_measurement_y_when_x_confident);
+        case FsmEvent::measurement_high_confidence:
+            return proceed(FsmState::finished);
+        }
+        break;
+
+    case FsmState::finished:
+        break;
+    }
+    return FsmState::finished; // unreachable
+}
+
+// Drive the FSM. Each iteration: run the scan for the current state, classify
+// its outcome, ask next_state() for the next state, transition. Terminates
+// when next_state() returns FsmState::finished. Hard errors from run_scan are
+// logged at the source and surfaced as FsmEvent::measurement_failed; the
+// dispatcher just retries (or eventually hits the iteration cap below).
+// Returns nullptr on success, or an error string on failure.
+const char *dispatch_fsm(FsmContext &ctx) {
+    constexpr unsigned max_iterations = 14;
+
+    FsmState state = FsmState::offset_measurement_x;
+    for (unsigned i = 0; i < max_iterations; ++i) {
+        if (state == FsmState::finished && ctx.om_x.confidence > high_confidence_threshold && ctx.om_y.confidence > high_confidence_threshold) {
+            return nullptr;
+        } else if (state == FsmState::finished) {
+            return "Tool offset FSM finished without high confidence in both axes";
+        }
+
+        ScanOutcome outcome;
+        switch (state) {
+        case FsmState::offset_measurement_x:
+        case FsmState::offset_measurement_x_when_y_confident:
+            outcome = scan_offset_measurement_x(ctx);
+            ctx.om_x = outcome;
+            break;
+        case FsmState::offset_measurement_y:
+        case FsmState::offset_measurement_y_when_x_confident:
+            outcome = scan_offset_measurement_y(ctx);
+            ctx.om_y = outcome;
+            break;
+        default:
+            break;
+        };
+
+        state = next_state(state, outcome.event, ctx);
+    }
+    return "Tool offset FSM exceeded iteration limit"; // unreachable
+}
+
+// RAII guard that disables the INDX loadcell + accelerometer and zeros the
+// hotend/bed targets for the duration of an XY scan, restoring everything on
+// destruction. Disabling the puppy traffic frees Modbus bandwidth for the
+// tool-offset sensor stream; zeroing the heaters reduces electromagnetic noise on
+// the induction tool-offset sensor. Must only be constructed AFTER the Z probe,
+// since the loadcell is needed for that probe.
+class IndxScanState {
+    Hotend &hotend_;
+    bool prev_loadcell_active_;
+    bool prev_accelerometer_active_;
+    int16_t prev_hotend_target_;
+    int16_t prev_bed_target_;
+
+public:
+    explicit IndxScanState(Hotend &hotend)
+        : hotend_(hotend)
+        , prev_loadcell_active_(buddy::puppies::indx.get_loadcell_active())
+        , prev_accelerometer_active_(buddy::puppies::indx.get_accelerometer_active())
+        , prev_hotend_target_(hotend.nozzle_target_temp())
+        , prev_bed_target_(thermalManager.degTargetBed()) {
+        buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, false);
+        buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, false);
+        hotend_.set_nozzle_target_temp(0);
+        thermalManager.setTargetBed(0);
+    }
+
+    ~IndxScanState() {
+        buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, prev_loadcell_active_);
+        buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, prev_accelerometer_active_);
+        hotend_.set_nozzle_target_temp(prev_hotend_target_);
+        thermalManager.setTargetBed(prev_bed_target_);
+    }
+
+    IndxScanState(const IndxScanState &) = delete;
+    IndxScanState &operator=(const IndxScanState &) = delete;
+};
+
+// Move above the sensor and probe down to find its true Z. Leaves the
+// carriage at the probed Z (loadcell remains active so the caller can
+// reposition before disabling it).
+std::expected<float, const char *> probe_sensor_z(const tool_offset::ProbingConfig &config) {
+    do_blocking_move_to_z(config.sensor_position.z + config.safe_z_height);
+
+    // Z-probing over TOS must be done out of the coil area to avoid destruction of the coil
+    auto z_probing_position = config.sensor_position;
+    z_probing_position.y += config.y_shift_z_probe_offset_from_sensor;
+    do_blocking_move_to_xy(z_probing_position);
+
+    const float sensor_z = measure_sensor_true_z(config);
+    if (std::isnan(sensor_z)) {
+        return std::unexpected("Initial probing failed, sensor Z is NaN");
+    }
+    return sensor_z;
+}
+
+// Run the XY-scan FSM. Assumes the carriage is already positioned at the
+// sensor XY at the desired probing Z. Returns the measured (x, y) offset in
+// the caller's frame (i.e. relative to `config.sensor_position`).
+std::expected<xy_pos_t, const char *> measure_xy_via_fsm(
+    const tool_offset::ProbingConfig &config,
+    tool_offset::Sensor &sensor,
+    const tool_offset::ToolOffset &initial_measurement_offset) {
+
+    auto &hotend = Hotend::for_tool(PhysicalToolIndex::currently_selected());
+    IndxScanState scan_state(hotend);
+
+    // Clamp the scan center to physical reach so the sweep stays within
+    // machine limits even when the sensor sits close to an edge. The scan
+    // remains symmetric around `scan_center`, so any difference from
+    // `config.sensor_position` shifts every reported offset by the same delta;
+    // we undo that shift on the result below.
+    const xy_pos_t scan_center { { {
+        std::clamp(
+            config.sensor_position.x,
+            X_MIN_POS + config.sensing_distance_x / 2.0f + X_MAX_OFFSET,
+            X_MAX_POS - config.sensing_distance_x / 2.0f - X_MAX_OFFSET),
+        std::clamp(
+            config.sensor_position.y,
+            Y_MIN_POS + config.sensing_distance_y / 2.0f + Y_MAX_OFFSET,
+            Y_MAX_POS - config.sensing_distance_y / 2.0f - Y_MAX_OFFSET),
+    } } };
+    const xy_pos_t scan_center_delta { { {
+        scan_center.x - config.sensor_position.x,
+        scan_center.y - config.sensor_position.y,
+    } } };
+
+    // Seed the cross-axis position cache with the caller's estimate (clamped
+    // to the scan range so it can't bias the cross-axis outside the sensor
+    // area). The seed is expressed in the scan_center frame, so the same
+    // delta is folded in here too.
+    const float clamp_x_lo = peak_width_mm - config.sensing_distance_x / 2.0f;
+    const float clamp_x_hi = peak_width_mm + config.sensing_distance_x / 2.0f;
+    const float clamp_y_lo = peak_width_mm - config.sensing_distance_y / 2.0f;
+    const float clamp_y_hi = peak_width_mm + config.sensing_distance_y / 2.0f;
+
+    FsmContext ctx {
+        .config = config,
+        .sensor = sensor,
+        .scan_center = scan_center,
+        .offset_for_measurement = { { {
+            std::clamp(initial_measurement_offset.x, clamp_x_lo, clamp_x_hi) + scan_center_delta.x,
+            std::clamp(initial_measurement_offset.y, clamp_y_lo, clamp_y_hi) + scan_center_delta.y,
+        } } },
+    };
+
+    if (const char *err = dispatch_fsm(ctx); err != nullptr) {
+        return std::unexpected(err);
+    }
+
+    // Undo the scan_center shift so the result is the true offset between the
+    // nozzle and the configured sensor position.
+    return xy_pos_t { { {
+        ctx.om_x.offset - scan_center_delta.x,
+        ctx.om_y.offset - scan_center_delta.y,
+    } } };
+}
+
+} // namespace
 
 std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_current_tool_offset(
     const tool_offset::ProbingConfig &config,
     tool_offset::Sensor &sensor,
-    const tool_offset::ToolOffset &current_offset) {
+    const tool_offset::ToolOffset &initial_measurement_offset) {
 
-    constexpr float confidence_threshold = 0.90f;
-    constexpr float precision_mm_threshold = 0.1f;
-    constexpr float peak_width_mm = 0.6f;
     auto &hotend = Hotend::for_tool(PhysicalToolIndex::currently_selected());
 
     // Check nozzle temperature before probing
@@ -472,95 +833,24 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     // Sensor may be below soft endstop limits — disable them for the whole measurement
     AutoRestore restore_soft_endstops(soft_endstops_enabled, false);
 
-    const float safe_z = config.sensor_position.z + config.safe_z_height;
-    do_blocking_move_to_z(safe_z);
-
-    // Z-probing over TOS must be done out of the coil area to avoid destruction of the coil
-    auto z_probing_position = config.sensor_position;
-    z_probing_position.y += config.y_shift_z_probe_offset_from_sensor;
-    do_blocking_move_to_xy(z_probing_position);
-
-    const float sensor_z = measure_sensor_true_z(config);
-    if (std::isnan(sensor_z)) {
-        return std::unexpected("Initial probing failed, sensor Z is NaN");
+    const auto sensor_z = probe_sensor_z(config);
+    if (!sensor_z) {
+        return std::unexpected(sensor_z.error());
     }
 
-    const float probing_z = sensor_z + config.sensing_z;
-    do_blocking_move_to_z(probing_z);
+    do_blocking_move_to_z(*sensor_z + config.sensing_z);
+    debug_report_probed_z(*sensor_z, *sensor_z - config.sensor_position.z);
 
-    debug_report_probed_z(sensor_z, sensor_z - config.sensor_position.z);
-
-    tool_offset::ToolOffset result;
-    result.z = sensor_z - config.sensor_position.z;
-
-    // Disable INDX loadcell and accelerometer to free Modbus bandwidth for tool offset sensor streaming and restore its state on exit
-    // Loadcell can be diabled only after probing Z height
-    const auto saved_loadcell_active = buddy::puppies::indx.get_loadcell_active();
-    buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, false);
-    const auto saved_accelerometer_active = buddy::puppies::indx.get_accelerometer_active();
-    buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, false);
-    // Disable INDX heater during XY scanning to reduce measured noise
-    const auto saved_hotend_target = hotend.nozzle_target_temp();
-    hotend.set_nozzle_target_temp(0);
-    const auto saved_bed_target = thermalManager.degTargetBed();
-    thermalManager.setTargetBed(0);
-
-    ScopeGuard restore_previous_state([&hotend, saved_hotend_target, saved_bed_target, saved_loadcell_active, saved_accelerometer_active] {
-        buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, saved_loadcell_active);
-        buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, saved_accelerometer_active);
-        hotend.set_nozzle_target_temp(saved_hotend_target);
-        thermalManager.setTargetBed(saved_bed_target);
-    });
-
-    // XY offset measurement via two-pass scanning
-    float sensor_x = config.sensor_position.x;
-    float sensor_y = config.sensor_position.y;
-    float actual_offset_x = std::clamp(current_offset.x, static_cast<float>(peak_width_mm - config.sensing_distance_x / 2.0f), static_cast<float>(peak_width_mm + config.sensing_distance_x / 2.0f));
-    float actual_offset_y = std::clamp(current_offset.y, static_cast<float>(peak_width_mm - config.sensing_distance_y / 2.0f), static_cast<float>(peak_width_mm + config.sensing_distance_y / 2.0f));
-
-    // Pass 1: center detection — scans centered on sensor_position
-    auto cd_x = run_scan({ config, sensor, "center-detection-x", true, sensor_x - actual_offset_x, sensor_y - actual_offset_y });
-    if (!cd_x.has_value()) {
-        return std::unexpected(cd_x.error());
-    }
-    auto cd_y = run_scan({ config, sensor, "center-detection-y", false, sensor_y - actual_offset_y, sensor_x - actual_offset_x });
-    if (!cd_y.has_value()) {
-        return std::unexpected(cd_y.error());
-    }
-    if (cd_x->confidence > confidence_threshold && cd_y->confidence > confidence_threshold && std::abs(actual_offset_x - cd_x->offset) < precision_mm_threshold && std::abs(actual_offset_y - cd_y->offset) < precision_mm_threshold) {
-        // Excellent results, no need for second pass — return early with center detection result
-        result.x = cd_x->offset + actual_offset_x;
-        result.y = cd_y->offset + actual_offset_y;
-        return result;
+    const auto xy = measure_xy_via_fsm(config, sensor, initial_measurement_offset);
+    if (!xy) {
+        return std::unexpected(xy.error());
     }
 
-    actual_offset_x = std::clamp(cd_x->offset, static_cast<float>(peak_width_mm - config.sensing_distance_x / 2.0f), static_cast<float>(peak_width_mm + config.sensing_distance_x / 2.0f));
-    actual_offset_y = std::clamp(cd_y->offset, static_cast<float>(peak_width_mm - config.sensing_distance_y / 2.0f), static_cast<float>(peak_width_mm + config.sensing_distance_y / 2.0f));
-
-    debug_report_pass1_center(actual_offset_x, actual_offset_y);
-
-    // Pass 2: nozzle offset — cross-axis corrected by pass-1 result
-    auto no_x = run_scan({ config, sensor, "nozzle-offset-x", true, sensor_x - actual_offset_x, sensor_y - actual_offset_y });
-    if (!no_x.has_value()) {
-        return std::unexpected(no_x.error());
-    }
-    if (no_x->confidence < confidence_threshold) {
-        // Too low confidence — return error
-        return std::unexpected("Low confidence in X offset measurement");
-    }
-
-    auto no_y = run_scan({ config, sensor, "nozzle-offset-y", false, sensor_y - actual_offset_y, sensor_x - actual_offset_x });
-    if (!no_y.has_value()) {
-        return std::unexpected(no_y.error());
-    }
-    if (no_y->confidence < confidence_threshold) {
-        // Too low confidence — return error
-        return std::unexpected("Low confidence in Y offset measurement");
-    }
-
-    result.x = no_x->offset + actual_offset_x;
-    result.y = no_y->offset + actual_offset_y;
-    return result;
+    return tool_offset::ToolOffset {
+        .x = xy->x,
+        .y = xy->y,
+        .z = *sensor_z - config.sensor_position.z,
+    };
 }
 
 // Signal preprocessing: median filter + normalize + zero-phase lowpass + detrend

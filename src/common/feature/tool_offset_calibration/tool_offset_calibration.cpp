@@ -211,12 +211,6 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     planner.synchronize();
     planner.reset_position();
 
-    // wait for calibration temperature (if probing is higher than upper limit)
-    // Restore temp is one level above in run()
-    const ToolTemperatures temps = get_tool_temperatures(tool);
-    thermalManager.setTargetHotend(temps.xy_probing, tool);
-    thermalManager.wait_for_hotend(tool, false, true);
-
     // Disable PA to reduce filter delay during probe analysis
     pressure_advance::PressureAdvanceDisabler pa_disabler;
 
@@ -235,42 +229,34 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     reset_hotend_offset(tool);
     hotend_currently_applied_offset = xyz_pos_t {};
 
-    // Check printer physical limits and shift the sensor position if needed to avoid crashes
-    tool_offset::ProbingConfig sensor_corrected_config = config;
-    sensor_corrected_config.sensor_position.x = std::max(sensor_corrected_config.sensor_position.x, X_MIN_POS + config.sensing_distance_x / 2.0f + X_MAX_OFFSET);
-    sensor_corrected_config.sensor_position.x = std::min(sensor_corrected_config.sensor_position.x, X_MAX_POS - config.sensing_distance_x / 2.0f - X_MAX_OFFSET);
-    offset_for_measurement.x += sensor_corrected_config.sensor_position.x - config.sensor_position.x;
-    sensor_corrected_config.sensor_position.y = std::max(sensor_corrected_config.sensor_position.y, Y_MIN_POS + config.sensing_distance_y / 2.0f + Y_MAX_OFFSET);
-    sensor_corrected_config.sensor_position.y = std::min(sensor_corrected_config.sensor_position.y, Y_MAX_POS - config.sensing_distance_y / 2.0f - Y_MAX_OFFSET);
-    offset_for_measurement.y += sensor_corrected_config.sensor_position.y - config.sensor_position.y;
-
     while (true) {
-        for (int i = 0; i < 3; i++) {
-            log_info(ToolOffsetCalib, "XY offset measurement attempt %d", i + 1);
-            auto result = tool_offset::measure_current_tool_offset(sensor_corrected_config, *sensor, offset_for_measurement);
-            if (result.has_value()) {
-                log_info(ToolOffsetCalib, "Measured XY offset: X=%.3f Y=%.3f", static_cast<double>(result->x), static_cast<double>(result->y));
-                // Store newly measured offsets only for XY, keep actual for Z
-                hotend_offset[tool].x = result->x + config.sensor_position.x - sensor_corrected_config.sensor_position.x; // Correct for any sensor position shift
-                hotend_offset[tool].y = result->y + config.sensor_position.y - sensor_corrected_config.sensor_position.y; // Correct for any sensor position shift
-                hotend_offset[tool].z = current_ho.z;
-                prusa_toolchanger.save_tool_offset(tool);
-                hotend_currently_applied_offset = hotend_offset[tool];
-                return true;
-            } else {
-                log_error(ToolOffsetCalib, "Measurement failed: %s", result.error());
-                // retrials performed with 0 offsets
-                offset_for_measurement.x = sensor_corrected_config.sensor_position.x - config.sensor_position.x;
-                offset_for_measurement.y = sensor_corrected_config.sensor_position.y - config.sensor_position.y;
-            }
+        // wait for calibration temperature (if probing is higher than upper limit)
+        // Restore temp is one level above in run()
+        const ToolTemperatures temps = get_tool_temperatures(tool);
+        thermalManager.setTargetHotend(temps.xy_probing, tool);
+        thermalManager.wait_for_hotend(tool, false, true);
+
+        log_info(ToolOffsetCalib, "XY offset measurement");
+        auto result = tool_offset::measure_current_tool_offset(config, *sensor, offset_for_measurement);
+        if (result.has_value()) {
+            log_info(ToolOffsetCalib, "Measured XY offset: X=%.3f Y=%.3f", static_cast<double>(result->x), static_cast<double>(result->y));
+            // Store newly measured offsets only for XY, keep actual for Z
+            hotend_offset[tool].x = result->x;
+            hotend_offset[tool].y = result->y;
+            hotend_offset[tool].z = current_ho.z;
+            prusa_toolchanger.save_tool_offset(tool);
+            hotend_currently_applied_offset = hotend_offset[tool];
+            return true;
+        } else {
+            log_error(ToolOffsetCalib, "Measurement failed: %s", result.error());
         }
 
-        // All 3 inner retries failed. Park to front-middle with Z raised so the user has
+        // If all retries failed, park to front-middle with Z raised so the user has
         // room to clean the nozzle, then block and ask for Retry/Abort. On Retry, move back
         // to where we were parked from and re-run the inner loop. On Abort, stop the print
         // outright — continuing with stale offsets would crash the tool.
-        constexpr float PARK_CLEAN_Z = 100.0f;
-        const mapi::ParkingPosition park_cleaning_position = mapi::ParkingPosition::from_xyz_pos({ { (X_MIN_POS + X_MAX_POS) / 2.0f, 10, PARK_CLEAN_Z } });
+        constexpr float park_clean_z = 100.0f;
+        const mapi::ParkingPosition park_cleaning_position = mapi::ParkingPosition::from_xyz_pos({ { (X_MIN_POS + X_MAX_POS) / 2.0f, 10, park_clean_z } });
         mapi::park(mapi::ZAction::absolute_move, park_cleaning_position);
 
         const auto response = marlin_server::prompt_warning(WarningType::ToolOffsetXyCalibrationFailed);
@@ -288,8 +274,8 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
         }
         log_info(ToolOffsetCalib, "User requested XY offset retry for tool %u", tool.to_raw());
 
-        do_blocking_move_to_xy(sensor_corrected_config.sensor_position.x, sensor_corrected_config.sensor_position.y);
-        do_blocking_move_to_z(sensor_corrected_config.sensor_position.z + sensor_corrected_config.safe_z_height);
+        do_blocking_move_to_xy(config.sensor_position.x, config.sensor_position.y);
+        do_blocking_move_to_z(config.sensor_position.z + config.safe_z_height);
     }
 }
 
@@ -444,9 +430,6 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             hotend_offset[tool].z = z_offset;
             log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", i, static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
         }
-
-        // Apply the newly computed offset
-        hotend_currently_applied_offset = hotend_offset[tool];
 
         min_z_offset = std::min(min_z_offset, hotend_offset[tool].z);
         max_z_offset = std::max(max_z_offset, hotend_offset[tool].z);

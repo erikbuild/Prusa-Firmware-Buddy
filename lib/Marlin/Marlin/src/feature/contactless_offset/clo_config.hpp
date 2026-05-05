@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <core/types.h>
 #include <config.h>
 #include <printers.h>

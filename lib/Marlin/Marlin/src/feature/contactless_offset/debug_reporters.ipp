@@ -64,10 +64,6 @@ static void debug_report_scan_result(const char *label, float confidence, float 
     serial_printf("# scan_result {\"label\": \"%s\", \"confidence\": %.3f, \"position_mm\": %.3f}\n", label, confidence, position_mm);
 }
 
-static void debug_report_pass1_center(float x, float y) {
-    serial_printf("# pass1_center {\"x\": %.6f, \"y\": %.6f}\n", x, y);
-}
-
 static void debug_report_analysis_error(const char *label, const char *error) {
     serial_printf("# analysis_error {\"label\": \"%s\", \"error\": \"%s\"}\n", label, error);
 }
@@ -435,7 +431,6 @@ public:
 static void debug_report_probed_z(float, float) {}
 static void debug_report_scan_start(const char *) {}
 static void debug_report_scan_result(const char *, float, float) {}
-static void debug_report_pass1_center(float, float) {}
 static void debug_report_analysis_error(const char *, const char *) {}
 
 template <typename Container>
