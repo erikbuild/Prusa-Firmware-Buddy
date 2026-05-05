@@ -118,7 +118,6 @@ void MenuMultiFilamentChange::windowEvent(window_t *sender, GUI_event_t event, v
             if (close_screen_on_media_disconnect_ && !is_carrying_out_changes()) {
                 // Blocked if filament change screens are open
                 Screens::Access()->Close();
-                closed_by_media_disconnect_ = true;
                 return;
             }
         }
@@ -258,20 +257,4 @@ ScreenChangeAllFilaments::ScreenChangeAllFilaments(SetupForPrint)
     : ScreenChangeAllFilaments {} {
     menu.menu.set_configuration(multi_filament_change::config_from_current_print_setup());
     menu.menu.close_screen_on_media_disconnect_ = true;
-}
-
-bool DialogChangeAllFilaments::exec(const MultiFilamentChangeConfig &initial_config, bool exit_on_media) {
-    DialogChangeAllFilaments dlg(initial_config);
-    dlg.menu.menu.close_screen_on_media_disconnect_ = exit_on_media;
-    Screens::Access()->gui_loop_until_dialog_closed();
-    return dlg.menu.menu.closed_by_media_disconnect_;
-}
-
-DialogChangeAllFilaments::DialogChangeAllFilaments(const MultiFilamentChangeConfig &initial_configuration)
-    : IDialog(GuiDefaults::RectScreenNoHeader)
-    , header(this, _(header_text))
-    , menu(this, GuiDefaults::RectScreenNoHeader) //
-{
-    CaptureNormalWindow(menu);
-    menu.menu.set_configuration(initial_configuration);
 }

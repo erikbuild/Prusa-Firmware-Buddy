@@ -13,7 +13,6 @@
 #include <gui/menu_item/menu_item_select_menu.hpp>
 #include <utils/compact_optional.hpp>
 
-class DialogChangeAllFilaments;
 class ScreenChangeAllFilaments;
 
 namespace multi_filament_change {
@@ -67,7 +66,6 @@ struct MenuMultiFilamentChange__<std::index_sequence<ix...>> {
 using MenuMultiFilamentChange_ = MenuMultiFilamentChange__<std::make_index_sequence<VirtualToolIndex::count>>;
 
 class MenuMultiFilamentChange : public WindowMenu {
-    friend class ::DialogChangeAllFilaments;
     friend class ::ScreenChangeAllFilaments;
 
 public:
@@ -90,7 +88,6 @@ private:
     MenuMultiFilamentChange_::Container container;
     bool is_carrying_out_changes_ = false;
     bool close_screen_on_media_disconnect_ = false;
-    bool closed_by_media_disconnect_ = false;
 };
 
 } // namespace multi_filament_change
@@ -104,20 +101,4 @@ public:
 
     struct SetupForPrint {};
     ScreenChangeAllFilaments(SetupForPrint);
-};
-
-class DialogChangeAllFilaments final : public IDialog {
-public:
-    /// Executes the "change all filaments" dialog
-    /// \param initial_config sets up the pre-selected configuration for the menu
-    /// \param exit_on_media if true, closes the dialog on media removed/error
-    /// \returns true if extited because of media error/disconnect
-    static bool exec(const MultiFilamentChangeConfig &initial_config, bool exit_on_media = false);
-
-private:
-    DialogChangeAllFilaments(const MultiFilamentChangeConfig &initial_configuration);
-
-private:
-    window_header_t header;
-    WindowExtendedMenu<multi_filament_change::MenuMultiFilamentChange> menu;
 };
