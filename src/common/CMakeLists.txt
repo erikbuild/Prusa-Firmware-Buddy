@@ -9,7 +9,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             app_metrics.cpp
             appmain.cpp
             awdg.cpp
-            base64_stream_decoder.cpp
             bbf.cpp
             conserve_cpu.cpp
             crc32.cpp
