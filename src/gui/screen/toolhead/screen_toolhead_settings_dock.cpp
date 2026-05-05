@@ -5,6 +5,9 @@
 #if HAS_INDX()
     #include <config_store/store_instance.hpp>
     #include <window_msgbox.hpp>
+    #include <marlin_client.hpp>
+    #include <gui/dialogs/window_dlg_wait.hpp>
+    #include <utils/variant_utils.hpp>
 #endif
 
 using namespace screen_toolhead_settings;
@@ -89,6 +92,19 @@ void MI_DOCK_INVALIDATE_CALIBRATION::click([[maybe_unused]] IWindowMenu &menu) {
     }
 
     const auto dock_index = std::get<PhysicalToolIndex>(toolhead());
+
+    if (stdext::holds_value(PhysicalToolIndex::currently_selected(), dock_index)) {
+        // Park first — once the dock is uncalibrated, we wouldn't know where exactly to park.
+        marlin_client::gcode("P0");
+        window_dlg_wait_t::wait_for_gcodes_to_finish();
+
+        // If parking failed for any reason, keep the dock calibrated.
+        if (stdext::holds_value(PhysicalToolIndex::currently_selected(), dock_index)) {
+            MsgBoxError(_("Could not park the tool. Calibration preserved."), Responses_Ok);
+            return;
+        }
+    }
+
     auto calibrated_mask = config_store().indx_dock_calibrated_mask.get();
     calibrated_mask.reset(dock_index.to_raw());
     config_store().indx_dock_calibrated_mask.set(calibrated_mask);
