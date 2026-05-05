@@ -14,6 +14,7 @@
 #include <utils/compact_optional.hpp>
 
 class DialogChangeAllFilaments;
+class ScreenChangeAllFilaments;
 
 namespace multi_filament_change {
 
@@ -67,6 +68,7 @@ using MenuMultiFilamentChange_ = MenuMultiFilamentChange__<std::make_index_seque
 
 class MenuMultiFilamentChange : public WindowMenu {
     friend class ::DialogChangeAllFilaments;
+    friend class ::ScreenChangeAllFilaments;
 
 public:
     MenuMultiFilamentChange(window_t *parent, const Rect16 &rect);
@@ -99,6 +101,9 @@ private:
 class ScreenChangeAllFilaments : public ScreenMenuBase<multi_filament_change::MenuMultiFilamentChange> {
 public:
     ScreenChangeAllFilaments();
+
+    struct SetupForPrint {};
+    ScreenChangeAllFilaments(SetupForPrint);
 };
 
 class DialogChangeAllFilaments final : public IDialog {

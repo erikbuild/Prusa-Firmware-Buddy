@@ -847,18 +847,8 @@ void FrameToolMapping::windowEvent(window_t *sender, GUI_event_t event, void *co
             return;
 
         case Response::Filament: {
-            if (DialogChangeAllFilaments::exec(multi_filament_change::config_from_current_print_setup(), true)) {
-                return;
-            }
-
-            // Dispositions changed, so we need to update config
-            update_config();
-
-            // And we gotta rebuild the items to update with the new info
-            update_mapping();
-
-            // Something somehow screws up the focus, too lazy to find out why atm, this hack fixes it
-            bottom_buttons_.SetFocus();
+            // The ChangeAll screen will pop out, this screen will get re-initialized afterwards
+            Screens::Access()->Open<ScreenChangeAllFilaments, ScreenChangeAllFilaments::SetupForPrint {}>();
             return;
         }
 

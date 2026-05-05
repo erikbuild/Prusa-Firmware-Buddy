@@ -254,6 +254,12 @@ ScreenChangeAllFilaments::ScreenChangeAllFilaments()
     menu.menu.set_configuration({});
 }
 
+ScreenChangeAllFilaments::ScreenChangeAllFilaments(SetupForPrint)
+    : ScreenChangeAllFilaments {} {
+    menu.menu.set_configuration(multi_filament_change::config_from_current_print_setup());
+    menu.menu.close_screen_on_media_disconnect_ = true;
+}
+
 bool DialogChangeAllFilaments::exec(const MultiFilamentChangeConfig &initial_config, bool exit_on_media) {
     DialogChangeAllFilaments dlg(initial_config);
     dlg.menu.menu.close_screen_on_media_disconnect_ = exit_on_media;
