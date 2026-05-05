@@ -170,6 +170,13 @@ bool PrusaToolChanger::ensure_safe_move() {
     return true;
 }
 
+bool PrusaToolChanger::pick_any_tool(tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool z_return) {
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+        return tool_change(tool, return_type, return_position, z_lift, z_return);
+    }
+    return false;
+}
+
 bool PrusaToolChanger::check_emergency_stop() {
     #if ENABLED(CRASH_RECOVERY)
     if (crash_s.get_state() == Crash_s::TRIGGERED_AC_FAULT) {

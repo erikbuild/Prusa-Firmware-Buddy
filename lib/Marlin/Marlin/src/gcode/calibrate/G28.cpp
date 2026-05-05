@@ -779,8 +779,7 @@ bool GcodeSuite::G28_no_parser(bool X, bool Y, bool Z, const G28Flags& flags) {
           bsod("Cannot toolchange");
         }
 
-        // When no tool is picked, make sure to pick one
-        failed = !prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw(0), tool_return_t::no_return, current_position.xyz(), tool_change_lift_t::no_lift, false);
+        failed = !prusa_toolchanger.pick_any_tool(tool_return_t::no_return, current_position.xyz(), tool_change_lift_t::no_lift, false);
       }
       #endif
 

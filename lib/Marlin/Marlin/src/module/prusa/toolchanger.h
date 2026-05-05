@@ -145,7 +145,6 @@ public:
      */
     [[nodiscard]] bool can_move_safely(AxisHomeLevel required_level = AxisHomeLevel::full);
 
-    #if HAS_INDX()
     /**
      * @brief Try to pick any enabled tool, iterating through all of them.
      * Useful when we need some tool picked but don't care which one.
@@ -157,6 +156,7 @@ public:
      */
     [[nodiscard]] bool pick_any_tool(tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift = tool_change_lift_t::full_lift, bool z_return = true);
 
+    #if HAS_INDX()
     /**
      * @brief Ensure head locking mechanism is open.
      * Checks head_open flag; if not open, calls open_head().
