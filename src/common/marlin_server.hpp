@@ -240,6 +240,9 @@ void fsm_change(FSMAndPhase fsm_and_phase, fsm::PhaseData data = {});
 
 void fsm_destroy(ClientFSM type);
 
+/// @returns whether a FSM is active
+bool is_fsm_active(ClientFSM type);
+
 template <FSMExtendedDataSubclass DATA_TYPE>
 void fsm_change_extended(FSMAndPhase fsm_and_phase, DATA_TYPE data) {
     FSMExtendedDataManager::store(data);
@@ -250,12 +253,16 @@ void fsm_change_extended(FSMAndPhase fsm_and_phase, DATA_TYPE data) {
     fsm_change(fsm_and_phase, fsm_change_data);
 }
 
-class FSM_Holder {
+class FSM_Holder : public Uncopyable {
     ClientFSM fsm;
+    bool do_destroy;
 
 public:
     FSM_Holder(ClientFSM fsm)
-        : fsm { fsm } {
+        : fsm { fsm }
+        // Only destroy the fsm at the end if the fsm was not active prior to the holder
+        // This is to support FSM Holder nesting
+        , do_destroy { fsm != ClientFSM::_none && !is_fsm_active(fsm) } {
     }
 
     FSM_Holder(FSMAndPhase fsm_and_phase, fsm::PhaseData data = fsm::PhaseData())
@@ -269,7 +276,7 @@ public:
     }
 
     ~FSM_Holder() {
-        if (fsm != ClientFSM::_none) {
+        if (do_destroy) {
             fsm_destroy(fsm);
         }
     }

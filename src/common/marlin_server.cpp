@@ -659,6 +659,10 @@ void fsm_destroy(ClientFSM type) {
     }
 }
 
+bool is_fsm_active(ClientFSM type) {
+    return fsm_states[type].has_value();
+}
+
 void fsm_change(FSMAndPhase fsm_and_phase, fsm::PhaseData data) {
     const auto base_data = fsm::BaseData(fsm_and_phase.phase, data);
 
