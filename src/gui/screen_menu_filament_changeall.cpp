@@ -98,7 +98,7 @@ MenuMultiFilamentChange::MenuMultiFilamentChange(window_t *parent, const Rect16 
 void MenuMultiFilamentChange::set_configuration(const MultiFilamentChangeConfig &set) {
     // Set the correct indexes for the actions
     stdext::visit_sequence<VirtualToolIndex::count>([&]<size_t ix>() {
-        container.Item<WithConstructorArgs<MI_ActionSelect, ix>>().set_config(set[ix]);
+        container.Item<WithConstructorArgs<MI_ActionSelect, ix>>().set_config(set[VirtualToolIndex::from_raw(ix)]);
     });
 }
 

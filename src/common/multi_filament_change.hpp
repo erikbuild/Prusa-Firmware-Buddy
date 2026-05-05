@@ -26,7 +26,7 @@ struct ConfigItem {
     std::optional<Color> color;
 };
 
-using Config = StrongIndexArray<ConfigItem, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes>;
+using Config = StrongIndexArray<ConfigItem, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static>;
 
 } // namespace multi_filament_change
 
