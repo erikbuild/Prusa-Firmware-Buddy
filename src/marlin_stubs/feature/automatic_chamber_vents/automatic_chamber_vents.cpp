@@ -161,7 +161,8 @@ bool execute_control(VentState target_state) {
     }
     marlin_server::FSM_Holder fsm_holder { PhaseWait::print_status_message };
 
-    if (!GcodeSuite::G28_no_parser(true, true, false, { .only_if_needed = true, .precise = false })) {
+    // On INDX, vent control holds specific tool, for that we need pickup (that needs precise homing), this precise homing avoids double homing on the next pickup
+    if (!GcodeSuite::G28_no_parser(true, true, false, { .only_if_needed = true, .precise = HAS_INDX() })) {
         return false;
     }
 
