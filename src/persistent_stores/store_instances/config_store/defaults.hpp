@@ -34,6 +34,11 @@
     #include <module/prusa/indx_dock_position_defaults.hpp>
 #endif
 
+#include <option/has_tool_offset_sensor.h>
+#if HAS_TOOL_OFFSET_SENSOR()
+    #include <feature/contactless_offset/clo_config.hpp>
+#endif
+
 #include <option/has_sheet_support.h>
 #include <option/has_loadcell.h>
 #include <option/has_phase_stepping.h>
@@ -165,6 +170,10 @@ namespace defaults {
     inline constexpr DockPosition dock_position { 0, 0 };
 #endif
     inline constexpr ToolOffset tool_offset { 0, 0, 0 };
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    inline constexpr xy_pos_t tool_offset_sensor_position = tool_offset::default_sensor_position;
+#endif
 
     inline constexpr float nozzle_diameter {
 #if PRINTER_IS_PRUSA_XL()

@@ -40,6 +40,7 @@ void GcodeSuite::G426() {
     SERIAL_ECHOLN("G426 contactless offset measurement");
 
     auto config = tool_offset::get_default_probing_config();
+    tool_offset_calibration::apply_stored_sensor_position(config);
 
     config.sensing_speed_slow = parser.floatval('F', config.sensing_speed_slow);
     config.sensing_speed_fast = parser.floatval('R', config.sensing_speed_fast);

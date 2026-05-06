@@ -290,9 +290,25 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     }
 }
 
+void apply_stored_sensor_position(tool_offset::ProbingConfig &config) {
+    const auto stored = config_store().tool_offset_sensor_position.get();
+    if (std::abs(stored.x - config.sensor_position.x) > config.sensor_position_error_threshold || std::abs(stored.y - config.sensor_position.y) > config.sensor_position_error_threshold) {
+        log_error(ToolOffsetCalib, "Stored sensor position (X=%.1f Y=%.1f) is too far from default (X=%.1f Y=%.1f), fallback to default values",
+            static_cast<double>(stored.x),
+            static_cast<double>(stored.y),
+            static_cast<double>(config.sensor_position.x),
+            static_cast<double>(config.sensor_position.y));
+        return;
+    }
+    // Stored position is more accurate than the default
+    config.sensor_position.x = stored.x;
+    config.sensor_position.y = stored.y;
+}
+
 bool run(uint8_t r_param, uint8_t probe_count) {
     PrintStatusMessageGuard status_guard;
-    const auto probing_config = tool_offset::get_default_probing_config();
+    auto probing_config = tool_offset::get_default_probing_config();
+    apply_stored_sensor_position(probing_config);
 
     reset_z_tool_offsets(); // Clear old Z offsets to avoid interference with calibration
 
@@ -451,26 +467,10 @@ bool run(uint8_t r_param, uint8_t probe_count) {
     if (num_tools > 1) {
         const float avg_x_offset = (min_x_offset + max_x_offset) / 2.0f;
         const float avg_y_offset = (min_y_offset + max_y_offset) / 2.0f;
-        log_info(ToolOffsetCalib, "Normalizing XY offsets: subtracting X=%.3f Y=%.3f",
-            static_cast<double>(avg_x_offset), static_cast<double>(avg_y_offset));
-        for (uint8_t i = 0; i < PhysicalToolIndex::count; i++) {
-            if (!used_physical_tools.test(i)) {
-                continue;
-            }
-            const auto tool = PhysicalToolIndex::from_raw(i);
-            hotend_offset[tool].x -= avg_x_offset;
-            hotend_offset[tool].y -= avg_y_offset;
-
-            metric_record_custom(&metric_tool_offset, ",tool=%u x=%.3f,y=%.3f,z=%.3f",
-                i,
-                static_cast<double>(hotend_offset[tool].x),
-                static_cast<double>(hotend_offset[tool].y),
-                static_cast<double>(hotend_offset[tool].z));
-        }
-
         // Spread is invariant under the midpoint subtraction, so we can use the pre-normalization extremes.
         const float x_spread = max_x_offset - min_x_offset;
         const float y_spread = max_y_offset - min_y_offset;
+
         if (x_spread > MAX_XY_OFFSET_DIFFERENCE || y_spread > MAX_XY_OFFSET_DIFFERENCE) {
             log_error(ToolOffsetCalib, "XY offset spread too large: X=%.3f Y=%.3f (limit %.3f)",
                 static_cast<double>(x_spread), static_cast<double>(y_spread), static_cast<double>(MAX_XY_OFFSET_DIFFERENCE));
@@ -478,6 +478,31 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             marlin_server::quick_stop();
             marlin_server::print_abort();
             return false;
+        }
+
+        if (std::abs(avg_x_offset) > probing_config.sensor_position_update_threshold || std::abs(avg_y_offset) > probing_config.sensor_position_update_threshold) {
+            // Detected sensor movement - update stored sensor position and apply correction to all tools.
+            // `probing_config.sensor_position` is the position the scan was conducted at (either the
+            // stored value or the default, depending on what apply_stored_sensor_position resolved to).
+            const MachinePosXY new_sensor_position { { {
+                probing_config.sensor_position.x + avg_x_offset,
+                probing_config.sensor_position.y + avg_y_offset,
+            } } };
+            log_info(ToolOffsetCalib, "Updating stored sensor position: (%.3f, %.3f) -> (%.3f, %.3f)",
+                static_cast<double>(probing_config.sensor_position.x), static_cast<double>(probing_config.sensor_position.y),
+                static_cast<double>(new_sensor_position.x), static_cast<double>(new_sensor_position.y));
+            config_store().tool_offset_sensor_position.set(new_sensor_position);
+
+            for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+                // Note: we update offset for all enabled tools, even if they are not measured in this run
+                hotend_offset[tool].x -= avg_x_offset;
+                hotend_offset[tool].y -= avg_y_offset;
+                metric_record_custom(&metric_tool_offset, ",tool=%u x=%.3f,y=%.3f,z=%.3f",
+                    tool.to_raw(),
+                    static_cast<double>(hotend_offset[tool].x),
+                    static_cast<double>(hotend_offset[tool].y),
+                    static_cast<double>(hotend_offset[tool].z));
+            }
         }
     }
 

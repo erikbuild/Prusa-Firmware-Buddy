@@ -33,6 +33,7 @@
 #include <option/has_input_shaper_calibration.h>
 #include <option/has_mmu2.h>
 #include <option/has_toolchanger.h>
+#include <option/has_tool_offset_sensor.h>
 #include <option/has_selftest.h>
 #include <option/has_phase_stepping.h>
 #include <option/has_i2c_expander.h>
@@ -441,6 +442,13 @@ struct CurrentStore
     inline void set_tool_offset(PhysicalToolIndex tool, ToolOffset value) {
         tool_offsets.set(tool.to_raw(), value);
     }
+#endif
+
+#if HAS_TOOL_OFFSET_SENSOR()
+    /// Calibrated XY position of the contactless tool-offset sensor.
+    /// Default is the per-printer geometry from clo_config; updated by tool offset
+    /// calibration when normalized values differs too much from the stored ones.
+    StoreItem<xy_pos_t, defaults::tool_offset_sensor_position, ItemFlag::calibrations, journal::hash("Tool Offset Sensor Position")> tool_offset_sensor_position;
 #endif
 
     /// In case the loaded_filament_is_previous flag (for the given tool) is

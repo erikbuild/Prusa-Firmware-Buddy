@@ -20,4 +20,10 @@ bool run(uint8_t r_param, uint8_t probe_count);
 /// @return true if calibration was successful
 bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfig &config);
 
+/// Overwrite the sensor position in `config` with the calibrated value from the
+/// config store, unless that value differs from the default by more than
+/// `sensor_position_error_threshold` (in which case the default is kept and an
+/// error is logged).
+void apply_stored_sensor_position(tool_offset::ProbingConfig &config);
+
 } // namespace tool_offset_calibration
