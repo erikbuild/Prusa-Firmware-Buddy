@@ -69,6 +69,11 @@ Dwarf::Dwarf(const uint8_t dwarf_nr, uint8_t modbus_address)
     GeneralWrite.value.HotendRequestedTemperature = 0;
     GeneralWrite.value.HeatbreakRequestedTemperature = DEFAULT_HEATBREAK_TEMPERATURE;
 
+    // Atomic mirrors must match the register initial values above.
+    cached_hotend_temp.store(HEATER_0_MINTEMP + 1);
+    cached_heatbreak_temp.store(HEATBREAK_MINTEMP + 1);
+    heatbreak_target_temp_desired.store(DEFAULT_HEATBREAK_TEMPERATURE);
+
     set_cheese_led(); // Set LED by eeprom config
     set_status_led(); // Default status LED mode
 }
@@ -93,6 +98,21 @@ CommunicationStatus Dwarf::read_discrete_general_status(PuppyModbus &bus) {
     // read general status discrete inputs
     CommunicationStatus status = bus.read(unit, DiscreteGeneralStatus, 250);
     if (status == CommunicationStatus::OK) {
+        uint8_t disc = 0;
+        if (DiscreteGeneralStatus.value.is_picked) {
+            disc |= DISC_PICKED;
+        }
+        if (DiscreteGeneralStatus.value.is_parked) {
+            disc |= DISC_PARKED;
+        }
+        if (DiscreteGeneralStatus.value.is_button_up_pressed) {
+            disc |= DISC_BTN_UP;
+        }
+        if (DiscreteGeneralStatus.value.is_button_down_pressed) {
+            disc |= DISC_BTN_DN;
+        }
+        cached_discrete_status.store(disc);
+
         DWARF_LOG(logging::Severity::debug, "Is parked: %d", DiscreteGeneralStatus.value.is_parked);
         DWARF_LOG(logging::Severity::debug, "Is picked: %d", DiscreteGeneralStatus.value.is_picked);
     }
@@ -107,8 +127,30 @@ CommunicationStatus Dwarf::read_general_status(PuppyModbus &bus) {
             handle_dwarf_fault(bus);
         }
 
-        // Cache for a use in interrupt (where we can't lock).
-        tool_filament_sensor = RegisterGeneralStatus.value.ToolFilamentSensor;
+        // Publish atomic mirrors for lock-free access from Marlin.
+        tool_filament_sensor.store(RegisterGeneralStatus.value.ToolFilamentSensor);
+        cached_hotend_temp.store(static_cast<int16_t>(RegisterGeneralStatus.value.HotendMeasuredTemperature));
+        cached_heater_pwm.store(RegisterGeneralStatus.value.HotendPWMState);
+        cached_heatbreak_temp.store(static_cast<int16_t>(RegisterGeneralStatus.value.HeatBreakMeasuredTemperature));
+        for (size_t i = 0; i < NUM_FANS; ++i) {
+            cached_fan_pwm[i].store(RegisterGeneralStatus.value.fan[i].pwm);
+            cached_fan_rpm[i].store(RegisterGeneralStatus.value.fan[i].rpm);
+        }
+        for (size_t i = 0; i < NUM_FANS; ++i) {
+            cached_fan_state[i].store(static_cast<uint8_t>(RegisterGeneralStatus.value.fan[i].state));
+        }
+
+        uint8_t rpm_ok_mask = 0;
+        for (size_t i = 0; i < NUM_FANS; ++i) {
+            if (RegisterGeneralStatus.value.fan[i].is_rpm_ok) {
+                rpm_ok_mask |= static_cast<uint8_t>(1u << i);
+            }
+        }
+        cached_fan_rpm_ok.store(rpm_ok_mask);
+        cached_mcu_temperature.store(static_cast<int16_t>(RegisterGeneralStatus.value.MCUTemperature));
+        cached_board_temperature.store(static_cast<int16_t>(RegisterGeneralStatus.value.BoardTemperature));
+        cached_24V_mV.store(RegisterGeneralStatus.value.system_24V_mV);
+        cached_heater_current_mA.store(RegisterGeneralStatus.value.heater_current_mA);
 
         metric_record_custom(&metric_dwarf_parked_raw, ",n=%u v=%ii", dwarf_nr, RegisterGeneralStatus.value.IsParkedRaw);
         metric_record_custom(&metric_dwarf_picked_raw, ",n=%u v=%ii", dwarf_nr, RegisterGeneralStatus.value.IsPickedRaw);
@@ -257,13 +299,23 @@ CommunicationStatus Dwarf::pull_fifo_nolock(PuppyModbus &bus, bool &more) {
 }
 
 CommunicationStatus Dwarf::write_general(PuppyModbus &bus) {
-    // Handle delayed writes from possibly an interrupt.
-    for (size_t i = 0; i < NUM_FANS; i++) {
-        uint16_t pwm_desired = fan_pwm_desired[i].load();
-        if (pwm_desired != GeneralWrite.value.fan_pwm[i]) {
-            GeneralWrite.value.fan_pwm[i] = pwm_desired;
+    // GeneralWrite.value is in a packed struct — copy out, compare, and write back.
+    const auto sync = [&](uint16_t &dst, const uint16_t desired) {
+        if (dst != desired) {
+            dst = desired;
             GeneralWrite.dirty = true;
         }
+    };
+    uint16_t hotend_temp = GeneralWrite.value.HotendRequestedTemperature;
+    uint16_t heatbreak_temp = GeneralWrite.value.HeatbreakRequestedTemperature;
+    sync(hotend_temp, hotend_target_temp_desired.load());
+    sync(heatbreak_temp, heatbreak_target_temp_desired.load());
+    GeneralWrite.value.HotendRequestedTemperature = hotend_temp;
+    GeneralWrite.value.HeatbreakRequestedTemperature = heatbreak_temp;
+    for (size_t i = 0; i < NUM_FANS; i++) {
+        uint16_t fan_pwm = GeneralWrite.value.fan_pwm[i];
+        sync(fan_pwm, fan_pwm_desired[i].load());
+        GeneralWrite.value.fan_pwm[i] = fan_pwm;
     }
     CommunicationStatus status = bus.write(unit, GeneralWrite);
     if (status == CommunicationStatus::ERROR) {
@@ -342,43 +394,33 @@ bool Dwarf::is_tmc_enabled() {
 }
 
 float Dwarf::get_hotend_temp() {
-    Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register
-    return static_cast<int16_t>(RegisterGeneralStatus.value.HotendMeasuredTemperature);
+    // Modbus carries the temperature as uint16_t but it encodes a signed int16_t value.
+    return static_cast<float>(static_cast<int16_t>(cached_hotend_temp.load()));
 }
 
 CommunicationStatus Dwarf::set_hotend_target_temp(float target) {
-    Lock guard(*mutex);
-
-    GeneralWrite.value.HotendRequestedTemperature = (uint16_t)target;
-    GeneralWrite.dirty = true;
+    hotend_target_temp_desired.store(static_cast<uint16_t>(target));
     return CommunicationStatus::OK;
 }
 
 int Dwarf::get_heater_pwm() {
-    Lock guard(*mutex);
-    return RegisterGeneralStatus.value.HotendPWMState;
+    return static_cast<int>(cached_heater_pwm.load());
 }
 
 bool Dwarf::is_picked() const {
-    Lock guard(*mutex);
-    return DiscreteGeneralStatus.value.is_picked;
+    return (cached_discrete_status.load() & DISC_PICKED) != 0;
 }
 
 bool Dwarf::is_parked() const {
-    Lock guard(*mutex);
-    return DiscreteGeneralStatus.value.is_parked;
+    return (cached_discrete_status.load() & DISC_PARKED) != 0;
 }
 
 bool Dwarf::is_button_up_pressed() const {
-    Lock guard(*mutex);
-    return DiscreteGeneralStatus.value.is_button_up_pressed;
+    return (cached_discrete_status.load() & DISC_BTN_UP) != 0;
 }
 
 bool Dwarf::is_button_down_pressed() const {
-    Lock guard(*mutex);
-    return DiscreteGeneralStatus.value.is_button_down_pressed;
+    return (cached_discrete_status.load() & DISC_BTN_DN) != 0;
 }
 
 CommunicationStatus Dwarf::run_time_sync(PuppyModbus &bus) {
@@ -507,56 +549,27 @@ IFSensor::value_type Dwarf::get_tool_filament_sensor() {
 }
 
 int16_t Dwarf::get_mcu_temperature() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register
-    return static_cast<int16_t>(RegisterGeneralStatus.value.MCUTemperature);
+    return cached_mcu_temperature.load();
 }
 
 int16_t Dwarf::get_board_temperature() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register
-    return static_cast<int16_t>(RegisterGeneralStatus.value.BoardTemperature);
+    return cached_board_temperature.load();
 }
 
 float Dwarf::get_24V() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    return RegisterGeneralStatus.value.system_24V_mV / 1000.0f;
+    return cached_24V_mV.load() / 1000.0f;
 }
 
 float Dwarf::get_heater_current() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    return RegisterGeneralStatus.value.heater_current_mA / 1000.0f;
+    return cached_heater_current_mA.load() / 1000.0f;
 }
 
 void Dwarf::set_heatbreak_target_temp(int16_t target) {
-    Lock guard(*mutex);
-
-    GeneralWrite.value.HeatbreakRequestedTemperature = target;
-    GeneralWrite.dirty = true;
+    heatbreak_target_temp_desired.store(static_cast<uint16_t>(target));
 }
 
 void Dwarf::set_fan(uint8_t fan, uint16_t target) {
     assert(fan < NUM_FANS);
-    // FIXME:
-    // Because this sometimes gets called from an interrupt, we need to just
-    // store the value and handle it properly under a lock somewhere else.
-    // BFW-6219.
     fan_pwm_desired[fan].store(target);
 }
 
@@ -638,22 +651,12 @@ void Dwarf::handle_dwarf_fault(PuppyModbus &bus) {
 }
 
 float Dwarf::get_heatbreak_temp() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register
-    return static_cast<int16_t>(RegisterGeneralStatus.value.HeatBreakMeasuredTemperature);
+    // Modbus carries the temperature as uint16_t but it encodes a signed int16_t value.
+    return static_cast<float>(static_cast<int16_t>(cached_heatbreak_temp.load()));
 }
 
 uint16_t Dwarf::get_heatbreak_fan_pwr() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    return RegisterGeneralStatus.value.fan[1].pwm;
+    return cached_fan_pwm[1].load();
 }
 
 void Dwarf::decode_log(const LogData &data) {
@@ -707,32 +710,19 @@ void Dwarf::decode_accelerometer_freq(const AccelerometerSamplingRate &data) {
 }
 
 uint16_t Dwarf::get_fan_pwm(uint8_t fan_nr) const {
-    // Lock guard(*mutex);
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    return RegisterGeneralStatus.value.fan[fan_nr].pwm;
+    return cached_fan_pwm[fan_nr].load();
 }
+
 uint16_t Dwarf::get_fan_rpm(uint8_t fan_nr) const {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-    return RegisterGeneralStatus.value.fan[fan_nr].rpm;
+    return cached_fan_rpm[fan_nr].load();
 }
+
 bool Dwarf::get_fan_rpm_ok(uint8_t fan_nr) const {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-    return RegisterGeneralStatus.value.fan[fan_nr].is_rpm_ok;
+    return (cached_fan_rpm_ok.load() >> fan_nr) & 1u;
 }
+
 uint16_t Dwarf::get_fan_state(uint8_t fan_nr) const {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-    return RegisterGeneralStatus.value.fan[fan_nr].state;
+    return cached_fan_state[fan_nr].load();
 }
 
 StrongIndexArray<Dwarf, DWARF_MAX_COUNT, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarfs {

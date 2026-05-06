@@ -380,8 +380,47 @@ private:
         } pid;
     };
     ModbusHoldingRegisterBlock<GENERAL_WRITE_REQUEST, GeneralWrite_t> GeneralWrite;
-    // Because they can be set from an interrupt.
+
+    // --- Cached read-side state, populated by read_general_status() / read_discrete_general_status() ---
+
+    // Mirrors of RegisterGeneralStatus.value.*, read lock-free from Marlin.
+    // Initial values match the constructor's pre-populated register values.
+    // HEATER_0_MINTEMP / HEATBREAK_MINTEMP are macros unavailable in this header;
+    // the non-zero initial values are set in the constructor instead.
+    std::atomic<int16_t> cached_hotend_temp { 0 };
+    std::atomic<uint16_t> cached_heater_pwm { 0 };
+    std::atomic<int16_t> cached_heatbreak_temp { 0 };
+    std::array<std::atomic<uint16_t>, NUM_FANS> cached_fan_pwm {};
+    std::array<std::atomic<uint16_t>, NUM_FANS> cached_fan_rpm {};
+    std::atomic<uint8_t> cached_fan_rpm_ok { 0 }; // bitmask, one bit per fan
+    std::array<std::atomic<uint8_t>, NUM_FANS> cached_fan_state {};
+    std::atomic<int16_t> cached_mcu_temperature { 0 };
+    std::atomic<int16_t> cached_board_temperature { 0 };
+    std::atomic<uint16_t> cached_24V_mV { 0 };
+    std::atomic<uint16_t> cached_heater_current_mA { 0 };
+
+    // Mirrors of DiscreteGeneralStatus.value.*, packed into one byte, read lock-free from Marlin.
+    static constexpr uint8_t DISC_PICKED = 1 << 0;
+    static constexpr uint8_t DISC_PARKED = 1 << 1;
+    static constexpr uint8_t DISC_BTN_UP = 1 << 2;
+    static constexpr uint8_t DISC_BTN_DN = 1 << 3;
+    std::atomic<uint8_t> cached_discrete_status { 0 };
+
+    // --- Desired write-side state, applied by write_general() ---
+
+    // Applied to GeneralWrite.value.HotendRequestedTemperature on next write_general().
+    std::atomic<uint16_t> hotend_target_temp_desired { 0 };
+    // Applied to GeneralWrite.value.HeatbreakRequestedTemperature on next write_general().
+    // DEFAULT_HEATBREAK_TEMPERATURE is a macro unavailable in this header;
+    // the non-zero initial value is set in the constructor instead.
+    std::atomic<uint16_t> heatbreak_target_temp_desired { 0 };
+    // Applied to GeneralWrite.value.fan_pwm[] on next write_general().
     std::array<std::atomic<uint16_t>, NUM_FANS> fan_pwm_desired { 0, 0 };
+
+    static_assert(std::atomic<bool>::is_always_lock_free);
+    static_assert(std::atomic<uint8_t>::is_always_lock_free);
+    static_assert(std::atomic<uint16_t>::is_always_lock_free);
+    static_assert(std::atomic<int16_t>::is_always_lock_free);
 
     MODBUS_REGISTER TmcWriteRequest_t {
         uint16_t address {};
