@@ -159,8 +159,8 @@ LoopResult CSelftestPart_Axis::stateHomeZ() {
 #if HAS_TOOLCHANGER()
     // The next Z axis check needs to be done with a tool. This will re-home XY on-demand
     if (std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
-        if (!prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw(0), tool_return_t::no_return, {})) {
-            return LoopResult::Fail;
+        if (!prusa_toolchanger.pick_any_tool(tool_return_t::no_return, {})) {
+            fatal_error("No calibrated dock", "PrusaToolChanger");
         }
     }
 #endif
