@@ -112,7 +112,7 @@ bool are_metrics_enabled() {
 }
 
 static int syslog_message_init(char *buffer, int buffer_len, int64_t timestamp) {
-    static int message_id = 0;
+    static uint32_t message_id = 0;
     const int facility = 1; // user level message
     const int severity = 6; // informational
     const char *appname = "buddy";
@@ -121,7 +121,7 @@ static int syslog_message_init(char *buffer, int buffer_len, int64_t timestamp) 
     // https://tools.ietf.org/html/rfc5424
     return snprintf(
         buffer, buffer_len,
-        "<%i>1 - %s %s - - - msg=%i,tm=%" PRId64 ",v=4 ",
+        "<%i>1 - %s %s - - - msg=%" PRIu32 ",tm=%" PRId64 ",v=4 ",
         facility * 8 + severity, otp_get_mac_address_str().data(), appname, message_id++, timestamp);
 }
 
