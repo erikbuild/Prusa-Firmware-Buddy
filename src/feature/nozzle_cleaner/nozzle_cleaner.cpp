@@ -77,7 +77,7 @@ static constexpr EnumArray<Sequence, GCodeFile, static_cast<int>(Sequence::_cnt)
                                                       "G750 Y91 F21000\n"
                                                       "G750 Y86.5 F21000\n"
                                                       "M906 P1\n" // Increase E current for purge
-                                                      "G750 E25 F250\n"
+                                                      "G750 E25 F4\n"
                                                       "M400\n" // planner.synchronize()
                                                       "M1705 N\n" // Autoretract sequence
                                                       "M400\n"
@@ -97,7 +97,7 @@ static constexpr EnumArray<Sequence, GCodeFile, static_cast<int>(Sequence::_cnt)
                                                             "G750 Y91 F21000\n"
                                                             "G750 Y86.5 F21000\n"
                                                             "M906 P1\n" // Increase E current for purge
-                                                            "G1 E25 F250\n"
+                                                            "G750 E25 F4\n"
                                                             "M400\n" // planner.synchronize()
                                                             "M906 P0\n" // Restore E current
                                                             "G750 X0.65 Y118.5 F18000\n"
