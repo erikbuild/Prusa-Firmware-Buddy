@@ -7,6 +7,8 @@
 #include <modular_bed_registers.hpp>
 #include <option/has_puppy_modularbed.h>
 #include <utility_extensions.hpp>
+#include <array>
+#include <atomic>
 
 static_assert(HAS_PUPPY_MODULARBED());
 
@@ -156,6 +158,16 @@ protected:
     uint16_t expand_to_sides(uint16_t enabled_mask, float target_temp);
 
 private:
+    // Cached read values — populated under mutex by puppy task, read lock-free by Marlin.
+    std::array<std::atomic<uint16_t>, BEDLET_COUNT> cached_bedlet_temp {};
+    std::atomic<int16_t> cached_heater_current_a { 0 };
+    std::atomic<int16_t> cached_heater_current_b { 0 };
+    std::atomic<uint16_t> cached_mcu_temperature { 0 };
+
+    static_assert(std::atomic<int16_t>::is_always_lock_free);
+    static_assert(std::atomic<uint16_t>::is_always_lock_free);
+    static_assert(std::atomic<bool>::is_always_lock_free);
+
     freertos::Mutex mutex;
     static constexpr uint32_t MAX_UNREAD_MS = 1000;
 

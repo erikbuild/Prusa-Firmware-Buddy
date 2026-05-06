@@ -159,6 +159,9 @@ CommunicationStatus ModularBed::read_currents(PuppyModbus &bus) {
         return status;
     }
 
+    cached_heater_current_a.store(currents.value.A_measured);
+    cached_heater_current_b.store(currents.value.B_measured);
+
     metric_record_custom(
         &metric_currents,
         ",n=0 v=%.3f,e=%.3f",
@@ -176,6 +179,10 @@ CommunicationStatus ModularBed::read_bedlet_data(PuppyModbus &bus) {
     CommunicationStatus status = bus.read(unit, bedlet_data, MAX_UNREAD_MS);
     if (status != CommunicationStatus::OK) {
         return status;
+    }
+
+    for (uint16_t i = 0; i < BEDLET_COUNT; ++i) {
+        cached_bedlet_temp[i].store(bedlet_data.value.measured_temperature[i]);
     }
 
     for (uint16_t i = 0; i < BEDLET_COUNT; ++i) {
@@ -295,6 +302,7 @@ CommunicationStatus ModularBed::read_mcu_temperature(PuppyModbus &bus) {
     log_debug(ModularBed, "MCU Temperature: %d", mcu_temperature.value);
     metric_record_float(&metric_mcu_temperature, mcu_temperature.value);
     sensor_data().bedMCUTemperature = mcu_temperature.value;
+    cached_mcu_temperature.store(mcu_temperature.value);
     return status;
 }
 
@@ -305,8 +313,7 @@ void ModularBed::clear_fault() {
 }
 
 float ModularBed::get_temp(const uint16_t idx) {
-    Lock guard(mutex);
-    return static_cast<float>(bedlet_data.value.measured_temperature[idx]) / MODBUS_TEMPERATURE_REGISTERS_SCALE;
+    return static_cast<float>(cached_bedlet_temp[idx].load()) / MODBUS_TEMPERATURE_REGISTERS_SCALE;
 }
 
 void ModularBed::set_print_fan_active(bool value) {
@@ -322,7 +329,6 @@ void ModularBed::set_enable_bedlet_connected_check(bool enable) {
 }
 
 float ModularBed::get_temp(const uint8_t column, const uint8_t row) {
-    // Private, not locked.
     return get_temp(idx(column, row));
 }
 
@@ -414,6 +420,7 @@ ModularBed::cost_and_enable_mask_t ModularBed::touch_side(uint16_t enabled_mask,
 
 void ModularBed::update_bedlet_temps(uint16_t enabled_mask, float target_temp) {
     Lock guard(mutex);
+
     // first calculate what bedlets to enable so that we heat towards two sides
     // this avoid bed warping, because when heated towards two sides, it can expand without making mountain in the middle
     if (expand_to_sides_enabled) {
@@ -489,13 +496,11 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
 }
 
 float ModularBed::get_heater_current() {
-    Lock guard(mutex);
-    return (currents.value.A_measured + currents.value.B_measured) / 1000.0f;
+    return (cached_heater_current_a.load() + cached_heater_current_b.load()) / 1000.0f;
 }
 
 uint16_t ModularBed::get_mcu_temperature() {
-    Lock guard(mutex);
-    return mcu_temperature.value;
+    return cached_mcu_temperature.load();
 }
 
 void ModularBed::safe_state() {
