@@ -76,8 +76,12 @@ void BaseHotend::set_heatbreak_target_temp(TargetTemperature set) {
 #endif
 
 void BaseHotend::manage() {
-    // Note: Checks in BaseHotend meansthat we're checking them twice on remote hotends if the remote hotend also uses this API (once on the master board, once on the remote tool board)
+    // Note: Checks in BaseHotend means that we're checking them twice on remote hotends if the remote hotend also uses this API (once on the master board, once on the remote tool board)
     // But better safe than sorry
+
+    if (!is_thermally_managed()) {
+        return;
+    }
 
     if (nozzle_temp() > base_config_.max_nozzle_temp) {
         thermalManager.max_temp_error((heater_ind_t)tool_.to_raw());
