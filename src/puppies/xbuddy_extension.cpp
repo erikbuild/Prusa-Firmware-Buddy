@@ -101,7 +101,9 @@ namespace buddy::puppies {
 
 void XBuddyExtension::set_fan_pwm(size_t fan_idx, uint8_t pwm) {
     assert(fan_idx < FAN_CNT);
-    fan_pwm_desired[fan_idx].store(pwm);
+    if (fan_pwm_desired[fan_idx].exchange(pwm) != pwm) {
+        config_dirty.store(true);
+    }
 }
 
 uint8_t XBuddyExtension::get_requested_fan_pwm(size_t fan_idx) {
@@ -125,12 +127,17 @@ bool XBuddyExtension::get_usb_power() const {
 }
 
 void XBuddyExtension::set_white_led(uint8_t intensity) {
-    w_led_pwm_desired.store(intensity);
+    if (w_led_pwm_desired.exchange(intensity) != intensity) {
+        config_dirty.store(true);
+    }
 }
 
 void XBuddyExtension::set_white_strobe_frequency(std::optional<uint16_t> freq) {
     assert(freq != 0); // Explicit 0 makes no sense as frequency
-    w_led_frequency_desired.store(freq.value_or(0));
+    const uint16_t value = freq.value_or(0);
+    if (w_led_frequency_desired.exchange(value) != value) {
+        config_dirty.store(true);
+    }
 }
 
 void XBuddyExtension::set_rgbw_led(std::array<uint8_t, 4> color) {
@@ -138,19 +145,27 @@ void XBuddyExtension::set_rgbw_led(std::array<uint8_t, 4> color) {
         | (static_cast<uint32_t>(color[1]) << 8)
         | (static_cast<uint32_t>(color[2]) << 16)
         | (static_cast<uint32_t>(color[3]) << 24);
-    rgbw_led_desired.store(packed);
+    if (rgbw_led_desired.exchange(packed) != packed) {
+        config_dirty.store(true);
+    }
 }
 
 void XBuddyExtension::set_usb_power(bool enabled) {
-    usb_power_desired.store(enabled);
+    if (usb_power_desired.exchange(enabled) != enabled) {
+        config_dirty.store(true);
+    }
 }
 
 void XBuddyExtension::set_mmu_power(bool enabled) {
-    mmu_power_desired.store(enabled);
+    if (mmu_power_desired.exchange(enabled) != enabled) {
+        config_dirty.store(true);
+    }
 }
 
 void XBuddyExtension::set_mmu_nreset(bool enabled) {
-    mmu_nreset_desired.store(enabled);
+    if (mmu_nreset_desired.exchange(enabled) != enabled) {
+        config_dirty.store(true);
+    }
 }
 
 std::optional<uint16_t> XBuddyExtension::get_fan_rpm(size_t fan_idx) const {
@@ -158,7 +173,7 @@ std::optional<uint16_t> XBuddyExtension::get_fan_rpm(size_t fan_idx) const {
     if (!valid.load()) {
         return std::nullopt;
     }
-    return cached_fan_rpm[fan_idx].load();
+    return fan_rpm[fan_idx].load();
 }
 
 std::array<uint16_t, XBuddyExtension::FAN_CNT> XBuddyExtension::get_fans_rpm() const {
@@ -167,7 +182,7 @@ std::array<uint16_t, XBuddyExtension::FAN_CNT> XBuddyExtension::get_fans_rpm() c
     }
     std::array<uint16_t, FAN_CNT> out;
     for (size_t i = 0; i < FAN_CNT; ++i) {
-        out[i] = cached_fan_rpm[i].load();
+        out[i] = fan_rpm[i].load();
     }
     return out;
 }
@@ -176,41 +191,47 @@ std::optional<float> XBuddyExtension::get_chamber_temp() const {
     if (!valid.load()) {
         return std::nullopt;
     }
-    return static_cast<float>(cached_chamber_temperature_dc.load()) / 10.0f;
+    return static_cast<float>(chamber_temperature_dc.load()) / 10.0f;
 }
 
 std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_gpio_filament_sensor_state() const {
     if (!valid.load()) {
         return std::nullopt;
     }
-    return static_cast<FilamentSensorState>(cached_gpio_filament_sensor.load());
+    return static_cast<FilamentSensorState>(gpio_filament_sensor.load());
 }
 
 std::optional<XBuddyExtension::FilamentSensorState> XBuddyExtension::get_ext_filament_sensor_state(uint8_t index) const {
     if (!valid.load()) {
         return std::nullopt;
     }
-    using Register = decltype(status.value.ext_filament_sensors);
+    using Register = decltype(Status::ext_filament_sensors);
     assert(index < xbuddy_extension::ext_filament_sensor_count);
     const uint8_t shift = index * xbuddy_extension::bits_per_fs_state;
     constexpr Register mask = (Register(1) << xbuddy_extension::bits_per_fs_state) - 1;
-    return static_cast<FilamentSensorState>((cached_ext_filament_sensors.load() >> shift) & mask);
+    return static_cast<FilamentSensorState>((ext_filament_sensors.load() >> shift) & mask);
 }
 
 CommunicationStatus XBuddyExtension::refresh_input(PuppyModbus &bus, uint32_t max_age) {
     // Already locked by caller.
 
-    const auto result = bus.read(unit, status, max_age);
+    ModbusInputRegisterBlock<Status::address, Status> block {};
+    block.last_read_timestamp_ms = status_last_read_ms;
+    const CommunicationStatus result = bus.read(unit, block, max_age);
+    status_last_read_ms = block.last_read_timestamp_ms;
 
     switch (result) {
     case CommunicationStatus::OK:
         for (size_t i = 0; i < FAN_CNT; ++i) {
-            cached_fan_rpm[i].store(status.value.fan_rpm[i]);
+            fan_rpm[i].store(block.value.fan_rpm[i]);
         }
-        cached_chamber_temperature_dc.store(status.value.temperature);
-        cached_gpio_filament_sensor.store(status.value.gpio_filament_sensor);
-        cached_ext_filament_sensors.store(status.value.ext_filament_sensors);
-        // Only after we have published the cached_..., to make sure to never
+        chamber_temperature_dc.store(block.value.temperature);
+        gpio_filament_sensor.store(block.value.gpio_filament_sensor);
+        ext_filament_sensors.store(block.value.ext_filament_sensors);
+        current_chunk_request = block.value.chunk_request;
+        current_digest_request = block.value.digest_request;
+        current_log_message_sequence = block.value.log_message_sequence;
+        // Only after publishing all status fields, to make sure to never
         // expose an invalid value.
         valid.store(true);
         break;
@@ -228,36 +249,41 @@ CommunicationStatus XBuddyExtension::refresh_input(PuppyModbus &bus, uint32_t ma
 CommunicationStatus XBuddyExtension::refresh_holding(PuppyModbus &bus) {
     // Already locked by caller
 
-    const auto write = [&](uint16_t &dst, const uint16_t val) {
-        if (val != dst) {
-            dst = val;
-            config.dirty = true;
-        }
-    };
-    for (size_t i = 0; i < FAN_CNT; ++i) {
-        write(config.value.fan_pwm[i], static_cast<uint16_t>(fan_pwm_desired[i].load()));
-    }
-    write(config.value.w_led_pwm, static_cast<uint16_t>(w_led_pwm_desired.load()));
-    write(config.value.w_led_frequency, w_led_frequency_desired.load());
-    const uint32_t rgbw = rgbw_led_desired.load();
-    write(config.value.rgbw_led_r_pwm, static_cast<uint16_t>(rgbw & 0xff));
-    write(config.value.rgbw_led_g_pwm, static_cast<uint16_t>((rgbw >> 8) & 0xff));
-    write(config.value.rgbw_led_b_pwm, static_cast<uint16_t>((rgbw >> 16) & 0xff));
-    write(config.value.rgbw_led_w_pwm, static_cast<uint16_t>((rgbw >> 24) & 0xff));
-    write(config.value.usb_power, static_cast<uint16_t>(usb_power_desired.load() ? 1 : 0));
-    write(config.value.mmu_power, static_cast<uint16_t>(mmu_power_desired.load() ? 1 : 0));
-    write(config.value.mmu_nreset, static_cast<uint16_t>(mmu_nreset_desired.load() ? 1 : 0));
+    // Clear dirty before snapshotting; a racing setter then either lands in
+    // our snapshot or re-marks dirty for the next cycle.
+    bool dirty = config_dirty.exchange(false);
 
-    uint32_t now = ticks_ms();
-    // We update it every time (so it's fresh), but force it written (set as
-    // dirty) only once in a while. That way we can piggy-back on other
-    // requests and save some round trips.
-    config.value.activity = now;
+    const uint32_t now = ticks_ms();
+    // Update activity every time so it stays fresh; mark dirty only periodically
+    // so we piggy-back on other requests and avoid unnecessary round trips.
+    config_activity = static_cast<uint16_t>(now);
     if (ticks_diff(now, last_activity_update) > activity_update_every_ms) {
-        config.dirty = true;
+        dirty = true;
     }
 
-    const auto result = bus.write(unit, config);
+    ModbusHoldingRegisterBlock<Config::address, Config> block {};
+    for (size_t i = 0; i < FAN_CNT; ++i) {
+        block.value.fan_pwm[i] = static_cast<uint16_t>(fan_pwm_desired[i].load());
+    }
+    block.value.w_led_pwm = static_cast<uint16_t>(w_led_pwm_desired.load());
+    block.value.w_led_frequency = w_led_frequency_desired.load();
+    const uint32_t rgbw_snap = rgbw_led_desired.load();
+    block.value.rgbw_led_r_pwm = static_cast<uint16_t>(rgbw_snap & 0xff);
+    block.value.rgbw_led_g_pwm = static_cast<uint16_t>((rgbw_snap >> 8) & 0xff);
+    block.value.rgbw_led_b_pwm = static_cast<uint16_t>((rgbw_snap >> 16) & 0xff);
+    block.value.rgbw_led_w_pwm = static_cast<uint16_t>((rgbw_snap >> 24) & 0xff);
+    block.value.usb_power = static_cast<uint16_t>(usb_power_desired.load() ? 1 : 0);
+    block.value.mmu_power = static_cast<uint16_t>(mmu_power_desired.load() ? 1 : 0);
+    block.value.mmu_nreset = static_cast<uint16_t>(mmu_nreset_desired.load() ? 1 : 0);
+    block.value.activity = config_activity;
+    block.dirty = dirty;
+
+    const CommunicationStatus result = bus.write(unit, block);
+    if (result == CommunicationStatus::ERROR && dirty) {
+        // Write didn't go through, keep work for next cycle.
+        config_dirty.store(true);
+    }
+
     if (result == CommunicationStatus::OK) {
         last_activity_update = now;
     }
@@ -271,7 +297,7 @@ CommunicationStatus XBuddyExtension::write_chunk(PuppyModbus &bus) {
         return CommunicationStatus::ERROR;
     }
 
-    const xbuddy_extension::modbus::ChunkRequest &current_request = status.value.chunk_request;
+    const xbuddy_extension::modbus::ChunkRequest current_request = current_chunk_request;
 
     if (flash_fd != -1 && last_chunk_request.file_id != current_request.file_id) {
         // The current file there is outdated (or maybe no request any more).
@@ -350,7 +376,7 @@ CommunicationStatus XBuddyExtension::write_chunk(PuppyModbus &bus) {
 }
 
 CommunicationStatus XBuddyExtension::write_digest(PuppyModbus &bus, DigestComputeFn compute) {
-    const xbuddy_extension::modbus::DigestRequest current_request = status.value.digest_request;
+    const xbuddy_extension::modbus::DigestRequest current_request = current_digest_request;
 
     if (current_request == last_digest_request) {
         return CommunicationStatus::SKIPPED;
@@ -432,7 +458,7 @@ CommunicationStatus XBuddyExtension::initial_scan(PuppyModbus &bus) {
     Lock lock(mutex);
 
     const auto input = refresh_input(bus, 0);
-    config.dirty = true;
+    config_dirty.store(true);
     return input;
 }
 
@@ -443,12 +469,11 @@ CommunicationStatus XBuddyExtension::ping(PuppyModbus &bus) {
 }
 
 CommunicationStatus XBuddyExtension::set_mmu_power(PuppyModbus &bus, bool mmu_power) {
-    // set_mmu_power variand called from PuppyBootstrap. Needs a "write
-    // immediatelly" semantics, therefore having the lock.
-    // The other set_mmu_power is called from Marlin, that can live with a delayed write.
+    // Called from PuppyBootstrap; synchronous flush instead of deferring to the next poll cycle.
     Lock lock(mutex);
-    mmu_power_desired.store(mmu_power);
-    config.dirty = true;
+    if (mmu_power_desired.exchange(mmu_power) != mmu_power) {
+        config_dirty.store(true);
+    }
     return refresh_holding(bus);
 }
 
@@ -456,7 +481,7 @@ CommunicationStatus XBuddyExtension::refresh_log_message(PuppyModbus &bus) {
     // Already locked by caller
 
     // Check if log_message_sequence changed at all
-    if (status.value.log_message_sequence == last_log_message_sequence) {
+    if (current_log_message_sequence == last_log_message_sequence) {
         return CommunicationStatus::SKIPPED;
     }
 

@@ -82,29 +82,29 @@ private:
     // The registers cached here are accessed from different tasks.
     mutable freertos::Mutex mutex;
 
-    // --- Cached read-side state, populated by refresh_input() ---
+    // --- Read-side state, populated by refresh_input() ---
 
     /// If reading/refresh failed, this'll be in invalid state and we'll return
     /// nullopt for queries.
     ///
     /// Used in a lock-like fashion - set to true only after valid values are
-    /// published in cached_... variables.
+    /// published in the status fields below.
     ///
     /// On setting to false, old values are preserved, so any stale check is
     /// just the same as reading it before the valid was set to false.
     std::atomic<bool> valid { false };
 
-    // Mirror of status.value.fan_rpm[].
-    std::array<std::atomic<uint16_t>, FAN_CNT> cached_fan_rpm {};
+    // Fan RPMs from the last status read.
+    std::array<std::atomic<uint16_t>, FAN_CNT> fan_rpm {};
 
-    // Mirror of status.value.temperature (decidegree Celsius).
-    std::atomic<uint16_t> cached_chamber_temperature_dc { 0 };
+    // Chamber temperature (decidegree Celsius).
+    std::atomic<uint16_t> chamber_temperature_dc { 0 };
 
-    // Mirror of status.value.gpio_filament_sensor.
-    std::atomic<uint16_t> cached_gpio_filament_sensor { 0 };
+    // GPIO filament sensor state.
+    std::atomic<uint16_t> gpio_filament_sensor { 0 };
 
-    // Mirror of status.value.ext_filament_sensors.
-    std::atomic<uint16_t> cached_ext_filament_sensors { 0 };
+    // External filament sensors state (2 bits per sensor).
+    std::atomic<uint16_t> ext_filament_sensors { 0 };
 
     // --- Desired write-side state, applied by refresh_holding() ---
 
@@ -129,10 +129,23 @@ private:
     OTP_v5 otp = {};
 
     using Config = xbuddy_extension::modbus::Config;
-    ModbusHoldingRegisterBlock<Config::address, Config> config;
-
     using Status = xbuddy_extension::modbus::Status;
-    ModbusInputRegisterBlock<Status::address, Status> status;
+
+    // Timestamps for stack-built register blocks (puppy task only).
+    uint32_t status_last_read_ms { 0 };
+    // Atomic so lock-free setters can flip it without taking the mutex.
+    std::atomic<bool> config_dirty { false };
+
+    // Plain mutex-protected members populated from status block in refresh_input().
+    // Read in write_chunk() — the puppy task uses this to know what chunk the XBE is asking for.
+    xbuddy_extension::modbus::ChunkRequest current_chunk_request {};
+    // Read in write_digest() — same purpose for the digest stream.
+    xbuddy_extension::modbus::DigestRequest current_digest_request {};
+    // Read in refresh_log_message() — sequence number used to detect new logs.
+    uint16_t current_log_message_sequence { 0 };
+
+    // Plain puppy-task-only field for the activity heartbeat sent in config.
+    uint16_t config_activity { 0 };
 
     // Track last log sequence to detect new log messages
     uint16_t last_log_message_sequence = 0;
