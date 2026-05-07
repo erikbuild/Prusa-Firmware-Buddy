@@ -51,6 +51,10 @@ constexpr float SAFE_Z_HEIGHT = 3.0f;
 /// If exceeded, the print is not allowed to continue
 constexpr float MAX_Z_OFFSET_DIFFERENCE = 0.8f;
 
+/// Maximum allowable XY offset spread (max - min) per axis after normalization, in mm
+/// If exceeded, the print is not allowed to continue
+constexpr float MAX_XY_OFFSET_DIFFERENCE = 0.4f;
+
 // Fallback temperatures if no filament is loaded
 constexpr int16_t DEFAULT_CLEANING_TEMP = 220;
 constexpr int16_t DEFAULT_PROBING_TEMP = 170;
@@ -452,6 +456,18 @@ bool run(uint8_t r_param, uint8_t probe_count) {
             const auto tool = PhysicalToolIndex::from_raw(i);
             hotend_offset[tool].x -= avg_x_offset;
             hotend_offset[tool].y -= avg_y_offset;
+        }
+
+        // Spread is invariant under the midpoint subtraction, so we can use the pre-normalization extremes.
+        const float x_spread = max_x_offset - min_x_offset;
+        const float y_spread = max_y_offset - min_y_offset;
+        if (x_spread > MAX_XY_OFFSET_DIFFERENCE || y_spread > MAX_XY_OFFSET_DIFFERENCE) {
+            log_error(ToolOffsetCalib, "XY offset spread too large: X=%.3f Y=%.3f (limit %.3f)",
+                static_cast<double>(x_spread), static_cast<double>(y_spread), static_cast<double>(MAX_XY_OFFSET_DIFFERENCE));
+            (void)marlin_server::prompt_warning(WarningType::HotendOffsetUnsafeXyDeviation);
+            marlin_server::quick_stop();
+            marlin_server::print_abort();
+            return false;
         }
     }
 

@@ -725,6 +725,9 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
 
     case WarningType::HotendOffsetUnsafeZDeviation:
         return ErrCode::ERR_MECHANICAL_TOOL_OFFSET_UNSAFE_Z_DEVIATION;
+
+    case WarningType::HotendOffsetUnsafeXyDeviation:
+        return ErrCode::ERR_MECHANICAL_TOOL_OFFSET_UNSAFE_XY;
 #endif
 
 #if HAS_SELFTEST()
