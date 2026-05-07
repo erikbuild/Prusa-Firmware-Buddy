@@ -139,18 +139,18 @@ void run() {
             hotend_temp_compensation::step();
 
             last_induction_control_us = now_us;
-            hal::TemperatureReading nozzle_temp_reading = hal::i2c::read_tpis_temperature();
+            hal::CheckedTemperatureReading nozzle_temp_reading = hal::i2c::read_tpis_temperature();
 
             if (nozzle_temp_reading.valid) {
-                if (nozzle_temp_reading.object_temperature_celsius > max_nozzle_temp) {
+                if (nozzle_temp_reading.temps.object_temperature_celsius > max_nozzle_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::nozzle_max_temp);
-                } else if (nozzle_temp_reading.object_temperature_celsius < min_nozzle_temp) {
+                } else if (nozzle_temp_reading.temps.object_temperature_celsius < min_nozzle_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::nozzle_min_temp);
                 }
 
-                if (nozzle_temp_reading.ambient_temperature_celsius > max_tpis_ambient_temp) {
+                if (nozzle_temp_reading.temps.ambient_temperature_celsius > max_tpis_ambient_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::tpis_ambient_max_temp);
-                } else if (nozzle_temp_reading.ambient_temperature_celsius < min_tpis_ambient_temp) {
+                } else if (nozzle_temp_reading.temps.ambient_temperature_celsius < min_tpis_ambient_temp) {
                     hal::panic(indx_head::errors::FaultStatusMask::tpis_ambient_min_temp);
                 }
 
@@ -162,7 +162,7 @@ void run() {
 
             // Note: If !nozzle_temp_reading.valid, nozzle_temp_reading contains last valid value
 
-            const int16_t nozzle_temp_uncompensated_c100 = static_cast<int16_t>(nozzle_temp_reading.object_temperature_celsius * 100.f);
+            const int16_t nozzle_temp_uncompensated_c100 = static_cast<int16_t>(nozzle_temp_reading.temps.object_temperature_celsius * 100.f);
             const int16_t nozzle_temp_compensated_c100 = nozzle_temp_uncompensated_c100 - hotend_temp_compensation::get_current_compensation_c100();
 
             // Calculate slope
@@ -180,7 +180,7 @@ void run() {
 
             ::nozzle_temp_uncompensated_c100.store(nozzle_temp_uncompensated_c100);
             ::nozzle_temp_compensated_c100.store(nozzle_temp_compensated_c100);
-            ::tpis_ambient_temp_c100.store(static_cast<int16_t>(nozzle_temp_reading.ambient_temperature_celsius * 100.f));
+            ::tpis_ambient_temp_c100.store(static_cast<int16_t>(nozzle_temp_reading.temps.ambient_temperature_celsius * 100.f));
 
             // Start calculating slope only after the nozzle_temps store actual readouts
             // to prevent a slope spike on first valid readout

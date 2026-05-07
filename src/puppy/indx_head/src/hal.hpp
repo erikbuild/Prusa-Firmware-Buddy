@@ -39,6 +39,10 @@ namespace rs485 {
 struct TemperatureReading {
     float object_temperature_celsius;
     float ambient_temperature_celsius;
+};
+
+struct CheckedTemperatureReading {
+    TemperatureReading temps;
     bool valid;
 };
 
@@ -49,7 +53,7 @@ namespace i2c {
     using fixed = fpm::fixed<int32_t, int64_t, 7>;
 
     /// Returns ambient and object temperatures
-    TemperatureReading read_tpis_temperature();
+    CheckedTemperatureReading read_tpis_temperature();
     void set_led_pwm(uint8_t r, uint8_t g, uint8_t b);
     void set_led_mode(indx_head::leds::Mode mode);
 } // namespace i2c
