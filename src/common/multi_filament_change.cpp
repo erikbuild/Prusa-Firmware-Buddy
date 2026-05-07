@@ -7,6 +7,9 @@
 #include <string_builder.hpp>
 #include <mbedtls/base64.h>
 
+#include <gcode/gcode.h>
+#include <marlin_server.hpp>
+
 namespace multi_filament_change {
 
 namespace {
@@ -114,7 +117,6 @@ void config_to_gcode(const Config &config, StringBuilder &sb) {
 
     sb.append_string(prefix);
 
-    // becuase StringBuilder does the same,
     const auto encode_buf = sb.alloc_chars(base64_data_length);
     if (!encode_buf) {
         bsod_unreachable();
@@ -131,4 +133,86 @@ void config_to_gcode(const Config &config, StringBuilder &sb) {
     assert(olen == base64_data_length);
 }
 
+void execute(const Config &tool_config) {
+    // If we have nothing to do, we can exit right now
+    if (std::all_of(tool_config.begin(), tool_config.end(), [](const auto &i) { return i.action == Action::keep; })) {
+        return;
+    }
+
+    marlin_server::FSM_Holder fsm { PhaseWait::print_status_message };
+
+    StrongIndexArray<FilamentType, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> old_filaments;
+    for (auto tool : VirtualToolIndex::all()) {
+        old_filaments[tool] = config_store().get_filament_type(tool);
+    }
+
+#if HAS_TOOLCHANGER()
+    // Start preheating all nozzles
+    for (auto tool : VirtualToolIndex::all()) {
+        const auto &config = tool_config[tool];
+        if (config.action == Action::keep) {
+            continue;
+        }
+
+        const uint16_t temperature = max(config.new_filament.parameters().nozzle_temperature, old_filaments[tool].parameters().nozzle_temperature);
+        thermalManager.setTargetHotend(temperature, tool.to_physical());
+    }
+#endif
+
+    // Lift Z to prevent unparking and parking of each tool
+    GcodeSuite::process_subcommands_now_P("G27 P0 Z40");
+
+    /* MMU2 Reimplementation
+
+        MMU should be in unloaded state right now (as every start of print)
+        For all selected tools (in this case tool == MMU's filament slot) change filament
+        This means MMU will go through selected tools and load to the slot (NOT load to extruder)
+        M704 for filament pre-load does not support color specification
+    */
+
+    // Carry out the changes
+    for (auto tool : VirtualToolIndex::all()) {
+        const auto &config = tool_config[tool];
+        switch (config.action) {
+
+        case Action::keep:
+            break;
+
+        case Action::unload: {
+#if HAS_MMU2()
+            config_store().set_filament_type(tool, FilamentType::none);
+#else
+            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
+            command_builder.append_printf("M702 T%d W2", tool.to_raw());
+            GcodeSuite::process_subcommands_now_P(command_builder.str());
+#endif
+            break;
+        }
+
+        case Action::change: {
+#if HAS_MMU2()
+            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
+            command_builder.append_printf("M704 P%d", tool.to_raw());
+            GcodeSuite::process_subcommands_now_P(command_builder.str());
+
+            config_store().set_filament_type(tool, config.new_filament);
+#else
+            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
+
+            // M1600 - filament change (doesn't ask for unload)
+            // M701 - filament load
+            command_builder.append_printf((old_filaments[tool] != FilamentType::none) ? "M1600 S\"%s\" T%d R" : "M701 S\"%s\" T%d W2", config.new_filament.parameters().name.data(), tool.to_raw());
+
+            if (config.color.has_value()) {
+                command_builder.append_printf(" O%" PRIu32, config.color->raw);
+            }
+
+            assert(command_builder.is_ok());
+            GcodeSuite::process_subcommands_now_P(command_builder.str());
+#endif
+            break;
+        }
+        }
+    }
+}
 } // namespace multi_filament_change

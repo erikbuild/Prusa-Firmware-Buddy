@@ -125,3 +125,7 @@ endif()
 if(HAS_INDX)
   target_sources(firmware PRIVATE G750.cpp)
 endif()
+
+if(HAS_TOOLCHANGER OR HAS_MMU2)
+  target_sources(firmware PRIVATE M9934.cpp)
+endif()

@@ -361,6 +361,12 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M9933();
             break;
 
+#if EXTRUDERS > 1
+        case 9934:
+            PrusaGcodeSuite::M9934();
+            break;
+#endif
+
         default:
             processed = false;
             break;

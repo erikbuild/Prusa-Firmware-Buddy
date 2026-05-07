@@ -187,6 +187,10 @@ void M9202(); //< Clear precise homing calibration
 
 void M9933(); //< Cork for tracking when gcode finished executing
 
+#if EXTRUDERS > 1
+void M9934(); ///< Multi filament change
+#endif
+
 #if HAS_TOOLCHANGER()
 void P0(); //< Tool park
 #endif

@@ -72,10 +72,6 @@ public:
     MenuMultiFilamentChange(window_t *parent, const Rect16 &rect);
 
 public:
-    inline bool is_carrying_out_changes() const {
-        return is_carrying_out_changes_;
-    }
-
     void set_configuration(const MultiFilamentChangeConfig &set);
 
 protected:
@@ -86,7 +82,6 @@ private:
 
 private:
     MenuMultiFilamentChange_::Container container;
-    bool is_carrying_out_changes_ = false;
     bool close_screen_on_media_disconnect_ = false;
 };
 

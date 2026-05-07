@@ -6,13 +6,8 @@
 #include <ScreenHandler.hpp>
 #include <img_resources.hpp>
 #include <marlin_client.hpp>
-#include "DialogHandler.hpp"
 #include <option/has_mmu2.h>
 #include <config_store/store_instance.hpp>
-#include "mmu2_toolchanger_common.hpp"
-#include <window_dlg_wait.hpp>
-#include "Marlin/src/gcode/queue.h"
-#include "Marlin/src/module/planner.h"
 #include <utils/string_builder.hpp>
 #include <algorithm_extensions.hpp>
 #include <filament_list.hpp>
@@ -115,8 +110,7 @@ void MenuMultiFilamentChange::windowEvent(window_t *sender, GUI_event_t event, v
         const MediaState_t media_state = MediaState_t(reinterpret_cast<int>(param));
         if (media_state == MediaState_t::removed || media_state == MediaState_t::error) {
             // USB was removed
-            if (close_screen_on_media_disconnect_ && !is_carrying_out_changes()) {
-                // Blocked if filament change screens are open
+            if (close_screen_on_media_disconnect_) {
                 Screens::Access()->Close();
                 return;
             }
@@ -132,12 +126,9 @@ void MenuMultiFilamentChange::windowEvent(window_t *sender, GUI_event_t event, v
 }
 
 void MenuMultiFilamentChange::carry_out_changes() {
-    struct ToolConfig : public ConfigItem {
-        FilamentType old_filament = FilamentType::none;
-    };
     auto tool_config = [&]<size_t... ix>(std::index_sequence<ix...>) {
-        return StrongIndexArray<ToolConfig, VirtualToolIndex::count, VirtualToolIndex, VirtualToolIndex::to_raw_static> {
-            ToolConfig { container.Item<WithConstructorArgs<MI_ActionSelect, ix>>().config(), config_store().get_filament_type(VirtualToolIndex::from_raw(ix)) }...
+        return MultiFilamentChangeConfig {
+            ConfigItem { container.Item<WithConstructorArgs<MI_ActionSelect, ix>>().config() }...
         };
     }(std::make_index_sequence<VirtualToolIndex::count>());
 
@@ -156,91 +147,9 @@ void MenuMultiFilamentChange::carry_out_changes() {
         }
     }
 
-    // If we have nothing to do, we can exit right now
-    if (std::all_of(tool_config.begin(), tool_config.end(), [](const auto &i) { return i.action == Action::keep; })) {
-        return;
-    }
-
-#if HAS_TOOLCHANGER()
-    // Set all temperatures
-    for (auto tool : VirtualToolIndex::all()) {
-        const auto &config = tool_config[tool];
-        if (config.action == Action::keep) {
-            continue;
-        }
-
-        const uint16_t temperature = max(config.new_filament.parameters().nozzle_temperature, config.old_filament.parameters().nozzle_temperature);
-        marlin_client::set_target_nozzle(temperature, tool.to_physical());
-    }
-
-    // Lift Z to prevent unparking and parking of each tool
-    marlin_client::gcode("G27 P0 Z40");
-
-    window_dlg_wait_t::wait_for_gcodes_to_finish();
-#endif
-
-    /* MMU2 Reimplementation
-
-        MMU should be in unloaded state right now (as every start of print)
-        For all selected tools (in this case tool == MMU's filament slot) change filament
-        This means MMU will go through selected tools and load to the slot (NOT load to extruder)
-        M704 for filament pre-load does not support color specification
-    */
-
-    // Carry out the changes
-    for (auto tool : VirtualToolIndex::all()) {
-        const auto &config = tool_config[tool];
-        switch (config.action) {
-
-        case Action::keep:
-            break;
-
-        case Action::unload:
-#if HAS_MMU2()
-            config_store().set_filament_type(tool, FilamentType::none);
-#else
-            marlin_client::gcode_printf("M702 T%d W2", tool.to_raw());
-#endif
-            break;
-
-        case Action::change: {
-#if HAS_MMU2()
-            marlin_client::gcode_printf("M704 P%d", tool.to_raw());
-            config_store().set_filament_type(tool, config.new_filament);
-#else
-            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
-
-            // M1600 - filament change (doesn't ask for unload)
-            // M701 - filament load
-            command_builder.append_printf((config.old_filament != FilamentType::none) ? "M1600 S\"%s\" T%d R" : "M701 S\"%s\" T%d W2", config.new_filament.parameters().name.data(), tool.to_raw());
-
-            if (config.color.has_value()) {
-                command_builder.append_printf(" O%" PRIu32, config.color->raw);
-            }
-
-            assert(command_builder.is_ok());
-            marlin_client::gcode(command_builder.str());
-#endif
-            break;
-        }
-        }
-
-        /// @note Wait while there are more than one command in queue.
-        ///  Keep one G-code in queue at all times to prevent race.
-        ///  If the queue is empty for a short moment, the printer seems to be idle and other stuff can happen.
-        while (queue.length > 1) {
-            gui::TickLoop();
-            DialogHandler::Access().Loop();
-            gui_loop();
-        }
-    }
-
-    // Wait for all changes to finish
-    while (marlin_vars().is_processing.get()) {
-        gui::TickLoop();
-        DialogHandler::Access().Loop();
-        gui_loop();
-    }
+    ArrayStringBuilder<MAX_CMD_SIZE> sb;
+    multi_filament_change::config_to_gcode(tool_config, sb);
+    marlin_client::gcode(sb.str());
 }
 
 static constexpr const char *header_text = HAS_MMU2() ? N_("FILAMENT CHANGE") : N_("MULTITOOL FILAMENT CHANGE");

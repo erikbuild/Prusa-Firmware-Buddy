@@ -46,6 +46,10 @@ std::optional<Config> config_from_gcode(GCodeBasicParser &parser);
 /// Generates a MultiFilamentChange gcode from the provided configuration
 void config_to_gcode(const Config &config, StringBuilder &sb);
 
+/// Executes a multi filament change
+/// !!! To be called only from the marlin thread
+void execute(const Config &config);
+
 } // namespace multi_filament_change
 
 /// Configuration used in DialogChangeAllFilaments
