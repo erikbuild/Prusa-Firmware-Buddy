@@ -57,43 +57,19 @@ constexpr bool is_singletool_only_action(Action action) {
     return action == Action::Heaters;
 }
 
-consteval auto get_submenu_label(PhysicalToolIndex tool, Action action) -> const char * {
-    struct ToolText {
-        PhysicalToolIndex tool;
-        Action action;
-        const char *label;
-    };
-    const ToolText tooltexts[] {
-        { PhysicalToolIndex::from_raw(0), Action::DockCalibration, N_("Dock 1 Calibration") },
-        { PhysicalToolIndex::from_raw(1), Action::DockCalibration, N_("Dock 2 Calibration") },
-        { PhysicalToolIndex::from_raw(2), Action::DockCalibration, N_("Dock 3 Calibration") },
-        { PhysicalToolIndex::from_raw(3), Action::DockCalibration, N_("Dock 4 Calibration") },
-        { PhysicalToolIndex::from_raw(4), Action::DockCalibration, N_("Dock 5 Calibration") },
-        { PhysicalToolIndex::from_raw(0), Action::Loadcell, N_("Tool 1 Loadcell Test") },
-        { PhysicalToolIndex::from_raw(1), Action::Loadcell, N_("Tool 2 Loadcell Test") },
-        { PhysicalToolIndex::from_raw(2), Action::Loadcell, N_("Tool 3 Loadcell Test") },
-        { PhysicalToolIndex::from_raw(3), Action::Loadcell, N_("Tool 4 Loadcell Test") },
-        { PhysicalToolIndex::from_raw(4), Action::Loadcell, N_("Tool 5 Loadcell Test") },
-        { PhysicalToolIndex::from_raw(0), Action::FilamentSensorCalibration, N_("Tool 1 Filament Sensor Calibration") },
-        { PhysicalToolIndex::from_raw(1), Action::FilamentSensorCalibration, N_("Tool 2 Filament Sensor Calibration") },
-        { PhysicalToolIndex::from_raw(2), Action::FilamentSensorCalibration, N_("Tool 3 Filament Sensor Calibration") },
-        { PhysicalToolIndex::from_raw(3), Action::FilamentSensorCalibration, N_("Tool 4 Filament Sensor Calibration") },
-        { PhysicalToolIndex::from_raw(4), Action::FilamentSensorCalibration, N_("Tool 5 Filament Sensor Calibration") },
-        { PhysicalToolIndex::from_raw(0), Action::Gears, N_("Tool 1 Gearbox alignment") },
-        { PhysicalToolIndex::from_raw(1), Action::Gears, N_("Tool 2 Gearbox alignment") },
-        { PhysicalToolIndex::from_raw(2), Action::Gears, N_("Tool 3 Gearbox alignment") },
-        { PhysicalToolIndex::from_raw(3), Action::Gears, N_("Tool 4 Gearbox alignment") },
-        { PhysicalToolIndex::from_raw(4), Action::Gears, N_("Tool 5 Gearbox alignment") },
-
-    };
-
-    if (auto it = std::ranges::find_if(tooltexts, [&](const auto &elem) {
-            return elem.tool == tool && elem.action == action;
-        });
-        it != std::end(tooltexts)) {
-        return it->label;
-    } else {
-        consteval_assert_false("Unable to find a label for this combination");
+// Returns a printf-style format string with a single %d for the 1-based tool/dock index.
+consteval auto get_submenu_label_template(Action action) -> const char * {
+    switch (action) {
+    case Action::DockCalibration:
+        return N_("Dock %d Calibration");
+    case Action::Loadcell:
+        return N_("Tool %d Loadcell Test");
+    case Action::FilamentSensorCalibration:
+        return N_("Tool %d Filament Sensor Calibration");
+    case Action::Gears:
+        return N_("Tool %d Gearbox alignment");
+    default:
+        consteval_assert_false("Unable to find a label template for this action");
         return "";
     }
 }

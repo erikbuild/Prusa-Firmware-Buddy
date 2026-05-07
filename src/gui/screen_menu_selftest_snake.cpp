@@ -552,10 +552,11 @@ void I_MI_STS::Loop() {
     set_icon_position(IconPosition::before_extension);
 }
 
-I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label, Action action, PhysicalToolIndex tool)
-    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, tool.is_enabled() ? is_hidden_t::no : is_hidden_t::yes)
+I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label_template, Action action, PhysicalToolIndex tool)
+    : IWindowMenuItem(string_view_utf8 {}, nullptr, is_enabled_t::yes, tool.is_enabled() ? is_hidden_t::no : is_hidden_t::yes)
     , action(action)
     , tool(tool) {
+    SetLabel(_(label_template).formatted(label_params_, tool.display_index()));
     set_icon_position(IconPosition::before_extension);
 }
 

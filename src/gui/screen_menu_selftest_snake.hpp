@@ -29,13 +29,14 @@ using MI_STS = WithConstructorArgs<I_MI_STS, action_>;
 
 class I_MI_STS_SUBMENU : public IWindowMenuItem {
 public:
-    I_MI_STS_SUBMENU(const char *label, Action action, PhysicalToolIndex tool);
+    I_MI_STS_SUBMENU(const char *label_template, Action action, PhysicalToolIndex tool);
     void click(IWindowMenu &window_menu) override;
     void Loop() override;
 
 private:
     const Action action;
     const PhysicalToolIndex tool;
+    StringViewUtf8Parameters<3> label_params_;
 };
 
 template <uint8_t tool_, Action action_>
@@ -43,7 +44,7 @@ template <uint8_t tool_, Action action_>
 class MI_STS_SUBMENU : public I_MI_STS_SUBMENU {
 public:
     MI_STS_SUBMENU()
-        : I_MI_STS_SUBMENU(get_submenu_label(PhysicalToolIndex::from_raw(tool_), action_), action_, PhysicalToolIndex::from_raw(tool_)) {}
+        : I_MI_STS_SUBMENU(get_submenu_label_template(action_), action_, PhysicalToolIndex::from_raw(tool_)) {}
 };
 
 bool is_menu_draw_enabled(window_t *window);

@@ -49,28 +49,9 @@ constexpr bool is_singletool_only_action([[maybe_unused]] Action action) {
     return false;
 }
 
-consteval auto get_submenu_label(PhysicalToolIndex tool, Action action) -> const char * {
-    struct ToolText {
-        PhysicalToolIndex tool;
-        Action action;
-        const char *label;
-    };
-    const ToolText tooltexts[] {
-        ToolText {
-            .tool = PhysicalToolIndex::from_raw(0),
-            .action = Action::_first,
-            .label = nullptr }
-    };
-
-    if (auto it = std::ranges::find_if(tooltexts, [&](const auto &elem) {
-            return elem.tool == tool && elem.action == action;
-        });
-        it != std::end(tooltexts)) {
-        return it->label;
-    } else {
-        consteval_assert_false("Unable to find a label for this combination");
-        return "";
-    }
+consteval auto get_submenu_label_template([[maybe_unused]] Action action) -> const char * {
+    consteval_assert_false("This config has no submenu actions");
+    return "";
 }
 
 TestResult get_test_result(Action action, ToolMask tool);
