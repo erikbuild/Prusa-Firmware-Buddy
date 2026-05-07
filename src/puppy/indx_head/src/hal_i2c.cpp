@@ -110,6 +110,12 @@ namespace {
             uint16_t tp_ambient = 0;
         };
 
+        SensorData decode_sensor_data(std::span<std::byte, 4> raw_data) {
+            uint32_t tp_object = (static_cast<uint32_t>(raw_data[0]) << 8 | static_cast<uint32_t>(raw_data[1])) << 1 | static_cast<uint32_t>(raw_data[2] >> 7);
+            uint16_t tp_ambient = (static_cast<uint16_t>(raw_data[2] & std::byte { 0x7f }) << 8) | static_cast<uint16_t>(raw_data[3]);
+            return SensorData { .tp_object = tp_object, .tp_ambient = tp_ambient };
+        }
+
         std::optional<SensorData> read_sensor_data() {
             LockGuard lg { i2c_mutex };
             std::array<std::byte, 4> raw_sensor_data {};
@@ -146,9 +152,7 @@ namespace {
                 return std::nullopt;
             }
 
-            uint32_t tp_object = (static_cast<uint32_t>(raw_sensor_data.at(0)) << 8 | static_cast<uint32_t>(raw_sensor_data.at(1))) << 1 | static_cast<uint32_t>(raw_sensor_data.at(2) >> 7);
-            uint16_t tp_ambient = (static_cast<uint16_t>(raw_sensor_data.at(2) & std::byte { 0x7f }) << 8) | static_cast<uint16_t>(raw_sensor_data.at(3));
-            return SensorData { tp_object, tp_ambient };
+            return decode_sensor_data(raw_sensor_data);
         }
 
         constexpr float degC0asKf = 273.15f;
@@ -208,6 +212,44 @@ namespace {
 
         bool initialized = false;
 
+        std::optional<CalibrationParameters> decode_calibration_parameters(std::span<std::byte, 32> raw_data) {
+            const uint8_t protocol = static_cast<uint8_t>(raw_data[0]);
+            if (protocol != 0x3) {
+                return std::nullopt;
+            }
+
+            if (!validate_checksum(raw_data)) {
+                return std::nullopt;
+            }
+
+            uint8_t lookup = static_cast<uint8_t>(raw_data[9]);
+            if (lookup != 2) {
+                return std::nullopt;
+            }
+
+            const uint16_t ptat25 = static_cast<uint16_t>(raw_data[10]) << 8 | static_cast<uint16_t>(raw_data[11]);
+            const uint16_t raw_m_reg = static_cast<uint16_t>(raw_data[12]) << 8 | static_cast<uint16_t>(raw_data[13]);
+            const fixed m = fixed(raw_m_reg) / 100;
+            const auto raw_u0_reg = static_cast<uint16_t>(raw_data[14]) << 8 | static_cast<uint16_t>(raw_data[15]);
+            const uint32_t u0 = raw_u0_reg + 32768;
+            const auto raw_uout1_reg = static_cast<uint16_t>(raw_data[16]) << 8 | static_cast<uint16_t>(raw_data[17]);
+            const uint32_t uout1 = raw_uout1_reg * 2;
+            const uint8_t t_obj1 = static_cast<uint8_t>(raw_data[18]);
+
+            const auto u_div = static_cast<int32_t>(uout1) - static_cast<int32_t>(u0);
+            // NOTE: Expensive float op, but OK since it is ideally only done once at init (on failed comm it tries reinit every 2s)
+            const float k_inv = (f(t_obj1 + degC0asKf) - f(degC25asKf)) / static_cast<float>(u_div) * 1.96f; // Emisivity 0.51
+
+            return CalibrationParameters {
+                .ptat25 = ptat25,
+                .m = m,
+                .u0 = u0,
+                .uout1 = uout1,
+                .t_obj1 = t_obj1,
+                .k_inv = k_inv
+            };
+        }
+
         bool read_eeprom_calibration() {
             LockGuard lg { i2c_mutex };
             std::array<std::byte, 32> raw {};
@@ -231,27 +273,11 @@ namespace {
                 return false;
             }
 
-            if (raw.at(0) != std::byte { 0x3 } || !validate_checksum(raw)) {
+            auto cal = decode_calibration_parameters(raw);
+            if (!cal.has_value()) {
                 return false;
             }
-
-            uint8_t lookup = static_cast<uint8_t>(raw.at(9));
-            if (lookup != 2) {
-                return false;
-            }
-
-            calibration.ptat25 = static_cast<uint16_t>(raw.at(10)) << 8 | static_cast<uint16_t>(raw.at(11));
-            const uint16_t raw_m_reg = static_cast<uint16_t>(raw.at(12)) << 8 | static_cast<uint16_t>(raw.at(13));
-            calibration.m = fixed(raw_m_reg) / 100;
-            const auto raw_u0_reg = static_cast<uint16_t>(raw.at(14)) << 8 | static_cast<uint16_t>(raw.at(15));
-            calibration.u0 = raw_u0_reg + 32768;
-            const auto raw_uout1_reg = static_cast<uint16_t>(raw.at(16)) << 8 | static_cast<uint16_t>(raw.at(17));
-            calibration.uout1 = raw_uout1_reg * 2;
-            calibration.t_obj1 = static_cast<uint8_t>(raw.at(18));
-
-            const auto u_div = static_cast<int32_t>(calibration.uout1) - static_cast<int32_t>(calibration.u0);
-            // NOTE: Expensive float op, but OK since it is ideally only done once at init (on failed comm it tries reinit every 2s)
-            calibration.k_inv = (f(calibration.t_obj1 + degC0asKf) - f(degC25asKf)) / static_cast<float>(u_div) * 1.96f; // Emisivity 0.51
+            calibration = *cal;
             return true;
         }
 
