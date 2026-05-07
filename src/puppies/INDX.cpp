@@ -41,6 +41,7 @@ Indx::Indx(uint8_t modbus_address)
     } else {
         set_leds_color(COLOR_BLACK, indx_head::leds::Mode::off);
     }
+    loadcell_enabled = true;
 }
 
 CommunicationStatus Indx::refresh(PuppyModbus &bus) {
@@ -56,14 +57,11 @@ CommunicationStatus Indx::refresh(PuppyModbus &bus) {
     return (this->*funcs[refresh_nr])(bus);
 }
 
-void Indx::handle_fault_status() {
-    const auto fault = register_general_status.value.fault_status;
+void Indx::handle_fault_status(indx_head::errors::FaultStatusMask fault) {
     if (fault == indx_head::errors::FaultStatusMask::no_fault) {
-        // nothing to do
         return;
     }
 
-    // handle the fault
     log_error(INDX, "Fault status: %d", std::to_underlying(fault));
     auto has_fault = [=](indx_head::errors::FaultStatusMask tested) {
         return std::to_underlying(fault) & std::to_underlying(tested);
@@ -81,56 +79,76 @@ void Indx::handle_fault_status() {
         fatal_error(ErrCode::ERR_TEMPERATURE_INDX_HEAD_TPIS_AMBIENT_MAXTEMP_ERR);
     }
 
-    // acknowledge the fault
-    general_write.value.clear_fault_status = std::to_underlying(fault);
-    general_write.dirty = true;
+    // Acknowledge the fault — write_general() will flush this and reset it to 0 after success.
+    clear_fault_status_pending = std::to_underlying(fault);
+    general_write_dirty.store(true);
 }
 
-void Indx::handle_nozzle_presence() {
+void Indx::handle_nozzle_presence(uint16_t nozzle_present, uint16_t nozzle_invalidation_ack) {
     // Trust nozzle data only when both are true:
     //  1. Head echoed back our invalidation token (debouncer was reset)
     //  2. Head reports a definitive result (not unknown — debouncer has settled with fresh samples)
     using indx_head::NozzlePresence;
-    const auto nozzle_state = static_cast<NozzlePresence>(register_general_status.value.nozzle_present);
-    const bool has_definitive_result = nozzle_state != NozzlePresence::unknown;
-    const bool head_acknowledged = register_general_status.value.nozzle_invalidation_ack == nozzle_invalidation_token;
+    const auto presence = static_cast<NozzlePresence>(nozzle_present);
+    const bool has_definitive_result = presence != NozzlePresence::unknown;
+    const bool head_acknowledged = nozzle_invalidation_ack == nozzle_invalidation_token.load();
     const bool valid = has_definitive_result && head_acknowledged;
 
-    cached_nozzle_state.store(valid ? nozzle_state : NozzlePresence::unknown);
+    nozzle_state.store(valid ? presence : NozzlePresence::unknown);
 }
 
-void Indx::handle_time_sync(const RequestTiming &timing) {
-    const uint32_t time_sync_hi = register_general_status.value.time_sync_hi;
-    const uint32_t time_sync_lo = register_general_status.value.time_sync_lo;
+void Indx::handle_time_sync(uint32_t time_sync_hi, uint32_t time_sync_lo, const RequestTiming &timing) {
     const uint32_t puppy_time_us = time_sync_hi << 16 | time_sync_lo;
     time_sync.sync(puppy_time_us, timing);
 }
 
+namespace fans {
+    constexpr size_t PRINTFAN_INDEX = 0;
+    constexpr size_t HEATBREAKFAN_INDEX = 1;
+} // namespace fans
+
 CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
-    // read general status registers
+    ModbusInputRegisterBlock<indx_head::modbus::Status::address, indx_head::modbus::Status> block {};
+    block.last_read_timestamp_ms = register_general_status_modbus_last_read_ms;
     RequestTiming timing;
-    CommunicationStatus status = bus.read(unit, register_general_status, 250, &timing);
+    const CommunicationStatus status = bus.read(unit, block, 250, &timing);
+    register_general_status_modbus_last_read_ms = block.last_read_timestamp_ms;
     if (status == CommunicationStatus::OK) {
-        handle_fault_status();
-        handle_nozzle_presence();
+        handle_fault_status(block.value.fault_status);
+        handle_nozzle_presence(block.value.nozzle_present, block.value.nozzle_invalidation_ack);
 
-        cached_hotend_temp_compensated_c100.store(
-            register_general_status.value.hotend_measured_temperature_compensated_c100);
+        hotend_temp_compensated_c100.store(block.value.hotend_measured_temperature_compensated_c100);
+        hotend_temp_uncompensated_c100.store(block.value.hotend_measured_temperature_uncompensated_c100);
+        hotend_temp_raw_c100_dt_s.store(block.value.hotend_temp_raw_c100_dt_s);
+        hotend_duty_cycle_sq_integral_us.store(
+            block.value.hotend_duty_cycle_sq_integral_us_lo
+            | (uint32_t(block.value.hotend_duty_cycle_sq_integral_us_hi) << 16));
 
-        cached_hotend_temp_uncompensated_c100.store(
-            register_general_status.value.hotend_measured_temperature_uncompensated_c100);
+        mcu_temperature.store(block.value.mcu_temperature);
+        board_temperature.store(block.value.board_temperature);
+        tpis_ambient_temperature_c100.store(block.value.tpis_ambient_temperature_c100);
+        v24_mV.store(block.value.system_24V_mV);
 
-        cached_hotend_temp_raw_c100_dt_s.store(register_general_status.value.hotend_temp_raw_c100_dt_s);
+        fan_pwm[fans::PRINTFAN_INDEX].store(block.value.print_fan_pwm);
+        fan_pwm[fans::HEATBREAKFAN_INDEX].store(block.value.heatbreak_fan_pwm);
+        fan_rpm[fans::PRINTFAN_INDEX].store(block.value.print_fan_rpm);
+        fan_rpm[fans::HEATBREAKFAN_INDEX].store(block.value.heatbreak_fan_rpm);
+        fan_state[fans::PRINTFAN_INDEX].store(block.value.print_fan_state);
+        fan_state[fans::HEATBREAKFAN_INDEX].store(block.value.heatbreak_fan_state);
 
-        cached_hotend_duty_cycle_sq_integral_us.store( //
-            register_general_status.value.hotend_duty_cycle_sq_integral_us_lo //
-            | (uint32_t(register_general_status.value.hotend_duty_cycle_sq_integral_us_hi) << 16) //
-        );
+        uint8_t rpm_ok_mask = 0;
+        if (block.value.print_fan_is_rpm_ok) {
+            rpm_ok_mask |= static_cast<uint8_t>(1u << fans::PRINTFAN_INDEX);
+        }
+        if (block.value.heatbreak_fan_is_rpm_ok) {
+            rpm_ok_mask |= static_cast<uint8_t>(1u << fans::HEATBREAKFAN_INDEX);
+        }
+        fan_rpm_ok.store(rpm_ok_mask);
 
         // !!! MUST be stored after reading the temperatures to avoid race conditions
-        cached_temps_valid.store(register_general_status.value.temps_valid);
+        temps_valid.store(block.value.temps_valid);
 
-        handle_time_sync(timing);
+        handle_time_sync(block.value.time_sync_hi, block.value.time_sync_lo, timing);
 
         // 0 has a special meaning, report one ms less if we would try to set zero
         // !!! MUST be updated as the last thing to avoid race conditions
@@ -143,26 +161,26 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
 CommunicationStatus Indx::ping(PuppyModbus &bus) {
     Lock guard(*mutex);
     // Need to check if puppy is responding on modbus, might as well read general status.
-    const uint32_t max_age_ms = 0;
-    return bus.read(unit, register_general_status, max_age_ms);
+    ModbusInputRegisterBlock<indx_head::modbus::Status::address, indx_head::modbus::Status> block {};
+    return bus.read(unit, block, 0);
 }
 
 CommunicationStatus Indx::initial_scan(PuppyModbus &bus) {
     Lock guard(*mutex);
     time_sync.init();
 
-    general_write.value.loadcell_enabled = true;
-    general_write.dirty = true;
+    loadcell_enabled = true;
+    general_write_dirty.store(true);
 
     register_general_status_last_read_ms = 0;
-    cached_temps_valid = false;
+    temps_valid = false;
 
     // !!! MUST be after resetting all the stuff to avoid race conditions
     // The intention is that when someone detects a reset, we want to guarantee that the data is already marked as invalid
     // and will become valid again only after it is properly fetched from the newly reset puppy.
     reset_counter++;
 
-    return bus.write(unit, general_write);
+    return write_general(bus);
 }
 
 void Indx::set_leds_color(Color color, indx_head::leds::Mode mode) {
@@ -174,17 +192,17 @@ void Indx::set_leds_color(Color color, indx_head::leds::Mode mode) {
     color.g = static_cast<uint8_t>(pwm_max * std::pow(float(color.g) / rgb_max, gamma));
     color.b = static_cast<uint8_t>(pwm_max * std::pow(float(color.b) / rgb_max, gamma));
     Lock guard(*mutex);
-    general_write.value.leds.r = color.r;
-    general_write.value.leds.g = color.g;
-    general_write.value.leds.b = color.b;
-    general_write.value.leds.mode = mode;
-    general_write.dirty = true;
+    leds.r = color.r;
+    leds.g = color.g;
+    leds.b = color.b;
+    leds.mode = mode;
+    general_write_dirty.store(true);
 }
 
 void Indx::set_leds_enabled(bool set) {
     Lock guard(*mutex);
-    general_write.value.leds.mode = set ? indx_head::leds::Mode::solid : indx_head::leds::Mode::off;
-    general_write.dirty = true;
+    leds.mode = set ? indx_head::leds::Mode::solid : indx_head::leds::Mode::off;
+    general_write_dirty.store(true);
 }
 
 CommunicationStatus Indx::pull_fifo(PuppyModbus &bus, bool &more) {
@@ -223,126 +241,118 @@ CommunicationStatus Indx::pull_fifo(PuppyModbus &bus, bool &more) {
     return status;
 }
 
-namespace fans {
-    constexpr size_t PRINTFAN_INDEX = 0;
-    constexpr size_t HEATBREAKFAN_INDEX = 1;
-} // namespace fans
-
 CommunicationStatus Indx::write_general(PuppyModbus &bus) {
-    // Handle delayed writes from possibly an interrupt.
-    const auto write = [&](auto &dst, const auto val) {
-        if (val != dst) {
-            dst = val;
-            general_write.dirty = true;
-        }
-    };
-    write(general_write.value.print_fan_pwm.value, fan_pwm_desired[fans::PRINTFAN_INDEX].load());
-    write(general_write.value.selftest_mode, selftest_mode_.load() ? 1 : 0);
-    write(general_write.value.nozzle_target_temperature, nozzle_target_temperature_desired.load());
-    write(general_write.value.hotend_temperature_compensation_c100, hotend_temperature_compensation_c100_desired.load());
-    write(general_write.value.invalidate_nozzle_presence, nozzle_invalidation_token.load());
+    // Clear dirty before snapshotting; a racing setter then either lands in
+    // our snapshot or re-marks dirty for the next cycle.
+    const bool was_dirty = general_write_dirty.exchange(false);
 
-    CommunicationStatus status = bus.write(unit, general_write);
-    if (status == CommunicationStatus::ERROR) {
-        return status;
+    ModbusHoldingRegisterBlock<indx_head::modbus::Config::address, indx_head::modbus::Config> block {};
+    block.value.selftest_mode = selftest_mode_.load() ? 1u : 0u;
+    block.value.nozzle_target_temperature = nozzle_target_temperature_desired.load();
+    block.value.hotend_temperature_compensation_c100 = hotend_temperature_compensation_c100_desired.load();
+    block.value.invalidate_nozzle_presence = nozzle_invalidation_token.load();
+    block.value.print_fan_pwm.value = static_cast<uint8_t>(fan_pwm_desired[fans::PRINTFAN_INDEX].load());
+    block.value.leds.r = leds.r;
+    block.value.leds.g = leds.g;
+    block.value.leds.b = leds.b;
+    block.value.leds.mode = leds.mode;
+    block.value.loadcell_enabled = loadcell_enabled ? 1u : 0u;
+    block.value.accelerometer_enabled = accelerometer_enabled ? 1u : 0u;
+    block.value.clear_fault_status = clear_fault_status_pending;
+    block.dirty = was_dirty;
+
+    const CommunicationStatus status = bus.write(unit, block);
+    if (status == CommunicationStatus::ERROR && was_dirty) {
+        // Write didn't go through, keep work for next cycle.
+        general_write_dirty.store(true);
     }
 
-    log_debug(INDX, "Written GeneralWrite");
-    general_write.value.clear_fault_status = 0;
+    if (status == CommunicationStatus::OK) {
+        clear_fault_status_pending = 0;
+        log_debug(INDX, "Written GeneralWrite");
+    }
     return status;
 }
 
 float Indx::get_hotend_temp_compensated() const {
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
-    return static_cast<float>(cached_hotend_temp_compensated_c100.load()) / 100.f;
+    return static_cast<float>(hotend_temp_compensated_c100.load()) / 100.f;
 }
 
 float Indx::get_hotend_temp_uncompensated() const {
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
-    return static_cast<float>(cached_hotend_temp_uncompensated_c100.load()) / 100.f;
+    return static_cast<float>(hotend_temp_uncompensated_c100.load()) / 100.f;
 }
 
 float Indx::get_hotend_temp_raw_c_dt_s() const {
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
-    return static_cast<float>(cached_hotend_temp_raw_c100_dt_s.load()) / 100.f;
+    return static_cast<float>(hotend_temp_raw_c100_dt_s.load()) / 100.f;
 }
 
 uint32_t Indx::get_hotend_duty_cycle_sq_integral_us() const {
-    return cached_hotend_duty_cycle_sq_integral_us.load();
+    return hotend_duty_cycle_sq_integral_us.load();
 }
 
 CommunicationStatus Indx::set_hotend_target_temp(float target) {
-    nozzle_target_temperature_desired.store(static_cast<uint16_t>(target));
+    const uint16_t value = static_cast<uint16_t>(target);
+    if (nozzle_target_temperature_desired.exchange(value) != value) {
+        general_write_dirty.store(true);
+    }
     return CommunicationStatus::OK;
 }
 
 CommunicationStatus Indx::set_hotend_temp_compensation(float offset) {
-    hotend_temperature_compensation_c100_desired.store(static_cast<int16_t>(offset * 100.0f));
+    const int16_t value = static_cast<int16_t>(offset * 100.0f);
+    if (hotend_temperature_compensation_c100_desired.exchange(value) != value) {
+        general_write_dirty.store(true);
+    }
     return CommunicationStatus::OK;
 }
 
 bool Indx::set_accelerometer(PuppyModbus &bus, bool active) {
     Lock guard(*mutex);
-    general_write.value.accelerometer_enabled = active;
-    general_write.dirty = true;
-    return bus.write(unit, general_write) == CommunicationStatus::OK;
+    accelerometer_enabled = active;
+    general_write_dirty.store(true);
+    return write_general(bus) == CommunicationStatus::OK;
 }
 
 bool Indx::get_accelerometer_active() {
     Lock guard(*mutex);
-    return general_write.value.accelerometer_enabled;
+    return accelerometer_enabled;
 }
 
 bool Indx::set_loadcell(PuppyModbus &bus, bool active) {
     Lock guard(*mutex);
-    general_write.value.loadcell_enabled = active;
-    general_write.dirty = true;
-    return bus.write(unit, general_write) == CommunicationStatus::OK;
+    loadcell_enabled = active;
+    general_write_dirty.store(true);
+    return write_general(bus) == CommunicationStatus::OK;
 }
 
 bool Indx::get_loadcell_active() {
     Lock guard(*mutex);
-    return general_write.value.loadcell_enabled;
+    return loadcell_enabled;
 }
 
 int16_t Indx::get_mcu_temperature() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register
-    return static_cast<int16_t>(register_general_status.value.mcu_temperature);
+    return mcu_temperature.load();
 }
 
 int16_t Indx::get_board_temperature() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    // Sent as int16 in uint16 modbus register
-    return static_cast<int16_t>(register_general_status.value.board_temperature);
+    return board_temperature.load();
 }
 
 float Indx::get_tpis_ambient_temperature() {
     // Sent in centiDeg (deg * 100) for precision on 2 decimal places
-    // FIXME: No mutex
-    return static_cast<float>(static_cast<int16_t>(register_general_status.value.tpis_ambient_temperature_c100)) / 100.f;
+    return static_cast<float>(tpis_ambient_temperature_c100.load()) / 100.f;
 }
 
 float Indx::get_24V() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-
-    return register_general_status.value.system_24V_mV / 1000.0f;
+    return static_cast<float>(v24_mV.load()) / 1000.0f;
 }
 
 std::optional<bool> Indx::get_nozzle_present() {
     // Called from Marlin - keep lockfree.
-    const auto state = cached_nozzle_state.load();
+    const auto state = nozzle_state.load();
     if (state == indx_head::NozzlePresence::unknown) {
         return std::nullopt;
     }
@@ -362,7 +372,8 @@ void Indx::invalidate_nozzle_data() {
     // the puppy task can race with this function and write back the previous (now stale)
     // state if it observes the old token still matching the head's old ack.
     nozzle_invalidation_token.store(token);
-    cached_nozzle_state.store(indx_head::NozzlePresence::unknown);
+    general_write_dirty.store(true);
+    nozzle_state.store(indx_head::NozzlePresence::unknown);
 }
 
 std::optional<uint32_t> Indx::get_register_general_status_last_read_ms() const {
@@ -376,25 +387,26 @@ void Indx::set_fan(uint8_t fan, uint16_t target) {
     // Because this sometimes gets called from an interrupt, we need to just
     // store the value and handle it properly under a lock somewhere else.
     // BFW-6219.
-    fan_pwm_desired[fan].store(target);
+    if (fan_pwm_desired[fan].exchange(target) != target) {
+        general_write_dirty.store(true);
+    }
 }
 
 void Indx::set_fan_auto(uint8_t fan) {
     assert(fan < NUM_FANS);
-    fan_pwm_desired[fan].store(FAN_MODE_AUTO_PWM);
+    if (fan_pwm_desired[fan].exchange(FAN_MODE_AUTO_PWM) != FAN_MODE_AUTO_PWM) {
+        general_write_dirty.store(true);
+    }
 }
 
 void Indx::set_selftest_mode(bool enabled) {
-    selftest_mode_.store(enabled);
+    if (selftest_mode_.exchange(enabled) != enabled) {
+        general_write_dirty.store(true);
+    }
 }
 
 uint16_t Indx::get_heatbreak_fan_pwr() {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
-    return 0;
-    // return RegisterGeneralStatus.value.heatbreak_fan_pwm;
+    return fan_pwm[fans::HEATBREAKFAN_INDEX].load();
 }
 
 void Indx::decode_log(const LogData &data) {
@@ -427,57 +439,41 @@ void Indx::decode_accelerometer_freq(const AccelerometerSamplingRate &data) {
 }
 
 uint16_t Indx::get_fan_pwm(uint8_t fan_nr) const {
-    // Lock guard(*mutex);
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
     switch (fan_nr) {
     case fans::PRINTFAN_INDEX:
-        return register_general_status.value.print_fan_pwm;
+        return fan_pwm[fans::PRINTFAN_INDEX].load();
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heatbreak_fan_pwm;
+        return fan_pwm[fans::HEATBREAKFAN_INDEX].load();
     }
     bsod_unreachable();
 }
 
 uint16_t Indx::get_fan_rpm(uint8_t fan_nr) const {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
     switch (fan_nr) {
     case fans::PRINTFAN_INDEX:
-        return register_general_status.value.print_fan_rpm;
+        return fan_rpm[fans::PRINTFAN_INDEX].load();
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heatbreak_fan_rpm;
+        return fan_rpm[fans::HEATBREAKFAN_INDEX].load();
     }
     bsod_unreachable();
 }
 
 bool Indx::get_fan_rpm_ok(uint8_t fan_nr) const {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
     switch (fan_nr) {
     case fans::PRINTFAN_INDEX:
-        return register_general_status.value.print_fan_is_rpm_ok;
+        return (fan_rpm_ok.load() >> fans::PRINTFAN_INDEX) & 1u;
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heatbreak_fan_is_rpm_ok;
+        return (fan_rpm_ok.load() >> fans::HEATBREAKFAN_INDEX) & 1u;
     }
     bsod_unreachable();
 }
 
 uint16_t Indx::get_fan_state(uint8_t fan_nr) const {
-    // FIXME:
-    // Called from interrupts, can't lock :-(
-    // BFW-6219.
-    // Lock guard(*mutex);
     switch (fan_nr) {
     case fans::PRINTFAN_INDEX:
-        return register_general_status.value.print_fan_state;
+        return fan_state[fans::PRINTFAN_INDEX].load();
     case fans::HEATBREAKFAN_INDEX:
-        return register_general_status.value.heatbreak_fan_state;
+        return fan_state[fans::HEATBREAKFAN_INDEX].load();
     }
     bsod_unreachable();
 }

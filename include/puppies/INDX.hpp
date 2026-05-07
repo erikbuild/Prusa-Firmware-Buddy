@@ -105,7 +105,7 @@ public:
     /// Once the temps get valid, they can only become invalid if the puppy is reset.
     /// Read before the get_temp_XX to avoid race conditions.
     [[nodiscard]] bool get_temps_valid() const {
-        return cached_temps_valid.load();
+        return temps_valid.load();
     }
 
     /// In (duty cycle 0-1)^2 * us
@@ -171,28 +171,34 @@ public:
 private:
     OTP_v5 otp = {};
 
-    ModbusInputRegisterBlock<indx_head::modbus::Status::address, indx_head::modbus::Status> register_general_status {};
-
-    // Cached from RegisterGeneralStatus.ToolFilamentSensor, for use from an interrupt (where we can't lock).
-    std::atomic<uint16_t> tool_filament_sensor = 0;
     /// Cached nozzle presence for use by Marlin.
     ///
     /// (encodes validity too).
-    std::atomic<indx_head::NozzlePresence> cached_nozzle_state { indx_head::NozzlePresence::unknown };
+    std::atomic<indx_head::NozzlePresence> nozzle_state { indx_head::NozzlePresence::unknown };
     static_assert(std::atomic<indx_head::NozzlePresence>::is_always_lock_free);
 
     std::atomic<uint16_t> nozzle_invalidation_token { 0 }; ///< Token sent to head; data is valid only after head echoes it back nozzle_invalidation_ack from INDX_HEAD
 
-    ModbusHoldingRegisterBlock<indx_head::modbus::Config::address, indx_head::modbus::Config> general_write;
-    // Cached hotend temperature fields — populated from read_general_status(), read lock-free by Marlin.
-    std::atomic<int16_t> cached_hotend_temp_compensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
-    std::atomic<int16_t> cached_hotend_temp_uncompensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
-    std::atomic<int16_t> cached_hotend_temp_raw_c100_dt_s { 0 };
-    std::atomic<uint32_t> cached_hotend_duty_cycle_sq_integral_us { 0 };
-    std::atomic<bool> cached_temps_valid { false };
+    // Hotend temperature fields — populated from read_general_status(), read lock-free by Marlin.
+    std::atomic<int16_t> hotend_temp_compensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
+    std::atomic<int16_t> hotend_temp_uncompensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
+    std::atomic<int16_t> hotend_temp_raw_c100_dt_s { 0 };
+    std::atomic<uint32_t> hotend_duty_cycle_sq_integral_us { 0 };
+    std::atomic<bool> temps_valid { false };
+
+    // General-status fields — populated by read_general_status(), read lock-free from Marlin.
+    std::atomic<int16_t> mcu_temperature { 0 };
+    std::atomic<int16_t> board_temperature { 0 };
+    std::atomic<int16_t> tpis_ambient_temperature_c100 { 0 };
+    std::atomic<uint16_t> v24_mV { 0 };
+    std::array<std::atomic<uint16_t>, NUM_FANS> fan_pwm {};
+    std::array<std::atomic<uint16_t>, NUM_FANS> fan_rpm {};
+    std::array<std::atomic<uint16_t>, NUM_FANS> fan_state {};
+    std::atomic<uint8_t> fan_rpm_ok { 0 }; // bitmask: bit 0 = print fan, bit 1 = heatbreak fan
 
     static_assert(std::atomic<int16_t>::is_always_lock_free);
     static_assert(std::atomic<uint16_t>::is_always_lock_free);
+    static_assert(std::atomic<uint8_t>::is_always_lock_free);
 
     // Desired values for temperature control — written lock-free by Marlin, applied in write_general().
     std::atomic<uint16_t> nozzle_target_temperature_desired { 0 };
@@ -210,7 +216,23 @@ private:
     /// Gets incremented each time the puppy is reset
     std::atomic<uint32_t> reset_counter { 0 };
 
-private:
+    // Internal max_age_ms skip timestamp for register_general_status (puppy task only).
+    uint32_t register_general_status_modbus_last_read_ms { 0 };
+    // Atomic so lock-free setters can flip it without taking the mutex.
+    std::atomic<bool> general_write_dirty { false };
+
+    // Plain mutex-protected write state for multi-field writes.
+    struct {
+        uint8_t r {};
+        uint8_t g {};
+        uint8_t b {};
+        indx_head::leds::Mode mode {};
+    } leds {};
+    bool loadcell_enabled { false };
+    bool accelerometer_enabled { false };
+    /// One-shot fault acknowledgment: set to fault mask, flushed by write_general(), reset to 0 after success.
+    uint16_t clear_fault_status_pending { 0 };
+
     // FIXME: Need to be forward-declared, because this header file is included
     // from marlin and it seems virtually impossible to persuade the **** build
     // system to set the include paths to the place where we hide the
@@ -230,9 +252,9 @@ private:
     CommunicationStatus write_general(PuppyModbus &);
     bool dispatch_log_event();
     CommunicationStatus read_general_status(PuppyModbus &);
-    void handle_fault_status();
-    void handle_nozzle_presence(); ///< Update cached_nozzle_state from latest modbus data
-    void handle_time_sync(const RequestTiming &);
+    void handle_fault_status(indx_head::errors::FaultStatusMask fault);
+    void handle_nozzle_presence(uint16_t nozzle_present, uint16_t nozzle_invalidation_ack); ///< Update nozzle_state
+    void handle_time_sync(uint32_t time_sync_hi, uint32_t time_sync_lo, const RequestTiming &);
 
     // Register refresh control
     uint32_t refresh_nr = 0; ///< Switch of different refresh cases
