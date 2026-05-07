@@ -71,7 +71,7 @@ CommunicationStatus ModularBed::initial_scan(PuppyModbus &bus) {
 
     // Reset dirty flag / schedule rewrite for important registers
     print_fan_active.dirty = true;
-    bedlet_target_temp.dirty = true;
+    bedlet_target_temp_dirty = true;
 
     return status;
 }
@@ -154,35 +154,41 @@ CommunicationStatus ModularBed::read_general_ready(PuppyModbus &bus) {
 }
 
 CommunicationStatus ModularBed::read_currents(PuppyModbus &bus) {
-    CommunicationStatus status = bus.read(unit, currents, MAX_UNREAD_MS);
+    ModbusInputRegisterBlock<CURRENTS_ADDR, CurrentsData> block {};
+    block.last_read_timestamp_ms = currents_last_read_ms;
+    const CommunicationStatus status = bus.read(unit, block, MAX_UNREAD_MS);
+    currents_last_read_ms = block.last_read_timestamp_ms;
     if (status != CommunicationStatus::OK) {
         return status;
     }
 
-    cached_heater_current_a.store(currents.value.A_measured);
-    cached_heater_current_b.store(currents.value.B_measured);
+    heater_current_a.store(block.value.A_measured);
+    heater_current_b.store(block.value.B_measured);
 
     metric_record_custom(
         &metric_currents,
         ",n=0 v=%.3f,e=%.3f",
-        static_cast<double>(currents.value.A_measured) / MODBUS_CURRENT_REGISTERS_SCALE,
-        static_cast<double>(currents.value.A_expected) / MODBUS_CURRENT_REGISTERS_SCALE);
+        static_cast<double>(block.value.A_measured) / MODBUS_CURRENT_REGISTERS_SCALE,
+        static_cast<double>(block.value.A_expected) / MODBUS_CURRENT_REGISTERS_SCALE);
     metric_record_custom(
         &metric_currents,
         ",n=1 v=%.3f,e=%.3f",
-        static_cast<double>(currents.value.B_measured) / MODBUS_CURRENT_REGISTERS_SCALE,
-        static_cast<double>(currents.value.B_expected) / MODBUS_CURRENT_REGISTERS_SCALE);
+        static_cast<double>(block.value.B_measured) / MODBUS_CURRENT_REGISTERS_SCALE,
+        static_cast<double>(block.value.B_expected) / MODBUS_CURRENT_REGISTERS_SCALE);
     return status;
 }
 
 CommunicationStatus ModularBed::read_bedlet_data(PuppyModbus &bus) {
-    CommunicationStatus status = bus.read(unit, bedlet_data, MAX_UNREAD_MS);
+    ModbusInputRegisterBlock<BEDLET_INPUT_REGISTERS_ADDR, BedletData> block {};
+    block.last_read_timestamp_ms = bedlet_data_last_read_ms;
+    const CommunicationStatus status = bus.read(unit, block, MAX_UNREAD_MS);
+    bedlet_data_last_read_ms = block.last_read_timestamp_ms;
     if (status != CommunicationStatus::OK) {
         return status;
     }
 
     for (uint16_t i = 0; i < BEDLET_COUNT; ++i) {
-        cached_bedlet_temp[i].store(bedlet_data.value.measured_temperature[i]);
+        bedlet_temp[i].store(block.value.measured_temperature[i]);
     }
 
     for (uint16_t i = 0; i < BEDLET_COUNT; ++i) {
@@ -191,28 +197,28 @@ CommunicationStatus ModularBed::read_bedlet_data(PuppyModbus &bus) {
                 &metric_states,
                 ",n=%d v=%u",
                 i,
-                static_cast<unsigned>(bedlet_data.value.fault_status[i]));
+                static_cast<unsigned>(block.value.fault_status[i]));
             metric_record_custom(
                 &metric_temps,
                 ",n=%d v=%.2f",
                 i,
-                static_cast<double>(bedlet_data.value.measured_temperature[i]) / MODBUS_TEMPERATURE_REGISTERS_SCALE);
+                static_cast<double>(block.value.measured_temperature[i]) / MODBUS_TEMPERATURE_REGISTERS_SCALE);
             metric_record_custom(
                 &metric_pwms,
                 ",n=%d v=%.2f",
                 i,
-                static_cast<double>(bedlet_data.value.pwm_state[i]));
+                static_cast<double>(block.value.pwm_state[i]));
             metric_record_custom(
                 &metric_regulators,
                 ",n=%d p=%d,i=%d,d=%d,tc=%d",
                 i,
-                bedlet_data.value.p_value[i],
-                bedlet_data.value.i_value[i],
-                bedlet_data.value.d_value[i],
-                bedlet_data.value.tc_value[i]);
+                block.value.p_value[i],
+                block.value.i_value[i],
+                block.value.d_value[i],
+                block.value.tc_value[i]);
         }
 
-        const auto fault_int { std::to_underlying(bedlet_data.value.fault_status[i]) };
+        const auto fault_int { std::to_underlying(block.value.fault_status[i]) };
         if (fault_int > 0) {
             const auto bedlet_number { bedlet_idx_to_board_number(i) };
             if (fault_int & std::to_underlying(HeatbedletError::HeaterDisconnected)) {
@@ -262,7 +268,11 @@ CommunicationStatus ModularBed::read_general_fault(PuppyModbus &bus) {
 }
 
 CommunicationStatus ModularBed::write_bedlet_target_temp(PuppyModbus &bus) {
-    CommunicationStatus status = bus.write(unit, bedlet_target_temp);
+    ModbusHoldingRegisterBlock<BEDLET_TARGET_TEMP_ADDR, uint16_t[BEDLET_COUNT]> block {};
+    std::copy(bedlet_target_temps.begin(), bedlet_target_temps.end(), block.value);
+    block.dirty = bedlet_target_temp_dirty;
+    const CommunicationStatus status = bus.write(unit, block);
+    bedlet_target_temp_dirty = block.dirty;
     if (status != CommunicationStatus::OK) {
         return status;
     }
@@ -272,7 +282,7 @@ CommunicationStatus ModularBed::write_bedlet_target_temp(PuppyModbus &bus) {
             &metric_targets,
             ",n=%d v=%.2f",
             i,
-            static_cast<double>(bedlet_target_temp.value[i]) / MODBUS_TEMPERATURE_REGISTERS_SCALE);
+            static_cast<double>(bedlet_target_temps[i]) / MODBUS_TEMPERATURE_REGISTERS_SCALE);
     }
     return status;
 }
@@ -294,15 +304,18 @@ CommunicationStatus ModularBed::read_bedlet_measured_max_current(PuppyModbus &bu
 }
 
 CommunicationStatus ModularBed::read_mcu_temperature(PuppyModbus &bus) {
-    CommunicationStatus status = bus.read(unit, mcu_temperature, MAX_UNREAD_MS);
+    ModbusInputRegisterBlock<MCU_TEMPERATURE_ADDR, uint16_t> block {};
+    block.last_read_timestamp_ms = mcu_temperature_last_read_ms;
+    const CommunicationStatus status = bus.read(unit, block, MAX_UNREAD_MS);
+    mcu_temperature_last_read_ms = block.last_read_timestamp_ms;
     if (status != CommunicationStatus::OK) {
         return status;
     }
 
-    log_debug(ModularBed, "MCU Temperature: %d", mcu_temperature.value);
-    metric_record_float(&metric_mcu_temperature, mcu_temperature.value);
-    sensor_data().bedMCUTemperature = mcu_temperature.value;
-    cached_mcu_temperature.store(mcu_temperature.value);
+    log_debug(ModularBed, "MCU Temperature: %d", block.value);
+    metric_record_float(&metric_mcu_temperature, block.value);
+    sensor_data().bedMCUTemperature = block.value;
+    mcu_temperature.store(block.value);
     return status;
 }
 
@@ -313,7 +326,7 @@ void ModularBed::clear_fault() {
 }
 
 float ModularBed::get_temp(const uint16_t idx) {
-    return static_cast<float>(cached_bedlet_temp[idx].load()) / MODBUS_TEMPERATURE_REGISTERS_SCALE;
+    return static_cast<float>(bedlet_temp[idx].load()) / MODBUS_TEMPERATURE_REGISTERS_SCALE;
 }
 
 void ModularBed::set_print_fan_active(bool value) {
@@ -339,13 +352,13 @@ void ModularBed::set_target(const uint8_t column, const uint8_t row, const float
 
 void ModularBed::set_target(const uint8_t idx, const float temp) {
     // Private, not locked
-    bedlet_target_temp.value[idx] = static_cast<uint16_t>(temp * MODBUS_TEMPERATURE_REGISTERS_SCALE);
-    bedlet_target_temp.dirty = true;
+    bedlet_target_temps[idx] = static_cast<uint16_t>(temp * MODBUS_TEMPERATURE_REGISTERS_SCALE);
+    bedlet_target_temp_dirty = true;
 }
 
 float ModularBed::get_target(const uint8_t idx) {
     // Private, not locked
-    return static_cast<float>(bedlet_target_temp.value[idx]) / MODBUS_TEMPERATURE_REGISTERS_SCALE;
+    return static_cast<float>(bedlet_target_temps[idx]) / MODBUS_TEMPERATURE_REGISTERS_SCALE;
 }
 
 float ModularBed::get_target(const uint8_t column, const uint8_t row) {
@@ -460,8 +473,8 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
     // first reset target of not enabled bedlets to zero
     for (uint8_t i = 0; i < BEDLET_COUNT; i++) {
         if ((enabled_mask & (1 << i)) == 0) {
-            bedlet_target_temp.value[i] = 0;
-            bedlet_target_temp.dirty = true;
+            bedlet_target_temps[i] = 0;
+            bedlet_target_temp_dirty = true;
         }
     }
 
@@ -469,7 +482,7 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
     for (uint8_t x1 = 0; x1 < BEDLET_MAX_X; ++x1) {
         for (uint8_t y1 = 0; y1 < BEDLET_MAX_Y; ++y1) {
             const uint16_t idx1 = idx(x1, y1);
-            const uint16_t temp1 = bedlet_target_temp.value[idx1];
+            const uint16_t temp1 = bedlet_target_temps[idx1];
             if ((enabled_mask & (1 << idx1)) == 0) { // if this bedlet is not enabled, don't calculate gradient from it
                 continue;
             }
@@ -487,8 +500,8 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
                     }
 
                     const int16_t temp2 = temp1 - static_cast<int16_t>(temp1 * std::pow(1 / bedlet_gradient_cutoff * dist, bedlet_gradient_exponent));
-                    bedlet_target_temp.value[idx2] = std::max(temp2, (int16_t)bedlet_target_temp.value[idx2]);
-                    bedlet_target_temp.dirty = true;
+                    bedlet_target_temps[idx2] = std::max(temp2, (int16_t)bedlet_target_temps[idx2]);
+                    bedlet_target_temp_dirty = true;
                 }
             }
         }
@@ -496,11 +509,11 @@ void ModularBed::update_gradients(uint16_t enabled_mask) {
 }
 
 float ModularBed::get_heater_current() {
-    return (cached_heater_current_a.load() + cached_heater_current_b.load()) / 1000.0f;
+    return (heater_current_a.load() + heater_current_b.load()) / 1000.0f;
 }
 
 uint16_t ModularBed::get_mcu_temperature() {
-    return cached_mcu_temperature.load();
+    return mcu_temperature.load();
 }
 
 void ModularBed::safe_state() {

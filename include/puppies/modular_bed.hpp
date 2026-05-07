@@ -125,13 +125,9 @@ private:
 
     ModbusDiscreteInputBlock<GENERAL_DISCRETE_INPUTS_ADDR, GeneralStatus> general_status {};
     ModbusInputRegisterBlock<STATIC_INPUT_REGISTERS_ADDR, GeneralStatic> general_static {};
-    ModbusInputRegisterBlock<BEDLET_INPUT_REGISTERS_ADDR, BedletData> bedlet_data {};
-    ModbusHoldingRegisterBlock<BEDLET_TARGET_TEMP_ADDR, uint16_t[BEDLET_COUNT]> bedlet_target_temp {};
     ModbusHoldingRegisterBlock<BEDLET_MEASURED_MAX_CURRENT_ADDR, uint16_t[BEDLET_COUNT]> bedlet_measured_max_current {};
-    ModbusInputRegisterBlock<CURRENTS_ADDR, CurrentsData> currents {};
     ModbusDiscreteInputBlock<BEDLET_DISCRETE_INPUTS_ADDR, bool> general_ready {};
     ModbusInputRegisterBlock<FAULT_STATUS_ADDR, SystemError> general_fault {};
-    ModbusInputRegisterBlock<MCU_TEMPERATURE_ADDR, uint16_t> mcu_temperature {};
     ModbusCoil<CLEAR_FAULT_ADDR> clear_fault_status {};
     ModbusCoil<RESET_OVECURRENT_FAULT_ADDR> reset_overcurrent {};
     ModbusCoil<TEST_HEATING_ADDR> test_heating {};
@@ -158,15 +154,24 @@ protected:
     uint16_t expand_to_sides(uint16_t enabled_mask, float target_temp);
 
 private:
-    // Cached read values — populated under mutex by puppy task, read lock-free by Marlin.
-    std::array<std::atomic<uint16_t>, BEDLET_COUNT> cached_bedlet_temp {};
-    std::atomic<int16_t> cached_heater_current_a { 0 };
-    std::atomic<int16_t> cached_heater_current_b { 0 };
-    std::atomic<uint16_t> cached_mcu_temperature { 0 };
+    // Read-side state — populated under mutex by puppy task, read lock-free by Marlin.
+    std::array<std::atomic<uint16_t>, BEDLET_COUNT> bedlet_temp {};
+    std::atomic<int16_t> heater_current_a { 0 };
+    std::atomic<int16_t> heater_current_b { 0 };
+    std::atomic<uint16_t> mcu_temperature { 0 };
 
     static_assert(std::atomic<int16_t>::is_always_lock_free);
     static_assert(std::atomic<uint16_t>::is_always_lock_free);
     static_assert(std::atomic<bool>::is_always_lock_free);
+
+    // Timestamps for skip-if-fresh logic (puppy task only).
+    uint32_t bedlet_data_last_read_ms { 0 };
+    uint32_t currents_last_read_ms { 0 };
+    uint32_t mcu_temperature_last_read_ms { 0 };
+    bool bedlet_target_temp_dirty { false };
+
+    // Target temperatures for all bedlets, protected by mutex.
+    std::array<uint16_t, BEDLET_COUNT> bedlet_target_temps {};
 
     freertos::Mutex mutex;
     static constexpr uint32_t MAX_UNREAD_MS = 1000;
