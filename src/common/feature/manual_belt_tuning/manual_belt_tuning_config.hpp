@@ -32,11 +32,11 @@ constexpr uint16_t belt_hz_per_rev2 = 12;
     #if HAS_INDX()
 
 // top belt length (vibrating part)
-constexpr float length_top_belt = 0.272175f;
+constexpr float length_top_belt = 0.270175f;
 // bottom belt length (vibrating part)
-constexpr float length_bottom_belt = 0.2875f;
+constexpr float length_bottom_belt = 0.2855f;
 
-constexpr int16_t calib_position_x = 253;
+constexpr int16_t calib_position_x = 251;
 constexpr int16_t calib_position_y = 30;
 
     #else
