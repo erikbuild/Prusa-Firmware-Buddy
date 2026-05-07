@@ -79,17 +79,22 @@ void MI_XBE_FILTRATION_FAN::OnClick() {
     handle_fan_item_click(*this, buddy::XBuddyExtension::Fan::filtration_fan);
 }
 
+// translation: menu item showing info about chamber cooling fan, %d is the fan number
+static constexpr const char *chamber_fan_label_template = N_("Chamber Fan %d");
+
 // MI_INFO_XBUDDY_EXTENSION_FAN1
 // =============================================
 MI_INFO_XBUDDY_EXTENSION_FAN1::MI_INFO_XBUDDY_EXTENSION_FAN1()
-    : WI_FAN_LABEL_t(_("Chamber Fan 1"), fan_info_function<buddy::XBuddyExtension::Fan::cooling_fan_1>) {
+    : WI_FAN_LABEL_t(string_view_utf8 {}, fan_info_function<buddy::XBuddyExtension::Fan::cooling_fan_1>) {
+    SetLabel(_(chamber_fan_label_template).formatted(label_params_, 1));
     set_is_hidden(buddy::xbuddy_extension().status() == buddy::XBuddyExtension::Status::disabled);
 }
 
 // MI_INFO_XBUDDY_EXTENSION_FAN2
 // =============================================
 MI_INFO_XBUDDY_EXTENSION_FAN2::MI_INFO_XBUDDY_EXTENSION_FAN2()
-    : WI_FAN_LABEL_t(_("Chamber Fan 2"), fan_info_function<buddy::XBuddyExtension::Fan::cooling_fan_2>) {
+    : WI_FAN_LABEL_t(string_view_utf8 {}, fan_info_function<buddy::XBuddyExtension::Fan::cooling_fan_2>) {
+    SetLabel(_(chamber_fan_label_template).formatted(label_params_, 2));
     set_is_hidden(buddy::xbuddy_extension().status() == buddy::XBuddyExtension::Status::disabled);
 }
 

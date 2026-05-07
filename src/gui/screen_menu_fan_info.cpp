@@ -18,25 +18,30 @@ MI_INFO_HBR_FAN::MI_INFO_HBR_FAN()
     ) {}
 
 #if HAS_BED_FAN()
+// translation: menu item showing info about heated bed fan, %d is the fan number
+static constexpr const char *bed_fan_label_template = N_("Bed Fan %d");
+
 MI_INFO_BED_FAN1::MI_INFO_BED_FAN1()
-    // translation: menu item showing info about heated bed fan (there are two of them)
     : WI_FAN_LABEL_t {
-        _("Bed Fan 1"),
+        string_view_utf8 {},
         [](auto) { return FanPWMAndRPM {
                        .pwm = sensor_data().bed_fan1_pwm.load(),
                        .rpm = sensor_data().bed_fan1_rpm.load(),
                    }; },
-    } {}
+    } {
+    SetLabel(_(bed_fan_label_template).formatted(label_params_, 1));
+}
 
 MI_INFO_BED_FAN2::MI_INFO_BED_FAN2()
     : WI_FAN_LABEL_t {
-        // translation: menu item showing info about heated bed fan (there are two of them)
-        _("Bed Fan 2"),
+        string_view_utf8 {},
         [](auto) { return FanPWMAndRPM {
                        .pwm = sensor_data().bed_fan2_pwm.load(),
                        .rpm = sensor_data().bed_fan2_rpm.load(),
                    }; },
-    } {}
+    } {
+    SetLabel(_(bed_fan_label_template).formatted(label_params_, 2));
+}
 #endif
 
 #if HAS_PSU_FAN()

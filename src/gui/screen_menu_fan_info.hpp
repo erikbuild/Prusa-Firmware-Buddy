@@ -28,11 +28,17 @@ public:
 class MI_INFO_BED_FAN1 : public WI_FAN_LABEL_t {
 public:
     MI_INFO_BED_FAN1();
+
+private:
+    StringViewUtf8Parameters<2> label_params_;
 };
 
 class MI_INFO_BED_FAN2 : public WI_FAN_LABEL_t {
 public:
     MI_INFO_BED_FAN2();
+
+private:
+    StringViewUtf8Parameters<2> label_params_;
 };
 #endif
 

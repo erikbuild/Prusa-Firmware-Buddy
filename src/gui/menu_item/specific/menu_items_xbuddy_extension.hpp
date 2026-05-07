@@ -36,6 +36,9 @@ public:
 class MI_INFO_XBUDDY_EXTENSION_FAN1 : public WI_FAN_LABEL_t {
 public:
     MI_INFO_XBUDDY_EXTENSION_FAN1();
+
+private:
+    StringViewUtf8Parameters<2> label_params_;
 };
 
 /// PWM/RPM info for fan2
@@ -43,6 +46,9 @@ public:
 class MI_INFO_XBUDDY_EXTENSION_FAN2 : public WI_FAN_LABEL_t {
 public:
     MI_INFO_XBUDDY_EXTENSION_FAN2();
+
+private:
+    StringViewUtf8Parameters<2> label_params_;
 };
 
 /// PWM/RPM info for fan3
