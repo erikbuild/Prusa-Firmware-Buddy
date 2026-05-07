@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstring>
 #include <span>
+#include <optional>
 
 namespace hal::peripherals {
 extern I2C_HandleTypeDef hi2c1;
@@ -107,12 +108,10 @@ namespace {
         struct SensorData {
             uint32_t tp_object = 0;
             uint16_t tp_ambient = 0;
-            bool valid = false;
         };
 
-        SensorData read_sensor_data() {
+        std::optional<SensorData> read_sensor_data() {
             LockGuard lg { i2c_mutex };
-            SensorData sd {};
             std::array<std::byte, 4> raw_sensor_data {};
 
             i2c_error_flag.store(false);
@@ -130,7 +129,7 @@ namespace {
                 // Failed to start I2C operation
                 waiting_for_i2c.store(false);
                 i2c_recover();
-                return sd;
+                return std::nullopt;
             }
 
             if (!i2c_it_semaphore.try_acquire_for(I2C_TIMEOUT_MS)) {
@@ -138,19 +137,18 @@ namespace {
                 waiting_for_i2c.store(false);
                 HAL_I2C_Master_Abort_IT(&peripherals::hi2c1, static_cast<uint16_t>(address << 1));
                 i2c_recover();
-                return sd;
+                return std::nullopt;
             }
 
             if (i2c_error_flag.load()) {
                 // I2C error occurred during transfer
                 i2c_recover();
-                return sd;
+                return std::nullopt;
             }
 
-            sd.tp_object = (static_cast<uint32_t>(raw_sensor_data.at(0)) << 8 | static_cast<uint32_t>(raw_sensor_data.at(1))) << 1 | static_cast<uint32_t>(raw_sensor_data.at(2) >> 7);
-            sd.tp_ambient = (static_cast<uint16_t>(raw_sensor_data.at(2) & std::byte { 0x7f }) << 8) | static_cast<uint16_t>(raw_sensor_data.at(3));
-            sd.valid = true;
-            return sd;
+            uint32_t tp_object = (static_cast<uint32_t>(raw_sensor_data.at(0)) << 8 | static_cast<uint32_t>(raw_sensor_data.at(1))) << 1 | static_cast<uint32_t>(raw_sensor_data.at(2) >> 7);
+            uint16_t tp_ambient = (static_cast<uint16_t>(raw_sensor_data.at(2) & std::byte { 0x7f }) << 8) | static_cast<uint16_t>(raw_sensor_data.at(3));
+            return SensorData { tp_object, tp_ambient };
         }
 
         constexpr float degC0asKf = 273.15f;
@@ -378,7 +376,7 @@ TemperatureReading read_tpis_temperature() {
     }
     // FIXME: Use scaled integers
     const auto sensor_data = thermometer::read_sensor_data();
-    if (!sensor_data.valid) {
+    if (!sensor_data.has_value()) {
         rtt::print("i2c: thermo read failed\n");
         // Return last valid temperature on error
         return {
@@ -387,8 +385,8 @@ TemperatureReading read_tpis_temperature() {
             .valid = false,
         };
     }
-    const auto t_ambient_k = thermometer::calculate_ambient_kelvin(sensor_data.tp_ambient);
-    const auto val = static_cast<float>(static_cast<int32_t>(sensor_data.tp_object) - static_cast<int32_t>(thermometer::calibration.u0)) * thermometer::calibration.k_inv;
+    const auto t_ambient_k = thermometer::calculate_ambient_kelvin(sensor_data->tp_ambient);
+    const auto val = static_cast<float>(static_cast<int32_t>(sensor_data->tp_object) - static_cast<int32_t>(thermometer::calibration.u0)) * thermometer::calibration.k_inv;
     const float t_obj_k = thermometer::F(val + thermometer::f_mapped(t_ambient_k));
     const float object_temperature_celsius = t_obj_k - thermometer::degC0asKf;
     const float ambient_temperature_celsius = static_cast<float>(t_ambient_k - thermometer::degC0asK);
