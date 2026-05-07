@@ -83,8 +83,7 @@ static constexpr const char *en_text_psu_fan = N_("PSU fan");
 static constexpr const char *en_text_manual_check_hotend = N_("Is Hotend fan (left) spinning?");
 #endif
 
-static constexpr const char *en_text_test_100_info = N_("Testing fan rotation on 100% power, please wait.");
-static constexpr const char *en_text_test_40_info = N_("Testing fan rotation on 40% power, please wait.");
+static constexpr const char *en_text_test_info = N_("Testing fan rotation on %d%% power, please wait.");
 static constexpr const char *en_text_result_ok = N_("All tests passed successfully.");
 static constexpr const char *en_text_info_rpm_failed = N_("The RPM test has failed, check both fans are free to spin and connected correctly.");
 
@@ -107,6 +106,8 @@ namespace frame {
 
         WindowIconOkNgArray print_icons;
         WindowIconOkNgArray heatbreak_icons;
+
+        StringViewUtf8Parameters<4> info_params;
 
 #if HAS_CHAMBER_API()
         window_text_t enclosure_label;
@@ -303,10 +304,10 @@ namespace frame {
 
             switch (phase) {
             case PhasesFansSelftest::test_100_percent:
-                info.SetText(_(en_text_test_100_info));
+                info.SetText(_(en_text_test_info).formatted(info_params, 100));
                 break;
             case PhasesFansSelftest::test_40_percent:
-                info.SetText(_(en_text_test_40_info));
+                info.SetText(_(en_text_test_info).formatted(info_params, 40));
                 break;
             case PhasesFansSelftest::results:
                 show_results();
