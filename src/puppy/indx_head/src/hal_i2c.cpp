@@ -46,7 +46,6 @@ namespace {
 
     namespace thermometer {
         struct EepromData {
-            uint8_t lookup = 0;
             uint16_t ptat25 = 0;
             fixed m { 0 };
             uint32_t u0 = 0;
@@ -238,8 +237,8 @@ namespace {
                 return false;
             }
 
-            eeprom_data.lookup = static_cast<uint8_t>(raw.at(9));
-            if (eeprom_data.lookup != 2) {
+            uint8_t lookup = static_cast<uint8_t>(raw.at(9));
+            if (lookup != 2) {
                 return false;
             }
 
