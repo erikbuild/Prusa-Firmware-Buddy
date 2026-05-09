@@ -316,9 +316,20 @@ class Planner {
     /// Currently planned machine position, in msteps
     xyze_msteps_t get_position_msteps() const { return position; };
 
-    /// Maximum Z position at which we printed so far for
-    /// MACHINE position
+    /// Maximum native (pre-MBL) Z reached by any printing extrusion inside
+    /// the print region. Compared against current_position.z (also native)
+    /// by door-open emergency parking, M600/M701 park-Z floors, the
+    /// toolchanger, and ceiling-clearance checks.
+    ///
+    /// Resetting this field to 0 (G28, start of print, etc.) is permitted
+    /// as a direct write — 0 is frame-agnostic. For all other updates from
+    /// machine-frame data, go through update_max_printed_z so the MBL strip
+    /// cannot be skipped.
     static float max_printed_z;
+
+    /// Update max_printed_z from a planner-frame target (machine Z).
+    /// MBL is stripped via to_native_pos so the result is in native frame.
+    static void update_max_printed_z(const MachinePosXYZE &xyze);
 
     #if ENABLED(SD_ABORT_ON_ENDSTOP_HIT)
       // #error dead code found by automatic analyses (see BFW-5461)

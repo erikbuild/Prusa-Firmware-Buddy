@@ -282,6 +282,11 @@ MachinePosXYZE Planner::position_float; // Needed for accurate maths. Steps cann
 
 float Planner::max_printed_z = 0;
 
+void Planner::update_max_printed_z(const MachinePosXYZE &xyze) {
+  const float native_z = to_native_pos(xyze.xyz()).z;
+  max_printed_z = std::max(max_printed_z, native_z);
+}
+
 struct PlannerMoveTools {
   std::optional<VirtualToolIndex> virtual_tool;
   std::optional<PhysicalToolIndex> physical_tool;
@@ -2236,7 +2241,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
   if (hints.move.is_printing_move
       && xyze.e > position_float.e
       && is_xy_in_print_region(xyze.xy())) {
-    max_printed_z = std::max(max_printed_z, xyze.z);
+    update_max_printed_z(xyze);
   }
 
   // When changing extruders recalculate mini-steps corresponding to the E position

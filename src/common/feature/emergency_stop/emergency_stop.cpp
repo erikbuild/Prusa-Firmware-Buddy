@@ -144,8 +144,11 @@ void EmergencyStop::maybe_block() {
         // If we are in/around pause (it was behaving a bit confused).
         && !marlin_server::printer_paused_extended()
 
-        // If we are below max_printed_z, to prevent crashing during sequential printing
-        && (planner.get_machine_position_mm().z >= planner.max_printed_z);
+        // Don't park if we are below the print high-water mark - parking could
+        // mean an XY traverse through an already-printed object during sequential
+        // printing (with luck we could avoid it in XY, but above is fine and
+        // that's when we allow it).
+        && (current_position.z >= planner.max_printed_z);
 
     // We are manipulating the moves "under the hands" of other stuff, and "in
     // the middle" of other stuff.

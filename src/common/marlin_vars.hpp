@@ -315,7 +315,7 @@ public:
     MarlinVariable<float> logical_pos[4]; ///< immediate position XYZE (logical coordinates) [mm]
     MarlinVariable<float> native_curr_pos[4]; ///< current position XYZE (native coordinates) [mm]
     MarlinVariable<float> logical_curr_pos[4]; ///< current position XYZE (logical coordinates) [mm]
-    MarlinVariable<float> max_printed_z;
+    MarlinVariable<float> max_printed_z; ///< native (pre-MBL) Z high-water mark; see Planner::max_printed_z
 
     MarlinVariable<float> temp_bed; // bed temperature [C]
     MarlinVariable<int16_t> target_bed; // bed target temperature [C]

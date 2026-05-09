@@ -1,6 +1,7 @@
 #include "ceiling_clearance.hpp"
 
 #include <marlin_server.hpp>
+#include <module/motion.h>
 #include <module/planner.h>
 
 namespace buddy {
@@ -9,12 +10,13 @@ static bool ignore_ceiling_clearance = false;
 
 static uint8_t ceiling_clearance_active_disablers = 0;
 
-void check_ceiling_clearance(const xyze_pos_t &target) {
+void check_ceiling_clearance(const MachinePosXYZE &target) {
     if (ignore_ceiling_clearance || ceiling_clearance_active_disablers) {
         return;
     }
 
-    if (planner.max_printed_z - target.z <= Z_CEILING_CLEARANCE) {
+    const float native_target_z = to_native_pos(target.xyz()).z;
+    if (planner.max_printed_z - native_target_z <= Z_CEILING_CLEARANCE) {
         // The motion is safe -> do nothing
         return;
     }
