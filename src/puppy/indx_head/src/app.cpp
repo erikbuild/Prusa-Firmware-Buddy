@@ -47,8 +47,6 @@ constexpr uint32_t control_delay_us = 1'000'000 / control_frequency;
 constexpr uint32_t fan_update_frequency = 10 /*Hz*/;
 constexpr uint32_t fan_update_delay_us = 1'000'000 / fan_update_frequency;
 
-constexpr uint32_t heatbreak_fan_turn_off_delay_ms = 2 * 60 * 1000;
-
 std::atomic<uint8_t> printfan_pwm = 0;
 std::atomic<uint8_t> heatbreak_fan_pwm = 0;
 
@@ -80,6 +78,42 @@ int16_t validate_board_temperature() {
 
 namespace app {
 
+// Drives heatbreak fan in auto mode
+class HeatbreakController {
+    static constexpr uint32_t turn_off_delay_ms = 2 * 60 * 1000;
+    uint32_t last_running_timestamp_ms;
+
+public:
+    HeatbreakController() {
+        last_running_timestamp_ms = timing::get_timestamp_ms() - turn_off_delay_ms;
+    }
+
+    void update_loop(uint32_t now_ms) {
+        if (should_run()) {
+            last_running_timestamp_ms = now_ms;
+        }
+        const bool keep_running = now_ms - last_running_timestamp_ms < turn_off_delay_ms;
+        set_pwm(keep_running ? 255 : 0);
+    }
+
+private:
+    bool should_run() {
+        const bool is_heating = target_temp.load() > 0;
+        const bool nozzle_temp_threshold_reached = get_nozzle_temp_compensated_c100() > 50 * 100; /*stored in centiDeg*/
+        const bool board_temp_threshold_reached = validate_board_temperature() > 40; /*stored in Deg*/
+        return is_heating || nozzle_temp_threshold_reached || board_temp_threshold_reached || selftest_mode.load();
+    }
+
+    void set_pwm(uint8_t pwm) {
+        hal::tim::set_heatbreak_fan_pwm(pwm);
+        if (heatbreak_fan_pwm == 0) {
+            // MUST be before setting the PWM to avoid race conditions
+            heatbreak_fan_start_ms = freertos::millis();
+        }
+        heatbreak_fan_pwm = pwm;
+    }
+};
+
 void run() {
     hal::i2c::init_comm();
 
@@ -92,7 +126,8 @@ void run() {
     uint64_t last_induction_control_us = startup_timestamp_us;
     uint64_t last_fan_update_us = startup_timestamp_us;
     uint32_t last_valid_nozzle_temp_ms = startup_timestamp_ms; // Timestamp of last valid nozzle temp reading
-    uint32_t heatbreak_fan_can_stop_ms = startup_timestamp_ms - heatbreak_fan_turn_off_delay_ms;
+
+    HeatbreakController heatbreak_ctl;
 
     FOREVER_WITH_WATCHDOG(100) {
         const uint64_t now_us = timing::get_timestamp_us();
@@ -169,28 +204,8 @@ void run() {
             // Print fan - direct PWM control
             hal::tim::set_printfan_pwm(printfan_pwm.load());
 
-            const int16_t board_temp_degC = validate_board_temperature();
             // Heatbreak fan
-            {
-                // Auto mode - thermal loop controls fan
-                const bool is_heating = target_temp.load() > 0;
-                const bool nozzle_temp_threshold_reached = get_nozzle_temp_compensated_c100() > 50 * 100; /*stored in centiDeg*/
-                const bool board_temp_threshold_reached = board_temp_degC > 40; /*stored in Deg*/
-                const bool should_run = is_heating || nozzle_temp_threshold_reached || board_temp_threshold_reached || selftest_mode.load();
-                if (should_run) {
-                    heatbreak_fan_can_stop_ms = now_ms;
-                }
-                uint8_t pwm = 0;
-                if (should_run || now_ms - heatbreak_fan_can_stop_ms < heatbreak_fan_turn_off_delay_ms) {
-                    pwm = 255;
-                }
-                hal::tim::set_heatbreak_fan_pwm(pwm);
-                if (heatbreak_fan_pwm == 0) {
-                    // MUST be before setting the PWM to avoid race conditions
-                    heatbreak_fan_start_ms = freertos::millis();
-                }
-                heatbreak_fan_pwm = pwm;
-            }
+            heatbreak_ctl.update_loop(now_ms);
 
             // LEDs control loop
             if (target_temp.load() == 0 && leds_changed) {
