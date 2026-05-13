@@ -51,9 +51,8 @@ constexpr bool is_singletool_only_action([[maybe_unused]] Action action) {
     return false;
 }
 
-consteval auto get_submenu_label_template([[maybe_unused]] Action action) -> const char * {
-    consteval_assert_false("This config has no submenu actions");
-    return "";
+constexpr auto get_submenu_label_template([[maybe_unused]] Action action) -> const char * {
+    bsod_unreachable();
 }
 
 constexpr EnumBitset<Action, Action::_count> get_dependencies(Action action) {

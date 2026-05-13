@@ -55,7 +55,7 @@ constexpr bool is_singletool_only_action(Action action) {
 }
 
 // Returns a printf-style format string with a single %d for the 1-based tool/dock index.
-consteval auto get_submenu_label_template(Action action) -> const char * {
+constexpr auto get_submenu_label_template(Action action) -> const char * {
     switch (action) {
     case Action::DockCalibration:
         return N_("Dock %d Calibration");
@@ -66,8 +66,7 @@ consteval auto get_submenu_label_template(Action action) -> const char * {
     case Action::Gears:
         return N_("Tool %d Gearbox alignment");
     default:
-        consteval_assert_false("Unable to find a label template for this action");
-        return "";
+        bsod_unreachable();
     }
 }
 
