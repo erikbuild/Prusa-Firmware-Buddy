@@ -30,9 +30,6 @@ enum class Action {
     _first = Fans,
 };
 
-template <Action action>
-concept SubmenuActionC = action == Action::DockCalibration || action == Action::Loadcell || action == Action::FilamentSensorCalibration || action == Action::Gears;
-
 constexpr bool has_submenu(Action action) {
     switch (action) {
     case Action::DockCalibration:

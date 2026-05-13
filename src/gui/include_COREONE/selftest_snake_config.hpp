@@ -27,9 +27,6 @@ enum class Action {
     _first = Fans,
 };
 
-template <Action action>
-concept SubmenuActionC = false;
-
 constexpr bool has_submenu(Action action) {
     switch (action) {
     default:

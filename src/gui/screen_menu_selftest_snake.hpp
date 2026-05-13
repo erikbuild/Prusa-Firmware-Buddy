@@ -40,7 +40,7 @@ private:
 };
 
 template <uint8_t tool_, Action action_>
-    requires SubmenuActionC<action_>
+    requires(has_submenu(action_))
 class MI_STS_SUBMENU : public I_MI_STS_SUBMENU {
 public:
     MI_STS_SUBMENU()
