@@ -41,14 +41,6 @@ private:
     StringViewUtf8Parameters<3> label_params_;
 };
 
-template <uint8_t tool_, Action action_>
-    requires(has_submenu(action_))
-class MI_STS_SUBMENU : public I_MI_STS_SUBMENU {
-public:
-    MI_STS_SUBMENU()
-        : I_MI_STS_SUBMENU(get_submenu_label_template(action_), action_, PhysicalToolIndex::from_raw(tool_)) {}
-};
-
 bool is_menu_draw_enabled(window_t *window);
 void do_menu_event(window_t *receiver, window_t *sender, GUI_event_t event, void *param, Action action, bool is_submenu);
 
