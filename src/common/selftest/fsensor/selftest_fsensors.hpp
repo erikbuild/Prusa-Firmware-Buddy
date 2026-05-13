@@ -1,8 +1,10 @@
 /// \file
 #pragma once
 
+#include <tool_index.hpp>
+
 struct SelftestFSensorsParams {
-    uint8_t tool;
+    PhysicalToolIndex tool;
 };
 
 enum class SelftestFSensorsResult {

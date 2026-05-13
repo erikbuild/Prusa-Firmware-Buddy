@@ -43,7 +43,7 @@ void M1981() {
         }
 
         using Result = SelftestFSensorsResult;
-        const Result test_result = run_selftest_fsensors({ .tool = tool.to_raw() });
+        const Result test_result = run_selftest_fsensors({ .tool = tool });
         switch (test_result) {
 
         case Result::success:

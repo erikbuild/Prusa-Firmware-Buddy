@@ -104,7 +104,7 @@ private:
 
     /// Wraps fsm_change to always include the tool index in PhaseData[0]
     void fsm_change_with_tool(Phase phase) {
-        marlin_server::fsm_change(phase, { params_.tool });
+        marlin_server::fsm_change(phase, { params_.tool.to_raw() });
     }
 
 private:
@@ -223,7 +223,7 @@ void SelftestFSensors::initialize() {
     };
 
     if (add_calibrator(GetExtruderFSensor(params_.tool))) {
-        config_store().fsensor_extruder_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool); });
+        config_store().fsensor_extruder_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool.to_raw()); });
     }
 
 #if HAS_SIDE_FSENSOR()
@@ -233,7 +233,7 @@ void SelftestFSensors::initialize() {
     #endif
     {
         if (add_calibrator(GetSideFSensor(params_.tool))) {
-            config_store().fsensor_side_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool); });
+            config_store().fsensor_side_enabled_bits.transform([&](auto val) { return val | (1 << params_.tool.to_raw()); });
         }
     }
 #endif
@@ -266,7 +266,7 @@ bool SelftestFSensors::prepare() {
 
 #if HAS_TOOLCHANGER() && !HAS_INDX()
     if (prusa_toolchanger.is_toolchanger_enabled()) {
-        const auto toolchange_result = prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw_notool(params_.tool), tool_return_t::no_return, {}, tool_change_lift_t::full_lift, false);
+        const auto toolchange_result = prusa_toolchanger.tool_change(params_.tool, tool_return_t::no_return, {}, tool_change_lift_t::full_lift, false);
         if (!toolchange_result) {
             return false;
         }
@@ -287,8 +287,10 @@ bool SelftestFSensors::initial_remove_filament() {
                 break;
 
             case Response::Unload: {
-                const auto examined_virtual_tool = VirtualToolIndex::from_raw(params_.tool);
-                filament_gcodes::M702_unload({}, Z_AXIS_LOAD_POS, RetAndCool_t::Neither, examined_virtual_tool, false);
+                const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(params_.tool.currently_selected_virtual_tool());
+                if (virtual_tool) {
+                    filament_gcodes::M702_unload({}, Z_AXIS_LOAD_POS, RetAndCool_t::Neither, *virtual_tool, false);
+                }
             } break;
 
             case Response::Abort:
