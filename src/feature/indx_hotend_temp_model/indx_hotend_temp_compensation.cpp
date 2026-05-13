@@ -30,7 +30,7 @@ namespace {
     // Positions of heat sources and sinks
     constexpr float heatbreak_position_mm = 0;
     constexpr float nozzle_tip_position_mm = 28;
-    constexpr float heat_capacity_center_mm = 11.7f;
+    constexpr float heat_capacity_center_mm = 11.2f;
 
     /// Position of the temperature sensor on the nozzle (that provides `hotend_temp_readout_c`)
     constexpr float temp_sensor_position_mm = 11;
