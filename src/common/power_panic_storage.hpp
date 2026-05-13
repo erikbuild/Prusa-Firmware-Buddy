@@ -168,11 +168,16 @@ struct state_progress_t {
 // toolchanger recovery info
 //   can't use PrusaToolChanger::ToolchangeReturnData as it doesn't have to be packed
 struct state_toolchanger_t {
-#if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
+#if HAS_TOOLCHANGER() && (HAS_TOOL_CRASH_RECOVERY() || HAS_INDX())
     XYZval<float, LogicalPosTag> return_pos; ///< Position wanted after toolchange
     uint8_t tool_nr; ///< Tool wanted to be picked before panic (MARLIN_NO_TOOL_PICKED if none)
     tool_return_t return_type : 8; ///< Where to return after recovery
+    #if HAS_INDX()
+    PrusaToolChanger::ToolchangePhase phase : 8; ///< Toolchange phase if PP hit mid-toolchange
+    uint32_t : 8; ///< Padding to keep the structure size aligned to 32 bit
+    #else
     uint32_t : 16; ///< Padding to keep the structure size aligned to 32 bit
+    #endif
 #endif
 };
 
@@ -195,7 +200,7 @@ struct state_t {
     state_planner_t planner;
     state_progress_t progress;
     state_print_t print;
-#if HAS_TOOL_CRASH_RECOVERY()
+#if HAS_TOOL_CRASH_RECOVERY() || HAS_INDX()
     state_toolchanger_t toolchanger;
 #endif
 

@@ -98,8 +98,14 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
         bsod("Recursion in tool_change()");
     }
     block_tool_check.store(true);
+    // Declared first so it runs last — after the trailing planner.synchronize() — keeping
+    // phase_ set while toolchange moves are still in the queue.
     ScopeGuard restore_block_tool_check([&]() {
         block_tool_check.store(false);
+        phase_.store(ToolchangePhase::none, std::memory_order_release);
+#if ENABLED(CRASH_RECOVERY)
+        crash_s.set_toolchange_in_progress(false, false);
+#endif
     });
 
     // Check where we should return to
@@ -112,6 +118,13 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
     if (return_type == tool_return_t::to_current && !all_axes_known()) {
         return_type = tool_return_t::no_return;
     }
+
+    // Publish toolchange-return data and the before_lock phase. Order matters (atomics synchronize).
+    set_return_data({ new_tool, return_type, return_position.asLogical() });
+    phase_.store(ToolchangePhase::before_lock, std::memory_order_release);
+#if ENABLED(CRASH_RECOVERY)
+    crash_s.set_toolchange_in_progress(true, planner.leveling_active);
+#endif
 
     const auto old_tool = PhysicalToolIndex::currently_selected();
 
@@ -752,6 +765,9 @@ bool PrusaToolChanger::pickup_procedure(PhysicalToolIndex tool) {
     // Dwell for reliability
     (void)wait([]() { return false; }, DOCK_DWELL_MS);
 
+    // Publish that the lock dwell is complete; PP can now continue from after_lock.
+    phase_.store(ToolchangePhase::after_lock, std::memory_order_release);
+
     // Full exit to safe position
     move(info.dock_x, safe_y, FAST_EXIT_FEEDRATE);
     planner.synchronize();
@@ -905,4 +921,66 @@ void PrusaToolChanger::persist_last_picked_tool(std::variant<PhysicalToolIndex, 
         // Tool park while printing && not yet invalidated -> invalidate
         config_store().indx_last_picked_tool_valid.set(false);
     }
+}
+
+bool PrusaToolChanger::recover_pp_toolchange(
+    const ToolchangeReturnData &rd,
+    std::variant<PhysicalToolIndex, NoTool> active_tool,
+    ToolchangePhase phase) {
+
+    switch (phase) {
+    case ToolchangePhase::before_lock:
+        return recover_before_lock(rd, active_tool);
+    case ToolchangePhase::after_lock:
+        return finish_pickup_after_lock(rd);
+    case ToolchangePhase::none:
+        bsod("recover_pp_toolchange called with phase none");
+    }
+    bsod_unreachable();
+}
+
+bool PrusaToolChanger::recover_before_lock(
+    const ToolchangeReturnData &rd,
+    std::variant<PhysicalToolIndex, NoTool> active_tool) {
+
+    // Bring the planner's view of the active tool in line with the held tool,
+    // then let tool_change re-run the full sequence from the top.
+    set_active_extruder(active_tool);
+    return tool_change(rd.tool, rd.return_type, rd.return_pos.asNative());
+}
+
+bool PrusaToolChanger::finish_pickup_after_lock(const ToolchangeReturnData &rd) {
+    // after_lock implies a physical tool is being picked; NoTool target never reaches the lock phase.
+    if (!std::holds_alternative<PhysicalToolIndex>(rd.tool)) {
+        bsod("finish_pickup_after_lock with NoTool target");
+    }
+    const PhysicalToolIndex tool = std::get<PhysicalToolIndex>(rd.tool);
+
+    if (!ensure_safe_move()) {
+        return false;
+    }
+
+    buddy::puppies::indx.invalidate_nozzle_data();
+    if (!nozzle_check_disabled && !verify_nozzle_state(tool, true)) {
+        return false;
+    }
+
+    // Odometer increment was already counted before PP — skip it here.
+    commit_pickup(tool, /*count_in_odometer=*/false, /*force_persist=*/true);
+
+    // MBL has not been re-enabled yet during PP resume. The Z portion of the
+    // offset diff was physically applied before PP (the z_shifts run before
+    // the after_lock store). The XY portion was never physically applied —
+    // it is implicit in rd.return_pos.asNative() because PP restore set
+    // hotend_currently_applied_offset to the new tool's offset, so the
+    // logical→native conversion already produces the adjusted native target.
+    // Pass 0 to skip a redundant in-place adjustment.
+    final_tool_change_moves({
+        .return_position = rd.return_pos.asNative(),
+        .return_type = rd.return_type,
+        .levelling_active = false,
+        .z_return = true,
+        .tool_offset_diff = xyz_pos_t { 0, 0, 0 },
+    });
+    return true;
 }

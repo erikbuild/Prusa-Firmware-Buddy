@@ -36,9 +36,10 @@ public:
      */
     [[nodiscard]] bool tool_change(const std::variant<PhysicalToolIndex, NoTool> new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift = tool_change_lift_t::full_lift, bool z_return = true);
 
-    #if HAS_TOOL_CRASH_RECOVERY()
+    #if HAS_TOOL_CRASH_RECOVERY() || HAS_INDX()
 
-    /// Data captured at toolchange start; used by tool-fall crash recovery to drive the replay.
+    /// Data captured at toolchange start; used by tool-fall crash recovery and
+    /// (on INDX) by power-panic-during-toolchange recovery to drive the replay.
     struct ToolchangeReturnData {
         std::variant<PhysicalToolIndex, NoTool> tool { NoTool {} }; ///< Last requested tool (not the tool physically picked)
         tool_return_t return_type {}; ///< How to return after toolchange
@@ -54,6 +55,10 @@ public:
     void set_return_data(const ToolchangeReturnData &d) {
         return_data_ = d;
     }
+
+    #endif // HAS_TOOL_CRASH_RECOVERY() || HAS_INDX()
+
+    #if HAS_TOOL_CRASH_RECOVERY()
 
     /**
      * @brief During toolcrash or toolfall recovery deselect dwarf as if all were parked.
@@ -143,6 +148,28 @@ public:
     [[nodiscard]] bool pick_any_tool(tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift = tool_change_lift_t::full_lift, bool z_return = true);
 
     #if HAS_INDX()
+
+    /// Phase of the current INDX toolchange, observed by power panic.
+    enum class ToolchangePhase : uint8_t {
+        none,
+        before_lock, ///< tool_change started, lock dwell not yet completed
+        after_lock, ///< post-lock dwell completed, exit/return pending
+    };
+
+    /// Acquire-ordered load of the current phase (publishes the latest return_data()).
+    ToolchangePhase phase() const { return phase_.load(std::memory_order_acquire); }
+
+    /// Continue an INDX toolchange interrupted by power panic.
+    ///
+    /// active_tool is the tool currently held at PP time (from saved planner state).
+    /// rd is the saved ToolchangeReturnData from state_buf at PP time.
+    /// phase is passed explicitly from on-flash state (not read from phase_).
+    /// Returns true if the toolchange completed successfully, false on failure (caller handles fallback).
+    [[nodiscard]] bool recover_pp_toolchange(
+        const ToolchangeReturnData &rd,
+        std::variant<PhysicalToolIndex, NoTool> active_tool,
+        ToolchangePhase phase);
+
     /**
      * @brief Ensure head locking mechanism is open.
      * Checks head_open flag; if not open, calls open_head().
@@ -227,6 +254,11 @@ private:
     [[nodiscard]] bool ensure_safe_move();
 
     #if HAS_INDX()
+    /// Release/acquire publication fence over the otherwise non-atomic return_data_:
+    /// the writer stores return_data_, then phase_ (release); a reader (PP ISR /
+    /// PP save) loads phase_ (acquire) and only then reads return_data_.
+    std::atomic<ToolchangePhase> phase_ { ToolchangePhase::none };
+
     bool head_open = false; ///< True when head locking mechanism is known to be open
     bool nozzle_check_disabled = false; ///< When true, skip nozzle presence vs EEPROM check (session-only, resets on reboot)
     std::atomic<uint16_t> pickup_fail_count = 0; ///< Number of failed pickup attempts since boot
@@ -333,6 +365,14 @@ private:
 
     /// Apply post-pickup return moves (XY unpark, Z return, synchronize); adjusts return_position by tool_offset_diff.
     void final_tool_change_moves(const FinalToolChangeMoves &args);
+
+    /// PP recovery: tool not yet locked; park held tool (if any) and re-run tool_change from scratch.
+    [[nodiscard]] bool recover_before_lock(
+        const ToolchangeReturnData &rd,
+        std::variant<PhysicalToolIndex, NoTool> active_tool);
+
+    /// PP recovery: tool mechanically locked but commit_pickup not yet run; finish the pickup.
+    [[nodiscard]] bool finish_pickup_after_lock(const ToolchangeReturnData &rd);
 
     #else
     /**

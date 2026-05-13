@@ -2795,6 +2795,28 @@ static void _server_print_loop(void) {
         break;
     }
     #endif
+    #if HAS_INDX()
+    case State::PowerPanic_FinishIndxToolchange: {
+        endstops.enable_globally(false);
+        const power_panic::state_toolchanger_t tc = power_panic::state_buf.toolchanger;
+        const std::variant<PhysicalToolIndex, NoTool> active_tool
+            = PhysicalToolIndex::from_raw_notool(power_panic::state_buf.planner.active_tool);
+        const PrusaToolChanger::ToolchangeReturnData rd {
+            .tool = PhysicalToolIndex::from_raw_notool(tc.tool_nr),
+            .return_type = tc.return_type,
+            .return_pos = tc.return_pos,
+        };
+        // The bool result is discarded; failure is handled downstream by resuming_begin(),
+        // which reapplies heater targets and calls tool_change(server.resume.active_tool,
+        // no_return) as a fallback pickup. sdpos still points at T<N>, so gcode replay
+        // re-executes it once printing resumes.
+        // NOTE: endstops.enable_globally(false) above remains in effect through
+        // resuming_begin(); a fallback tool_change() that needs G28 would silently fail to home.
+        (void)prusa_toolchanger.recover_pp_toolchange(rd, active_tool, tc.phase);
+        server.print_state = State::Resuming_Begin;
+        break;
+    }
+    #endif
     case State::CrashRecovery_Retracting: {
         if (planner.processing()) {
             break;

@@ -233,9 +233,15 @@ static void atomic_reset() {
 static void atomic_finish() {
     HAL_NVIC_DisableIRQ(buddy::hw::acFault.getIRQn());
 
+#if HAS_TOOLCHANGER() && HAS_INDX()
+    if (state_buf.toolchanger.phase != PrusaToolChanger::ToolchangePhase::none) {
+        // Power panic hit during a toolchange; finish the toolchange on resume
+        marlin_server::powerpanic_finish_indx_toolchange();
+    } else
+#endif
 #if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
-    if (state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL // Was in toolchange area
-        && prusa_toolchanger.is_toolchanger_enabled()) { // Toolchanger is installed
+        if (state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL // Was in toolchange area
+            && prusa_toolchanger.is_toolchanger_enabled()) { // Toolchanger is installed
 
         // Continue with toolcrash recovery
         marlin_server::powerpanic_finish_toolcrash();
@@ -335,6 +341,10 @@ void resume_loop() {
 #endif
 #if HAS_INDX()
         resume.active_tool = state_buf.planner.active_tool;
+        if (state_buf.toolchanger.phase != PrusaToolChanger::ToolchangePhase::none) {
+            // During a toolchange planner.active_tool is pre-toolchange; use the target tool.
+            resume.active_tool = state_buf.toolchanger.tool_nr;
+        }
 #endif
         marlin_server::set_resume_data(&resume);
 
@@ -361,12 +371,16 @@ void resume_loop() {
 #endif
 
 #if HAS_INDX()
-        // Outside the toolchange area: tool is physically still on the head, but
-        // active_extruder wasn't restored from EEPROM (the cache is invalidated
-        // mid-print). Apply the saved tool so subsequent E moves are valid,
-        // including its tool offset.
-        if (state_buf.planner.active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
-            const PhysicalToolIndex tool = PhysicalToolIndex::from_raw(state_buf.planner.active_tool);
+        // active_extruder is not restored from EEPROM (the cache is invalidated
+        // mid-print). Apply the saved pre-toolchange tool so subsequent E moves
+        // are valid, including its tool offset. Prefer the one physically held
+        // if toolchange is in progress.
+        const uint8_t effective_active_tool
+            = state_buf.toolchanger.phase == PrusaToolChanger::ToolchangePhase::after_lock
+            ? state_buf.toolchanger.tool_nr
+            : state_buf.planner.active_tool;
+        if (effective_active_tool != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
+            const PhysicalToolIndex tool = PhysicalToolIndex::from_raw(effective_active_tool);
             prusa_toolchanger.set_active_extruder(tool);
             hotend_currently_applied_offset = hotend_offset[tool];
         } else {
@@ -413,6 +427,13 @@ void resume_loop() {
             resume_state = ResumeState::Finish; // Do not reheat, do not unpark
             break; // Skip lift and rehome
             // Will continue with toolcrash recovery
+        }
+#endif
+#if HAS_INDX()
+        if (state_buf.toolchanger.phase != PrusaToolChanger::ToolchangePhase::none) {
+            // Skip XY re-home. Already included in the toolchange recovery.
+            resume_state = ResumeState::Finish;
+            break;
         }
 #endif
 
@@ -784,7 +805,7 @@ void panic_loop() {
         }
 #endif
         state_buf.gcode_stream_restore_info = marlin_server::stream_restore_info();
-#if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
+#if HAS_TOOLCHANGER() && (HAS_TOOL_CRASH_RECOVERY() || HAS_INDX())
         // Store tool that was last requested and where to return in case toolchange is ongoing
         {
             const PrusaToolChanger::ToolchangeReturnData &tc = prusa_toolchanger.return_data();
@@ -826,6 +847,8 @@ void panic_loop() {
                 || state_buf.crash.crash_position.x > X_WASTEBIN_SAFE_POINT; // Cleaner / wastebin strip
     #elif PRINTER_IS_PRUSA_XL()
             stay_put = state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL;
+    #else
+        #error "Need to know where the toolchanger is"
     #endif
             if (stay_put) { // Outside print area - no need to escape, and lateral move could hit hardware
                 // Do not move X or Y
@@ -968,7 +991,13 @@ void ac_fault_isr() {
         }
 
         // save crash parameters
-#if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
+#if HAS_TOOLCHANGER() && (HAS_TOOL_CRASH_RECOVERY() || HAS_INDX())
+    #if HAS_INDX()
+        // Snapshot the phase before the preempted tool_change()'s ScopeGuard
+        // runs and wipes phase_. The acquire-load also acts as a publication fence for the
+        // return_data() read below.
+        state_buf.toolchanger.phase = prusa_toolchanger.phase();
+    #endif
         if (crash_s.is_toolchange_event()) {
             // Panic during toolchange, use the intended destination for replay
             // !! We're losing E somewhere?!
