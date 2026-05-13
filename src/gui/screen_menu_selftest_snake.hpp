@@ -10,6 +10,8 @@
 namespace SelftestSnake {
 static_assert(Action::_first != Action::_last, "Edge case not handled");
 
+const char *get_action_label(Action action);
+
 class I_MI_STS : public IWindowMenuItem {
 public:
     static constexpr size_t max_label_len { 66 }; ///< Buffer for label, needs to fit all languages

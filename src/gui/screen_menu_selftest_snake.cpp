@@ -27,6 +27,7 @@
 #include "Marlin/src/gcode/queue.h"
 #include "selftest/i_selftest.hpp"
 #include <selftest/selftest_invocation.hpp>
+#include <gui/wizard/screen_selftest_submenu.hpp>
 
 #include <option/has_side_fsensor_remap.h>
 #if HAS_SIDE_FSENSOR_REMAP()
@@ -35,7 +36,7 @@
 
 using namespace SelftestSnake;
 
-namespace {
+namespace SelftestSnake {
 
 inline bool is_multitool() {
 #if HAS_TOOLCHANGER()
@@ -285,7 +286,7 @@ struct SnakeConfig {
     PhysicalToolIndex last_tool { PhysicalToolIndex::from_raw(0) };
 };
 
-} // namespace
+} // namespace SelftestSnake
 
 static SnakeConfig snake_config {};
 
@@ -543,7 +544,7 @@ void I_MI_STS::click(IWindowMenu &) {
     if (!has_submenu(action) || !is_multitool()) {
         do_snake(action, PhysicalToolIndex::from_raw(0));
     } else {
-        open_submenu(action);
+        Screens::Access()->Open(ScreenFactory::ScreenWithArg<ScreenSelftestSubmenu>(action));
     }
 }
 
