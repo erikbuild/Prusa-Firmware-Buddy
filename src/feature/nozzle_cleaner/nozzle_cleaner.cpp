@@ -267,8 +267,6 @@ bool execute() {
 
     // this means the gcode was loaded successfully -> ready to execute it
     if (loader_result.has_value()) {
-        // FIXME: !!! VERY DANGEROUS !!! BFW-8697
-        // This screws up parser state, so if this function is used inside another gcode and that gcode then tries to access the parser, it will get garbage
         GcodeSuite::process_subcommands_now(loader_result.value());
         return true;
     } else { // Here we have an error so we finished unsuccessfully and need to reset the loader for the next use
