@@ -602,6 +602,13 @@ bool PrusaToolChanger::park(PhysicalToolIndex tool) {
 
         ++park_fail_count;
 
+        // Outside of a print there is no toolchange recovery UX to run
+        // (the failure dialog assumes printing). Bail out
+        // and let the caller — typically selftest — decide how to handle it.
+        if (!marlin_server::is_printing()) {
+            return false;
+        }
+
         // Nozzle still detected -- first retry
         if (max_retry_cnt > 0) {
             log_warning(PrusaToolChanger, "Park procedure for tool #%u failed, retrying (remaining retries: %u)", tool.to_raw(), max_retry_cnt);
@@ -765,6 +772,7 @@ bool PrusaToolChanger::pickup_procedure(PhysicalToolIndex tool) {
 }
 
 bool PrusaToolChanger::pickup(PhysicalToolIndex tool) {
+    uint8_t max_retry_cnt = 1;
     for (;;) {
         if (!ensure_safe_move()) {
             return false; // We cannot even home, abort the print
@@ -786,6 +794,13 @@ bool PrusaToolChanger::pickup(PhysicalToolIndex tool) {
         // and let the caller — typically selftest — decide how to handle it.
         if (!marlin_server::is_printing()) {
             return false;
+        }
+
+        // Nozzle still detected -- first retry
+        if (max_retry_cnt > 0) {
+            log_warning(PrusaToolChanger, "Pickup procedure for tool #%u failed, retrying (remaining retries: %u)", tool.to_raw(), max_retry_cnt);
+            --max_retry_cnt;
+            continue;
         }
 
         // TODO: What if we are trying to pick unmapped tool? A fallback procedure rather than print pause would make more sense here
