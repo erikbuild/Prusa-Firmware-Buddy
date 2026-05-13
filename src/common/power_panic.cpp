@@ -407,9 +407,9 @@ void resume_loop() {
 
 #if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
         if (state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL) { // Was in toolchange area
-            prusa_toolchanger.set_precrash_state({ state_buf.toolchanger.precrash_tool,
+            prusa_toolchanger.set_return_data({ PhysicalToolIndex::from_raw_notool(state_buf.toolchanger.tool_nr),
                 state_buf.toolchanger.return_type,
-                state_buf.toolchanger.return_pos }); // Set result for tool recovery
+                state_buf.toolchanger.return_pos });
             resume_state = ResumeState::Finish; // Do not reheat, do not unpark
             break; // Skip lift and rehome
             // Will continue with toolcrash recovery
@@ -786,9 +786,15 @@ void panic_loop() {
         state_buf.gcode_stream_restore_info = marlin_server::stream_restore_info();
 #if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
         // Store tool that was last requested and where to return in case toolchange is ongoing
-        state_buf.toolchanger.precrash_tool = prusa_toolchanger.get_precrash().tool_nr;
-        state_buf.toolchanger.return_type = prusa_toolchanger.get_precrash().return_type;
-        state_buf.toolchanger.return_pos = prusa_toolchanger.get_precrash().return_pos;
+        {
+            const PrusaToolChanger::ToolchangeReturnData &tc = prusa_toolchanger.return_data();
+            state_buf.toolchanger.tool_nr = match(
+                tc.tool,
+                [](PhysicalToolIndex t) -> uint8_t { return t.to_raw(); },
+                [](NoTool) -> uint8_t { return PrusaToolChanger::MARLIN_NO_TOOL_PICKED; });
+            state_buf.toolchanger.return_type = tc.return_type;
+            state_buf.toolchanger.return_pos = tc.return_pos;
+        }
 #endif
 
         log_info(PowerPanic, "powerpanic saving");
@@ -966,7 +972,7 @@ void ac_fault_isr() {
         if (crash_s.is_toolchange_event()) {
             // Panic during toolchange, use the intended destination for replay
             // !! We're losing E somewhere?!
-            state_buf.crash.start_current_position = xyze_pos_t(prusa_toolchanger.get_precrash().return_pos.asNative());
+            state_buf.crash.start_current_position = xyze_pos_t(prusa_toolchanger.return_data().return_pos.asNative());
         } else
 #endif
         {

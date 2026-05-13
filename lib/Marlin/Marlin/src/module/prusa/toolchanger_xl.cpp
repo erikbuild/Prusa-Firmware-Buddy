@@ -236,7 +236,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
     // Store input parameters to repeat toolchange if needed (position cleared)
     // Position is stored without tool offset, needs to be converted
     const auto store_return_position = return_position.asLogical();
-    precrash_data = { raw_new_tool, return_type, store_return_position };
+    set_return_data({ new_tool, return_type, store_return_position });
 
     Dwarf *old_dwarf = picked_dwarf.load(); ///< Change from physically picked dwarf
 

@@ -38,35 +38,21 @@ public:
 
     #if HAS_TOOL_CRASH_RECOVERY()
 
-    /// Structure to remember wanted toolchange result in case of a crash
-    struct PrecrashData {
-        uint8_t tool_nr; ///< Marlin id of last requested tool [indexed from 0] (last requested, not the tool physically picked)
-        tool_return_t return_type; ///< Last wanted return position
-
-        /**
-         * @brief Destination to return to.
-         * Linked to return_type.
-         * @warning This is logical position! Use return_pos = toLogical(current_position).
-         */
-        XYZval<float, LogicalPosTag> return_pos;
+    /// Data captured at toolchange start; used by tool-fall crash recovery to drive the replay.
+    struct ToolchangeReturnData {
+        std::variant<PhysicalToolIndex, NoTool> tool; ///< Last requested tool (not the tool physically picked)
+        tool_return_t return_type; ///< How to return after toolchange
+        XYZval<float, LogicalPosTag> return_pos; ///< Logical return position (used when return_type selects it)
     };
 
-    /**
-     * @brief Get last wanted state.
-     * To be used in tool_change() in tool failure recovery.
-     * @return last requested result of a toolchange
-     */
-    const PrecrashData &get_precrash() const {
-        return precrash_data;
+    /// Get last recorded toolchange return data. Used in tool failure recovery.
+    const ToolchangeReturnData &return_data() const {
+        return return_data_;
     }
 
-    /**
-     * @brief Force precrash state.
-     * This is to be used when recovering from powerpanic through toolcrash.
-     * @param data wanted result of a toolchange
-     */
-    void set_precrash_state(const PrecrashData &data) {
-        precrash_data = data;
+    /// Set toolchange return data. Used when recovering from powerpanic through toolcrash.
+    void set_return_data(const ToolchangeReturnData &d) {
+        return_data_ = d;
     }
 
     /**
@@ -225,7 +211,7 @@ public:
     #endif
 private:
     #if HAS_TOOL_CRASH_RECOVERY()
-    PrecrashData precrash_data = {}; ///< Remember wanted toolchange result in case of a crash
+    ToolchangeReturnData return_data_ { NoTool {}, {}, {} }; ///< Toolchange return state captured for crash/PP recovery
     uint8_t tool_check_fails = 0; ///< Count before toolfall
     static constexpr uint8_t TOOL_CHECK_FAILS_LIMIT = 3; ///< Limit of tool_check_fails before toolfall
     #endif

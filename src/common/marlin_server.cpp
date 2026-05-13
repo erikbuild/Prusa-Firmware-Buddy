@@ -2853,10 +2853,10 @@ static void _server_print_loop(void) {
             if (crash_s.get_state() == Crash_s::REPEAT_WAIT) {
                 // After toolcrash, return to what was requested before the crash
                 // return_pos is stored in logical coordinates
-                return_pos = prusa_toolchanger.get_precrash().return_pos.asNative();
-                return_type = prusa_toolchanger.get_precrash().return_type;
+                return_pos = prusa_toolchanger.return_data().return_pos.asNative();
+                return_type = prusa_toolchanger.return_data().return_type;
             }
-            if (!prusa_toolchanger.tool_change(PhysicalToolIndex::from_raw_notool(prusa_toolchanger.get_precrash().tool_nr),
+            if (!prusa_toolchanger.tool_change(prusa_toolchanger.return_data().tool,
                     return_type,
                     return_pos,
                     tool_change_lift_t::no_lift,
