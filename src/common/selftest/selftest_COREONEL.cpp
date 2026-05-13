@@ -108,10 +108,14 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
             Hotend::for_tool(*tool).set_nozzle_pid_config_compat(pid); },
         .heatbreak_fan_fnc = Fans::heat_break,
         .print_fan_fnc = Fans::print,
+#if HAS_INDX()
+        .heat_time_ms = 6500,
+#else
         .heat_time_ms = 42000,
+#endif
         .start_temp = 80,
         .undercool_temp = 75,
-        .target_temp = 230,
+        .target_temp = 290,
         .heat_min_temp = 195,
         .heat_max_temp = 245,
         .heatbreak_min_temp = 10,
