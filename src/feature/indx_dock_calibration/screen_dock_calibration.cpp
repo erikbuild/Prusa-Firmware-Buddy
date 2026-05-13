@@ -25,7 +25,7 @@ constexpr auto txt_remove_tool = N_("A tool is currently detected on the head.\n
 constexpr auto txt_homing = N_("Homing XY axes");
 constexpr auto txt_moving_away = N_("Raising Z axis for clearance");
 constexpr auto txt_lock_position = N_("Motors are now locked.\n\nEnsure your hands are outside the printer enclosure.\n\nVerify the head is in the correct position, then press Continue to start measuring.");
-constexpr auto txt_measuring = N_("Measuring dock position\n\nDo not touch the printer");
+constexpr auto txt_measuring = N_("Measuring dock position\n\nDo not touch the printer.");
 constexpr auto txt_success = N_("Dock positions have been successfully calibrated and saved.");
 constexpr auto txt_failed = N_("Dock %d calibration failed.\n\nMeasured: X=%.1f Y=%.1f\n\nExpected: X=%.1f Y=%.1f\nTolerance: X=+-%.1f Y=+-%.1f");
 
