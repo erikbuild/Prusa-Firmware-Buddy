@@ -164,7 +164,7 @@ const char *get_action_label(Action action) {
 
 bool are_dependencies_met(Action action) {
     const auto dependencies = get_dependencies(action);
-    for (Action dependency = get_first_action(); dependency <= Action::_last; dependency = get_next_action(dependency)) {
+    for (Action dependency = get_first_action(), end = get_last_action(); dependency != end; dependency = get_next_action(dependency)) {
         if (!dependencies.test(dependency)) {
             continue;
         }
@@ -176,7 +176,7 @@ bool are_dependencies_met(Action action) {
 }
 
 bool are_all_actions_completed() {
-    for (Action action = get_first_action(); action <= Action::_last; action = get_next_action(action)) {
+    for (Action action = get_first_action(), end = get_last_action(); action != end; action = get_next_action(action)) {
         if (!is_completed(get_test_result(action, AllTools {}))) {
             return false;
         }
