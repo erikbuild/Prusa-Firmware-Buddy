@@ -89,6 +89,7 @@ target_link_libraries(
           fifo_encoder
           LP5817
           cortex-m0-atomic
+          tpis
   )
 
 target_include_directories(firmware PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")

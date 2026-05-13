@@ -1,11 +1,11 @@
 #pragma once
 
 #include <stm32c0xx_hal.h>
-#include <fpm/fixed.hpp>
 
 #include <indx_head/errors.hpp>
 #include <indx_head/leds.hpp>
 #include <freertos/binary_semaphore.hpp>
+#include <tpis/tpis.hpp>
 
 #include <array>
 #include <cstddef>
@@ -36,21 +36,14 @@ namespace rs485 {
     std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> data);
 } // namespace rs485
 
-struct TemperatureReading {
-    float object_temperature_celsius;
-    float ambient_temperature_celsius;
-};
-
 struct CheckedTemperatureReading {
-    TemperatureReading temps;
+    tpis::TemperatureReading temps;
     bool valid;
 };
 
 namespace i2c {
     // Does everything to prepare and initialize all the I2C peripherals
     void init_comm();
-
-    using fixed = fpm::fixed<int32_t, int64_t, 7>;
 
     /// Returns ambient and object temperatures
     CheckedTemperatureReading read_tpis_temperature();
