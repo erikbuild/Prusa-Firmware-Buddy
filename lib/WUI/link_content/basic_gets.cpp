@@ -56,6 +56,9 @@ JsonResult get_printer(size_t resume_point, JsonOutput &output) {
     case State::CrashRecovery_Begin:
     case State::CrashRecovery_Lifting:
     case State::CrashRecovery_ToolchangePowerPanic:
+#if HAS_INDX()
+    case State::PowerPanic_FinishIndxToolchange:
+#endif
     case State::CrashRecovery_Retracting:
     case State::CrashRecovery_XY_Measure:
 #if HAS_TOOL_CRASH_RECOVERY()
@@ -276,6 +279,9 @@ JsonResult get_job_octoprint(size_t resume_point, JsonOutput &output) {
     case State::CrashRecovery_Begin:
     case State::CrashRecovery_Lifting:
     case State::CrashRecovery_ToolchangePowerPanic:
+#if HAS_INDX()
+    case State::PowerPanic_FinishIndxToolchange:
+#endif
     case State::CrashRecovery_Retracting:
     case State::CrashRecovery_XY_Measure:
 #if HAS_TOOL_CRASH_RECOVERY()

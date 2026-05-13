@@ -312,6 +312,9 @@ void powerpanic_resume(const char *media_SFN_path, const GCodeReaderPosition &re
 void powerpanic_finish_recovery();
 void powerpanic_finish_pause();
 void powerpanic_finish_toolcrash();
+#if HAS_INDX()
+void powerpanic_finish_indx_toolchange();
+#endif
 
 void request_calibrations_screen();
 

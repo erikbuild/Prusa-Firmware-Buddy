@@ -799,6 +799,9 @@ void screen_printing_data_t::change_print_state() {
         case State::CrashRecovery_Retracting:
         case State::CrashRecovery_Lifting:
         case State::CrashRecovery_ToolchangePowerPanic:
+#if HAS_INDX()
+        case State::PowerPanic_FinishIndxToolchange:
+#endif
         case State::CrashRecovery_XY_Measure:
 #if HAS_TOOL_CRASH_RECOVERY()
         case State::CrashRecovery_Tool_Pickup:

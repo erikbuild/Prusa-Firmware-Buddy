@@ -19,7 +19,6 @@
     #include <feature/motor_current_profile/motor_current_profile.hpp>
 #endif
 #include <option/has_tool_crash_recovery.h>
-#include <option/has_indx.h>
 
 #if HAS_TOOLCHANGER()
     #include <module/prusa/toolchanger.h>

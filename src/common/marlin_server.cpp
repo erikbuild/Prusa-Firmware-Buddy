@@ -152,6 +152,7 @@
 
 #if ENABLED(POWER_PANIC)
     #include "power_panic.hpp"
+    #include "power_panic_storage.hpp"
 #endif
 
 #if HAS_TOOLCHANGER()
@@ -1970,6 +1971,18 @@ void powerpanic_finish_toolcrash() {
     // Go through ToolchangePowerPanic to set up the toolchanger correctly
     crash_s.set_state(Crash_s::REPEAT_WAIT);
     server.print_state = State::CrashRecovery_ToolchangePowerPanic;
+}
+    #endif
+    #if HAS_INDX()
+void powerpanic_finish_indx_toolchange() {
+    // WARNING: this sequence needs to _just_ set the server state and exit;
+    // perform any higher-level operation inside power_panic::atomic_finish
+
+    // Restore leveling state, do not tweak planner position manually as leveling was off when the panic happened
+    set_bed_leveling_enabled(crash_s.leveling_active);
+
+    crash_s.set_state(Crash_s::REPEAT_WAIT);
+    server.print_state = State::PowerPanic_FinishIndxToolchange;
 }
     #endif
 #endif
