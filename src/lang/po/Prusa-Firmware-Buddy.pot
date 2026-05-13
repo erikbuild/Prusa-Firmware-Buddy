@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the Prusa-Firmware-Buddy package.
 # Prusa Research <info@prusa3d.com>, 2026
 #
-#: src/gui/dialogs/DialogLoadUnload.cpp:83
+#: src/gui/dialogs/DialogLoadUnload.cpp:87
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Prusa-Firmware-Buddy 4.1\n"
 "Report-Msgid-Bugs-To: info@prusa3d.com\n"
-"POT-Creation-Date: 2026-04-28 09:23+0200\n"
+"POT-Creation-Date: 2026-05-13 13:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,204 +41,25 @@ msgstr ""
 msgid "!! Careful, tools are hot !!"
 msgstr ""
 
-#: src/gui/include_XL/selftest_snake_config.hpp:121
-#, c-format
-msgid "%d Bed Heater Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:90
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:90
-#, c-format
-msgid "%d Belt Tuning"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:94
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:94
-#, c-format
-msgid "%d Dock Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:115
-#, c-format
-msgid "%d Dock Position Calibration"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:87
-#: src/gui/include_COREONE/selftest_snake_config.hpp:84
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:87
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:85
-#, c-format
-msgid "%d Door Sensor"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:100
-#: src/gui/include_XL/selftest_snake_config.hpp:108
-#: src/gui/include_COREONE/selftest_snake_config.hpp:83
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:100
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:76
-#: src/gui/include_MINI/selftest_snake_config.hpp:75
-#: src/gui/include_iX/selftest_snake_config.hpp:82
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:84
-#: src/gui/include_MK4/selftest_snake_config.hpp:77
-#, c-format
-msgid "%d Fan Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:96
-#: src/gui/include_XL/selftest_snake_config.hpp:120
-#: src/gui/include_COREONE/selftest_snake_config.hpp:95
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:96
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:82
-#: src/gui/include_MINI/selftest_snake_config.hpp:79
-#: src/gui/include_iX/selftest_snake_config.hpp:92
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:96
-#: src/gui/include_MK4/selftest_snake_config.hpp:84
-#, c-format
-msgid "%d Filament Sensor Calibration"
-msgstr ""
-
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:81
-#: src/gui/include_MINI/selftest_snake_config.hpp:80
-#, c-format
-msgid "%d First Layer Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:124
-#: src/gui/include_COREONE/selftest_snake_config.hpp:94
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:95
-#: src/gui/include_MK4/selftest_snake_config.hpp:83
-#, c-format
-msgid "%d Gearbox Alignment"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:101
-#: src/gui/include_XL/selftest_snake_config.hpp:119
-#: src/gui/include_COREONE/selftest_snake_config.hpp:93
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:101
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:80
-#: src/gui/include_MINI/selftest_snake_config.hpp:78
-#: src/gui/include_iX/selftest_snake_config.hpp:91
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:94
-#: src/gui/include_MK4/selftest_snake_config.hpp:82
-#, c-format
-msgid "%d Heater Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:92
-#: src/gui/include_XL/selftest_snake_config.hpp:113
-#: src/gui/include_COREONE/selftest_snake_config.hpp:89
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:92
-#: src/gui/include_iX/selftest_snake_config.hpp:87
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:90
-#, c-format
-msgid "%d Homing Calibration"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:103
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:103
-#, c-format
-msgid "%d Input Shaper Calibration"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:98
-#: src/gui/include_XL/selftest_snake_config.hpp:116
-#: src/gui/include_COREONE/selftest_snake_config.hpp:91
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:98
-#: src/gui/include_iX/selftest_snake_config.hpp:89
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:92
-#: src/gui/include_MK4/selftest_snake_config.hpp:80
-#, c-format
-msgid "%d Loadcell Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:95
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:95
-#, c-format
-msgid "%d Nozzle Cleaner Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:122
-#, c-format
-msgid "%d Nozzle Heaters Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:102
-#: src/gui/include_XL/selftest_snake_config.hpp:123
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:102
-#: src/gui/include_iX/selftest_snake_config.hpp:93
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:97
-#, c-format
-msgid "%d Phase Stepping Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:117
-#, c-format
-msgid "%d Tool Offset Calibration"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:88
-#: src/gui/include_XL/selftest_snake_config.hpp:111
-#: src/gui/include_COREONE/selftest_snake_config.hpp:87
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:88
-#: src/gui/include_iX/selftest_snake_config.hpp:85
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:88
-#, c-format
-msgid "%d X Axis Test"
-msgstr ""
-
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:78
-#: src/gui/include_MINI/selftest_snake_config.hpp:76
-#: src/gui/include_MK4/selftest_snake_config.hpp:79
-#, c-format
-msgid "%d XY Axis Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:89
-#: src/gui/include_XL/selftest_snake_config.hpp:110
-#: src/gui/include_COREONE/selftest_snake_config.hpp:86
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:89
-#: src/gui/include_iX/selftest_snake_config.hpp:84
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:87
-#, c-format
-msgid "%d Y Axis Test"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:97
-#: src/gui/include_XL/selftest_snake_config.hpp:109
-#: src/gui/include_COREONE/selftest_snake_config.hpp:85
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:97
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:77
-#: src/gui/include_iX/selftest_snake_config.hpp:83
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:86
-#: src/gui/include_MK4/selftest_snake_config.hpp:78
-#, c-format
-msgid "%d Z Alignment Calibration"
-msgstr ""
-
-#: src/gui/include_COREONEL_INDX/selftest_snake_config.hpp:99
-#: src/gui/include_XL/selftest_snake_config.hpp:118
-#: src/gui/include_COREONE/selftest_snake_config.hpp:92
-#: src/gui/include_COREONE_INDX/selftest_snake_config.hpp:99
-#: src/gui/include_MK3.5/selftest_snake_config.hpp:79
-#: src/gui/include_MINI/selftest_snake_config.hpp:77
-#: src/gui/include_iX/selftest_snake_config.hpp:90
-#: src/gui/include_COREONEL/selftest_snake_config.hpp:93
-#: src/gui/include_MK4/selftest_snake_config.hpp:81
-#, c-format
-msgid "%d Z Axis Test"
-msgstr ""
-
-#: tmp_error_headers/error_list.hpp:702
+#: tmp_error_headers/error_list.hpp:744
 #, c-format
 msgid "%s Check hotend heater and control electronics for possible damage"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:730
+#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:61
+#, c-format
+msgid ""
+"%s can be remapped to the right side.\n"
+"(calibration will follow)\n"
+"Remap?"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:772
 #, c-format
 msgid "%s lost a link to parent system."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:723
+#: tmp_error_headers/error_list.hpp:765
 #, c-format
 msgid "%s stopped receiving data."
 msgstr ""
@@ -281,13 +102,13 @@ msgstr ""
 msgid "- Gateway"
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:81
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:77
 msgid ""
 "- Remove calibration pin.\n"
 "- Install sheet on heatbed."
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:59
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:55
 msgid ""
 "- Remove heatbed sheet.\n"
 "- Install calibration pin."
@@ -348,7 +169,7 @@ msgstr ""
 msgid "A crash dump report (file dump.bin) has been saved to the USB drive."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1199
+#: tmp_error_headers/error_list.hpp:1241
 msgid "A filament specified in the G-code is either not loaded or wrong type."
 msgstr ""
 
@@ -384,15 +205,15 @@ msgstr ""
 msgid "ABORTING ..."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:484 tmp_error_headers/error_list.hpp:491
-#: tmp_error_headers/error_list.hpp:736 tmp_error_headers/error_list.hpp:743
-#: tmp_error_headers/error_list.hpp:750 tmp_error_headers/error_list.hpp:757
-#: tmp_error_headers/error_list.hpp:764 tmp_error_headers/error_list.hpp:771
+#: tmp_error_headers/error_list.hpp:512 tmp_error_headers/error_list.hpp:519
 #: tmp_error_headers/error_list.hpp:778 tmp_error_headers/error_list.hpp:785
+#: tmp_error_headers/error_list.hpp:792 tmp_error_headers/error_list.hpp:799
+#: tmp_error_headers/error_list.hpp:806 tmp_error_headers/error_list.hpp:813
+#: tmp_error_headers/error_list.hpp:820 tmp_error_headers/error_list.hpp:827
 msgid "AC CONTROLLER FAULT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:708
+#: tmp_error_headers/error_list.hpp:750
 msgid "ACCELEROMETER COMMUNICATION FAILED"
 msgstr ""
 
@@ -453,7 +274,7 @@ msgstr ""
 msgid "Additional probing"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:849
+#: tmp_error_headers/error_list.hpp:891
 msgid "Address assignment error"
 msgstr ""
 
@@ -516,7 +337,7 @@ msgstr ""
 msgid "All nozzles"
 msgstr ""
 
-#: src/gui/wizard/screen_fan_selftest.cpp:88
+#: src/gui/wizard/screen_fan_selftest.cpp:87
 msgid "All tests passed successfully."
 msgstr ""
 
@@ -533,7 +354,7 @@ msgstr ""
 msgid "Are you sure to stop this printing?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1521
+#: tmp_error_headers/error_list.hpp:1563
 msgid ""
 "Are you sure you want to abort the print?\n"
 "\n"
@@ -572,7 +393,7 @@ msgid ""
 "Do you want to revise your printer configuration?"
 msgstr ""
 
-#: src/gui/screen_input_shaper_calibration.cpp:83
+#: src/gui/screen_input_shaper_calibration.cpp:87
 msgid ""
 "Attention: Ensure the accelerometer is properly connected. Follow the step-"
 "by-step guide in the link below:"
@@ -602,7 +423,7 @@ msgstr ""
 msgid "Auto-retracting"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:45
+#: src/gui/dialogs/DialogLoadUnload.cpp:49
 msgid "Auto-retracting filament"
 msgstr ""
 
@@ -612,7 +433,7 @@ msgstr ""
 
 #. //MSG_PROGRESS_FEED_NOZZLE c=20
 #: src/mmu2/mmu2_progress_converter.cpp:15
-#: src/gui/dialogs/DialogLoadUnload.cpp:56
+#: src/gui/dialogs/DialogLoadUnload.cpp:60
 msgid "Avoiding grind"
 msgstr ""
 
@@ -632,15 +453,15 @@ msgstr ""
 msgid "BACK"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:960
+#: tmp_error_headers/error_list.hpp:1002
 msgid "BBF ALLOCATION FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:967
+#: tmp_error_headers/error_list.hpp:1009
 msgid "BBF INITIALIZATION FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:968
+#: tmp_error_headers/error_list.hpp:1010
 msgid "BBF initialization failed, repeat the action or try another USB drive."
 msgstr ""
 
@@ -648,11 +469,11 @@ msgstr ""
 msgid "BED LEVEL CORRECTION"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:505
+#: tmp_error_headers/error_list.hpp:533
 msgid "BOARD MAXTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:498
+#: tmp_error_headers/error_list.hpp:526
 msgid "BOARD MINTEMP ERROR"
 msgstr ""
 
@@ -674,13 +495,14 @@ msgstr ""
 msgid "Bed"
 msgstr ""
 
-#: src/gui/screen_menu_fan_info.cpp:24
-msgid "Bed Fan 1"
+#. translation: menu item showing info about heated bed fan, %d is the fan number
+#: src/gui/screen_menu_fan_info.cpp:22
+#, c-format
+msgid "Bed Fan %d"
 msgstr ""
 
-#. translation: menu item showing info about heated bed fan (there are two of them)
-#: src/gui/screen_menu_fan_info.cpp:34
-msgid "Bed Fan 2"
+#: src/gui/screen_menu_selftest_snake.cpp:152
+msgid "Bed Heater Test"
 msgstr ""
 
 #: src/gui/MItem_menus.hpp:189
@@ -708,7 +530,7 @@ msgstr ""
 msgid "Bed fans"
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_temp.cpp:229
+#: src/gui/wizard/selftest_frame_temp.cpp:248
 msgid ""
 "Bed heater selftest failed.\n"
 "\n"
@@ -716,7 +538,7 @@ msgid ""
 "Retry."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1423
+#: tmp_error_headers/error_list.hpp:1465
 msgid "Bed leveling failed. Try again?"
 msgstr ""
 
@@ -747,7 +569,7 @@ msgid ""
 msgstr ""
 
 #. Now show always, bed heater selftest can fail if there is no sheet on the bed
-#: src/gui/screen_menu_selftest_snake.cpp:505
+#: src/gui/screen_menu_selftest_snake.cpp:642
 msgid ""
 "Before you continue, make sure the print sheet is installed on the heatbed."
 msgstr ""
@@ -760,6 +582,10 @@ msgstr ""
 
 #: src/feature/gearbox_alignment/screen_gearbox_alignment.cpp:39
 msgid "Before you proceed, make sure filament is unloaded from the Nextruder."
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:130
+msgid "Belt Tuning"
 msgstr ""
 
 #: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:54
@@ -801,7 +627,7 @@ msgstr ""
 msgid "CALIBRATE HOMING FROM MENU"
 msgstr ""
 
-#: src/gui/screen_menu_selftest_snake.hpp:91
+#: src/gui/screen_menu_selftest_snake.hpp:92
 msgid "CALIBRATIONS & TESTS"
 msgstr ""
 
@@ -821,15 +647,15 @@ msgstr ""
 msgid "CHAMBER FILTRATION"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:365
+#: tmp_error_headers/error_list.hpp:393
 msgid "CHAMBER MAXTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:372
+#: tmp_error_headers/error_list.hpp:400
 msgid "CHAMBER MINTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:449
+#: tmp_error_headers/error_list.hpp:477
 msgid "CHAMBER WARMING UP"
 msgstr ""
 
@@ -849,7 +675,7 @@ msgstr ""
 msgid "COMMUNICATION ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:792
+#: tmp_error_headers/error_list.hpp:834
 msgid "CONNECT REGISTRATION FAILED"
 msgstr ""
 
@@ -866,9 +692,9 @@ msgid "COOLDOWN"
 msgstr ""
 
 #. don't close on menu timeout
-#: src/gui/screen_crash_recovery.cpp:266 tmp_error_headers/error_list.hpp:1226
-#: tmp_error_headers/error_list.hpp:1233 tmp_error_headers/error_list.hpp:1240
-#: tmp_error_headers/error_list.hpp:1247 tmp_error_headers/error_list.hpp:1254
+#: src/gui/screen_crash_recovery.cpp:266 tmp_error_headers/error_list.hpp:1268
+#: tmp_error_headers/error_list.hpp:1275 tmp_error_headers/error_list.hpp:1282
+#: tmp_error_headers/error_list.hpp:1289 tmp_error_headers/error_list.hpp:1296
 msgid "CRASH DETECTED"
 msgstr ""
 
@@ -876,7 +702,11 @@ msgstr ""
 msgid "CUSTOM PARAMETERS"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:72
+#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:39
+msgid "Calibrate"
+msgstr ""
+
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:75
 msgid "Calibrate Dock Position"
 msgstr ""
 
@@ -901,7 +731,7 @@ msgstr ""
 msgid "Calibrating Y motor"
 msgstr ""
 
-#: src/gui/screen_input_shaper_calibration.cpp:30
+#: src/gui/screen_input_shaper_calibration.cpp:34
 msgid "Calibrating accelerometer..."
 msgstr ""
 
@@ -917,7 +747,7 @@ msgstr ""
 msgid "Calibrating tool offsets"
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:71
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:67
 msgid "Calibrating tool offsets."
 msgstr ""
 
@@ -938,7 +768,7 @@ msgstr ""
 msgid "Calibration failed with error."
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:37
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:36
 #, c-format
 msgid ""
 "Calibration failed.\n"
@@ -967,7 +797,7 @@ msgstr ""
 msgid "Calibrations & Tests"
 msgstr ""
 
-#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:106
+#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:111
 msgid "Camera"
 msgstr ""
 
@@ -984,7 +814,7 @@ msgstr ""
 msgid "Canceled"
 msgstr ""
 
-#: src/common/gcode/gcode_compatibility.cpp:495
+#: src/common/gcode/gcode_compatibility.cpp:496
 msgid ""
 "Cannot disable filament sensors, because they are required for spool join."
 msgstr ""
@@ -1021,7 +851,7 @@ msgstr ""
 msgid "Chamber"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1464
+#: tmp_error_headers/error_list.hpp:1506
 msgid "Chamber Cooling Fan Error"
 msgstr ""
 
@@ -1029,12 +859,10 @@ msgstr ""
 msgid "Chamber Dimming"
 msgstr ""
 
-#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:85
-msgid "Chamber Fan 1"
-msgstr ""
-
-#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:92
-msgid "Chamber Fan 2"
+#. translation: menu item showing info about chamber cooling fan, %d is the fan number
+#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:83
+#, c-format
+msgid "Chamber Fan %d"
 msgstr ""
 
 #: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:41
@@ -1050,7 +878,7 @@ msgstr ""
 msgid "Chamber Filtration"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1471
+#: tmp_error_headers/error_list.hpp:1513
 msgid "Chamber Filtration Fan Error"
 msgstr ""
 
@@ -1062,7 +890,7 @@ msgstr ""
 msgid "Chamber Lights Dimmed"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:456
+#: tmp_error_headers/error_list.hpp:484
 msgid "Chamber Overheating"
 msgstr ""
 
@@ -1072,7 +900,7 @@ msgstr ""
 msgid "Chamber Temperature"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:463
+#: tmp_error_headers/error_list.hpp:491
 msgid "Chamber Temperature Is Critical"
 msgstr ""
 
@@ -1080,13 +908,13 @@ msgstr ""
 msgid "Chamber Vent Control"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1465
+#: tmp_error_headers/error_list.hpp:1507
 msgid ""
 "Chamber cooling fan is not spinning. Check it for possible debris, then "
 "inspect the wiring."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1472
+#: tmp_error_headers/error_list.hpp:1514
 msgid ""
 "Chamber filtration fan is not spinning. Check it for possible debris, then "
 "inspect the wiring."
@@ -1097,11 +925,11 @@ msgstr ""
 msgid "Chamber temperature"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:457
+#: tmp_error_headers/error_list.hpp:485
 msgid "Chamber temperature above safety limit. Ensure better ventilation."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:464
+#: tmp_error_headers/error_list.hpp:492
 msgid "Chamber temperature critical. Aborting print to prevent printer damage."
 msgstr ""
 
@@ -1134,13 +962,13 @@ msgstr ""
 msgid "Change to %s"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1262
+#: tmp_error_headers/error_list.hpp:1304
 msgid ""
 "Changes of mapping available only in the Printer UI. Select Print to start "
 "the print with defaults."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:150
+#: src/gui/dialogs/DialogLoadUnload.cpp:154
 msgid "Changing filament"
 msgstr ""
 
@@ -1152,11 +980,11 @@ msgstr ""
 msgid "Check all tools if they are properly parked or picked."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:709
+#: tmp_error_headers/error_list.hpp:751
 msgid "Check that the accelerometer cable is plugged in and not damaged."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:366 tmp_error_headers/error_list.hpp:373
+#: tmp_error_headers/error_list.hpp:394 tmp_error_headers/error_list.hpp:401
 msgid "Check the chamber thermistor wiring for possible damage."
 msgstr ""
 
@@ -1164,38 +992,38 @@ msgstr ""
 msgid "Check the gantry squareness"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:261
+#: tmp_error_headers/error_list.hpp:289
 msgid "Check the heatbed heater & thermistor wiring for possible damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:282 tmp_error_headers/error_list.hpp:303
-#: tmp_error_headers/error_list.hpp:324
+#: tmp_error_headers/error_list.hpp:310 tmp_error_headers/error_list.hpp:331
+#: tmp_error_headers/error_list.hpp:352
 msgid "Check the heatbed thermistor wiring for possible damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:345 tmp_error_headers/error_list.hpp:352
+#: tmp_error_headers/error_list.hpp:373 tmp_error_headers/error_list.hpp:380
 msgid "Check the heatbreak thermistor wiring for possible damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:275
+#: tmp_error_headers/error_list.hpp:303
 msgid "Check the heater and thermistor wiring for potential damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:268
+#: tmp_error_headers/error_list.hpp:296
 msgid "Check the print head heater & thermistor wiring for possible damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:289 tmp_error_headers/error_list.hpp:310
-#: tmp_error_headers/error_list.hpp:331
+#: tmp_error_headers/error_list.hpp:317 tmp_error_headers/error_list.hpp:338
+#: tmp_error_headers/error_list.hpp:359
 msgid "Check the print head thermistor wiring for possible damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:296 tmp_error_headers/error_list.hpp:317
-#: tmp_error_headers/error_list.hpp:338
+#: tmp_error_headers/error_list.hpp:324 tmp_error_headers/error_list.hpp:345
+#: tmp_error_headers/error_list.hpp:366
 msgid "Check the thermistor wiring for potential damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:380
+#: tmp_error_headers/error_list.hpp:408
 msgid ""
 "Check the thermistor wiring, cooling duct or heatbreak fan wiring for "
 "potential damage."
@@ -1210,13 +1038,13 @@ msgstr ""
 msgid "Clean steel sheet."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:42
+#: src/gui/dialogs/DialogLoadUnload.cpp:46
 msgid "Cleaning nozzle"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1478 tmp_error_headers/error_list.hpp:1485
-#: tmp_error_headers/error_list.hpp:1492 tmp_error_headers/error_list.hpp:1499
-#: tmp_error_headers/error_list.hpp:1506
+#: tmp_error_headers/error_list.hpp:1520 tmp_error_headers/error_list.hpp:1527
+#: tmp_error_headers/error_list.hpp:1534 tmp_error_headers/error_list.hpp:1541
+#: tmp_error_headers/error_list.hpp:1548
 msgid "Cleaning the nozzle"
 msgstr ""
 
@@ -1224,7 +1052,7 @@ msgstr ""
 msgid "Click the knob to close"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1457
+#: tmp_error_headers/error_list.hpp:1499
 msgid "Close Chamber Ventilation"
 msgstr ""
 
@@ -1247,7 +1075,7 @@ msgstr ""
 msgid "Code: %s"
 msgstr ""
 
-#: src/gui/MItem_tools.hpp:434 tmp_error_headers/error_list.hpp:1142
+#: src/gui/MItem_tools.hpp:434 tmp_error_headers/error_list.hpp:1184
 msgid "Cold Pull"
 msgstr ""
 
@@ -1274,7 +1102,11 @@ msgstr ""
 msgid "Communicating with the OpenPrintTag..."
 msgstr ""
 
-#: src/gui/screen_input_shaper_calibration.cpp:221
+#: src/gui/screen_menu_selftest_snake.cpp:191
+msgid "Complete these calibrations first:"
+msgstr ""
+
+#: src/gui/screen_input_shaper_calibration.cpp:223
 #, c-format
 msgid ""
 "Computed shapers:\n"
@@ -1317,12 +1149,12 @@ msgstr ""
 msgid "Consumed material"
 msgstr ""
 
-#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:72
+#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:71
 #: src/gui/dialogs/resolution_480x320/radio_button_preview.cpp:59
 msgid "Continue"
 msgstr ""
 
-#: src/gui/screen_menu_selftest_snake.cpp:303
+#: src/gui/screen_menu_selftest_snake.cpp:443
 msgid "Continue running Calibrations & Tests?"
 msgstr ""
 
@@ -1338,7 +1170,7 @@ msgstr ""
 msgid "Cooling down. Do not touch the nozzle!"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:751
+#: tmp_error_headers/error_list.hpp:793
 msgid ""
 "Cooling fan of the power supply unit is operating outside of specification."
 msgstr ""
@@ -1349,6 +1181,10 @@ msgstr ""
 
 #: src/gui/screen_cold_pull.cpp:262
 msgid "Cooling the nozzle"
+msgstr ""
+
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:103
+msgid "Could not park the tool. Calibration preserved."
 msgstr ""
 
 #: src/gui/screen_home.cpp:339
@@ -1394,11 +1230,11 @@ msgstr ""
 msgid "Cutter"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:162
+#: src/gui/dialogs/DialogLoadUnload.cpp:166
 msgid "Cutting filament"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:722
+#: tmp_error_headers/error_list.hpp:764
 msgid "DATA TIMEOUT"
 msgstr ""
 
@@ -1418,7 +1254,7 @@ msgstr ""
 msgid "DISABLE MMU"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:715
+#: tmp_error_headers/error_list.hpp:757
 msgid "DISPLAY PROBLEM DETECTED"
 msgstr ""
 
@@ -1434,12 +1270,12 @@ msgstr ""
 msgid "DNS error"
 msgstr ""
 
-#: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:134
+#: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:142
 #: src/gui/include_XL/selftest_snake_submenus.cpp:21
 msgid "DOCK CALIBRATION"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:100
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:116
 msgid "DOCK CONFIGURATION"
 msgstr ""
 
@@ -1463,7 +1299,7 @@ msgstr ""
 msgid "DOWN"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:834
+#: tmp_error_headers/error_list.hpp:876
 msgid "DWARF ERROR"
 msgstr ""
 
@@ -1509,7 +1345,7 @@ msgstr ""
 
 #. //MSG_PROGRESS_ENGAGE_IDLER c=20
 #: src/mmu2/mmu2_progress_converter.cpp:9
-#: src/gui/dialogs/DialogLoadUnload.cpp:50
+#: src/gui/dialogs/DialogLoadUnload.cpp:54
 msgid "Disengaging idler"
 msgstr ""
 
@@ -1517,7 +1353,7 @@ msgstr ""
 msgid "Display Refresh Speed"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:716
+#: tmp_error_headers/error_list.hpp:758
 msgid ""
 "Display issues detected. Reducing the refresh rate will possibly solve the "
 "problem. Proceed?"
@@ -1609,6 +1445,11 @@ msgstr ""
 msgid "Do you wish to retry the failed selftest?"
 msgstr ""
 
+#: src/gui/include_XL/selftest_snake_config.hpp:64
+#, c-format
+msgid "Dock %d Calibration"
+msgstr ""
+
 #: src/gui/wizard/selftest_frame_dock.cpp:122
 #, c-format
 msgid "Dock %d calibration"
@@ -1630,32 +1471,18 @@ msgstr ""
 msgid "Dock %d position differs too much from expected values."
 msgstr ""
 
-#: src/gui/screen/screen_nozzle_mismatch.cpp:33
+#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:50
+#, c-format
+msgid "Dock %i"
+msgstr ""
+
+#: src/gui/screen/screen_nozzle_mismatch.cpp:34
 #, c-format
 msgid "Dock %u"
 msgstr ""
 
-#: src/gui/include_XL/selftest_snake_config.hpp:67
-msgid "Dock 1 Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:68
-msgid "Dock 2 Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:69
-msgid "Dock 3 Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:70
-msgid "Dock 4 Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:71
-msgid "Dock 5 Calibration"
-msgstr ""
-
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:22
+#: src/gui/screen_menu_selftest_snake.cpp:139
 #: src/gui/wizard/selftest_frame_dock.cpp:22
 msgid "Dock Calibration"
 msgstr ""
@@ -1664,11 +1491,15 @@ msgstr ""
 msgid "Dock Position"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:30
+#: src/gui/screen_menu_selftest_snake.cpp:141
+msgid "Dock Position Calibration"
+msgstr ""
+
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:33
 msgid "Dock X"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:54
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:57
 msgid "Dock Y"
 msgstr ""
 
@@ -1692,7 +1523,8 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: src/gui/MItem_tools.cpp:659 src/gui/MItem_hardware.hpp:69
+#: src/gui/screen_menu_selftest_snake.cpp:114 src/gui/MItem_tools.cpp:659
+#: src/gui/MItem_hardware.hpp:69
 msgid "Door Sensor"
 msgstr ""
 
@@ -1722,7 +1554,7 @@ msgid ""
 "Printer may vibrate and be noisier during homing."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:835
+#: tmp_error_headers/error_list.hpp:877
 #, c-format
 msgid ""
 "Dwarf board encountered the following problem: \n"
@@ -1741,7 +1573,7 @@ msgstr ""
 msgid "EJECT FROM MMU"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:841
+#: tmp_error_headers/error_list.hpp:883
 msgid "EMERGENCY STOP"
 msgstr ""
 
@@ -1749,7 +1581,7 @@ msgstr ""
 msgid "ENCLOSURE SETTINGS"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:81
+#: src/gui/dialogs/DialogLoadUnload.cpp:85
 msgid "ERR HW test failed"
 msgstr ""
 
@@ -1758,19 +1590,19 @@ msgstr ""
 msgid "ERR Help filament"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:59
+#: src/gui/dialogs/DialogLoadUnload.cpp:63
 msgid "ERR Helping filament"
 msgstr ""
 
 #. //MSG_PROGRESS_WAIT_USER c=20
 #: src/mmu2/mmu2_progress_converter.cpp:18
-#: src/gui/dialogs/DialogLoadUnload.cpp:58
+#: src/gui/dialogs/DialogLoadUnload.cpp:62
 msgid "ERR Internal"
 msgstr ""
 
 #. //MSG_PROGRESS_ERR_HELP_FIL c=20
 #: src/mmu2/mmu2_progress_converter.cpp:20
-#: src/gui/dialogs/DialogLoadUnload.cpp:60
+#: src/gui/dialogs/DialogLoadUnload.cpp:64
 msgid "ERR TMC failed"
 msgstr ""
 
@@ -1795,27 +1627,27 @@ msgstr ""
 msgid "EXTRUDED FILAMENT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:988
+#: tmp_error_headers/error_list.hpp:1030
 msgid "EXTRUDER ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:316
+#: tmp_error_headers/error_list.hpp:344
 msgid "EXTRUDER MAXTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:337
+#: tmp_error_headers/error_list.hpp:365
 msgid "EXTRUDER MINTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1114
+#: tmp_error_headers/error_list.hpp:1156
 msgid "EXTRUDER NOT DETECTED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:274
+#: tmp_error_headers/error_list.hpp:302
 msgid "EXTRUDER PREHEAT ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:295
+#: tmp_error_headers/error_list.hpp:323
 msgid "EXTRUDER THERMAL RUNAWAY"
 msgstr ""
 
@@ -1827,18 +1659,18 @@ msgstr ""
 msgid "Eject From MMU"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:37
+#: src/gui/dialogs/DialogLoadUnload.cpp:41
 msgid "Ejecting"
 msgstr ""
 
 #. //MSG_PROGRESS_PARK_SELECTOR c=20
 #: src/mmu2/mmu2_progress_converter.cpp:29
-#: src/gui/dialogs/DialogLoadUnload.cpp:69
-#: src/gui/dialogs/DialogLoadUnload.cpp:164
+#: src/gui/dialogs/DialogLoadUnload.cpp:73
+#: src/gui/dialogs/DialogLoadUnload.cpp:168
 msgid "Ejecting filament"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:842
+#: tmp_error_headers/error_list.hpp:884
 msgid "Emergency stop invoked by G-code (M112)."
 msgstr ""
 
@@ -1867,7 +1699,7 @@ msgstr ""
 msgid "Enclosure fan"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1388
+#: tmp_error_headers/error_list.hpp:1430
 msgid ""
 "Enclosure fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -1890,16 +1722,16 @@ msgstr ""
 #. //MSG_PROGRESS_OK c=4
 #. MMU-related
 #: src/mmu2/mmu2_progress_converter.cpp:8
-#: src/gui/dialogs/DialogLoadUnload.cpp:49
+#: src/gui/dialogs/DialogLoadUnload.cpp:53
 msgid "Engaging idler"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1458
+#: tmp_error_headers/error_list.hpp:1500
 msgid ""
 "Ensure the top ventilation grille is closed for optimal chamber temperature."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1451
+#: tmp_error_headers/error_list.hpp:1493
 msgid "Ensure the top ventilation grille is open for proper airflow."
 msgstr ""
 
@@ -1912,7 +1744,7 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1038
+#: tmp_error_headers/error_list.hpp:1080
 msgid ""
 "Error erasing\n"
 " flash! Restart\n"
@@ -1968,7 +1800,7 @@ msgstr ""
 msgid "Extruder"
 msgstr ""
 
-#: src/gui/screen_menu_sensor_info.hpp:102
+#: src/gui/screen_menu_sensor_info.hpp:114
 msgid "Extruder Filament Sensors"
 msgstr ""
 
@@ -1976,7 +1808,7 @@ msgstr ""
 msgid "Extruder Maintenance"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:989
+#: tmp_error_headers/error_list.hpp:1031
 #, c-format
 msgid "Extruder motor is not spinning on tool %d"
 msgstr ""
@@ -1987,7 +1819,7 @@ msgid "FACTORY RESET"
 msgstr ""
 
 #. translation: Header text of the screen showing information about fans.
-#: src/gui/screen_menu_fan_info.cpp:57
+#: src/gui/screen_menu_fan_info.cpp:62
 msgid "FAN INFO"
 msgstr ""
 
@@ -1999,7 +1831,7 @@ msgstr ""
 msgid "FILAMENT"
 msgstr ""
 
-#: src/gui/screen_menu_filament_changeall.cpp:227
+#: src/gui/screen_menu_filament_changeall.cpp:246
 msgid "FILAMENT CHANGE"
 msgstr ""
 
@@ -2073,7 +1905,7 @@ msgstr ""
 msgid "FINISH"
 msgstr ""
 
-#: src/gui/screen_menu_selftest_snake.cpp:283
+#: src/gui/screen_menu_selftest_snake.cpp:423
 msgid ""
 "FINISH remaining calibrations without proceeding to other tests, or perform "
 "ALL Calibrations and Tests?\n"
@@ -2085,19 +1917,19 @@ msgstr ""
 msgid "FINISHED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1093
+#: tmp_error_headers/error_list.hpp:1135
 msgid "FIRMWARE MISSING"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1065 tmp_error_headers/error_list.hpp:1072
+#: tmp_error_headers/error_list.hpp:1107 tmp_error_headers/error_list.hpp:1114
 msgid "FIRMWARExPRINTER MISMATCH"
 msgstr ""
 
-#: src/gui/ScreenSelftest.hpp:40
+#: src/gui/ScreenSelftest.hpp:44
 msgid "FIRST LAYER CALIBRATION"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1037
+#: tmp_error_headers/error_list.hpp:1079
 msgid "FLASH ERASE ERROR"
 msgstr ""
 
@@ -2145,7 +1977,7 @@ msgstr ""
 msgid "FSensors Disabled"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1058
+#: tmp_error_headers/error_list.hpp:1100
 msgid "FW IN INTERNAL FLASH CORRUPTED"
 msgstr ""
 
@@ -2196,44 +2028,44 @@ msgstr ""
 msgid "Failed to generate the encryption key."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:562
+#: tmp_error_headers/error_list.hpp:604
 msgid ""
 "Failed to home the X-axis, make sure there is no obstacle on X-axis or Y-"
 "axis."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:583
+#: tmp_error_headers/error_list.hpp:625
 msgid ""
 "Failed to home the Y-axis, make sure there is no obstacle on X-axis or Y-"
 "axis."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:569
+#: tmp_error_headers/error_list.hpp:611
 msgid "Failed to home the Y-axis, make sure there is no obstacle on Y-axis."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:527
+#: tmp_error_headers/error_list.hpp:569
 msgid "Failed to home the Z-axis, make sure the loadcell is working."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:555
+#: tmp_error_headers/error_list.hpp:597
 msgid ""
 "Failed to home the extruder in X-axis, make sure there is no obstacle on X-"
 "axis."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:576
+#: tmp_error_headers/error_list.hpp:618
 msgid ""
 "Failed to home the extruder in Y-axis, make sure there is no obstacle on Y-"
 "axis."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:520
+#: tmp_error_headers/error_list.hpp:562
 msgid ""
 "Failed to home the extruder in Z-axis, make sure the loadcell is working."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:534
+#: tmp_error_headers/error_list.hpp:576
 msgid "Failed to home the extruder in Z-axis."
 msgstr ""
 
@@ -2256,17 +2088,17 @@ msgstr ""
 msgid "Failed to read data from the tag."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:821
+#: tmp_error_headers/error_list.hpp:863
 msgid ""
 "Failed to write usage data to OpenPrintTag. Make sure it has not been "
 "removed from the reader."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:758
+#: tmp_error_headers/error_list.hpp:800
 msgid "Fan 0 of the heated bed is operating outside of specification."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:765
+#: tmp_error_headers/error_list.hpp:807
 msgid "Fan 1 of the heated bed is operating outside of specification."
 msgstr ""
 
@@ -2282,9 +2114,13 @@ msgstr ""
 msgid "Fan RPM tests"
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:84
+msgid "Fan Test"
+msgstr ""
+
 #. //MSG_PROGRESS_UNLOAD_PULLEY c=20
 #: src/mmu2/mmu2_progress_converter.cpp:12
-#: src/gui/dialogs/DialogLoadUnload.cpp:53
+#: src/gui/dialogs/DialogLoadUnload.cpp:57
 msgid "Feeding to FINDA"
 msgstr ""
 
@@ -2293,7 +2129,7 @@ msgstr ""
 msgid "Feeding to FSensor"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:54
+#: src/gui/dialogs/DialogLoadUnload.cpp:58
 msgid "Feeding to drive gear"
 msgstr ""
 
@@ -2302,13 +2138,13 @@ msgstr ""
 msgid "Feeding to extruder"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:73
+#: src/gui/dialogs/DialogLoadUnload.cpp:77
 msgid "Feeding to fsensor"
 msgstr ""
 
 #. //MSG_PROGRESS_FEED_EXTRUDER c=20
 #: src/mmu2/mmu2_progress_converter.cpp:14
-#: src/gui/dialogs/DialogLoadUnload.cpp:55
+#: src/gui/dialogs/DialogLoadUnload.cpp:59
 msgid "Feeding to nozzle"
 msgstr ""
 
@@ -2346,6 +2182,10 @@ msgstr ""
 msgid "Filament Sensor"
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:90
+msgid "Filament Sensor Calibration"
+msgstr ""
+
 #: tmp_error_headers/error_list.hpp:127
 msgid "Filament Sensors Disabled"
 msgstr ""
@@ -2375,7 +2215,7 @@ msgid ""
 "sensors and wiring."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1206
+#: tmp_error_headers/error_list.hpp:1248
 msgid ""
 "Filament detected. Unload filament now? Select NO to start the print with "
 "the currently loaded filament."
@@ -2389,7 +2229,7 @@ msgstr ""
 msgid "Filament is not customizable"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1444
+#: tmp_error_headers/error_list.hpp:1486
 msgid "Filament loading timed out."
 msgstr ""
 
@@ -2397,7 +2237,7 @@ msgstr ""
 msgid "Filament needs to be heated and pushed back to the nozzle."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1185
+#: tmp_error_headers/error_list.hpp:1227
 msgid ""
 "Filament not detected. Load filament now?\n"
 "Select NO to cancel the print.\n"
@@ -2488,7 +2328,7 @@ msgstr ""
 msgid "File doesn't contain any print instructions"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1212 tmp_error_headers/error_list.hpp:1213
+#: tmp_error_headers/error_list.hpp:1254 tmp_error_headers/error_list.hpp:1255
 msgid "File error"
 msgstr ""
 
@@ -2500,7 +2340,7 @@ msgstr ""
 msgid "File removed or transfer aborted"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1101
+#: tmp_error_headers/error_list.hpp:1143
 msgid ""
 "File system error!\n"
 "Try a different USB\n"
@@ -2523,7 +2363,7 @@ msgid "Filter Usage"
 msgstr ""
 
 #: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:73
-#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:99
+#: src/gui/menu_item/specific/menu_items_xbuddy_extension.cpp:104
 msgid "Filtration Fan"
 msgstr ""
 
@@ -2537,7 +2377,7 @@ msgstr ""
 
 #. //MSG_PROGRESS_AVOID_GRIND c=20
 #: src/mmu2/mmu2_progress_converter.cpp:16
-#: src/gui/dialogs/DialogLoadUnload.cpp:57
+#: src/gui/dialogs/DialogLoadUnload.cpp:61
 msgid "Finishing moves"
 msgstr ""
 
@@ -2554,8 +2394,8 @@ msgid ""
 "will start moving and calibration data will be collected."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1121 tmp_error_headers/error_list.hpp:1128
-#: tmp_error_headers/error_list.hpp:1135
+#: tmp_error_headers/error_list.hpp:1163 tmp_error_headers/error_list.hpp:1170
+#: tmp_error_headers/error_list.hpp:1177
 msgid "Firmware Update Required"
 msgstr ""
 
@@ -2563,7 +2403,7 @@ msgstr ""
 msgid "Firmware Version"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1066
+#: tmp_error_headers/error_list.hpp:1108
 msgid ""
 "Firmware and hardware\n"
 "versions do not\n"
@@ -2573,7 +2413,7 @@ msgid ""
 "your printer."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1073
+#: tmp_error_headers/error_list.hpp:1115
 msgid ""
 "Firmware and hardware versions do\n"
 "not match. Make sure you have\n"
@@ -2581,14 +2421,14 @@ msgid ""
 "your printer."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1031
+#: tmp_error_headers/error_list.hpp:1073
 msgid ""
 "Firmware file\n"
 "missing in the USB\n"
 "flash!"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1024
+#: tmp_error_headers/error_list.hpp:1066
 msgid ""
 "Firmware file has\n"
 "invalid size!\n"
@@ -2597,7 +2437,7 @@ msgid ""
 "and try again."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1052
+#: tmp_error_headers/error_list.hpp:1094
 msgid ""
 "Firmware hash\n"
 "verification failed!\n"
@@ -2608,7 +2448,7 @@ msgid ""
 "USB drive again."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1059
+#: tmp_error_headers/error_list.hpp:1101
 msgid ""
 "Firmware in the\n"
 "internal flash\n"
@@ -2617,7 +2457,7 @@ msgid ""
 "firmware."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1045
+#: tmp_error_headers/error_list.hpp:1087
 msgid ""
 "Firmware signature\n"
 "verification failed!\n"
@@ -2630,7 +2470,7 @@ msgstr ""
 msgid "Firmware update required"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1080
+#: tmp_error_headers/error_list.hpp:1122
 msgid ""
 "Firmware/printer\n"
 "types do not match.\n"
@@ -2640,7 +2480,7 @@ msgid ""
 "printer model."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1087
+#: tmp_error_headers/error_list.hpp:1129
 msgid ""
 "Firmware/printer\n"
 "versions do not\n"
@@ -2651,6 +2491,7 @@ msgid ""
 "Buddy board."
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:106
 #: src/gui/screen_menu_steel_sheets.hpp:41
 msgid "First Layer Calibration"
 msgstr ""
@@ -2720,7 +2561,7 @@ msgstr ""
 msgid "Full Weight"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:799
+#: tmp_error_headers/error_list.hpp:841
 msgid "G-CODE METRICS CONFIG CHANGE"
 msgstr ""
 
@@ -2811,7 +2652,7 @@ msgstr ""
 msgid "G-Code requires some features the printer does not have."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1528
+#: tmp_error_headers/error_list.hpp:1570
 #, c-format
 msgid ""
 "G-Code signed by an identity not trusted by this printer. Do you want to "
@@ -2825,7 +2666,7 @@ msgstr ""
 msgid "G-Code tool is not mapped."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1346
+#: tmp_error_headers/error_list.hpp:1388
 msgid ""
 "G-Code transfer running too slow. Check your network for issues or use "
 "different USB drive. Press Continue to resume printing."
@@ -2835,7 +2676,7 @@ msgstr ""
 msgid "G-Code version mismatch"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:982
+#: tmp_error_headers/error_list.hpp:1024
 msgid ""
 "G-code command was too long and did not fit in the internal buffers. As a "
 "result, it may have been executed incorrectly."
@@ -2858,23 +2699,27 @@ msgstr ""
 msgid "Gateway"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:974
+#: tmp_error_headers/error_list.hpp:1016
 msgid "Gcode Corruption"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:981
+#: tmp_error_headers/error_list.hpp:1023
 msgid "Gcode Cropped"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:800
+#: tmp_error_headers/error_list.hpp:842
 msgid ""
 "Gcode is trying to change metrics configuration.\n"
 "\n"
 "Allow the changes?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:975
+#: tmp_error_headers/error_list.hpp:1017
 msgid "Gcode on the USB drive is corrupt. Fix manually before resuming."
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:122
+msgid "Gearbox Alignment"
 msgstr ""
 
 #: src/feature/gearbox_alignment/screen_gearbox_alignment.cpp:61
@@ -2907,35 +2752,35 @@ msgid ""
 "shown in the picture. Then confirm."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:660
+#: tmp_error_headers/error_list.hpp:702
 msgid "HAL detected an I2C busy state when receiving data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:632
+#: tmp_error_headers/error_list.hpp:674
 msgid "HAL detected an I2C busy state when sending data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:653
+#: tmp_error_headers/error_list.hpp:695
 msgid "HAL detected an I2C error when receiving data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:625
+#: tmp_error_headers/error_list.hpp:667
 msgid "HAL detected an I2C error when sending data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:667
+#: tmp_error_headers/error_list.hpp:709
 msgid "HAL detected an I2C timeout when receiving data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:639
+#: tmp_error_headers/error_list.hpp:681
 msgid "HAL detected an I2C timeout when sending data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:674
+#: tmp_error_headers/error_list.hpp:716
 msgid "HAL detected an I2C undefined error when receiving data via I2C."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:646
+#: tmp_error_headers/error_list.hpp:688
 msgid "HAL detected an I2C undefined error when sending data via I2C."
 msgstr ""
 
@@ -2948,19 +2793,19 @@ msgstr ""
 msgid "HARDWARE"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1051
+#: tmp_error_headers/error_list.hpp:1093
 msgid "HASH VERIFICATION FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:379
+#: tmp_error_headers/error_list.hpp:407
 msgid "HEATBREAK COOLING TOO SLOW"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:351
+#: tmp_error_headers/error_list.hpp:379
 msgid "HEATBREAK MAXTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:344
+#: tmp_error_headers/error_list.hpp:372
 msgid "HEATBREAK MINTEMP ERROR"
 msgstr ""
 
@@ -2972,11 +2817,11 @@ msgstr ""
 msgid "HELP"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1415
+#: tmp_error_headers/error_list.hpp:1457
 msgid "HEPA Filter Expired"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1401
+#: tmp_error_headers/error_list.hpp:1443
 msgid "HEPA Filter Expiring"
 msgstr ""
 
@@ -2984,21 +2829,21 @@ msgstr ""
 msgid "HOMING CALIBRATION NEEDED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:554 tmp_error_headers/error_list.hpp:561
+#: tmp_error_headers/error_list.hpp:596 tmp_error_headers/error_list.hpp:603
 msgid "HOMING ERROR X"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:568 tmp_error_headers/error_list.hpp:575
-#: tmp_error_headers/error_list.hpp:582
+#: tmp_error_headers/error_list.hpp:610 tmp_error_headers/error_list.hpp:617
+#: tmp_error_headers/error_list.hpp:624
 msgid "HOMING ERROR Y"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:512 tmp_error_headers/error_list.hpp:519
-#: tmp_error_headers/error_list.hpp:526 tmp_error_headers/error_list.hpp:533
+#: tmp_error_headers/error_list.hpp:554 tmp_error_headers/error_list.hpp:561
+#: tmp_error_headers/error_list.hpp:568 tmp_error_headers/error_list.hpp:575
 msgid "HOMING ERROR Z"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:701
+#: tmp_error_headers/error_list.hpp:743
 msgid "HOTEND HEATER OVERCURRENT"
 msgstr ""
 
@@ -3010,31 +2855,31 @@ msgstr ""
 msgid "HW Reset"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:74
+#: src/gui/dialogs/DialogLoadUnload.cpp:78
 msgid "HW test begin"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:78
+#: src/gui/dialogs/DialogLoadUnload.cpp:82
 msgid "HW test cleanup"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:80
+#: src/gui/dialogs/DialogLoadUnload.cpp:84
 msgid "HW test display"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:79
+#: src/gui/dialogs/DialogLoadUnload.cpp:83
 msgid "HW test exec"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:75
+#: src/gui/dialogs/DialogLoadUnload.cpp:79
 msgid "HW test idler"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:77
+#: src/gui/dialogs/DialogLoadUnload.cpp:81
 msgid "HW test pulley"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:76
+#: src/gui/dialogs/DialogLoadUnload.cpp:80
 msgid "HW test selector"
 msgstr ""
 
@@ -3048,6 +2893,10 @@ msgstr ""
 
 #: src/gui/MItem_menus.hpp:125 src/gui/MItem_menus.hpp:128
 msgid "Hardware"
+msgstr ""
+
+#: src/gui/screen_menu_sensor_info.cpp:29
+msgid "Head Ambient Temperature"
 msgstr ""
 
 #: src/gui/screen_menu_sensor_info.cpp:18
@@ -3070,7 +2919,7 @@ msgstr ""
 msgid "Heatbed Temperature"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:443
+#: tmp_error_headers/error_list.hpp:471
 #, c-format
 msgid ""
 "Heatbed connector no. %d:\n"
@@ -3081,14 +2930,14 @@ msgstr ""
 msgid "Heatbed heater check"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:422
+#: tmp_error_headers/error_list.hpp:450
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
 " Unexpected temperature peak detected."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:387 tmp_error_headers/error_list.hpp:394
+#: tmp_error_headers/error_list.hpp:415 tmp_error_headers/error_list.hpp:422
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
@@ -3096,35 +2945,35 @@ msgid ""
 "Follow online guide to diagnose."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:429
+#: tmp_error_headers/error_list.hpp:457
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
 "Preheat error."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:436
+#: tmp_error_headers/error_list.hpp:464
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
 "Test heating error."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:828
+#: tmp_error_headers/error_list.hpp:870
 #, c-format
 msgid ""
 "Heatbed tile no. %d:\n"
 "Unknown error: %d"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:401 tmp_error_headers/error_list.hpp:408
+#: tmp_error_headers/error_list.hpp:429 tmp_error_headers/error_list.hpp:436
 #, c-format
 msgid ""
 "Heatbed tile no. %d: \n"
 "Temperature measurement error; thermistor may be faulty."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:415
+#: tmp_error_headers/error_list.hpp:443
 #, c-format
 msgid ""
 "Heatbed tile no. %d: \n"
@@ -3148,7 +2997,7 @@ msgstr ""
 msgid "Heatbreak Temperature"
 msgstr ""
 
-#: src/gui/screen_menu_sensor_info.hpp:83
+#: src/gui/screen_menu_sensor_info.hpp:92
 msgid "Heatbreak Temperatures"
 msgstr ""
 
@@ -3156,16 +3005,20 @@ msgstr ""
 msgid "Heatbreak status"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1332
+#: tmp_error_headers/error_list.hpp:1374
 msgid "Heatbreak thermistor is disconnected. Inspect the wiring."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:779
+#: tmp_error_headers/error_list.hpp:821
 msgid "Heated bed is operating outside of specification."
 msgstr ""
 
 #: src/gui/MItem_tools.cpp:618
 msgid "Heater Current"
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:88
+msgid "Heater Test"
 msgstr ""
 
 #: src/gui/MItem_tools.cpp:613
@@ -3184,11 +3037,11 @@ msgstr ""
 msgid "Heating"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1283 tmp_error_headers/error_list.hpp:1304
+#: tmp_error_headers/error_list.hpp:1325 tmp_error_headers/error_list.hpp:1346
 msgid "Heating disabled due to 10 minutes of inactivity."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1290 tmp_error_headers/error_list.hpp:1311
+#: tmp_error_headers/error_list.hpp:1332 tmp_error_headers/error_list.hpp:1353
 msgid "Heating disabled due to 30 minutes of inactivity."
 msgstr ""
 
@@ -3273,27 +3126,24 @@ msgstr ""
 #: src/mmu2/mmu2_progress_converter.cpp:31
 #: src/common/feature/print_status_message/print_status_message_formatter_buddy.cpp:21
 #: src/gui/screen_phase_stepping_calibration.cpp:41
-#: src/gui/dialogs/DialogLoadUnload.cpp:71 src/gui/screen_crash_recovery.cpp:93
+#: src/gui/dialogs/DialogLoadUnload.cpp:75 src/gui/screen_crash_recovery.cpp:93
 msgid "Homing"
 msgstr ""
 
-#: src/gui/MItem_hardware.cpp:172
+#: src/gui/screen_menu_selftest_snake.cpp:110 src/gui/MItem_hardware.cpp:172
 msgid "Homing Calibration"
 msgstr ""
 
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:25
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:23
-msgid ""
-"Homing XY axes...\n"
-"\n"
-"Please wait."
+msgid "Homing XY axes"
 msgstr ""
 
 #: tmp_error_headers/error_list.hpp:170
 msgid "Homing calibration is needed to ensure repeatable homing."
 msgstr ""
 
-#: src/gui/screen/screen_nozzle_mismatch.cpp:78
+#: src/gui/screen/screen_nozzle_mismatch.cpp:91
 msgid "Homing..."
 msgstr ""
 
@@ -3323,7 +3173,7 @@ msgstr ""
 msgid "Hotend fan"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1374
+#: tmp_error_headers/error_list.hpp:1416
 msgid ""
 "Hotend fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -3337,35 +3187,35 @@ msgstr ""
 msgid "How to update firmware?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:659
+#: tmp_error_headers/error_list.hpp:701
 msgid "I2C RECEIVE BUSY"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:652
+#: tmp_error_headers/error_list.hpp:694
 msgid "I2C RECEIVE FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:666
+#: tmp_error_headers/error_list.hpp:708
 msgid "I2C RECEIVE TIMEOUT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:673
+#: tmp_error_headers/error_list.hpp:715
 msgid "I2C RECEIVE UNDEFINED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:631
+#: tmp_error_headers/error_list.hpp:673
 msgid "I2C SEND BUSY"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:624
+#: tmp_error_headers/error_list.hpp:666
 msgid "I2C SEND FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:638
+#: tmp_error_headers/error_list.hpp:680
 msgid "I2C SEND TIMEOUT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:645
+#: tmp_error_headers/error_list.hpp:687
 msgid "I2C SEND UNDEFINED"
 msgstr ""
 
@@ -3381,7 +3231,7 @@ msgstr ""
 msgid "IGNORE"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1044
+#: tmp_error_headers/error_list.hpp:1086
 msgid "IMPOSTER! FAKE SIGNATURE"
 msgstr ""
 
@@ -3393,7 +3243,13 @@ msgstr ""
 msgid "INDX Refresh Err"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:499 tmp_error_headers/error_list.hpp:506
+#: tmp_error_headers/error_list.hpp:541 tmp_error_headers/error_list.hpp:548
+msgid ""
+"INDX head TPiS ambient temperature is out of range. Let the printer cool "
+"down and try again. If the issue persists, contact support."
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:527 tmp_error_headers/error_list.hpp:534
 msgid ""
 "INDX head board temperature is out of range. Let the printer cool down and "
 "try again. If the issue persists, contact support."
@@ -3403,7 +3259,7 @@ msgstr ""
 msgid "INFO"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:610
+#: tmp_error_headers/error_list.hpp:652
 msgid "INPUT PORT OVERCURRENT"
 msgstr ""
 
@@ -3419,11 +3275,11 @@ msgstr ""
 msgid "INSPECT FINDA"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1002
+#: tmp_error_headers/error_list.hpp:1044
 msgid "INTERNAL ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1023
+#: tmp_error_headers/error_list.hpp:1065
 msgid "INVALID FW SIZE ON USB FLASH DRIVE"
 msgstr ""
 
@@ -3503,6 +3359,10 @@ msgstr ""
 msgid "Input Shaper"
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:134
+msgid "Input Shaper Calibration"
+msgstr ""
+
 #: src/common/footer_def.cpp:23
 msgid "Input Shaper X"
 msgstr ""
@@ -3511,19 +3371,19 @@ msgstr ""
 msgid "Input Shaper Y"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1122
+#: tmp_error_headers/error_list.hpp:1164
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the MK4 firmware."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1136
+#: tmp_error_headers/error_list.hpp:1178
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the MK4/MK3.9 firmware."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1129
+#: tmp_error_headers/error_list.hpp:1171
 msgid ""
 "Insert the bundled USB drive, restart the printer and click the knob once "
 "during the boot. This will install the correct firmware for your hardware."
@@ -3543,7 +3403,7 @@ msgstr ""
 msgid "Insert the filament into the filament sensor."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:35
+#: src/gui/dialogs/DialogLoadUnload.cpp:39
 msgid "Inserting"
 msgstr ""
 
@@ -3558,7 +3418,7 @@ msgstr ""
 msgid "Install pins"
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:49
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:45
 msgid "Install sheet on heatbed."
 msgstr ""
 
@@ -3570,7 +3430,7 @@ msgstr ""
 msgid "Invalid BGCODE file header"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:83
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:86
 msgid "Invalidate Calibration"
 msgstr ""
 
@@ -3590,11 +3450,11 @@ msgstr ""
 msgid "Is Hotend fan (left) spinning?"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:40
+#: src/gui/dialogs/DialogLoadUnload.cpp:44
 msgid "Is color correct?"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:36
+#: src/gui/dialogs/DialogLoadUnload.cpp:40
 msgid "Is filament in extruder gear?"
 msgstr ""
 
@@ -3648,7 +3508,7 @@ msgstr ""
 msgid "LANGUAGES"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:946
+#: tmp_error_headers/error_list.hpp:988
 msgid "LED MEMORY ERROR"
 msgstr ""
 
@@ -3660,7 +3520,7 @@ msgstr ""
 msgid "LIGHTS SETTINGS"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:729
+#: tmp_error_headers/error_list.hpp:771
 msgid "LINK LOST"
 msgstr ""
 
@@ -3672,7 +3532,7 @@ msgstr ""
 msgid "LOAD TO EXTR. FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:932
+#: tmp_error_headers/error_list.hpp:974
 msgid "LOADCELL MEASURE FAILED"
 msgstr ""
 
@@ -3680,7 +3540,7 @@ msgstr ""
 msgid "LOADCELL TEST"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:939
+#: tmp_error_headers/error_list.hpp:981
 msgid "LOADCELL TIMEOUT"
 msgstr ""
 
@@ -3713,14 +3573,14 @@ msgstr ""
 msgid "Left Side [um]"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1227
+#: tmp_error_headers/error_list.hpp:1269
 msgid ""
 "Length of an axis is too long.\n"
 "Motor current is too low, probably.\n"
 "Retry check, pause or resume the print?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1234
+#: tmp_error_headers/error_list.hpp:1276
 msgid ""
 "Length of an axis is too short.\n"
 "There's an obstacle or bearing issue.\n"
@@ -3801,6 +3661,7 @@ msgstr ""
 msgid "Loadcell"
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:118
 #: src/gui/wizard/selftest_frame_loadcell.cpp:36
 msgid "Loadcell Test"
 msgstr ""
@@ -3818,7 +3679,7 @@ msgid ""
 "Loadcell data are noisy. Make sure the printer is on a stable surface. Retry?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:933
+#: tmp_error_headers/error_list.hpp:975
 msgid "Loadcell measured an inifinite or undefined load value."
 msgstr ""
 
@@ -3855,14 +3716,14 @@ msgstr ""
 msgid "Loading Test"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1443
+#: tmp_error_headers/error_list.hpp:1485
 msgid "Loading Timeout"
 msgstr ""
 
 #. //MSG_PROGRESS_UNLOADING_FILAMENT c=20
 #: src/mmu2/mmu2_progress_converter.cpp:22
-#: src/gui/dialogs/DialogLoadUnload.cpp:62
-#: src/gui/dialogs/DialogLoadUnload.cpp:152
+#: src/gui/dialogs/DialogLoadUnload.cpp:66
+#: src/gui/dialogs/DialogLoadUnload.cpp:156
 msgid "Loading filament"
 msgstr ""
 
@@ -3876,7 +3737,7 @@ msgid ""
 "sensor calibration, if needed."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:38
+#: src/gui/dialogs/DialogLoadUnload.cpp:42
 msgid "Loading to nozzle"
 msgstr ""
 
@@ -3946,19 +3807,19 @@ msgstr ""
 msgid "MAINTENANCE WARNING"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:953
+#: tmp_error_headers/error_list.hpp:995
 msgid "MARLIN REQUEST TIMEOUT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:302 tmp_error_headers/error_list.hpp:309
+#: tmp_error_headers/error_list.hpp:330 tmp_error_headers/error_list.hpp:337
 msgid "MAXTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:358
+#: tmp_error_headers/error_list.hpp:386
 msgid "MCU MAXTEMP ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:470
+#: tmp_error_headers/error_list.hpp:498
 msgid "MCU OVERHEAT"
 msgstr ""
 
@@ -3966,24 +3827,24 @@ msgstr ""
 msgid "MCU Temperature"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:359
+#: tmp_error_headers/error_list.hpp:387
 #, c-format
 msgid "MCU in %s is overheated."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1353
+#: tmp_error_headers/error_list.hpp:1395
 msgid ""
 "MCU in Buddy is overheated, likely due to exceeding the printer's operating "
 "temperature. Prevent overheating for optimal performance."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1360
+#: tmp_error_headers/error_list.hpp:1402
 msgid ""
 "MCU in Dwarf is overheated, likely due to exceeding the printer's operating "
 "temperature. Prevent overheating for optimal performance."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1367
+#: tmp_error_headers/error_list.hpp:1409
 msgid ""
 "MCU in Modular Bed is overheated, likely due to exceeding the printer's "
 "operating temperature. Prevent overheating for optimal performance."
@@ -3994,7 +3855,7 @@ msgstr ""
 msgid "MESSAGES"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:323 tmp_error_headers/error_list.hpp:330
+#: tmp_error_headers/error_list.hpp:351 tmp_error_headers/error_list.hpp:358
 msgid "MINTEMP ERROR"
 msgstr ""
 
@@ -4006,7 +3867,7 @@ msgstr ""
 msgid "MMU Current"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1268
+#: tmp_error_headers/error_list.hpp:1310
 msgid "MMU Error"
 msgstr ""
 
@@ -4040,7 +3901,7 @@ msgstr ""
 msgid "MMU NOT RESPONDING"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:617
+#: tmp_error_headers/error_list.hpp:659
 msgid "MMU OVERCURRENT"
 msgstr ""
 
@@ -4099,13 +3960,13 @@ msgid ""
 "connectors. If the issue persists contact support."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:386 tmp_error_headers/error_list.hpp:393
-#: tmp_error_headers/error_list.hpp:400 tmp_error_headers/error_list.hpp:407
 #: tmp_error_headers/error_list.hpp:414 tmp_error_headers/error_list.hpp:421
 #: tmp_error_headers/error_list.hpp:428 tmp_error_headers/error_list.hpp:435
-#: tmp_error_headers/error_list.hpp:442 tmp_error_headers/error_list.hpp:540
-#: tmp_error_headers/error_list.hpp:547 tmp_error_headers/error_list.hpp:680
-#: tmp_error_headers/error_list.hpp:687 tmp_error_headers/error_list.hpp:827
+#: tmp_error_headers/error_list.hpp:442 tmp_error_headers/error_list.hpp:449
+#: tmp_error_headers/error_list.hpp:456 tmp_error_headers/error_list.hpp:463
+#: tmp_error_headers/error_list.hpp:470 tmp_error_headers/error_list.hpp:582
+#: tmp_error_headers/error_list.hpp:589 tmp_error_headers/error_list.hpp:722
+#: tmp_error_headers/error_list.hpp:729 tmp_error_headers/error_list.hpp:869
 msgid "MODULAR BED ERROR"
 msgstr ""
 
@@ -4117,7 +3978,7 @@ msgstr ""
 msgid "MOVE AXIS"
 msgstr ""
 
-#: src/gui/screen_menu_filament_changeall.cpp:227
+#: src/gui/screen_menu_filament_changeall.cpp:246
 msgid "MULTITOOL FILAMENT CHANGE"
 msgstr ""
 
@@ -4142,7 +4003,7 @@ msgstr ""
 msgid "Make sure the dock is accessible, then press Continue."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:34
+#: src/gui/dialogs/DialogLoadUnload.cpp:38
 msgid "Make sure the filament is inserted through the sensor."
 msgstr ""
 
@@ -4174,7 +4035,7 @@ msgid ""
 "Manually position the head at the nozzle cleaner and adjust the height screw"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:954
+#: tmp_error_headers/error_list.hpp:996
 msgid ""
 "Marlin client could not send message to Marlin server and timeout was "
 "reached."
@@ -4197,42 +4058,41 @@ msgstr ""
 msgid "Maximum Chamber Temperature"
 msgstr ""
 
+#: tmp_error_headers/error_list.hpp:275
+msgid ""
+"Measured XY tool offset exceeds the safe threshold. The print has been "
+"aborted to prevent printer damage."
+msgstr ""
+
 #: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:44
 msgid ""
 "Measured belt frequencies are out of the expected range.\n"
 "Please check that the gantry is aligned properly and repeat the calibration."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1297
+#: tmp_error_headers/error_list.hpp:1339
 msgid ""
 "Measured temperature is not matching expected value. Check the thermistor is "
 "in contact with hotend. In case of damage, replace it."
 msgstr ""
 
-#: src/gui/screen_input_shaper_calibration.cpp:233
+#: src/gui/screen_input_shaper_calibration.cpp:235
 msgid "Measurement failed."
 msgstr ""
 
+#. %c is the axis letter ('X' or 'Y')
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:33
+#, c-format
 msgid ""
-"Measuring X position\n"
+"Measuring %c position\n"
 "\n"
 "Do not touch the printer."
 msgstr ""
 
-#: src/gui/screen_input_shaper_calibration.cpp:112
-msgid "Measuring X resonance..."
-msgstr ""
-
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:34
-msgid ""
-"Measuring Y position\n"
-"\n"
-"Do not touch the printer."
-msgstr ""
-
-#: src/gui/screen_input_shaper_calibration.cpp:120
-msgid "Measuring Y resonance..."
+#. %c is the axis letter ('X' or 'Y')
+#: src/gui/screen_input_shaper_calibration.cpp:23
+#, c-format
+msgid "Measuring %c resonance..."
 msgstr ""
 
 #. Prepare for measuring actual frequencies, QR, prerequisites PHASE: intro_measure
@@ -4244,10 +4104,10 @@ msgstr ""
 msgid ""
 "Measuring dock position\n"
 "\n"
-"Do not touch the printer"
+"Do not touch the printer."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:947
+#: tmp_error_headers/error_list.hpp:989
 msgid "Memory allocation failed for scheduled LED animation"
 msgstr ""
 
@@ -4267,7 +4127,7 @@ msgstr ""
 msgid "Metrics & Log"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:471
+#: tmp_error_headers/error_list.hpp:499
 #, c-format
 msgid "Microcontroller unit of %s is overheating."
 msgstr ""
@@ -4301,27 +4161,9 @@ msgstr ""
 msgid "Motor %c vibration reduced by %2d%%"
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:29
-msgid ""
-"Motors are now locked.\n"
-"\n"
-"Ensure your hands are outside the printer enclosure.\n"
-"\n"
-"Verify the head is at the correct X position, then press Continue to start "
-"measuring."
-msgstr ""
-
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:30
-msgid ""
-"Motors are now locked.\n"
-"\n"
-"Ensure your hands are outside the printer enclosure.\n"
-"\n"
-"Verify the head is at the correct Y position, then press Continue to start "
-"measuring."
-msgstr ""
-
+#. Identical wording to dock_calibration's txt_lock_position; kept verbatim so both share one POT entry.
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:27
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:29
 msgid ""
 "Motors are now locked.\n"
 "\n"
@@ -4363,15 +4205,15 @@ msgid ""
 "tensioner on both ends. If there is, follow the guide."
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:26
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:25
 msgid ""
-"Move the head precisely to the nozzle cleaner as shown on the picture.\n"
+"Move the head to the silicone V groove inside the nozzle cleaner as shown on "
+"the picture.\n"
 "\n"
-"Rotate the adjustment screw until the nozzle is aligned with the cleaner in "
-"the Z axis."
+"Rotate the adjustment screw so that the nozzle is touching the silicone."
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:31
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:30
 msgid ""
 "Move the nozzle precisely to the nozzle cleaner X-axis calibration indent in "
 "front of the bin.\n"
@@ -4379,7 +4221,7 @@ msgid ""
 "Then press Continue."
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:32
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:31
 msgid ""
 "Move the nozzle precisely to the nozzle cleaner Y-axis calibration indent on "
 "the side of the bin.\n"
@@ -4387,13 +4229,13 @@ msgid ""
 "Then press Continue."
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:76
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:72
 msgid "Moving away."
 msgstr ""
 
 #. //MSG_PROGRESS_HOMING c=20
 #: src/mmu2/mmu2_progress_converter.cpp:32
-#: src/gui/dialogs/DialogLoadUnload.cpp:72
+#: src/gui/dialogs/DialogLoadUnload.cpp:76
 msgid "Moving selector"
 msgstr ""
 
@@ -4445,7 +4287,7 @@ msgstr ""
 msgid "NO"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1030
+#: tmp_error_headers/error_list.hpp:1072
 msgid "NO FW ON USB FLASH DRIVE"
 msgstr ""
 
@@ -4457,11 +4299,11 @@ msgstr ""
 msgid "NOW"
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:94
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:117
 msgid "NOZZLE CLEANER CALIBRATION"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:603
+#: tmp_error_headers/error_list.hpp:645
 msgid "NOZZLE HEATER OVERCURRENT"
 msgstr ""
 
@@ -4506,11 +4348,11 @@ msgstr ""
 msgid "Never"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1164
+#: tmp_error_headers/error_list.hpp:1206
 msgid "New FW available"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1171
+#: tmp_error_headers/error_list.hpp:1213
 msgid "New firmware available"
 msgstr ""
 
@@ -4526,7 +4368,6 @@ msgstr ""
 msgid "Nextruder Silicone Sock"
 msgstr ""
 
-#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:37
 #: src/gui/screen/openprinttag/screen_opt_info.cpp:18
 msgid "No"
 msgstr ""
@@ -4556,7 +4397,7 @@ msgstr ""
 msgid "No crash dump to save."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1094
+#: tmp_error_headers/error_list.hpp:1136
 msgid ""
 "No firmware found\n"
 "in the internal\n"
@@ -4578,10 +4419,6 @@ msgstr ""
 
 #: lib/Marlin/Marlin/src/feature/phase_stepping/calibration.cpp:1901
 msgid "No peaks found."
-msgstr ""
-
-#: src/gui/screen_menu_selftest_snake.cpp:201
-msgid "No tools enabled. Calibrate docks first."
 msgstr ""
 
 #: src/gui/screen/filament/screen_filament_detail.cpp:125
@@ -4650,7 +4487,14 @@ msgstr ""
 msgid "Nozzle"
 msgstr ""
 
+#. %c is the axis letter ('X', 'Y' or 'Z')
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:27
+#, c-format
+msgid "Nozzle %c-Axis Alignment"
+msgstr ""
+
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:19
+#: src/gui/screen_menu_selftest_snake.cpp:146
 msgid "Nozzle Cleaner Calibration"
 msgstr ""
 
@@ -4664,6 +4508,10 @@ msgstr ""
 
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:182
 msgid "Nozzle Hardened"
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:154
+msgid "Nozzle Heaters Test"
 msgstr ""
 
 #: src/gui/screen/toolhead/screen_toolhead_settings.cpp:197
@@ -4692,35 +4540,24 @@ msgstr ""
 msgid "Nozzle Temperature"
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:27
-msgid "Nozzle X-Axis Alignment"
-msgstr ""
-
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:28
-msgid "Nozzle Y-Axis Alignment"
-msgstr ""
-
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:25
-msgid "Nozzle Z-Axis Alignment"
-msgstr ""
-
 #: src/common/gcode/gcode_compatibility.cpp:109
 msgid "Nozzle cleaner not calibrated"
 msgstr ""
 
-#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:35
+#: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:34
 msgid "Nozzle cleaner position has been successfully calibrated and saved."
 msgstr ""
 
 #: src/common/feature/print_status_message/print_status_message_formatter_buddy.cpp:34
+#: src/common/feature/print_status_message/print_status_message_formatter_buddy.cpp:57
 msgid "Nozzle cleaning"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1513
+#: tmp_error_headers/error_list.hpp:1555
 msgid "Nozzle cleaning failed"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1430
+#: tmp_error_headers/error_list.hpp:1472
 msgid "Nozzle cleaning failed."
 msgstr ""
 
@@ -4728,13 +4565,13 @@ msgstr ""
 msgid "Nozzle diameter"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1339
+#: tmp_error_headers/error_list.hpp:1381
 msgid ""
 "Nozzle doesn't seem to have round cross section. Make sure it is clean and "
 "perpendicular to the bed."
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:44
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:40
 msgid ""
 "Nozzle have to be perfectly clean for good calibration results.\n"
 "- Clean all nozzles\n"
@@ -4771,11 +4608,11 @@ msgstr ""
 msgid "ON "
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:806
+#: tmp_error_headers/error_list.hpp:848
 msgid "OPENPRINTTAG ASSIGNED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:813
+#: tmp_error_headers/error_list.hpp:855
 msgid "OPENPRINTTAG CANNOT TRACK"
 msgstr ""
 
@@ -4792,7 +4629,7 @@ msgstr ""
 msgid "OPENPRINTTAG SETTINGS"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:820
+#: tmp_error_headers/error_list.hpp:862
 msgid "OPENPRINTTAG WRITE FAILED"
 msgstr ""
 
@@ -4855,7 +4692,7 @@ msgstr ""
 msgid "Online"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1450
+#: tmp_error_headers/error_list.hpp:1492
 msgid "Open Chamber Ventilation"
 msgstr ""
 
@@ -4877,11 +4714,11 @@ msgid ""
 "close the door and confirm."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:470
+#: src/gui/dialogs/DialogLoadUnload.cpp:474
 msgid "OpenPrintTag Pending Write"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:807
+#: tmp_error_headers/error_list.hpp:849
 msgid ""
 "OpenPrintTag has been linked with the filament. Filament usage data will be "
 "stored on the tag."
@@ -4896,27 +4733,27 @@ msgstr ""
 msgid "Opening chamber vents"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:590
+#: tmp_error_headers/error_list.hpp:632
 msgid "Overcurrent detected on USB port."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:604
+#: tmp_error_headers/error_list.hpp:646
 msgid "Overcurrent detected on nozzle heater."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:618
+#: tmp_error_headers/error_list.hpp:660
 msgid "Overcurrent detected on the MMU port, disconnect the device."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:597
+#: tmp_error_headers/error_list.hpp:639
 msgid "Overcurrent detected on the connected USB device, disconnect it."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:611
+#: tmp_error_headers/error_list.hpp:653
 msgid "Overcurrent detected on xBuddy input port, disconnect the device."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:541
+#: tmp_error_headers/error_list.hpp:583
 msgid "Overcurrent detected."
 msgstr ""
 
@@ -4937,7 +4774,7 @@ msgstr ""
 msgid "PAUSING ..."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:477
+#: tmp_error_headers/error_list.hpp:505
 msgid "PCB OVERHEAT"
 msgstr ""
 
@@ -4957,7 +4794,7 @@ msgstr ""
 msgid "POSTPONE"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:694
+#: tmp_error_headers/error_list.hpp:736
 msgid "POWER PANIC"
 msgstr ""
 
@@ -4965,7 +4802,7 @@ msgstr ""
 msgid "PRECISE HOMING FAILED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:260 tmp_error_headers/error_list.hpp:267
+#: tmp_error_headers/error_list.hpp:288 tmp_error_headers/error_list.hpp:295
 msgid "PREHEAT ERROR"
 msgstr ""
 
@@ -4995,7 +4832,7 @@ msgid "PROJECTS"
 msgstr ""
 
 #. translation: menu item showing info about power supply unit cooling fan
-#: src/gui/screen_menu_fan_info.cpp:46
+#: src/gui/screen_menu_fan_info.cpp:51
 msgid "PSU Fan"
 msgstr ""
 
@@ -5007,12 +4844,12 @@ msgstr ""
 msgid "PULLEY CANNOT MOVE"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:848 tmp_error_headers/error_list.hpp:855
-#: tmp_error_headers/error_list.hpp:862 tmp_error_headers/error_list.hpp:869
-#: tmp_error_headers/error_list.hpp:876 tmp_error_headers/error_list.hpp:883
 #: tmp_error_headers/error_list.hpp:890 tmp_error_headers/error_list.hpp:897
 #: tmp_error_headers/error_list.hpp:904 tmp_error_headers/error_list.hpp:911
 #: tmp_error_headers/error_list.hpp:918 tmp_error_headers/error_list.hpp:925
+#: tmp_error_headers/error_list.hpp:932 tmp_error_headers/error_list.hpp:939
+#: tmp_error_headers/error_list.hpp:946 tmp_error_headers/error_list.hpp:953
+#: tmp_error_headers/error_list.hpp:960 tmp_error_headers/error_list.hpp:967
 msgid "PUPPY ERROR"
 msgstr ""
 
@@ -5043,13 +4880,13 @@ msgid "Park Tool %i"
 msgstr ""
 
 #: src/gui/dialogs/DialogLoadUnload.cpp:25
-#: src/gui/screen_input_shaper_calibration.cpp:104
+#: src/gui/screen_input_shaper_calibration.cpp:108
 msgid "Parking"
 msgstr ""
 
 #. //MSG_PROGRESS_RETURN_SELECTOR c=20
 #: src/mmu2/mmu2_progress_converter.cpp:28
-#: src/gui/dialogs/DialogLoadUnload.cpp:68
+#: src/gui/dialogs/DialogLoadUnload.cpp:72
 msgid "Parking selector"
 msgstr ""
 
@@ -5064,7 +4901,7 @@ msgid ""
 "Please try again."
 msgstr ""
 
-#: src/gui/screen/screen_nozzle_mismatch.cpp:72
+#: src/gui/screen/screen_nozzle_mismatch.cpp:85
 msgid "Parking to dock..."
 msgstr ""
 
@@ -5093,7 +4930,7 @@ msgstr ""
 
 #. //MSG_PROGRESS_PUSH_FILAMENT c=20
 #: src/mmu2/mmu2_progress_converter.cpp:26
-#: src/gui/dialogs/DialogLoadUnload.cpp:66
+#: src/gui/dialogs/DialogLoadUnload.cpp:70
 msgid "Performing cut"
 msgstr ""
 
@@ -5105,6 +4942,10 @@ msgstr ""
 
 #: src/gui/MItem_menus.hpp:164
 msgid "Phase Stepping"
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:126
+msgid "Phase Stepping Calibration"
 msgstr ""
 
 #: src/gui/screen_phase_stepping_calibration.cpp:210
@@ -5129,10 +4970,8 @@ msgid "Pick/Park Tool"
 msgstr ""
 
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:22
-msgid ""
-"Picking up tool...\n"
-"\n"
-"Please wait."
+#: src/gui/wizard/selftest_frame_temp.cpp:71
+msgid "Picking up tool"
 msgstr ""
 
 #: src/gui/MItem_tools.cpp:686
@@ -5156,7 +4995,7 @@ msgstr ""
 msgid "Please calibrate the nozzle cleaner first."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1157
+#: tmp_error_headers/error_list.hpp:1199
 msgid "Please complete Calibrations & Tests before using the printer."
 msgstr ""
 
@@ -5185,7 +5024,7 @@ msgid ""
 "motors and ask before doing any moves."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:32
+#: src/gui/dialogs/DialogLoadUnload.cpp:35
 msgid "Please open idler and remove filament manually"
 msgstr ""
 
@@ -5193,7 +5032,11 @@ msgstr ""
 msgid "Please remove filament from filament sensor."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1381
+#: src/gui/dialogs/DialogLoadUnload.cpp:33
+msgid "Please remove the filament manually"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:1423
 msgid "Please replace filament."
 msgstr ""
 
@@ -5223,27 +5066,27 @@ msgstr ""
 msgid "Power Cycle"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:681
+#: tmp_error_headers/error_list.hpp:723
 msgid "Power failure"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:772
+#: tmp_error_headers/error_list.hpp:814
 msgid "Power grid is operating outside of specification."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:688
+#: tmp_error_headers/error_list.hpp:730
 msgid "Power panic"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:695
+#: tmp_error_headers/error_list.hpp:737
 msgid "Power panic detected on startup. Check power panic cable."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:744
+#: tmp_error_headers/error_list.hpp:786
 msgid "Power panic situation detected."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:786
+#: tmp_error_headers/error_list.hpp:828
 msgid "Power supply unit is operating outside of specification."
 msgstr ""
 
@@ -5289,11 +5132,11 @@ msgstr ""
 
 #. //MSG_PROGRESS_SELECT_SLOT c=20
 #: src/mmu2/mmu2_progress_converter.cpp:24
-#: src/gui/dialogs/DialogLoadUnload.cpp:64
+#: src/gui/dialogs/DialogLoadUnload.cpp:68
 msgid "Preparing blade"
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:54
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:50
 msgid "Preparing for calibration pin installation."
 msgstr ""
 
@@ -5306,11 +5149,11 @@ msgstr ""
 msgid "Preset"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:82
+#: src/gui/dialogs/DialogLoadUnload.cpp:86
 msgid "Press CONTINUE and push filament into MMU."
 msgstr ""
 
-#: src/gui/screen_menu_selftest_snake.cpp:161
+#: src/gui/screen_menu_selftest_snake.cpp:304
 msgid "Previous Calibrations & Tests are not all done. Continue anyway?"
 msgstr ""
 
@@ -5369,7 +5212,7 @@ msgstr ""
 msgid "Print fan"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1276
+#: tmp_error_headers/error_list.hpp:1318
 msgid ""
 "Print fan not spinning. Check it for possible debris, then inspect the "
 "wiring."
@@ -5391,7 +5234,7 @@ msgstr ""
 msgid "Print will end"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:478
+#: tmp_error_headers/error_list.hpp:506
 #, c-format
 msgid "Printed circuit board of %s is overheating."
 msgstr ""
@@ -5431,7 +5274,7 @@ msgstr ""
 msgid "Printer is homing, please wait."
 msgstr ""
 
-#: src/gui/MItem_tools.cpp:99 src/gui/dialogs/window_dlg_wait.cpp:10
+#: src/gui/MItem_tools.cpp:99
 msgid "Printer may vibrate and be noisier during homing."
 msgstr ""
 
@@ -5504,31 +5347,31 @@ msgstr ""
 msgid "Pulley motor stalled. Ensure the pulley can move and check the wiring."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:912
+#: tmp_error_headers/error_list.hpp:954
 #, c-format
 msgid "Puppy %s firmware fingerprint mismatch"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:898
+#: tmp_error_headers/error_list.hpp:940
 #, c-format
 msgid "Puppy %s firmware not found"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:905
+#: tmp_error_headers/error_list.hpp:947
 #, c-format
 msgid "Puppy %s flash writing failed"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:870
+#: tmp_error_headers/error_list.hpp:912
 #, c-format
 msgid "Puppy %s not responding"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:863
+#: tmp_error_headers/error_list.hpp:905
 msgid "Puppy discovery error. No puppy found"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:877
+#: tmp_error_headers/error_list.hpp:919
 #, c-format
 msgid ""
 "Puppy uses incompatible bootloader protocol %04x, Buddy FW requires %04x"
@@ -5538,22 +5381,22 @@ msgstr ""
 msgid "Purge Filament"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:39
+#: src/gui/dialogs/DialogLoadUnload.cpp:43
 msgid "Purging"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:158
+#: src/gui/dialogs/DialogLoadUnload.cpp:162
 msgid "Purging filament"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1493
+#: tmp_error_headers/error_list.hpp:1535
 msgid ""
 "Purging the filament.\n"
 "\n"
 "Please wait until the purge is complete."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:33
+#: src/gui/dialogs/DialogLoadUnload.cpp:37
 msgid ""
 "Push the filament into the extruder and then, while still pushing, press "
 "CONTINUE."
@@ -5583,7 +5426,7 @@ msgstr ""
 
 #. //MSG_PROGRESS_PREPARE_BLADE c=20
 #: src/mmu2/mmu2_progress_converter.cpp:25
-#: src/gui/dialogs/DialogLoadUnload.cpp:65
+#: src/gui/dialogs/DialogLoadUnload.cpp:69
 msgid "Pushing filament"
 msgstr ""
 
@@ -5607,7 +5450,7 @@ msgstr ""
 msgid "Question"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1436
+#: tmp_error_headers/error_list.hpp:1478
 msgid "Quick Pause"
 msgstr ""
 
@@ -5664,17 +5507,8 @@ msgid "RIGHT"
 msgstr ""
 
 #: src/feature/indx_dock_calibration/screen_dock_calibration.cpp:26
-msgid ""
-"Raising Z axis for clearance\n"
-"\n"
-"Please wait"
-msgstr ""
-
 #: src/feature/indx_nozzle_cleaner_calibration/screen_nozzle_cleaner_calibration.cpp:24
-msgid ""
-"Raising Z axis for clearance...\n"
-"\n"
-"Please wait."
+msgid "Raising Z axis for clearance"
 msgstr ""
 
 #: src/gui/dialogs/DialogLoadUnload.cpp:28
@@ -5698,20 +5532,17 @@ msgid "Reassign the currently detected tag to the filament?"
 msgstr ""
 
 #: src/common/feature/print_status_message/print_status_message_formatter_buddy.cpp:24
-#: src/gui/dialogs/window_dlg_wait.cpp:11
 msgid "Recalibrating home. This may take some time."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1163 tmp_error_headers/error_list.hpp:1170
+#: tmp_error_headers/error_list.hpp:1205 tmp_error_headers/error_list.hpp:1212
 msgid "Recommendation"
 msgstr ""
 
-#: src/gui/screen_input_shaper_calibration.cpp:160
-msgid "Recommended shaper frequency for X axis: "
-msgstr ""
-
+#. %c is the axis letter ('X' or 'Y')
 #: src/gui/screen_input_shaper_calibration.cpp:161
-msgid "Recommended shaper frequency for Y axis: "
+#, c-format
+msgid "Recommended shaper frequency for %c axis: "
 msgstr ""
 
 #: src/gui/screen_menu_connect.cpp:69
@@ -5742,11 +5573,11 @@ msgstr ""
 msgid "Registration successful, continue at connect.prusa3d.com"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:793
+#: tmp_error_headers/error_list.hpp:835
 msgid "Registration to Prusa Connect failed due to:"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:156
+#: src/gui/dialogs/DialogLoadUnload.cpp:160
 msgid "Reloading filament"
 msgstr ""
 
@@ -5777,7 +5608,7 @@ msgstr ""
 msgid "Remove the filament manually"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1507
+#: tmp_error_headers/error_list.hpp:1549
 msgid ""
 "Remove the purged filament and ensure the nozzle is clean and ready.\n"
 "\n"
@@ -5792,13 +5623,13 @@ msgstr ""
 msgid "Reorder Filaments"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1241
+#: tmp_error_headers/error_list.hpp:1283
 msgid ""
 "Repeated collision has been detected.\n"
 "Do you want to resume or pause the print?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1380
+#: tmp_error_headers/error_list.hpp:1422
 msgid "Replace filament"
 msgstr ""
 
@@ -5827,7 +5658,7 @@ msgstr ""
 msgid "Reset filter usage?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:737
+#: tmp_error_headers/error_list.hpp:779
 msgid "Residual-current device tripped."
 msgstr ""
 
@@ -5862,7 +5693,7 @@ msgstr ""
 msgid "Retract from FINDA"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:70
+#: src/gui/dialogs/DialogLoadUnload.cpp:74
 msgid "Retracting from FINDA"
 msgstr ""
 
@@ -5882,7 +5713,7 @@ msgstr ""
 
 #. //MSG_PROGRESS_PERFORM_CUT c=20
 #: src/mmu2/mmu2_progress_converter.cpp:27
-#: src/gui/dialogs/DialogLoadUnload.cpp:67
+#: src/gui/dialogs/DialogLoadUnload.cpp:71
 msgid "Returning selector"
 msgstr ""
 
@@ -5900,7 +5731,7 @@ msgid ""
 "flush with the cover. Unlock and open the idler."
 msgstr ""
 
-#: src/gui/screen_menu_selftest_snake.cpp:499
+#: src/gui/screen_menu_selftest_snake.cpp:636
 msgid "Run selftests and calibrations now?"
 msgstr ""
 
@@ -5913,7 +5744,7 @@ msgstr ""
 msgid "SCAN OPENPRINTTAG"
 msgstr ""
 
-#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:158
+#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:160
 msgid "SELECT DOCKS"
 msgstr ""
 
@@ -5929,15 +5760,15 @@ msgstr ""
 msgid "SELECTOR CANNOT MOVE"
 msgstr ""
 
-#: src/gui/ScreenSelftest.hpp:39 src/gui/wizard/screen_fan_selftest.cpp:60
+#: src/gui/ScreenSelftest.hpp:43 src/gui/wizard/screen_fan_selftest.cpp:60
 msgid "SELFTEST"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:995
+#: tmp_error_headers/error_list.hpp:1037
 msgid "SELFTEST NOT PASSED"
 msgstr ""
 
-#: src/gui/screen_menu_sensor_info.cpp:26
+#: src/gui/screen_menu_sensor_info.cpp:37
 msgid "SENSOR INFO"
 msgstr ""
 
@@ -6089,7 +5920,7 @@ msgstr ""
 msgid "Selecting fil. slot"
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:63
+#: src/gui/dialogs/DialogLoadUnload.cpp:67
 msgid "Selecting filament slot"
 msgstr ""
 
@@ -6178,26 +6009,14 @@ msgstr ""
 msgid "Side FSensor Remap"
 msgstr ""
 
+#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:50
 #: src/gui/screen_menu_filament_sensors.hpp:60
 msgid "Side Filament Sensor"
 msgstr ""
 
-#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:49
-msgid ""
-"Side Filament Sensor can be remapped to the right side.\n"
-"(calibration will follow)\n"
-"Remap?"
-msgstr ""
-
-#: src/gui/screen_menu_sensor_info.hpp:107
+#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:52
+#: src/gui/screen_menu_sensor_info.hpp:119
 msgid "Side Filament Sensors"
-msgstr ""
-
-#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:53
-msgid ""
-"Side Filament Sensors can be remapped to the right side.\n"
-"(calibration will follow)\n"
-"Remap?"
 msgstr ""
 
 #: src/gui/MItem_tools.cpp:595
@@ -6221,6 +6040,7 @@ msgstr ""
 msgid "Silver"
 msgstr ""
 
+#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:38
 #: src/gui/ScreenPrintingModel.cpp:56
 msgid "Skip"
 msgstr ""
@@ -6258,7 +6078,7 @@ msgstr ""
 msgid "Sound Volume"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:961
+#: tmp_error_headers/error_list.hpp:1003
 msgid ""
 "Space allocation for firmware BBF file failed. Repeat the action or try "
 "another USB drive."
@@ -6318,7 +6138,7 @@ msgid ""
 "damage."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1318
+#: tmp_error_headers/error_list.hpp:1360
 msgid "Steppers disabled due to inactivity."
 msgstr ""
 
@@ -6351,7 +6171,7 @@ msgstr ""
 msgid "Sun"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:513
+#: tmp_error_headers/error_list.hpp:555
 msgid ""
 "SuperPINDA sensor is probably broken or disconnected, could not home Z-axis "
 "properly."
@@ -6377,7 +6197,7 @@ msgstr ""
 msgid "TEST ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:281 tmp_error_headers/error_list.hpp:288
+#: tmp_error_headers/error_list.hpp:309 tmp_error_headers/error_list.hpp:316
 msgid "THERMAL RUNAWAY"
 msgstr ""
 
@@ -6496,7 +6316,7 @@ msgstr ""
 msgid "TOOL CHANGES"
 msgstr ""
 
-#: src/gui/screen/screen_nozzle_mismatch.cpp:97
+#: src/gui/screen/screen_nozzle_mismatch.cpp:110
 msgid "TOOL MISMATCH"
 msgstr ""
 
@@ -6520,6 +6340,14 @@ msgstr ""
 msgid "TOOLS SETTINGS"
 msgstr ""
 
+#: tmp_error_headers/error_list.hpp:547
+msgid "TPIS AMBIENT MAXTEMP ERROR"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:540
+msgid "TPIS AMBIENT MINTEMP ERROR"
+msgstr ""
+
 #: src/gui/screen_menu_tune.hpp:130
 msgid "TUNE"
 msgstr ""
@@ -6540,7 +6368,7 @@ msgstr ""
 msgid "Tap the nozzle on beep"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:450
+#: tmp_error_headers/error_list.hpp:478
 msgid "Target temperature not yet reached. Continue waiting?"
 msgstr ""
 
@@ -6556,11 +6384,11 @@ msgstr ""
 msgid "Temperature"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:485
+#: tmp_error_headers/error_list.hpp:513
 msgid "Temperature sensor of the heated bed is disconnected."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:492
+#: tmp_error_headers/error_list.hpp:520
 msgid "Temperature sensor of the heated bed is shorted."
 msgstr ""
 
@@ -6586,41 +6414,36 @@ msgstr ""
 
 #: src/gui/wizard/screen_fan_selftest.cpp:86
 #, c-format
-msgid "Testing fan rotation on 100% power, please wait."
+msgid "Testing fan rotation on %d%% power, please wait."
 msgstr ""
 
-#: src/gui/wizard/screen_fan_selftest.cpp:87
-#, c-format
-msgid "Testing fan rotation on 40% power, please wait."
-msgstr ""
-
-#: src/gui/dialogs/DialogLoadUnload.cpp:160
+#: src/gui/dialogs/DialogLoadUnload.cpp:164
 msgid "Testing filament"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1178
+#: tmp_error_headers/error_list.hpp:1220
 msgid "The G-code isn't fully compatible"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1416
+#: tmp_error_headers/error_list.hpp:1458
 msgid ""
 "The HEPA filter has expired. Change the HEPA filter before your next print."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1409
+#: tmp_error_headers/error_list.hpp:1451
 msgid ""
 "The HEPA filter has expired. Change the HEPA filter before your next print. "
 "Visit prusa.io/xl-filter for more information."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1395
+#: tmp_error_headers/error_list.hpp:1437
 msgid ""
 "The HEPA filter is nearing the end of its life span (100 hours of printing "
 "time remaining). We recommend purchasing a new one. Visit prusa.io/xl-filter "
 "for more information."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1402
+#: tmp_error_headers/error_list.hpp:1444
 msgid ""
 "The HEPA filter is nearing the end of its life span. We recommend purchasing "
 "a new one."
@@ -6643,13 +6466,13 @@ msgid ""
 "compatible version."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:814
+#: tmp_error_headers/error_list.hpp:856
 msgid ""
 "The OpenPrintTag does not allow filament usage tracking. Filament "
 "consumption will not be saved."
 msgstr ""
 
-#: src/gui/wizard/screen_fan_selftest.cpp:89
+#: src/gui/wizard/screen_fan_selftest.cpp:88
 msgid ""
 "The RPM test has failed, check both fans are free to spin and connected "
 "correctly."
@@ -6673,7 +6496,7 @@ msgid ""
 "Insert the module, try restarting the printer, or use the ethernet cable."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1514
+#: tmp_error_headers/error_list.hpp:1556
 msgid ""
 "The auto-retract feature is disabled, which might have caused the failure.\n"
 "\n"
@@ -6692,19 +6515,22 @@ msgid ""
 "Loosen and remove the dock pins."
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:37
-msgid "The calibration should take a little over 14 minutes."
-msgstr ""
-
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:35
-msgid "The calibration should take a little over 7 minutes."
+#. Quick user can
+#. 1:15 - Home and install pin
+#. 2:15 - Calibrate tool
+#. 0:15 - Remove pin and install sheet
+#. For 2 tool printer - at least 6 minutes
+#. For 5 tool printer - at least 12:45
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:34
+#, c-format
+msgid "The calibration should take a little over %d minutes."
 msgstr ""
 
 #: src/feature/door_sensor_calibration/screen_door_sensor_calibration.cpp:32
 msgid "The door sensor is successfully calibrated now."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1500
+#: tmp_error_headers/error_list.hpp:1542
 msgid ""
 "The filament has been purged.\n"
 "\n"
@@ -6755,7 +6581,7 @@ msgid ""
 "correct dock is selected and empty, then try again."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1220
+#: tmp_error_headers/error_list.hpp:1262
 msgid ""
 "The heatbed cooled down during the power outage, printed object might have "
 "detached. Inspect it before continuing."
@@ -6773,7 +6599,7 @@ msgstr ""
 msgid "The path does not exist"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:996
+#: tmp_error_headers/error_list.hpp:1038
 msgid "The previous tests must be completed before this one."
 msgstr ""
 
@@ -6820,7 +6646,7 @@ msgid ""
 "rest, but the selftest will fail."
 msgstr ""
 
-#: src/gui/dialogs/DialogLoadUnload.cpp:470
+#: src/gui/dialogs/DialogLoadUnload.cpp:474
 msgid ""
 "There is filament usage to be written to the OpenPrintTag. Make sure the "
 "spool is close to the NFC reader."
@@ -6837,7 +6663,7 @@ msgid ""
 "If the filament is stuck, open the idler lever."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:940
+#: tmp_error_headers/error_list.hpp:982
 msgid ""
 "There was a timeout while waiting for measurement sample, please repeat the "
 "action."
@@ -6847,11 +6673,8 @@ msgstr ""
 msgid "There was an error connecting to the Wi-Fi."
 msgstr ""
 
-#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:57
-msgid ""
-"Third Side Filament Sensor can be remapped to the right side.\n"
-"(calibration will follow)\n"
-"Remap?"
+#: src/common/feature/filament_sensor/filament_sensors_handler_remap.cpp:54
+msgid "Third Side Filament Sensor"
 msgstr ""
 
 #: src/gui/screen/print/frame_tool_mapping.cpp:170
@@ -6862,7 +6685,7 @@ msgid ""
 "switching to it once the original tool runs out of material?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1192
+#: tmp_error_headers/error_list.hpp:1234
 msgid "This G-code was set up for another filament type."
 msgstr ""
 
@@ -6870,7 +6693,7 @@ msgstr ""
 msgid "This change will apply to all toolheads. Do you want to continue?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1010
+#: tmp_error_headers/error_list.hpp:1052
 msgid ""
 "This error code is not found\n"
 "in our database.\n"
@@ -6907,7 +6730,7 @@ msgid ""
 "continue?"
 msgstr ""
 
-#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:87
+#: src/gui/screen/toolhead/screen_toolhead_settings_dock.cpp:90
 msgid ""
 "This will invalidate the calibration for this tool. The tool will not be "
 "available for printing until its dock is calibrated again. Proceed?"
@@ -7013,6 +6836,21 @@ msgstr ""
 msgid "Tool %d"
 msgstr ""
 
+#: src/gui/include_XL/selftest_snake_config.hpp:68
+#, c-format
+msgid "Tool %d Filament Sensor Calibration"
+msgstr ""
+
+#: src/gui/include_XL/selftest_snake_config.hpp:70
+#, c-format
+msgid "Tool %d Gearbox alignment"
+msgstr ""
+
+#: src/gui/include_XL/selftest_snake_config.hpp:66
+#, c-format
+msgid "Tool %d Loadcell Test"
+msgstr ""
+
 #: tmp_error_headers/error_list.hpp:44
 #, c-format
 msgid "Tool %d offset %c: %.3f is out of bounds [%.3f, %.3f]."
@@ -7023,66 +6861,6 @@ msgstr ""
 msgid "Tool %i"
 msgstr ""
 
-#: src/gui/include_XL/selftest_snake_config.hpp:77
-msgid "Tool 1 Filament Sensor Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:82
-msgid "Tool 1 Gearbox alignment"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:72
-msgid "Tool 1 Loadcell Test"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:78
-msgid "Tool 2 Filament Sensor Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:83
-msgid "Tool 2 Gearbox alignment"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:73
-msgid "Tool 2 Loadcell Test"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:79
-msgid "Tool 3 Filament Sensor Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:84
-msgid "Tool 3 Gearbox alignment"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:74
-msgid "Tool 3 Loadcell Test"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:80
-msgid "Tool 4 Filament Sensor Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:85
-msgid "Tool 4 Gearbox alignment"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:75
-msgid "Tool 4 Loadcell Test"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:81
-msgid "Tool 5 Filament Sensor Calibration"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:86
-msgid "Tool 5 Gearbox alignment"
-msgstr ""
-
-#: src/gui/include_XL/selftest_snake_config.hpp:76
-msgid "Tool 5 Loadcell Test"
-msgstr ""
-
 #: src/gui/MItem_tools.cpp:570
 msgid "Tool Filament sensor"
 msgstr ""
@@ -7091,13 +6869,23 @@ msgstr ""
 msgid "Tool Light"
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:150
+msgid "Tool Offset Calibration"
+msgstr ""
+
 #: src/gui/wizard/selftest_frame_tool_offsets.cpp:15
 msgid "Tool Offsets Calibration"
 msgstr ""
 
-#: src/gui/screen_menu_sensor_info.hpp:78
+#: src/gui/screen_menu_sensor_info.hpp:87
 #: src/gui/screen_menu_temperature.hpp:37 src/gui/screen_menu_tune.hpp:57
 msgid "Tool Temperatures"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:261
+msgid ""
+"Tool Z offsets differ above the safe threshold. The print has been aborted "
+"to prevent printer damage."
 msgstr ""
 
 #: src/gui/screen_menu_statistics.cpp:128
@@ -7112,8 +6900,14 @@ msgstr ""
 msgid "Tool lost"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1261
+#: tmp_error_headers/error_list.hpp:1303
 msgid "Tool mapping"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:282
+msgid ""
+"Tool offset sensor XY position differ above the safe threshold. The print "
+"has been aborted to prevent printer damage."
 msgstr ""
 
 #: tmp_error_headers/error_list.hpp:232
@@ -7132,7 +6926,7 @@ msgstr ""
 msgid "Tool was still detected after parking."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1255
+#: tmp_error_headers/error_list.hpp:1297
 msgid ""
 "Toolchanger problem has been detected.\n"
 "Park all tools to docks\n"
@@ -7244,7 +7038,11 @@ msgstr ""
 msgid "UNEVEN BED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1009
+#: tmp_error_headers/error_list.hpp:267
+msgid "UNEXPECTED_TOOL"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:1051
 #: tmp_error_headers/error_list_mmu.hpp:318
 msgid "UNKNOWN ERROR"
 msgstr ""
@@ -7257,19 +7055,19 @@ msgstr ""
 msgid "UNLOAD MANUALLY"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1086
+#: tmp_error_headers/error_list.hpp:1128
 msgid "UNSUPPORTED BUDDY FW"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1107
+#: tmp_error_headers/error_list.hpp:1149
 msgid "UNSUPPORTED FIRMWARE BBF FILE"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1079
+#: tmp_error_headers/error_list.hpp:1121
 msgid "UNSUPPORTED PRINTER MODEL"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1527
+#: tmp_error_headers/error_list.hpp:1569
 msgid "UNTRUSTED IDENTITY"
 msgstr ""
 
@@ -7277,23 +7075,23 @@ msgstr ""
 msgid "UP"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:596
+#: tmp_error_headers/error_list.hpp:638
 msgid "USB DEVICE OVERCURRENT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1016
+#: tmp_error_headers/error_list.hpp:1058
 msgid "USB FLASH DRIVE NOT CONNECTED"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1100
+#: tmp_error_headers/error_list.hpp:1142
 msgid "USB FLASH ERROR"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:589
+#: tmp_error_headers/error_list.hpp:631
 msgid "USB PORT OVERCURRENT"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1017
+#: tmp_error_headers/error_list.hpp:1059
 msgid ""
 "USB drive not\n"
 "connected! Please\n"
@@ -7302,11 +7100,11 @@ msgid ""
 "firmware file."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1325
+#: tmp_error_headers/error_list.hpp:1367
 msgid "USB drive or file error, the print is now paused. Reconnect the drive."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1108
+#: tmp_error_headers/error_list.hpp:1150
 msgid ""
 "USB flash drive contains\n"
 "unsupported firmware BBF file."
@@ -7316,21 +7114,21 @@ msgstr ""
 msgid "USER INTERFACE"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1248
+#: tmp_error_headers/error_list.hpp:1290
 msgid ""
 "Unable to home the printer.\n"
 "Do you want to try again?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:891
+#: tmp_error_headers/error_list.hpp:933
 msgid "Unable to start puppy application"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1115
+#: tmp_error_headers/error_list.hpp:1157
 msgid "Unable to verify the extruder type, check the wiring and connectors."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:856
+#: tmp_error_headers/error_list.hpp:898
 msgid "Unassigned puppy found"
 msgstr ""
 
@@ -7342,8 +7140,12 @@ msgstr ""
 msgid "Unexpected error occurred."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:548
+#: tmp_error_headers/error_list.hpp:590
 msgid "Unexpected invalid current."
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:268
+msgid "Unexpected obstruction present in vent control area."
 msgstr ""
 
 #: src/gui/screen_menu_e2ee.cpp:22
@@ -7359,11 +7161,11 @@ msgstr ""
 msgid "Unknown file error"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1149
+#: tmp_error_headers/error_list.hpp:1191
 msgid "Unknown file system"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:884
+#: tmp_error_headers/error_list.hpp:926
 msgid "Unknown puppy type"
 msgstr ""
 
@@ -7389,20 +7191,20 @@ msgstr ""
 
 #. //MSG_PROGRESS_ERR_TMC c=20
 #: src/mmu2/mmu2_progress_converter.cpp:21
-#: src/gui/dialogs/DialogLoadUnload.cpp:61
-#: src/gui/dialogs/DialogLoadUnload.cpp:154
+#: src/gui/dialogs/DialogLoadUnload.cpp:65
+#: src/gui/dialogs/DialogLoadUnload.cpp:158
 msgid "Unloading filament"
 msgstr ""
 
 #. //MSG_PROGRESS_DISENGAGE_IDLER c=20
 #: src/mmu2/mmu2_progress_converter.cpp:10
-#: src/gui/dialogs/DialogLoadUnload.cpp:51
+#: src/gui/dialogs/DialogLoadUnload.cpp:55
 msgid "Unloading to FINDA"
 msgstr ""
 
 #. //MSG_PROGRESS_UNLOAD_FINDA c=20
 #: src/mmu2/mmu2_progress_converter.cpp:11
-#: src/gui/dialogs/DialogLoadUnload.cpp:52
+#: src/gui/dialogs/DialogLoadUnload.cpp:56
 msgid "Unloading to pulley"
 msgstr ""
 
@@ -7412,6 +7214,18 @@ msgstr ""
 
 #: src/gui/dialogs/DialogLoadUnload.cpp:26
 msgid "Unparking"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:274
+msgid "Unsafe XY tool offset"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:260
+msgid "Unsafe Z tool offset deviation"
+msgstr ""
+
+#: tmp_error_headers/error_list.hpp:281
+msgid "Unsafe sensor position"
 msgstr ""
 
 #: src/common/gcode/gcode_compatibility.cpp:92
@@ -7435,7 +7249,7 @@ msgid ""
 "Press Continue to proceed."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1150
+#: tmp_error_headers/error_list.hpp:1192
 msgid ""
 "Use a different USB drive or reformat this one to the supported FAT32 file "
 "system."
@@ -7489,15 +7303,15 @@ msgstr ""
 msgid "WI-FI SETTINGS"
 msgstr ""
 
-#: src/gui/ScreenSelftest.hpp:36
+#: src/gui/ScreenSelftest.hpp:40
 msgid "WIZARD"
 msgstr ""
 
-#: src/gui/ScreenSelftest.hpp:38
+#: src/gui/ScreenSelftest.hpp:42
 msgid "WIZARD - NOK"
 msgstr ""
 
-#: src/gui/ScreenSelftest.hpp:37
+#: src/gui/ScreenSelftest.hpp:41
 msgid "WIZARD - OK"
 msgstr ""
 
@@ -7516,7 +7330,7 @@ msgstr ""
 msgid "Waiting for chamber"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:919
+#: tmp_error_headers/error_list.hpp:961
 msgid "Waiting for fingerprint timed out"
 msgstr ""
 
@@ -7524,11 +7338,11 @@ msgstr ""
 msgid "Waiting for hotend"
 msgstr ""
 
-#: src/gui/wizard/selftest_frame_tool_offsets.cpp:64
+#: src/gui/wizard/selftest_frame_tool_offsets.cpp:60
 msgid "Waiting for hotends to stabilize at calibration temperature:"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1486
+#: tmp_error_headers/error_list.hpp:1528
 msgid "Waiting for nozzle temperature..."
 msgstr ""
 
@@ -7536,7 +7350,7 @@ msgstr ""
 msgid "Waiting for nozzle to cool down"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:926
+#: tmp_error_headers/error_list.hpp:968
 msgid "Waiting for puppies to start timed out"
 msgstr ""
 
@@ -7544,11 +7358,11 @@ msgstr ""
 msgid "Waiting for temperature"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1437
+#: tmp_error_headers/error_list.hpp:1479
 msgid "Waiting for the user. Press \"Resume\" once the printer is ready."
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1269
+#: tmp_error_headers/error_list.hpp:1311
 msgid "Waiting for user input"
 msgstr ""
 
@@ -7556,21 +7370,21 @@ msgstr ""
 msgid "Warn"
 msgstr ""
 
-#: src/guiapi/src/window_msgbox.cpp:341 tmp_error_headers/error_list.hpp:1156
-#: tmp_error_headers/error_list.hpp:1177 tmp_error_headers/error_list.hpp:1184
-#: tmp_error_headers/error_list.hpp:1191 tmp_error_headers/error_list.hpp:1198
-#: tmp_error_headers/error_list.hpp:1205 tmp_error_headers/error_list.hpp:1219
-#: tmp_error_headers/error_list.hpp:1275 tmp_error_headers/error_list.hpp:1282
-#: tmp_error_headers/error_list.hpp:1289 tmp_error_headers/error_list.hpp:1296
-#: tmp_error_headers/error_list.hpp:1303 tmp_error_headers/error_list.hpp:1310
+#: src/guiapi/src/window_msgbox.cpp:341 tmp_error_headers/error_list.hpp:1198
+#: tmp_error_headers/error_list.hpp:1219 tmp_error_headers/error_list.hpp:1226
+#: tmp_error_headers/error_list.hpp:1233 tmp_error_headers/error_list.hpp:1240
+#: tmp_error_headers/error_list.hpp:1247 tmp_error_headers/error_list.hpp:1261
 #: tmp_error_headers/error_list.hpp:1317 tmp_error_headers/error_list.hpp:1324
 #: tmp_error_headers/error_list.hpp:1331 tmp_error_headers/error_list.hpp:1338
 #: tmp_error_headers/error_list.hpp:1345 tmp_error_headers/error_list.hpp:1352
 #: tmp_error_headers/error_list.hpp:1359 tmp_error_headers/error_list.hpp:1366
-#: tmp_error_headers/error_list.hpp:1373 tmp_error_headers/error_list.hpp:1387
-#: tmp_error_headers/error_list.hpp:1394 tmp_error_headers/error_list.hpp:1408
-#: tmp_error_headers/error_list.hpp:1422 tmp_error_headers/error_list.hpp:1429
-#: tmp_error_headers/error_list.hpp:1520
+#: tmp_error_headers/error_list.hpp:1373 tmp_error_headers/error_list.hpp:1380
+#: tmp_error_headers/error_list.hpp:1387 tmp_error_headers/error_list.hpp:1394
+#: tmp_error_headers/error_list.hpp:1401 tmp_error_headers/error_list.hpp:1408
+#: tmp_error_headers/error_list.hpp:1415 tmp_error_headers/error_list.hpp:1429
+#: tmp_error_headers/error_list.hpp:1436 tmp_error_headers/error_list.hpp:1450
+#: tmp_error_headers/error_list.hpp:1464 tmp_error_headers/error_list.hpp:1471
+#: tmp_error_headers/error_list.hpp:1562
 msgid "Warning"
 msgstr ""
 
@@ -7578,7 +7392,7 @@ msgstr ""
 msgid "Was filament unload successful?"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1003
+#: tmp_error_headers/error_list.hpp:1045
 msgid ""
 "We are actively working on resolving these issues. Please send the crash "
 "dump, saved upon reset, to our support team."
@@ -7616,7 +7430,7 @@ msgstr ""
 msgid "Wed"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1143
+#: tmp_error_headers/error_list.hpp:1185
 msgid ""
 "Welcome to the Cold Pull wizard. Prepare a 30cm piece of PLA filament and "
 "follow the instructions. For more details, visit:"
@@ -7666,11 +7480,11 @@ msgstr ""
 msgid "With sock"
 msgstr ""
 
-#: src/gui/screen_menu_selftest_snake.hpp:100
+#: src/gui/screen_menu_selftest_snake.hpp:101
 msgid "Wizard"
 msgstr ""
 
-#: tmp_error_headers/error_list.hpp:1479
+#: tmp_error_headers/error_list.hpp:1521
 msgid ""
 "Would you like to purge the filament?\n"
 "\n"
@@ -7687,6 +7501,10 @@ msgstr ""
 
 #: src/common/gcode/gcode_compatibility.cpp:122
 msgid "Wrong tool"
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:100
+msgid "X Axis Test"
 msgstr ""
 
 #: src/gui/screen_menu_statistics.cpp:104
@@ -7717,6 +7535,10 @@ msgstr ""
 msgid "XL Enclosure"
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:97
+msgid "XY Axis Test"
+msgstr ""
+
 #: tmp_error_headers/error_list.hpp:57
 msgid "XY POSITION INVALID"
 msgstr ""
@@ -7739,6 +7561,10 @@ msgid ""
 "it may be hot."
 msgstr ""
 
+#: src/gui/screen_menu_selftest_snake.cpp:102
+msgid "Y Axis Test"
+msgstr ""
+
 #: src/gui/screen_menu_statistics.cpp:108
 msgid "Y Axis Travel"
 msgstr ""
@@ -7759,7 +7585,6 @@ msgstr ""
 msgid "YES"
 msgstr ""
 
-#: src/feature/indx_dock_calibration/dialog_dock_select.cpp:37
 #: src/gui/screen/openprinttag/screen_opt_info.cpp:19
 msgid "Yes"
 msgstr ""
@@ -7792,6 +7617,14 @@ msgstr ""
 
 #: src/gui/screen_move_z.hpp:14
 msgid "Z AXIS MOVE"
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:93
+msgid "Z Alignment Calibration"
+msgstr ""
+
+#: src/gui/screen_menu_selftest_snake.cpp:86
+msgid "Z Axis Test"
 msgstr ""
 
 #: src/gui/screen_menu_statistics.cpp:112
