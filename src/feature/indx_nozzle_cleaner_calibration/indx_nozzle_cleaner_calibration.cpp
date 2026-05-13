@@ -65,13 +65,15 @@ static constexpr AxisCalibConfig y_axis_config {
 };
 
 static constexpr AxisCalibConfig x_axis_config {
-    .phase_ask_position = PhaseNozzleCleanerCalibration::ask_position_x,
+    // V-groove placement also serves as the Z alignment step — user seats the nozzle in the groove and
+    // adjusts the cleaner's eccentric screw so the silicone touches the nozzle.
+    .phase_ask_position = PhaseNozzleCleanerCalibration::move_to_z_point,
     .phase_lock_position = PhaseNozzleCleanerCalibration::lock_position_x,
     .phase_measuring = PhaseNozzleCleanerCalibration::measuring_x,
     .phase_evaluating = PhaseNozzleCleanerCalibration::evaluating_x,
     .axis = AxisEnum::X_AXIS,
     .nominal_mm = X_NOZZLE_CLEANER_ORIGIN,
-    .park_pos = { .x = X_NOZZLE_CLEANER_ORIGIN, .y = Y_NOZZLE_CLEANER_ORIGIN - 10.f },
+    .park_pos = { .x = X_WASTEBIN_SAFE_POINT, .y = Y_BRUSH_AVOID_POINT },
 };
 
 class NozzleCleanerCalibrationWizard {
@@ -147,24 +149,8 @@ private:
             return result;
         }
 
-        // Move close to the nozzle cleaner for Z-point alignment
-        do_blocking_move_to_xy(X_WASTEBIN_SAFE_POINT, Y_BRUSH_AVOID_POINT, PrusaToolChanger::PARKING_FINAL_MAX_SPEED);
-
-        // Disable motors so user can move the head freely
-        planner.synchronize();
-        disable_XY();
-        disable_Z();
-
-        // User moves the head above the nozzle cleaner
-        fsm_change(PhaseNozzleCleanerCalibration::move_to_z_point);
-        if (wait_for_response(PhaseNozzleCleanerCalibration::move_to_z_point) == Response::Abort) {
-            return Result::aborted;
-        }
-
-        fsm_change(PhaseNozzleCleanerCalibration::homing);
-        GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = false });
-
-        // Calibrate X axis, then Y axis
+        // Calibrate X first (V-groove also doubles as the Z reference, set mechanically via the cleaner's
+        // eccentric adjustment screw), then Y.
         {
             const auto result = calibrate_axis(x_axis_config);
             if (result != Result::success) {
@@ -189,15 +175,20 @@ private:
             bsod_unreachable();
         }
 
+        const auto current_temp = Hotend::for_tool(*tool).nozzle_temp();
+        if (current_temp <= cooldown_safe_temperature_c) {
+            return Result::success;
+        }
+
         fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown);
 
         // Push current temp to the GUI and handle abort while M109 is blocking
-        Subscriber subscriber(marlin_server::idle_publisher, [tool] {
+        Subscriber subscriber(marlin_server::idle_publisher, [tool, current_temp] {
             if (marlin_server::get_response_from_phase(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown) == Response::Abort) {
                 planner.quick_stop();
                 return;
             }
-            const uint16_t t = static_cast<uint16_t>(Hotend::for_tool(*tool).nozzle_temp());
+            const uint16_t t = static_cast<uint16_t>(current_temp);
             const fsm::PhaseData data = {
                 static_cast<uint8_t>((t >> 8) & 0xff),
                 static_cast<uint8_t>(t & 0xff),
@@ -207,14 +198,14 @@ private:
             marlin_server::fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, data);
         });
 
-        if (thermalManager.degHotend(*tool) > cooldown_safe_temperature_c) {
+        if (current_temp > cooldown_safe_temperature_c) {
             const M109Flags flags {
                 .target_temp = cooldown_safe_temperature_c,
                 .wait_heat_or_cool = true,
                 .autotemp = true,
             };
             M109_no_parser(*tool, flags); // This is the temp we want to reach
-            thermalManager.setTargetHotend(0, *tool); // This is so that we dont accidentally re-heat to 50
+            Hotend::for_tool(*tool).set_nozzle_target_temp(0); // This is so that we dont accidentally re-heat to 50
         }
 
         return planner.draining() ? Result::aborted : Result::success;
@@ -269,19 +260,14 @@ private:
                 .y = stepper.position_from_startup(AxisEnum::B_AXIS),
             } } };
 
-            // Move to clear the nozzle cleaner before homing
-            // On X measure point, we move out to -Y and then -X (because we home Y first, cleaner has to be out of the way)
-            // On Y measure point, we move out to -X
-            if (config.axis == AxisEnum::X_AXIS) {
-                current_position.y += exit_move_mm;
+            // On the Y measure point, move out in -X to clear the cleaner before homing. The X measure
+            // point is in the V groove; G28 homes Y first (away from the cleaner) and then X, so no exit
+            // move is needed there.
+            if (config.axis == AxisEnum::Y_AXIS) {
+                current_position.x += exit_move_mm;
                 line_to_current_position(PrusaToolChanger::SLOW_MOVE_MM_S);
                 planner.synchronize();
-                current_position.x += exit_move_mm * 2;
-            } else {
-                current_position.x += exit_move_mm;
             }
-            line_to_current_position(PrusaToolChanger::SLOW_MOVE_MM_S);
-            planner.synchronize();
 
             // Home XY (z_raise=0: Z is at the bottom, no need for Z clearance)
             GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = false });

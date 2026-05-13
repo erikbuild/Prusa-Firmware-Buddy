@@ -28,7 +28,6 @@ calibrate_white_16x16.png
 cancel_16x16.png
 cancel_44x33.png
 cancel_60x60.png
-cleaner_calibration_x.png
 cleaner_calibration_y.png
 cleaner_calibration_z.png
 clear_44x33.png

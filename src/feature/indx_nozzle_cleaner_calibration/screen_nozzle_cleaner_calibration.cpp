@@ -17,17 +17,16 @@
 namespace {
 
 constexpr auto txt_title_intro = N_("Nozzle Cleaner Calibration");
-constexpr auto txt_intro = N_("Manually position the head at the nozzle cleaner and adjust the height screw");
+constexpr auto txt_intro = N_("The printer will guide you through calibrating the nozzle cleaner. You will need to manually position the head and adjust the height screw.");
 constexpr auto txt_wait_for_nozzle_cooldown = N_("Wait!\n\nThe nozzle is still cooling down.");
 constexpr auto txt_picking_tool = N_("Picking up tool");
 constexpr auto txt_homing = N_("Homing XY axes");
 constexpr auto txt_moving_away = N_("Raising Z axis for clearance");
-constexpr auto txt_move_to_z_point = N_("Move the head to the silicone V groove inside the nozzle cleaner as shown on the picture.\n\nRotate the adjustment screw so that the nozzle is touching the silicone.");
-// %c is the axis letter ('X', 'Y' or 'Z')
+// %c is the axis letter ('Y' or 'Z')
 constexpr auto txt_title_axis_alignment = N_("Nozzle %c-Axis Alignment");
 // Identical wording to dock_calibration's txt_lock_position; kept verbatim so both share one POT entry.
 constexpr auto txt_lock_position = N_("Motors are now locked.\n\nEnsure your hands are outside the printer enclosure.\n\nVerify the head is in the correct position, then press Continue to start measuring.");
-constexpr auto txt_ask_position_x = N_("Move the nozzle precisely to the nozzle cleaner X-axis calibration indent in front of the bin.\n\nThen press Continue.");
+constexpr auto txt_move_to_z_point = N_("Move the head to the silicone V groove inside the nozzle cleaner as shown on the picture.\n\nRotate the adjustment screw anticlockwise until the nozzle is touching the silicone.");
 constexpr auto txt_ask_position_y = N_("Move the nozzle precisely to the nozzle cleaner Y-axis calibration indent on the side of the bin.\n\nThen press Continue.");
 // %c is the axis letter ('X' or 'Y')
 constexpr auto txt_measuring = N_("Measuring %c position\n\nDo not touch the printer.");
@@ -90,9 +89,8 @@ private:
     StringViewUtf8Parameters<60> params;
 };
 
-static constexpr const img::Resource *img_move_to_z_point = &img::cleaner_calibration_z;
 static constexpr const img::Resource *img_ask_position_y = &img::cleaner_calibration_y;
-static constexpr const img::Resource *img_ask_position_x = &img::cleaner_calibration_x;
+static constexpr const img::Resource *img_move_to_z_point = &img::cleaner_calibration_z;
 
 using Frames = FrameDefinitionList<ScreenNozzleCleanerCalibration::FrameStorage,
     FrameDefinition<PhaseNozzleCleanerCalibration::intro, FramePrompt, PhaseNozzleCleanerCalibration::intro, txt_title_intro, txt_intro>,
@@ -101,14 +99,13 @@ using Frames = FrameDefinitionList<ScreenNozzleCleanerCalibration::FrameStorage,
     FrameDefinition<PhaseNozzleCleanerCalibration::homing, FrameWait, txt_homing>,
     FrameDefinition<PhaseNozzleCleanerCalibration::moving_away, FrameWait, txt_moving_away>,
     FrameDefinition<PhaseNozzleCleanerCalibration::move_to_z_point, FrameTitleTextImagePromptWithAxis, PhaseNozzleCleanerCalibration::move_to_z_point, txt_title_axis_alignment, txt_move_to_z_point, img_move_to_z_point, 'Z'>,
+    FrameDefinition<PhaseNozzleCleanerCalibration::lock_position_x, FrameTextPrompt, PhaseNozzleCleanerCalibration::lock_position_x, txt_lock_position>,
+    FrameDefinition<PhaseNozzleCleanerCalibration::measuring_x, FrameWaitWithAxis, txt_measuring, 'X'>,
+    FrameDefinition<PhaseNozzleCleanerCalibration::evaluating_x, FrameEvaluating, PhaseNozzleCleanerCalibration::evaluating_x, txt_evaluating_failed>,
     FrameDefinition<PhaseNozzleCleanerCalibration::ask_position_y, FrameTitleTextImagePromptWithAxis, PhaseNozzleCleanerCalibration::ask_position_y, txt_title_axis_alignment, txt_ask_position_y, img_ask_position_y, 'Y'>,
     FrameDefinition<PhaseNozzleCleanerCalibration::lock_position_y, FrameTextPrompt, PhaseNozzleCleanerCalibration::lock_position_y, txt_lock_position>,
     FrameDefinition<PhaseNozzleCleanerCalibration::measuring_y, FrameWaitWithAxis, txt_measuring, 'Y'>,
     FrameDefinition<PhaseNozzleCleanerCalibration::evaluating_y, FrameEvaluating, PhaseNozzleCleanerCalibration::evaluating_y, txt_evaluating_failed>,
-    FrameDefinition<PhaseNozzleCleanerCalibration::ask_position_x, FrameTitleTextImagePromptWithAxis, PhaseNozzleCleanerCalibration::ask_position_x, txt_title_axis_alignment, txt_ask_position_x, img_ask_position_x, 'X'>,
-    FrameDefinition<PhaseNozzleCleanerCalibration::lock_position_x, FrameTextPrompt, PhaseNozzleCleanerCalibration::lock_position_x, txt_lock_position>,
-    FrameDefinition<PhaseNozzleCleanerCalibration::measuring_x, FrameWaitWithAxis, txt_measuring, 'X'>,
-    FrameDefinition<PhaseNozzleCleanerCalibration::evaluating_x, FrameEvaluating, PhaseNozzleCleanerCalibration::evaluating_x, txt_evaluating_failed>,
     FrameDefinition<PhaseNozzleCleanerCalibration::calibration_success, FrameTextPrompt, PhaseNozzleCleanerCalibration::calibration_success, txt_success>>;
 
 } // namespace
