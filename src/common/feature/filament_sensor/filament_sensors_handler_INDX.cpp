@@ -14,7 +14,7 @@ FSensorXBuddyExtension *getSideFSensor(uint8_t index) {
         { FilamentSensorID { .position = FilamentSensorID::Position::side, .index = 7 }, FSensorXBuddyExtension::Source::ext },
     } };
     static_assert(PhysicalToolIndex::count == 8);
-    if (index >= sensors.size() || !PhysicalToolIndex::from_raw(index).is_enabled()) {
+    if (index >= sensors.size()) {
         return nullptr;
     }
     return &sensors[index];
