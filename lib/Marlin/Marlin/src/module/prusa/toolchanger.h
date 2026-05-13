@@ -40,9 +40,9 @@ public:
 
     /// Data captured at toolchange start; used by tool-fall crash recovery to drive the replay.
     struct ToolchangeReturnData {
-        std::variant<PhysicalToolIndex, NoTool> tool; ///< Last requested tool (not the tool physically picked)
-        tool_return_t return_type; ///< How to return after toolchange
-        XYZval<float, LogicalPosTag> return_pos; ///< Logical return position (used when return_type selects it)
+        std::variant<PhysicalToolIndex, NoTool> tool { NoTool {} }; ///< Last requested tool (not the tool physically picked)
+        tool_return_t return_type {}; ///< How to return after toolchange
+        XYZval<float, LogicalPosTag> return_pos {}; ///< Logical return position (used when return_type selects it)
     };
 
     /// Get last recorded toolchange return data. Used in tool failure recovery.
@@ -210,8 +210,10 @@ public:
     [[nodiscard]] bool align_locks();
     #endif
 private:
+    #if HAS_TOOL_CRASH_RECOVERY() || HAS_INDX()
+    ToolchangeReturnData return_data_; ///< Toolchange return state captured for crash/PP recovery
+    #endif
     #if HAS_TOOL_CRASH_RECOVERY()
-    ToolchangeReturnData return_data_ { NoTool {}, {}, {} }; ///< Toolchange return state captured for crash/PP recovery
     uint8_t tool_check_fails = 0; ///< Count before toolfall
     static constexpr uint8_t TOOL_CHECK_FAILS_LIMIT = 3; ///< Limit of tool_check_fails before toolfall
     #endif
@@ -317,6 +319,21 @@ private:
      * INDX_TODO: Do homing moves to makes sure we dont crash and crash the printer
      */
     bool park_procedure(PhysicalToolIndex tool);
+
+    /// Commit successful pickup: clear head_open, log, update odometer and active extruder state.
+    void commit_pickup(PhysicalToolIndex tool, bool count_in_odometer, bool force_persist);
+
+    struct FinalToolChangeMoves {
+        xyz_pos_t return_position;
+        tool_return_t return_type;
+        bool levelling_active;
+        bool z_return;
+        xyz_pos_t tool_offset_diff;
+    };
+
+    /// Apply post-pickup return moves (XY unpark, Z return, synchronize); adjusts return_position by tool_offset_diff.
+    void final_tool_change_moves(const FinalToolChangeMoves &args);
+
     #else
     /**
      * @brief Check if powerpanic happened.

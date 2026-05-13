@@ -208,31 +208,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
             }
         }
 
-        // update return_position to the new working offset
-        return_position += tool_offset_diff;
-        // Prevent a move outside physical bounds
-        apply_motion_limits(return_position);
-
-        // Move back in XY direction
-        if (return_type > tool_return_t::no_return) {
-            // Move back to the original (or adjusted) position
-            unpark_to(return_position.xy()); // schedule a smooth XY transition to return_position
-        }
-
-        // Now move down in Z
-        if (z_return) {
-            set_bed_leveling_enabled(levelling_active); // Reenable MBL for this move
-            if (current_position.z != return_position.z) {
-                destination = current_position;
-                destination.z = return_position.z;
-                prepare_move_to(destination, Z_HOP_FEEDRATE_MM_S, {});
-            }
-        }
-
-        // Wait for moves to finish
-        /// @note This synchronization makes it a bit slower, but prevents errors of powerpanic and crash
-        ///   happening after this but during last moves of toolchange.
-        planner.synchronize();
+        final_tool_change_moves({ .return_position = return_position, .return_type = return_type, .levelling_active = levelling_active, .z_return = z_return, .tool_offset_diff = tool_offset_diff });
     }
 
     return true;
@@ -833,17 +809,47 @@ bool PrusaToolChanger::pickup(PhysicalToolIndex tool) {
         break;
     }
 
-    // Commit picked state
+    commit_pickup(tool, /*count_in_odometer=*/true, /*force_persist=*/false);
+    return true;
+}
+
+void PrusaToolChanger::commit_pickup(PhysicalToolIndex tool, bool count_in_odometer, bool force_persist) {
     head_open = false;
     loadcell.Clear();
 
     log_info(PrusaToolChanger, "INDX Tool #%u picked successfully", tool.to_raw());
-    Odometer_s::instance().add_toolpick(tool);
+    if (count_in_odometer) {
+        Odometer_s::instance().add_toolpick(tool);
+    }
 
     set_active_extruder(tool);
-    persist_last_picked_tool(tool);
+    persist_last_picked_tool(tool, force_persist);
+}
 
-    return true;
+void PrusaToolChanger::final_tool_change_moves(const FinalToolChangeMoves &args) {
+    // update return_position to the new working offset
+    xyz_pos_t return_position = args.return_position + args.tool_offset_diff;
+    // Prevent a move outside physical bounds
+    apply_motion_limits(return_position);
+
+    // Move back in XY direction
+    if (args.return_type > tool_return_t::no_return) {
+        // Move back to the original (or adjusted) position
+        unpark_to(return_position.xy()); // schedule a smooth XY transition to return_position
+    }
+
+    // Now move down in Z
+    if (args.z_return) {
+        set_bed_leveling_enabled(args.levelling_active); // Reenable MBL for this move
+        if (current_position.z != return_position.z) {
+            destination = current_position;
+            destination.z = return_position.z;
+            prepare_move_to(destination, Z_HOP_FEEDRATE_MM_S, {});
+        }
+    }
+
+    // Wait for moves to finish
+    planner.synchronize();
 }
 
 void PrusaToolChanger::unpark_to(const xy_pos_t &destination) {
