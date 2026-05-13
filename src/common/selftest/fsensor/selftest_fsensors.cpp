@@ -288,15 +288,6 @@ bool SelftestFSensors::initial_remove_filament() {
 
             case Response::Unload: {
                 const auto examined_virtual_tool = VirtualToolIndex::from_raw(params_.tool);
-#if HAS_TOOLCHANGER() && HAS_INDX()
-                const auto examined_physical_tool = examined_virtual_tool.to_physical();
-                if (!stdext::holds_value(PhysicalToolIndex::currently_selected(), examined_physical_tool)) {
-                    const auto tool_change_result = prusa_toolchanger.tool_change(examined_physical_tool, tool_return_t::no_return, {}, tool_change_lift_t::full_lift, false);
-                    if (!tool_change_result) {
-                        continue; // Ask user again to unload
-                    }
-                }
-#endif
                 filament_gcodes::M702_unload({}, Z_AXIS_LOAD_POS, RetAndCool_t::Neither, examined_virtual_tool, false);
             } break;
 
