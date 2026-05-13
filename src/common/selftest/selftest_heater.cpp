@@ -328,6 +328,10 @@ LoopResult CSelftestPart_Heater::stateMeasure() {
         log_info(Selftest, "%s heat range offseted by %d degrees Celsius due to HW differences", m_config.partname, hw_diff);
     }
 
+    // we are measuring how long it takes to heat up to temp in (heat_min_temp, heat_max_temp) interval
+    // target_temp must be big enough to keep PID at full power
+    assert(m_config.target_temp > m_config.heat_max_temp + 10);
+
     if ((m_config.getTemp() < m_config.heat_min_temp + hw_diff) || (m_config.getTemp() > m_config.heat_max_temp + hw_diff)) {
         log_error(Selftest, "%s %d out of range (%d - %d)\n", m_config.partname, static_cast<int>(m_config.getTemp()),
             static_cast<int>(m_config.heat_min_temp + hw_diff), static_cast<int>(m_config.heat_max_temp + hw_diff));
