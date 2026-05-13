@@ -169,7 +169,7 @@ void run() {
                 // Auto mode - thermal loop controls fan
                 const bool is_heating = target_temp.load() > 0;
                 const bool nozzle_temp_threshold_reached = get_nozzle_temp_compensated_c100() > 50 * 100; /*stored in centiDeg*/
-                const bool board_temp_threshold_reached = board_temp_degC > 50; /*stored in Deg*/
+                const bool board_temp_threshold_reached = board_temp_degC > 40; /*stored in Deg*/
                 const uint8_t pwm = (is_heating || nozzle_temp_threshold_reached || board_temp_threshold_reached || selftest_mode.load()) ? 255 : 0;
                 hal::tim::set_heatbreak_fan_pwm(pwm);
                 if (heatbreak_fan_pwm == 0) {
