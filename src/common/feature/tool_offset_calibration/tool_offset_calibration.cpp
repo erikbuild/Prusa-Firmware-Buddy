@@ -41,8 +41,8 @@ LOG_COMPONENT_DEF(ToolOffsetCalib, logging::Severity::info);
 
 namespace {
 // INDX_TODO: Set preferred reference line positions
-constexpr xy_pos_t POS_TOOL_0 = { 5.0f, 5.0f };
-constexpr xy_pos_t POS_TOOL_LAST = { 45.0f, 5.0f };
+constexpr xy_pos_t POS_TOOL_0 = { 25.0f, 5.0f };
+constexpr xy_pos_t POS_TOOL_LAST = { 65.0f, 5.0f };
 
 // Safe Z height for travel moves between probes
 constexpr float SAFE_Z_HEIGHT = 3.0f;
