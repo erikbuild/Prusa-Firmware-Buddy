@@ -19,17 +19,21 @@ static constexpr auto progress_top = Rect16::Top_t { 100 };
 
 class FrameMeasurement {
 private:
+    // %c is the axis letter ('X' or 'Y')
+    static constexpr const char *text_measuring_axis = N_("Measuring %c resonance...");
+
     window_text_t text_above;
     window_text_t text_below;
+    StringViewUtf8Parameters<2> text_above_params;
     string_view_utf8 text_above_axis;
     window_wizard_progress_t progress;
     std::array<char, sizeof("255 Hz")> text_below_buffer;
 
 protected:
-    FrameMeasurement(window_t *parent, const string_view_utf8 &txt)
+    FrameMeasurement(window_t *parent, char axis)
         : text_above(parent, rect_frame_top, is_multiline::no, is_closed_on_click_t::no, _("Calibrating accelerometer..."))
         , text_below(parent, rect_frame_bottom, is_multiline::no, is_closed_on_click_t::no)
-        , text_above_axis(txt)
+        , text_above_axis(_(text_measuring_axis).formatted(text_above_params, axis))
         , progress(parent, progress_top) {
         text_above.SetAlignment(Align_t::CenterTop());
         text_below.SetAlignment(Align_t::CenterTop());
@@ -107,17 +111,13 @@ public:
 class FrameMeasuringExtruder final : public FrameMeasurement {
 public:
     explicit FrameMeasuringExtruder(window_t *parent)
-        : FrameMeasurement(parent, _(text_measuring_x_axis)) {}
-
-    static constexpr const char *text_measuring_x_axis = N_("Measuring X resonance...");
+        : FrameMeasurement(parent, 'X') {}
 };
 
 class FrameMeasuringBed final : public FrameMeasurement {
 public:
     explicit FrameMeasuringBed(window_t *parent)
-        : FrameMeasurement(parent, _(text_measuring_y_axis)) {}
-
-    static constexpr const char *text_measuring_y_axis = N_("Measuring Y resonance...");
+        : FrameMeasurement(parent, 'Y') {}
 };
 
 class FrameComputing final {
@@ -157,8 +157,8 @@ private:
 
     static constexpr const char *text_freq_low = N_("axis frequency is too low.\nPlease tighten the belt.");
     static constexpr const char *text_freq_high = N_("axis frequency is too high.\nPlease check your HW setup.\nIf the problem prevails, contact the customer support.");
-    static constexpr const char *text_shaper_x = N_("Recommended shaper frequency for X axis: ");
-    static constexpr const char *text_shaper_y = N_("Recommended shaper frequency for Y axis: ");
+    // %c is the axis letter ('X' or 'Y')
+    static constexpr const char *text_shaper = N_("Recommended shaper frequency for %c axis: ");
     static constexpr const char *type_freq_format = "%3s %3dHz";
     static constexpr const char *text_x_axis = "X ";
     static constexpr const char *text_y_axis = "Y ";
@@ -182,7 +182,8 @@ public:
             str_build_x_axis.append_string(text_x_axis);
             str_build_x_axis.append_string_view(_(text_freq_high));
         } else {
-            str_build_x_axis.append_string_view(_(text_shaper_x));
+            StringViewUtf8Parameters<2> shaper_params;
+            str_build_x_axis.append_string_view(_(text_shaper).formatted(shaper_params, 'X'));
             str_build_x_axis.append_printf(type_freq_format, to_short_string(x_type), x_freq);
         }
 
@@ -193,7 +194,8 @@ public:
             str_build_y_axis.append_string(text_y_axis);
             str_build_y_axis.append_string_view(_(text_freq_high));
         } else {
-            str_build_y_axis.append_string_view(_(text_shaper_y));
+            StringViewUtf8Parameters<2> shaper_params;
+            str_build_y_axis.append_string_view(_(text_shaper).formatted(shaper_params, 'Y'));
             str_build_y_axis.append_printf(type_freq_format, to_short_string(y_type), y_freq);
         }
 
