@@ -8,6 +8,8 @@
 #include <client_response.hpp>
 #include <qr.hpp>
 #include <meta_utils.hpp>
+#include <standard_frame/frame_text_prompt.hpp>
+#include <standard_frame/frame_wait.hpp>
 
 using Phase = PhaseManualBeltTuning;
 
@@ -26,7 +28,7 @@ constexpr const char *txt_desc_gantry = N_("Move printhead to the back. Check th
 constexpr const char *txt_desc_gantry = N_("Move printhead to the front. Check there's no gap between gantry and tensioner on both ends. If there is, follow the guide.");
 #endif
 // Waiting for homing and moving to wizard position
-constexpr const char *txt_wait = N_("Printer is homing, please wait.");
+constexpr auto txt_wait = N_("Printer is homing, please wait.");
 // Prepare for measuring actual frequencies, QR, prerequisites PHASE: intro_measure
 constexpr const char *txt_title_measure = N_("Measuring actual belt frequency");
 constexpr const char *txt_desc_measure = N_("The upper belt will be measured first, then the lower. Use the knob to adjust resonance. Correct frequency appears as slow belt motion with sharp peaks.");
@@ -50,16 +52,12 @@ constexpr const char *txt_title_turn_screw = N_("Adjust belt tensioners");
 constexpr const char *txt_desc_turn_screw = N_("Turn both screws:\n%s %s turns\n\nPress Continue when done.");
 constexpr const char *txt_desc_no_turn = N_("No need to turn the tensioner screws.\n\nPress Continue to finish calibration or Adjust to repeat measuring.");
 // Finish screen
-constexpr const char *txt_title_finished = N_("Calibration complete");
-constexpr const char *txt_desc_finished = N_("Belt tension has been successfully calibrated.\n\nPress Finish to exit.");
+constexpr auto txt_desc_finished = N_("Belt tension has been successfully calibrated.");
 
 constexpr uint8_t qr_size = 100;
 
 constexpr Rect16 rect_title = Rect16(WizardDefaults::MarginLeft, WizardDefaults::row_0, GuiDefaults::ScreenWidth - WizardDefaults::MarginLeft - WizardDefaults::MarginRight, WizardDefaults::txt_h);
 constexpr Rect16 rect_line = Rect16(WizardDefaults::MarginLeft, WizardDefaults::row_1, GuiDefaults::ScreenWidth - WizardDefaults::MarginLeft - WizardDefaults::MarginRight, 1);
-
-constexpr Rect16 rect_hourglass = Rect16(WizardDefaults::MarginLeft, WizardDefaults::row_0, GuiDefaults::ScreenWidth - WizardDefaults::MarginLeft - WizardDefaults::MarginRight, 110);
-constexpr Rect16 rect_wait = Rect16(WizardDefaults::MarginLeft, rect_hourglass.Bottom() + WizardDefaults::txt_h, GuiDefaults::ScreenWidth - WizardDefaults::MarginLeft - WizardDefaults::MarginRight, WizardDefaults::txt_h);
 
 constexpr Rect16 rect_qr = Rect16(GuiDefaults::ScreenWidth - WizardDefaults::MarginRight - qr_size, WizardDefaults::row_1 + 10 /*=visual delimeter*/, qr_size, qr_size);
 constexpr Rect16 rect_desc = Rect16(WizardDefaults::MarginLeft, WizardDefaults::row_1 + 10 /*=visual delimeter*/, GuiDefaults::ScreenWidth - WizardDefaults::MarginLeft - WizardDefaults::MarginRight, WizardDefaults::Y_space - WizardDefaults::RectRadioButton(0).Height() - WizardDefaults::row_h - 30 /*=visual space*/);
@@ -74,26 +72,9 @@ constexpr Rect16 rect_numb = Rect16(GuiDefaults::ScreenWidth / 2 - 50, WizardDef
 constexpr Rect16 rect_knob = Rect16(GuiDefaults::ScreenWidth / 2 - 41, WizardDefaults::RectRadioButton(0).Top() - 70, 81, 55);
 constexpr Rect16 rect_minus = Rect16(GuiDefaults::ScreenWidth / 2 - 61, WizardDefaults::RectRadioButton(0).Top() - 70, 20, 55);
 constexpr Rect16 rect_plus = Rect16(GuiDefaults::ScreenWidth / 2 + 40, WizardDefaults::RectRadioButton(0).Top() - 70, 20, 55);
-
-constexpr Rect16 rect_text_joe = Rect16(WizardDefaults::MarginLeft, WizardDefaults::row_1 + 10, GuiDefaults::ScreenWidth - WizardDefaults::MarginLeft - WizardDefaults::MarginRight - 50, WizardDefaults::Y_space - WizardDefaults::RectRadioButton(0).Height() - WizardDefaults::row_h - 30 /*=visual space*/ - 64 /* icon */);
-constexpr Rect16 rect_joe = Rect16(0, rect_text_joe.Bottom(), GuiDefaults::ScreenWidth, 64);
 } // namespace
 
 namespace frames {
-
-class FrameWait {
-public:
-    FrameWait(window_frame_t *parent)
-        : hourglass(parent, rect_hourglass, &img::hourglass_26x39)
-        , wait(parent, rect_wait, is_multiline::no, is_closed_on_click_t::no, _(txt_wait)) {
-        hourglass.SetAlignment(Align_t::CenterBottom());
-        wait.SetAlignment(Align_t::Center());
-    }
-
-protected:
-    window_icon_t hourglass;
-    window_text_t wait;
-};
 
 class FrameTitle {
 public:
@@ -145,20 +126,6 @@ protected:
     const char *desc_ptr;
     window_text_t desc;
     StringViewUtf8Parameters<30> params;
-};
-
-class FrameFinishJoe : public FrameTitleRadio {
-public:
-    FrameFinishJoe(window_frame_t *parent, Phase phase, const char *title, const char *desc)
-        : FrameTitleRadio(parent, phase, title)
-        , desc(parent, rect_text_joe, is_multiline::yes, is_closed_on_click_t::no, _(desc))
-        , joe(parent, rect_joe, &img::pepa_42x64) {
-        joe.SetAlignment(Align_t::Center());
-    }
-
-protected:
-    window_text_t desc;
-    window_icon_t joe;
 };
 
 class FrameTitleDescRadioQR : public FrameTitleRadio {
@@ -297,14 +264,14 @@ namespace {
 using Frames = FrameDefinitionList<ScreenManualBeltTuning::FrameStorage,
     FrameDefinition<Phase::intro, frames::FrameTitleDescRadioQR, Phase::intro, txt_title_begin, txt_desc_begin, link_begin_calib>,
     FrameDefinition<Phase::check_x_gantry, frames::FrameTitleDescRadioQR, Phase::check_x_gantry, txt_title_gantry, txt_desc_gantry, link_belt_calib_gantry>,
-    FrameDefinition<Phase::homing_wait, frames::FrameWait>,
+    FrameDefinition<Phase::homing_wait, FrameWait, txt_wait>,
     FrameDefinition<Phase::intro_measure, frames::FrameTitleDescRadioQR, Phase::intro_measure, txt_title_measure, txt_desc_measure, link_begin_calib>,
     FrameDefinition<Phase::measure_upper_belt, frames::FrameAdjustKnob, Phase::measure_upper_belt, txt_title_up_belt_freq, txt_desc_up_belt_freq>,
     FrameDefinition<Phase::measure_lower_belt, frames::FrameAdjustKnob, Phase::measure_lower_belt, txt_title_lo_belt_freq, txt_desc_lo_belt_freq>,
     FrameDefinition<Phase::show_tension, frames::FrameTitleDescRadio, Phase::show_tension, txt_title_freq_report, txt_desc_freq_report>,
     FrameDefinition<Phase::alignment_issue, frames::FrameTitleDescRadioQR, Phase::alignment_issue, txt_title_alignment_issue, txt_desc_alignment_issue, link_belt_calib_gantry>,
     FrameDefinition<Phase::adjust_tensioners, frames::FrameTitleDescRadioQR, Phase::adjust_tensioners, txt_title_turn_screw, txt_desc_turn_screw, link_tensioning>,
-    FrameDefinition<Phase::finished, frames::FrameFinishJoe, Phase::finished, txt_title_finished, txt_desc_finished>>;
+    FrameDefinition<Phase::finished, FrameTextPrompt, Phase::finished, txt_desc_finished>>;
 
 } // namespace
 
