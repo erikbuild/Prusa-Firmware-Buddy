@@ -479,6 +479,9 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
     do_blocking_move_to_xy(z_probing_position);
 
     const float sensor_z = measure_sensor_true_z(config);
+    if (std::isnan(sensor_z)) {
+        return std::unexpected("Initial probing failed, sensor Z is NaN");
+    }
 
     const float probing_z = sensor_z + config.sensing_z;
     do_blocking_move_to_z(probing_z);
