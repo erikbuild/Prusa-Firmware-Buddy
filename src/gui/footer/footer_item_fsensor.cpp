@@ -18,17 +18,29 @@ FooterItemFSensorSide::FooterItemFSensorSide(window_t *parent)
 }
 
 int FooterItemFSensor::static_readValue() {
-    if (IFSensor *sensor = FSensors_instance().sensor(LogicalFilamentSensor::extruder)) {
-        return static_cast<int>(sensor->get_state());
+    IFSensor *sensor = FSensors_instance().sensor(LogicalFilamentSensor::extruder);
+    if (auto tool = physical_tool_override()) {
+        sensor = GetExtruderFSensor(*tool);
     }
-    return no_tool_value;
+
+    if (sensor) {
+        return static_cast<int>(sensor->get_state());
+    } else {
+        return no_tool_value;
+    }
 }
 
 int FooterItemFSensorSide::static_readValue() {
-    if (IFSensor *sensor = FSensors_instance().sensor(LogicalFilamentSensor::side)) {
-        return static_cast<int>(sensor->get_state());
+    IFSensor *sensor = FSensors_instance().sensor(LogicalFilamentSensor::side);
+    if (auto tool = physical_tool_override()) {
+        sensor = GetSideFSensor(*tool);
     }
-    return no_tool_value;
+
+    if (sensor) {
+        return static_cast<int>(sensor->get_state());
+    } else {
+        return no_tool_value;
+    }
 }
 
 // TODO FIXME last character is not shown, I do not know why, added space as workaround

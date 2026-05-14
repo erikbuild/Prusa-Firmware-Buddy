@@ -8,6 +8,18 @@
 #include "cmath_ext.h"
 #include "display_helper.h"
 
+namespace {
+std::optional<PhysicalToolIndex> physical_tool_override_;
+}
+
+void IFooterItem::set_tool_override(std::optional<PhysicalToolIndex> physical_tool) {
+    physical_tool_override_ = physical_tool;
+}
+
+std::optional<PhysicalToolIndex> IFooterItem::physical_tool_override() {
+    return physical_tool_override_;
+}
+
 IFooterItem::IFooterItem(window_t *parent, Rect16::W_t width)
     : window_frame_t(parent, Rect16(0, 0 /* item_top*/, width, item_h))
     , update_period(500)

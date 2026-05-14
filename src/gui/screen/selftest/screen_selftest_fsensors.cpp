@@ -254,6 +254,7 @@ ScreenSelftestFSensors::ScreenSelftestFSensors()
 
 ScreenSelftestFSensors::~ScreenSelftestFSensors() {
     destroy_frame();
+    IFooterItem::set_tool_override(std::nullopt);
 }
 
 void ScreenSelftestFSensors::create_frame() {
@@ -269,4 +270,5 @@ void ScreenSelftestFSensors::update_frame() {
     const uint8_t tool = fsm_base_data.GetData()[0];
     header.SetText(_("FS calibration - Tool %d").formatted(title_params_, tool + 1));
     Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
+    IFooterItem::set_tool_override(PhysicalToolIndex::from_raw(tool));
 }

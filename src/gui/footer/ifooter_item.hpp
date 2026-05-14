@@ -28,6 +28,11 @@ public:
     IFooterItem(window_t *parent, Rect16::Width_t width);
     constexpr void ChangeUpdatePeriod(uint16_t ms) { update_period = ms; }
 
+    /// Forces all footer items that have the feature implemented show information for the specified tool
+    static void set_tool_override(std::optional<PhysicalToolIndex> physical_tool);
+
+    static std::optional<PhysicalToolIndex> physical_tool_override();
+
 protected:
     enum class TickResult {
         unchanged,
