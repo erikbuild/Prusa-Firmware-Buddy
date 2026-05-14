@@ -868,6 +868,8 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = 576.f / 550.f;
     #define Y_MIN_POS (-33.5f - Y_MAX_OFFSET)
     #define Z_MIN_POS (0 - Z_MAX_OFFSET)
     #define X_MAX_POS (X_BED_SIZE - X_MIN_OFFSET + 11)
+    #define X_MIN_PRINT_POS X_MIN_POS
+    #define X_MAX_PRINT_POS X_WASTEBIN_SAFE_POINT // maximal print area X position (excluding nozzle cleaner area)
     #define Y_MAX_PRINT_POS (Y_BED_SIZE - Y_MIN_OFFSET) // maximal print area Y position (excluding toolchanger area)
     #define Y_MAX_POS (Y_MAX_PRINT_POS) // extra distance in Y to reach toolchanger
     #define PROBE_MAX_Y Y_BED_SIZE // limit maximal Y probe position (so that tool doesn't hit toolchanger with high tool offsets)
@@ -884,6 +886,8 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = 576.f / 550.f;
     #define Y_MIN_POS -19
     #define Z_MIN_POS 0
     #define X_MAX_POS (X_BED_SIZE + 2)
+    #define X_MIN_PRINT_POS X_MIN_POS
+    #define X_MAX_PRINT_POS X_MAX_POS
     #define Y_MAX_POS (Y_BED_SIZE + 1)
     #define Y_MAX_PRINT_POS Y_MAX_POS
     #define Y_MIN_PRINT_POS Y_MIN_POS

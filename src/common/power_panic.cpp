@@ -808,14 +808,15 @@ void panic_loop() {
 #endif
             destination = current_position;
             const PrintArea::rect_t print_rect = print_area.get_bounding_rect(); // We need to get out of print area
-#if HAS_TOOLCHANGER() && HAS_TOOL_CRASH_RECOVERY()
-            bool in_dock_area = false;
+#if HAS_TOOLCHANGER()
+            bool stay_put = false;
     #if HAS_INDX()
-            in_dock_area = state_buf.crash.crash_position.y < PrusaToolChanger::SAFE_Y_WITH_TOOL;
+            stay_put = state_buf.crash.crash_position.y < PrusaToolChanger::SAFE_Y_WITH_TOOL // Dock area
+                || state_buf.crash.crash_position.x > X_WASTEBIN_SAFE_POINT; // Cleaner / wastebin strip
     #elif PRINTER_IS_PRUSA_XL()
-            in_dock_area = state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL;
+            stay_put = state_buf.crash.crash_position.y > PrusaToolChanger::SAFE_Y_WITH_TOOL;
     #endif
-            if (in_dock_area) { // Is in the toolchange area
+            if (stay_put) { // Outside print area - no need to escape, and lateral move could hit hardware
                 // Do not move X or Y
             } else
 #endif
@@ -834,8 +835,9 @@ void panic_loop() {
                     } else
 #endif /*ENABLED(COREXY)*/
                     {
-                        // Move to X edge of printer in direction of nearest X end of print area
-                        current_position.x = (current_position.x < (print_rect.a.x + print_rect.b.x) / 2 ? X_MIN_POS : X_MAX_POS);
+                        // Move to X edge of printer in direction of nearest X end of print area.
+                        // X_*_PRINT_POS excludes per-printer hardware outside the print area (nozzle cleaner / waste bin).
+                        current_position.x = (current_position.x < (print_rect.a.x + print_rect.b.x) / 2 ? X_MIN_PRINT_POS : X_MAX_PRINT_POS);
                     }
                 } else {
                     // we might be anywhere, plan some move towards the endstop

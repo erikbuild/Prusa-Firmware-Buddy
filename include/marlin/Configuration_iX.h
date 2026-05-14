@@ -795,6 +795,8 @@
 #define Y_MIN_POS -1
 #define Z_MIN_POS 0
 #define X_MAX_POS 274
+#define X_MIN_PRINT_POS X_MIN_POS
+#define X_MAX_PRINT_POS X_MAX_POS
 #define Y_MIN_PRINT_POS Y_MIN_POS
 #define Y_MAX_PRINT_POS (Y_BED_SIZE) // maximal print area Y position
 #define Y_MAX_POS 307
