@@ -23,6 +23,7 @@
 #include "../../inc/MarlinConfig.h"
 
 #include <option/has_dwarf.h>
+#include <option/has_indx.h>
 #include <option/has_toolchanger.h>
 #include <option/has_bed_fan.h>
 #if HAS_BED_FAN()
@@ -125,6 +126,15 @@ static bool set_special_fan_speed(uint8_t fan, std::optional<PhysicalToolIndex> 
         }
         return true;
     #endif
+
+    #if HAS_INDX()
+    case 6:
+        // Dock fan on the xBuddy NEXTRUDER print-fan pin (same controller as
+        // the C1 print fan).
+        Fans::dock_fan().set_pwm(speed);
+        return true;
+    #endif
+
     default:
         break;
     }
@@ -154,6 +164,7 @@ static bool set_special_fan_speed(uint8_t fan, std::optional<PhysicalToolIndex> 
  *     - `3` - Cooling fan (if supported) or Enclosure fan (XL)
  *     - `4` - Filtration fan (if supported)
  *     - `5` - Bed Fan (if supported)
+ *     - `6` - Dock fan (INDX only)
  * - `R` - Set the to auto control (if supported by the fan)
  * - `T` - Select which tool if the same fan is on multiple tools, active_extruder if not specified
  * - `N` - Ramp function breakpoint PWM for chamber fan regulator (0-255, P3/P4 only). See description below.
@@ -253,6 +264,7 @@ void GcodeSuite::M106() {
  *     - `3` - Cooling fan (if supported) or Enclosure fan (XL)
  *     - `4` - Filtration fan (if supported)
  *     - `5` - Bed Fan (if supported)
+ *     - `6` - Dock fan (INDX only)
  * - `T` - Select which tool if there are multiple fans, one on each tool
  */
 void GcodeSuite::M107() {

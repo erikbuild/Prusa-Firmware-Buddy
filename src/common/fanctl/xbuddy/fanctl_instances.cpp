@@ -74,8 +74,27 @@ CFanCtlCommon &Fans::heat_break([[maybe_unused]] size_t index) {
     return instance;
 };
 
+#if HAS_INDX()
+CFanCtlCommon &Fans::dock_fan() {
+    // Same hardware as the C1 print fan (NEXTRUDER print-fan pin + shared tach).
+    // RPM checking is disabled (skip_tacho_t::yes) until error handling is wired up.
+    static auto instance = CFanCtl3WireDynamic(
+        buddy::hw::fanPrintPwm,
+        buddy::hw::fanTach,
+        FANCTLPRINT_PWM_MIN, FANCTLPRINT_PWM_MAX,
+        FANCTLPRINT_RPM_MIN, FANCTLPRINT_RPM_MAX,
+        FANCTLPRINT_PWM_THR,
+        is_autofan_t::no,
+        skip_tacho_t::yes,
+        FANCTLPRINT_MIN_PWM_TO_MEASURE_RPM);
+    return instance;
+}
+#endif
+
 void Fans::tick() {
-#if !HAS_INDX()
+#if HAS_INDX()
+    Fans::dock_fan().tick();
+#else
     CFanCtl3Wire &heatbreak_fan = static_cast<CFanCtl3Wire &>(Fans::heat_break(PhysicalToolIndex::from_raw(0)));
     CFanCtl3Wire &print_fan = static_cast<CFanCtl3Wire &>(Fans::print(PhysicalToolIndex::from_raw(0)));
 

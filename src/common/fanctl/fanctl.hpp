@@ -4,6 +4,7 @@
 #include <device/board.h>
 #include <cstddef>
 #include <tool_index.hpp>
+#include <option/has_indx.h>
 #include <option/xl_enclosure_support.h>
 
 class Fans {
@@ -28,5 +29,13 @@ public:
 #if XL_ENCLOSURE_SUPPORT() // XLBOARD has CFanCtlPuppy and additional enclosure fan, but DWARF has only normal CFanCtls
     static CFanCtlCommon &enclosure();
 #endif
+
+#if HAS_INDX()
+    // Auxiliary dock fan, wired to the xBuddy NEXTRUDER connector's print-fan
+    // pin and using the same fan controller as the C1 print fan. The print fan
+    // itself lives on the INDX head so that pin is free here.
+    static CFanCtlCommon &dock_fan();
+#endif
+
     static void tick();
 };

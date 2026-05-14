@@ -52,6 +52,7 @@
 #include <option/has_advanced_power.h>
 #include <option/has_phase_stepping.h>
 #include <option/has_burst_stepping.h>
+#include <option/has_indx.h>
 #include <option/has_xbuddy_extension.h>
 #include <option/buddy_enable_wui.h>
 #include <option/has_touch.h>
@@ -251,6 +252,9 @@ static void init_isr_statics() {
     Fans::heat_break(PhysicalToolIndex::from_raw(0));
 #if XL_ENCLOSURE_SUPPORT()
     Fans::enclosure();
+#endif
+#if HAS_INDX()
+    Fans::dock_fan();
 #endif
     sensor_data();
     GetExtruderFSensor(0);
