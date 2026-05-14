@@ -55,6 +55,7 @@
 #include <option/has_heatbed_screws_during_transport.h>
 #include <option/has_anfc.h>
 #include <option/has_indx.h>
+#include <option/has_side_fsensor.h>
 #include <option/has_side_fsensor_invertible.h>
 #include <common/extended_printer_type.hpp>
 #include <common/hw_check.hpp>
@@ -193,8 +194,13 @@ struct CurrentStore
     StoreItem<uint8_t, 0xff, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Side FSensors enabled")> fsensor_extruder_enabled_bits;
 
 #if HAS_SIDE_FSENSOR_INVERTIBLE()
+    /// Per-tool side filament sensor selftest result.
+    StoreItemArray<TestResult, defaults::test_result_unknown, ItemFlag::calibrations, journal::hash("Selftest Result - Side FSensor"), 16, PhysicalToolIndex::count> selftest_result_side_fsensor;
+#endif
+
+#if HAS_SIDE_FSENSOR_INVERTIBLE()
     /// Per-tool bitset: side filament sensor has its HasFilament/NoFilament outputs swapped (reversed magnet polarity).
-    StoreItem<EncodedBitset<PhysicalToolIndex::count>, 0, ItemFlag::calibrations, journal::hash("Side FSensor Polarity Inverted")> side_fsensor_polarity_inverted_bits;
+    StoreItem<EncodedBitset<16>, 0, ItemFlag::calibrations, journal::hash("Side FSensor Polarity Inverted")> side_fsensor_polarity_inverted_bits;
 #endif
 
     // LAN settings
