@@ -452,6 +452,9 @@ namespace {
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
     constinit StrongIndexArray<ErrorChecker, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> hotendFanErrorChecker;
     constinit ErrorChecker printFanErrorChecker;
+#if HAS_INDX()
+    constinit ErrorChecker dockFanErrorChecker;
+#endif
 
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
     constinit ErrorChecker xbe_cool_fan_checker; // Handles both cooling fans (we cannot differentiate anyway)
@@ -2984,6 +2987,12 @@ static void _server_print_loop(void) {
         }
 #endif
         printFanErrorChecker.checkTrue(Fans::print(active_extruder).is_fan_ok(), WarningType::PrintFanError, false, true);
+#if HAS_INDX()
+        // INDX_TODO: Replace WarningType::PrintFanError with a dedicated
+        // WarningType::DockFanError (YAML entry + ErrCode mapping + icon).
+        // Disabled for now — `true` keeps the checker from firing.
+        dockFanErrorChecker.checkTrue(true /* INDX_TODO: Fans::dock_fan().is_fan_ok() */, WarningType::PrintFanError, false, true);
+#endif
 
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
         const bool cool_fan_ok = buddy::xbuddy_extension().is_fan_ok(buddy::XBuddyExtension::Fan::cooling_fan_1) && buddy::xbuddy_extension().is_fan_ok(buddy::XBuddyExtension::Fan::cooling_fan_2);
@@ -3018,6 +3027,12 @@ static void _server_print_loop(void) {
     if (Fans::print(active_extruder).get_rpm_is_ok()) {
         printFanErrorChecker.reset();
     }
+#if HAS_INDX()
+    // INDX_TODO: pair with the dedicated dock-fan checker when wired up.
+    if (Fans::dock_fan().get_rpm_is_ok()) {
+        dockFanErrorChecker.reset();
+    }
+#endif
 
 #if HAS_TEMP_HEATBREAK
     for (auto tool : PhysicalToolIndex::all()) {
@@ -3069,6 +3084,10 @@ void resuming_begin(void) {
         hotendFanErrorChecker[tool].reset();
     }
     printFanErrorChecker.reset();
+#if HAS_INDX()
+    // INDX_TODO: pair with the dedicated dock-fan checker when wired up.
+    dockFanErrorChecker.reset();
+#endif
 
     mcuMaxTempErrorChecker.reset();
 #if HAS_DWARF()
