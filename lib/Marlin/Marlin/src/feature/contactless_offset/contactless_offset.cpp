@@ -70,7 +70,7 @@
 
 LOG_COMPONENT_DEF(ContactlessOffset, logging::Severity::debug);
 
-#define SERIAL_DEBUG
+#define TOOL_OFFSET_DEBUG() 1
 
 // Margin (in samples) added around each chunk to suppress filter edge artifacts.
 static constexpr size_t preprocess_edge_margin = 10;

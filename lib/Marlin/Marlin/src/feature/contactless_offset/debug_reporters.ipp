@@ -1,7 +1,9 @@
 // Debug reporter functions for contactless offset measurement.
 // Included directly into contactless_offset.cpp — not a standalone translation unit.
-// All functions are called unconditionally; #ifdef SERIAL_DEBUG gates the bodies so we can
-// always call them to not clutter the business logic with extra ifs.
+// All functions are called unconditionally; SERIAL_DEBUG selects between real implementations
+// and empty stubs so we can always call them to not clutter the business logic with extra ifs.
+
+#if TOOL_OFFSET_DEBUG()
 
 #include <cstdarg>
 #include <cstdio>
@@ -12,8 +14,6 @@
     #include <USBSerial.h>
 #endif
 
-// serial_printf is only called from within #ifdef SERIAL_DEBUG bodies
-#ifdef SERIAL_DEBUG
 static void serial_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
 static void serial_printf(const char *fmt, ...) {
@@ -24,80 +24,62 @@ static void serial_printf(const char *fmt, ...) {
     va_end(args);
     SerialUSB.cdc_write_sync(reinterpret_cast<uint8_t *>(buf), strlen(buf));
 }
-#endif
 
 // Streaming reporter for raw sensor samples during a line scan
 class LineSamplesDebugReporter {
-    [[maybe_unused]] const char *label;
-    [[maybe_unused]] bool first_sample = true;
+    const char *label;
+    bool first_sample = true;
 
 public:
     explicit LineSamplesDebugReporter(const char *label)
         : label(label) {}
 
     void start() {
-#ifdef SERIAL_DEBUG
         serial_printf("# line_samples {\"label\": \"%s\", \"samples\": [", label);
-#endif
     }
 
-    void report_sample([[maybe_unused]] float sensor_value) {
-#ifdef SERIAL_DEBUG
+    void report_sample(float sensor_value) {
         if (!first_sample) {
             serial_printf(", ");
         } else {
             first_sample = false;
         }
         serial_printf("%.6f", sensor_value);
-#endif
     }
 
-    void finish([[maybe_unused]] float sampling_freq_hz) {
-#ifdef SERIAL_DEBUG
+    void finish(float sampling_freq_hz) {
         serial_printf("], \"sampling_freq_hz\": %.2f}\n", sampling_freq_hz);
-#endif
     }
 };
 
-static void debug_report_probed_z([[maybe_unused]] float sensor_z, [[maybe_unused]] float offset) {
-#ifdef SERIAL_DEBUG
+static void debug_report_probed_z(float sensor_z, float offset) {
     serial_printf("# probed_z {\"sensor_z\": %.6f, \"offset\": %.6f}\n", sensor_z, offset);
-#endif
 }
 
-static void debug_report_scan_start([[maybe_unused]] const char *label) {
-#ifdef SERIAL_DEBUG
+static void debug_report_scan_start(const char *label) {
     serial_printf("# scan_start {\"label\": \"%s\"}\n", label);
-#endif
 }
 
-static void debug_report_scan_result([[maybe_unused]] const char *label, [[maybe_unused]] float confidence, float position_mm) {
-#ifdef SERIAL_DEBUG
+static void debug_report_scan_result(const char *label, float confidence, float position_mm) {
     serial_printf("# scan_result {\"label\": \"%s\", \"confidence\": %.3f, \"position_mm\": %.3f}\n", label, confidence, position_mm);
-#endif
 }
 
-static void debug_report_pass1_center([[maybe_unused]] float x, [[maybe_unused]] float y) {
-#ifdef SERIAL_DEBUG
+static void debug_report_pass1_center(float x, float y) {
     serial_printf("# pass1_center {\"x\": %.6f, \"y\": %.6f}\n", x, y);
-#endif
 }
 
-static void debug_report_analysis_error([[maybe_unused]] const char *label, [[maybe_unused]] const char *error) {
-#ifdef SERIAL_DEBUG
+static void debug_report_analysis_error(const char *label, const char *error) {
     serial_printf("# analysis_error {\"label\": \"%s\", \"error\": \"%s\"}\n", label, error);
-#endif
 }
 
 template <typename Container>
 static void debug_report_symmetry_search(
-    [[maybe_unused]] const Container &signal_value,
-    [[maybe_unused]] const Container &signal_deriv,
-    [[maybe_unused]] unsigned max_lag,
-    [[maybe_unused]] int coarse_lag, [[maybe_unused]] float coarse_score,
-    [[maybe_unused]] int fine_min, [[maybe_unused]] int fine_max,
-    [[maybe_unused]] int best_lag, [[maybe_unused]] float best_combined) {
-#ifdef SERIAL_DEBUG
+    const Container &signal_value,
+    const Container &signal_deriv,
+    unsigned max_lag,
+    int coarse_lag, float coarse_score,
+    int fine_min, int fine_max,
+    int best_lag, float best_combined) {
     unsigned n = static_cast<unsigned>(signal_value.size());
     float corr_at_0_val = sp::symmetry_correlation(signal_value, 0, 1.0f);
     float corr_at_0_der = sp::symmetry_correlation(signal_deriv, 0, -1.0f);
@@ -112,16 +94,14 @@ static void debug_report_symmetry_search(
         coarse_lag, coarse_score,
         fine_min, fine_max, best_lag, best_combined,
         corr_at_0_val, corr_at_0_der, corr_at_best_val, corr_at_best_der);
-#endif
 }
 
 static void debug_report_rough_align(
-    [[maybe_unused]] const char *status,
-    [[maybe_unused]] int offset,
-    [[maybe_unused]] float extra_float,
-    [[maybe_unused]] const size_t pass_start[4],
-    [[maybe_unused]] const size_t pass_end[4]) {
-#ifdef SERIAL_DEBUG
+    const char *status,
+    int offset,
+    float extra_float,
+    const size_t pass_start[4],
+    const size_t pass_end[4]) {
     serial_printf("# rough_align {\"status\": \"%s\", \"offset\": %d, \"extra\": %.3f, "
                   "\"chunks\": [[%u,%u],[%u,%u],[%u,%u],[%u,%u]]}\n",
         status, offset, extra_float,
@@ -129,18 +109,16 @@ static void debug_report_rough_align(
         static_cast<unsigned>(pass_start[1]), static_cast<unsigned>(pass_end[1]),
         static_cast<unsigned>(pass_start[2]), static_cast<unsigned>(pass_end[2]),
         static_cast<unsigned>(pass_start[3]), static_cast<unsigned>(pass_end[3]));
-#endif
 }
 
 template <typename Container>
 static void debug_report_pass_preprocessed(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] size_t chunk_start,
-    [[maybe_unused]] size_t chunk_size,
-    [[maybe_unused]] float dt,
-    [[maybe_unused]] const Container &signal_value) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    int pass_num,
+    size_t chunk_start,
+    size_t chunk_size,
+    float dt,
+    const Container &signal_value) {
     serial_printf("# pass_preprocessed {\"label\": \"%s\", \"pass\": %d, "
                   "\"chunk_start\": %u, \"chunk_size\": %u, \"dt\": %.6f, \"samples\": [",
         label, pass_num,
@@ -153,15 +131,13 @@ static void debug_report_pass_preprocessed(
         serial_printf("%.6f", signal_value[i]);
     }
     serial_printf("]}\n");
-#endif
 }
 
 template <typename Container>
 static void debug_report_pass_derivative(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] const Container &signal_deriv) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    int pass_num,
+    const Container &signal_deriv) {
     serial_printf("# pass_derivative {\"label\": \"%s\", \"pass\": %d, \"samples\": [",
         label, pass_num);
     for (size_t i = 0; i < signal_deriv.size(); ++i) {
@@ -171,19 +147,17 @@ static void debug_report_pass_derivative(
         serial_printf("%.6f", signal_deriv[i]);
     }
     serial_printf("]}\n");
-#endif
 }
 
 template <typename Container>
 static void debug_report_pass_correlation(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] int fine_min,
-    [[maybe_unused]] int fine_max,
-    [[maybe_unused]] int best_lag,
-    [[maybe_unused]] const Container &signal_value,
-    [[maybe_unused]] const Container &signal_deriv) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    int pass_num,
+    int fine_min,
+    int fine_max,
+    int best_lag,
+    const Container &signal_value,
+    const Container &signal_deriv) {
     // Compute normalization factors over the fine range
     float max_abs_val = 0, max_abs_der = 0;
     for (int lag = fine_min; lag <= fine_max; ++lag) {
@@ -244,19 +218,17 @@ static void debug_report_pass_correlation(
         serial_printf("%.4f", cv + cd);
     }
     serial_printf("]}\n");
-#endif
 }
 
 template <typename Container>
 static void debug_report_rough_align_score(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] float dt_dec,
-    [[maybe_unused]] int k_min,
-    [[maybe_unused]] int k_max,
-    [[maybe_unused]] int k_best,
-    [[maybe_unused]] float score_over_baseline,
-    [[maybe_unused]] const Container &score_curve) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    float dt_dec,
+    int k_min,
+    int k_max,
+    int k_best,
+    float score_over_baseline,
+    const Container &score_curve) {
     serial_printf("# rough_align_score {\"label\": \"%s\", \"dt_dec\": %.6f, "
                   "\"k_min\": %d, \"k_max\": %d, \"k_best\": %d, "
                   "\"score_over_baseline\": %.4f, \"score_curve\": [",
@@ -268,20 +240,18 @@ static void debug_report_rough_align_score(
         serial_printf("%.4e", static_cast<float>(score_curve[i]));
     }
     serial_printf("]}\n");
-#endif
 }
 
 template <typename Container>
 static void debug_report_rough_align_energy(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int decimation,
-    [[maybe_unused]] float dt_dec,
-    [[maybe_unused]] float threshold,
-    [[maybe_unused]] int offset_original,
-    [[maybe_unused]] const EnergyRegion *regions,
-    [[maybe_unused]] size_t num_regions,
-    [[maybe_unused]] const Container &energy) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    int decimation,
+    float dt_dec,
+    float threshold,
+    int offset_original,
+    const EnergyRegion *regions,
+    size_t num_regions,
+    const Container &energy) {
     serial_printf("# rough_align_energy {\"label\": \"%s\", \"decimation\": %d, "
                   "\"dt_dec\": %.6f, \"threshold\": %.6f, \"offset\": %d, \"regions\": [",
         label, decimation, dt_dec, threshold, offset_original);
@@ -301,7 +271,6 @@ static void debug_report_rough_align_energy(
         serial_printf("%.4f", energy[i]);
     }
     serial_printf("]}\n");
-#endif
 }
 
 // Reports the second-pass (trimmed) symmetry refinement.
@@ -309,18 +278,17 @@ static void debug_report_rough_align_energy(
 // pass2_lag/pass2_score = trimmed-signal second-pass result, in original-signal lag coordinates.
 // pass1_refined_full / pass2_refined_full = parabolic-refined floats in original lag coordinates.
 static void debug_report_pass_trim_refine(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] size_t n_full,
-    [[maybe_unused]] size_t n_kept,
-    [[maybe_unused]] size_t trim_start,
-    [[maybe_unused]] int pass1_lag,
-    [[maybe_unused]] float pass1_score,
-    [[maybe_unused]] float pass1_refined,
-    [[maybe_unused]] int pass2_lag,
-    [[maybe_unused]] float pass2_score,
-    [[maybe_unused]] float pass2_refined) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    int pass_num,
+    size_t n_full,
+    size_t n_kept,
+    size_t trim_start,
+    int pass1_lag,
+    float pass1_score,
+    float pass1_refined,
+    int pass2_lag,
+    float pass2_score,
+    float pass2_refined) {
     serial_printf("# pass_trim_refine {\"label\": \"%s\", \"pass\": %d, "
                   "\"n_full\": %u, \"n_kept\": %u, \"trim_start\": %u, "
                   "\"pass1_lag\": %d, \"pass1_score\": %.4f, \"pass1_refined\": %.4f, "
@@ -331,16 +299,14 @@ static void debug_report_pass_trim_refine(
         static_cast<unsigned>(trim_start),
         pass1_lag, pass1_score, pass1_refined,
         pass2_lag, pass2_score, pass2_refined);
-#endif
 }
 
 static void debug_report_pass_raw_chunk(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] int pass_num,
-    [[maybe_unused]] size_t chunk_start,
-    [[maybe_unused]] size_t chunk_size,
-    [[maybe_unused]] const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    int pass_num,
+    size_t chunk_start,
+    size_t chunk_size,
+    const sfl::segmented_vector<RawRecordedSample, 512> &raw_samples) {
     serial_printf("# pass_raw_chunk {\"label\": \"%s\", \"pass\": %d, "
                   "\"chunk_start\": %u, \"chunk_size\": %u, \"samples\": [",
         label, pass_num,
@@ -353,14 +319,12 @@ static void debug_report_pass_raw_chunk(
         serial_printf("%.0f", raw_samples[chunk_start + i].sensor_value);
     }
     serial_printf("]}\n");
-#endif
 }
 
 static void debug_report_motion_profile(
-    [[maybe_unused]] const SweepSpeedProfile &profile,
-    [[maybe_unused]] sp::SamplingFreq sampling_freq,
-    [[maybe_unused]] const char *label) {
-#ifdef SERIAL_DEBUG
+    const SweepSpeedProfile &profile,
+    sp::SamplingFreq sampling_freq,
+    const char *label) {
     const float dt = 1.0f / sampling_freq;
     auto profile_source = profile.make_source(sampling_freq);
 
@@ -381,13 +345,11 @@ static void debug_report_motion_profile(
         t += dt;
     }
     serial_printf("]}\n");
-#endif
 }
 
 static void debug_report_motion_timing(
-    [[maybe_unused]] const char *label,
-    [[maybe_unused]] const MotionExecutionResult &result) {
-#ifdef SERIAL_DEBUG
+    const char *label,
+    const MotionExecutionResult &result) {
     float sensor_offset_ms = 0;
     if (!result.raw_samples.empty() && result.motion_profile_start_us != 0) {
         sensor_offset_ms = static_cast<float>(
@@ -397,14 +359,12 @@ static void debug_report_motion_timing(
     serial_printf("# motion_timing {\"label\": \"%s\", \"convert_ms\": %lu, \"steps_ms\": %lu, \"expected_ms\": %lu, \"actual_ms\": %lu, \"sensor_offset_ms\": %.3f}\n",
         label, static_cast<unsigned long>(result.convert_time_ms), static_cast<unsigned long>(result.steps_time_ms),
         static_cast<unsigned long>(result.expected_time_ms), static_cast<unsigned long>(result.actual_time_ms), sensor_offset_ms);
-#endif
 }
 
 static void debug_report_twospeed_analysis(
-    [[maybe_unused]] const TwoSpeedAnalysisResult &result,
-    [[maybe_unused]] const SweepSpeedProfile &profile,
-    [[maybe_unused]] const char *label) {
-#ifdef SERIAL_DEBUG
+    const TwoSpeedAnalysisResult &result,
+    const SweepSpeedProfile &profile,
+    const char *label) {
     char name[64];
     snprintf(name, sizeof(name), "%.0f/%.0f mm/s, %.0fmm",
         profile.speed1, profile.speed2, profile.total_distance);
@@ -460,5 +420,75 @@ static void debug_report_twospeed_analysis(
             pass.correlation_peak,
             pass.correlation_peak_full);
     }
-#endif
 }
+
+#else // TOOL_OFFSET_DEBUG()
+
+class LineSamplesDebugReporter {
+public:
+    explicit LineSamplesDebugReporter(const char *) {}
+    void start() {}
+    void report_sample(float) {}
+    void finish(float) {}
+};
+
+static void debug_report_probed_z(float, float) {}
+static void debug_report_scan_start(const char *) {}
+static void debug_report_scan_result(const char *, float, float) {}
+static void debug_report_pass1_center(float, float) {}
+static void debug_report_analysis_error(const char *, const char *) {}
+
+template <typename Container>
+static void debug_report_symmetry_search(
+    const Container &, const Container &,
+    unsigned,
+    int, float,
+    int, int,
+    int, float) {}
+
+static void debug_report_rough_align(
+    const char *,
+    int,
+    float,
+    const size_t[4],
+    const size_t[4]) {}
+
+template <typename Container>
+static void debug_report_pass_preprocessed(
+    const char *, int, size_t, size_t, float, const Container &) {}
+
+template <typename Container>
+static void debug_report_pass_derivative(
+    const char *, int, const Container &) {}
+
+template <typename Container>
+static void debug_report_pass_correlation(
+    const char *, int, int, int, int, const Container &, const Container &) {}
+
+template <typename Container>
+static void debug_report_rough_align_score(
+    const char *, float, int, int, int, float, const Container &) {}
+
+template <typename Container>
+static void debug_report_rough_align_energy(
+    const char *, int, float, float, int, const EnergyRegion *, size_t, const Container &) {}
+
+static void debug_report_pass_trim_refine(
+    const char *, int, size_t, size_t, size_t,
+    int, float, float,
+    int, float, float) {}
+
+static void debug_report_pass_raw_chunk(
+    const char *, int, size_t, size_t,
+    const sfl::segmented_vector<RawRecordedSample, 512> &) {}
+
+static void debug_report_motion_profile(
+    const SweepSpeedProfile &, sp::SamplingFreq, const char *) {}
+
+static void debug_report_motion_timing(
+    const char *, const MotionExecutionResult &) {}
+
+static void debug_report_twospeed_analysis(
+    const TwoSpeedAnalysisResult &, const SweepSpeedProfile &, const char *) {}
+
+#endif // TOOL_OFFSET_DEBUG()
