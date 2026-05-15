@@ -24,7 +24,7 @@ static constexpr auto count = PhysicalToolIndex::count;
 static_assert(count == 8, "Update indx_dock_position_defaults if tool count changes");
 
 static constexpr std::array<float, count> x_mm = { 2.0f, 37.0f, 72.0f, 107.0f, 154.0f, 189.0f, 224.0f, 259.0f };
-static constexpr float y_mm = -28.7f;
+static constexpr float y_mm = -29.f;
 
 static constexpr std::array<DockPosition, count> positions = [] {
     std::array<DockPosition, count> result {};
