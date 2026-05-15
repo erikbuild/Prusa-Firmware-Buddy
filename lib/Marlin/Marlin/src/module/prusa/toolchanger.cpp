@@ -740,7 +740,7 @@ bool PrusaToolChanger::align_locks() {
         // Go to the front right corner quickly, so homing is not too long
         move(X_MAX_POS, 0, travel_feedrate);
     } else {
-        // A bit back in case the carriage is near tool
+        // Move a bit back in case the carriage is near tool
         if (do_homing_move(Y_AXIS, SAFE_Y_WITHOUT_TOOL - DOCK_DEFAULT_Y_MM)) {
             // If we hit something, it means we're at the front of the printer (Y_MIN)
             // Back of a bit, otherwise we'll be sliding on the front edge, falsely triggering Y endstops during the X move
@@ -754,7 +754,6 @@ bool PrusaToolChanger::align_locks() {
             // Check for the correct backoff direction
             static_assert(SAFE_Y_WITHOUT_TOOL - DOCK_DEFAULT_Y_MM < -10);
         }
-        axes_home_level[Y_AXIS] = AxisHomeLevel::not_homed; // Needs homing after
     }
     planner.synchronize();
 
@@ -763,9 +762,6 @@ bool PrusaToolChanger::align_locks() {
         axes_home_level[X_AXIS] = AxisHomeLevel::not_homed; // Needs homing
         return false; // Failed to bump right edge
     }
-    axes_home_level[X_AXIS] = AxisHomeLevel::not_homed; // Needs homing after
-    current_position.x = X_MAX_POS;
-    sync_plan_position();
 
     // Return to left edge before homing
     move(0, current_position.y, travel_feedrate);

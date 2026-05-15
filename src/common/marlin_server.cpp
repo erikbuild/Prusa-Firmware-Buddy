@@ -3188,17 +3188,8 @@ static void lift_head() {
         // If the Z is not homed, do a "homing" move with quickstops that will stop as soon as we hit the limits
         TemporaryGlobalEndstopsState _es(true);
 
-        auto cpz = current_position.z;
-
-        // do_homing_move does not update current position, we have to do it manually
         // have to use HOMING_FEEDRATE, otherwise the stallguards might not trigger
-        if (do_homing_move(Z_AXIS, distance, HOMING_FEEDRATE_INVERTED_Z)) {
-            current_position.z = Z_MAX_POS;
-        } else {
-            // BFW-7734 but sometimes it zeroes Z - this is to prevent ceiling hit tests from triggering in such a case
-            current_position.z = cpz + distance;
-        }
-        sync_plan_position();
+        do_homing_move(Z_AXIS, distance, HOMING_FEEDRATE_INVERTED_Z);
     }
 }
 

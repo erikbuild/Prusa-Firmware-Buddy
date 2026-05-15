@@ -106,12 +106,7 @@ static void safe_move_down() {
 
     if (do_homing_move(AxisEnum::Z_AXIS, target_Z - current_position.z, HOMING_FEEDRATE_INVERTED_Z)) {
         // endstop triggered, raise the nozzle
-        current_position.z = Z_MIN_POS;
-        sync_plan_position();
         move_z_after_probing();
-    } else {
-        current_position.z = target_Z;
-        sync_plan_position();
     }
 
     STOW_PROBE();

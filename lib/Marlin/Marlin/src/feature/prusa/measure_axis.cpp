@@ -157,10 +157,6 @@ void Measure_axis::home_start(AxisEnum axis, bool invert) {
     (void)do_homing_move_axis_rel(axis, dist, fr[axis]);
 }
 
-void Measure_axis::home_finish(AxisEnum axis) {
-    endstops.validate_homing_move();
-}
-
 void Measure_axis::save_length(AxisEnum axis) {
     axis_length[axis] = std::abs(home_start_motor_pos[axis] - planner.get_axis_position_mm(axis));
 }
@@ -255,14 +251,12 @@ void Measure_axis::state_finish() {
         sensorless_disable(X_AXIS);
         // don't break
     case HOME_X:
-        home_finish(X_AXIS);
         break;
     case MEASURE_Y:
         save_length(Y_AXIS);
         sensorless_disable(Y_AXIS);
         // don't break
     case HOME_Y:
-        home_finish(Y_AXIS);
         break;
     default:
         break;

@@ -870,7 +870,6 @@ std::expected<void, PrusaToolChanger::BumpError> PrusaToolChanger::bump_to_dock(
         phase_stepping::EnsureSuitableForHoming phstep_disabler;
         // INDX_TODO: test with real hardware and make sure we dont break anything (possible to reduce currents and speeds)
         hit = do_homing_move(Y_AXIS, move_distance, homing_feedrate(Y_AXIS)); // move down to the dock
-        planner.synchronize();
     }
     // We've hit endstops so back off a bit and warn user probably
     if (hit) {
@@ -881,12 +880,6 @@ std::expected<void, PrusaToolChanger::BumpError> PrusaToolChanger::bump_to_dock(
         return std::unexpected<BumpError>(BumpError::hit);
     }
 
-    current_position.y = info.dock_y;
-    sync_plan_position();
-    // do_homing_move() unconditionally sets the axis to not_homed; restore it,
-    // otherwise the next ensure_safe_move() forces a G28 from inside the dock pocket.
-    axes_home_level[Y_AXIS] = AxisHomeLevel::full;
-    planner.synchronize();
     return std::expected<void, BumpError>();
 }
 

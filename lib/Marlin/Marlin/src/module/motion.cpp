@@ -384,10 +384,6 @@ void do_blocking_move_to_xy(const xy_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0
       if (planner.draining()) {
         return 0;
       }
-      if (trigger_state) {
-        current_position.z = Z_MAX_POS;
-      }
-      sync_plan_position();
 
       if (!endstop_enabled) {
         endstops.not_homing(); // Reset endstops only if they weren't enabled before

@@ -95,7 +95,6 @@ private:
     void quick_home_finish();
     void home_back(AxisEnum axis);
     void home_start(AxisEnum axis, bool invert = false);
-    void home_finish(AxisEnum axis);
     void save_length(AxisEnum axis);
     void finish();
 };

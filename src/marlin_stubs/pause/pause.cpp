@@ -176,9 +176,6 @@ void unhomed_z_lift(float amount_mm) {
     if (amount_mm > current_position.z) {
         TemporaryGlobalEndstopsState park_move_endstops(true);
         do_homing_move((AxisEnum)(Z_AXIS), amount_mm - current_position.z, HOMING_FEEDRATE_INVERTED_Z, false); // warning: the speed must probably be exactly this, otherwise endstops don't work
-        // note: do_homing_move() resets the Marlin's internal position (Planner::position) to 0 (in Z axis) at the beginning
-        current_position.z = amount_mm;
-        sync_plan_position();
     }
 }
 
