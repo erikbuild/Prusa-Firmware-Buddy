@@ -81,8 +81,9 @@ public:
     FrameTitle(window_frame_t *parent, const char *txt_title)
         : line(parent, rect_line)
         , title(parent, rect_title, is_multiline::no, is_closed_on_click_t::no, _(txt_title)) {
-        line.SetBackColor(COLOR_WHITE);
+        line.SetBackColor(COLOR_DARK_GRAY);
         title.set_font(Font::big);
+        title.SetTextColor(COLOR_BRAND);
     }
 
 protected:
