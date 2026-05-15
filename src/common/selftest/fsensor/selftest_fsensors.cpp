@@ -447,7 +447,7 @@ SelftestFSensors::EarlyFailCheckResult SelftestFSensors::check_early_fail([[mayb
         }
 
         // Fail calibrators that are not ready
-        // Otherwise the selftest could be reported as OK is we're in the last ask_remove_filament phase (and no calibrate follows)
+        // Otherwise the selftest could be reported as OK if we're in the last ask_remove_filament phase (and no calibrate() follows)
         for (auto *calibrator : calibrators_) {
             calibrator->fail_if(!calibrator->is_ready_for_calibration(calib_phase));
         }
