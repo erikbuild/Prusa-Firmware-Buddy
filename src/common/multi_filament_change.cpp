@@ -6,9 +6,12 @@
 #include <base64/base64.hpp>
 #include <string_builder.hpp>
 #include <mbedtls/base64.h>
+#include <M70X.hpp>
 
 #include <gcode/gcode.h>
 #include <marlin_server.hpp>
+#include <mapi/parking.hpp>
+#include <Marlin/src/module/motion.h>
 
 namespace multi_filament_change {
 
@@ -160,6 +163,7 @@ void execute(const Config &tool_config) {
 #endif
 
     // Lift Z to prevent unparking and parking of each tool
+    // without a pre-raise, every iteration would do its own Z movement (raise + lower)
     GcodeSuite::process_subcommands_now_P("G27 P0 Z40");
 
     /* MMU2 Reimplementation
@@ -182,33 +186,42 @@ void execute(const Config &tool_config) {
 #if HAS_MMU2()
             config_store().set_filament_type(tool, FilamentType::none);
 #else
-            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
-            command_builder.append_printf("M702 T%d W2", tool.to_raw());
-            GcodeSuite::process_subcommands_now_P(command_builder.str());
+            filament_gcodes::M702_unload(
+                std::nullopt,
+                Z_AXIS_LOAD_POS,
+                RetAndCool_t::Return,
+                tool,
+                false);
 #endif
             break;
         }
 
         case Action::change: {
 #if HAS_MMU2()
-            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
-            command_builder.append_printf("M704 P%d", tool.to_raw());
-            GcodeSuite::process_subcommands_now_P(command_builder.str());
+            // preload the MMU slot
+            filament_gcodes::mmu_load(tool.to_raw());
 
             config_store().set_filament_type(tool, config.new_filament);
 #else
-            ArrayStringBuilder<MAX_CMD_SIZE> command_builder;
-
-            // M1600 - filament change (doesn't ask for unload)
-            // M701 - filament load
-            command_builder.append_printf((old_filaments[tool] != FilamentType::none) ? "M1600 S\"%s\" T%d R" : "M701 S\"%s\" T%d W2", FilamentType { config.new_filament }.parameters().name.data(), tool.to_raw());
-
-            if (config.color.has_value()) {
-                command_builder.append_printf(" O%" PRIu32, config.color->raw);
+            const FilamentType new_filament { config.new_filament };
+            if (old_filaments[tool] != FilamentType::none) {
+                filament_gcodes::M1600_change_filament(
+                    new_filament,
+                    tool,
+                    RetAndCool_t::Return,
+                    filament_gcodes::AskFilament_t::Never,
+                    config.color);
+            } else {
+                filament_gcodes::M701_load(
+                    new_filament,
+                    std::nullopt,
+                    Z_AXIS_LOAD_POS,
+                    RetAndCool_t::Return,
+                    tool,
+                    -1,
+                    config.color,
+                    filament_gcodes::ResumePrint_t::No);
             }
-
-            assert(command_builder.is_ok());
-            GcodeSuite::process_subcommands_now_P(command_builder.str());
 #endif
             break;
         }
