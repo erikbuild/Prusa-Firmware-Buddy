@@ -122,17 +122,13 @@ struct PreheatBehavior {
     bool set_chamber_temperature : 1; ///< true -> heat up chamber as well, false otherwise
 #endif
 
-    static constexpr PreheatBehavior force_preheat_only_extruder() {
-        return PreheatBehavior {
-            .force_temp = true,
-            .preheat_bed = false,
-#if HAS_CHAMBER_API()
-            .set_chamber_temperature = false,
-#endif
-        };
-    }
+    /// If true, preheats to max(selected_filament_type, previous_filament_type)
+    bool consider_previous_filament : 1;
     /// @returns preheat behavior for loads during filament change
-    static PreheatBehavior for_filament_change(bool force_temp = true);
+    static PreheatBehavior for_filament_load(bool force_temp = true);
+
+    /// @returns preheat behavior for unloads during filament change
+    static PreheatBehavior for_filament_unload(bool force_temp = true);
 };
 
 std::pair<std::optional<PreheatStatus::Result>, FilamentType> preheat(PreheatData preheat_data, PreheatBehavior preheat_arg);

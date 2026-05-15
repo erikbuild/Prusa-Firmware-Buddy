@@ -90,7 +90,7 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     if (op_preheat) {
         if (filament_to_be_loaded == FilamentType::none) {
             PreheatData data = PreheatData::make(do_purge_only ? PreheatMode::purge : PreheatMode::standard_load, virtual_tool, *op_preheat);
-            auto preheat_ret = preheat(data, PreheatBehavior::for_filament_change());
+            auto preheat_ret = preheat(data, PreheatBehavior::for_filament_load());
             if (preheat_ret.first) {
                 // canceled
                 M70X_process_user_response(*preheat_ret.first, virtual_tool);
@@ -99,7 +99,7 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
 
             filament_to_be_loaded = preheat_ret.second;
         } else {
-            preheat_to(filament_to_be_loaded, virtual_tool.to_physical(), PreheatBehavior::for_filament_change(false));
+            preheat_to(filament_to_be_loaded, virtual_tool.to_physical(), PreheatBehavior::for_filament_load(false));
         }
     }
     filament::set_type_to_load(filament_to_be_loaded);
@@ -163,8 +163,7 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
 
     if (do_preheat) {
         PreheatData data = PreheatData::make(PreheatMode::unload, virtual_tool, *op_preheat);
-        // avoid preheating bed in this case
-        auto preheat_ret = preheat(data, PreheatBehavior::force_preheat_only_extruder());
+        auto preheat_ret = preheat(data, PreheatBehavior::for_filament_unload());
         if (preheat_ret.first) {
             // canceled
             M70X_process_user_response(*preheat_ret.first, virtual_tool);
@@ -320,7 +319,7 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
 
     if constexpr (option::has_human_interactions) {
         PreheatData data = PreheatData::make(PreheatMode::autoload, virtual_tool, RetAndCool_t::Return);
-        auto preheat_ret = preheat(data, PreheatBehavior::for_filament_change());
+        auto preheat_ret = preheat(data, PreheatBehavior::for_filament_load());
 
         if (preheat_ret.first) {
             // canceled
@@ -390,7 +389,7 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
 #endif
 
     if (!is_safe_to_unload) {
-        preheat_to(filament, virtual_tool.to_physical(), PreheatBehavior::for_filament_change(false));
+        preheat_to(filament, virtual_tool.to_physical(), PreheatBehavior::for_filament_unload(false));
     }
     xyze_pos_t current_position_tmp = current_position;
 
@@ -417,7 +416,7 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
     // cannot do normal preheat, since printer is already preheated from unload
     if (filament_to_be_loaded == FilamentType::none) {
         PreheatData data = PreheatData::make(PreheatMode::change_load, virtual_tool, preheat);
-        auto preheat_ret = ::preheat(data, PreheatBehavior::for_filament_change());
+        auto preheat_ret = ::preheat(data, PreheatBehavior::for_filament_load());
         if (preheat_ret.first) {
             // canceled
             M70X_process_user_response(*preheat_ret.first, virtual_tool);
@@ -426,7 +425,7 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
 
         filament_to_be_loaded = preheat_ret.second;
     } else {
-        preheat_to(filament_to_be_loaded, virtual_tool.to_physical(), PreheatBehavior::for_filament_change(false));
+        preheat_to(filament_to_be_loaded, virtual_tool.to_physical(), PreheatBehavior::for_filament_load(false));
     }
     filament::set_type_to_load(filament_to_be_loaded);
     filament::set_color_to_load(color_to_be_loaded);

@@ -246,7 +246,7 @@ std::pair<std::optional<PreheatStatus::Result>, FilamentType> filament_gcodes::p
     }
 }
 
-filament_gcodes::PreheatBehavior filament_gcodes::PreheatBehavior::for_filament_change(bool force_temp) {
+filament_gcodes::PreheatBehavior filament_gcodes::PreheatBehavior::for_filament_load(bool force_temp) {
     const bool preheat_all = config_store().filament_change_preheat_all.get();
 
     return PreheatBehavior {
@@ -255,6 +255,18 @@ filament_gcodes::PreheatBehavior filament_gcodes::PreheatBehavior::for_filament_
 #if HAS_CHAMBER_API()
         .set_chamber_temperature = preheat_all,
 #endif
+        .consider_previous_filament = true,
+    };
+}
+
+filament_gcodes::PreheatBehavior filament_gcodes::PreheatBehavior::for_filament_unload(bool force_temp) {
+    return PreheatBehavior {
+        .force_temp = force_temp,
+        .preheat_bed = false,
+#if HAS_CHAMBER_API()
+        .set_chamber_temperature = false,
+#endif
+        .consider_previous_filament = false,
     };
 }
 
@@ -279,7 +291,7 @@ void filament_gcodes::preheat_to(FilamentType filament, std::variant<PhysicalToo
             //
             // Only do this if there's no currently loaded filament to avoid
             // preheating to 250C if we're already loaded.
-            if (!config_store().get_filament_type(*virtual_tool)) {
+            if (preheat_arg.consider_previous_filament && !config_store().get_filament_type(*virtual_tool)) {
                 int16_t prev_temp = 250; // default previous filament temperature in case the previous filament is unknown
                 const FilamentType prev_filament = config_store().get_previous_filament_type(*virtual_tool);
                 if (prev_filament != FilamentType::none) {
