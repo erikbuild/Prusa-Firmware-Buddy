@@ -255,24 +255,21 @@ void sync_e_position_to(float e) {
  */
 void set_current_from_steppers_for_axis(const AxisEnum axis) {
   // Cartesian conversion result goes here:
-  xyze_pos_t cartes = current_position;
-  planner.get_axis_position_mm(cartes);
+  MachinePosXYZE machine_position;
+  planner.get_axis_position_mm(machine_position);
 
-  #if HAS_LEVELING
-    planner.unapply_leveling(cartes);
-  #endif
+  const xyze_pos_t native_position = to_native_pos(machine_position);
   
   if (axis == ALL_AXES_ENUM)
-    current_position = cartes;
+    current_position = native_position;
   else
-    current_position[axis] = cartes[axis];
+    current_position[axis] = native_position[axis];
 }
 
 
 /**
  * Set the current_position for all axes based on
- * the stepper positions, removing any leveling that
- * may have been applied.
+ * the stepper positions.
  */
 void set_current_from_steppers() {
   set_current_from_steppers_for_axis(ALL_AXES_ENUM);
