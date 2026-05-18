@@ -37,7 +37,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/rtt_log.txt"
                     },
                     {
                         "label": "Heap instrumentation",
@@ -83,7 +84,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/rtt_log.txt"
                     }
                 ]
             }
@@ -119,7 +121,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/dwarf-build/rtt_log.txt"
                     }
                 ]
             }
@@ -151,7 +154,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/dwarf-build/rtt_log.txt"
                     }
                 ]
             }
@@ -224,7 +228,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/indx_head-build/rtt_log.txt"
                     }
                 ]
             },
@@ -270,7 +275,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/indx_head-build/rtt_log.txt"
                     }
                 ]
             },
@@ -326,7 +332,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/xbuddy_extension-build/rtt_log.txt"
                     }
                 ]
             }
@@ -362,7 +369,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/xbuddy_extension-build/rtt_log.txt"
                     }
                 ]
             }
@@ -399,7 +407,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/anfc-build/rtt_log.txt"
                     }
                 ]
             },
@@ -456,7 +465,8 @@
                         "label": "Logging",
                         "port": 0,
                         "noprompt": true,
-                        "type": "console"
+                        "type": "console",
+                        "logfile": "${workspaceRoot}/build-vscode-buddy/tool_offset_sensor-build/rtt_log.txt"
                     }
                 ]
             },
