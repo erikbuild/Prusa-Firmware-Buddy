@@ -31,7 +31,7 @@
 #include <option/debug_with_beeps.h>
 #include "Marlin/src/module/motion.h" // for active_extruder
 #include "puppies/modular_bed.hpp"
-#include "otp.hpp"
+#include "hw_configuration.hpp"
 #include <logging/log.hpp>
 
 LOG_COMPONENT_REF(Buddy);
@@ -69,9 +69,6 @@ const OutputPin *YStep = nullptr;
 const OutputPin *SideLed_LcdSelector = nullptr;
 } // namespace buddy::hw
 
-// stores board bom ID from OTP for faster access
-uint8_t board_bom_id;
-
 static float hwio_beeper_vol = 1.0F;
 static uint32_t hwio_beeper_duration_ms = 0;
 // Needed for older XL boards, where SW buzzer control must be used
@@ -80,12 +77,6 @@ static uint32_t hwio_beeper_period = 0;
 
 //--------------------------------------
 // Beeper
-
-bool board_revisions_9_and_higher() {
-    // board revision 4 should not be distributed to customers
-    // so they are not important, check is kept only for legacy reason
-    return (board_bom_id >= 9 || board_bom_id == 4);
-}
 
 float hwio_beeper_get_vol(void) {
     return hwio_beeper_vol;
@@ -134,7 +125,7 @@ void hwio_beeper_tone(float frq, uint32_t duration_ms) {
             frq = 100000;
         }
 
-        if (board_revisions_9_and_higher()) {
+        if (buddy::hw::Configuration::Instance().has_alternative_board_pinout()) {
 #if HAS_GUI() && (DEBUG_WITH_BEEPS() || !_DEBUG)
             uint32_t per = (uint32_t)(84000000.0F / frq);
             uint32_t pul = (uint32_t)(per * hwio_beeper_vol / 2);
@@ -160,7 +151,7 @@ void hwio_beeper_tone2(float frq, uint32_t duration_ms, float vol) {
 }
 
 void hwio_beeper_notone(void) {
-    if (board_revisions_9_and_higher()) {
+    if (buddy::hw::Configuration::Instance().has_alternative_board_pinout()) {
         hwio_beeper_set_pwm(0, 0);
     } else {
         // SW control for older board revisions Buzzer PD5 pin
@@ -170,7 +161,7 @@ void hwio_beeper_notone(void) {
 
 void hwio_update_1ms(void) {
 #if HAS_GUI() && (DEBUG_WITH_BEEPS() || !_DEBUG)
-    if (board_revisions_9_and_higher()) {
+    if (buddy::hw::Configuration::Instance().has_alternative_board_pinout()) {
         if ((hwio_beeper_duration_ms) && ((--hwio_beeper_duration_ms) == 0)) {
             hwio_beeper_set_pwm(0, 0);
         }
@@ -419,15 +410,10 @@ void pinMode([[maybe_unused]] uint32_t ulPin, [[maybe_unused]] uint32_t ulMode) 
 }
 
 void buddy::hw::hwio_configure_board_revision_changed_pins() {
-    auto otp_bom_id = otp_get_bom_id();
-
-    if (!otp_bom_id || (board_bom_id = *otp_bom_id) < 4) {
-        bsod("Unable to determine board BOM ID");
-    }
-    log_info(Buddy, "Detected bom ID %d", board_bom_id);
+    const auto &config = buddy::hw::Configuration::Instance();
 
     // Different HW revisions have different pins connections, figure it out here
-    if (board_revisions_9_and_higher()) {
+    if (config.has_alternative_board_pinout()) {
         Buzzer = &buzzer_pin_a0;
         XStep = &xStep_pin_d7;
         YStep = &yStep_pin_d5;
@@ -440,24 +426,23 @@ void buddy::hw::hwio_configure_board_revision_changed_pins() {
     XStep->configure();
     YStep->configure();
 
-    if (board_bom_id >= 9) {
+    if (config.has_shared_side_led_spi()) {
         SideLed_LcdSelector = &sideLed_LcdSelector_pin_e9;
         SideLed_LcdSelector->configure();
     }
 
-    if (board_revisions_9_and_higher()) {
+    if (config.has_alternative_board_pinout()) {
         hw_tim2_init(); // TIM2 is used to generate buzzer PWM, except on older board revisions
     }
 }
 
 void hw_init_spi_side_leds() {
-    // Side leds was connectet to dedicated SPI untill revision 8, in revision 9 SPI is shared with LCD. So init SPI only if needed.
-    if (board_bom_id <= 8) {
+    if (!buddy::hw::Configuration::Instance().has_shared_side_led_spi()) {
         SPI_INIT(led);
     }
 }
 SPI_HandleTypeDef *hw_get_spi_side_strip() {
-    if (board_revisions_9_and_higher()) {
+    if (buddy::hw::Configuration::Instance().has_shared_side_led_spi()) {
         return &SPI_HANDLE_FOR(lcd);
     } else {
         return &SPI_HANDLE_FOR(led);

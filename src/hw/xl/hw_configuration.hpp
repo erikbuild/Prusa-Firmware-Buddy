@@ -19,6 +19,13 @@ public:
     static Configuration &Instance();
 
     bool check_bom_compatible() const;
+
+    /// Rev 9+ and rev 4 have remapped buzzer, stepper, and side LED SPI pins.
+    /// Rev 4 was most likely not distributed, the check is only kept for legacy reasons.
+    bool has_alternative_board_pinout() const;
+
+    /// Rev 9+ shares SPI between LCD and side LED strip via a mux selector
+    bool has_shared_side_led_spi() const;
 };
 
 class SandwichConfiguration {

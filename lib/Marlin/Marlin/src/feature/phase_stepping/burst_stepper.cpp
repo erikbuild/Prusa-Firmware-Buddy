@@ -5,7 +5,7 @@
 #include <device/peripherals.h>
 
 #if BOARD_IS_XLBUDDY()
-    #include "otp.hpp"
+    #include "hw_configuration.hpp"
 #endif
 
 using namespace phase_stepping;
@@ -108,12 +108,7 @@ void burst_stepping::init() {
     setup_xbuddy_pinout();
 #elif BOARD_IS_XLBUDDY()
     // #error dead code found by automatic analyses (see BFW-5461)
-    auto otp_bom_id = otp_get_bom_id();
-    if (!otp_bom_id.has_value()) {
-        bsod("Unable to determine board BOM ID");
-    }
-    auto board_bom_id = *otp_bom_id;
-    if (board_bom_id >= 9 || board_bom_id == 4) {
+    if (buddy::hw::Configuration::Instance().has_alternative_board_pinout()) {
         setup_xl_pinout_2();
     } else {
         setup_xl_pinout_1();

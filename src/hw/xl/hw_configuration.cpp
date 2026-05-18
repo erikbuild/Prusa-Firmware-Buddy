@@ -18,6 +18,14 @@ bool Configuration::check_bom_compatible() const {
     return get_board_bom_id() >= 4;
 }
 
+bool Configuration::has_alternative_board_pinout() const {
+    return get_board_bom_id() >= 9 || get_board_bom_id() == 4;
+}
+
+bool Configuration::has_shared_side_led_spi() const {
+    return get_board_bom_id() >= 9;
+}
+
 SandwichConfiguration &SandwichConfiguration::Instance() {
     static SandwichConfiguration ths = SandwichConfiguration();
     return ths;
