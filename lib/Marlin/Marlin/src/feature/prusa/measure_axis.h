@@ -49,6 +49,7 @@ private:
     float raise_z;
     Motion_Parameters mp;
     el_current_xyz_t current;
+    xy_float_t home_start_motor_pos = { NAN, NAN };
     xy_float_t axis_length = { NAN, NAN };
     #if ENABLED(SENSORLESS_HOMING)
     sensorless_t stealth_states;

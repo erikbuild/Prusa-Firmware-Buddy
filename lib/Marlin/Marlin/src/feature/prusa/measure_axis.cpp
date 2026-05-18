@@ -153,6 +153,7 @@ void Measure_axis::home_start(AxisEnum axis, bool invert) {
     const int axis_home_dir = (invert_dir[axis] ^ invert ? (-home_dir(axis))
                                                          : home_dir(axis));
     float dist = 1.5f * max_length(axis) * axis_home_dir;
+    home_start_motor_pos[axis] = planner.get_axis_position_mm(axis);
     do_homing_move_axis_rel(axis, dist, fr[axis]);
 }
 
@@ -161,7 +162,7 @@ void Measure_axis::home_finish(AxisEnum axis) {
 }
 
 void Measure_axis::save_length(AxisEnum axis) {
-    axis_length[axis] = std::abs(planner.get_axis_position_mm(axis));
+    axis_length[axis] = std::abs(home_start_motor_pos[axis] - planner.get_axis_position_mm(axis));
 }
 
 void Measure_axis::finish() {
