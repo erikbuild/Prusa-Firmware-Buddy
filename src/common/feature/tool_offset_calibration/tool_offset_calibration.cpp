@@ -210,7 +210,7 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     // wait for calibration temperature (if probing is higher than upper limit)
     // Restore temp is one level above in run()
     const ToolTemperatures temps = get_tool_temperatures(tool);
-    const int16_t xy_measurement_temperature_upper_limit = 170; // degC
+    const int16_t xy_measurement_temperature_upper_limit = 100; // degC
     thermalManager.setTargetHotend(std::min(temps.probing, xy_measurement_temperature_upper_limit), tool);
     thermalManager.wait_for_hotend(tool, false, true);
 
