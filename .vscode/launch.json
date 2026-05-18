@@ -197,7 +197,7 @@
             "rtos": "FreeRTOS",
         },
         {
-            "name": "Launch INDX",
+            "name": "Launch INDX head",
             "cwd": "${workspaceRoot}",
             "executable": "${workspaceRoot}/build-vscode-buddy/indx_head-build/firmware",
             "request": "launch",
@@ -249,7 +249,7 @@
             ]
         },
         {
-            "name": "Attach to INDX",
+            "name": "Attach to INDX head",
             "cwd": "${workspaceRoot}",
             "executable": "${workspaceRoot}/build-vscode-buddy/indx_head-build/firmware",
             "request": "attach",
