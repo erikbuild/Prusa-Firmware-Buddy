@@ -74,7 +74,9 @@ private:
 class FrameDockSelection {
 public:
     FrameDockSelection(window_frame_t *parent, Phase phase)
-        : menu(parent, GuiDefaults::RectScreenNoHeader, phase) {}
+        : menu(parent, GuiDefaults::RectScreenNoHeader, phase) {
+        parent->CaptureNormalWindow(menu);
+    }
 
     WindowExtendedMenu<DockMenu> menu;
 };
