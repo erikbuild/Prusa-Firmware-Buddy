@@ -492,7 +492,7 @@ void PrusaToolChanger::open_head(PhysicalToolIndex tool) {
     // Sanity check: no tool should be thermally managed while we open the head
     IndxHotend::assert_thermally_managed_invariant(NoTool {});
 
-    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/true);
+    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);
     const float safe_y = info.dock_y + DOCK_SAFE_Y_OFFSET;
     const float unlock_y = info.dock_y + DOCK_UNLOCK_Y_OFFSET;
 
@@ -543,7 +543,7 @@ bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
 
     IndxHotend::indx_tool(tool).hotend().stop_heating();
 
-    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/true);
+    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);
     const float safe_y = info.dock_y + DOCK_SAFE_Y_OFFSET;
     const float unlock_y = info.dock_y + DOCK_UNLOCK_Y_OFFSET;
 
@@ -851,7 +851,7 @@ std::expected<void, PrusaToolChanger::BumpError> PrusaToolChanger::bump_to_dock(
     mapi::park(mapi::ZAction::move_to_at_least, { .x = mapi::ParkingPosition::unchanged, .y = mapi::ParkingPosition::unchanged, .z = 2.0f });
 
     // Get dock info
-    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/true);
+    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);
 
     // reduce maximum parking speed to improve reliability during constant toolchanging
     float target_fr = limit_stealth_feedrate(PARKING_FINAL_MAX_SPEED);
