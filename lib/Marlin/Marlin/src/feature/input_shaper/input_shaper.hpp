@@ -25,8 +25,8 @@ constexpr const uint8_t INPUT_SHAPER_MAX_LOGICAL_AXES = 1;
 constexpr const uint8_t INPUT_SHAPER_MAX_LENGTH = 5;
 constexpr const uint8_t INPUT_SHAPER_MAX_PULSES = INPUT_SHAPER_MAX_LENGTH * INPUT_SHAPER_MAX_LOGICAL_AXES;
 
-constexpr const double INPUT_SHAPER_VELOCITY_EPSILON = 0.0001;
-constexpr const double INPUT_SHAPER_ACCELERATION_EPSILON = 0.1;
+constexpr const float INPUT_SHAPER_VELOCITY_EPSILON = 0.0001f;
+constexpr const float INPUT_SHAPER_ACCELERATION_EPSILON = 0.1f;
 constexpr const double INPUT_SHAPER_PULSES_MIN_TIME_DIFF = 0.00001;
 
 namespace input_shaper {

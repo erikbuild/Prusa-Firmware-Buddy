@@ -714,7 +714,7 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = 576.f / 550.f;
 #if ENABLED(NOZZLE_LOAD_CELL)
   // Enable G29 P9 for nozzle cleanup
   #define PROBE_CLEANUP_SUPPORT
-  #define PROBE_CLEANUP_CLEARANCE 2.0
+  #define PROBE_CLEANUP_CLEARANCE 2.f
   #define PROBE_CLEANUP_TRAVEL_ACCELERATION 800
   #define Z_PROBE_SPEED_BACK_MOVE 20
 #endif
@@ -986,7 +986,7 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = 576.f / 550.f;
     // split up moves into short segments like a Delta. This follows the
     // contours of the bed more closely than edge-to-edge straight moves.
     #define SEGMENT_LEVELED_MOVES
-    #define LEVELED_SEGMENT_LENGTH 5.0 // (mm) Length of all segments (except the last one)
+    #define LEVELED_SEGMENT_LENGTH 5.f // (mm) Length of all segments (except the last one)
 
     /// (mm) If distance between min and max Z during probing exceeds this value, we offer a Z alignment calibration
     #define MBL_Z_DIFF_CALIB_WARNING_THRESHOLD 2

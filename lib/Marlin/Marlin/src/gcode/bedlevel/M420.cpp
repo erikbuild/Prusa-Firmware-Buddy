@@ -206,7 +206,7 @@ void GcodeSuite::M420() {
   #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM("Fade Height ");
-    if (planner.z_fade_height > 0.0)
+    if (planner.z_fade_height > 0.f)
       SERIAL_ECHOLN(planner.z_fade_height);
     else
       SERIAL_ECHOLNPGM(MSG_OFF);

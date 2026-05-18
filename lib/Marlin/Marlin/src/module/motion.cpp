@@ -563,7 +563,7 @@ bool axis_unhomed_error(uint8_t axis_bits/*=0x07*/, AxisHomeLevel required_level
  */
 feedRate_t get_homing_bump_feedrate(const AxisEnum axis) {
   float hbd = homing_bump_divisor[axis];
-  if (hbd < 0.5) {
+  if (hbd < 0.5f) {
     hbd = 10;
     SERIAL_ECHO_MSG("Warning: Homing Bump Divisor < 0.5");
   }

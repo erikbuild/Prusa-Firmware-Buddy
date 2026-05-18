@@ -197,7 +197,7 @@ struct HarmonicPeak {
 
     bool operator==(const HarmonicPeak &other) const {
         const auto position_equal = [](float a, float b) {
-            return std::fabs(a - b) < 1e3;
+            return std::fabs(a - b) < 1000;
         };
 
         return harmonic == other.harmonic && position_equal(position, other.position);
@@ -1251,7 +1251,7 @@ SamplesAnnotation phase_stepping::capture_speed_sweep_samples(AxisEnum axis,
     plan_marker_move(axis, direction);
     plan_no_movement_block(axis, direction, VIBRATION_SETTLE_TIME);
 
-    int32_t timeout_ms = static_cast<int32_t>(1.5 * 1000 * end_marker);
+    int32_t timeout_ms = static_cast<int32_t>(1.5f * 1000 * end_marker);
     auto [sampling_freq, movement_ok, acc_error] = capture_movement_samples(axis, timeout_ms, yield_sample);
 
     return {

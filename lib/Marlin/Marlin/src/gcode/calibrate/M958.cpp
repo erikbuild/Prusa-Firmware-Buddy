@@ -976,7 +976,7 @@ static float limit_end_frequency(const float start_frequency, float end_frequenc
 static double get_inv_D(const input_shaper::Shaper &shaper) {
     double d = 0.;
     for (int i = 0; i < shaper.num_pulses; ++i) {
-        d += shaper.a[i];
+        d += static_cast<double>(shaper.a[i]);
     }
     return 1. / d;
 }
@@ -993,17 +993,18 @@ static double get_inv_D(const input_shaper::Shaper &shaper) {
  */
 static double vibration_reduction(const input_shaper::Shaper &shaper, float system_damping_ratio, float frequency) {
     const double inv_D = get_inv_D(shaper);
-    const double omega = 2. * std::numbers::pi_v<double> * frequency;
-    const double damping = system_damping_ratio * omega;
-    const double omega_d = omega * sqrt(1. - sq(system_damping_ratio));
+    const double omega = 2. * std::numbers::pi_v<double> * static_cast<double>(frequency);
+    const double damping = static_cast<double>(system_damping_ratio) * omega;
+    const double omega_d = omega * sqrt(1. - sq(static_cast<double>(system_damping_ratio)));
 
     double s = 0.;
     double c = 0.;
 
     for (int i = 0; i < shaper.num_pulses; ++i) {
-        const double w = shaper.a[i] * exp(-damping * (shaper.t[shaper.num_pulses - 1] - shaper.t[i]));
-        s += w * sin(omega_d * shaper.t[i]);
-        c += w * cos(omega_d * shaper.t[i]);
+        const double t_i = static_cast<double>(shaper.t[i]);
+        const double w = shaper.a[i] * exp(-damping * (static_cast<double>(shaper.t[shaper.num_pulses - 1]) - t_i));
+        s += w * sin(omega_d * t_i);
+        c += w * cos(omega_d * t_i);
     }
     return (sqrt(sq(s) + sq(c)) * inv_D);
 }
@@ -1049,7 +1050,7 @@ static float smoothing(const input_shaper::Shaper &shaper) {
 
     double ts = 0.;
     for (int i = 0; i < shaper.num_pulses; ++i) {
-        ts += shaper.a[i] * shaper.t[i];
+        ts += static_cast<double>(shaper.a[i] * shaper.t[i]);
     }
     ts *= inv_D;
 
@@ -1057,11 +1058,13 @@ static float smoothing(const input_shaper::Shaper &shaper) {
     double offset_180 = 0.;
 
     for (int i = 0; i < shaper.num_pulses; ++i) {
-        if (shaper.t[i] >= ts) {
+        const double t_i = static_cast<double>(shaper.t[i]);
+        const double a_i = static_cast<double>(shaper.a[i]);
+        if (t_i >= ts) {
             /// Calculate offset for one of the axes
-            offset_90 += shaper.a[i] * (scv + half_accel * (shaper.t[i] - ts)) * (shaper.t[i] - ts);
+            offset_90 += a_i * (scv + half_accel * (t_i - ts)) * (t_i - ts);
         }
-        offset_180 += shaper.a[i] * half_accel * sq(shaper.t[i] - ts);
+        offset_180 += a_i * half_accel * sq(t_i - ts);
     }
     offset_90 *= (inv_D * sqrt(2.));
     offset_180 *= inv_D;

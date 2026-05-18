@@ -8,7 +8,7 @@
 #include "../../../feature/pressure_advance/pressure_advance_config.hpp"
 
 static void dump_current_config() {
-    if (const pressure_advance::Config &config = pressure_advance::get_axis_e_config(); config.pressure_advance <= 0.) {
+    if (const pressure_advance::Config &config = pressure_advance::get_axis_e_config(); config.pressure_advance <= 0.f) {
         SERIAL_ECHO_MSG("Pressure advance: disabled");
     } else {
         std::array<char, 128> buff;

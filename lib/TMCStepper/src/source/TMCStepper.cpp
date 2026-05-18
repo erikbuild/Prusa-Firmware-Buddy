@@ -29,7 +29,7 @@ void TMCStepper::rms_current(uint16_t mA) {
   // If Current Scale is too low, turn on high sensitivity R_sense and calculate again
   if (CS < 16) {
     vsense(true);
-    CS = static_cast<uint8_t>((32*1.41421*mA/1000*(Rsense+0.02f)/0.18f - 1) + 0.5f);
+    CS = static_cast<uint8_t>((32*1.41421f*mA/1000*(Rsense+0.02f)/0.18f - 1) + 0.5f);
   } else { // If CS >= 16, turn off high_sense_r
     vsense(false);
   }

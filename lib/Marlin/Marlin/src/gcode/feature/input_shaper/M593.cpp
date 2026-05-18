@@ -184,7 +184,7 @@ void GcodeSuite::M593() {
 
     if (parser.seen('D')) {
         const float dr = parser.value_float();
-        if (WITHIN(dr, 0., 1.)) {
+        if (WITHIN(dr, 0.f, 1.f)) {
             params.axis.damping_ratio = dr;
         } else {
             SERIAL_ECHO_MSG("?Damping ratio (D) value out of range (0-1)");
