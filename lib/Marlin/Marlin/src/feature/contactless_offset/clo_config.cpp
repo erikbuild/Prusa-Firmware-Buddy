@@ -7,6 +7,7 @@ namespace tool_offset::detail {
 static constexpr float sensor_x = 257.f;
 static constexpr float sensor_y = Y_MAX_PRINT_POS - 197.5f; // CAD position 197.5mm from the homing position, Y homing position is Y_MAX_PRINT_POS
 static constexpr float sensing_diameter = 6.f;
+static constexpr float y_shift_z_probe_offset_from_sensor = -3.2f; // See BFW-8747 geometric shift to move the probe point out of the coil area
 } // namespace tool_offset::detail
 #elif PRINTER_IS_PRUSA_COREONEL()
 // So far only copy from COREONE INDX
@@ -15,6 +16,7 @@ namespace tool_offset::detail {
 static constexpr float sensor_x = 257.f;
 static constexpr float sensor_y = Y_MAX_PRINT_POS - 197.5f;
 static constexpr float sensing_diameter = 10.f;
+static constexpr float y_shift_z_probe_offset_from_sensor = -3.2f; // See BFW-8747 geometric shift to move the probe point out of the coil area
 } // namespace tool_offset::detail
 #else
     #error "No default probing config for this printer"
@@ -31,6 +33,7 @@ tool_offset::ProbingConfig tool_offset::get_default_probing_config() {
         .sweep_rest_time = 0.35f,
         .max_safe_temp = 110.f,
         .symmetry_trim_fraction = 0.5f,
+        .y_shift_z_probe_offset_from_sensor = detail::y_shift_z_probe_offset_from_sensor,
     };
 }
 

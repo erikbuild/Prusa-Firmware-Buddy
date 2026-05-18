@@ -17,6 +17,7 @@ struct ProbingConfig {
     float symmetry_trim_fraction; // Per-pass second-correlation: keep this central fraction
                                   // (around the first-pass symmetry axis) and re-correlate.
                                   // 1.0 disables, 0.5 keeps central 50%.
+    float y_shift_z_probe_offset_from_sensor; // Y shift of the Z probing point from the sensor position, to move it out of the coil area
 };
 
 ProbingConfig get_default_probing_config();

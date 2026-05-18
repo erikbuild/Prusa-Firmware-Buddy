@@ -470,7 +470,11 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
 
     const float safe_z = config.sensor_position.z + config.safe_z_height;
     do_blocking_move_to_z(safe_z);
-    do_blocking_move_to_xy(config.sensor_position);
+
+    // Z-probing over TOS must be done out of the coil area to avoid destruction of the coil
+    auto z_probing_position = config.sensor_position;
+    z_probing_position.y += config.y_shift_z_probe_offset_from_sensor;
+    do_blocking_move_to_xy(z_probing_position);
 
     const float sensor_z = measure_sensor_true_z(config);
 
