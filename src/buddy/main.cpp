@@ -343,6 +343,13 @@ extern "C" void main_cpp(void) {
     }
 #endif
 
+#if !BOARD_IS_BUDDY()
+    // No Configuration class for BUDDY
+    if (!buddy::hw::Configuration::Instance().check_bom_compatible()) {
+        bsod("BOM ID not compatible");
+    }
+#endif
+
 #if HAS_XBUDDY_EXTENSION()
     buddy::hw::Configuration::Instance().setup_ext_reset();
     #if XBUDDY_EXTENSION_VARIANT_IS_iX()

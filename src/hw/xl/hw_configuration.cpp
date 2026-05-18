@@ -14,6 +14,10 @@ Configuration &Configuration::Instance() {
     return ths;
 }
 
+bool Configuration::check_bom_compatible() const {
+    return get_board_bom_id() >= 4;
+}
+
 SandwichConfiguration &SandwichConfiguration::Instance() {
     static SandwichConfiguration ths = SandwichConfiguration();
     return ths;

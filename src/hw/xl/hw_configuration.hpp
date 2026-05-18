@@ -17,6 +17,8 @@ public:
      * @return Configuration&
      */
     static Configuration &Instance();
+
+    bool check_bom_compatible() const;
 };
 
 class SandwichConfiguration {

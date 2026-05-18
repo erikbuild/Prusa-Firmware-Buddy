@@ -59,15 +59,19 @@ Configuration &Configuration::Instance() {
 }
 
 Configuration::Configuration() {
-#if PRINTER_IS_PRUSA_MK3_5()
-    auto bom_id = otp_get_bom_id();
-
-    if (!bom_id || *bom_id == 27) {
-        bsod("Wrong board version");
-    }
-#endif
     loveboard_bom_id = data_exchange::get_loveboard_eeprom().bomID;
     loveboard_present = data_exchange::get_loveboard_status().data_valid;
+}
+
+bool Configuration::check_bom_compatible() const {
+#if PRINTER_IS_PRUSA_MK3_5()
+    return get_board_bom_id() >= 37;
+#elif PRINTER_IS_PRUSA_iX()
+    return get_board_bom_id() >= 1;
+#else
+    // MK4, COREONE, COREONEL
+    return get_board_bom_id() >= 27;
+#endif
 }
 
 bool Configuration::has_inverted_fans() const {

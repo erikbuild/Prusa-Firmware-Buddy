@@ -26,6 +26,7 @@ public:
     bool has_inverted_fans() const;
     bool has_mmu_power_up_hw() const;
     bool has_trinamic_oscillators() const;
+    bool check_bom_compatible() const;
     bool is_fw_compatible_with_hw() const;
     bool needs_heatbreak_thermistor_table_5() const;
     bool needs_software_mmu_powerup() const;
