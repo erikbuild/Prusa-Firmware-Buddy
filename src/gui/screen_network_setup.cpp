@@ -329,17 +329,23 @@ public:
     }
 };
 
-class FrameConnected : public FrameTextWithSSID {
-
+class FrameConnected final : public FramePrompt {
 public:
     FrameConnected(window_frame_t *parent)
-        : FrameTextWithSSID(parent, Phase::connected, _("Successfully connected"), _("SSID: %s\n\nYou can now fully use all network features of the printer.")) {
-        if (config_store().active_netdev.get() != NETDEV_ESP_ID) {
-            info.SetText(info.GetText().formatted(params, "Ethernet"));
-        }
+        : FramePrompt {
+            parent,
+            Phase::connected,
+            _("Successfully connected"),
+            _("SSID: %s\n\nYou can now fully use all network features of the printer."),
+        } {
+        const char *ssid = (config_store().active_netdev.get() == NETDEV_ESP_ID)
+            ? config_store().wifi_ap_ssid.get_c_str()
+            : "Ethernet";
+        info.SetText(info.GetText().formatted(params, ssid));
     }
 
 private:
+    StringViewUtf8Parameters<config_store_ns::wifi_max_ssid_len + 1> params;
 };
 
 class FrameWaitForINI : public FramePrompt {
