@@ -5,7 +5,11 @@
 #include <device/peripherals.h>
 
 #if BOARD_IS_XLBUDDY()
-    #include "hw_configuration.hpp"
+    // TODO: include directly from src/hw as the cmake-based add_subdirectory
+    // selection is not used for building Marlin. After Marlin is integrated,
+    // change to:
+    // # include "hw_configuration.hpp"
+    #include "xl/hw_configuration.hpp"
 #endif
 
 using namespace phase_stepping;
