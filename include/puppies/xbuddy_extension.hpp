@@ -74,7 +74,6 @@ public:
     CommunicationStatus initial_scan(PuppyModbus &);
     CommunicationStatus ping(PuppyModbus &);
     CommunicationStatus set_mmu_power(PuppyModbus &, bool mmu_power);
-    CommunicationStatus set_mmu_nreset(PuppyModbus &, bool mmu_nreset);
 
     void set_otp(const OTP_v5 &);
     OTP_v5 get_otp() const;

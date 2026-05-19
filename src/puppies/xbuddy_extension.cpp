@@ -452,16 +452,6 @@ CommunicationStatus XBuddyExtension::set_mmu_power(PuppyModbus &bus, bool mmu_po
     return refresh_holding(bus);
 }
 
-CommunicationStatus XBuddyExtension::set_mmu_nreset(PuppyModbus &bus, bool mmu_nreset) {
-    // set_mmu_nreset variand called from PuppyBootstrap. Needs a "write
-    // immediatelly" semantics, therefore having the lock.
-    // The other set_mmu_nreset is called from Marlin, that can live with a delayed write.
-    Lock lock(mutex);
-    mmu_nreset_desired.store(mmu_nreset);
-    config.dirty = true;
-    return refresh_holding(bus);
-}
-
 CommunicationStatus XBuddyExtension::refresh_log_message(PuppyModbus &bus) {
     // Already locked by caller
 
