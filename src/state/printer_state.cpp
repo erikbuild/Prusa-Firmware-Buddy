@@ -449,6 +449,16 @@ StateWithDialog get_state_with_dialog(bool ready) {
         break;
     }
 #endif
+#if HAS_INDX()
+    case ClientFSM::NozzleMismatch: {
+        auto phase = GetEnumFromPhaseIndex<PhaseNozzleMismatch>(data.GetPhase());
+        if (auto attention_code = nozzle_mismatch_phase_error_code_mapper(phase); attention_code.has_value()) {
+            const Response *available_responses = ClientResponses::get_available_responses(phase).data();
+            return { state, attention_code, fsm_gen, available_responses };
+        }
+        break;
+    }
+#endif
 
     // These have no buttons or phase
     case ClientFSM::Wait:
@@ -485,14 +495,6 @@ StateWithDialog get_state_with_dialog(bool ready) {
     case ClientFSM::DoorSensorCalibration:
 #endif
 #if HAS_INDX()
-    case ClientFSM::NozzleMismatch: {
-        auto phase = GetEnumFromPhaseIndex<PhaseNozzleMismatch>(data.GetPhase());
-        if (auto attention_code = nozzle_mismatch_phase_error_code_mapper(phase); attention_code.has_value()) {
-            const Response *available_responses = ClientResponses::get_available_responses(phase).data();
-            return { state, attention_code, fsm_gen, available_responses };
-        }
-        break;
-    }
     case ClientFSM::DockCalibration:
     case ClientFSM::NozzleCleanerCalibration:
 #endif
