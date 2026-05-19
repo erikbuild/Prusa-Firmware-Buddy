@@ -1,8 +1,10 @@
 #include "menu_items_chamber.hpp"
 
+#include <cinttypes>
 #include <feature/chamber/chamber.hpp>
 #include <img_resources.hpp>
 #include <marlin/Configuration.h>
+#include <marlin_client.hpp>
 #include <numeric_input_config_common.hpp>
 
 using namespace buddy;
@@ -17,7 +19,7 @@ MI_CHAMBER_TARGET_TEMP::MI_CHAMBER_TARGET_TEMP(const char *label)
 }
 
 void MI_CHAMBER_TARGET_TEMP::OnClick() {
-    chamber().set_target_temperature(value_opt());
+    marlin_client::gcode_printf("M141 S%" PRIu32, static_cast<uint32_t>(value_opt().value_or(0)));
 }
 
 void MI_CHAMBER_TARGET_TEMP::Loop() {

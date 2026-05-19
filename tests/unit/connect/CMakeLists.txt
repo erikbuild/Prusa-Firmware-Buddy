@@ -61,7 +61,6 @@ add_executable(
   printer.cpp
   partial_file_mock.cpp
   gui_media_events_mock.cpp
-  buddy_chamber_mock.cpp
   xbuddy_extension_mock.cpp
   side_strip_control_mock.cpp
   cancel_object_mock.cpp
@@ -197,7 +196,6 @@ add_executable(
   planner.cpp
   partial_file_mock.cpp
   gui_media_events_mock.cpp
-  buddy_chamber_mock.cpp
   xbuddy_extension_mock.cpp
   side_strip_control_mock.cpp
   ${CMAKE_SOURCE_DIR}/lib/Middlewares/Third_Party/mbedtls/library/aes.c

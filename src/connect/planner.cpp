@@ -17,9 +17,9 @@
 
 #include <option/xbuddy_extension_variant.h>
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
-    #include <feature/chamber/chamber.hpp>
     #include <feature/xbuddy_extension/xbuddy_extension.hpp>
     #include <feature/xbuddy_extension/cooling.hpp>
+    #include <marlin_client.hpp>
 #endif
 
 #include <option/has_chamber_filtration_api.h>
@@ -1031,8 +1031,9 @@ void Planner::command(const Command &command, const SetValue &params) {
         break;
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
     case connect_client::PropertyName::ChamberTargetTemp: {
-        auto target_temp = get<uint32_t>(params.value);
-        buddy::chamber().set_target_temperature(target_temp == connect_client::Printer::ChamberInfo::target_temp_unset ? nullopt : std::make_optional(target_temp));
+        const auto target_temp = get<uint32_t>(params.value);
+        const auto gcode_temp = (target_temp == connect_client::Printer::ChamberInfo::target_temp_unset) ? uint32_t { 0 } : target_temp;
+        marlin_client::gcode_printf("M141 S%" PRIu32, gcode_temp);
     } break;
     case connect_client::PropertyName::ChamberFanPwmTarget: {
         // Note: cooling fans share PWM control

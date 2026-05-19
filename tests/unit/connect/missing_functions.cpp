@@ -1,12 +1,30 @@
+#include "marlin_client_mock.h"
+
 #include <common/filepath_operation.h>
 #include <marlin_events.h>
 #include <tool_index.hpp>
+#include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
 
 void print_begin(const char *, marlin_server::PreviewSkipIfAble) {}
+
+namespace marlin_client {
+
+std::string last_gcode;
+
+void gcode_printf(const char *format, ...) {
+    char buf[128];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buf, sizeof(buf), format, args);
+    va_end(args);
+    last_gcode = buf;
+}
+
+} // namespace marlin_client
 
 bool f_gcode_get_next_comment_assignment(FILE *, char *, int, char *, int) {
     return false;
