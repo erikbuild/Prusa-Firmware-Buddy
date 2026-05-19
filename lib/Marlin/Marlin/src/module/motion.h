@@ -54,6 +54,9 @@ struct MoveHints {
   /// Whether extrusion safety checks (PREVENT_COLD_EXTRUSION, PREVENT_LENGTHY_EXTRUDE) should be applied
   bool extrusion_safety_checks : 1 = true;
 
+  /// If set, ignores the e_factor
+  bool ignore_e_factor: 1 = false;
+
   /// The gears are not engaged in filament gear, executing extruder service (switching INDX tools)
   /// This move should avoid filament tracking, auto retract and tool presence check
   bool is_service_extruder_move : 1 = false;

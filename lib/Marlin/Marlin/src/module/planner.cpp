@@ -321,6 +321,21 @@ struct PlannerMoveTools {
   }
 };
 
+
+static float get_move_e_factor(const PlannerMoveTools &tools, const MoveHints &hints) {
+  #if HAS_INDX()
+    if (hints.is_service_extruder_move) {
+      return EXTRUDER_SERVICE_MOVE_E_FACTOR;
+    }
+  #endif
+
+  if(!hints.ignore_e_factor && tools.virtual_tool.has_value()) {
+    return Planner::e_factor[*tools.virtual_tool];
+  }
+
+  return 1.0f;
+}
+
 /**
  * Class and Instance Methods
  */
@@ -1253,14 +1268,7 @@ bool Planner::_populate_block(block_t * const block,
   if (dc < 0) SBI(dm, Z_AXIS);
   if (de < 0) SBI(dm, E_AXIS);
 
-  float e_fac = tools.virtual_tool.has_value()
-    ? e_factor[*tools.virtual_tool]
-    : 1.0f;
-#if HAS_INDX()
-  if (hints.move.is_service_extruder_move) {
-    e_fac = EXTRUDER_SERVICE_MOVE_E_FACTOR;
-  }
-#endif
+  const float e_fac = get_move_e_factor(tools, hints.move);
   const float e_msteps_float = de * e_fac;
   const int32_t e_msteps = static_cast<int32_t>(std::abs(e_msteps_float) + 0.5f);
 
@@ -2169,7 +2177,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
       // Note: This is not >>ideal<<, because although the moves get planned, they might get discarded through (gcode_exceptions/quick_stop)
       // Most notably, this will track some extra filament usage if user intterupts purging
       // Tying this directly to the immediate motor positions might be better, but one would also need to also handle the origin resets
-      buddy::filament_tracker().track_extruder_move(*tools.virtual_tool, (xyze.e - position_float.e) * e_factor[*tools.virtual_tool]);
+      buddy::filament_tracker().track_extruder_move(*tools.virtual_tool, (xyze.e - position_float.e) * get_move_e_factor(tools, hints.move));
     }
 #endif
   }
@@ -2269,9 +2277,7 @@ bool Planner::buffer_segment(const MachinePosXYZE &xyze, const feedRate_t fr_mm_
         }
       #endif // PREVENT_COLD_EXTRUSION
       #if ENABLED(PREVENT_LENGTHY_EXTRUDE)
-        const float e_fac = tools.virtual_tool.has_value()
-          ? e_factor[*tools.virtual_tool]
-          : 1.0f;
+        const float e_fac = get_move_e_factor(tools, hints.move);
         const float e_msteps = ABS(de * e_fac);
         const float max_e_msteps = settings.axis_msteps_per_mm[E_AXIS_N(tools.extruder)] * (EXTRUDE_MAXLENGTH);
         if (e_msteps > max_e_msteps) {
