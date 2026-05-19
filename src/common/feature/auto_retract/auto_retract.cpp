@@ -127,7 +127,7 @@ void AutoRetract::maybe_retract_from_nozzle(const RetractFromNozzleParams &param
 
 #if HAS_WASTEBIN()
     if (params.park_over_wastebin) {
-        mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
+        mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
     }
 #endif
 
