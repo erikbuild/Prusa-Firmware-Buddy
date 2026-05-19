@@ -558,7 +558,7 @@ void run() {
                 break;
             }
 
-#if HAS_TOOLCHANGER()
+#if HAS_DWARF()
             // select active tool (previously active tool, or first one when starting)
             if (!prusa_toolchanger.init(bus, first_run)) {
                 log_error(Puppies, "Unable to select tool, retrying");

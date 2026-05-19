@@ -735,6 +735,10 @@ void init(void) {
     SteelSheets::CheckIfCurrentValid();
 #endif
     settings_load();
+#if HAS_INDX()
+    prusa_toolchanger.load_tool_info();
+    prusa_toolchanger.restore_last_picked_tool();
+#endif
 }
 
 void print_fan_spd() {

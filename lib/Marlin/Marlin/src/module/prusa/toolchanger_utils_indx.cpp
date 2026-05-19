@@ -62,22 +62,13 @@ PrusaToolChangerUtils::PrusaToolChangerUtils() {
     tool_info.fill({ 0, 0 });
 }
 
-bool PrusaToolChangerUtils::init(buddy::puppies::PuppyModbus &bus, bool first_run) {
-    load_tool_info();
-
-    if (!first_run) {
-        return true;
-    }
-
-    // Restore last picked tool from EEPROM if valid
-    // Since INDX tools are passive with no sensors, we must trust EEPROM
+void PrusaToolChangerUtils::restore_last_picked_tool() {
+    // INDX has no sensors; trust EEPROM for the last picked tool
     if (config_store().indx_last_picked_tool_valid.get()) {
         set_active_extruder(config_store().get_indx_last_picked_tool());
     } else {
         set_active_extruder(NoTool {});
     }
-
-    return true;
 }
 
 bool PrusaToolChangerUtils::is_tool_enabled(uint8_t tool) {

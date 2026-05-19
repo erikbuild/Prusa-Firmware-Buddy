@@ -112,16 +112,21 @@ public:
 public:
     PrusaToolChangerUtils();
 
+    #if HAS_DWARF()
     /**
      * @brief Initialize toolchanger.
      * @param first_run should be true only the first time after boot
      * @return true on success, false on communication error
      */
     bool init(buddy::puppies::PuppyModbus &, bool first_run);
+    #endif
 
     #if HAS_INDX()
 
     void set_active_extruder(std::variant<PhysicalToolIndex, NoTool> tool);
+
+    /// Restore active tool from EEPROM at boot. Must run on marlin thread, exactly once.
+    void restore_last_picked_tool();
 
     inline bool is_toolchanger_enabled() {
         return true;
