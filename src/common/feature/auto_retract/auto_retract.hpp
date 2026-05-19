@@ -7,6 +7,7 @@
 #include <inplace_function.hpp>
 #include <option/has_indx.h>
 #include <option/has_wastebin.h>
+#include <option/has_nextruder.h>
 
 namespace buddy {
 
@@ -31,12 +32,21 @@ class AutoRetract {
 public:
     using ToolVariant = std::variant<PhysicalToolIndex, NoTool>;
 
-    static constexpr float minimum_auto_retract_distance = 20.f; ///< Minimum retract distance for the filament to be considered auto-retracted. Auto-retracted filaments can be unloaded without heating.
+#if HAS_NEXTRUDER()
+    /// Minimum retract distance for the filament to be considered auto-retracted. Auto-retracted filaments can be unloaded without heating.
+    static constexpr float minimum_auto_retract_distance = 20.f; // mm
+    static constexpr bool supports_cold_unload = true;
 
-    /// Whether the printer supports cold unload.
-    ///
-    /// INDX has very short nozzle, not physically possible.
-    static constexpr bool supports_cold_unload = !option::has_indx;
+#elif HAS_INDX_HEAD()
+    /// Retraction distance for a standard auto retract sequence
+    static constexpr float minimum_auto_retract_distance = 8.f; // mm
+
+    /// In parked tools, the only thing holding the filament is the nozzle
+    /// Thus we cannot auto-retract to the level that would allow cold unload
+    static constexpr bool supports_cold_unload = false;
+#else
+    #error
+#endif
 
     /// @returns whether the specified \param hotend is retracted (some amount > 0.0f) and is a known value -> will deretract on positive Z move
     bool will_deretract(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
