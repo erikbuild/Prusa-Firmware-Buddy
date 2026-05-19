@@ -45,7 +45,7 @@ void PrusaGcodeSuite::G12() {
     bool auto_retract = false;
     (void)parser.store_option_if_present('R', auto_retract);
 
-    if (auto_retract && !buddy::auto_retract().is_safely_retracted_for_unload()) {
+    if (auto_retract && !buddy::auto_retract().is_auto_retracted()) {
         buddy::auto_retract().maybe_retract_from_nozzle();
     }
 #endif

@@ -152,7 +152,7 @@ void marlin_finalize_unload() {
 bool marlin_is_retracted() {
 #if HAS_AUTO_RETRACT()
     static_assert(HOTENDS == 1);
-    return buddy::auto_retract().is_safely_retracted_for_unload(PhysicalToolIndex::from_raw(0));
+    return buddy::auto_retract().can_cold_unload(PhysicalToolIndex::from_raw(0));
 #else
     return false;
 #endif

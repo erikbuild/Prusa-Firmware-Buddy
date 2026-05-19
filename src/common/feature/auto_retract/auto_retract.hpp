@@ -38,18 +38,19 @@ public:
     /// INDX has very short nozzle, not physically possible.
     static constexpr bool supports_cold_unload = !option::has_indx;
 
-    /// \returns whether the specified \param hotend is retracted (some amount > 0.0f) and is a known value -> will deretract on positive Z move
+    /// @returns whether the specified \param hotend is retracted (some amount > 0.0f) and is a known value -> will deretract on positive Z move
     bool will_deretract(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
-    /// \returns true if the filament is completely retracted from the \param hotend's nozzle (distance >= minimum_retract_distance), allowing for cold unload.
-    bool is_safely_retracted_for_unload(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
+    /// @returns true if the filament retracted from the \param hotend's nozzle for at least minimum_auto_retract_distance
+    bool is_auto_retracted(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
-    bool is_cold_unload_allowed_and_filament_retracted(PhysicalToolIndex physical_tool) const;
+    /// @returns true if the filament is retracted enough for a cold unload (unloading without heating up the nozzle)
+    bool can_cold_unload(PhysicalToolIndex physical_tool) const;
 
     /// How much is the filament retracted from the nozzle (mm), std::nullopt if retracted distance not a known value
     std::optional<float> retracted_distance(ToolVariant tool = PhysicalToolIndex::currently_selected()) const;
 
-    /// If !is_safely_retracted_for_unload(), executes the retraction process and saves retracted distance
+    /// If !is_auto_retracted(), executes the retraction process and saves retracted distance
     void maybe_retract_from_nozzle(const auto_retract_detail::RetractFromNozzleParams &params = {});
 
     /// If will_deretract(), executes the deretraction process and set retracted distance to unknown value (because it can be changed by printing moves without notice)

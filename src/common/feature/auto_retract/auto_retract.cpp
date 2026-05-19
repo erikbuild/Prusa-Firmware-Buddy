@@ -46,7 +46,7 @@ bool AutoRetract::will_deretract(ToolVariant tool) const {
     );
 }
 
-bool AutoRetract::is_safely_retracted_for_unload(ToolVariant tool) const {
+bool AutoRetract::is_auto_retracted(ToolVariant tool) const {
     const auto dist = retracted_distance(tool);
     return dist.has_value() && dist.value() >= minimum_auto_retract_distance;
 }
@@ -58,9 +58,9 @@ std::optional<float> AutoRetract::retracted_distance(ToolVariant tool) const {
         [](NoTool) -> std::optional<float> { return std::nullopt; } //
     );
 }
-bool AutoRetract::is_cold_unload_allowed_and_filament_retracted([[maybe_unused]] PhysicalToolIndex physical_tool) const {
+bool AutoRetract::can_cold_unload([[maybe_unused]] PhysicalToolIndex physical_tool) const {
     if constexpr (supports_cold_unload) {
-        return is_safely_retracted_for_unload(physical_tool);
+        return is_auto_retracted(physical_tool);
     } else {
         return false;
     }
@@ -89,7 +89,7 @@ void AutoRetract::maybe_retract_from_nozzle(const RetractFromNozzleParams &param
     const auto physical_tool = virtual_tool.to_physical();
 
     // Is already retracted -> exit
-    if (is_safely_retracted_for_unload(physical_tool)) {
+    if (is_auto_retracted(physical_tool)) {
         return;
     }
 

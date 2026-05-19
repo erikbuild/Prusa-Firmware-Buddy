@@ -53,7 +53,7 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
     {
 #if ENABLED(PREVENT_COLD_EXTRUSION) && HAS_AUTO_RETRACT()
         const bool is_unload = load_type == Pause::LoadType::unload || load_type == Pause::LoadType::unload_confirm || load_type == Pause::LoadType::unload_from_gears;
-        const bool allow_cold = is_unload && buddy::auto_retract().is_cold_unload_allowed_and_filament_retracted(rSettings.physical_tool());
+        const bool allow_cold = is_unload && buddy::auto_retract().can_cold_unload(rSettings.physical_tool());
         AutoRestore ar_ce(thermalManager.allow_cold_extrude, true, allow_cold);
 #endif
 
@@ -158,7 +158,7 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
 
     bool do_preheat = op_preheat.has_value();
 #if HAS_AUTO_RETRACT()
-    do_preheat = do_preheat && !buddy::auto_retract().is_cold_unload_allowed_and_filament_retracted(virtual_tool.to_physical());
+    do_preheat = do_preheat && !buddy::auto_retract().can_cold_unload(virtual_tool.to_physical());
 #endif
 
     if (do_preheat) {
@@ -385,7 +385,7 @@ void filament_gcodes::M1600_change_filament(FilamentType filament_to_be_loaded, 
 
     bool is_safe_to_unload = false;
 #if HAS_AUTO_RETRACT()
-    is_safe_to_unload = buddy::auto_retract().is_cold_unload_allowed_and_filament_retracted(virtual_tool.to_physical());
+    is_safe_to_unload = buddy::auto_retract().can_cold_unload(virtual_tool.to_physical());
 #endif
 
     if (!is_safe_to_unload) {
