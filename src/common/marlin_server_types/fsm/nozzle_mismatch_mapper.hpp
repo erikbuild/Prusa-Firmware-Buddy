@@ -9,8 +9,6 @@ constexpr std::optional<ErrCode> nozzle_mismatch_phase_error_code_mapper(const F
     switch (static_cast<PhaseNozzleMismatch>(nozzle_mismatch_phase.phase)) {
     case PhaseNozzleMismatch::prompt:
         return ErrCode::ERR_MECHANICAL_NOZZLE_MISMATCH_UNKNOWN;
-    case PhaseNozzleMismatch::dock_selection:
-        return ErrCode::ERR_MECHANICAL_NOZZLE_MISMATCH_DOCK_SELECTION;
     case PhaseNozzleMismatch::dock_not_empty:
         return ErrCode::ERR_MECHANICAL_NOZZLE_MISMATCH_DOCK_NOT_EMPTY;
     case PhaseNozzleMismatch::tool_lost:
