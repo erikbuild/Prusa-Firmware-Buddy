@@ -1,4 +1,4 @@
-#include "DialogLoadUnload.hpp"
+#include "screen_filament_change.hpp"
 #include "error_codes_mmu.hpp"
 #include "filament_to_load.hpp"
 #include "find_error.hpp"
@@ -422,7 +422,7 @@ private:
 };
 #endif
 // -------------------------------FRAME STORAGE--------------------------------
-using Frames = FrameDefinitionList<DialogLoadUnload::FrameStorage,
+using Frames = FrameDefinitionList<ScreenFilamentChange::FrameStorage,
     FrameDefinition<Phase::initial, FrameProgress, txt_init>,
     FrameDefinition<Phase::ChangingTool, FrameProgress, txt_tool>,
     FrameDefinition<Phase::Parking_stoppable, FrameProgress, txt_parking>,
@@ -516,25 +516,25 @@ using Frames = FrameDefinitionList<DialogLoadUnload::FrameStorage,
     FrameDefinition<Phase::Unparking, FrameProgress, txt_unparking>>;
 } // anonymous namespace
 
-DialogLoadUnload::DialogLoadUnload(fsm::BaseData data)
-    : DialogFSM(data) {
+ScreenFilamentChange::ScreenFilamentChange()
+    : ScreenFSM(nullptr, GuiDefaults::RectScreenNoHeader) {
     create_frame();
 }
 
-DialogLoadUnload::~DialogLoadUnload() {
+ScreenFilamentChange::~ScreenFilamentChange() {
     sound::stop();
     destroy_frame();
 }
 
-void DialogLoadUnload::create_frame() {
+void ScreenFilamentChange::create_frame() {
     const auto phase = get_phase();
     Frames::create_frame(frame_storage, phase, &inner_frame, phase);
 }
 
-void DialogLoadUnload::destroy_frame() {
+void ScreenFilamentChange::destroy_frame() {
     Frames::destroy_frame(frame_storage, get_phase());
 }
 
-void DialogLoadUnload::update_frame() {
+void ScreenFilamentChange::update_frame() {
     Frames::update_frame(frame_storage, get_phase(), fsm_base_data.GetData());
 }

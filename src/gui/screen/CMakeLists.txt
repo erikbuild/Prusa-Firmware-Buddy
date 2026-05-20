@@ -3,8 +3,14 @@ add_subdirectory(toolhead)
 add_subdirectory(print)
 
 target_sources(
-  firmware PRIVATE dialog_safety_timer.cpp screen_factory_reset.cpp screen_m600.cpp
-                   screen_menu_virtual.cpp screen_preheat.cpp screen_print_preview.cpp
+  firmware
+  PRIVATE dialog_safety_timer.cpp
+          screen_factory_reset.cpp
+          screen_filament_change.cpp
+          screen_m600.cpp
+          screen_menu_virtual.cpp
+          screen_preheat.cpp
+          screen_print_preview.cpp
   )
 
 if(HAS_ANFC)

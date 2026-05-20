@@ -3,10 +3,10 @@
 #include <screen_fsm.hpp>
 #include <fsm/filament_change_phases.hpp>
 
-class DialogLoadUnload : public DialogFSM {
+class ScreenFilamentChange : public ScreenFSM {
 public:
-    DialogLoadUnload(fsm::BaseData data);
-    ~DialogLoadUnload();
+    ScreenFilamentChange();
+    ~ScreenFilamentChange();
 
 protected:
     void create_frame() override;

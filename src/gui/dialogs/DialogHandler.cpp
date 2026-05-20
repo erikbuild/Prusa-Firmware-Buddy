@@ -1,6 +1,6 @@
 #include "DialogHandler.hpp"
 
-#include "DialogLoadUnload.hpp"
+#include <gui/screen/screen_filament_change.hpp>
 #include "IScreenPrinting.hpp"
 #include "ScreenHandler.hpp"
 #include "screen_printing.hpp"
@@ -264,7 +264,7 @@ using FSMDisplayConfig = FSMDisplayConfigDef<
 #if HAS_SERIAL_PRINT()
     FSMPrintDef<ClientFSM::Serial_printing>,
 #endif
-    FSMDialogDef<ClientFSM::Load_unload, DialogLoadUnload>,
+    FSMScreenDef<ClientFSM::Load_unload, ScreenFilamentChange>,
     FSMScreenDef<ClientFSM::Preheat, ScreenPreheat>,
 #if HAS_SELFTEST()
     FSMScreenDef<ClientFSM::Selftest, ScreenSelftest>,

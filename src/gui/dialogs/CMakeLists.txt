@@ -4,7 +4,6 @@ target_sources(
   firmware
   PRIVATE dialog_text_input.cpp
           DialogHandler.cpp
-          DialogLoadUnload.cpp
           DialogTimed.cpp
           i_radio_button.cpp
           IDialog.cpp
