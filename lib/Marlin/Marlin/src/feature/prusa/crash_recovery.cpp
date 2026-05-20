@@ -174,7 +174,11 @@ void Crash_s::set_state(state_t new_state) {
         if (state != PRINTING || !is_active() || !is_enabled()) {
             bsod_unreachable();
         }
-        // FALLTHRU
+
+        toolchange_event = toolchange_in_progress;
+        stop_and_save();
+        break;
+
     case TRIGGERED_AC_FAULT:
         // transition to AC_FAULT is _always_ possible from any state
         toolchange_event = toolchange_in_progress;
