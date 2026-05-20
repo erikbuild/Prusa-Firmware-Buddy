@@ -25,11 +25,15 @@
  */
 
 #include "../../../inc/MarlinConfig.h"
-#include <feature/auto_retract/auto_retract.hpp>
 #include <feature/nozzle_cleaning_failed/nozzle_cleaning_failed_wizard.hpp>
 #include <config_store/store_instance.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
 #include <mapi/parking.hpp>
+
+#include <option/has_auto_retract.h>
+#if HAS_AUTO_RETRACT()
+    #include <feature/auto_retract/auto_retract.hpp>
+#endif
 
 #if ENABLED(AUTO_BED_LEVELING_UBL)
 
@@ -40,7 +44,6 @@
     #include <marlin_server.hpp>
     #include <calibration_z.hpp>
     #include <option/has_uneven_bed_prompt.h>
-    #include <option/has_auto_retract.h>
 
     #include <mapi/motion.hpp>
 
