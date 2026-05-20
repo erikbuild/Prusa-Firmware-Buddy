@@ -792,6 +792,7 @@ void screen_printing_data_t::change_print_state() {
             return printing_state_t::REHEATING;
         case State::Resuming_BufferData:
         case State::Resuming_Begin:
+        case State::Resuming_ExecutingGCodeInterrupt:
         case State::Resuming_UnparkHead_XY:
         case State::Resuming_UnparkHead_ZE:
         case State::CrashRecovery_Begin:

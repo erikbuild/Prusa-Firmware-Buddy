@@ -28,6 +28,7 @@ static ac_controller::AnimationType marlin_to_anim_state() {
     case State::Resuming_Reheating:
     case State::Resuming_UnparkHead_XY:
     case State::Resuming_UnparkHead_ZE:
+    case State::Resuming_ExecutingGCodeInterrupt:
         return ac_controller::AnimationType::PROGRESS_PERCENT;
 
     case State::Idle:

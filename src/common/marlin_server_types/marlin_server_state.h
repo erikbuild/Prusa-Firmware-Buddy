@@ -30,6 +30,7 @@ enum class State {
     Resuming_BufferData,
     Resuming_Begin,
     Resuming_Reheating,
+    Resuming_ExecutingGCodeInterrupt,
     Resuming_UnparkHead_XY,
     Resuming_UnparkHead_ZE,
     Aborting_Begin,

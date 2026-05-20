@@ -24,17 +24,18 @@ class Crash_s {
 public:
     /// Crash detection/recovery states
     typedef enum {
-        IDLE, /// initial/disabled state
-        PRINTING, /// printer is working in a usual way (also in pause)
-        TRIGGERED_ISR, /// crash was detected, handling ISR
-        TRIGGERED_AC_FAULT, /// crash was triggered during an AC fault
-        TRIGGERED_TOOLFALL, /// dwarf fell off the toolchanger, not during toolchange, regular crash recovery + tool pickup
-        TRIGGERED_TOOLCRASH, /// crash during toolchange, no recovery, just pause and wait for tool pickup
-        TRIGGERED_HOMEFAIL, /// couldn't home, no recovery, just rehome
-        REPEAT_WAIT, /// waiting for user to repark dwarves or to rehome, skips parking and replay
-        RECOVERY, /// crash was detected and recovery is being done
-        REPLAY, /// printer was re-homed and the last G code is being replayed
-        SELFTEST, /// Selftest is running, do not interfere
+        IDLE, ///< initial/disabled state
+        PRINTING, ///< printer is working in a usual way (also in pause)
+        TRIGGERED_ISR, ///< crash was detected, handling ISR
+        TRIGGERED_AC_FAULT, ///< crash was triggered during an AC fault
+        TRIGGERED_TOOLFALL, ///< dwarf fell off the toolchanger, not during toolchange, regular crash recovery + tool pickup
+        TRIGGERED_TOOLCRASH, ///< crash during toolchange, no recovery, just pause and wait for tool pickup
+        TRIGGERED_HOMEFAIL, ///< couldn't home, no recovery, just rehome
+        TRIGGERED_GCODE_INTERRUPT, ///< Gcode needs to be executed mid-movement
+        REPEAT_WAIT, ///< waiting for user to repark dwarves or to rehome, skips parking and replay
+        RECOVERY, ///< crash was detected and recovery is being done
+        REPLAY, ///< printer was re-homed and the last G code is being replayed
+        SELFTEST, ///< Selftest is running, do not interfere
     } state_t;
 
     /// Instruction recovery flags

@@ -128,6 +128,7 @@ static StateAnimation marlin_to_anim_state() {
     case State::Resuming_BufferData:
     case State::Resuming_Begin:
     case State::Resuming_Reheating:
+    case State::Resuming_ExecutingGCodeInterrupt:
     case State::Resuming_UnparkHead_XY:
     case State::Resuming_UnparkHead_ZE: {
         if (load_unload_state.has_value() || is_preheating) {

@@ -75,6 +75,25 @@ enqueue_gcode_printf(const char *gcode, ...);
 // @retval false otherwise
 bool inject(InjectQueueRecord record);
 
+/// Similar to inject, but attempts to execute the provided gcode immediately
+/// Like, really immediately.
+///
+/// If deemned appropriate, it interrupts the currently executed gcode using the crash recovery mechanism,
+/// otherwise falls back to standard inject() mechanics.
+///
+/// If the interrupt path is selected and the g-code gets interrupted,
+/// the interrupting gcode gets executed AFTER RECOVERY REHOMING and REHEATING, but BEFORE UNPARKING.
+/// The filament WILL BE RETRACTED BY THE RECOVERY MECHANISM.
+/// Double-check the marlin_server resuming mechanism to validate that whatever you want to do, it fits with the sequence.
+/// Also be mindful that the resuming mechanism will unpark to resume_pos, INCLUDING EXTRUDER POSITION
+///
+/// Currently intended for a quick reaction to filament runouts,
+/// really think twice if you'd need to use it somewhere else.
+///
+/// !!! If the gcode DOES interrupt something, it will get executed BEFORE the final unparking
+/// !!! ONLY USE IF YOU 100% KNOW WHAT YOU'RE DOING
+void gcode_interrupt(GCodeLiteral gcode);
+
 // direct call of settings.save()
 void settings_save();
 
