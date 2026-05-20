@@ -703,14 +703,16 @@ const char *dispatch_fsm(FsmContext &ctx) {
 // since the loadcell is needed for that probe.
 class IndxScanState {
     Hotend &hotend_;
+    const tool_offset::ProbingConfig &config_;
     bool prev_loadcell_active_;
     bool prev_accelerometer_active_;
     int16_t prev_hotend_target_;
     int16_t prev_bed_target_;
 
 public:
-    explicit IndxScanState(Hotend &hotend)
+    explicit IndxScanState(Hotend &hotend, const tool_offset::ProbingConfig &config)
         : hotend_(hotend)
+        , config_(config)
         , prev_loadcell_active_(buddy::puppies::indx.get_loadcell_active())
         , prev_accelerometer_active_(buddy::puppies::indx.get_accelerometer_active())
         , prev_hotend_target_(hotend.nozzle_target_temp())
@@ -726,6 +728,7 @@ public:
         buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, prev_accelerometer_active_);
         hotend_.set_nozzle_target_temp(prev_hotend_target_);
         thermalManager.setTargetBed(prev_bed_target_);
+        do_blocking_move_to_z(config_.sensor_position.z + config_.safe_z_height);
     }
 
     IndxScanState(const IndxScanState &) = delete;
@@ -757,9 +760,6 @@ std::expected<xy_pos_t, const char *> measure_xy_via_fsm(
     const tool_offset::ProbingConfig &config,
     tool_offset::Sensor &sensor,
     const tool_offset::ToolOffset &initial_measurement_offset) {
-
-    auto &hotend = Hotend::for_tool(PhysicalToolIndex::currently_selected());
-    IndxScanState scan_state(hotend);
 
     // Clamp the scan center to physical reach so the sweep stays within
     // machine limits even when the sensor sits close to an edge. The scan
@@ -840,6 +840,8 @@ std::expected<tool_offset::ToolOffset, const char *> tool_offset::measure_curren
 
     do_blocking_move_to_z(*sensor_z + config.sensing_z);
     debug_report_probed_z(*sensor_z, *sensor_z - config.sensor_position.z);
+
+    IndxScanState scan_state(hotend, config);
 
     const auto xy = measure_xy_via_fsm(config, sensor, initial_measurement_offset);
     if (!xy) {
