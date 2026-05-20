@@ -197,18 +197,17 @@ namespace {
         { StateAnimation::Idle, { { 0, 0, 255 }, 1000, 0, 400, solid } },
             { StateAnimation::Printing, { { 0, 255, 0 }, 1000, 0, 400, solid } },
             { StateAnimation::Finished, { { 0, 0, 255 }, 500, 0, 250, pulsing } },
+            { StateAnimation::Aborted, { { 0, 0, 255 }, 1000, 0, 400, solid } },
+            { StateAnimation::Warning, { { 128, 32, 0 }, 1000, 0, 1000, pulsing } },
+            { StateAnimation::PowerPanic, { { 0, 255, 0 }, 1000, 0, 400, solid } },
 #else
         { StateAnimation::Idle, { { 0, 0, 0 }, 1000, 0, 400, solid } },
             { StateAnimation::Printing, { { 0, 150, 255 }, 1000, 0, 400, solid } },
             { StateAnimation::Finished, { { 0, 255, 0 }, 1000, 0, 400, solid } },
-#endif
             { StateAnimation::Aborted, { { 0, 0, 0 }, 1000, 0, 400, solid } },
-#if PRINTER_IS_PRUSA_iX()
-            { StateAnimation::Warning, { { 128, 32, 0 }, 1000, 0, 1000, pulsing } },
-#else
             { StateAnimation::Warning, { { 255, 255, 0 }, 1000, 0, 1000, pulsing } },
-#endif
             { StateAnimation::PowerPanic, { { 0, 0, 0 }, 1000, 0, 400, solid } },
+#endif
             { StateAnimation::PowerUp, { { 0, 255, 0 }, 1500, 0, 1500, pulsing } },
 #if PRINTER_IS_PRUSA_iX()
             { StateAnimation::WaitingForPrinter, { { 0, 0, 255 }, 500, 0, 250, alternating } },
