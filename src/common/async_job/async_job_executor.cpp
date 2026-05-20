@@ -70,8 +70,7 @@ void AsyncJobExecutor::thread_routine() {
 
             assert(job->state_ == State::running);
 
-            // Clear the executor for an extra bit of checking
-            job->executor = nullptr;
+            // KEEP the executor set to prevent race conditions (BFW-8766)
 
             // !!! This must be done as the last thing before unlocking the mutex to make AsyncJob::is_active() work correctly
             job->state_ = State::finished;
