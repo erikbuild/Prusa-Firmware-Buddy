@@ -232,7 +232,7 @@ void FilamentSensors::process_events() {
 
         m600_sent = true;
 
-        marlin_server::inject(GCodeLiteral { .gcode = "M600 A" }); // change filament
+        marlin_server::gcode_interrupt(GCodeLiteral { .gcode = "M600 A" }); // change filament
 
         log_info(FSensor, "Injected runout");
         return true;
