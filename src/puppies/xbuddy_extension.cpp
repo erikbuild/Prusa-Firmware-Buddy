@@ -282,7 +282,7 @@ CommunicationStatus XBuddyExtension::write_chunk(PuppyModbus &bus) {
     const FileId file_id = xbuddy_extension::modbus::parse_file_id(current_request.file_id);
     if (file_id == FileId::none) {
         // No request -> we are done.
-        return CommunicationStatus::OK;
+        return CommunicationStatus::SKIPPED;
     }
 
     if (flash_fd != -1) {
@@ -457,7 +457,7 @@ CommunicationStatus XBuddyExtension::refresh_log_message(PuppyModbus &bus) {
 
     // Check if log_message_sequence changed at all
     if (status.value.log_message_sequence == last_log_message_sequence) {
-        return CommunicationStatus::OK;
+        return CommunicationStatus::SKIPPED;
     }
 
     xbuddy_extension::modbus::LogMessage log_message;
