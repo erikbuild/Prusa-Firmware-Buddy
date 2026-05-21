@@ -82,6 +82,10 @@ static_assert(HAS_PAUSE());
     #include <feature/openprinttag/filament_usage_tracker/filament_usage_tracker.hpp>
 #endif
 
+#if ENABLED(CRASH_RECOVERY)
+    #include <feature/prusa/crash_recovery.hpp>
+#endif
+
 LOG_COMPONENT_REF(MarlinServer);
 
 #ifndef NOZZLE_UNPARK_XY_FEEDRATE
@@ -1520,6 +1524,17 @@ void Pause::park_nozzle_and_notify() {
 }
 
 void Pause::unpark_nozzle_and_notify() {
+#if ENABLED(CRASH_RECOVERY)
+    if (crash_s.get_state() == Crash_s::RECOVERY) {
+        // With the gcode_interrupt mechanism, gcodes can get executed during the crash recovery process (typically M600 during runout).
+        // At this stage, the crash recovery itself handles retraction, Z lift and unparking,
+        // so let the crash recovery do its' job and don't unpark.
+        // Just let the system know that we've left the filament retracted a bit.
+        retracted_distance_after_unpark = -settings.retract;
+        return;
+    }
+#endif
+
     if (settings.resume_pos.x == NAN || settings.resume_pos.y == NAN || settings.resume_pos.z == NAN) {
         return;
     }
@@ -1616,8 +1631,9 @@ void Pause::filament_change(const pause::Settings &settings_, bool is_filament_s
     invoke_loop();
 
     // Now all extrusion positions are resumed and ready to be confirmed
-    // Set extruder to saved position
-    sync_e_position_to(settings.resume_pos.e);
+    // Set extruder to saved position, minus whatever we've left retracted
+    // retracted_distance_after_unpark should be zero unless we're in gcode interrupt
+    sync_e_position_to(settings.resume_pos.e - retracted_distance_after_unpark);
     destination.e = settings.resume_pos.e;
 
     feedrate_percentage = saved_feedrate_percentage;
