@@ -62,26 +62,29 @@ constexpr float MAX_XY_OFFSET_DIFFERENCE = 0.8f;
 
 // Fallback temperatures if no filament is loaded
 constexpr int16_t DEFAULT_CLEANING_TEMP = 220;
-constexpr int16_t DEFAULT_PROBING_TEMP = 170;
+constexpr int16_t DEFAULT_Z_PROBING_TEMP = 170;
+constexpr int16_t DEFAULT_XY_PROBING_TEMP = 100;
 
 struct ToolTemperatures {
     int16_t cleaning; // nozzle temp for purge/clean
-    int16_t probing; // cooled-down temp for Z probing
+    int16_t z_probing; // cooled-down temp for Z probing
+    int16_t xy_probing; // cooled-down temp for XY probing
 };
 
 /// Get nozzle temperatures for a physical tool from its loaded filament.
 /// Uses tool mapping to find the gcode tool, then looks up the filament type.
+/// xy_probing temp is set to a default since it does not depend on used filament or tool
 ToolTemperatures get_tool_temperatures(PhysicalToolIndex tool) {
     const uint8_t gcode_raw = tools_mapping::to_gcode_tool(tool.to_raw());
     if (gcode_raw == tools_mapping::no_tool) {
-        return { DEFAULT_CLEANING_TEMP, DEFAULT_PROBING_TEMP };
+        return { DEFAULT_CLEANING_TEMP, DEFAULT_Z_PROBING_TEMP, DEFAULT_XY_PROBING_TEMP };
     }
     const FilamentType filament = config_store().get_filament_type(VirtualToolIndex::from_raw(gcode_raw));
     if (filament == FilamentType::none) {
-        return { DEFAULT_CLEANING_TEMP, DEFAULT_PROBING_TEMP };
+        return { DEFAULT_CLEANING_TEMP, DEFAULT_Z_PROBING_TEMP, DEFAULT_XY_PROBING_TEMP };
     }
     const auto params = filament.parameters();
-    return { params.nozzle_temperature, params.nozzle_preheat_temperature };
+    return { params.nozzle_temperature, params.nozzle_preheat_temperature, DEFAULT_XY_PROBING_TEMP };
 }
 
 /// Return a random float in [-r_param, +r_param]
@@ -123,7 +126,7 @@ bool prepare_tool(PhysicalToolIndex tool) {
     }
 
     // Cool down to probing temperature with print fan on to speed it up
-    thermalManager.setTargetHotend(temps.probing, tool);
+    thermalManager.setTargetHotend(temps.z_probing, tool);
     const uint16_t saved_fan_speed = thermalManager.get_fan_speed(0);
     thermalManager.set_fan_speed(0, 255);
     ScopeGuard restore_fan([&] {
@@ -211,8 +214,7 @@ bool calibrate_xy_offset(PhysicalToolIndex tool, const tool_offset::ProbingConfi
     // wait for calibration temperature (if probing is higher than upper limit)
     // Restore temp is one level above in run()
     const ToolTemperatures temps = get_tool_temperatures(tool);
-    const int16_t xy_measurement_temperature_upper_limit = static_cast<int16_t>(config.max_safe_temp) - 10; // degC, leave some headroom for safety
-    thermalManager.setTargetHotend(std::min(temps.probing, xy_measurement_temperature_upper_limit), tool);
+    thermalManager.setTargetHotend(temps.xy_probing, tool);
     thermalManager.wait_for_hotend(tool, false, true);
 
     // Disable PA to reduce filter delay during probe analysis
