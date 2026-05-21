@@ -1,6 +1,6 @@
 #include "i2c_manager.hpp"
 #include <bsod.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <mutex>
 
 namespace i2c {

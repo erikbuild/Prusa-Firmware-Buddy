@@ -6,7 +6,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <freertos/timing.hpp>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <can_driver_fdcan.hpp>
 #include <device/hal.h>
 #include <o1heap/o1heap.hpp>

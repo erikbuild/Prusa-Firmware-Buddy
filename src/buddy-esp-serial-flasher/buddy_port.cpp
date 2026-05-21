@@ -1,7 +1,7 @@
 #include <buddy/esp_uart_dma_buffer_rx.hpp>
 #include <cstdlib>
 #include <device/peripherals_uart.hpp>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <esp_loader.h>
 #include <freertos/timing.hpp>
 #include <string.h>

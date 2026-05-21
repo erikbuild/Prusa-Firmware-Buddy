@@ -5,10 +5,6 @@
 
 #include <option/has_esp.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
 #if (BOARD_IS_XBUDDY() || BOARD_IS_XLBUDDY())
     #define HAS_ADC3
 #endif
@@ -337,7 +333,3 @@ void hw_tim14_init();
 #define SPI_INIT(peripheral)               \
     _JOIN(hw_spi, spi_##peripheral, _init) \
     ()
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus

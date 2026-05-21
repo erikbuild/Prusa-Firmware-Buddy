@@ -1,5 +1,5 @@
 #include <device/cmsis.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include "hal/HAL_RS485.hpp"
 
 extern "C" {

@@ -1,6 +1,6 @@
 #include "interrupts_helper.hpp"
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/peripherals_uart.hpp>
 #include <option/buddy_enable_wui.h>
 #include <option/has_burst_stepping.h>

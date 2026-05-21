@@ -2,7 +2,7 @@
 
 #include <bsod.h>
 #include <cstdint>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <freertos/binary_semaphore.hpp>
 #include <freertos/mutex.hpp>
 #include <atomic>

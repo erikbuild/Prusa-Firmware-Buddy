@@ -1,4 +1,4 @@
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include "bsod.h"
 #include "Pin.hpp"
 #include "hwio_pindef.h"

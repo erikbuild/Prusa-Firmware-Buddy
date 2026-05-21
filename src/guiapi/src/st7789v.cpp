@@ -4,7 +4,7 @@
 #include "cmath_ext.h"
 #include "cmsis_os.h"
 #include "interrupt_disabler.hpp"
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <hwio_pindef.h>
 #include "qoi_decoder.hpp"
 #include "raster_opfn_c.h"

@@ -1,7 +1,7 @@
 #include "puppies/PuppyBus.hpp"
 
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/peripherals_uart.hpp>
 #include "hwio_pindef.h"
 #include "timing.h"

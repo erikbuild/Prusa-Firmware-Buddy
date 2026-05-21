@@ -3,7 +3,7 @@
 #include "inttypes.h"
 #include <device/hal.h>
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <stdint.h>
 #include "printers.h"
 #include "MarlinPin.h"

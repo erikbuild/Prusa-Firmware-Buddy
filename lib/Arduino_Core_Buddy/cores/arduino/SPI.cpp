@@ -4,7 +4,7 @@
     #include "SPI.h"
     #include <device/board.h>
     #include <device/hal.h>
-    #include <device/peripherals.h>
+    #include <device/peripherals.hpp>
 
 extern int HAL_SPI_Initialized;
 

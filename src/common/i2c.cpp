@@ -5,7 +5,7 @@
 #include <array>
 #include "HAL/HAL.h"
 #include <feature/precise_stepping/precise_stepping.hpp>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 
 #define MAX_RETRIES 20
 

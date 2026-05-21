@@ -1,6 +1,6 @@
 #pragma once
 #include <device/cmsis.h>
-#include <device/peripherals.h>
+#include <device/hal.h>
 #include "printers.h"
 #include <stdint.h>
 #include <device/board.h>

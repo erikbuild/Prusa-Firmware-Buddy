@@ -3,7 +3,7 @@
 #include "timing.h"
 #include "device/cmsis.h"
 #include "stm32g0xx_hal.h"
-#include "device/peripherals.h"
+#include "device/peripherals.hpp"
 #include "buddy/priorities_config.h"
 
 TIM_HandleTypeDef TimerSysHandle;

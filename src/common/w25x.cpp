@@ -5,7 +5,7 @@
 #include <logging/log.hpp>
 #include "cmsis_os.h"
 #include <bsod.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <hwio_pindef.h>
 #include <stdlib.h>
 

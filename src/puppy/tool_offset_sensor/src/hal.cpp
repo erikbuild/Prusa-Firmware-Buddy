@@ -1,6 +1,6 @@
 #include "hal.hpp"
 #include <bsod.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/hal.h>
 #include <i2c_manager.hpp>
 

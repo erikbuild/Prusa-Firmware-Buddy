@@ -5,7 +5,7 @@
     #include <array>
     #include <bsod.h>
     #include <freertos/mutex.hpp>
-    #include <device/peripherals.h>
+    #include <device/peripherals.hpp>
     #include <stm32f4xx_hal_adc.h>
 
 namespace awdg {

@@ -1,7 +1,7 @@
 #include "quick_tmc_spi.hpp"
 
 #include <feature/motordriver_util.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <hwio_pindef.h>
 
 using namespace phase_stepping;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "inttypes.h"
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include "cmsis_os.h"
 
 namespace i2c {

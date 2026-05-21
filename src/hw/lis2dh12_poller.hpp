@@ -5,7 +5,7 @@
 #include <atomic>
 #include <device/hal.h>
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <freertos/timing.hpp>
 #include <Pin.hpp>
 #include <utils/atomic_circular_queue.hpp>

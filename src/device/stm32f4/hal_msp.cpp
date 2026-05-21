@@ -3,7 +3,7 @@
 #include <device/board.h>
 #include <logging/log.hpp>
 // #include "FreeRTOSConfig.h"
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <buddy/priorities_config.h>
 #include <option/has_burst_stepping.h>
 

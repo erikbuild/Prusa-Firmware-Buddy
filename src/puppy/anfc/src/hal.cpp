@@ -2,7 +2,7 @@
 #include "nfc.hpp"
 #include "adc.hpp"
 #include "bsod.h"
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/hal.h>
 #include <option/can_bus_type.h>
 #include <option/nfc_board_has_left_right_detection_pin.h>

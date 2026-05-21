@@ -1,6 +1,6 @@
 #include "can_driver_fdcan.hpp"
 
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <assert.h>
 #include <bsod.h>
 #include <timing.h>

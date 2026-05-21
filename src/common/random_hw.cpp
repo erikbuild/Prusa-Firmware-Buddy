@@ -5,7 +5,7 @@
 
 #include <device/hal.h>
 #include <freertos/mutex.hpp>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <mutex>
 
 #include <option/developer_mode.h>

@@ -18,7 +18,7 @@
 #include <common/metric.h>
 #include <common/crc32.h>
 #include <device/peripherals_uart.hpp>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <freertos/queue.hpp>
 #include <task.h>
 #include <semphr.h>

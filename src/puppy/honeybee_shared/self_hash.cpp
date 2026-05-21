@@ -2,7 +2,7 @@
 #include "self_hash.hpp"
 
 #include <device/hal.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 
 #ifndef HASH_ALGOSELECTION_SHA256
     #include <mbedtls/sha256.h>

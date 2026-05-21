@@ -4,7 +4,7 @@
 #include "ModbusInit.hpp"
 #include "cmsis_os.h"
 #include "module_marlin.hpp"
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include "loadcell.hpp"
 #include "accelerometer.hpp"
 #include "adc.hpp"

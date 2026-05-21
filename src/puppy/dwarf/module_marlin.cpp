@@ -1,6 +1,6 @@
 #include "module_marlin.hpp"
 
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/hal.h>
 #include "Marlin.h"
 #include "modbus/ModbusTask.hpp"

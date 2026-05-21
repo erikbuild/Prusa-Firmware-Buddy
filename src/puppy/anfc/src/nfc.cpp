@@ -1,6 +1,6 @@
 #include "nfc.hpp"
 #include "hal.hpp"
-#include "device/peripherals.h"
+#include "device/peripherals.hpp"
 
 #include <st25r39xxb/ST25R39XXB.hpp>
 #include <freertos/timing.hpp>

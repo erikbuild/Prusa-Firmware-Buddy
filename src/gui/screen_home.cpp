@@ -40,7 +40,7 @@
 
 #include <option/has_loadcell.h>
 #include <option/developer_mode.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <option/has_mmu2.h>
 #include <option/has_human_interactions.h>
 #include <option/has_selftest.h>

@@ -5,7 +5,7 @@
 #include "window_msgbox.hpp"
 #include "img_resources.hpp"
 #include "ScreenHandler.hpp"
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <hw/touchscreen/touchscreen.hpp>
 #include "screen_touch_playground.hpp"
 

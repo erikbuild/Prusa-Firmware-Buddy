@@ -2,7 +2,7 @@
 #include "common.hpp"
 #include <hwio.h>
 #include <array>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 
 #if BOARD_IS_XLBUDDY()
     // TODO: include directly from src/hw as the cmake-based add_subdirectory

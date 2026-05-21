@@ -1,7 +1,7 @@
 #include <buddy/main.h>
 #include "platform.h"
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/peripherals_uart.hpp>
 #include <freertos/critical_section.hpp>
 #include <guiconfig/guiconfig.h>

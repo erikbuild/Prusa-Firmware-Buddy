@@ -1,6 +1,6 @@
 #include <bsod/bsod.h>
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <buddy/phase_stepping_opts.h>
 #include <atomic>
 #include "Pin.hpp"

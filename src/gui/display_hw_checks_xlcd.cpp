@@ -3,7 +3,7 @@
 #include <display.hpp>
 #include <ScreenHandler.hpp>
 #include <option/has_touch.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <logging/log.hpp>
 #include <utils/timing/rate_limiter.hpp>
 #include <marlin_client.hpp>

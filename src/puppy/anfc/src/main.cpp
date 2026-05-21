@@ -5,7 +5,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <freertos/timing.hpp>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <cyphal_anfc_node.hpp>
 #include <option/can_bus_type.h>
 #if CAN_BUS_TYPE_IS_UART()

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/hal.h>
 #include <cstdint>
 #include "i2c.hpp"

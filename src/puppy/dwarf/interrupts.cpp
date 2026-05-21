@@ -1,5 +1,5 @@
 #include <device/cmsis.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include "hal/HAL_RS485.hpp"
 #include "loadcell.hpp"
 #include "timing_sys.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdlib>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 
 namespace buddy {
 namespace puppies {

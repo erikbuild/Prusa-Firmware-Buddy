@@ -1,6 +1,6 @@
 #include "interrupts_helper.hpp"
 #include <device/board.h>
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <device/peripherals_uart.hpp>
 #include <hw/buffered_serial.hpp>
 #include <option/buddy_enable_wui.h>

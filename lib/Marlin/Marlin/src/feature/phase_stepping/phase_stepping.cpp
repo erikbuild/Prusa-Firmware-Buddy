@@ -16,7 +16,7 @@
 #include "debug_events.hpp"
 #include <config_store/store_instance.hpp>
 
-#include <device/peripherals.h>
+#include <device/peripherals.hpp>
 #include <module/motion.h>
 #include <module/stepper.h>
 #include <feature/motordriver_util.h>
