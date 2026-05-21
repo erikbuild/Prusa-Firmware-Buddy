@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <device/hal.h>
+#include <atomic>
 #include "cmsis_os.h"
 
 #ifdef __cplusplus
@@ -79,10 +80,10 @@ namespace hw {
             uint8_t *buffer;
 
             /// Size of the buffer
-            int buffer_size;
+            size_t buffer_size;
 
             /// Index of the next position in the buffer to read from
-            int buffer_pos;
+            size_t buffer_pos;
 
             /// position in buffer where idle occured (UINT32_MAX when no idle occured)
             uint32_t idle_at_NDTR;
@@ -114,6 +115,8 @@ namespace hw {
 
         /// This will start the Receiving DMA (or restart it on error)
         void StartReceiving();
+
+        void x_half_reached(int half_event);
     };
 
 } // namespace hw
