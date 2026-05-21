@@ -692,8 +692,8 @@
  */
 #if HAS_PAUSE()
     #define PAUSE_PARK_RETRACT_FEEDRATE 10.8f // (mm/s) Initial retract feedrate.
-    #define PAUSE_PARK_RETRACT_LENGTH 1 // (mm) Initial retract.
-        // This short retract is done immediately, before parking the nozzle.
+    #define PAUSE_PARK_RETRACT_LENGTH 8 // (mm) Initial retract.
+        // This retract is done immediately, before parking the nozzle.
     #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 27 // (mm/s) Unload filament feedrate. This can be pretty fast.
     #define FILAMENT_CHANGE_UNLOAD_ACCEL 1100 // (mm/s^2) Lower acceleration may allow a faster feedrate.
     #define FILAMENT_CHANGE_UNLOAD_LENGTH 105 // (mm) The length of filament for a complete unload.
