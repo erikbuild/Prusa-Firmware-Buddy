@@ -1295,6 +1295,14 @@ STEPPING_INLINE void trigger_first_step_event_after_specified_ticks(const uint32
         StepIsrDisabler step_guard;
         const uint16_t deadline = PreciseStepping::step_generator_state.initial_counter + isr_ticks;
         __HAL_TIM_SET_COMPARE(&TimerHandle[STEP_TIMER_NUM].handle, TIM_CHANNEL_1, deadline);
+
+        // Drop any stale invocation that might have gotten scheduled (but
+        // didn't fire yet) before we changed the compare above. If we let it
+        // fire, it would run _now_ and would confuse scheduling of the events
+        // - which assume they'd fire at the time we just scheduled.
+        __HAL_TIM_CLEAR_IT(&TimerHandle[STEP_TIMER_NUM].handle, TIM_IT_CC1);
+        NVIC_ClearPendingIRQ(TIM8_BRK_TIM12_IRQn);
+
         PreciseStepping::left_ticks_to_next_step_event = left_ticks;
         PreciseStepping::last_step_isr_delay = 0;
     }
