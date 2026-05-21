@@ -1199,7 +1199,15 @@ void Pause::unloaded_ask_process(Response response) {
         if (load_type == LoadType::filament_stuck && FSensors_instance().HasMMU()) {
             set(LoadState::filament_push_ask);
         } else {
-            set(LoadState::filament_not_in_fs);
+            // On printers without extruder FSensor (like INDX) we want the user to confirm it without enforcing the filament to be removed from the sensor.
+            // The motivation is that some users would remove the old and push the new one in first before confirming the unload, and if we enforce the
+            // filament to be removed, the printer would think that the filament was not removed at all and would not proceed with loading the new filament.
+            // The user would then need to remove the new filament again and push it in again after confirming the unload, which is a bad user experience.
+            if (FSensors_instance().is_working(LogicalFilamentSensor::extruder)) {
+                set(LoadState::filament_not_in_fs);
+            } else {
+                set(LoadState::unload_finish_or_change);
+            }
         }
         return;
     }
