@@ -26,6 +26,11 @@ cmake_policy(SET CMP0097 NEW)
 
 if(NOT CMAKE_CROSSCOMPILING)
   option(UNITTESTS_ENABLE "Enable building of unittest" ON)
+  option(COVERAGE_ENABLE "Enable code coverage instrumentation for tests" OFF)
+  if(COVERAGE_ENABLE)
+    add_compile_options(--coverage -fno-inline)
+    add_link_options(--coverage)
+  endif()
 endif()
 include(ProjectOptions.cmake)
 

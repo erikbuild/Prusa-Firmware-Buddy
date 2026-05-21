@@ -100,6 +100,20 @@ ctest -L translator --verbose     # Run translator tests with verbose output
 - **Testing specific feature:** `python3 utils/build_tests.py -t -- -R <feature_name>`
 - **Before committing:** `python3 utils/build_tests.py --run` (full suite)
 
+## Code Coverage
+
+Generate HTML coverage report:
+
+```bash
+# Build instrumented tests, run them, and open the HTML report
+python3 utils/build_tests.py --coverage
+
+# Pass ctest filters to run coverage on a subset of tests
+python3 utils/build_tests.py --coverage -- -R gcode
+```
+
+Coverage builds use a separate build directory (`build_tests_coverage`) so they don't interfere with regular test builds.
+
 ## Manual Building (Alternative)
 
 If you prefer to build manually or need more control:
