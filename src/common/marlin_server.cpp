@@ -1644,40 +1644,6 @@ static bool crash_recovery_begin_toolchange() {
     return false;
 }
     #endif
-
-/**
- * @brief Part of crash recovery begin when reason of crash is failed homing.
- * @note This has to call fsm_create() exactly once.
- * @note Should break current switch case after this.
- */
-static void crash_recovery_begin_home() {
-    Crash_recovery_fsm cr_fsm(SelftestSubtestState_t::running, SelftestSubtestState_t::undef);
-    fsm_create(PhasesCrashRecovery::home, cr_fsm.Serialize());
-
-    measure_axes_and_home(); // If crash happens during homing, skip crash recovery and go directly to measuring axes / homing
-}
-
-    #if ENABLED(AXIS_MEASURE)
-/**
- * @brief Part of crash recovery begin when it is a regular crash, axis measure is enabled and this is a repeated crash.
- * @note This has to call fsm_create() exactly once.
- * @note Do not break current switch case after this, will park and replay.
- */
-static void crash_recovery_begin_axis_measure() {
-    Crash_recovery_fsm cr_fsm(SelftestSubtestState_t::running, SelftestSubtestState_t::undef);
-    fsm_create(PhasesCrashRecovery::check_X, cr_fsm.Serialize()); // check axes first
-}
-    #endif /*ENABLED(AXIS_MEASURE)*/
-
-/**
- * @brief Part of crash recovery begin when it is a regular crash.
- * @note This has to call fsm_create() exactly once.
- * @note Do not break current switch case after this, will park and replay.
- */
-static void crash_recovery_begin_crash() {
-    Crash_recovery_fsm cr_fsm(SelftestSubtestState_t::running, SelftestSubtestState_t::undef);
-    fsm_create(PhasesCrashRecovery::home, cr_fsm.Serialize());
-}
 #endif /*ENABLED(CRASH_RECOVERY)*/
 
 void media_prefetch_lazy_start() {
@@ -2716,6 +2682,8 @@ static void _server_print_loop(void) {
             crash_s.set_state(Crash_s::RECOVERY);
         }
 
+        static constexpr Crash_recovery_fsm cr_fsm(SelftestSubtestState_t::running, SelftestSubtestState_t::undef);
+
         /**
          * Unreadable switch with 4 posibilites:
          *
@@ -2746,18 +2714,19 @@ static void _server_print_loop(void) {
     #endif
 
         else if (crash_s.get_state() == Crash_s::REPEAT_WAIT) { // REPEAT_WAIT could be toolfall, but it was handled above
-            crash_recovery_begin_home();
+            fsm_create(PhasesCrashRecovery::home, cr_fsm.Serialize());
+            measure_axes_and_home(); // If crash happens during homing, skip crash recovery and go directly to measuring axes / homing
             break; // Skip crash recovery and go directly to homing
         }
 
     #if ENABLED(AXIS_MEASURE)
         else if (crash_s.is_repeated_crash()) {
-            crash_recovery_begin_axis_measure();
+            fsm_create(PhasesCrashRecovery::check_X, cr_fsm.Serialize()); // check axes first
         }
     #endif /*ENABLED(AXIS_MEASURE)*/
 
         else { // All toolfalls, crashes and homing fails are handled above, only regular crash remains
-            crash_recovery_begin_crash();
+            fsm_create(PhasesCrashRecovery::home, cr_fsm.Serialize());
         }
 
         // save the current resume position
