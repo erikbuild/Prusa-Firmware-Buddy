@@ -287,6 +287,10 @@ void apply_stored_sensor_position(tool_offset::ProbingConfig &config) {
             static_cast<double>(stored.y),
             static_cast<double>(config.sensor_position.x),
             static_cast<double>(config.sensor_position.y));
+        config_store().tool_offset_sensor_position.set(xy_pos_t { config.sensor_position.x, config.sensor_position.y });
+        metric_record_custom(&metric_sensor_pos, " x=%.3f,y=%.3f",
+            static_cast<double>(config.sensor_position.x),
+            static_cast<double>(config.sensor_position.y));
         return;
     }
     // Stored position is more accurate than the default
