@@ -73,7 +73,7 @@ void PrusaGcodeSuite::G163() {
             idle(true);
             ma.loop();
         }
-        cr_fsm.set(axis_length_ok_fsm(X_AXIS, ma.length().x), SelftestSubtestState_t::running);
+        cr_fsm = { .x = axis_length_ok_fsm(X_AXIS, ma.length().x), .y = SelftestSubtestState_t::running };
         marlin_server::fsm_change(PhasesCrashRecovery::check_Y, cr_fsm.Serialize());
     }
 
@@ -90,7 +90,7 @@ void PrusaGcodeSuite::G163() {
     }
 
     marlin_server::set_axes_length(ma.length());
-    cr_fsm.set(axis_length_ok_fsm(X_AXIS, ma.length().x), axis_length_ok_fsm(Y_AXIS, ma.length().y));
+    cr_fsm = { .x = axis_length_ok_fsm(X_AXIS, ma.length().x), .y = axis_length_ok_fsm(Y_AXIS, ma.length().y) };
     marlin_server::fsm_change(PhasesCrashRecovery::check_Y, cr_fsm.Serialize());
 #endif
 }

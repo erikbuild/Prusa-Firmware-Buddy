@@ -275,13 +275,13 @@ bool ScreenCrashRecovery::Change(fsm::BaseData data) {
     change_phase(GetEnumFromPhaseIndex<PhasesCrashRecovery>(data.GetPhase()));
 
     const auto visitor = [&]<typename T>(T &mem) {
+        const auto state = Crash_recovery_fsm::deserialize(data.GetData());
+
         if constexpr (std::is_same_v<T, WinsCheckAxis> || std::is_same_v<T, WinsAxisNok>) {
-            Crash_recovery_fsm state(data.GetData());
             mem.icon_x_axis.SetState(state.x);
             mem.icon_y_axis.SetState(state.y);
 
         } else if constexpr (std::is_same_v<T, WinsHome>) {
-            Crash_recovery_fsm state(data.GetData());
             mem.icon_home_axes.SetState(state.x);
         }
 

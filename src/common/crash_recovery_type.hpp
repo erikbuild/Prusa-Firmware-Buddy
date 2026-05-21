@@ -10,42 +10,19 @@
 #include <common/fsm_base_types.hpp>
 #include "selftest_sub_state.hpp"
 
-class Crash_recovery_fsm {
-public:
+struct Crash_recovery_fsm {
     SelftestSubtestState_t x;
     SelftestSubtestState_t y;
 
-    constexpr Crash_recovery_fsm(SelftestSubtestState_t x = SelftestSubtestState_t::undef, SelftestSubtestState_t y = SelftestSubtestState_t::undef)
-        : x(x)
-        , y(y) {}
-
-    constexpr Crash_recovery_fsm(fsm::PhaseData new_data)
-        : Crash_recovery_fsm() {
-        Deserialize(new_data);
-    }
-
-    constexpr void set(SelftestSubtestState_t x_state = SelftestSubtestState_t::undef, SelftestSubtestState_t y_state = SelftestSubtestState_t::undef) {
-        x = x_state;
-        y = y_state;
-    }
-
     constexpr fsm::PhaseData Serialize() const {
-        fsm::PhaseData ret = { { uint8_t(x), uint8_t(y) } };
-        return ret;
+        return fsm::serialize_data(*this);
     }
 
-    constexpr void Deserialize(fsm::PhaseData new_data) {
-        x = SelftestSubtestState_t(new_data[0]);
-        y = SelftestSubtestState_t(new_data[1]);
+    constexpr static Crash_recovery_fsm deserialize(fsm::PhaseData new_data) {
+        return fsm::deserialize_data<Crash_recovery_fsm>(new_data);
     }
 
-    bool operator==(const Crash_recovery_fsm &other) const {
-        return Serialize() == other.Serialize();
-    }
-
-    bool operator!=(const Crash_recovery_fsm &other) const {
-        return !((*this) == other);
-    }
+    bool operator==(const Crash_recovery_fsm &other) const = default;
 };
 
 /**
