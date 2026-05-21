@@ -12,9 +12,24 @@
 #endif
 
 /*****************************************************************************/
+
+namespace {
+const img::Resource *icon_for_tool(const std::variant<PhysicalToolIndex, CurrentlySelectedTool> &tool) {
+    return match(
+        tool,
+        [](PhysicalToolIndex t) -> const img::Resource * {
+            return stdext::holds_value(PhysicalToolIndex::currently_selected(), t)
+                ? &img::arrow_right_10x16
+                : nullptr;
+        },
+        // Top-level CurrentlySelectedTool item (when not in per-tool mode) keeps the nozzle icon.
+        [](CurrentlySelectedTool) -> const img::Resource * { return &img::nozzle_16x16; });
+}
+} // namespace
+
 // MI_NOZZLE_TARGET_TEMP
 MI_NOZZLE_TARGET_TEMP::MI_NOZZLE_TARGET_TEMP(std::variant<PhysicalToolIndex, CurrentlySelectedTool> tool)
-    : WiSpin(0, numeric_input_config::nozzle_temperature, string_view_utf8 {}, &img::nozzle_16x16)
+    : WiSpin(0, numeric_input_config::nozzle_temperature, string_view_utf8 {}, icon_for_tool(tool))
     , tool_(tool) {
     SetLabel(match(
         tool_,
