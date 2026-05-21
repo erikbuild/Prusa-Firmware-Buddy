@@ -5,7 +5,6 @@
 
 #include <option/has_chamber_api.h>
 #include <option/has_indx.h>
-#include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 #include <option/xbuddy_extension_variant.h>
 
@@ -33,8 +32,10 @@ using MI_CHAMBER_TARGET_TEMP = WithConstructorArgs<::MI_CHAMBER_TARGET_TEMP, HAS
 using MI_COOLDOWN = WithConstructorArgs<WindowMenuCallbackItem, N_("Cooldown"), nullptr>;
 
 using ScreenBase = ScreenMenu<
-    EFooter::On, MI_RETURN, MI_NOZZLE_TARGET_TEMP,
-#if HAS_PER_TOOL_TEMPERATURES()
+    EFooter::On, MI_RETURN,
+    MI_NOZZLE_TARGET_TEMP,
+#if HAS_TOOLCHANGER()
+    // Multi-tool: additional submenu to set target temp for all tools, not just the active one.
     MenuItemVirtualSubmenu<N_("Tool Temperatures"), MI_NOZZLE_TARGET_TEMP, PhysicalToolIndex::count, PhysicalToolIndex::from_raw>,
 #endif
     MI_HEATBED,
