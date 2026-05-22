@@ -213,7 +213,7 @@ Temperature thermalManager;
     .error_code = ErrCode::ERR_TEMPERATURE_BED_PREHEAT_ERROR,
   };
 
-  HeaterWatchWithConfig<watch_bed_config> watch_bed;
+  HeaterWatch watch_bed { watch_bed_config };
   #endif
   #if DISABLED(PIDTEMPBED)
     millis_t Temperature::next_bed_check_ms;

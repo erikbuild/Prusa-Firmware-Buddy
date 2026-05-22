@@ -14,8 +14,7 @@
 /// next update() call. This decouples target arming from baseline data,
 /// so arming can happen synchronously (e.g. from start_heating()) before
 /// the next manage tick refreshes the current temperature.
-class HeaterWatchBase {
-
+class HeaterWatch {
 public:
     struct Config {
         /// By how many degrees must the temperature increase
@@ -37,19 +36,21 @@ public:
         bool watch_cooling_instead = false;
     };
 
-    /// @returns true when armed (Pending or Watching).
-    bool is_running() const {
-        return state_ != State::Disarmed;
-    }
+    explicit HeaterWatch(const Config &config)
+        : config_(config) {}
 
-protected:
     /// Set the watch target. Baseline is captured by the next update().
     /// target_temp <= 0 disarms.
     void arm(int16_t target_temp);
 
     /// Tick: captures baseline when pending, fires fatal_error if the period
     /// elapses without sufficient progress.
-    void update(const Config &config, float current_temp);
+    void update(float current_temp);
+
+    /// @returns true when armed (pending or watching).
+    bool is_running() const {
+        return state_ != State::disarmed;
+    }
 
 private:
     enum class State : uint8_t {
@@ -58,24 +59,9 @@ private:
         watching,
     };
 
+    const Config config_;
     State state_ = State::disarmed;
     int16_t target_temp_ = 0;
     int16_t baseline_threshold_ = 0;
     millis_t next_check_ms_ = 0;
-};
-
-class HeaterWatch final : public HeaterWatchBase {
-public:
-    using HeaterWatchBase::arm;
-    using HeaterWatchBase::update;
-};
-
-template <HeaterWatchBase::Config config>
-class HeaterWatchWithConfig final : public HeaterWatchBase {
-public:
-    using HeaterWatchBase::arm;
-
-    void update(float current_temp) {
-        HeaterWatchBase::update(config, current_temp);
-    }
 };

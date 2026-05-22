@@ -11,7 +11,7 @@
 #endif
 
 #if WATCH_HOTENDS
-static constexpr HeaterWatchBase::Config heater_watch_config {
+static constexpr HeaterWatch::Config heater_watch_config {
     .temp_increase = WATCH_TEMP_INCREASE,
     .period_s = WATCH_TEMP_PERIOD,
     .min_temp_diff = WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1,
@@ -21,7 +21,11 @@ static constexpr HeaterWatchBase::Config heater_watch_config {
 
 BaseHotend::BaseHotend(PhysicalToolIndex tool, const Config *config)
     : base_config_(*config)
-    , tool_(tool) {
+    , tool_(tool)
+#if WATCH_HOTENDS
+    , heater_watch_(heater_watch_config)
+#endif
+{
 }
 
 bool BaseHotend::supports_filament(const FilamentTypeParameters &filament) const {
@@ -98,7 +102,7 @@ void BaseHotend::manage() {
 #endif
 
 #if WATCH_HOTENDS
-    heater_watch_.update(heater_watch_config, nozzle_temp());
+    heater_watch_.update(nozzle_temp());
 #endif
 }
 

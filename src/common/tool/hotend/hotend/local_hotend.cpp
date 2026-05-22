@@ -34,6 +34,9 @@ LocalHotend::LocalHotend(PhysicalToolIndex tool, const Config *config)
 #if HAS_TEMP_HEATBREAK
     , heatbreak_raw_temp_range_ { MarlinTemptableRawMinMax::compute(local_config_.heatbreak_temp_table, HEATBREAK_MINTEMP, HEATBREAK_MAXTEMP) }
 #endif
+#if WATCH_HEATBREAK
+    , heatbreak_watch_(heatbreak_watch_config)
+#endif
 {
     // Do not call pinMode - it does nothing
     // pinMode(local_config_.nozzle_heater_marlin_pin, OUTPUT);
@@ -217,7 +220,7 @@ void LocalHotend::manage_heatbreak() {
     next_heatbreak_check_ms_ = ms + 1000;
 
     #if WATCH_HEATBREAK
-    heatbreak_watch_.update(heatbreak_watch_config, heatbreak_temp());
+    heatbreak_watch_.update(heatbreak_temp());
     #endif
 
     // iX has a non-constant maxtemp for the heatbreak, so we need to explicitly set it
