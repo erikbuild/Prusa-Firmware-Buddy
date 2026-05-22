@@ -3577,6 +3577,9 @@ bool _process_server_valid_request(const Request &request, int client_id) {
     case Request::Type::Inject:
         inject(request.inject);
         return true;
+    case Request::Type::GcodeInterrupt:
+        gcode_interrupt(request.gcode_interrupt);
+        return true;
     case Request::Type::SetVariable:
         _server_set_var(request);
         return true;

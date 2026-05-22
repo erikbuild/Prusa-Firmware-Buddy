@@ -229,6 +229,13 @@ void inject(InjectQueueRecord record) {
     _send_request_to_server_and_wait(request);
 }
 
+void gcode_interrupt(GCodeLiteral gcode) {
+    Request request;
+    request.type = Request::Type::GcodeInterrupt;
+    request.gcode_interrupt = gcode;
+    _send_request_to_server_and_wait(request);
+}
+
 int event(Event evt_id) {
     int ret = 0;
     marlin_client_t *client = _client_ptr();

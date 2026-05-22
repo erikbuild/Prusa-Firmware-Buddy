@@ -61,6 +61,10 @@ void inject(InjectQueueRecord record);
 // inject gcode directly - thread-safe version
 inline void inject(ConstexprString gcode) { inject(GCodeLiteral(gcode)); };
 
+/// See marlin_server::gcode_interrupt for the documentation.
+/// !!! ONLY USE IF YOU 100% KNOW WHAT YOU'RE DOING
+void gcode_interrupt(GCodeLiteral gcode);
+
 // returns current event status for evt_id
 int event(marlin_server::Event evt_id);
 
