@@ -3144,6 +3144,14 @@ void set_media_position(uint32_t set) {
     // it is overridden and therefore lost. (This was happening during PP when the print was paused)
     queue.sdpos = set;
     queue.last_executed_sdpos = set;
+
+    // The queue should be empty when we're setting the position,
+    // but if it isn't, we need to set the sdpos for all items in the queue
+    // Otherwise executing one of the items would overwrite `queue.last_executed_sdpos`
+    // This actually happens on crash recovery where SerialPrinting::pause overwrites whatever was set by the Crash_s.
+    for (auto &sdpos : queue.sdpos_buffer) {
+        sdpos = set;
+    }
 }
 
 static void retract() {
