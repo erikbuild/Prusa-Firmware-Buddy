@@ -684,7 +684,7 @@
             { -50, 1500 / 60.F}, \
         }
 
-    #define PAUSE_PARK_RETRACT_FEEDRATE 10.8f // (mm/s) Initial retract feedrate.
+    #define PAUSE_PARK_RETRACT_FEEDRATE 40 // (mm/s) Initial retract feedrate.
     #define PAUSE_PARK_RETRACT_LENGTH 8 // (mm) Initial retract.
         // This retract is done immediately, before parking the nozzle.
     #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 27 // (mm/s) Unload filament feedrate. This can be pretty fast.
