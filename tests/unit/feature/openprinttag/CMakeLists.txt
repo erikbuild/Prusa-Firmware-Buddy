@@ -41,7 +41,6 @@ add_catch_test(buddy_openprinttag_datautils_tests)
 # filament_usage_tracker_tests
 add_executable(
   filament_usage_tracker_tests
-  ${CMAKE_SOURCE_DIR}/src/common/feature/filament_tracker/filament_tracker.cpp
   ${CMAKE_SOURCE_DIR}/tests/stubs/async_job/async_job.cpp
   ${OPT_SRC}/filament_usage_tracker/filament_usage_tracker.cpp
   ${OPT_SRC}/detail/requests_multi_base.cpp
