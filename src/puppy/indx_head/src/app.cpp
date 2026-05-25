@@ -246,7 +246,10 @@ bool get_temps_valid() {
 
 void set_nozzle_present(indx_head::NozzlePresence state) {
     if (state == indx_head::NozzlePresence::unknown) {
-        return; // Invalid analysis — do not disturb debounce
+        // Invalid analysis or partial coupling (decay between thresholds) — skip the sample.
+        // The debouncer is left untouched, so its current stability state is preserved until
+        // clean present/absent samples resume.
+        return;
     }
 
     CriticalSection cs; // ISR-safe guard against concurrent invalidate_nozzle_presence() from modbus task

@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <fpm/fixed.hpp>
+#include <indx_head/nozzle_presence.hpp>
 
 enum class RingdownAnalysisStatus {
     VALID = 0,
@@ -17,7 +18,7 @@ struct RingdownAnalysis {
     RingdownAnalysisStatus status;
     uint16_t interval; // in CPU cycles
     float decay;
-    bool nozzle_detected;
+    indx_head::NozzlePresence nozzle_presence;
     uint32_t time; // in sys_tick
 };
 
@@ -30,7 +31,13 @@ public:
     static constexpr uint8_t avg_peaks = 3; // number of ring-down cycles to average
     static constexpr uint16_t max_power = 14;
     static constexpr uint16_t limited_max_power = 10; // ~46W
-    static constexpr float minimal_nozzle_decay = 0.085f; // ~0.096 with nozzle, ~0.029 without nozzle
+    // Decay-to-presence thresholds. Reference measurements: ~0.096 with a fully seated nozzle,
+    // ~0.029 without a nozzle. Values strictly between the thresholds indicate partial coupling
+    // (e.g. nozzle stuck halfway) and are reported as `unknown` so the debouncer never settles
+    // on them. Only `present` is safe to heat — below the present threshold the LC circuit has
+    // no/insufficient energy sink and would burn the TVS/MOSFET at full power.
+    static constexpr float nozzle_present_decay_threshold = 0.085f;
+    static constexpr float nozzle_absent_decay_threshold = 0.04f;
 
     void heater_control(int32_t target_centideg, int32_t current_centideg);
 

@@ -123,7 +123,7 @@ InductionHeater::InductionHeater()
         .status = RingdownAnalysisStatus::NOT_ENOUGH_PEAKS,
         .interval = 0,
         .decay = 0,
-        .nozzle_detected = false,
+        .nozzle_presence = indx_head::NozzlePresence::unknown,
         .time = 0,
     }
     , dcOffset(0)
@@ -264,10 +264,12 @@ void InductionHeater::update(uint16_t target_power) {
         did_measure = true;
     }
 
-    if (last_analysis.status != RingdownAnalysisStatus::VALID || !last_analysis.nozzle_detected) {
-        // Do not heat without a valid analysis or detected nozzle — MOSFET would burn
-        // without a nozzle (verified experimentally :) ). The control loop will retry
-        // on the next update() call in a few milliseconds.
+    if (last_analysis.status != RingdownAnalysisStatus::VALID
+        || last_analysis.nozzle_presence != indx_head::NozzlePresence::present) {
+        // Do not heat without a valid analysis and a fully present nozzle — MOSFET would burn
+        // without a nozzle (verified experimentally :) ). Partial-coupling readings classify as
+        // `unknown`, so this single guard also covers them. The control loop will retry on the
+        // next update() call in a few milliseconds.
         target_power = 0;
     }
 
@@ -400,10 +402,17 @@ void InductionHeater::ringdown_analysis(void) {
     }
     decay = 1.0f - (decay / avg_peaks);
     analysis.decay = decay;
-    // If decay is low, nozzle is not present. In other words, there is no
-    // energy sink and LC circuit voltage could rise to dangerous levels, which
-    // would burn TVS or MOSFET.
-    analysis.nozzle_detected = decay >= minimal_nozzle_decay;
+    // Below the present threshold the LC circuit has no/insufficient energy sink and would
+    // burn the TVS/MOSFET if we kept driving it. Decay in the band between thresholds means
+    // partial coupling (e.g. nozzle stuck halfway) — reported as `unknown` so the publish
+    // call below skips it and the debouncer doesn't advance toward a misleading stable state.
+    if (decay >= nozzle_present_decay_threshold) {
+        analysis.nozzle_presence = indx_head::NozzlePresence::present;
+    } else if (decay < nozzle_absent_decay_threshold) {
+        analysis.nozzle_presence = indx_head::NozzlePresence::absent;
+    } else {
+        analysis.nozzle_presence = indx_head::NozzlePresence::unknown;
+    }
 
     uint16_t interval = 0;
     for (int i = skip_count; i < skip_count + avg_peaks; i++) {
@@ -414,9 +423,7 @@ void InductionHeater::ringdown_analysis(void) {
     analysis.interval = interval;
 
     if (ringdown_analysis_sanity_check(analysis)) {
-        app::set_nozzle_present(analysis.nozzle_detected
-                ? indx_head::NozzlePresence::present
-                : indx_head::NozzlePresence::absent);
+        app::set_nozzle_present(analysis.nozzle_presence);
     } else {
         app::set_nozzle_present(indx_head::NozzlePresence::unknown);
     }

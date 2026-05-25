@@ -658,6 +658,8 @@ void PrusaToolChanger::z_shift(const float diff) {
 bool PrusaToolChanger::verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present) {
     // Wait until nozzle presence confirms the expected post-pickup/park state.
     // This avoids failing on an early stale-but-valid sample from before the mechanical transition settled.
+    // Note: a "stuck halfway" nozzle reads as `unknown` on the head side (decay between thresholds),
+    // so it stays nullopt here and times out into the retry/abort recovery branch below.
     const bool data_ready = wait(
         [expect_present]() { return buddy::puppies::indx.get_nozzle_present() == std::optional<bool>(expect_present); },
         NOZZLE_VERIFY_TIMEOUT_MS);
