@@ -3225,15 +3225,18 @@ static void retract() {
 }
 
 static void lift_head() {
-    const float distance = std::min<float>(
-                               std::max<float>({
-                                   Z_NOZZLE_PARK_RISE + std::max(current_position.z, planner.max_printed_z),
+    float target_z = std::max(current_position.z, planner.max_printed_z) + Z_NOZZLE_PARK_RISE;
+
 #ifdef Z_NOZZLE_PARK_POINT_MIN
-                                   Z_NOZZLE_PARK_POINT_MIN,
+    if (crash_s.get_state() != Crash_s::RECOVERY) {
+        // This usually moves the bed to the middle of the printer or lower,
+        // pointless during crash
+        target_z = std::max(target_z, Z_NOZZLE_PARK_POINT_MIN);
+    }
 #endif
-                               }),
-                               Z_MAX_POS)
-        - current_position.z;
+
+    const float distance = std::min(target_z, Z_MAX_POS) - current_position.z;
+
     static_assert(Z_NOZZLE_PARK_POINT > 0);
 
     if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
