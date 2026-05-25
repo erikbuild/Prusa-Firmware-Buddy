@@ -26,6 +26,16 @@ bool extruder_move(float distance, float feed_rate, bool ignore_flow_factor = tr
  */
 float extruder_schedule_turning(float feed_rate, float step = 0.6f);
 
+/// Deretracts any retraction of the filament known to the printer
+/// Considers auto_retract and filament_tracker
+/// Blocks until the deretraction is done
+void fully_deretract();
+
+/// Ensures the filament is retracted to the specified distance
+/// Considers auto_retract and filament_tracker
+/// Blocks
+void retract_to(float target_retraction_distance, float fr_mm_s);
+
 /**
  * Make sure a tool with accelerometer is picked up. If not, pick up such a
  * tool. Does nothing on machines without a toolchanger or accelerometer.

@@ -13,6 +13,16 @@
     #include <module/tool_change.h>
 #endif
 
+#include <option/has_auto_retract.h>
+#if HAS_AUTO_RETRACT()
+    #include <feature/auto_retract/auto_retract.hpp>
+#endif
+
+#include <option/has_filament_tracker.h>
+#if HAS_FILAMENT_TRACKER()
+    #include <feature/filament_tracker/filament_tracker.hpp>
+#endif
+
 #include <raii/auto_restore.hpp>
 #include "src/module/motion.h"
 
@@ -44,6 +54,68 @@ float extruder_schedule_turning(float feed_rate, float step) {
     }
 
     return 0;
+}
+
+void fully_deretract() {
+    [[maybe_unused]] const auto tool = PhysicalToolIndex::currently_selected_opt();
+    if (!tool.has_value()) {
+        return;
+    }
+
+#if HAS_AUTO_RETRACT()
+    // First, deretract auto-retract
+    // Auto-retract might not be stored in the filament_tracker,
+    // beause auto_retract is persistent and filament_tracker is runtime only
+    // Plus it inserts deretract moves automatically on extrusion,
+    // so if we don't take it off before querying the filament_tracker,
+    // we could end up deretracting the distance twice.
+    buddy::auto_retract().maybe_deretract_to_nozzle();
+#endif
+
+#if HAS_FILAMENT_TRACKER()
+    mapi::extruder_move(buddy::filament_tracker().get_retracted_distance(*tool).value_or(0), FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+#endif
+
+    planner.synchronize();
+}
+
+void retract_to(float target_retraction_distance, float fr_mm_s) {
+    [[maybe_unused]] const auto tool = PhysicalToolIndex::currently_selected_opt();
+    if (!tool.has_value()) {
+        return;
+    }
+
+    float current_retraction_distance = 0;
+
+#if HAS_AUTO_RETRACT()
+    const auto auto_retraction_distance = buddy::auto_retract().retracted_distance(*tool).value_or(0);
+    if (auto_retraction_distance >= target_retraction_distance) {
+        // Already retracted enough, quit
+        return;
+
+    } else if (auto_retraction_distance > 0) {
+        // "Take" the retracted distance out from auto_retract
+        // Retractions are blocked if auto_retract is active
+
+        current_retraction_distance = auto_retraction_distance;
+        buddy::auto_retract().set_retracted_distance(*tool, std::nullopt);
+    }
+#endif
+
+#if HAS_FILAMENT_TRACKER()
+    // Only resort to filament tracker if we were not auto_retracted
+    // auto_retract data is persistent across restarts, so it has higher priority
+    // and while auto_retracted, no extruder moves are permitted, so the value should be exact
+    if (current_retraction_distance == 0) {
+        current_retraction_distance = buddy::filament_tracker().get_retracted_distance(*tool).value_or(0);
+    }
+#endif
+
+    if (current_retraction_distance < target_retraction_distance) {
+        mapi::extruder_move(-(target_retraction_distance - current_retraction_distance), fr_mm_s);
+    }
+
+    planner.synchronize();
 }
 
 void ensure_tool_with_accelerometer_picked() {
