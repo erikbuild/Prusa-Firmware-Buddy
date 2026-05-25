@@ -37,7 +37,6 @@ static uint32_t reverse_crc32(uint32_t current_crc, uint32_t desired_crc) {
     return desired_crc ^ current_crc;
 }
 
-    #ifdef CRC32_USE_HW
 static uint32_t crc32_hw(const uint8_t *buffer, uint32_t length, uint32_t crc) {
     if (length == 0) {
         return crc;
@@ -82,26 +81,6 @@ static uint32_t crc32_hw(const uint8_t *buffer, uint32_t length, uint32_t crc) {
     return result;
 }
 
-uint32_t crc32_eeprom(const uint32_t *buffer, uint32_t length) {
-    // ensure nobody else uses the peripheral
-    osMutexWait(crc32_hw_mutex_id, osWaitForever);
-    // prepare the CRC unit
-    CRC->CR = CRC_CR_RESET;
-    // calculate the CRC32 value
-    while (length--) {
-        CRC->DR = *((uint32_t *)buffer++);
-    }
-    uint32_t result = CRC->DR;
-    // release the peripheral
-    osMutexRelease(crc32_hw_mutex_id);
-    return result;
-}
-    #endif
-
-#else
-uint32_t crc32_eeprom(const uint32_t *buffer, uint32_t length) {
-    return crc32_calc((uint8_t *)buffer, length * 4);
-}
 #endif
 
 extern uint32_t crc32_sw(const uint8_t *buffer, uint32_t length, uint32_t crc) {

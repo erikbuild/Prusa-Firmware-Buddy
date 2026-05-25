@@ -12,7 +12,6 @@ if(BOARD IN_LIST BUDDY_BOARDS)
             bbf.cpp
             conserve_cpu.cpp
             crc32.cpp
-            crc32_zlib.cpp
             data_exchange.cpp
             directory.cpp
             error_code_mangle.cpp
