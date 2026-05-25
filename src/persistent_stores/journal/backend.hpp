@@ -195,8 +195,6 @@ public:
      */
     void read_items_for_migrations(const CallbackFunction &callback);
 
-    void erase_storage_area();
-
     /**
      * @brief If needed to initialize without having state set to cold_start, this will override the cold_start to valid_start
      *
@@ -347,14 +345,6 @@ public:
     void save(uint16_t id, const std::span<const uint8_t> &data);
     std::unique_lock<freertos::Mutex> lock();
     JournalState get_journal_state() const;
-
-    /**
-     * @brief Invalidates the values stored in eeprom in both banks
-     *
-     * Writes 0xff to each address in eeprom
-     * Restart or reinitialization of eeprom is needed after this function
-     */
-    void reset();
 
     /**
      * @brief In case there's gonna be multiple writes in succession,  all the writes can be put into one transaction by starting a transaction via this guard and releasing the guard once the transaction is done

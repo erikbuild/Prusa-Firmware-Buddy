@@ -12,7 +12,6 @@ public:
     void read_bytes(uint16_t address, std::span<uint8_t> buffer) override;
     void write_byte(uint16_t address, uint8_t data) override;
     void write_bytes(uint16_t address, std::span<const uint8_t> data) override;
-    void erase_area(uint16_t start_address, uint16_t end_address) override;
 };
 
 inline configuration_store::Storage &EEPROMInstance() {

@@ -514,10 +514,6 @@ auto Backend::version_migration_guard() -> VersionMigratingTransactionGuard {
     return VersionMigratingTransactionGuard(*this);
 }
 
-void Backend::erase_storage_area() {
-    storage.erase_area(start_address, start_address + bank_size * 2);
-}
-
 bool Backend::fits_in_current_bank(uint16_t size) const {
     return get_free_space_in_current_bank() >= size;
 }
