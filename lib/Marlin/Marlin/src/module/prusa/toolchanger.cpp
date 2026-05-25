@@ -489,9 +489,9 @@ void PrusaToolChanger::toolfall() {
 }
 
 bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
-    const size_t tool_nr = dwarf.dwarf_index();
+    const PhysicalToolIndex tool = PhysicalToolIndex::from_raw(dwarf.dwarf_index());
 
-    if (thermalManager.tooColdToExtrude(dwarf.dwarf_index())) {
+    if (thermalManager.tooColdToExtrude(tool)) {
         // hotend is cold, skip purge because it can't do anything
         return true;
     }
@@ -499,8 +499,8 @@ bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
     // fan to 100% for better sopel
     // use fanctl interface directly, without modifing marlin's value. This will prevent restoring wrong fan value on power panic or failed toolchange.
     // !!! Note: This does not work if you're purging the currently selected tool - see BFW-6365
-    const auto prev_pwm = Fans::print(tool_nr).get_pwm();
-    Fans::print(tool_nr).set_pwm(255);
+    const auto prev_pwm = Fans::print(tool).get_pwm();
+    Fans::print(tool).set_pwm(255);
 
     // go to purge location
     const PrusaToolInfo &info = get_tool_info(dwarf, /*check_calibrated=*/true);
@@ -529,7 +529,7 @@ bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
     (void)wait([]() { return false; }, 5000);
 
     // restore fan speed
-    Fans::print(tool_nr).set_pwm(prev_pwm);
+    Fans::print(tool).set_pwm(prev_pwm);
 
     if (!park(dwarf)) {
         return false;
