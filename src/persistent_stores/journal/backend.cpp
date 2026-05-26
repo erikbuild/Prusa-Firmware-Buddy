@@ -1,6 +1,6 @@
 #include "backend.hpp"
 #include <cassert>
-#include <crc32.h>
+#include <crc32.hpp>
 #include <algorithm>
 
 #ifndef UNITTESTS
@@ -21,9 +21,9 @@ std::optional<uint16_t> Backend::map_over_transaction(Backend::Address address, 
     CRCType crc_comp = 0;
 
     auto transaction_len = map_over_transaction_unchecked(address, free_space,
-        [&crc_comp, &fnc](ItemHeader header, std::array<uint8_t, MAX_ITEM_SIZE> &buffer) {
-            crc_comp = crc32_calc_ex(crc_comp, reinterpret_cast<const uint8_t *>(&header), ITEM_HEADER_SIZE);
-            crc_comp = crc32_calc_ex(crc_comp, buffer.data(), header.len);
+        [&crc_comp, &fnc](ItemHeader header, std::array<std::byte, MAX_ITEM_SIZE> &buffer) {
+            crc_comp = crc32(crc_comp, trivial_as_bytes(header));
+            crc_comp = crc32(crc_comp, { buffer.data(), header.len });
 
             // this is now OK, it is currently just used to count the items. No loading is taking place with this callback
             fnc(header, buffer);
@@ -63,7 +63,7 @@ void Backend::read_all_items(Address address, Offset len_of_transactions, const 
 
     len_of_transactions = std::min(len_of_transactions, static_cast<Offset>(bank_size - BANK_HEADER_SIZE_WITH_CRC));
 
-    auto last_item_clb_wrapper = [&last_item, &fnc](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+    auto last_item_clb_wrapper = [&last_item, &fnc](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
         if (header.id == journal::Backend::LAST_ITEM_STOP.id) {
             last_item = true;
             return;
@@ -84,7 +84,7 @@ void Backend::read_all_items(Address address, Offset len_of_transactions, const 
 }
 
 std::optional<uint16_t> Backend::map_over_transaction_unchecked(const Backend::Address address, const Backend::Offset free_space, const CallbackFunction &callback) {
-    std::array<uint8_t, MAX_ITEM_SIZE> buffer {};
+    std::array<std::byte, MAX_ITEM_SIZE> buffer {};
 
     for (uint16_t pos = 0; pos < free_space;) {
         auto header_opt = load_item(address + pos, free_space - pos, buffer);
@@ -111,7 +111,7 @@ std::optional<uint16_t> Backend::map_over_transaction_unchecked(const Backend::A
 std::optional<Backend::TransactionValidationResult> Backend::get_next_transaction(uint16_t address, const Offset free_space) {
     uint16_t num_of_items = 0;
 
-    auto fnc = [&num_of_items]([[maybe_unused]] ItemHeader header, [[maybe_unused]] std::array<uint8_t, MAX_ITEM_SIZE> &buffer) {
+    auto fnc = [&num_of_items]([[maybe_unused]] ItemHeader header, [[maybe_unused]] std::array<std::byte, MAX_ITEM_SIZE> &buffer) {
         num_of_items++;
     };
 
@@ -123,12 +123,12 @@ std::optional<Backend::TransactionValidationResult> Backend::get_next_transactio
     return TransactionValidationResult { .address = address, .transaction_len = transaction_len.value(), .num_of_items = num_of_items };
 }
 
-std::optional<Backend::ItemLoadResult> Backend::load_item(uint16_t address, uint16_t free_space, const std::span<uint8_t> &buffer) {
+std::optional<Backend::ItemLoadResult> Backend::load_item(uint16_t address, uint16_t free_space, const WritableBytes &buffer) {
     if (free_space < ITEM_HEADER_SIZE) {
         return std::nullopt;
     }
     ItemHeader header = { false, 0, 0 };
-    storage.read_bytes(address, { reinterpret_cast<uint8_t *>(&header), ITEM_HEADER_SIZE });
+    storage.read_bytes(address, trivial_as_writable_bytes(header));
 
     if (free_space < ITEM_HEADER_SIZE + header.len) {
         return std::nullopt;
@@ -144,11 +144,11 @@ std::optional<Backend::CRCType> Backend::get_crc(const uint16_t address, const u
         return std::nullopt;
     }
     CRCType crc;
-    storage.read_bytes(address, { reinterpret_cast<uint8_t *>(&crc), CRC_SIZE });
+    storage.read_bytes(address, trivial_as_writable_bytes(crc));
     return crc;
 }
 
-std::optional<Backend::CRCType> Backend::get_crc(const std::span<const uint8_t> data) {
+std::optional<Backend::CRCType> Backend::get_crc(Bytes data) {
     if (data.size() < CRC_SIZE) {
         return std::nullopt;
     }
@@ -159,7 +159,7 @@ std::optional<Backend::CRCType> Backend::get_crc(const std::span<const uint8_t> 
 size_t Backend::find_oldest_version_migration_index(std::span<const MigrationFunction> migration_functions) {
     size_t oldest_migration = migration_functions.size();
 
-    auto callback = [&migration_functions, &oldest_migration](ItemHeader header, [[maybe_unused]] std::array<uint8_t, MAX_ITEM_SIZE> &buffer) -> void {
+    auto callback = [&migration_functions, &oldest_migration](ItemHeader header, [[maybe_unused]] std::array<std::byte, MAX_ITEM_SIZE> &buffer) -> void {
         for (size_t i = 0; i < oldest_migration; ++i) {
             if (std::ranges::any_of(
                     migration_functions[i].deprecated_ids,
@@ -293,7 +293,7 @@ void Backend::load_all(const UpdateFunction &update_function, const std::span<co
     }
 }
 std::optional<Backend::BanksState> Backend::choose_bank() const {
-    std::array<uint8_t, BANK_HEADER_SIZE_WITH_CRC> bank_header_buffer {};
+    std::array<std::byte, BANK_HEADER_SIZE_WITH_CRC> bank_header_buffer {};
 
     storage.read_bytes(start_address, bank_header_buffer);
     auto bank1_header = validate_bank_header(bank_header_buffer);
@@ -341,7 +341,7 @@ Backend::MultipleTransactionValidationResult Backend::validate_transactions(cons
     }
 
     if (last_transaction.num_of_items == 1) {
-        std::array<uint8_t, MAX_ITEM_SIZE> buffer {};
+        std::array<std::byte, MAX_ITEM_SIZE> buffer {};
 
         // check that transaction has end item
         auto item = load_item(last_transaction.address, last_transaction.transaction_len, buffer);
@@ -366,14 +366,14 @@ Backend::MultipleTransactionValidationResult Backend::validate_transactions(cons
     }
 }
 
-std::optional<Backend::BankHeader> Backend::validate_bank_header(const std::span<const uint8_t> &data) {
+std::optional<Backend::BankHeader> Backend::validate_bank_header(const Bytes &data) {
     BankHeader header { 0, 0 };
     memcpy(&header, data.data(), BANK_HEADER_SIZE);
     auto crc_read = get_crc(data.subspan(BANK_HEADER_SIZE));
     if (!crc_read.has_value()) {
         return std::nullopt;
     }
-    CRCType crc_computed = crc32_calc(reinterpret_cast<const uint8_t *>(&header), BANK_HEADER_SIZE);
+    CRCType crc_computed = crc32(0, trivial_as_bytes(header));
     if (crc_read != crc_computed) {
         return std::nullopt;
     }
@@ -383,9 +383,9 @@ std::optional<Backend::BankHeader> Backend::validate_bank_header(const std::span
 void Backend::init_bank(const Backend::BankSelector selector, Backend::BankSequenceId id, bool is_next_bank) {
     Address address = get_bank_start_address(selector);
     BankHeader header { .sequence_id = id, .version = CURRENT_VERSION };
-    CRCType crc = crc32_calc(reinterpret_cast<const uint8_t *>(&header), BANK_HEADER_SIZE);
-    storage.write_bytes(address + BANK_HEADER_SIZE, { reinterpret_cast<uint8_t *>(&crc), CRC_SIZE });
-    storage.write_bytes(address, { reinterpret_cast<uint8_t *>(&header), BANK_HEADER_SIZE });
+    CRCType crc = crc32(0, trivial_as_bytes(header));
+    storage.write_bytes(address + BANK_HEADER_SIZE, trivial_as_bytes(crc));
+    storage.write_bytes(address, trivial_as_bytes(header));
     write_end_item(address + BANK_HEADER_SIZE_WITH_CRC);
 
     if (is_next_bank) {
@@ -417,7 +417,7 @@ void Backend::init(const DumpCallback &callback) {
 }
 
 void Backend::load_items(uint16_t address, uint16_t len_of_transactions, const UpdateFunction &update_function) {
-    read_all_items(address, len_of_transactions, [&update_function](ItemHeader header, std::array<uint8_t, MAX_ITEM_SIZE> &buffer) {
+    read_all_items(address, len_of_transactions, [&update_function](ItemHeader header, std::array<std::byte, MAX_ITEM_SIZE> &buffer) {
         update_function(header.id, { buffer.data(), header.len });
     });
 }
@@ -426,10 +426,10 @@ uint16_t Backend::write_end_item(uint16_t address) {
         return 0;
     }
 
-    CRCType crc = crc32_calc_ex(0, reinterpret_cast<const uint8_t *>(&Backend::LAST_ITEM_STOP), sizeof(Backend::LAST_ITEM_STOP));
+    CRCType crc = crc32(0, trivial_as_bytes(LAST_ITEM_STOP));
     return write_item(address, LAST_ITEM_STOP, {}, crc);
 }
-void Backend::store_single_item(uint16_t id, const std::span<const uint8_t> &data) {
+void Backend::store_single_item(uint16_t id, const Bytes &data) {
     if (!fits_in_current_bank(ITEM_HEADER_SIZE + data.size() + CRC_SIZE + END_ITEM_SIZE_WITH_CRC)) {
         migrate_bank();
         return;
@@ -525,18 +525,18 @@ uint16_t Backend::get_bank_start_address(Address address_in_bank) const {
     return start_address + (address_in_bank < start_address + bank_size ? 0 : bank_size);
 }
 
-uint16_t Backend::write_item(Address address, Backend::ItemHeader header, const std::span<const uint8_t> &data, std::optional<CRCType> crc) {
+uint16_t Backend::write_item(Address address, Backend::ItemHeader header, const Bytes &data, std::optional<CRCType> crc) {
     const uint16_t data_address = address + ITEM_HEADER_SIZE;
     uint16_t written = 0;
 
     if (crc.has_value()) {
         const uint16_t crc_address = address + ITEM_HEADER_SIZE + data.size();
-        storage.write_bytes(crc_address, { reinterpret_cast<uint8_t *>(&crc.value()), CRC_SIZE });
+        storage.write_bytes(crc_address, trivial_as_bytes(crc.value()));
         written += CRC_SIZE;
     }
     storage.write_bytes(data_address, data);
     written += data.size();
-    storage.write_bytes(address, { reinterpret_cast<const uint8_t *>(&header), ITEM_HEADER_SIZE });
+    storage.write_bytes(address, trivial_as_bytes(header));
 
     if (!bank_migration.has_value() && header.id != LAST_ITEM_ID) {
 #ifndef UNITTESTS
@@ -549,12 +549,12 @@ uint16_t Backend::write_item(Address address, Backend::ItemHeader header, const 
     return written + ITEM_HEADER_SIZE;
 }
 
-Backend::CRCType Backend::calculate_crc(const Backend::ItemHeader &header, const std::span<const uint8_t> &data, CRCType crc) {
-    crc = crc32_calc_ex(crc, reinterpret_cast<const uint8_t *>(&header), ITEM_HEADER_SIZE);
-    crc = crc32_calc_ex(crc, data.data(), data.size());
+Backend::CRCType Backend::calculate_crc(const Backend::ItemHeader &header, const Bytes &data, CRCType crc) {
+    crc = crc32(crc, trivial_as_bytes(header));
+    crc = crc32(crc, data);
     return crc;
 }
-void Backend::save(uint16_t id, const std::span<const uint8_t> &data) {
+void Backend::save(uint16_t id, const Bytes &data) {
     if (bank_migration.has_value()) {
         bank_migration->store_item(id, data);
     } else if (transaction.has_value()) {
@@ -628,17 +628,17 @@ Backend::Transaction::~Transaction() {
     auto &current_address = type == Type::version_migration ? backend.current_next_address : backend.current_address;
 
     // Append CRC
-    backend.storage.write_bytes(current_address, { reinterpret_cast<uint8_t *>(&last_item_crc), CRC_SIZE });
+    backend.storage.write_bytes(current_address, trivial_as_bytes(last_item_crc));
 
     // Overwrite last item header to mark it ast last item
     last_item_header.last_item = true;
-    backend.storage.write_bytes(last_item_address, { reinterpret_cast<uint8_t *>(&last_item_header), ITEM_HEADER_SIZE });
+    backend.storage.write_bytes(last_item_address, trivial_as_bytes(last_item_header));
     current_address += CRC_SIZE;
 
     backend.write_end_item(current_address);
 }
 
-void Backend::Transaction::calculate_crc(Backend::Id id, const std::span<const uint8_t> &data) {
+void Backend::Transaction::calculate_crc(Backend::Id id, const Bytes &data) {
     const auto prev_crc = crc;
 
     ItemHeader header { .last_item = false, .id = id, .len = static_cast<uint16_t>(data.size()) };
@@ -649,7 +649,7 @@ void Backend::Transaction::calculate_crc(Backend::Id id, const std::span<const u
     last_item_crc = Backend::calculate_crc(header, data, prev_crc);
 }
 
-void Backend::Transaction::store_item(Backend::Id id, const std::span<const uint8_t> &data) {
+void Backend::Transaction::store_item(Backend::Id id, const Bytes &data) {
     if (type == Type::transaction && !backend.fits_in_current_bank(ITEM_HEADER_SIZE + data.size())) {
         backend.migrate_bank();
         return;

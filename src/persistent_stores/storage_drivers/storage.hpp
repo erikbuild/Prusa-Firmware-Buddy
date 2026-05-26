@@ -1,15 +1,17 @@
+/// @file
 #pragma once
-#include <span>
-#include <stdint.h>
+
 #include <atomic>
+#include <cstdint>
+#include <utils/byte_utils.hpp>
 
 namespace configuration_store {
 
 class Storage {
 
 public:
-    virtual void read_bytes(uint16_t address, std::span<uint8_t> buffer) = 0;
-    virtual void write_bytes(uint16_t address, std::span<const uint8_t> data) = 0;
+    virtual size_t read_bytes(size_t address, WritableBytes buffer) = 0;
+    virtual size_t write_bytes(size_t address, Bytes data) = 0;
     Storage() = default;
     Storage(const Storage &other) = delete;
     Storage(Storage &&other) = delete;

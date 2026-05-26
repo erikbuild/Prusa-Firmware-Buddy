@@ -160,7 +160,7 @@ TEST_CASE("journal::EEPROM::Test item loading") {
 
     size_t num_of_items = 0;
 
-    const auto load_fnc = [&num_of_items](uint16_t id, const std::span<const uint8_t> &buffer) {
+    const auto load_fnc = [&num_of_items](uint16_t id, Bytes buffer) {
         REQUIRE(id == num_of_items);
         num_of_items++;
         REQUIRE(buffer.size() == 10);
@@ -273,9 +273,9 @@ struct NestedStruct {
     bool is_valid = false;
 };
 
-uint32_t calculate_crc(uint32_t crc, uint16_t id, bool last_item, std::span<uint8_t> data) {
+uint32_t calculate_crc(uint32_t crc, uint16_t id, bool last_item, std::span<const uint8_t> data) {
     Backend::ItemHeader header { .last_item = last_item, .id = id, .len = static_cast<uint16_t>(data.size()) };
-    return Backend::calculate_crc(header, data, crc);
+    return Backend::calculate_crc(header, std::as_bytes(data), crc);
 }
 
 TEST_CASE("journal::EEPROM::Test transaction creation") {
@@ -288,7 +288,7 @@ TEST_CASE("journal::EEPROM::Test transaction creation") {
     journal.current_address = Backend::BANK_HEADER_SIZE_WITH_CRC;
 
     SECTION("Single item transaction") {
-        journal.store_single_item(1, data);
+        journal.store_single_item(1, std::as_bytes(std::span { data }));
 
         auto const [state, num_of_transactions, end_of_last_transaction] = journal.validate_transactions(Backend::BANK_HEADER_SIZE_WITH_CRC);
         REQUIRE(state == Backend::BankState::Valid);
@@ -306,7 +306,7 @@ TEST_CASE("journal::EEPROM::Test transaction creation") {
 
         for (size_t i = 0; i < item_count; i++) {
 
-            journal.save(1, data);
+            journal.save(1, std::as_bytes(std::span { data }));
 
             REQUIRE(last_item_address == journal.transaction->last_item_address);
             last_item_address = journal.current_address;
@@ -629,7 +629,7 @@ void int_item_migration(journal::Backend &backend, uint16_t new_id) {
 
     static_assert(sizeof(typename IntItemT::value_type) == 4, "");
 
-    auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+    auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
         if (header.id == IntItemT::hashed_id) {
             memcpy(&old_int_item, buffer.data(), header.len);
         }
@@ -700,42 +700,6 @@ inline constexpr journal::Backend::MigrationFunction test_migration_functions_v3
     { V3_migrations::int_item, V3_deprecated_ids::int_item },
 };
 inline constexpr std::span<const journal::Backend::MigrationFunction> test_migration_functions_span_v3 { test_migration_functions_v3 };
-
-// USE INFO(print_chip); to print the current state of chip
-std::string print_chip() {
-    std::array<uint8_t, 32> buffer; // adjust number to print more
-    eeprom_chip.read_bytes(chip_journal_start_address, buffer);
-
-    std::string str { "" };
-    str += "CHIP:\n";
-    int counter = 0;
-
-    for (const auto &el : buffer) {
-        str += " ";
-        char buffer[10];
-        snprintf(buffer, sizeof(buffer), "%02X", static_cast<int>(el));
-        str += buffer;
-        if (++counter >= 5) {
-            counter = 0;
-            str += "\n";
-        }
-    }
-
-    // eeprom_chip.read_bytes(chip_journal_start_address + chip_journal_size / 2, buffer);
-    // counter = 0;
-    // str += "\nCHIP Next bank:\n";
-    // for (const auto &el : buffer) {
-    //     str += " ";
-    //     char buffer[10];
-    //     snprintf(buffer, sizeof(buffer), "%02X", static_cast<int>(el));
-    //     str += buffer;
-    //     if (++counter >= 5) {
-    //         counter = 0;
-    //         str += "\n";
-    //     }
-    // }
-    return str;
-}
 
 TEST_CASE("journal::EEPROM::Item migration") {
     eeprom_chip.clear();
@@ -842,7 +806,7 @@ TEST_CASE("journal::EEPROM::Regression BFW-3553") {
     // Write an item that just fits the rest of the bank - without the end item
     // This is however artificially constructed and in practice probably never happens in the real code
     {
-        std::vector<unsigned char> data(backend.get_free_space_in_current_bank() - Backend::ITEM_HEADER_SIZE - Backend::CRC_SIZE);
+        std::vector<std::byte> data(backend.get_free_space_in_current_bank() - Backend::ITEM_HEADER_SIZE - Backend::CRC_SIZE);
         Backend::ItemHeader header { .last_item = true, .id = 8631, .len = static_cast<uint16_t>(data.size()) };
         const auto crc = backend.calculate_crc(header, data);
         backend.current_address += backend.write_item(backend.current_address, header, data, crc);

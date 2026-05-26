@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <type_traits>
 #include <journal/concepts.hpp>
+#include <utils/byte_utils.hpp>
 
 namespace journal {
 
@@ -104,7 +105,7 @@ public:
     };
     struct ItemLoadResult {
         ItemHeader header;
-        std::span<uint8_t> data;
+        WritableBytes data;
     };
 
     struct BanksState {
@@ -124,7 +125,7 @@ public:
     static constexpr size_t END_ITEM_SIZE_WITH_CRC = ITEM_HEADER_SIZE + CRC_SIZE;
     static constexpr size_t BANK_HEADER_SIZE_WITH_CRC = BANK_HEADER_SIZE + CRC_SIZE;
 
-    using CallbackFunction = stdext::inplace_function<void(ItemHeader, std::array<uint8_t, MAX_ITEM_SIZE> &)>;
+    using CallbackFunction = stdext::inplace_function<void(ItemHeader, std::array<std::byte, MAX_ITEM_SIZE> &)>;
 
     struct Transaction {
         enum class Type {
@@ -154,8 +155,8 @@ public:
 
         Transaction(Type type, Backend &backend);
         ~Transaction();
-        void calculate_crc(Id id, const std::span<const uint8_t> &data);
-        void store_item(Id id, const std::span<const uint8_t> &data);
+        void calculate_crc(Id id, const Bytes &data);
+        void store_item(Id id, const Bytes &data);
     };
 
     /**
@@ -219,10 +220,7 @@ public:
     void save_migration_item(Id hashed_id, const std::type_identity_t<T> &item_to_be_saved) {
         static_assert(sizeof(T) <= MAX_ITEM_SIZE, "Trying to save an item too big");
         assert(transaction.has_value() && transaction->type == Transaction::Type::version_migration); // migrating transaction must be in progress
-
-        std::array<uint8_t, sizeof(T)> buffer;
-        memcpy(buffer.data(), &item_to_be_saved, sizeof(T)); // Load the buffer with data
-        save(hashed_id, { buffer.data(), sizeof(T) }); // Save the data into the backend
+        save(hashed_id, trivial_as_bytes(item_to_be_saved));
     }
 
 private:
@@ -286,9 +284,9 @@ public:
 
     freertos::Mutex mutex;
 
-    static std::optional<BankHeader> validate_bank_header(const std::span<const uint8_t> &data);
+    static std::optional<BankHeader> validate_bank_header(const Bytes &data);
 
-    std::optional<ItemLoadResult> load_item(Address address, Offset free_space, const std::span<uint8_t> &buffer);
+    std::optional<ItemLoadResult> load_item(Address address, Offset free_space, const WritableBytes &buffer);
     void load_items(Address address, Offset len_of_transactions, const UpdateFunction &update_function);
 
     /**
@@ -310,8 +308,8 @@ public:
     MultipleTransactionValidationResult validate_transactions(const Address address);
 
     std::optional<CRCType> get_crc(const Address address, const Offset free_space);
-    static std::optional<CRCType> get_crc(const std::span<const uint8_t> data);
-    static CRCType calculate_crc(const Backend::ItemHeader &, const std::span<const uint8_t> &data, CRCType crc = 0);
+    static std::optional<CRCType> get_crc(Bytes data);
+    static CRCType calculate_crc(const Backend::ItemHeader &, const Bytes &data, CRCType crc = 0);
 
     void init_bank(const BankSelector bank, uint32_t id, bool is_next_bank = false);
     std::optional<Backend::BanksState> choose_bank() const;
@@ -333,16 +331,17 @@ public:
     [[nodiscard]] Address get_next_bank_start_address() const;
     BankSelector get_next_bank();
 
-    uint16_t write_item(Address address, Backend::ItemHeader, const std::span<const uint8_t> &data, std::optional<CRCType> crc);
+    uint16_t write_item(Address address, Backend::ItemHeader, const Bytes &data, std::optional<CRCType> crc);
     uint16_t write_end_item(Address address);
-    void store_single_item(Id id, const std::span<const uint8_t> &data);
+    void store_single_item(Id id, const Bytes &data);
 
 public:
     void load_all(const UpdateFunction &update_function, const std::span<const MigrationFunction> &migration_functions);
 
     void init(const DumpCallback &callback);
 
-    void save(uint16_t id, const std::span<const uint8_t> &data);
+    void save(uint16_t id, const Bytes &data);
+
     std::unique_lock<freertos::Mutex> lock();
     JournalState get_journal_state() const;
 

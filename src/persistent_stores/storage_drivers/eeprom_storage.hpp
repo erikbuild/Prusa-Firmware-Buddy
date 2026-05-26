@@ -8,8 +8,8 @@
 class EEPROMStorage : public configuration_store::Storage {
     // TODO detect errors and return them
 public:
-    void read_bytes(uint16_t address, std::span<uint8_t> buffer) override;
-    void write_bytes(uint16_t address, std::span<const uint8_t> data) override;
+    size_t read_bytes(size_t address, WritableBytes buffer) override;
+    size_t write_bytes(size_t address, Bytes data) override;
 };
 
 inline configuration_store::Storage &EEPROMInstance() {

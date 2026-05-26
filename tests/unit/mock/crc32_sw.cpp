@@ -1,4 +1,5 @@
 #include "crc32.h"
+#include "crc32.hpp"
 
 extern uint32_t crc32_sw(const uint8_t *buffer, uint32_t length, uint32_t crc) {
     uint32_t value = crc ^ 0xFFFFFFFF;
@@ -23,4 +24,8 @@ extern uint32_t crc32_calc_ex(uint32_t crc, const uint8_t *data, uint32_t count)
     crc = crc32_sw(data, count, crc);
 
     return crc;
+}
+
+uint32_t crc32(uint32_t crc, Bytes data) {
+    return crc32_calc_ex(crc, reinterpret_cast<const uint8_t *>(data.data()), data.size());
 }

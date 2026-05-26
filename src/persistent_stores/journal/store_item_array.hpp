@@ -2,6 +2,7 @@
 
 #include <freertos/task.hpp>
 #include <utils/algorithm_extensions.hpp>
+#include <utils/byte_utils.hpp>
 
 #include "concepts.hpp"
 
@@ -154,7 +155,7 @@ public:
         return data_array;
     }
 
-    void init(uint8_t index, const std::span<const uint8_t> &raw_data) {
+    void init(uint8_t index, const Bytes &raw_data) {
         if ((raw_data.size() != sizeof(value_type)) || (index >= item_count)) {
             std::terminate();
         }
@@ -189,7 +190,7 @@ public:
     static constexpr uint16_t hashed_id_last { hashed_id + item_count - 1 };
 
 public:
-    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+    inline void check_init(uint16_t id, const Bytes &data) {
         if (hashed_id_first <= id && id <= hashed_id_last) {
             this->init(id - hashed_id_first, data);
         }
@@ -199,7 +200,7 @@ public:
         if (index >= item_count) {
             std::terminate();
         }
-        backend().save(hashed_id_first + index, { reinterpret_cast<const uint8_t *>(&(this->data_array[index])), sizeof(DataT) });
+        backend().save(hashed_id_first + index, trivial_as_bytes(this->data_array[index]));
     }
 };
 
@@ -209,7 +210,7 @@ template <StoreItemDataC DataT, auto default_val, ItemFlags flags_, auto backend
 struct JournalItemLegacyArray : public JournalItemArrayBase<JournalItemLegacyArray<DataT, default_val, flags_, backend, hashed_ids>, DataT, default_val, flags_, backend, hashed_ids.size()> {
 
 public:
-    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+    inline void check_init(uint16_t id, const Bytes &data) {
         if (const auto index = stdext::index_of(hashed_ids, id); index != hashed_ids.size()) {
             this->init(index, data);
         }
@@ -219,7 +220,7 @@ public:
         if (index >= hashed_ids.size()) {
             std::terminate();
         }
-        backend().save(hashed_ids[index], { reinterpret_cast<const uint8_t *>(&(this->data_array[index])), sizeof(DataT) });
+        backend().save(hashed_ids[index], trivial_as_bytes(this->data_array[index]));
     }
 };
 

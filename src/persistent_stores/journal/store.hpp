@@ -82,7 +82,7 @@ public:
      * @param id Hashed id of target store item
      * @param data Holds data in binary form to be loaded into current item
      */
-    void load_item(uint16_t id, const std::span<const uint8_t> &data) {
+    void load_item(uint16_t id, const Bytes &data) {
         visit_all_struct_fields(static_cast<Config &>(*this), [&]<typename Item>(Item &item) {
             item.check_init(id, data);
         });
@@ -100,7 +100,7 @@ public:
     };
 
     void load_all() {
-        Config::get_backend().load_all([this](uint16_t id, const std::span<const uint8_t> &data) -> void { return load_item(id, data); }, MigrationFunctions);
+        Config::get_backend().load_all([this](uint16_t id, const Bytes &data) -> void { return load_item(id, data); }, MigrationFunctions);
     };
     void init() {
         Config::get_backend().init([this]() {

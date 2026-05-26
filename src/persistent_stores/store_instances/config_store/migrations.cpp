@@ -11,7 +11,7 @@
 namespace {
 
 void read_old_item_value_impl(journal::Backend &backend, uint16_t item_hash, void *old_value) {
-    auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+    auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
         if (header.id == item_hash) {
             memcpy(old_value, buffer.data(), header.len);
         }
@@ -71,7 +71,7 @@ namespace migrations {
 #endif
         };
 
-        backend.read_items_for_migrations([&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        backend.read_items_for_migrations([&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             for (const auto &migration_rec : migration_mapping) {
                 if (header.id == migration_rec.oldID) {
                     memcpy(&values[migration_rec.index], buffer.data(), sizeof(Value));
@@ -90,7 +90,7 @@ namespace migrations {
         using OldItem = decltype(DeprecatedStore::xy_motors_400_step);
         bool has_400_motors = true;
 
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             if (header.id == OldItem::hashed_id) {
                 memcpy(&has_400_motors, buffer.data(), header.len);
             }
@@ -107,7 +107,7 @@ namespace migrations {
         using NewItem = decltype(CurrentStore::hostname);
         NewItem::value_type hostname { 0 };
 
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             // Copy either hostname that's not empty
             if ((header.id == decltype(DeprecatedStore::wifi_hostname)::hashed_id || header.id == decltype(DeprecatedStore::lan_hostname)::hashed_id) && strnlen(reinterpret_cast<const char *>(buffer.data()), sizeof(hostname)) != 0) {
                 memcpy(&hostname, buffer.data(), header.len);
@@ -126,7 +126,7 @@ namespace migrations {
 
         std::array<NewItem::value_type, VirtualToolIndex::count> filament_types;
 
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             const auto ix = stdext::index_of(deprecated_ids::loaded_filament_type, static_cast<uint16_t>(header.id));
             if (ix >= filament_types.size()) {
                 return;
@@ -151,7 +151,7 @@ namespace migrations {
         using NewItem = decltype(CurrentStore::side_leds_max_brightness);
         std::optional<NewItem::value_type> val;
 
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             if (header.id == decltype(DeprecatedStore::side_leds_enabled)::hashed_id) {
                 val = static_cast<bool>(buffer[0]) ? 255 : 0;
             }
@@ -171,7 +171,7 @@ namespace migrations {
 
         OldItem::value_type saved_hotend_type = defaults::hotend_type;
 
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             if (header.id == decltype(DeprecatedStore::hotend_type_single_hotend)::hashed_id) {
                 memcpy(&saved_hotend_type, buffer.data(), header.len);
             }
@@ -221,7 +221,7 @@ namespace migrations {
         struct old_variables old_vals;
 
         auto callback
-            = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+            = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             if (header.id == OldEnabled::hashed_id) {
                 memcpy(&old_vals.saved_flags, buffer.data(), header.len);
             } else if (header.id == OldFilterTimer::hashed_id) {
@@ -260,7 +260,7 @@ namespace migrations {
         using OldItem = decltype(DeprecatedStore::emergency_stop_enable);
 
         OldItem::value_type saved_emergency_enable = NewItem::default_val;
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) -> void {
             if (header.id == OldItem::hashed_id) {
                 memcpy(&saved_emergency_enable, buffer.data(), header.len);
             }
@@ -277,7 +277,7 @@ namespace migrations {
 
         OldItem::value_type old_byte = OldItem::default_val;
 
-        auto callback = [&](journal::Backend::ItemHeader header, std::array<uint8_t, journal::Backend::MAX_ITEM_SIZE> &buffer) {
+        auto callback = [&](journal::Backend::ItemHeader header, std::array<std::byte, journal::Backend::MAX_ITEM_SIZE> &buffer) {
             if (header.id == OldItem::hashed_id) {
                 memcpy(&old_byte, buffer.data(), header.len);
             }

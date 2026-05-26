@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utils/array_extensions.hpp>
+#include <utils/byte_utils.hpp>
 
 #include "concepts.hpp"
 #include <freertos/task.hpp>
@@ -53,12 +54,12 @@ public:
         return data.data();
     }
 
-    inline void init(const std::span<const uint8_t> &)
+    inline void init(const Bytes &)
         requires(ram_only)
     {
     }
 
-    void init(const std::span<const uint8_t> &raw_data)
+    void init(const Bytes &raw_data)
         requires(!ram_only)
     {
         if (raw_data.size() != sizeof(value_type)) {
@@ -102,7 +103,7 @@ protected:
 
     void do_save(uint16_t hashed_id) {
         if constexpr (!ram_only) {
-            backend().save(hashed_id, { reinterpret_cast<const uint8_t *>(&data), sizeof(DataT) });
+            backend().save(hashed_id, trivial_as_bytes(data));
         }
     }
 };
@@ -126,7 +127,7 @@ public:
         static_assert(sizeof(JournalItem) == sizeof(DataT));
     }
 
-    inline void check_init(uint16_t id, const std::span<const uint8_t> &data) {
+    inline void check_init(uint16_t id, const Bytes &data) {
         if (hashed_id == id) {
             this->init(data);
         }
