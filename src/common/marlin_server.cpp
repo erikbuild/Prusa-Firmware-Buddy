@@ -479,11 +479,6 @@ namespace {
 
     constinit MCUTempErrorChecker mcuMaxTempErrorChecker; ///< Check Buddy MCU temperature
 #if HAS_DWARF()
-    // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
-    static constexpr StrongIndexArray<const char *, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarf_names {
-        "Dwarf 1", "Dwarf 2", "Dwarf 3", "Dwarf 4", "Dwarf 5"
-    };
-
     /// Check Dwarf MCU temperature
     // we keep old array size instead of PhysicalToolIndex::count because of weak indexing (see definition of PhysicalToolIndex::count)
     constinit StrongIndexArray<MCUTempErrorChecker, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static, strong_index_array::AllowWeakIndexing::yes> dwarfMaxTempErrorChecker;
@@ -3106,7 +3101,10 @@ static void _server_print_loop(void) {
 #if HAS_DWARF()
     for (auto tool : PhysicalToolIndex::all()) {
         if (tool.is_enabled()) {
-            dwarfMaxTempErrorChecker[tool].check(buddy::puppies::dwarfs[tool].get_mcu_temperature(), WarningType::DwarfMCUMaxTemp, dwarf_names[tool]);
+            static_assert(PhysicalToolIndex::count <= 9);
+            char dwarf_name[] = "Dwarf 0";
+            dwarf_name[sizeof(dwarf_name) - 2] += tool.display_index();
+            dwarfMaxTempErrorChecker[tool].check(buddy::puppies::dwarfs[tool].get_mcu_temperature(), WarningType::DwarfMCUMaxTemp, dwarf_name);
         }
     }
 #endif /*HAS_DWARF()*/
