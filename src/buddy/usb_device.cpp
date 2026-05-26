@@ -1,7 +1,7 @@
 #include "cmsis_os.h"
 #include "stm32f4xx_hal.h"
 #include "tusb.h"
-#include <buddy/main.h>
+#include <device/peripherals.hpp>
 #include <buddy/usb_device.hpp>
 #include <logging/log.hpp>
 #include "otp.hpp"
