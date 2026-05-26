@@ -270,15 +270,15 @@ int digitalRead(uint32_t marlinPin) {
         return static_cast<bool>(buddy::hw::xyProbe.read());
 #endif
     case MARLIN_PIN(E0_ENA):
-        return buddy::puppies::dwarfs[0].is_tmc_enabled();
+        return buddy::puppies::dwarfs[PhysicalToolIndex::from_raw(0)].is_tmc_enabled();
     case MARLIN_PIN(E1_ENA):
-        return buddy::puppies::dwarfs[1].is_tmc_enabled();
+        return buddy::puppies::dwarfs[PhysicalToolIndex::from_raw(1)].is_tmc_enabled();
     case MARLIN_PIN(E2_ENA):
-        return buddy::puppies::dwarfs[2].is_tmc_enabled();
+        return buddy::puppies::dwarfs[PhysicalToolIndex::from_raw(2)].is_tmc_enabled();
     case MARLIN_PIN(E3_ENA):
-        return buddy::puppies::dwarfs[3].is_tmc_enabled();
+        return buddy::puppies::dwarfs[PhysicalToolIndex::from_raw(3)].is_tmc_enabled();
     case MARLIN_PIN(E4_ENA):
-        return buddy::puppies::dwarfs[4].is_tmc_enabled();
+        return buddy::puppies::dwarfs[PhysicalToolIndex::from_raw(4)].is_tmc_enabled();
     case MARLIN_PIN(X_STEP):
         return buddy::hw::XStep->read() == Pin::State::low ? 0 : 1;
     case MARLIN_PIN(Y_STEP):
@@ -310,47 +310,30 @@ void digitalWrite(uint32_t marlinPin, uint32_t ulVal) {
         return;
     }
 #endif //_DEBUG
+    const auto enable_tmc = [ulVal](PhysicalToolIndex tool) {
+        auto dwarf = &buddy::puppies::dwarfs[tool];
+        if (dwarf->is_enabled()) {
+            /// TODO do not access puppyModbus outside of puppy task
+            /// BFW-8185
+            dwarf->tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
+        }
+    };
     switch (marlinPin) {
-    case MARLIN_PIN(E0_ENA): {
-        if (buddy::puppies::dwarfs[0].is_enabled()) {
-            /// TODO do not access puppyModbus outside of puppy task
-            /// BFW-8185
-            buddy::puppies::dwarfs[0].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
-        }
+    case MARLIN_PIN(E0_ENA):
+        enable_tmc(PhysicalToolIndex::from_raw(0));
         break;
-    }
-    case MARLIN_PIN(E1_ENA): {
-        if (buddy::puppies::dwarfs[1].is_enabled()) {
-            /// TODO do not access puppyModbus outside of puppy task
-            /// BFW-8185
-            buddy::puppies::dwarfs[1].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
-        }
+    case MARLIN_PIN(E1_ENA):
+        enable_tmc(PhysicalToolIndex::from_raw(1));
         break;
-    }
-    case MARLIN_PIN(E2_ENA): {
-        if (buddy::puppies::dwarfs[2].is_enabled()) {
-            /// TODO do not access puppyModbus outside of puppy task
-            /// BFW-8185
-            buddy::puppies::dwarfs[2].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
-        }
+    case MARLIN_PIN(E2_ENA):
+        enable_tmc(PhysicalToolIndex::from_raw(2));
         break;
-    }
-    case MARLIN_PIN(E3_ENA): {
-        if (buddy::puppies::dwarfs[3].is_enabled()) {
-            /// TODO do not access puppyModbus outside of puppy task
-            /// BFW-8185
-            buddy::puppies::dwarfs[3].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
-        }
+    case MARLIN_PIN(E3_ENA):
+        enable_tmc(PhysicalToolIndex::from_raw(3));
         break;
-    }
-    case MARLIN_PIN(E4_ENA): {
-        if (buddy::puppies::dwarfs[4].is_enabled()) {
-            /// TODO do not access puppyModbus outside of puppy task
-            /// BFW-8185
-            buddy::puppies::dwarfs[4].tmc_set_enable(buddy::puppies::puppyModbus, ulVal);
-        }
+    case MARLIN_PIN(E4_ENA):
+        enable_tmc(PhysicalToolIndex::from_raw(4));
         break;
-    }
     case MARLIN_PIN(X_STEP):
         buddy::hw::XStep->write(ulVal ? Pin::State::high : Pin::State::low);
         break;

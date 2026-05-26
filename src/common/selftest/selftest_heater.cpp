@@ -370,9 +370,9 @@ void CSelftestPart_Heater::single_check_callback() {
     float power;
 
     if (m_config.type == heater_type_t::Nozzle) {
-        current = advancedpower.get_nozzle_current(m_config.tool_nr.to_raw()); // This will either give 1.5 A or 0 depending if PWM is on or off
-        voltage = advancedpower.get_nozzle_voltage(m_config.tool_nr.to_raw());
-        pwm = advancedpower.get_nozzle_pwm(m_config.tool_nr.to_raw());
+        current = advancedpower.get_nozzle_current(m_config.tool_nr); // This will either give 1.5 A or 0 depending if PWM is on or off
+        voltage = advancedpower.get_nozzle_voltage(m_config.tool_nr);
+        pwm = advancedpower.get_nozzle_pwm(m_config.tool_nr);
         power = current * voltage;
 
         /**

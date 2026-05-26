@@ -58,21 +58,18 @@ public:
     }
 
     // Get nozzle heater current [A]
-    inline float get_nozzle_current(uint8_t index) {
-        assert(index >= 0 && index < buddy::puppies::dwarfs.size());
-        return buddy::puppies::dwarfs[index].get_heater_current();
+    inline float get_nozzle_current(PhysicalToolIndex tool) {
+        return buddy::puppies::dwarfs[tool].get_heater_current();
     }
 
     // Get nozzle supply voltage [V]
-    inline float get_nozzle_voltage(uint8_t index) {
-        assert(index >= 0 && index < buddy::puppies::dwarfs.size());
-        return buddy::puppies::dwarfs[index].get_24V();
+    inline float get_nozzle_voltage(PhysicalToolIndex tool) {
+        return buddy::puppies::dwarfs[tool].get_24V();
     }
 
     // Get nozzle heater PWM
-    inline int get_nozzle_pwm(uint8_t index) {
-        assert(index >= 0 && index < buddy::puppies::dwarfs.size());
-        return buddy::puppies::dwarfs[index].get_heater_pwm();
+    inline int get_nozzle_pwm(PhysicalToolIndex tool) {
+        return buddy::puppies::dwarfs[tool].get_heater_pwm();
     }
 #elif BOARD_IS_DWARF()
     inline float GetDwarfNozzleCurrent() const {

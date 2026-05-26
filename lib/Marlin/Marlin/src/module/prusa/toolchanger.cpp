@@ -225,7 +225,10 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
         toolchanger_error("Toolchanger not enabled");
     }
 
-    Dwarf *new_dwarf = (raw_new_tool == MARLIN_NO_TOOL_PICKED) ? nullptr : &dwarfs[raw_new_tool]; ///< Dwarf to change to
+    Dwarf *new_dwarf = match(
+        new_tool,
+        [](PhysicalToolIndex tool) { return &dwarfs[tool]; },
+        [](NoTool) -> Dwarf * { return nullptr; });
     if (new_dwarf && !new_dwarf->is_enabled()) {
         toolchanger_error("Toolchange to tool that is not enabled");
     }

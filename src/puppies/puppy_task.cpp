@@ -544,7 +544,12 @@ void run() {
     #endif
     #if HAS_DWARF()
         for (const auto dwarf_dock : DWARFS) {
-            dwarfs[to_dwarf_index(dwarf_dock)].set_enabled(bootstrap_result.is_dock_occupied(dwarf_dock));
+            auto dwarf_index = to_dwarf_index(dwarf_dock);
+            if (dwarf_index < PhysicalToolIndex::count) {
+                dwarfs[PhysicalToolIndex::from_raw(dwarf_index)].set_enabled(bootstrap_result.is_dock_occupied(dwarf_dock));
+            } else {
+                dwarfs[dwarf_index].set_enabled(false);
+            }
         }
     #endif
 
