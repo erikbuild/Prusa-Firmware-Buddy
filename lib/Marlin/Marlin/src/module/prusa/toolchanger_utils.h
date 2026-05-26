@@ -243,13 +243,8 @@ public:
 
     #endif // HAS_INDX()
 
-    [[deprecated("Use the ToolIndex overload")]]
-    bool is_tool_enabled(uint8_t tool);
-
     [[deprecated("Use tool.is_enabled()")]]
-    inline bool is_tool_enabled(PhysicalToolIndex tool) {
-        return is_tool_enabled(tool.to_raw());
-    }
+    bool is_tool_enabled(PhysicalToolIndex tool);
 
     [[nodiscard]] uint8_t get_num_enabled_tools() const;
 

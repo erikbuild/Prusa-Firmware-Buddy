@@ -138,8 +138,7 @@ void PrusaToolChangerUtils::request_active_switch(Dwarf *new_dwarf) {
     }
 }
 
-bool PrusaToolChangerUtils::is_tool_enabled(uint8_t tool) {
-    assert(tool < buddy::puppies::dwarfs.size());
+bool PrusaToolChangerUtils::is_tool_enabled(PhysicalToolIndex tool) {
     return buddy::puppies::dwarfs[tool].is_enabled();
 }
 

@@ -71,9 +71,8 @@ void PrusaToolChangerUtils::restore_last_picked_tool() {
     }
 }
 
-bool PrusaToolChangerUtils::is_tool_enabled(uint8_t tool) {
-    assert(tool < PhysicalToolIndex::count);
-    return config_store().indx_dock_calibrated_mask.get().test(tool);
+bool PrusaToolChangerUtils::is_tool_enabled(PhysicalToolIndex tool) {
+    return config_store().indx_dock_calibrated_mask.get().test(tool.to_raw());
 }
 
 uint8_t PrusaToolChangerUtils::get_num_enabled_tools() const {
