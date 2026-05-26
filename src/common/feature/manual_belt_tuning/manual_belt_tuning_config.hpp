@@ -21,8 +21,6 @@ constexpr float nominal_weight_kg_m = 0.007569f;
 
 #if PRINTER_IS_PRUSA_COREONE()
 
-// optimal belt tension for the printer
-constexpr uint16_t tension_optimal_N = 19;
 // constants for calculating how many revolutions to do for any frequency differences
 // this constants represents average frequency change of the belt per one revolution of its own screw
 constexpr uint16_t belt_hz_per_rev = 15;
@@ -30,6 +28,9 @@ constexpr uint16_t belt_hz_per_rev = 15;
 constexpr uint16_t belt_hz_per_rev2 = 12;
 
     #if HAS_INDX()
+
+// optimal belt tension for the printer
+constexpr uint16_t tension_optimal_N = 21;
 
 // top belt length (vibrating part)
 constexpr float length_top_belt = 0.270175f;
@@ -40,6 +41,9 @@ constexpr int16_t calib_position_x = 251;
 constexpr int16_t calib_position_y = 30;
 
     #else
+
+// optimal belt tension for the printer
+constexpr uint16_t tension_optimal_N = 19;
 
 // avg belt length (vibrating part)
 constexpr float length_belt = 0.267f;
