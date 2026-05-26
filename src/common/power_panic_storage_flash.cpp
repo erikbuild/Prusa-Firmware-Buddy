@@ -9,8 +9,14 @@ namespace power_panic {
 
 LOG_COMPONENT_REF(PowerPanic);
 
-static constexpr uint32_t FLASH_OFFSET = w25x_pp_start_address;
-static constexpr uint32_t FLASH_SIZE = w25x_pp_size;
+using Storage = W25xFlash;
+
+static Storage &storage_instance() {
+    return Storage::instance();
+}
+
+static constexpr uint32_t flash_offset = Storage::pp_start_address;
+static constexpr uint32_t flash_size = Storage::pp_size;
 
 struct flash_data_t {
     fixed_t fixed;
@@ -25,15 +31,15 @@ state_t state_buf_data;
 // Set reference to state_buf_data, to point to in-ram version of the data
 state_t &state_buf = state_buf_data;
 
-static_assert(sizeof(flash_data_t) <= FLASH_SIZE, "powerpanic data exceeds reserved storage space");
+static_assert(sizeof(flash_data_t) <= flash_size, "powerpanic data exceeds reserved storage space");
 
 // Helper functions to read/write to the flash area with type checking
-#define FLASH_DATA_OFF(member) (FLASH_OFFSET + offsetof(flash_data_t, member))
+#define FLASH_DATA_OFF(member) (flash_offset + offsetof(flash_data_t, member))
 
-#define FLASH_SAVE(member, src)                                                            \
-    do {                                                                                   \
-        static_assert(std::is_same<decltype(flash_data_t::member), decltype(src)>::value); \
-        w25x_program(FLASH_DATA_OFF(member), (uint8_t *)(&src), sizeof(src));              \
+#define FLASH_SAVE(member, src)                                                             \
+    do {                                                                                    \
+        static_assert(std::is_same<decltype(flash_data_t::member), decltype(src)>::value);  \
+        storage_instance().program(FLASH_DATA_OFF(member), (uint8_t *)(&src), sizeof(src)); \
     } while (0)
 
 #define FLASH_SAVE_EXPR(member, expr)  \
@@ -46,7 +52,7 @@ static_assert(sizeof(flash_data_t) <= FLASH_SIZE, "powerpanic data exceeds reser
 #define FLASH_LOAD(member, dst)                                                            \
     do {                                                                                   \
         static_assert(std::is_same<decltype(flash_data_t::member), decltype(dst)>::value); \
-        w25x_rd_data(FLASH_DATA_OFF(member), (uint8_t *)(&dst), sizeof(dst));              \
+        storage_instance().read(FLASH_DATA_OFF(member), (uint8_t *)(&dst), sizeof(dst));   \
     } while (0)
 
 #define FLASH_LOAD_EXPR(member)             \
@@ -57,31 +63,34 @@ static_assert(sizeof(flash_data_t) <= FLASH_SIZE, "powerpanic data exceeds reser
     }())
 
 void state_t::save() {
-    w25x_program(FLASH_DATA_OFF(state), reinterpret_cast<const uint8_t *>(&state_buf), sizeof(state_t));
+    auto &storage = storage_instance();
+    storage.program(FLASH_DATA_OFF(state), reinterpret_cast<const uint8_t *>(&state_buf), sizeof(state_t));
 
     // mark as valid
     uint8_t invalid_buff = false;
     FLASH_SAVE(invalid, invalid_buff);
 
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         log_error(PowerPanic, "Failed to save live data.");
     }
 }
 
 void state_t::load() {
-    w25x_rd_data(FLASH_DATA_OFF(state), reinterpret_cast<uint8_t *>(&state_buf), sizeof(state_t));
+    auto &storage = storage_instance();
+    storage.read(FLASH_DATA_OFF(state), reinterpret_cast<uint8_t *>(&state_buf), sizeof(state_t));
     runtime_state.nested_fault = true;
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         log_error(PowerPanic, "Load failed.");
         return;
     }
 }
 
 void erase() {
-    for (uintptr_t addr = 0; addr < FLASH_SIZE; addr += w25x_block_size) {
-        w25x_sector_erase(FLASH_OFFSET + addr);
+    auto &storage = storage_instance();
+    for (uintptr_t addr = 0; addr < flash_size; addr += Storage::block_size) {
+        storage.erase_block(flash_offset + addr);
     }
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         log_error(PowerPanic, "Failed to erase.");
     }
 }
@@ -96,10 +105,11 @@ void fixed_t::save() {
     FLASH_SAVE(fixed.z_values, unified_bed_leveling::z_values);
 
     // optimize the write to avoid writing the entire buffer
-    w25x_program(FLASH_DATA_OFF(fixed.media_SFN_path), (uint8_t *)runtime_state.media_SFN_path,
+    auto &storage = storage_instance();
+    storage.program(FLASH_DATA_OFF(fixed.media_SFN_path), (uint8_t *)runtime_state.media_SFN_path,
         strlen(runtime_state.media_SFN_path) + 1);
 
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         log_error(PowerPanic, "Failed to save fixed data.");
         return;
     }
@@ -119,7 +129,7 @@ void fixed_t::load() {
     // path
     FLASH_LOAD(fixed.media_SFN_path, runtime_state.media_SFN_path);
 
-    if (w25x_fetch_error()) {
+    if (storage_instance().fetch_error()) {
         log_error(PowerPanic, "Load failed.");
         return;
     }
@@ -127,7 +137,7 @@ void fixed_t::load() {
 
 bool state_stored() {
     bool retval = !FLASH_LOAD_EXPR(invalid);
-    if (w25x_fetch_error()) {
+    if (storage_instance().fetch_error()) {
         log_error(PowerPanic, "Failed to get stored.");
         return false;
     }
@@ -137,7 +147,7 @@ bool state_stored() {
 const char *stored_media_path() {
     assert(state_stored()); // caller is responsible for checking
     FLASH_LOAD(fixed.media_SFN_path, runtime_state.media_SFN_path);
-    if (w25x_fetch_error()) {
+    if (storage_instance().fetch_error()) {
         log_error(PowerPanic, "Failed to get media path.");
     }
     return runtime_state.media_SFN_path;

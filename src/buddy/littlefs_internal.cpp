@@ -1,10 +1,14 @@
 #include <buddy/littlefs_internal.h>
 #include <common/w25x.hpp>
 
-#define BLOCK_SIZE w25x_block_size
+using Storage = W25xFlash;
 
-// Address offset to skip area reserved for the dump
-#define ADDR_OFFSET w25x_fs_start_address
+static Storage &storage_instance() {
+    return Storage::instance();
+}
+
+static constexpr uint32_t block_size = Storage::block_size;
+static constexpr uint32_t addr_offset = Storage::fs_start_address;
 
 static lfs_t lfs;
 
@@ -55,7 +59,7 @@ static struct lfs_config littlefs_config = {
     // block device configuration
     .read_size = 1,
     .prog_size = 1,
-    .block_size = BLOCK_SIZE,
+    .block_size = block_size,
     .block_count = 0, // to be initialized at runtime
     .block_cycles = 500,
     .cache_size = lfs_internal.cache_size,
@@ -70,11 +74,11 @@ static struct lfs_config littlefs_config = {
 };
 
 static uint32_t get_address(lfs_block_t block, lfs_off_t offset) {
-    return ADDR_OFFSET + block * littlefs_config.block_size + offset;
+    return addr_offset + block * littlefs_config.block_size + offset;
 }
 
 static bool address_is_valid(uint32_t address) {
-    return address >= ADDR_OFFSET && address <= (w25x_get_sector_count() * BLOCK_SIZE);
+    return address >= addr_offset && address <= (storage_instance().block_count() * block_size);
 }
 
 static int read([[maybe_unused]] const struct lfs_config *c, lfs_block_t block,
@@ -85,9 +89,10 @@ static int read([[maybe_unused]] const struct lfs_config *c, lfs_block_t block,
         return LFS_ERR_INVAL;
     }
 
-    w25x_rd_data(addr, static_cast<uint8_t *>(buffer), size);
+    auto &storage = storage_instance();
+    storage.read(addr, static_cast<uint8_t *>(buffer), size);
 
-    if (w25x_fetch_error() != 0) {
+    if (storage.fetch_error() != 0) {
         return LFS_ERR_IO;
     }
 
@@ -102,9 +107,10 @@ static int prog([[maybe_unused]] const struct lfs_config *c, lfs_block_t block,
         return LFS_ERR_INVAL;
     }
 
-    w25x_program(addr, (uint8_t *)buffer, size);
+    auto &storage = storage_instance();
+    storage.program(addr, (uint8_t *)buffer, size);
 
-    if (w25x_fetch_error() != 0) {
+    if (storage.fetch_error() != 0) {
         return LFS_ERR_IO;
     }
 
@@ -117,9 +123,10 @@ static int erase([[maybe_unused]] const struct lfs_config *c, lfs_block_t block)
         return LFS_ERR_INVAL;
     }
 
-    w25x_sector_erase(addr);
+    auto &storage = storage_instance();
+    storage.erase_block(addr);
 
-    if (w25x_fetch_error() != 0) {
+    if (storage.fetch_error() != 0) {
         return LFS_ERR_IO;
     }
 
@@ -132,7 +139,7 @@ static int sync(__attribute__((unused)) const struct lfs_config *c) {
 
 lfs_t *littlefs_internal_init() {
     // setup flash size
-    littlefs_config.block_count = w25x_get_sector_count() - (ADDR_OFFSET / BLOCK_SIZE);
+    littlefs_config.block_count = storage_instance().block_count() - (addr_offset / block_size);
 
     // mount the filesystem
     int err = lfs_mount(&lfs, &littlefs_config);

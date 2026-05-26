@@ -22,6 +22,12 @@ extern "C" {
 
 namespace crash_dump {
 
+using Storage = W25xFlash;
+
+static Storage &storage_instance() {
+    return Storage::instance();
+}
+
 /// While dumping, this stores size of already dumped data
 static uint32_t dump_size;
 static bool dump_breakpoint_paused = false;
@@ -49,17 +55,17 @@ typedef struct __attribute__((packed)) {
 } message_t;
 
 /// Position of dump header
-inline constexpr uint32_t dump_header_addr = w25x_dump_start_address;
+inline constexpr uint32_t dump_header_addr = Storage::dump_start_address;
 /// Position of dump data
 inline constexpr uint32_t dump_data_addr = dump_header_addr + sizeof(info_t);
 /// Max size of dump (header + data)
-inline constexpr uint32_t dump_max_size = w25x_dump_size;
+inline constexpr uint32_t dump_max_size = Storage::dump_size;
 /// Max size of dump data
 inline constexpr uint32_t dump_max_data_size = dump_max_size - sizeof(info_t);
 
-static_assert(sizeof(message_t) <= (w25x_pp_start_address - w25x_error_start_adress), "Error message overflows reserved space.");
+static_assert(sizeof(message_t) <= (Storage::pp_start_address - Storage::error_start_address), "Error message overflows reserved space.");
 /// Position of dump message in flash
-static const message_t *dumpmessage_flash = reinterpret_cast<message_t *>(w25x_error_start_adress);
+static const message_t *dumpmessage_flash = reinterpret_cast<message_t *>(Storage::error_start_address);
 
 enum {
     RAM_ADDR = SRAM1_BASE,
@@ -84,8 +90,9 @@ enum {
 };
 
 static bool dump_read_header(info_t &dumpinfo) {
-    w25x_rd_data(dump_header_addr, (uint8_t *)(&dumpinfo), sizeof(dumpinfo));
-    if (w25x_fetch_error()) {
+    auto &storage = storage_instance();
+    storage.read(dump_header_addr, (uint8_t *)(&dumpinfo), sizeof(dumpinfo));
+    if (storage.fetch_error()) {
         return false;
     }
     return true;
@@ -119,21 +126,23 @@ size_t dump_get_size() {
 }
 
 bool dump_read_data(size_t offset, size_t size, uint8_t *ptr) {
-    w25x_rd_data(dump_data_addr + offset, ptr, size);
-    return !w25x_fetch_error();
+    auto &storage = storage_instance();
+    storage.read(dump_data_addr + offset, ptr, size);
+    return !storage.fetch_error();
 }
 
 /**
  * @todo Programming single byte more times is undocumented feature of w25x
  */
 static void dump_set_flag(const DumpFlags flag) {
+    auto &storage = storage_instance();
     DumpFlags dump_flags;
-    w25x_rd_data(dump_header_addr + offsetof(info_t, dump_flags), reinterpret_cast<uint8_t *>(&dump_flags), 1);
+    storage.read(dump_header_addr + offsetof(info_t, dump_flags), reinterpret_cast<uint8_t *>(&dump_flags), 1);
     // set bit to zero - that is active state of this bit
-    if (!w25x_fetch_error() && any(dump_flags & flag)) {
+    if (!storage.fetch_error() && any(dump_flags & flag)) {
         dump_flags = dump_flags & ~flag;
-        w25x_program(dump_header_addr + offsetof(info_t, dump_flags), reinterpret_cast<uint8_t *>(&dump_flags), 1);
-        w25x_fetch_error();
+        storage.program(dump_header_addr + offsetof(info_t, dump_flags), reinterpret_cast<uint8_t *>(&dump_flags), 1);
+        storage.fetch_error();
     }
 }
 
@@ -146,18 +155,19 @@ void dump_set_displayed() {
 }
 
 void dump_reset() {
-    static_assert(dump_header_addr % w25x_block64_size == 0 && (dump_header_addr + dump_max_size) % w25x_block_size == 0, "More than reserved area is erased.");
+    static_assert(dump_header_addr % Storage::block64_size == 0 && (dump_header_addr + dump_max_size) % Storage::block_size == 0, "More than reserved area is erased.");
+    auto &storage = storage_instance();
     uint32_t addr = dump_header_addr;
     // first fast-erase multiple sectors with 64KiB blocks
-    for (; addr + w25x_block64_size <= dump_max_size; addr += w25x_block64_size) {
-        w25x_block64_erase(addr);
+    for (; addr + Storage::block64_size <= dump_max_size; addr += Storage::block64_size) {
+        storage.block64_erase(addr);
     }
     // now erase rest of the blocks
-    for (; addr + w25x_block_size <= dump_max_size; addr += w25x_block_size) {
-        w25x_sector_erase(addr);
+    for (; addr + Storage::block_size <= dump_max_size; addr += Storage::block_size) {
+        storage.erase_block(addr);
     }
 
-    w25x_fetch_error();
+    storage.fetch_error();
 }
 
 bool save_dump_to_usb(const char *fn) {
@@ -207,7 +217,7 @@ void save_message(MsgType type, uint16_t error_code, const char *error, const ch
 
     buddy::InterruptDisabler _;
     vTaskEndScheduler();
-    if (!w25x_reinit_before_crash_dump()) {
+    if (!storage_instance().reinit_before_crash_dump()) {
         return;
     }
 
@@ -225,66 +235,72 @@ void force_save_message_without_dump(MsgType type, uint16_t error_code, const ch
         title = "";
     }
 
-    w25x_sector_erase(w25x_error_start_adress);
+    auto &storage = storage_instance();
+    storage.erase_block(Storage::error_start_address);
 
     const size_t title_len = strnlen(title, std::size(dumpmessage_flash->title));
     const size_t msg_len = strnlen(error, std::size(dumpmessage_flash->msg));
 
-    w25x_program(reinterpret_cast<uint32_t>(&dumpmessage_flash->type), reinterpret_cast<uint8_t *>(&type), sizeof(type));
-    w25x_program(reinterpret_cast<uint32_t>(&dumpmessage_flash->error_code), reinterpret_cast<uint8_t *>(&error_code), sizeof(error_code));
-    w25x_program(reinterpret_cast<uint32_t>(&dumpmessage_flash->title), reinterpret_cast<const uint8_t *>(title),
+    storage.program(reinterpret_cast<uint32_t>(&dumpmessage_flash->type), reinterpret_cast<uint8_t *>(&type), sizeof(type));
+    storage.program(reinterpret_cast<uint32_t>(&dumpmessage_flash->error_code), reinterpret_cast<uint8_t *>(&error_code), sizeof(error_code));
+    storage.program(reinterpret_cast<uint32_t>(&dumpmessage_flash->title), reinterpret_cast<const uint8_t *>(title),
         std::min(std::size(dumpmessage_flash->title), title_len + 1)); // +1 for null terminator
-    w25x_program(reinterpret_cast<uint32_t>(&dumpmessage_flash->msg), reinterpret_cast<const uint8_t *>(error),
+    storage.program(reinterpret_cast<uint32_t>(&dumpmessage_flash->msg), reinterpret_cast<const uint8_t *>(error),
         std::min(std::size(dumpmessage_flash->msg), msg_len + 1));
 
     // write magic number to make flash record valid
     uint32_t magic = MESSAGE_DUMP_MAGIC_NR;
-    w25x_program(reinterpret_cast<uint32_t>(&dumpmessage_flash->message_magic_nr), reinterpret_cast<const uint8_t *>(&magic), sizeof(magic));
-    w25x_fetch_error();
+    storage.program(reinterpret_cast<uint32_t>(&dumpmessage_flash->message_magic_nr), reinterpret_cast<const uint8_t *>(&magic), sizeof(magic));
+    storage.fetch_error();
 }
 
 bool message_is_valid() {
+    auto &storage = storage_instance();
     uint32_t magic;
-    w25x_rd_data(reinterpret_cast<uint32_t>(&dumpmessage_flash->message_magic_nr), reinterpret_cast<uint8_t *>(&magic), sizeof(message_t::message_magic_nr));
-    if (w25x_fetch_error()) {
+    storage.read(reinterpret_cast<uint32_t>(&dumpmessage_flash->message_magic_nr), reinterpret_cast<uint8_t *>(&magic), sizeof(message_t::message_magic_nr));
+    if (storage.fetch_error()) {
         return false;
     }
     return magic == MESSAGE_DUMP_MAGIC_NR;
 }
 
 MsgType message_get_type() {
+    auto &storage = storage_instance();
     uint8_t type;
-    w25x_rd_data(reinterpret_cast<uint32_t>(&dumpmessage_flash->type), &type, sizeof(message_t::type));
-    if (w25x_fetch_error()) {
+    storage.read(reinterpret_cast<uint32_t>(&dumpmessage_flash->type), &type, sizeof(message_t::type));
+    if (storage.fetch_error()) {
         return MsgType::EMPTY; // Behave as invalid message
     }
     return MsgType(type);
 }
 
 bool message_is_displayed() {
+    auto &storage = storage_instance();
     uint8_t not_displayed;
-    w25x_rd_data(reinterpret_cast<uint32_t>(&dumpmessage_flash->not_displayed), &not_displayed, sizeof(message_t::not_displayed));
-    if (w25x_fetch_error()) {
+    storage.read(reinterpret_cast<uint32_t>(&dumpmessage_flash->not_displayed), &not_displayed, sizeof(message_t::not_displayed));
+    if (storage.fetch_error()) {
         return false;
     }
     return !not_displayed;
 }
 
 void message_set_displayed() {
+    auto &storage = storage_instance();
     uint8_t not_displayed = 0;
-    w25x_program(reinterpret_cast<uint32_t>(&dumpmessage_flash->not_displayed), &not_displayed, sizeof(message_t::not_displayed));
-    w25x_fetch_error();
+    storage.program(reinterpret_cast<uint32_t>(&dumpmessage_flash->not_displayed), &not_displayed, sizeof(message_t::not_displayed));
+    storage.fetch_error();
 }
 
 bool load_message(char *msg_dst, size_t msg_dst_size, char *tit_dst, size_t tit_dst_size) {
+    auto &storage = storage_instance();
     const size_t title_max_size = std::min(std::size(dumpmessage_flash->title), tit_dst_size);
     const size_t msg_max_size = std::min(std::size(dumpmessage_flash->msg), msg_dst_size);
 
     if (title_max_size > 0) {
-        w25x_rd_data(reinterpret_cast<uint32_t>(&dumpmessage_flash->title), (uint8_t *)(tit_dst), title_max_size);
+        storage.read(reinterpret_cast<uint32_t>(&dumpmessage_flash->title), (uint8_t *)(tit_dst), title_max_size);
     }
     if (msg_max_size > 0) {
-        w25x_rd_data(reinterpret_cast<uint32_t>(&dumpmessage_flash->msg), (uint8_t *)(msg_dst), msg_max_size);
+        storage.read(reinterpret_cast<uint32_t>(&dumpmessage_flash->msg), (uint8_t *)(msg_dst), msg_max_size);
     }
 
     if (title_max_size) {
@@ -294,19 +310,20 @@ bool load_message(char *msg_dst, size_t msg_dst_size, char *tit_dst, size_t tit_
         msg_dst[msg_max_size - 1] = '\0';
     }
 
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         return false;
     }
     return true;
 }
 
 uint16_t load_message_error_code() {
+    auto &storage = storage_instance();
     uint16_t error_code;
-    w25x_rd_data(
+    storage.read(
         reinterpret_cast<uint32_t>(&dumpmessage_flash->error_code),
         reinterpret_cast<uint8_t *>(&error_code),
         sizeof(message_t::error_code));
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         return std::to_underlying(ErrCode::ERR_UNDEF);
     }
     return error_code;
@@ -339,7 +356,7 @@ void before_dump() {
 #endif
     }
 
-    // this function is called before WDR or when preparing to dump on flash. Flash erase takes
+    // this function is called before WDR or when preparing to dump on storage. Flash erase takes
     // 300ms typically. But according to dataheet, it can take multiple seconds, and we might need
     // to initialize it first. Refresh the watchdog once to give us an additioanl 4s to dump it.
     if (!crash_dump::wdg_reset_safeguard) {
@@ -375,7 +392,7 @@ void CrashCatcher_DumpStart([[maybe_unused]] const CrashCatcherInfo *pInfo) {
     crash_dump::before_dump();
     crash_dump::privacy_protection.clean_up();
 
-    if (!w25x_reinit_before_crash_dump()) {
+    if (!crash_dump::storage_instance().reinit_before_crash_dump()) {
         crash_dump::dump_failed();
     }
 
@@ -398,10 +415,11 @@ void CrashCatcher_DumpMemory(const void *pvMemory, CrashCatcherElementSizes elem
         crash_dump::dump_failed();
     }
 
-    w25x_program(crash_dump::dump_data_addr + crash_dump::dump_size, (uint8_t *)pvMemory, size_in_bytes);
+    auto &storage = crash_dump::storage_instance();
+    storage.program(crash_dump::dump_data_addr + crash_dump::dump_size, (uint8_t *)pvMemory, size_in_bytes);
     crash_dump::dump_size += size_in_bytes;
 
-    if (w25x_fetch_error()) {
+    if (storage.fetch_error()) {
         crash_dump::dump_failed();
     }
 }
@@ -413,8 +431,9 @@ CrashCatcherReturnCodes CrashCatcher_DumpEnd(void) {
         .dump_flags = crash_dump::DumpFlags::DEFAULT,
         .dump_size = crash_dump::dump_size,
     };
-    w25x_program(crash_dump::dump_header_addr, (uint8_t *)&dump_info, sizeof(dump_info));
-    if (w25x_fetch_error()) {
+    auto &storage = crash_dump::storage_instance();
+    storage.program(crash_dump::dump_header_addr, (uint8_t *)&dump_info, sizeof(dump_info));
+    if (storage.fetch_error()) {
         crash_dump::dump_failed();
     }
 

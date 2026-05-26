@@ -202,9 +202,10 @@ static FactoryReset::ItemBitset decode_items_to_keep(uint16_t encoded_params) {
     indicate_progress(FactoryResetStep::wipe_eeprom, 1.f);
 
     if (wipe_xflash) {
-        const uint32_t xflash_size = w25x_get_sector_count() * w25x_block_size;
-        for (uint32_t address = 0; address < xflash_size; address += w25x_block64_size) {
-            w25x_block64_erase(address);
+        auto &w25x_flash = W25xFlash::instance();
+        const uint32_t xflash_size = w25x_flash.block_count() * W25xFlash::block_size;
+        for (uint32_t address = 0; address < xflash_size; address += W25xFlash::block64_size) {
+            w25x_flash.block64_erase(address);
             indicate_progress(FactoryResetStep::wipe_xflash, float(address) / xflash_size);
         }
     }

@@ -269,7 +269,7 @@ extern "C" void main_cpp(void) {
     Fans::init_hw();
     hw_dma_init();
 
-    w25x_init();
+    W25xFlash::instance().init();
 
     // ADC/DMA
     hw_adc1_init();
