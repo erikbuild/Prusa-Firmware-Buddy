@@ -103,6 +103,9 @@ if(BOARD IN_LIST BUDDY_BOARDS)
   if(HAS_SERIAL_PRINT)
     target_sources(firmware PRIVATE serial_printing.cpp)
   endif()
+  if(HAS_INTERNAL_STORAGE_FLASH)
+    target_sources(firmware PRIVATE mt29f_flash.cpp)
+  endif()
 elseif(BOARD STREQUAL "DWARF")
   target_sources(
     firmware

@@ -27,6 +27,7 @@ This file is generated automatically so don't edit it directly
 - LDC1612: logging::Severity::warning, src/puppy/tool_offset_sensor/src/ldc1612.cpp
 - Loadcell: logging::Severity::info, src/common/loadcell.cpp
 - MMU2: logging::Severity::info, src/common/appmain.cpp
+- MT29F: logging::Severity::info, src/common/mt29f_flash.cpp
 - Marlin: logging::Severity::info, src/common/marlin_log_component.cpp
 - MarlinClient: logging::Severity::info, src/common/marlin_client.cpp
 - MarlinServer: logging::Severity::info, src/common/marlin_server.cpp

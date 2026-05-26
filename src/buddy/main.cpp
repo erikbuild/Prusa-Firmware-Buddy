@@ -53,6 +53,7 @@
 #include <option/has_phase_stepping.h>
 #include <option/has_burst_stepping.h>
 #include <option/has_indx.h>
+#include <option/has_internal_storage_flash.h>
 #include <option/has_xbuddy_extension.h>
 #include <option/buddy_enable_wui.h>
 #include <option/has_touch.h>
@@ -113,6 +114,10 @@
 
 #if HAS_ADVANCED_POWER()
     #include <advanced_power.hpp>
+#endif
+
+#if HAS_INTERNAL_STORAGE_FLASH()
+    #include <common/mt29f_flash.hpp>
 #endif
 
 #include <option/has_esp.h>
@@ -274,6 +279,9 @@ extern "C" void main_cpp(void) {
         // to the external FLASH to show after the reboot
         bsod("failed to initialize ext flash");
     }
+#if HAS_INTERNAL_STORAGE_FLASH()
+    (void)Mt29fFlash::instance().init();
+#endif
 
     // ADC/DMA
     hw_adc1_init();
