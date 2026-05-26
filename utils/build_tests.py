@@ -9,8 +9,8 @@ Simple wrapper that handles:
 - Code coverage reporting
 
 After building, run tests manually with ctest:
-    cd build_tests && ctest
-    cd build_tests && ctest -R gcode  # run specific tests
+    cd build/tests && ctest
+    cd build/tests && ctest -R gcode  # run specific tests
 """
 
 import argparse
@@ -440,8 +440,8 @@ Examples:
         'Specific test targets to build (e.g., cobs_tests). If empty, builds all tests.'
     )
     parser.add_argument('--build-dir',
-                        default='build_tests',
-                        help='Build directory name (default: build_tests)')
+                        default='build/tests',
+                        help='Build directory name (default: build/tests)')
     parser.add_argument('--board',
                         default='BUDDY',
                         help='Board to build for (default: BUDDY)')
@@ -517,8 +517,8 @@ Examples:
     # Coverage builds must not share a build dir with regular builds, since
     # the instrumented object files would otherwise be reused for non-coverage
     # builds (and vice versa).
-    if args.coverage and args.build_dir == 'build_tests':
-        args.build_dir = 'build_tests_coverage'
+    if args.coverage and args.build_dir == parser.get_default('build_dir'):
+        args.build_dir = 'build/tests_coverage'
 
     build_dir = project_root / args.build_dir
 
@@ -566,7 +566,7 @@ Examples:
         sys.exit(1)
 
     # Create build directory if needed
-    build_dir.mkdir(exist_ok=True)
+    build_dir.mkdir(parents=True, exist_ok=True)
 
     # Change to build directory
     os.chdir(build_dir)

@@ -5,9 +5,10 @@
 
 import argparse
 from pathlib import Path
-import os, stat
+import os, stat, sys
 import platform
 from shutil import which
+from build_dir import find_latest_build_dir
 
 # init directories
 script_dir = Path(os.path.dirname(__file__))
@@ -44,7 +45,12 @@ args = parser.parse_args()
 
 # check provided arguments
 if (args.elf == None):
-    args.elf = project_root_dir / Path('build-vscode-buddy/firmware')
+    latest = find_latest_build_dir()
+    if latest is None:
+        print("ELF file not provided and no firmware found under build/*. "
+              "Specify --elf explicitly.")
+        exit(1)
+    args.elf = latest / 'firmware'
     print(f"ELF file not provided, using default: {args.elf}")
 if (args.gdb == None):
     args.gdb = f'{project_root_dir}/.dependencies/gcc-arm-none-eabi-13.3.1/bin/arm-none-eabi-gdb'

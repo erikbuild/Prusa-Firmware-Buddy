@@ -4,13 +4,13 @@
         {
             "name": "Launch Buddy",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/firmware",
+            "executable": "${command:cmake.buildDirectory}/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
             "gdbPath": "gdb-multiarch",
             "openOCDPreConfigLaunchCommands": [
-                "set bbf_over_debugger_path ./build-vscode-buddy/firmware.bbf"
+                "set bbf_over_debugger_path ${command:cmake.buildDirectory}/firmware.bbf"
             ],
             "configFiles": [
                 "${workspaceRoot}/utils/debug/buddy.cfg",
@@ -38,7 +38,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/rtt_log.txt"
                     },
                     {
                         "label": "Heap instrumentation",
@@ -53,13 +53,13 @@
         {
             "name": "Attach to Buddy",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/firmware",
+            "executable": "${command:cmake.buildDirectory}/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
             "gdbPath": "gdb-multiarch",
             "openOCDPreConfigLaunchCommands": [
-                "set bbf_over_debugger_path ./build-vscode-buddy/firmware.bbf"
+                "set bbf_over_debugger_path ${command:cmake.buildDirectory}/firmware.bbf"
             ],
             "configFiles": [
                 "${workspaceRoot}/utils/debug/buddy.cfg",
@@ -85,7 +85,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/rtt_log.txt"
                     }
                 ]
             }
@@ -93,7 +93,7 @@
         {
             "name": "Launch Dwarf",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/dwarf-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/dwarf-build/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -122,7 +122,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/dwarf-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/dwarf-build/rtt_log.txt"
                     }
                 ]
             }
@@ -130,7 +130,7 @@
         {
             "name": "Attach to Dwarf",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/dwarf-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/dwarf-build/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -155,7 +155,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/dwarf-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/dwarf-build/rtt_log.txt"
                     }
                 ]
             }
@@ -163,7 +163,7 @@
         {
             "name": "Launch ModularBed",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/modularbed-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/modularbed-build/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -183,7 +183,7 @@
         {
             "name": "Attach to ModularBed",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/modularbed-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/modularbed-build/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -199,7 +199,7 @@
         {
             "name": "Launch INDX head",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/indx_head-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/indx_head-build/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -229,7 +229,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/indx_head-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/indx_head-build/rtt_log.txt"
                     }
                 ]
             },
@@ -251,7 +251,7 @@
         {
             "name": "Attach to INDX head",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/indx_head-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/indx_head-build/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -276,7 +276,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/indx_head-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/indx_head-build/rtt_log.txt"
                     }
                 ]
             },
@@ -298,13 +298,13 @@
             },
             "gdbPath": "gdb-multiarch",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/firmware",
+            "executable": "${command:cmake.buildDirectory}/firmware",
             "request": "launch",
         },
         {
             "name": "Launch XBuddyExtension",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/xbuddy_extension-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/xbuddy_extension-build/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -333,7 +333,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/xbuddy_extension-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/xbuddy_extension-build/rtt_log.txt"
                     }
                 ]
             }
@@ -341,7 +341,7 @@
         {
             "name": "Attach to XBuddyExtension",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/xbuddy_extension-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/xbuddy_extension-build/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -370,7 +370,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/xbuddy_extension-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/xbuddy_extension-build/rtt_log.txt"
                     }
                 ]
             }
@@ -380,7 +380,7 @@
             // see /util/debug/README_STM32C0.md
             "name": "Launch ANFC (C0)",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/anfc-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/anfc-build/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -408,7 +408,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/anfc-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/anfc-build/rtt_log.txt"
                     }
                 ]
             },
@@ -416,7 +416,7 @@
         {
             "name": "Attach to ANFC (C0)",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/anfc-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/anfc-build/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -438,7 +438,7 @@
             // see /util/debug/README_STM32C0.md
             "name": "Launch TOOL_OFFSET_SENSOR",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/tool_offset_sensor-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/tool_offset_sensor-build/firmware",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -466,7 +466,7 @@
                         "port": 0,
                         "noprompt": true,
                         "type": "console",
-                        "logfile": "${workspaceRoot}/build-vscode-buddy/tool_offset_sensor-build/rtt_log.txt"
+                        "logfile": "${command:cmake.buildDirectory}/tool_offset_sensor-build/rtt_log.txt"
                     }
                 ]
             },
@@ -476,7 +476,7 @@
             // see /util/debug/README_STM32C0.md
             "name": "Attach TOOL_OFFSET_SENSOR",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/tool_offset_sensor-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/tool_offset_sensor-build/firmware",
             "request": "attach",
             "type": "cortex-debug",
             "servertype": "openocd",
@@ -509,14 +509,14 @@
             },
             "gdbPath": "gdb-multiarch",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceRoot}/build-vscode-buddy/firmware",
+            "executable": "${command:cmake.buildDirectory}/firmware",
             "request": "launch",
         },
         {
             "name": "GDB - Buddy (QEMU)",
             "type": "gdb",
             "request": "attach",
-            "executable": "${workspaceRoot}/build-vscode-buddy/firmware",
+            "executable": "${command:cmake.buildDirectory}/firmware",
             "target": ":1234",
             "remote": true,
             "cwd": "${workspaceRoot}",
@@ -527,7 +527,7 @@
             "name": "GDB - Dwarf (QEMU)",
             "type": "gdb",
             "request": "attach",
-            "executable": "${workspaceRoot}/build-vscode-buddy/dwarf-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/dwarf-build/firmware",
             "target": ":1234",
             "remote": true,
             "cwd": "${workspaceRoot}",
@@ -538,7 +538,7 @@
             "name": "GDB - ModularBed (QEMU)",
             "type": "gdb",
             "request": "attach",
-            "executable": "${workspaceRoot}/build-vscode-buddy/modularbed-build/firmware",
+            "executable": "${command:cmake.buildDirectory}/modularbed-build/firmware",
             "target": ":1234",
             "remote": true,
             "cwd": "${workspaceRoot}",
@@ -551,8 +551,8 @@
             "request": "launch",
             "gdbpath": "gdb",
             // Note: replace this with whatever test you want to debug:
-            "target": "${workspaceRoot}/build-tests/tests/unit/connect/connect_tests",
-            "cwd": "${workspaceRoot}/build-tests/tests/unit/connect",
+            "target": "${workspaceRoot}/build/tests/tests/unit/connect/connect_tests",
+            "cwd": "${workspaceRoot}/build/tests/tests/unit/connect",
             "debugger_args": [
                 "-d",
                 "${workspaceRoot}"

@@ -24,6 +24,7 @@ from pathlib import Path
 from simulator.simulator import Simulator
 from simulator.printer import MachineType
 from bootstrap import get_dependency_directory
+from build_dir import find_latest_build_dir
 
 
 class BuildDirectory:
@@ -84,10 +85,10 @@ class BuildDirectory:
 
     @staticmethod
     def find() -> Optional['BuildDirectory']:
-        standard_location = BuildDirectory(project_root / 'build-vscode-buddy')
-        if standard_location.seems_ok():
-            return standard_location
-        return None
+        latest = find_latest_build_dir()
+        if latest is None:
+            return None
+        return BuildDirectory(latest)
 
 
 def friendly_path(path: Path):
@@ -150,7 +151,7 @@ async def run_simulator(build_dir: Path, bootloader_bin: Path, firmware: Path,
     """
     Runs the buddy firmware in a simulator.
 
-    To run your localy-build firmware within the ./build-vscode-buddy build directory, just
+    To run your locally-built firmware (most recent build/* directory), just
     start it without any arguments.
 
         $ python utils/simulator

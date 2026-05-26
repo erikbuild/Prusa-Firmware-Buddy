@@ -5,23 +5,34 @@
 #
 ########################################################################################################################################################################
 
-import shutil, datetime, os, time
+import datetime
+import os
+import shutil
+import sys
+import time
+from pathlib import Path
+from build_dir import find_latest_build_dir
 
-os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+project_root = Path(__file__).resolve().parent.parent
+os.chdir(project_root)
+
+build_dir = find_latest_build_dir()
+if build_dir is None:
+    print('No build/*/firmware found; nothing to back up.')
+    sys.exit(0)
+
+src_file = build_dir / 'firmware'
+dst_folder = build_dir / 'debug_elf_backups'
 
 # Get the current timestamp in the format "YYYY-MM-DD_HH-MM-SS"
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-# The source file and destination folder
-src_file = "build-vscode-buddy/firmware"
-dst_folder = "build-vscode-buddy/debug_elf_backups"
-
 # Check if the directory already exists
-if not os.path.exists(dst_folder):
-    os.makedirs(dst_folder)
+if not dst_folder.exists():
+    dst_folder.mkdir(parents=True)
 
 # The new name for the copied file
-dst_file = f"{dst_folder}/firmware_{timestamp}.elf"
+dst_file = dst_folder / f"firmware_{timestamp}.elf"
 
 # Copy the file and add timestamp to the name
 shutil.copy2(src_file, dst_file)

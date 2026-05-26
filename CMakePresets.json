@@ -9,7 +9,7 @@
         {
             "name": "coreone_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -64,7 +64,7 @@
         {
             "name": "coreone_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -119,7 +119,7 @@
         {
             "name": "coreone_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -174,7 +174,7 @@
         {
             "name": "coreone_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -229,7 +229,7 @@
         {
             "name": "coreone_oak_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_oak_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -284,7 +284,7 @@
         {
             "name": "coreone_oak_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_oak_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -339,7 +339,7 @@
         {
             "name": "coreone_oak_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_oak_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -394,7 +394,7 @@
         {
             "name": "coreone_oak_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_oak_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -449,7 +449,7 @@
         {
             "name": "coreone_indx_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -504,7 +504,7 @@
         {
             "name": "coreone_indx_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -559,7 +559,7 @@
         {
             "name": "coreone_indx_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -614,7 +614,7 @@
         {
             "name": "coreone_indx_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -669,7 +669,7 @@
         {
             "name": "coreonel_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -724,7 +724,7 @@
         {
             "name": "coreonel_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -779,7 +779,7 @@
         {
             "name": "coreonel_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -834,7 +834,7 @@
         {
             "name": "coreonel_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -889,7 +889,7 @@
         {
             "name": "coreonel_indx_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -944,7 +944,7 @@
         {
             "name": "coreonel_indx_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -999,7 +999,7 @@
         {
             "name": "coreonel_indx_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1054,7 +1054,7 @@
         {
             "name": "coreonel_indx_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1109,7 +1109,7 @@
         {
             "name": "mini_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1160,7 +1160,7 @@
         {
             "name": "mini_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1211,7 +1211,7 @@
         {
             "name": "mini_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1262,7 +1262,7 @@
         {
             "name": "mini_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1313,7 +1313,7 @@
         {
             "name": "mini-en-cs_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-cs_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1368,7 +1368,7 @@
         {
             "name": "mini-en-cs_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-cs_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1423,7 +1423,7 @@
         {
             "name": "mini-en-cs_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-cs_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1478,7 +1478,7 @@
         {
             "name": "mini-en-cs_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-cs_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1533,7 +1533,7 @@
         {
             "name": "mini-en-de_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-de_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1588,7 +1588,7 @@
         {
             "name": "mini-en-de_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-de_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1643,7 +1643,7 @@
         {
             "name": "mini-en-de_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-de_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1698,7 +1698,7 @@
         {
             "name": "mini-en-de_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-de_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1753,7 +1753,7 @@
         {
             "name": "mini-en-es_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-es_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1808,7 +1808,7 @@
         {
             "name": "mini-en-es_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-es_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1863,7 +1863,7 @@
         {
             "name": "mini-en-es_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-es_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1918,7 +1918,7 @@
         {
             "name": "mini-en-es_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-es_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -1973,7 +1973,7 @@
         {
             "name": "mini-en-fr_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-fr_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2028,7 +2028,7 @@
         {
             "name": "mini-en-fr_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-fr_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2083,7 +2083,7 @@
         {
             "name": "mini-en-fr_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-fr_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2138,7 +2138,7 @@
         {
             "name": "mini-en-fr_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-fr_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2193,7 +2193,7 @@
         {
             "name": "mini-en-it_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-it_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2248,7 +2248,7 @@
         {
             "name": "mini-en-it_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-it_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2303,7 +2303,7 @@
         {
             "name": "mini-en-it_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-it_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2358,7 +2358,7 @@
         {
             "name": "mini-en-it_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-it_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2413,7 +2413,7 @@
         {
             "name": "mini-en-pl_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-pl_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2468,7 +2468,7 @@
         {
             "name": "mini-en-pl_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-pl_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2523,7 +2523,7 @@
         {
             "name": "mini-en-pl_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-pl_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2578,7 +2578,7 @@
         {
             "name": "mini-en-pl_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-pl_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2633,7 +2633,7 @@
         {
             "name": "mini-en-ja_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-ja_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2688,7 +2688,7 @@
         {
             "name": "mini-en-ja_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-ja_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2743,7 +2743,7 @@
         {
             "name": "mini-en-ja_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-ja_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2798,7 +2798,7 @@
         {
             "name": "mini-en-ja_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-ja_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2853,7 +2853,7 @@
         {
             "name": "mini-en-uk_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-uk_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2908,7 +2908,7 @@
         {
             "name": "mini-en-uk_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-uk_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -2963,7 +2963,7 @@
         {
             "name": "mini-en-uk_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-uk_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3018,7 +3018,7 @@
         {
             "name": "mini-en-uk_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mini-en-uk_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3073,7 +3073,7 @@
         {
             "name": "mk4_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3124,7 +3124,7 @@
         {
             "name": "mk4_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3175,7 +3175,7 @@
         {
             "name": "mk4_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3226,7 +3226,7 @@
         {
             "name": "mk4_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3277,7 +3277,7 @@
         {
             "name": "mk4-burst_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4-burst_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3332,7 +3332,7 @@
         {
             "name": "mk4-burst_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4-burst_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3387,7 +3387,7 @@
         {
             "name": "mk4-burst_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4-burst_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3442,7 +3442,7 @@
         {
             "name": "mk4-burst_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk4-burst_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3497,7 +3497,7 @@
         {
             "name": "mk3.5_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk3.5_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3548,7 +3548,7 @@
         {
             "name": "mk3.5_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk3.5_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3599,7 +3599,7 @@
         {
             "name": "mk3.5_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk3.5_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3650,7 +3650,7 @@
         {
             "name": "mk3.5_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/mk3.5_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3701,7 +3701,7 @@
         {
             "name": "ix_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/ix_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3756,7 +3756,7 @@
         {
             "name": "ix_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/ix_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3811,7 +3811,7 @@
         {
             "name": "ix_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/ix_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3866,7 +3866,7 @@
         {
             "name": "ix_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/ix_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3921,7 +3921,7 @@
         {
             "name": "xl_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -3972,7 +3972,7 @@
         {
             "name": "xl_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4023,7 +4023,7 @@
         {
             "name": "xl_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4074,7 +4074,7 @@
         {
             "name": "xl_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4125,7 +4125,7 @@
         {
             "name": "xl-burst_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-burst_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4180,7 +4180,7 @@
         {
             "name": "xl-burst_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-burst_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4235,7 +4235,7 @@
         {
             "name": "xl-burst_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-burst_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4290,7 +4290,7 @@
         {
             "name": "xl-burst_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-burst_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4345,7 +4345,7 @@
         {
             "name": "xl-minimal_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-minimal_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4428,7 +4428,7 @@
         {
             "name": "xl-minimal_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-minimal_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4511,7 +4511,7 @@
         {
             "name": "xl-minimal_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-minimal_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4594,7 +4594,7 @@
         {
             "name": "xl-minimal_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl-minimal_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4677,7 +4677,7 @@
         {
             "name": "xl_dev_kit_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_dev_kit_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4728,7 +4728,7 @@
         {
             "name": "xl_dev_kit_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_dev_kit_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4779,7 +4779,7 @@
         {
             "name": "xl_dev_kit_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_dev_kit_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4830,7 +4830,7 @@
         {
             "name": "xl_dev_kit_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/xl_dev_kit_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4881,7 +4881,7 @@
         {
             "name": "xl-dwarf_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-dwarf",
+            "binaryDir": "build/xl-dwarf_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4932,7 +4932,7 @@
         {
             "name": "xl-dwarf_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-dwarf",
+            "binaryDir": "build/xl-dwarf_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -4983,7 +4983,7 @@
         {
             "name": "xl-dwarf_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-dwarf",
+            "binaryDir": "build/xl-dwarf_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5034,7 +5034,7 @@
         {
             "name": "xl-dwarf_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-dwarf",
+            "binaryDir": "build/xl-dwarf_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5085,7 +5085,7 @@
         {
             "name": "xl-modularbed_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/xl-modularbed_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5136,7 +5136,7 @@
         {
             "name": "xl-modularbed_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/xl-modularbed_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5187,7 +5187,7 @@
         {
             "name": "xl-modularbed_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/xl-modularbed_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5238,7 +5238,7 @@
         {
             "name": "xl-modularbed_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/xl-modularbed_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5289,7 +5289,7 @@
         {
             "name": "ix-modularbed_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/ix-modularbed_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5340,7 +5340,7 @@
         {
             "name": "ix-modularbed_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/ix-modularbed_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5391,7 +5391,7 @@
         {
             "name": "ix-modularbed_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/ix-modularbed_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5442,7 +5442,7 @@
         {
             "name": "ix-modularbed_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-modularbed",
+            "binaryDir": "build/ix-modularbed_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5493,7 +5493,7 @@
         {
             "name": "ix-xbuddy_extension_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/ix-xbuddy_extension_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5544,7 +5544,7 @@
         {
             "name": "ix-xbuddy_extension_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/ix-xbuddy_extension_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5595,7 +5595,7 @@
         {
             "name": "ix-xbuddy_extension_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/ix-xbuddy_extension_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5646,7 +5646,7 @@
         {
             "name": "ix-xbuddy_extension_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/ix-xbuddy_extension_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5697,7 +5697,7 @@
         {
             "name": "coreone-xbuddy_extension_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone-xbuddy_extension_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5748,7 +5748,7 @@
         {
             "name": "coreone-xbuddy_extension_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone-xbuddy_extension_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5799,7 +5799,7 @@
         {
             "name": "coreone-xbuddy_extension_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone-xbuddy_extension_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5850,7 +5850,7 @@
         {
             "name": "coreone-xbuddy_extension_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone-xbuddy_extension_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5901,7 +5901,7 @@
         {
             "name": "coreone_indx-xbuddy_extension_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone_indx-xbuddy_extension_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -5952,7 +5952,7 @@
         {
             "name": "coreone_indx-xbuddy_extension_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone_indx-xbuddy_extension_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6003,7 +6003,7 @@
         {
             "name": "coreone_indx-xbuddy_extension_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone_indx-xbuddy_extension_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6054,7 +6054,7 @@
         {
             "name": "coreone_indx-xbuddy_extension_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreone_indx-xbuddy_extension_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6105,7 +6105,7 @@
         {
             "name": "coreonel-xbuddy_extension_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel-xbuddy_extension_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6156,7 +6156,7 @@
         {
             "name": "coreonel-xbuddy_extension_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel-xbuddy_extension_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6207,7 +6207,7 @@
         {
             "name": "coreonel-xbuddy_extension_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel-xbuddy_extension_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6258,7 +6258,7 @@
         {
             "name": "coreonel-xbuddy_extension_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel-xbuddy_extension_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6309,7 +6309,7 @@
         {
             "name": "coreonel_indx-xbuddy_extension_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel_indx-xbuddy_extension_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6360,7 +6360,7 @@
         {
             "name": "coreonel_indx-xbuddy_extension_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel_indx-xbuddy_extension_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6411,7 +6411,7 @@
         {
             "name": "coreonel_indx-xbuddy_extension_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel_indx-xbuddy_extension_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6462,7 +6462,7 @@
         {
             "name": "coreonel_indx-xbuddy_extension_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-xbuddy-extension",
+            "binaryDir": "build/coreonel_indx-xbuddy_extension_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6513,7 +6513,7 @@
         {
             "name": "anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6576,7 +6576,7 @@
         {
             "name": "anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6639,7 +6639,7 @@
         {
             "name": "anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6702,7 +6702,7 @@
         {
             "name": "anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6765,7 +6765,7 @@
         {
             "name": "anfc-uart_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc-uart_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6820,7 +6820,7 @@
         {
             "name": "anfc-uart_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc-uart_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6875,7 +6875,7 @@
         {
             "name": "anfc-uart_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc-uart_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6930,7 +6930,7 @@
         {
             "name": "anfc-uart_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/anfc-uart_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -6985,7 +6985,7 @@
         {
             "name": "slx-anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/slx-anfc_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7040,7 +7040,7 @@
         {
             "name": "slx-anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/slx-anfc_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7095,7 +7095,7 @@
         {
             "name": "slx-anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/slx-anfc_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7150,7 +7150,7 @@
         {
             "name": "slx-anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/slx-anfc_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7205,7 +7205,7 @@
         {
             "name": "coreone-anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone-anfc_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7264,7 +7264,7 @@
         {
             "name": "coreone-anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone-anfc_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7323,7 +7323,7 @@
         {
             "name": "coreone-anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone-anfc_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7382,7 +7382,7 @@
         {
             "name": "coreone-anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone-anfc_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7441,7 +7441,7 @@
         {
             "name": "coreone_indx-anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone_indx-anfc_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7500,7 +7500,7 @@
         {
             "name": "coreone_indx-anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone_indx-anfc_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7559,7 +7559,7 @@
         {
             "name": "coreone_indx-anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone_indx-anfc_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7618,7 +7618,7 @@
         {
             "name": "coreone_indx-anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreone_indx-anfc_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7677,7 +7677,7 @@
         {
             "name": "coreonel-anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel-anfc_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7736,7 +7736,7 @@
         {
             "name": "coreonel-anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel-anfc_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7795,7 +7795,7 @@
         {
             "name": "coreonel-anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel-anfc_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7854,7 +7854,7 @@
         {
             "name": "coreonel-anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel-anfc_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7913,7 +7913,7 @@
         {
             "name": "coreonel_indx-anfc_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel_indx-anfc_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -7972,7 +7972,7 @@
         {
             "name": "coreonel_indx-anfc_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel_indx-anfc_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8031,7 +8031,7 @@
         {
             "name": "coreonel_indx-anfc_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel_indx-anfc_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8090,7 +8090,7 @@
         {
             "name": "coreonel_indx-anfc_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-anfc",
+            "binaryDir": "build/coreonel_indx-anfc_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8149,7 +8149,7 @@
         {
             "name": "coreone_indx-tool_offset_sensor_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreone_indx-tool_offset_sensor_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8200,7 +8200,7 @@
         {
             "name": "coreone_indx-tool_offset_sensor_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreone_indx-tool_offset_sensor_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8251,7 +8251,7 @@
         {
             "name": "coreone_indx-tool_offset_sensor_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreone_indx-tool_offset_sensor_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8302,7 +8302,7 @@
         {
             "name": "coreone_indx-tool_offset_sensor_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreone_indx-tool_offset_sensor_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8353,7 +8353,7 @@
         {
             "name": "coreonel_indx-tool_offset_sensor_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreonel_indx-tool_offset_sensor_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8404,7 +8404,7 @@
         {
             "name": "coreonel_indx-tool_offset_sensor_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreonel_indx-tool_offset_sensor_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8455,7 +8455,7 @@
         {
             "name": "coreonel_indx-tool_offset_sensor_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreonel_indx-tool_offset_sensor_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8506,7 +8506,7 @@
         {
             "name": "coreonel_indx-tool_offset_sensor_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-tool-offset-sensor",
+            "binaryDir": "build/coreonel_indx-tool_offset_sensor_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8557,7 +8557,7 @@
         {
             "name": "coreone_indx-indx_head_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx-indx_head_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8604,7 +8604,7 @@
         {
             "name": "coreone_indx-indx_head_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx-indx_head_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8651,7 +8651,7 @@
         {
             "name": "coreone_indx-indx_head_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx-indx_head_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8698,7 +8698,7 @@
         {
             "name": "coreone_indx-indx_head_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreone_indx-indx_head_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8745,7 +8745,7 @@
         {
             "name": "coreonel_indx-indx_head_debug_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx-indx_head_debug_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8792,7 +8792,7 @@
         {
             "name": "coreonel_indx-indx_head_debug_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx-indx_head_debug_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8839,7 +8839,7 @@
         {
             "name": "coreonel_indx-indx_head_release_boot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx-indx_head_release_boot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8886,7 +8886,7 @@
         {
             "name": "coreonel_indx-indx_head_release_noboot",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-buddy",
+            "binaryDir": "build/coreonel_indx-indx_head_release_noboot",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8933,7 +8933,7 @@
         {
             "name": "unittests_debug",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-host",
+            "binaryDir": "build/unittests_debug",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",
@@ -8948,7 +8948,7 @@
         {
             "name": "unittests_release",
             "generator": "Ninja",
-            "binaryDir": "build-vscode-host",
+            "binaryDir": "build/unittests_release",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": {
                     "type": "FILEPATH",

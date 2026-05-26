@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
+import sys
 from collections import namedtuple
 from contextlib import closing
 from enum import Enum
+from pathlib import Path
 from random import randbytes
 from time import sleep
 import serial
+from build_dir import find_latest_build_dir
 
 # This is a tool for communicating with puppies without the printer.
 # Puppies are XL/iX daughterboards communicating using MODBUS over RS485.
@@ -237,7 +240,12 @@ class ModbusProtocol(object):
 
 def main():
     port = '/dev/ttyUSB0'
-    modularbed_firmware_path = 'build-vscode-modularbed/firmware.bin'
+    modularbed_build = find_latest_build_dir(marker='firmware.bin',
+                                             name_prefix='modularbed')
+    if modularbed_build is None:
+        raise SystemExit(
+            'No build/modularbed_* directory with firmware.bin found.')
+    modularbed_firmware_path = str(modularbed_build / 'firmware.bin')
     with closing(Bus(port, b'\x00')) as bus:
         bootloader = Bootloader(bus)
         if not bootloader.is_running():

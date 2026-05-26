@@ -121,14 +121,14 @@ class BuildConfiguration(ABC):
 class BuildLayout(Enum):
     DEVELOPMENT = auto()
     """
-    Used when configuring future build (cproject, etc)
-    Build dirs are placed under build-vscode-(buddy,dwarf,modularbed,xbuddy-extension).
+    Used when configuring future build (cproject, etc).
+    Build dirs are placed under build/<configuration-name>.
     """
 
     COMMON_BUILD_DIR = auto()
     """
     Used when building multiple configurations.
-    Build dirs are placed under build/<printer>_(release/debug)_(no,)boot>
+    Build dirs are placed under build/<configuration-name>.
     """
 
 
@@ -506,21 +506,7 @@ class CMakePresetsGenerator:
 
     @staticmethod
     def build_dir_for_configuration(configuration: BuildConfiguration) -> str:
-        if isinstance(configuration, FirmwareBuildConfiguration):
-            if 'dwarf' in configuration.preset.name:
-                return 'build-vscode-dwarf'
-            elif 'modularbed' in configuration.preset.name:
-                return 'build-vscode-modularbed'
-            elif 'xbuddy_extension' in configuration.preset.name:
-                return 'build-vscode-xbuddy-extension'
-            elif 'anfc' in configuration.preset.name:
-                return 'build-vscode-anfc'
-            elif 'tool_offset_sensor' in configuration.preset.name:
-                return 'build-vscode-tool-offset-sensor'
-            else:
-                return 'build-vscode-buddy'
-        else:
-            return 'build-vscode-host'
+        return 'build/' + configuration.name.lower()
 
     @staticmethod
     def generate_cmake_preset(configuration: BuildConfiguration):

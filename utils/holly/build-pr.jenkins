@@ -310,13 +310,13 @@ pipeline {
                         . .venv/bin/activate
 
                         # Build tests using the test build script
-                        python3 utils/build_tests.py --build-dir build-test --run -- --output-on-failure
+                        python3 utils/build_tests.py --run -- --output-on-failure
                         """
                     }
                     post {
                         failure {
                             // archive test logs
-                            archiveArtifacts artifacts: 'build-test/Testing/Temporary/LastTest.log'
+                            archiveArtifacts artifacts: 'build/tests/Testing/Temporary/LastTest.log'
                         }
                         cleanup {
                             deleteDir()
