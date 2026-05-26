@@ -159,10 +159,10 @@ static constexpr HeaterConfig_t Config_HeaterBed = {
     .min_pwm_to_measure = 26
 };
 
-static consteval LoadcellConfig_t make_loadcell_config(uint8_t index, const char *name) {
+static consteval LoadcellConfig_t make_loadcell_config(PhysicalToolIndex tool, const char *name) {
     return {
         .partname = name,
-        .tool_nr = index,
+        .tool_nr = tool,
         .heatbreak_fan_fnc = Fans::heat_break,
         .print_fan_fnc = Fans::print,
         .cool_temp = 50,
@@ -178,27 +178,27 @@ static consteval LoadcellConfig_t make_loadcell_config(uint8_t index, const char
 }
 
 static constexpr LoadcellConfig_t Config_Loadcell[] = {
-    make_loadcell_config(0, "Loadcell 1"),
-    make_loadcell_config(1, "Loadcell 2"),
-    make_loadcell_config(2, "Loadcell 3"),
-    make_loadcell_config(3, "Loadcell 4"),
-    make_loadcell_config(4, "Loadcell 5")
+    make_loadcell_config(PhysicalToolIndex::from_raw(0), "Loadcell 1"),
+    make_loadcell_config(PhysicalToolIndex::from_raw(1), "Loadcell 2"),
+    make_loadcell_config(PhysicalToolIndex::from_raw(2), "Loadcell 3"),
+    make_loadcell_config(PhysicalToolIndex::from_raw(3), "Loadcell 4"),
+    make_loadcell_config(PhysicalToolIndex::from_raw(4), "Loadcell 5")
 };
 
-static consteval DockConfig_t make_dock_config(uint8_t index) {
+static consteval DockConfig_t make_dock_config(PhysicalToolIndex tool) {
     return {
-        .dock_id = index,
+        .dock_id = tool,
         .z_extra_pos = 100,
         .z_extra_pos_fr = maxFeedrates[Z_AXIS],
     };
 }
 
 static constexpr std::array<const DockConfig_t, PhysicalToolIndex::count> Config_Docks = { {
-    make_dock_config(0),
-    make_dock_config(1),
-    make_dock_config(2),
-    make_dock_config(3),
-    make_dock_config(4),
+    make_dock_config(PhysicalToolIndex::from_raw(0)),
+    make_dock_config(PhysicalToolIndex::from_raw(1)),
+    make_dock_config(PhysicalToolIndex::from_raw(2)),
+    make_dock_config(PhysicalToolIndex::from_raw(3)),
+    make_dock_config(PhysicalToolIndex::from_raw(4)),
 } };
 
 static constexpr ToolOffsetsConfig_t Config_ToolOffsets = {};

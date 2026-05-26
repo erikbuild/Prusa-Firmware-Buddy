@@ -36,18 +36,18 @@ CSelftestPart_Loadcell::CSelftestPart_Loadcell(IPartHandler &state_machine, cons
     : rStateMachine(state_machine)
     , rConfig(config)
     , rResult(result)
-    , begin_target_temp(thermalManager.degTargetHotend(rConfig.tool_nr))
+    , begin_target_temp(Hotend::for_tool(rConfig.tool_nr).nozzle_target_temp())
     , time_start(SelftestInstance().GetTime())
     , log(1000)
     , log_fast(100) // this is only during 1s (will generate 9-10 logs)
 {
-    thermalManager.setTargetHotend(0, rConfig.tool_nr);
+    Hotend::for_tool(rConfig.tool_nr).set_nozzle_target_temp(0);
     endstops.enable(true);
     log_info(Selftest, "%s Started", rConfig.partname);
 }
 
 CSelftestPart_Loadcell::~CSelftestPart_Loadcell() {
-    thermalManager.setTargetHotend(begin_target_temp, rConfig.tool_nr);
+    Hotend::for_tool(rConfig.tool_nr).set_nozzle_target_temp(begin_target_temp);
     endstops.enable(false);
 }
 
@@ -85,8 +85,8 @@ LoopResult CSelftestPart_Loadcell::stateParking() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateCooldownInit() {
-    thermalManager.setTargetHotend(0, rConfig.tool_nr); // Disable heating for tested hotend
-    const float temp = thermalManager.degHotend(rConfig.tool_nr);
+    Hotend::for_tool(rConfig.tool_nr).set_nozzle_target_temp(0); // Disable heating for tested hotend
+    const float temp = Hotend::for_tool(rConfig.tool_nr).nozzle_temp();
     rResult.temperature = static_cast<int16_t>(temp);
     need_cooling = temp > rConfig.cool_temp; // Check if temperature is safe
     if (need_cooling) {
@@ -112,7 +112,7 @@ LoopResult CSelftestPart_Loadcell::stateCooldownInit() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateCooldown() {
-    const float temp = thermalManager.degHotend(rConfig.tool_nr);
+    const float temp = Hotend::for_tool(rConfig.tool_nr).nozzle_temp();
     rResult.temperature = static_cast<int16_t>(temp);
 
     // still cooling
@@ -137,10 +137,10 @@ LoopResult CSelftestPart_Loadcell::stateCooldownDeinit() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateToolSelectInit() {
-    if (PhysicalToolIndex::currently_selected() != PhysicalToolIndex::from_raw_notool(rConfig.tool_nr)) {
+    if (!stdext::holds_value(PhysicalToolIndex::currently_selected(), rConfig.tool_nr)) {
         IPartHandler::SetFsmPhase(PhasesSelftest::Loadcell_tool_select);
 
-        marlin_server::enqueue_gcode_printf("T%d S1 L0 D0", rConfig.tool_nr);
+        marlin_server::enqueue_gcode_printf("T%d S1 L0 D0", rConfig.tool_nr.to_raw());
 
         // go to some reasonable position
         // Use reasonable feedrate as it was likely set by previous Z move

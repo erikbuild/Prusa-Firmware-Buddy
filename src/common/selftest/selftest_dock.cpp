@@ -111,7 +111,7 @@ LoopResult CSelftestPart_Dock::state_wait_user_manual_park2() {
     }
 
     if (prusa_toolchanger.detect_tool_nr() != PrusaToolChanger::MARLIN_NO_TOOL_PICKED) {
-        log_error(Selftest, "User failed to park the current tool %d", config.dock_id);
+        log_error(Selftest, "User failed to park the current tool %d", config.dock_id.to_raw());
         return LoopResult::GoToMark0;
     }
 
@@ -156,11 +156,11 @@ LoopResult CSelftestPart_Dock::state_ask_user_remove_pin() {
     toolcheck_disable();
 
     // Select the tool to mark it, unselect all others
-    for (uint i = 0; i < HOTENDS; ++i) {
+    for (auto tool : PhysicalToolIndex::all()) {
         /// TODO do not access puppyModbus outside of puppy task
         /// BFW-8185
-        prusa_toolchanger.getTool(i).set_selected(buddy::puppies::puppyModbus, i == config.dock_id);
-        prusa_toolchanger.getTool(i).set_cheese_led(0xff, 0x00); // LED on on the selected tool
+        prusa_toolchanger.getTool(tool).set_selected(buddy::puppies::puppyModbus, tool == config.dock_id);
+        prusa_toolchanger.getTool(tool).set_cheese_led(0xff, 0x00); // LED on on the selected tool
     }
 
     // Disable steppers - let user operate with the printer
@@ -185,7 +185,7 @@ LoopResult CSelftestPart_Dock::state_hold_position() {
 
 LoopResult CSelftestPart_Dock::state_ask_user_tighten_pillar() {
     if (!dwarf.is_picked() || !dwarf.is_parked()) {
-        log_error(Selftest, "Tool %d not picked and parked while dock being tightened", config.dock_id);
+        log_error(Selftest, "Tool %d not picked and parked while dock being tightened", config.dock_id.to_raw());
         return LoopResult::Fail;
     }
 
@@ -199,7 +199,7 @@ LoopResult CSelftestPart_Dock::state_measure() {
 
     // Assumes user just positioned head to dock position by hand
     // Reset current position to expected state - otherwise the current position may be negative and this would block G0 movements
-    current_position.x = PrusaToolChanger::DOCK_DEFAULT_FIRST_X_MM + (config.dock_id) * PrusaToolChanger::DOCK_OFFSET_X_MM;
+    current_position.x = PrusaToolChanger::DOCK_DEFAULT_FIRST_X_MM + config.dock_id.to_raw() * PrusaToolChanger::DOCK_OFFSET_X_MM;
     current_position.y = PrusaToolChanger::DOCK_DEFAULT_Y_MM;
     planner.synchronize();
     sync_plan_position();
@@ -255,8 +255,8 @@ LoopResult CSelftestPart_Dock::state_compute_position() {
         log_error(
             Selftest,
             "Dock %d position %f, %f differs too much from expected",
-            config.dock_id, static_cast<double>(tool_calibration.dock_x), static_cast<double>(tool_calibration.dock_y));
-        fatal_error(ErrCode::ERR_MECHANICAL_DOCK_POSITION_OUT_OF_BOUNDS, (config.dock_id + 1));
+            config.dock_id.to_raw(), static_cast<double>(tool_calibration.dock_x), static_cast<double>(tool_calibration.dock_y));
+        fatal_error(ErrCode::ERR_MECHANICAL_DOCK_POSITION_OUT_OF_BOUNDS, config.dock_id.display_index());
     }
 
     // Apply tool info
@@ -364,7 +364,7 @@ LoopResult CSelftestPart_Dock::state_selftest_check_state() {
 
     // Check timeout
     if ((ticks_ms() - move_required.timeout_start) > PrusaToolChanger::WAIT_TIME_TOOL_PARKED_PICKED) {
-        log_error(Selftest, "Tool %d didn't respond properly while self-testing park", config.dock_id);
+        log_error(Selftest, "Tool %d didn't respond properly while self-testing park", config.dock_id.to_raw());
         revert_tool_info();
         IPartHandler::SetFsmPhase(PhasesSelftest::Dock_selftest_failed);
         return LoopResult::Fail;
@@ -374,7 +374,7 @@ LoopResult CSelftestPart_Dock::state_selftest_check_state() {
     if (dwarf.refresh_park_pick_status()) {
         return LoopResult::RunCurrent;
     } else {
-        log_error(Selftest, "Failed to read tool %d pick/park state", config.dock_id);
+        log_error(Selftest, "Failed to read tool %d pick/park state", config.dock_id.to_raw());
         IPartHandler::SetFsmPhase(PhasesSelftest::Dock_selftest_failed);
         return LoopResult::Fail;
     }
@@ -395,13 +395,13 @@ LoopResult CSelftestPart_Dock::state_selftest_pick() {
 
     // Check tool parked before picking it
     if (dwarf.is_picked() || !dwarf.is_parked()) {
-        log_error(Selftest, "Tool %d not parked while self-testing pick", config.dock_id);
+        log_error(Selftest, "Tool %d not parked while self-testing pick", config.dock_id.to_raw());
         revert_tool_info();
         IPartHandler::SetFsmPhase(PhasesSelftest::Dock_selftest_failed);
         return LoopResult::Fail;
     }
 
-    marlin_server::enqueue_gcode_printf("T%d S1 L0 D0", config.dock_id);
+    marlin_server::enqueue_gcode_printf("T%d S1 L0 D0", config.dock_id.to_raw());
     marlin_server::enqueue_gcode("M400");
     return LoopResult::RunNext;
 }
@@ -410,7 +410,7 @@ LoopResult CSelftestPart_Dock::state_selftest_park() {
 
     // Check tool picked before parking it
     if (!dwarf.is_picked() || dwarf.is_parked()) {
-        log_error(Selftest, "Tool %d not picked while self-testing park", config.dock_id);
+        log_error(Selftest, "Tool %d not picked while self-testing park", config.dock_id.to_raw());
         revert_tool_info();
         IPartHandler::SetFsmPhase(PhasesSelftest::Dock_selftest_failed);
         return LoopResult::Fail;

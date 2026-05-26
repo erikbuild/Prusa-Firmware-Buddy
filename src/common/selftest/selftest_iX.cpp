@@ -149,7 +149,7 @@ static constexpr HeaterConfig_t Config_HeaterBed = {
 
 static constexpr LoadcellConfig_t Config_Loadcell[] = { {
     .partname = "Loadcell",
-    .tool_nr = 0,
+    .tool_nr = PhysicalToolIndex::from_raw(0),
     .heatbreak_fan_fnc = Fans::heat_break,
     .print_fan_fnc = Fans::print,
     .cool_temp = 50,

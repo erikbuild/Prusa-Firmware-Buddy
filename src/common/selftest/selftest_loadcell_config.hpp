@@ -15,10 +15,10 @@ namespace selftest {
 // using 32bit variables, because it is stored in flash and access to 32bit variables is more efficient
 struct LoadcellConfig_t {
     using type_evaluation = SelftestLoadcell_t;
-    using FanCtlFnc = CFanCtlCommon &(*)(size_t);
+    using FanCtlFnc = CFanCtlCommon &(*)(PhysicalToolIndex);
     static constexpr SelftestParts part_type = SelftestParts::Loadcell;
     const char *partname;
-    uint8_t tool_nr;
+    PhysicalToolIndex tool_nr;
     FanCtlFnc heatbreak_fan_fnc;
     FanCtlFnc print_fan_fnc;
     int32_t cool_temp;

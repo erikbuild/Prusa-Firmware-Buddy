@@ -38,8 +38,8 @@ CSelftestPart_Loadcell::CSelftestPart_Loadcell(IPartHandler &state_machine, cons
     const auto tool = PhysicalToolIndex::currently_selected_opt();
     begin_target_temp = 0;
     if (tool.has_value()) {
-        begin_target_temp = thermalManager.degTargetHotend(tool->to_raw());
-        thermalManager.setTargetHotend(0, tool->to_raw());
+        begin_target_temp = Hotend::for_tool(*tool).nozzle_target_temp();
+        Hotend::for_tool(*tool).set_nozzle_target_temp(0);
     }
     endstops.enable(true);
     log_info(Selftest, "%s Started", rConfig.partname);
@@ -48,7 +48,7 @@ CSelftestPart_Loadcell::CSelftestPart_Loadcell(IPartHandler &state_machine, cons
 CSelftestPart_Loadcell::~CSelftestPart_Loadcell() {
     const auto tool = PhysicalToolIndex::currently_selected_opt();
     if (tool.has_value()) {
-        thermalManager.setTargetHotend(begin_target_temp, tool->to_raw());
+        Hotend::for_tool(*tool).set_nozzle_target_temp(begin_target_temp);
     }
     endstops.enable(false);
 }
@@ -95,8 +95,8 @@ LoopResult CSelftestPart_Loadcell::stateCooldownInit() {
     if (!tool.has_value()) {
         bsod_unreachable();
     }
-    thermalManager.setTargetHotend(0, tool->to_raw()); // Disable heating for tested hotend
-    const float temp = thermalManager.degHotend(tool->to_raw());
+    Hotend::for_tool(*tool).set_nozzle_target_temp(0); // Disable heating for tested hotend
+    const float temp = Hotend::for_tool(*tool).nozzle_temp();
 #if HAS_INDX()
     // This is a hack because xbuddy locally substitutes 15 °C
     // whenever INDX hotend instance isn't the currently-selected tool
@@ -121,10 +121,10 @@ LoopResult CSelftestPart_Loadcell::stateCooldownInit() {
         IPartHandler::SetFsmPhase(PhasesSelftest::Loadcell_cooldown);
         log_info(Selftest, "%s cooling needed, target: %d current: %f", rConfig.partname,
             static_cast<int>(rConfig.cool_temp), static_cast<double>(temp));
-        rConfig.print_fan_fnc(tool->to_raw()).enter_selftest_mode();
-        rConfig.heatbreak_fan_fnc(tool->to_raw()).enter_selftest_mode();
-        rConfig.print_fan_fnc(tool->to_raw()).selftest_set_pwm(255); // it will be restored by exitSelftestMode
-        rConfig.heatbreak_fan_fnc(tool->to_raw()).selftest_set_pwm(255); // it will be restored by exitSelftestMode
+        rConfig.print_fan_fnc(*tool).enter_selftest_mode();
+        rConfig.heatbreak_fan_fnc(*tool).enter_selftest_mode();
+        rConfig.print_fan_fnc(*tool).selftest_set_pwm(255); // it will be restored by exitSelftestMode
+        rConfig.heatbreak_fan_fnc(*tool).selftest_set_pwm(255); // it will be restored by exitSelftestMode
         log_info(Selftest, "%s fans set to maximum", rConfig.partname);
     }
     return LoopResult::RunNext;
@@ -135,7 +135,7 @@ LoopResult CSelftestPart_Loadcell::stateCooldown() {
     if (!tool.has_value()) {
         bsod_unreachable();
     }
-    const float temp = thermalManager.degHotend(tool->to_raw());
+    const float temp = Hotend::for_tool(*tool).nozzle_temp();
     rResult.temperature = static_cast<int16_t>(temp);
 
     // still cooling
@@ -159,8 +159,8 @@ LoopResult CSelftestPart_Loadcell::stateCooldownDeinit() {
         // unpark from nozzle cleaner
         marlin_server::inject(nozzle_cleaner::get_sequence(nozzle_cleaner::Sequence::exit_cleaner));
 
-        rConfig.print_fan_fnc(tool->to_raw()).exit_selftest_mode();
-        rConfig.heatbreak_fan_fnc(tool->to_raw()).exit_selftest_mode();
+        rConfig.print_fan_fnc(*tool).exit_selftest_mode();
+        rConfig.heatbreak_fan_fnc(*tool).exit_selftest_mode();
         log_info(Selftest, "%s fans disabled", rConfig.partname);
     }
     return LoopResult::RunNext;
