@@ -12,6 +12,7 @@
 #include <logging/log.hpp>
 #include "timing.h"
 #include <tool/hotend/hotend/indx_hotend.hpp>
+#include <utils/badge.hpp>
 
 #include <config_store/store_instance.hpp>
 
@@ -71,7 +72,7 @@ void PrusaToolChangerUtils::restore_last_picked_tool() {
     }
 }
 
-bool PrusaToolChangerUtils::is_tool_enabled(PhysicalToolIndex tool) {
+bool PrusaToolChangerUtils::is_tool_enabled(PhysicalToolIndex tool, Badge<PhysicalToolIndex>) {
     return config_store().indx_dock_calibrated_mask.get().test(tool.to_raw());
 }
 

@@ -21,6 +21,7 @@
     #endif
     #include <module/tool_change.h>
     #include <tool_index.hpp>
+    #include <utils/badge.hpp>
 
     #include <inplace_function.hpp>
 
@@ -243,8 +244,9 @@ public:
 
     #endif // HAS_INDX()
 
-    [[deprecated("Use tool.is_enabled()")]]
-    bool is_tool_enabled(PhysicalToolIndex tool);
+    /// Should be used only by PhysicalToolIndex class.
+    /// Use tool.is_enabled() instead.
+    bool is_tool_enabled(PhysicalToolIndex tool, Badge<PhysicalToolIndex>);
 
     [[nodiscard]] uint8_t get_num_enabled_tools() const;
 

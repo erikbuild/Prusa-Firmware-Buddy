@@ -138,7 +138,7 @@ void PrusaToolChangerUtils::request_active_switch(Dwarf *new_dwarf) {
     }
 }
 
-bool PrusaToolChangerUtils::is_tool_enabled(PhysicalToolIndex tool) {
+bool PrusaToolChangerUtils::is_tool_enabled(PhysicalToolIndex tool, Badge<PhysicalToolIndex>) {
     return buddy::puppies::dwarfs[tool].is_enabled();
 }
 

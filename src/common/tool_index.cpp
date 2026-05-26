@@ -73,7 +73,7 @@ bool PhysicalToolIndex::is_enabled() const {
     [[maybe_unused]] const auto &self = static_cast<const PhysicalToolIndex &>(*this);
 
 #if HAS_TOOLCHANGER()
-    return prusa_toolchanger.is_tool_enabled(self);
+    return prusa_toolchanger.is_tool_enabled(self, {});
 #else
     static_assert(PhysicalToolIndex::count == 1);
     return true;
