@@ -40,22 +40,26 @@ enum class Dock : uint8_t {
 static_assert(std::to_underlying(Dock::XBUDDY_EXTENSION) == 7, "Must stay 8th puppy, because we are unable to do dynamic address assignemnt on startup on xBuddy");
 static_assert(std::to_underlying(Dock::INDX_HEAD) == 8, "Must stay 9th puppy, because we are unable to do dynamic address assignemnt on startup on xBuddy");
 
+#if HAS_PUPPY_MODULARBED() || HAS_DWARF() || HAS_INDX_HEAD()
 constexpr auto DOCKS = std::to_array({
-#if HAS_PUPPY_MODULARBED()
+    #if HAS_PUPPY_MODULARBED()
     Dock::MODULAR_BED,
-#endif
-#if HAS_DWARF()
+    #endif
+    #if HAS_DWARF()
         Dock::DWARF_1,
         Dock::DWARF_2,
         Dock::DWARF_3,
         Dock::DWARF_4,
         Dock::DWARF_5,
         Dock::DWARF_6,
-#endif
-#if HAS_INDX_HEAD()
+    #endif
+    #if HAS_INDX_HEAD()
         Dock::INDX_HEAD,
-#endif
+    #endif
 });
+#else
+constexpr std::array<Dock, 0> DOCKS {};
+#endif
 
 using DockIterator = decltype(DOCKS)::const_iterator;
 

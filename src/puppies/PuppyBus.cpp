@@ -13,6 +13,19 @@ namespace puppies {
     using buddy::hw::Pin;
     using buddy::hw::RS485FlowControlPuppies;
 
+    namespace {
+        constexpr uint32_t baud_rate = 230'400;
+        constexpr uint32_t bauds_per_character = 10; // 8N1
+
+        /// Modbus 3.5-character silent interval. IDLE event covers 1 character,
+        /// so the enforced value is 2.5 characters.
+        constexpr float modbus_silence = 2.5f;
+        constexpr uint32_t MINIMAL_PAUSE_BETWEEN_REQUESTS_US = static_cast<uint32_t>(1.0f + (modbus_silence * bauds_per_character * 1'000'000 / baud_rate));
+
+        /// Longer pause for legacy bootloaders (MODULAR_BED, Dwarf).
+        constexpr uint32_t BOOTSTRAP_PAUSE_BETWEEN_REQUESTS_US = static_cast<uint32_t>(1.0f + (8.0f * bauds_per_character * 1'000'000 / baud_rate));
+    } // namespace
+
     osMutexDef(puppyMutex);
     static osMutexId puppyMutexId;
     uint32_t PuppyBus::last_operation_time_us = 0;
@@ -84,13 +97,13 @@ namespace puppies {
         return res;
     }
 
-    void PuppyBus::EnsurePause() {
+    void PuppyBus::ensure_pause(uint32_t pause_us) {
         assert(!xPortIsInsideInterrupt());
         const uint32_t elapsed_us = ticks_us() - last_operation_time_us;
-        if (MINIMAL_PAUSE_BETWEEN_REQUESTS_US <= elapsed_us) {
+        if (pause_us <= elapsed_us) {
             return;
         }
-        const uint32_t remaining_us = MINIMAL_PAUSE_BETWEEN_REQUESTS_US - elapsed_us;
+        const uint32_t remaining_us = pause_us - elapsed_us;
         assert(remaining_us < 0xFFFF);
 
         // Delays shorter than 2 us would be more difficult to handle.
@@ -105,6 +118,19 @@ namespace puppies {
         __HAL_TIM_ENABLE(&htim4);
 
         delay_semaphore.acquire();
+    }
+
+    void PuppyBus::EnsurePause(Pause pause) {
+        uint32_t pause_us;
+        switch (pause) {
+        case Pause::Short:
+            pause_us = MINIMAL_PAUSE_BETWEEN_REQUESTS_US;
+            break;
+        case Pause::Long:
+            pause_us = BOOTSTRAP_PAUSE_BETWEEN_REQUESTS_US;
+            break;
+        }
+        ensure_pause(pause_us);
     }
 
     PuppyBus::LockGuard::LockGuard() {

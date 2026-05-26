@@ -125,7 +125,7 @@ PuppyModbus::SingleRequestResult PuppyModbus::make_single_request(RequestTiming 
         log_debug(Modbus, "Request data: %02x: %02x", i, modbusMasterGetRequest(&master)[i]);
     }
 
-    PuppyBus::EnsurePause();
+    PuppyBus::EnsurePause(PuppyBus::Pause::Short);
 
     if (timing) {
         timing->begin_us = ticks_us();

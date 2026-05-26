@@ -47,21 +47,22 @@ namespace puppies {
         /// callback for switching Transmit Enable pin of RS485
         static void HalfDuplexCallbackSwitch(bool transmit);
 
-        /// Calling whis will ensure that there is delay on bus between two messages
-        static void EnsurePause();
+        /// Master-side silence before sending the next request.
+        /// Selected per-target because puppy bootloaders disagree on the
+        /// frame-complete threshold (see BFW-8690).
+        enum class Pause {
+            Short, ///< BFW-8690 tuning. XBE, INDX_HEAD.
+            Long, ///< Pre-BFW-8690. MODULAR_BED, Dwarf bootloaders.
+        };
+
+        /// Ensure a silent interval on the bus before the next transmission.
+        static void EnsurePause(Pause pause);
 
     private:
         /// Time when last operation was done
         static uint32_t last_operation_time_us;
 
-        /// Minimal pause that EnsurePause will enforce
-        /// Modbus specifies that between received message and next transmission
-        /// there should be a silent interval of at least 3.5 character times.
-        /// Due to IDLE event is actually 1 character, the time value corresponds to 2.5 character
-        static constexpr uint32_t baud_rate = 230'400;
-        static constexpr uint32_t bauds_per_character = 10; // 8N1
-        static constexpr float modbus_silence = 2.5f;
-        static constexpr uint32_t MINIMAL_PAUSE_BETWEEN_REQUESTS_US = static_cast<uint32_t>(1.0f + (modbus_silence * bauds_per_character * 1'000'000 / baud_rate));
+        static void ensure_pause(uint32_t pause_us);
     };
 
 } // namespace puppies

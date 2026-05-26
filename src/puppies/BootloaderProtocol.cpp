@@ -4,16 +4,44 @@
 #include <cstring>
 #include "buffered_serial.hpp"
 #include "puppies/PuppyBus.hpp"
+#include "puppies/PuppyBootstrap.hpp"
 #include <assert.h>
+#include <bsod.h>
 
 namespace buddy::puppies {
+
+/// Pick the bus pause for a bootloader-protocol command target.
+static PuppyBus::Pause pause_for_address(uint8_t address) {
+    switch (address) {
+    case BootloaderProtocol::Address::DEFAULT_ADDRESS:
+        // Broadcast during dynamic addressing reaches MODULAR_BED/Dwarf only;
+        // INDX_HEAD skips this phase and XBE has its own discover path.
+        return PuppyBus::Pause::Long;
+
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::MODULAR_BED):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::DWARF_1):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::DWARF_2):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::DWARF_3):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::DWARF_4):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::DWARF_5):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::DWARF_6):
+        // Legacy bootloaders (MODULAR_BED, Dwarf).
+        return PuppyBus::Pause::Long;
+
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::XBUDDY_EXTENSION):
+    case PuppyBootstrap::get_boot_address_for_dock(Dock::INDX_HEAD):
+        // BFW-8690-retuned bootloaders.
+        return PuppyBus::Pause::Short;
+    }
+    bsod_unreachable();
+}
 
 BootloaderProtocol::status_t BootloaderProtocol::write_command(commands_t cmd, uint8_t len) {
     assert(len <= MAX_REQUEST_DATA_LEN);
 
     PuppyBus::ErrorRecovery();
     PuppyBus::Flush();
-    PuppyBus::EnsurePause();
+    PuppyBus::EnsurePause(pause_for_address(current_address));
 
     write_buffer[0] = current_address;
     write_buffer[1] = (uint8_t)cmd;
