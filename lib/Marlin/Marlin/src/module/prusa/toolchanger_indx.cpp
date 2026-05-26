@@ -110,7 +110,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
 
     const auto old_tool = PhysicalToolIndex::currently_selected();
 
-    if (std::holds_alternative<PhysicalToolIndex>(new_tool) && !is_tool_enabled(std::get<PhysicalToolIndex>(new_tool))) {
+    if (std::holds_alternative<PhysicalToolIndex>(new_tool) && !std::get<PhysicalToolIndex>(new_tool).is_enabled()) {
         toolchanger_error("Toolchange to tool that is not enabled");
     }
 

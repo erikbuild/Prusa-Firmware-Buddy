@@ -82,7 +82,7 @@ namespace {
     /// @return true if a suitable tool is picked and dock 4 is confirmed empty.
     bool prepare_tool_for_vent_control() {
         // Prefer tool 4 if enabled — picking it definitionally empties dock 4.
-        if (prusa_toolchanger.is_tool_enabled(VENT_DOCK)) {
+        if (VENT_DOCK.is_enabled()) {
             if (prusa_toolchanger.tool_change(VENT_DOCK, tool_return_t::no_return, {}, tool_change_lift_t::full_lift, false)) {
                 return true;
             }
