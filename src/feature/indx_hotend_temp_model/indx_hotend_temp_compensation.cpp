@@ -13,7 +13,7 @@ namespace {
     // See BFW-8630 for more info
 
     /// K/W at full fan power, thermal resistance of nozzle tip surface to air
-    constexpr float nozzle_tip_thermal_resistance_k_w = 120;
+    constexpr float nozzle_tip_thermal_resistance_k_w = 75;
 
     /// K/W, thermal resistance between the nozzle and the heatsink
     constexpr float heatbreak_thermal_resistance_k_w = 80;
@@ -25,12 +25,12 @@ namespace {
     constexpr float heat_capacity_j_k = 1.17f;
 
     /// Decides how much of temperature gradient is compensated [%]
-    constexpr float compensation_factor = 0.3f;
+    constexpr float compensation_factor = 0.35f;
 
     // Positions of heat sources and sinks
     constexpr float heatbreak_position_mm = 0;
     constexpr float nozzle_tip_position_mm = 28;
-    constexpr float heat_capacity_center_mm = 11.2f;
+    constexpr float heat_capacity_center_mm = 11.5f;
 
     /// Position of the temperature sensor on the nozzle (that provides `hotend_temp_readout_c`)
     constexpr float temp_sensor_position_mm = 11;
@@ -47,9 +47,9 @@ namespace {
 } // namespace
 
 FilamentPrecomputedParameters FilamentPrecomputedParameters::compute(const FilamentParameters &params) {
-    static constexpr float base_const_coef = -54.71f * 0.001f;
+    static constexpr float base_const_coef = -55.0f * 0.001f;
     static constexpr float base_linear_coef = 2.2f * 0.001f;
-    static constexpr float base_threshold = 6.57f;
+    static constexpr float base_threshold = 6.5f;
 
     return FilamentPrecomputedParameters {
         .const_coef = base_const_coef * params.heat_per_mm / params.heat_time_constant,
@@ -91,18 +91,7 @@ float HotendTempCompensator::step(const StepParams &params) {
     // Calculate heating offset
     const float heating_offset_c = heating_offset_weight * params.hotend_temp_readout_dt_c_s;
 
-    // Intentionally without filament offset, that is computed separately
-    const float offset_sum_c = fan_offset_c + heating_offset_c + heatbreak_offset_c;
-
-    const float abs_filament_offset_c = std::abs(filament_offset_c);
-    const float filament_offset_divisor_c = abs_filament_offset_c + std::abs(offset_sum_c);
-    const float effective_filament_offset =
-        // Protect from division by zero.
-        // Because the dividend is basically ^2, it will always go to zero faster than divisor.
-        // So in the limit, the result should approach zero anyway.
-        (filament_offset_divisor_c == 0) ? 0.f : filament_offset_c * abs_filament_offset_c / filament_offset_divisor_c;
-
-    const float final_temp_offset_c = compensation_factor * (effective_filament_offset + offset_sum_c);
+    const float final_temp_offset_c = compensation_factor * (fan_offset_c + heating_offset_c + heatbreak_offset_c + filament_offset_c);
 
     // Note: Exponential fadeout is then applied directly on the INDX head
     // Clamp to sane values, just in case
