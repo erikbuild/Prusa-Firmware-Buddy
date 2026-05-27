@@ -3,6 +3,8 @@
 #include "../../../src/common/marlin_client.hpp"
 
 #include <state/printer_state.hpp>
+#include <option/has_tool_crash_recovery.h>
+#include <option/has_tool_mapping.h>
 
 #include <cassert>
 
@@ -26,7 +28,7 @@ namespace {
     };
 
     SimplePrintState get_state() {
-        SimplePrintState simple_state {};
+        SimplePrintState simple_state = SimplePrintState::Idle;
 
         switch (marlin_vars().print_state) {
 
@@ -50,18 +52,31 @@ namespace {
         case State::CrashRecovery_XY_HOME:
         case State::CrashRecovery_HOMEFAIL:
         case State::CrashRecovery_Repeated_Crash:
+#if HAS_TOOL_CRASH_RECOVERY()
+        case State::CrashRecovery_Tool_Pickup:
+#endif
         case State::Resuming_BufferData:
         case State::Resuming_Begin:
         case State::Resuming_Reheating:
         case State::Resuming_UnparkHead_XY:
         case State::Resuming_UnparkHead_ZE:
+        case State::Resuming_ExecutingGCodeInterrupt:
         case State::Aborting_Begin:
         case State::Aborting_WaitIdle:
         case State::Aborting_ParkHead:
         case State::Aborting_Preview:
+        case State::Aborting_UnloadFilament:
+        case State::Finishing_UnloadFilament:
         case State::Finishing_WaitIdle:
         case State::Finishing_ParkHead:
         case State::PrintPreviewConfirmed:
+        case State::PrintPreviewInit:
+        case State::PrintPreviewImage:
+#if HAS_TOOL_MAPPING()
+        case State::PrintPreviewToolsMapping:
+#endif
+        case State::PrintInit:
+        case State::SerialPrintInit:
             simple_state = SimplePrintState::Busy;
             break;
 
@@ -79,11 +94,6 @@ namespace {
 
         case State::PrintPreviewQuestions:
             simple_state = SimplePrintState::Attention;
-            break;
-
-        default:
-            assert(0);
-            simple_state = SimplePrintState::Idle;
             break;
         }
 
