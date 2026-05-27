@@ -109,7 +109,7 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
         .heatbreak_fan_fnc = Fans::heat_break,
         .print_fan_fnc = Fans::print,
 #if HAS_INDX()
-        .heat_time_ms = 5500,
+        .heat_time_ms = 5700,
 #else
         .heat_time_ms = 42000,
 #endif
