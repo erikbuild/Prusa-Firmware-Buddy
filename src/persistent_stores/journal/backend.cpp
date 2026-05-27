@@ -565,8 +565,13 @@ Backend::CRCType Backend::calculate_crc(const Backend::ItemHeader &header, const
     return crc;
 }
 void Backend::save(uint16_t id, const Bytes &data) {
-    if (bank_migration.has_value()) {
-        bank_migration->store_item(id, data);
+    if (bank_migration) {
+        bank_migration->calculate_crc(id, data);
+        bank_migration->item_count++;
+        bank_migration->last_item_header = { .last_item = false, .id = id, .len = static_cast<uint16_t>(data.size()) };
+        bank_migration->last_item_address = current_address;
+        current_address += storage.write_bytes(current_address, trivial_as_bytes(bank_migration->last_item_header));
+        current_address += storage.write_bytes(current_address, data);
     } else if (transaction.has_value()) {
         transaction->store_item(id, data);
     } else {
