@@ -17,7 +17,7 @@ class ScreenChangeAllFilaments;
 
 namespace multi_filament_change {
 
-class MI_ActionSelect final : public MenuItemSelectMenu {
+class MI_ActionSelect : public MenuItemSelectMenu {
 
 public:
     MI_ActionSelect(uint8_t tool_ix);
