@@ -103,6 +103,23 @@ Dialog::Dialog(MenuItemSelectMenu &menu)
 MenuItemSelectMenu::MenuItemSelectMenu(const string_view_utf8 &label)
     : IWindowMenuItem(label, 1) {}
 
+void MenuItemSelectMenu::set_behavior(Behavior set) {
+    behavior_ = set;
+
+    switch (set) {
+
+    case Behavior::select_only:
+        current_item_ = -1;
+        set_show_expand_icon();
+        break;
+
+    case Behavior::submenu:
+    case Behavior::quick_cycle:
+        // No extra changes
+        break;
+    }
+}
+
 void MenuItemSelectMenu::set_current_item(int set) {
     if (current_item_ != set) {
         force_set_current_item(set);
@@ -110,6 +127,11 @@ void MenuItemSelectMenu::set_current_item(int set) {
 }
 
 void MenuItemSelectMenu::force_set_current_item(int set) {
+    if (behavior_ == Behavior::select_only) {
+        // Always keep current_item at -1
+        return;
+    }
+
     if (set < 0 || set >= item_count()) {
         return;
     }
@@ -121,6 +143,12 @@ void MenuItemSelectMenu::force_set_current_item(int set) {
 }
 
 void MenuItemSelectMenu::printExtension(Rect16 extension_rect, Color color_text, Color color_back, [[maybe_unused]] ropfn raster_op) const {
+    if (behavior_ == Behavior::select_only) {
+        // Handles drawing "expands" icon
+        IWindowMenuItem::printExtension(extension_rect, color_text, color_back, raster_op);
+        return;
+    }
+
     if (current_item_ < 0 || current_item_ >= item_count()) {
         return;
     }
@@ -137,6 +165,7 @@ void MenuItemSelectMenu::printExtension(Rect16 extension_rect, Color color_text,
         static constexpr EnumArray<Behavior, std::array<const char *, 2>, static_cast<int>(Behavior::_last) + 1> behavior_brackes {
             { Behavior::submenu, { "[", "]" } },
             { Behavior::quick_cycle, { "<", ">" } },
+            { Behavior::select_only, { "", "" } }, // Dead path
         };
 
         const auto rct1 = Rect16::fromLTWH(extension_rect.Left(), extension_rect.Top(), font_w, extension_rect.Height());
@@ -159,6 +188,7 @@ void MenuItemSelectMenu::click(IWindowMenu &menu) {
 
     switch (behavior_) {
 
+    case Behavior::select_only:
     case Behavior::submenu: {
 
         {

@@ -15,7 +15,14 @@ public:
         /// !!! or where its not obvious what the items are
         quick_cycle,
 
-        _last = quick_cycle,
+        /// Configures the menu item to work as a "popup to select action" only
+        /// - On click, pops up the submenu, same as the submenu behavior
+        /// - The current_item() values becomes irrelevant (and should stay -1 all the time)
+        /// - Instead of extension, the ">" arrow will be rendered (bcs current_item is irrelevant)
+        /// - The on_item_selected still works as expected
+        select_only,
+
+        _last = select_only,
     };
 
     static constexpr Font value_font = GuiDefaults::FontMenuItems;
@@ -24,9 +31,7 @@ public:
 
     MenuItemSelectMenu(const string_view_utf8 &label);
 
-    void set_behavior(Behavior set) {
-        behavior_ = set;
-    }
+    void set_behavior(Behavior set);
 
     /// \returns currently selected item
     int current_item() const {
