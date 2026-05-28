@@ -46,8 +46,8 @@ void MI_ActionSelect::set_config(const ConfigItem &set) {
     }());
 }
 
-ConfigItem MI_ActionSelect::config() const {
-    const auto mapping = index_mapping.from_index(current_item());
+ConfigItem MI_ActionSelect::config(int item_index) const {
+    const auto mapping = index_mapping.from_index(item_index);
     return ConfigItem {
         .action = mapping.item,
         .new_filament = (mapping.item == Action::change) ? filament_list[mapping.pos_in_section] : FilamentType::none,

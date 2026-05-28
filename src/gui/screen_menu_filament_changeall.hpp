@@ -22,8 +22,11 @@ class MI_ActionSelect : public MenuItemSelectMenu {
 public:
     MI_ActionSelect(uint8_t tool_ix);
 
+    ConfigItem config() const {
+        return config(current_item());
+    }
+    ConfigItem config(int item_index) const;
     void set_config(const ConfigItem &set);
-    ConfigItem config() const;
 
     int item_count() const final;
     string_view_utf8 build_item_text(int index, ItemTextParams &params) const final;
