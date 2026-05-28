@@ -86,7 +86,9 @@ constexpr EnumBitset<Action, Action::_count> get_dependencies(Action action) {
         break;
 #endif
     case Action::DockCalibration:
+#if HAS_PRECISE_HOMING_COREXY()
         deps.set(Action::PreciseHoming);
+#endif
         break;
     case Action::NozzleCleanerCalibration:
     case Action::Heaters:
