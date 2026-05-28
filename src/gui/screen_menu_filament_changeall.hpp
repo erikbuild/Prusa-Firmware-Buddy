@@ -37,8 +37,8 @@ public:
 private:
     static constexpr auto items = std::to_array<DynamicIndexMappingRecord<Action>>({
         Action::keep,
-        { Action::change, DynamicIndexMappingType::dynamic_section },
         Action::unload,
+        { Action::change, DynamicIndexMappingType::dynamic_section },
     });
 
     bool on_item_selected(const OnItemSelectedArgs &args) override;
