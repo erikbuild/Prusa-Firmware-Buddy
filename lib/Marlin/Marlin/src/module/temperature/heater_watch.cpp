@@ -20,6 +20,7 @@ void HeaterWatch::update(float current_temp) {
 
     case State::watching:
         if (!ELAPSED(millis(), next_check_ms_)) {
+            return;
         }
         if ((current_temp < baseline_threshold_celsius_) ^ config_.watch_cooling_instead) {
             fatal_error(config_.error_code);
