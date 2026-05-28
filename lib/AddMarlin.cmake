@@ -184,6 +184,10 @@ if(BOARD_IS_MASTER_BOARD)
     target_sources(Marlin PRIVATE Marlin/Marlin/src/module/prusa/homing_corexy.cpp)
   endif()
 
+  if(HAS_PRECISE_HOMING_COREXY OR HAS_INDX)
+    target_sources(Marlin PRIVATE Marlin/Marlin/src/module/prusa/corexy_transform.cpp)
+  endif()
+
   if(HAS_TOOLCHANGER)
     if(HAS_INDX)
       target_sources(

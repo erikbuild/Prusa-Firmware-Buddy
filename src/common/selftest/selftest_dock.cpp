@@ -4,7 +4,7 @@
 #include <module/stepper.h>
 #include <module/endstops.h>
 #include <module/tool_change.h>
-#include <module/prusa/homing_corexy.hpp>
+#include <module/prusa/corexy_transform.hpp>
 #include "bsod.h"
 #include "marlin_server.hpp"
 

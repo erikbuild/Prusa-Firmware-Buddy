@@ -5,6 +5,8 @@
 
 #include "homing_corexy.hpp"
 
+#include "corexy_transform.hpp"
+
 // sanity checks
 #include <option/has_precise_homing.h>
 #if HAS_PRECISE_HOMING()
@@ -67,14 +69,6 @@ METRIC_DEF(metric_phxy_sens, "phxy_sens", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED
 METRIC_DEF(metric_phxy_home, "phxy_home", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
 METRIC_DEF(metric_phxy_orig, "phxy_orig", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
 
-/// Convert raw AB steps to XY mm
-void corexy_ab_to_xy(const ab_steps_t &steps, MachinePosXY &mm) {
-    const float x = static_cast<float>(steps.a + steps.b) / 2.f;
-    const float y = static_cast<float>(CORESIGN(steps.a - steps.b)) / 2.f;
-    mm.x = x * planner.mm_per_step[X_AXIS];
-    mm.y = y * planner.mm_per_step[Y_AXIS];
-}
-
 /// Convert raw AB steps to XY mm and position in mini-steps
 static void corexy_ab_to_xy(const ab_steps_t &steps, MachinePosXY &mm, xy_msteps_t &pos_msteps) {
     const float x = static_cast<float>(steps.a + steps.b) / 2.f;
@@ -83,18 +77,6 @@ static void corexy_ab_to_xy(const ab_steps_t &steps, MachinePosXY &mm, xy_msteps
     mm.y = y * planner.mm_per_step[Y_AXIS];
     pos_msteps.x = LROUND(x * PLANNER_STEPS_MULTIPLIER);
     pos_msteps.y = LROUND(y * PLANNER_STEPS_MULTIPLIER);
-}
-
-/// Convert raw AB steps to XY mm, filling others from current state
-void corexy_ab_to_xyze(const ab_steps_t &steps, MachinePosXYZE &mm) {
-    {
-        MachinePosXY xy;
-        corexy_ab_to_xy(steps, xy);
-        mm.set(xy);
-    }
-    LOOP_S_L_N(i, C_AXIS, XYZE_N) {
-        mm[i] = planner.get_axis_position_mm((AxisEnum)i);
-    }
 }
 
 /// Convert raw AB steps to XY mm and position in mini-steps, filling others from current state

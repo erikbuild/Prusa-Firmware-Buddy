@@ -48,7 +48,7 @@
 #include "../../module/planner.h"
 #include "../../module/tool_change.h"
 #include "../../module/endstops.h"
-#include "../../module/prusa/homing_corexy.hpp"
+#include "../../module/prusa/corexy_transform.hpp"
 #include "../../feature/bedlevel/bedlevel.h"
 #include "../../feature/pressure_advance/pressure_advance_config.hpp"
 #include "Marlin/src/gcode/gcode.h"

@@ -4,13 +4,6 @@
  */
 
 #pragma once
-#include <core/mtypes.hpp>
-
-// convert raw AB steps to XY mm
-void corexy_ab_to_xy(const ab_steps_t &steps, MachinePosXY &mm);
-
-// convert raw AB steps to XY mm, filling others from current state
-void corexy_ab_to_xyze(const ab_steps_t &steps, MachinePosXYZE &mm);
 
 enum class CoreXYCalibrationMode {
     on_demand, // Allow automatic calibration
