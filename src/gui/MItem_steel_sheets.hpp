@@ -10,7 +10,7 @@ public:
     string_view_utf8 build_item_text(int index, ItemTextParams &params) const final;
 
 protected:
-    bool on_item_selected(int old_index, int new_index) override;
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
 
 protected:
     int item_count_ = 0;

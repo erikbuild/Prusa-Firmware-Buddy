@@ -283,15 +283,15 @@ string_view_utf8 MI_MMU_NEXTRUDER_REWORK::build_item_text(int index, [[maybe_unu
     return _(mmu_rework_items[index]);
 }
 
-bool MI_MMU_NEXTRUDER_REWORK::on_item_selected([[maybe_unused]] int old_index, int new_index) {
-    if (!set_mmu_rework(new_index == 1)) {
+bool MI_MMU_NEXTRUDER_REWORK::on_item_selected(const OnItemSelectedArgs &args) {
+    if (!set_mmu_rework(args.new_index == 1)) {
         return false;
     }
 
     // Enabling MMU rework hides the FS_Autoload option from the menu - BFW-4290
     // However the request was that the autoload "stays active"
     // So we have to make sure that it's on when you activate the rework
-    if (new_index) {
+    if (args.new_index) {
         config_store().fs_autoload_enabled.set(true);
     }
 

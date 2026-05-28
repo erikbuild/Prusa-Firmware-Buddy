@@ -29,8 +29,8 @@ string_view_utf8 MI_CHAMBER_FILTRATION_BACKEND::build_item_text(int index, [[may
     return _(ChamberFiltration::backend_name(items_[index]));
 }
 
-bool MI_CHAMBER_FILTRATION_BACKEND::on_item_selected(int, int new_index) {
-    chamber_filtration().set_backend(items_[new_index]);
+bool MI_CHAMBER_FILTRATION_BACKEND::on_item_selected(const OnItemSelectedArgs &args) {
+    chamber_filtration().set_backend(items_[args.new_index]);
     return true;
 }
 

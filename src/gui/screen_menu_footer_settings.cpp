@@ -27,8 +27,8 @@ string_view_utf8 I_MI_FOOTER::build_item_text(int index, [[maybe_unused]] MenuIt
     return _(footer::to_string(footer::item_list[index]));
 }
 
-bool I_MI_FOOTER::on_item_selected([[maybe_unused]] int old_index, int new_index) {
-    StatusFooter::SetSlotInit(item_, footer::item_list[new_index]);
+bool I_MI_FOOTER::on_item_selected(const OnItemSelectedArgs &args) {
+    StatusFooter::SetSlotInit(item_, footer::item_list[args.new_index]);
 
     return true;
 }

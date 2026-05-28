@@ -30,9 +30,9 @@ string_view_utf8 MI_IS_TYPE::build_item_text(int index, [[maybe_unused]] MenuIte
     return _(input_shaper::filter_names[input_shaper::filter_list[index]]);
 }
 
-bool MI_IS_TYPE::on_item_selected([[maybe_unused]] int old_index, int new_index) {
+bool MI_IS_TYPE::on_item_selected(const OnItemSelectedArgs &args) {
     auto config = config_store().get_input_shaper_axis_config(axis_);
-    config.type = input_shaper::filter_list[new_index];
+    config.type = input_shaper::filter_list[args.new_index];
     config_store().set_input_shaper_axis_config(axis_, config);
 
     // Make the input shaper reload config from config_store

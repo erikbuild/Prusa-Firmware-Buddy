@@ -182,7 +182,12 @@ void MenuItemSelectMenu::click(IWindowMenu &menu) {
         return;
     }
 
-    if (!on_item_selected(current_item_, new_item)) {
+    const OnItemSelectedArgs args {
+        .old_index = current_item_,
+        .new_index = new_item,
+        .menu = menu,
+    };
+    if (!on_item_selected(args)) {
         return;
     }
 

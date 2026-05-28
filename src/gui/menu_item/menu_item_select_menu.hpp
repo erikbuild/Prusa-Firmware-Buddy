@@ -46,10 +46,18 @@ public:
     virtual string_view_utf8 build_item_text(int index, ItemTextParams &params) const = 0;
 
 protected:
+    struct OnItemSelectedArgs {
+        int old_index;
+        int new_index;
+        IWindowMenu &menu;
+    };
+
     /// Called when the current item is changed by the user
     /// \returns whether the item selection is valid.
     /// Does not change the select value if \p false is returned
-    virtual bool on_item_selected([[maybe_unused]] int old_index, [[maybe_unused]] int new_index) { return true; }
+    virtual bool on_item_selected([[maybe_unused]] const OnItemSelectedArgs &args) {
+        return true;
+    }
 
 protected:
     void printExtension(Rect16 extension_rect, Color color_text, Color color_back, ropfn raster_op) const override;

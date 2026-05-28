@@ -24,7 +24,7 @@ protected:
     [[deprecated("Use on_item_selected")]]
     virtual void OnChange([[maybe_unused]] size_t old_index) {};
 
-    bool on_item_selected([[maybe_unused]] int old_index, [[maybe_unused]] int new_index) override;
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
 
     string_view_utf8 build_item_text(int index, ItemTextParams &params) const final;
 

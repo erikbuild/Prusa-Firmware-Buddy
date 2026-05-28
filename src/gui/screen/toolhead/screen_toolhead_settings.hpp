@@ -44,7 +44,7 @@ public:
     void store_value_impl(PhysicalToolIndex ix, HotendType set) final;
 
 protected:
-    bool on_item_selected(int old_index, int new_index) override;
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
 
 private:
     bool has_varying_values_;
@@ -131,7 +131,7 @@ public:
     void store_value_impl(PhysicalToolIndex ix, PrintFanType set) final;
 
 protected:
-    bool on_item_selected(int old_index, int new_index) override;
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
 
 private:
     bool has_varying_values_;

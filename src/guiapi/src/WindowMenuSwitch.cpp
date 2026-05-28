@@ -9,9 +9,9 @@ MenuItemSwitch::MenuItemSwitch(const string_view_utf8 &label, const std::span<co
     set_current_item(initial_index);
 }
 
-bool MenuItemSwitch::on_item_selected([[maybe_unused]] int old_index, [[maybe_unused]] int new_index) {
-    set_current_item(new_index); // OnChange() expects updated MenuItemSelectMenu::current_item_ for correct function
-    OnChange(old_index);
+bool MenuItemSwitch::on_item_selected(const OnItemSelectedArgs &args) {
+    set_current_item(args.new_index); // OnChange() expects updated MenuItemSelectMenu::current_item_ for correct function
+    OnChange(args.old_index);
     return true;
 }
 

@@ -82,12 +82,12 @@ string_view_utf8 MI_EXTENDED_PRINTER_TYPE::build_item_text(int index, [[maybe_un
     return string_view_utf8::MakeCPUFLASH(PrinterModelInfo::get(extended_printer_type_model[index]).id_str);
 }
 
-bool MI_EXTENDED_PRINTER_TYPE::on_item_selected([[maybe_unused]] int old_index, int new_index) {
-    config_store().extended_printer_type.set(new_index);
+bool MI_EXTENDED_PRINTER_TYPE::on_item_selected(const OnItemSelectedArgs &args) {
+    config_store().extended_printer_type.set(args.new_index);
 
     #if EXTENDED_PRINTER_TYPE_DETERMINES_MOTOR_STEPS()
     // Reset motor configuration if the printer types have different motors
-    if (extended_printer_type_has_400step_motors[old_index] != extended_printer_type_has_400step_motors[new_index]) {
+    if (extended_printer_type_has_400step_motors[args.old_index] != extended_printer_type_has_400step_motors[args.new_index]) {
         {
             auto &store = config_store();
             auto transaction = store.get_backend().transaction_guard();

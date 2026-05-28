@@ -30,7 +30,7 @@ string_view_utf8 MI_CURRENT_SHEET_PROFILE::build_item_text(int index, MenuItemSe
     return string_view_utf8::MakeRAM(params.buffer.data());
 }
 
-bool MI_CURRENT_SHEET_PROFILE::on_item_selected([[maybe_unused]] int old_index, int new_index) {
-    SteelSheets::SelectSheet(items_[new_index]);
+bool MI_CURRENT_SHEET_PROFILE::on_item_selected(const OnItemSelectedArgs &args) {
+    SteelSheets::SelectSheet(items_[args.new_index]);
     return true;
 }

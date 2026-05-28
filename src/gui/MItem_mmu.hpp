@@ -290,7 +290,7 @@ public:
     string_view_utf8 build_item_text(int index, ItemTextParams &params) const override;
 
 protected:
-    bool on_item_selected(int old_index, int new_index) override;
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
 };
 
 class MI_INFO_FINDA : public MenuItemAutoUpdatingLabel<bool> {

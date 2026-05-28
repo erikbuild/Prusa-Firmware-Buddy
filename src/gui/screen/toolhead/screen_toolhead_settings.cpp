@@ -75,8 +75,8 @@ string_view_utf8 MI_HOTEND_TYPE::build_item_text(int index, [[maybe_unused]] Men
     }
 }
 
-bool MI_HOTEND_TYPE::on_item_selected([[maybe_unused]] int old_index, int new_index) {
-    const int effective_index = new_index - (has_varying_values_ ? 1 : 0);
+bool MI_HOTEND_TYPE::on_item_selected(const OnItemSelectedArgs &args) {
+    const int effective_index = args.new_index - (has_varying_values_ ? 1 : 0);
 
     if (effective_index == -1) {
         return false;
@@ -147,8 +147,8 @@ string_view_utf8 MI_PRINT_FAN_TYPE::build_item_text(int index, [[maybe_unused]] 
     }
 }
 
-bool MI_PRINT_FAN_TYPE::on_item_selected([[maybe_unused]] int old_index, int new_index) {
-    const int effective_index = new_index - (has_varying_values_ ? 1 : 0);
+bool MI_PRINT_FAN_TYPE::on_item_selected(const OnItemSelectedArgs &args) {
+    const int effective_index = args.new_index - (has_varying_values_ ? 1 : 0);
 
     if (effective_index == -1) {
         return false;
