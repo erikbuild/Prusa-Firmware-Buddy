@@ -1003,7 +1003,7 @@ static bool pre_finalize_print([[maybe_unused]] bool finished) {
         if (!nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::clean)) {
             return false;
         }
-        mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
+        mapi::park(mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }).without_z_move());
     }
 #endif
 
@@ -3227,11 +3227,11 @@ static void park_head([[maybe_unused]] bool is_pause) {
 
 #if PRINTER_IS_PRUSA_iX()
     if (is_pause) {
-        mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
+        mapi::park(mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }).without_z_move());
     } else
 #endif
     {
-        mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT_ON_PRINT_END } }));
+        mapi::park(mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT_ON_PRINT_END } }).without_z_move());
     }
 }
 
@@ -3242,7 +3242,7 @@ void unpark_head_XY(void) {
         return;
     }
 
-    mapi::park(mapi::ZAction::no_move, { .x = server.resume.pos.x, .y = std::min<float>(server.resume.pos.y, Y_BED_SIZE), .z = {} });
+    mapi::park({ .x = server.resume.pos.x, .y = std::min<float>(server.resume.pos.y, Y_BED_SIZE) });
 }
 
 void unpark_head_ZE(void) {

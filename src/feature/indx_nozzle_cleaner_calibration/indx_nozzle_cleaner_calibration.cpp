@@ -213,7 +213,7 @@ private:
         for (;;) { // Retry loop for this axis
 
             // Move close to the calibration point so the user has a shorter distance to adjust
-            mapi::park(mapi::ZAction::no_move, { .x = config.park_pos.x, .y = config.park_pos.y, .z = mapi::ParkingPosition::unchanged });
+            mapi::park({ .x = config.park_pos.x, .y = config.park_pos.y });
 
             // Position and confirm loop — user can go back to reposition
             for (;;) {

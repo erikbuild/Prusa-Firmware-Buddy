@@ -3,6 +3,8 @@
 #include <Marlin/src/gcode/gcode.h>
 #include <Marlin/src/module/motion.h>
 #include <config_store/store_instance.hpp>
+#include <utils/overloaded_visitor.hpp>
+#include <module/planner.h>
 
 #include <option/has_wastebin.h>
 
@@ -45,32 +47,62 @@ ParkingPosition get_parking_position(ParkPosition position) {
     bsod_unreachable();
 }
 
-xyz_pos_t ParkingPosition::to_xyz_pos(const xyz_pos_t &pos) const {
-    xyz_pos_t result {
-        (x == unchanged) ? pos.x : std::get<float>(x),
-        (y == unchanged) ? pos.y : std::get<float>(y),
-        (z == unchanged) ? pos.z : std::get<float>(z)
+xyz_bool_t ParkingPosition::axes_needing_homing() const {
+    // We want XY homing requirements to be joined, mainly bcs of pre_park_move_pattern
+    const bool do_axis_xy = std::holds_alternative<float>(x) || std::holds_alternative<float>(y);
+    return xyz_bool_t {
+        .x = do_axis_xy,
+        .y = do_axis_xy,
+        .z = std::holds_alternative<float>(z),
     };
+}
 
+xyz_pos_t ParkingPosition::to_xyz_pos(const xyz_pos_t &pos) const {
+    const auto result = to_nan_xyz_pos(pos);
     if (std::isnan(result.x) || std::isnan(result.y) || std::isnan(result.z)) {
         bsod("Conversion to xyz_pos_t failed.");
     }
     return result;
 }
 
-xyz_pos_t ParkingPosition::to_nan_xyz_pos() const {
-    return xyz_pos_t {
-        (x == ParkingPosition::unchanged) ? std::numeric_limits<float>::quiet_NaN() : std::get<float>(x),
-        (y == ParkingPosition::unchanged) ? std::numeric_limits<float>::quiet_NaN() : std::get<float>(y),
-        (z == ParkingPosition::unchanged) ? std::numeric_limits<float>::quiet_NaN() : std::get<float>(z)
+xyz_pos_t ParkingPosition::to_nan_xyz_pos(const xyz_pos_t &pos) const {
+    return {
+        .x = std::holds_alternative<Unchanged>(x) ? pos.x : std::get<float>(x),
+        .y = std::holds_alternative<Unchanged>(y) ? pos.y : std::get<float>(y),
+        .z = match(
+            z, //
+            [&](Unchanged) { return pos.z; }, //
+            [](float val) { return val; }, //
+            [&](const AdvancedZ &mv) { //
+                float result = pos.z + mv.relative;
+
+                if (std::isnan(result)) {
+                    return result;
+                }
+
+                if (!std::isnan(mv.minimum)) {
+                    result = std::max<float>(result, mv.minimum);
+                }
+
+                return std::clamp<float>(result, Z_MIN_POS, Z_MAX_POS);
+            } //
+            ),
     };
 }
 
 ParkingPosition ParkingPosition::from_xyz_pos(const xyz_pos_t &pos) {
     return ParkingPosition {
-        (std::isnan(pos.x) ? mapi::ParkingPosition::unchanged : pos.x),
-        (std::isnan(pos.y) ? mapi::ParkingPosition::unchanged : pos.y),
-        (std::isnan(pos.z) ? mapi::ParkingPosition::unchanged : pos.z),
+        std::isnan(pos.x) ? (decltype(x))mapi::ParkingPosition::unchanged : pos.x,
+        std::isnan(pos.y) ? (decltype(y))mapi::ParkingPosition::unchanged : pos.y,
+        std::isnan(pos.z) ? (decltype(z))mapi::ParkingPosition::unchanged : pos.z,
+    };
+}
+
+ParkingPosition ParkingPosition::from_xy_relative_z_pos(const xyz_pos_t &pos) {
+    return ParkingPosition {
+        std::isnan(pos.x) ? (decltype(x))mapi::ParkingPosition::unchanged : pos.x,
+        std::isnan(pos.y) ? (decltype(y))mapi::ParkingPosition::unchanged : pos.y,
+        std::isnan(pos.z) ? (decltype(z))mapi::ParkingPosition::unchanged : AdvancedZ { .relative = pos.z },
     };
 }
 
@@ -211,52 +243,55 @@ void move_out_of_nozzle_cleaner_area() {
 }
 #endif
 
-void park(ZAction z_action, const ParkingPosition &parking_position) {
+bool park(const ParkingPosition &parking_position) {
     static constexpr feedRate_t fr_xy = NOZZLE_PARK_XY_FEEDRATE, fr_z = NOZZLE_PARK_Z_FEEDRATE;
 
-    if (!(axes_home_level.is_homed(X_AXIS, AxisHomeLevel::imprecise) && axes_home_level.is_homed(Y_AXIS, AxisHomeLevel::imprecise))) {
-        return;
-    }
+    const auto curr_pos = current_position.xyz();
+    const auto park_destination = parking_position.to_xyz_pos(curr_pos);
+    const auto needs_homed = parking_position.axes_needing_homing();
 
-    if (parking_position.z != ParkingPosition::unchanged) {
-        const float z = std::get<float>(parking_position.z);
-        switch (z_action) {
-        case mapi::ZAction::move_to_at_least: // Raise to at least the Z-park height
-            do_blocking_move_to_z(_MAX(z, current_position.z), fr_z);
-            break;
-        case ZAction::absolute_move: // Go to Z-park height
-            do_blocking_move_to_z(z, fr_z);
-            break;
-        case ZAction::relative_move: // Raise by Z-park height
-            do_blocking_move_to_z(_MIN(current_position.z + z, Z_MAX_POS), fr_z);
-            break;
-        case ZAction::relative_move_skip_xy: // TODO: Not implemented yet
-        case ZAction::no_move: /// No Z move, just XY park
-            break;
+    if (park_destination.z != curr_pos.z) {
+        if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
+            do_blocking_move_to_z(park_destination.z, fr_z);
+
+        } else if (needs_homed.z) {
+            // The move requires homed Z axis, which we don't have
+            // Don't allow XY moves without lifting
+            return false;
+
+        } else {
+            do_homing_move(Z_AXIS, park_destination.z - curr_pos.z, HOMING_FEEDRATE_INVERTED_Z);
         }
     }
 
-#if HAS_INDX()
-    // move out of dock area perpendicularly before parking
-    if (current_position.y < Y_DOCK_PARKING_MIN_SAFE_POS) {
-        do_blocking_move_to_y(Y_DOCK_PARKING_MIN_SAFE_POS, feedrate_mm_s);
-    }
-#endif
-    const xy_pos_t park_destination = parking_position.to_xyz_pos(current_position.xyz()).xy();
-#if HAS_NOZZLE_CLEANER()
-    pre_park_move_pattern(fr_xy, park_destination);
-#endif
-    do_blocking_move_to_xy(park_destination, fr_xy);
+    if (park_destination.xy() != curr_pos.xy()) {
+        if (!axes_home_level.is_homed({ X_AXIS, Y_AXIS }, AxisHomeLevel::imprecise)) {
+            // We need to always be homed to do XY moves
+            return false;
+        }
 
+#if HAS_INDX()
+        // move out of dock area perpendicularly before parking
+        if (curr_pos.y < Y_DOCK_PARKING_MIN_SAFE_POS) {
+            do_blocking_move_to_y(Y_DOCK_PARKING_MIN_SAFE_POS, feedrate_mm_s);
+        }
+#endif
+
+#if HAS_NOZZLE_CLEANER()
+        pre_park_move_pattern(fr_xy, park_destination.xy());
+#endif
+        do_blocking_move_to_xy(park_destination, fr_xy);
+    }
+
+    planner.synchronize();
     report_current_position();
+    return !planner.draining();
 }
 
-void home_if_needed_and_park(ZAction z_action, const ParkingPosition &parking_position) {
-    const xyz_bool_t do_axis {
-        .x = (parking_position.x != mapi::ParkingPosition::unchanged),
-        .y = (parking_position.y != mapi::ParkingPosition::unchanged),
-        .z = (parking_position.z != mapi::ParkingPosition::unchanged) && z_action == mapi::ZAction::absolute_move
-    };
+void home_if_needed_and_park(const ParkingPosition &parking_position) {
+    // We only need homing if we move to absolute coordinates
+    // For relative moves through AdvancedZ we can use do_homing_move
+    const xyz_bool_t do_axis = parking_position.axes_needing_homing();
     GcodeSuite::G28_no_parser(do_axis.x, do_axis.y, do_axis.z,
         {
             .only_if_needed = true,
@@ -264,7 +299,7 @@ void home_if_needed_and_park(ZAction z_action, const ParkingPosition &parking_po
             .precise = false, // We don't need precise position for parking
         });
 
-    park(z_action, parking_position);
+    park(parking_position);
 }
 
 } // namespace mapi

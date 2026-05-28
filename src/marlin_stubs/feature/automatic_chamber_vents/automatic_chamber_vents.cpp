@@ -185,7 +185,7 @@ bool execute_control(VentState target_state) {
     plan_to_y(Y_SAFE);
 
     // Return to the home position after the vent operation.
-    mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::park));
+    mapi::park(mapi::get_parking_position(mapi::ParkPosition::park).without_z_move());
 #endif
 
     // Wait for all planned moves to complete

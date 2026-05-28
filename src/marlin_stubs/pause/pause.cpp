@@ -535,7 +535,7 @@ void Pause::await_filament_process([[maybe_unused]] Response response) {
 
     // Either side sensor not working or it has filament, go to loading
     if (!FSensors_instance().no_filament_surely(LogicalFilamentSensor::side)) {
-        mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::load));
+        mapi::home_if_needed_and_park(mapi::get_parking_position(mapi::ParkPosition::load).without_z_move());
         if (!FSensors_instance().is_extruder_fs_independent()) {
             set_timed(LoadState::assist_insertion);
         } else {
@@ -632,7 +632,7 @@ void Pause::load_to_gears_process([[maybe_unused]] Response response) { // slow 
 
 void Pause::move_to_purge_process([[maybe_unused]] Response response) {
     if constexpr (option::has_side_fsensor) {
-        mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
+        mapi::home_if_needed_and_park(mapi::get_parking_position(mapi::ParkPosition::purge).without_z_move());
     }
     set(LoadState::load_wait_temp);
 }
@@ -767,7 +767,7 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
 
     float purged = 0.f;
     while (purged < settings.purge_length()) {
-        mapi::park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::purge));
+        mapi::park(mapi::get_parking_position(mapi::ParkPosition::purge).without_z_move());
         planner.synchronize(); // Wait for the park to finish before continuing
     #if !HAS_INDX() // We do the purgue move in the gcode of the loader on INDX, so we don't want to do it here
         const auto purge_result = do_e_move_notify_progress_hotextrude(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE, StopConditions::All);
@@ -1010,7 +1010,7 @@ void Pause::load_finalize_process(Response) {
 
         if (!marlin_server::is_printing()) {
             // If not printing, park on the nozzle cleaner planchette
-            mapi::park(mapi::ZAction::no_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }));
+            mapi::park(mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT } }).without_z_move());
         }
     }
 #endif
@@ -1424,7 +1424,7 @@ void Pause::park_nozzle_and_notify() {
             unhomed_z_lift(target_Z);
         } else {
             log_info(MarlinServer, "Parking Z");
-            mapi::park(mapi::ZAction::absolute_move, { .x = {}, .y = {}, .z = target_Z });
+            mapi::park({ .z = target_Z });
         }
     }
 
@@ -1479,7 +1479,7 @@ void Pause::park_nozzle_and_notify() {
 
         // XY park (includes dock avoidance on INDX)
         log_info(MarlinServer, "Parking XY");
-        mapi::park(mapi::ZAction::no_move, { .x = settings.park_pos.x, .y = settings.park_pos.y, .z = {} });
+        mapi::park({ .x = settings.park_pos.x, .y = settings.park_pos.y });
     }
 
     report_current_position();
@@ -1510,7 +1510,7 @@ void Pause::unpark_nozzle_and_notify() {
 
     {
         PauseFsmExplicitProgressNotifier N(*this, begin_pos, end_pos, 0, parkMoveXYPercent(Z_len, XY_len), marlin_vars().native_pos[x_greater_than_y ? MARLIN_VAR_INDEX_X : MARLIN_VAR_INDEX_Y]);
-        mapi::park(mapi::ZAction::no_move, { .x = settings.resume_pos.x, .y = settings.resume_pos.y, .z = {} });
+        mapi::park({ .x = settings.resume_pos.x, .y = settings.resume_pos.y });
     }
 
     // Move Z_AXIS to saved position, scope for PauseFsmNotifier

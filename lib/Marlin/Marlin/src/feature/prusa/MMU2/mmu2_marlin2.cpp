@@ -105,7 +105,7 @@ void motion_do_blocking_move_to_z(float z, float feedRate_mm_s) {
 }
 
 void nozzle_park() {
-    mapi::park(mapi::ZAction::relative_move, mapi::ParkingPosition::from_xyz_pos({ { XYZ_NOZZLE_PARK_POINT_M600 } }));
+    mapi::park(mapi::ParkingPosition::from_xy_relative_z_pos({ { XYZ_NOZZLE_PARK_POINT_M600 } }));
 }
 
 bool marlin_printingIsActive() {

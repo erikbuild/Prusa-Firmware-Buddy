@@ -111,7 +111,7 @@ float probe_z_at(const xy_pos_t &pos, uint8_t probe_count) {
 bool prepare_tool(PhysicalToolIndex tool) {
     const ToolTemperatures temps = get_tool_temperatures(tool);
 
-    mapi::park(mapi::ZAction::absolute_move, mapi::ParkingPosition::from_xyz_pos({ { X_WASTEBIN_SAFE_POINT, Y_BRUSH_AVOID_POINT, SAFE_Z_HEIGHT } }));
+    mapi::park(mapi::ParkingPosition::from_xyz_pos({ { X_WASTEBIN_SAFE_POINT, Y_BRUSH_AVOID_POINT, SAFE_Z_HEIGHT } }));
 
     if (!nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::eject_blob)) {
         return false;
@@ -140,7 +140,7 @@ bool prepare_tool(PhysicalToolIndex tool) {
     }
 
     // park out of cleaner area
-    mapi::park(mapi::ZAction::absolute_move, mapi::ParkingPosition::from_xyz_pos({ { X_WASTEBIN_SAFE_POINT, Y_WASTEBIN_SAFE_POINT, SAFE_Z_HEIGHT } }));
+    mapi::park(mapi::ParkingPosition::from_xyz_pos({ { X_WASTEBIN_SAFE_POINT, Y_WASTEBIN_SAFE_POINT, SAFE_Z_HEIGHT } }));
     return true;
 }
 
@@ -155,7 +155,7 @@ Response prompt_retry(WarningType warning) {
 
     constexpr float park_clean_z = 100.0f;
     const mapi::ParkingPosition park_cleaning_position = mapi::ParkingPosition::from_xyz_pos({ { { (X_MIN_POS + X_MAX_POS) / 2.0f, 10.0f, park_clean_z } } });
-    mapi::park(mapi::ZAction::absolute_move, park_cleaning_position);
+    mapi::park(park_cleaning_position);
 
     if (marlin_server::prompt_warning(warning) != Response::Retry) {
         marlin_server::quick_stop();

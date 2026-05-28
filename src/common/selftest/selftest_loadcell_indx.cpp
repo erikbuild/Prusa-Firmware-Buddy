@@ -167,7 +167,7 @@ LoopResult CSelftestPart_Loadcell::stateCooldownDeinit() {
 }
 
 LoopResult CSelftestPart_Loadcell::stateToolSelectInit() {
-    mapi::home_if_needed_and_park(mapi::ZAction::no_move, mapi::get_parking_position(mapi::ParkPosition::loadcell_selftest));
+    mapi::home_if_needed_and_park(mapi::get_parking_position(mapi::ParkPosition::loadcell_selftest).without_z_move());
     return LoopResult::RunNext;
 }
 

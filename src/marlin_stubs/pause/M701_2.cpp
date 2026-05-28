@@ -78,7 +78,7 @@ static bool load_unload(Pause::LoadType load_type, pause::Settings &rSettings) {
 // accessible (e.g. for the user to reach the spool after a filament operation).
 static void park_to_dock_and_back_off() {
     tool_change(NoTool {}, tool_return_t::no_return);
-    mapi::park(mapi::ZAction::no_move, { .x = mapi::ParkingPosition::unchanged, .y = current_position.y + 50.0f, .z = mapi::ParkingPosition::unchanged });
+    mapi::park({ .x = mapi::ParkingPosition::unchanged, .y = current_position.y + 50.0f });
 }
 #endif
 
@@ -331,7 +331,7 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
         filament::set_type_to_load(filament);
         filament::set_color_to_load(std::nullopt);
 
-        mapi::ParkingPosition park_position({ mapi::ParkingPosition::unchanged, mapi::ParkingPosition::unchanged, std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE }) });
+        mapi::ParkingPosition park_position({ .z = std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE }) });
         // Returning to previous position is unwanted outside of printing (M1701 should be used only outside of printing)
         settings.SetParkPoint(park_position);
 

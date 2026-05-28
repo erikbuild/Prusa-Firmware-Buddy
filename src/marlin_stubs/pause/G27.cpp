@@ -45,9 +45,9 @@
  * - `Y` - Y park position
  * - `Z` - Z park position
  * - `P` - Z action
- *   - `0` - (Default) Relative raise by NOZZLE_PARK_Z_RAISE_MIN before XY parking
- *   - `1` - Absolute move to NOZZLE_PARK_POINT.z before XY parking. This may move the nozzle down, so use with caution!
- *   - `2` - Relative raise by NOZZLE_PARK_POINT.z before XY parking.
+ *   - `0` - (Default) Raise to at least Z before XY parking
+ *   - `1` - Absolute move to Z before XY parking. This may move the nozzle down, so use with caution!
+ *   - `2` - Relative move by Z before XY parking.
  * - `W` - Use pre-defined park position. Usable only if X, Y and Z are not present as they override pre-defined behaviour.
  *   - `0` - Park
  *   - `1` - Purge
@@ -59,22 +59,40 @@ void GcodeSuite::G27() {
         return;
     }
 
-    mapi::ZAction z_action { mapi::ZAction::move_to_at_least };
-    parser.store_option_if_present('P', z_action, static_cast<uint32_t>(mapi::ZAction::_last) + 1);
-
     mapi::ParkingPosition parking_position;
+
     if (auto where_to_park = parser.option<mapi::ParkPosition>('W', mapi::ParkPosition::_cnt)) {
         parking_position = mapi::get_parking_position(*where_to_park);
-    } else {
-        auto parse_axis = [&parser](char letter, mapi::ParkingPosition::Variant &axis) {
-            if (auto res = parser.option<float>(letter)) {
-                axis = *res;
-            }
-        };
 
-        parse_axis('X', parking_position.x);
-        parse_axis('Y', parking_position.y);
-        parse_axis('Z', parking_position.z);
+    } else {
+        if (auto x = parser.option<float>('X')) {
+            parking_position.x = *x;
+        }
+
+        if (auto y = parser.option<float>('Y')) {
+            parking_position.y = *y;
+        }
+
+        if (auto z = parser.option<float>('Z')) {
+            switch (parser.option<int>('P').value_or(0)) {
+
+            case 0:
+                parking_position.z = mapi::ParkingPosition::AdvancedZ {
+                    .minimum = *z,
+                };
+                break;
+
+            case 1:
+                parking_position.z = *z;
+                break;
+
+            case 2:
+                parking_position.z = mapi::ParkingPosition::AdvancedZ {
+                    .relative = *z,
+                };
+                break;
+            }
+        }
 
         // If no axis has been specified (comparing against a position with all axes unchanged)
         if (parking_position == mapi::ParkingPosition {}) {
@@ -82,16 +100,7 @@ void GcodeSuite::G27() {
         }
     }
 
-    // If not homed and only Z clearance is requested, od just that, otherwise home and then park.
-    if (axes_need_homing(X_AXIS | Y_AXIS | Z_AXIS)) {
-        if (parking_position.x == mapi::ParkingPosition::unchanged && parking_position.y == mapi::ParkingPosition::unchanged && parking_position.z != mapi::ParkingPosition::unchanged && z_action == mapi::ZAction::move_to_at_least) {
-            // Only Z axis is given in P=0 mode, do Z clearance
-            do_z_clearance(std::get<float>(parking_position.z));
-            return;
-        }
-    }
-
-    mapi::home_if_needed_and_park(z_action, parking_position);
+    mapi::home_if_needed_and_park(parking_position);
 }
 
 /** @}*/

@@ -563,8 +563,8 @@ bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     const float unlock_y = info.dock_y + DOCK_UNLOCK_Y_OFFSET;
 
     // Move to dock X, then to safe Y in front of dock
-    mapi::park(mapi::ZAction::no_move, { .x = mapi::ParkingPosition::unchanged, .y = safe_y });
-    mapi::park(mapi::ZAction::no_move, { .x = info.dock_x, .y = mapi::ParkingPosition::unchanged });
+    mapi::park({ .y = safe_y });
+    mapi::park({ .x = info.dock_x });
     planner.synchronize();
 
     // Approach unlock position
@@ -754,8 +754,8 @@ bool PrusaToolChanger::pickup_procedure(PhysicalToolIndex tool) {
     const float safe_y = info.dock_y + DOCK_SAFE_Y_OFFSET;
 
     // Move to dock X, then to safe Y in front of dock
-    mapi::park(mapi::ZAction::no_move, { .x = mapi::ParkingPosition::unchanged, .y = safe_y });
-    mapi::park(mapi::ZAction::no_move, { .x = info.dock_x, .y = mapi::ParkingPosition::unchanged });
+    mapi::park({ .y = safe_y });
+    mapi::park({ .x = info.dock_x });
     planner.synchronize();
 
     // Move into dock — nozzle enters head
@@ -859,7 +859,7 @@ std::expected<void, PrusaToolChanger::BumpError> PrusaToolChanger::bump_to_dock(
     }
     planner.synchronize();
 
-    mapi::park(mapi::ZAction::move_to_at_least, { .x = mapi::ParkingPosition::unchanged, .y = mapi::ParkingPosition::unchanged, .z = 2.0f });
+    mapi::park({ .z = mapi::ParkingPosition::AdvancedZ { .minimum = 2.0f } });
 
     // Get dock info
     const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);
