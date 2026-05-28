@@ -76,16 +76,28 @@ CFanCtlCommon &Fans::heat_break([[maybe_unused]] size_t index) {
 
 #if HAS_INDX()
 CFanCtlCommon &Fans::dock_fan() {
-    // Same hardware as the C1 print fan (NEXTRUDER print-fan pin + shared tach).
-    static auto instance = CFanCtl3WireDynamic(
-        buddy::hw::fanPrintPwm,
-        buddy::hw::fanTach,
-        FANCTLPRINT_PWM_MIN, FANCTLPRINT_PWM_MAX,
-        FANCTLPRINT_RPM_MIN, FANCTLPRINT_RPM_MAX,
-        FANCTLPRINT_PWM_THR,
-        is_autofan_t::no,
-        skip_tacho_t::no,
-        FANCTLPRINT_MIN_PWM_TO_MEASURE_RPM);
+    // On both C1 and C1L INDX, the dock fan is wired to the xBuddy NEXTRUDER
+    // print-fan pin (PWM + shared tach) and runs on the same fan controller as
+    // the C1 print fan; the actual print fan lives on the INDX head, freeing
+    // that pin here.
+    //
+    // The dock fan is therefore the only consumer of the xBuddy print-fan tach
+    // line on INDX, so park the tach mux on that input here, in main-thread
+    // context (doing it from Fans::tick(), called from TIM14 ISR, would trip
+    // the __cxa_guard_acquire assert in cxa_guard.cpp). A future INDX board
+    // variant that repurposes the mux would need to revisit this.
+    static auto instance = [] {
+        buddy::hw::tachoSelectPrintFan.write(buddy::hw::Pin::State::low);
+        return CFanCtl3WireDynamic(
+            buddy::hw::fanPrintPwm,
+            buddy::hw::fanTach,
+            FANCTLPRINT_PWM_MIN, FANCTLPRINT_PWM_MAX,
+            FANCTLPRINT_RPM_MIN, FANCTLPRINT_RPM_MAX,
+            FANCTLPRINT_PWM_THR,
+            is_autofan_t::no,
+            skip_tacho_t::no,
+            FANCTLPRINT_MIN_PWM_TO_MEASURE_RPM);
+    }();
     return instance;
 }
 #endif
