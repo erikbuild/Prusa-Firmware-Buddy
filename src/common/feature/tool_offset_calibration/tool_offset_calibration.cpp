@@ -45,7 +45,7 @@ METRIC_DEF(metric_sensor_pos, "tool_off_sensor_pos", METRIC_VALUE_CUSTOM, 0, MET
 METRIC_DEF(metric_tool_offset, "tool_offset", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
 
 namespace {
-// INDX_TODO: Set preferred reference line positions
+// C1_INDX - this position is proved to be the best in terms of the lowest warping
 constexpr xy_pos_t POS_TOOL_0 = { 25.0f, 5.0f };
 constexpr xy_pos_t POS_TOOL_LAST = { 65.0f, 5.0f };
 
