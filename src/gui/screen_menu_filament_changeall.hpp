@@ -17,10 +17,13 @@ class ScreenChangeAllFilaments;
 
 namespace multi_filament_change {
 
-class MI_ActionSelect : public MenuItemSelectMenu {
+class MI_ActionSelect final : public MenuItemSelectMenu {
 
 public:
     MI_ActionSelect(uint8_t tool_ix);
+
+    struct SetAllToMode {};
+    MI_ActionSelect(SetAllToMode);
 
     ConfigItem config() const {
         return config(current_item());
@@ -38,14 +41,17 @@ private:
         Action::unload,
     });
 
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
+
 private:
-    const VirtualToolIndex tool;
-    bool has_filament_loaded = false;
     CompactOptional<Color, COLOR_NONE> color;
 
     StringViewUtf8Parameters<2> label_params;
     DynamicIndexMapping<items> index_mapping;
     FilamentList filament_list;
+
+    bool has_filament_loaded : 1 = false;
+    bool set_all_to_mode : 1 = false;
 };
 
 class MI_ApplyChanges : public IWindowMenuItem {
@@ -62,6 +68,7 @@ struct MenuMultiFilamentChange__;
 template <size_t... ix>
 struct MenuMultiFilamentChange__<std::index_sequence<ix...>> {
     using Container = WinMenuContainer<MI_RETURN,
+        WithConstructorArgs<MI_ActionSelect, MI_ActionSelect::SetAllToMode {}>,
         WithConstructorArgs<MI_ActionSelect, ix>...,
         MI_ApplyChanges>;
 };

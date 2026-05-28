@@ -16,12 +16,20 @@
 using namespace multi_filament_change;
 
 MI_ActionSelect::MI_ActionSelect(uint8_t tool_ix)
-    : MenuItemSelectMenu({})
-    , tool(VirtualToolIndex::from_raw(tool_ix)) //
-{
+    : MenuItemSelectMenu({}) {
+    const auto tool = VirtualToolIndex::from_raw(tool_ix);
     has_filament_loaded = (config_store().get_filament_type(tool) != FilamentType::none);
     set_is_hidden(!tool.is_enabled());
     SetLabel(tool.display_name(label_params));
+}
+
+MI_ActionSelect::MI_ActionSelect(SetAllToMode)
+    : MenuItemSelectMenu(_("Set All To"))
+    , set_all_to_mode { true } {
+    set_behavior(Behavior::select_only);
+
+    // Necessary to generate filament list
+    set_config({});
 }
 
 void MI_ActionSelect::set_config(const ConfigItem &set) {
@@ -76,6 +84,30 @@ string_view_utf8 MI_ActionSelect::build_item_text(int index, MenuItemSelectMenu:
     }
 
     bsod_unreachable();
+}
+
+bool MI_ActionSelect::on_item_selected(const OnItemSelectedArgs &args) {
+    if (set_all_to_mode) {
+        auto &menu = static_cast<MenuMultiFilamentChange &>(args.menu);
+        auto new_config = menu.configuration();
+        const auto new_config_item = this->config(args.new_index);
+
+        for (auto tool : VirtualToolIndex::all().skip_all_disabled()) {
+            auto &config_item = new_config[tool];
+
+            // Keep the color
+            const auto orig_color = config_item.color;
+            config_item = new_config_item;
+            config_item.color = orig_color;
+        }
+
+        menu.set_configuration(new_config);
+
+    } else {
+        // Just let current_item to be updated by the parent, will be picked up by the owning menu
+    }
+
+    return true;
 }
 
 MI_ApplyChanges::MI_ApplyChanges()
