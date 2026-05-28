@@ -20,7 +20,8 @@ struct SelftestToolIndx {
     TestResult _heatbreak_fan : 2;
     TestResult _nozzle : 2;
     TestResult _loadcell : 2;
-    uint8_t _reserved[2]; // reserved for future use
+    TestResult _dock_fan : 2;
+    uint8_t _reserved[1]; // reserved for future use
 
     bool operator==(const SelftestToolIndx &rhs) const = default;
 };
@@ -61,6 +62,9 @@ struct SelftestResultImplIndx {
     inline void set_heatbreak_fan([[maybe_unused]] uint8_t tool, TestResult result) { _tool._heatbreak_fan = result; }
     inline void set_heatbreak_fan([[maybe_unused]] PhysicalToolIndex tool, TestResult result) { _tool._heatbreak_fan = result; }
 
+    inline TestResult get_dock_fan() const { return _tool._dock_fan; }
+    inline void set_dock_fan(TestResult result) { _tool._dock_fan = result; }
+
     [[deprecated("Use the ToolIndex overload")]]
     inline TestResult get_fans_switched([[maybe_unused]] uint8_t tool) const { return TestResult::passed; }
     inline TestResult get_fans_switched([[maybe_unused]] PhysicalToolIndex tool) const { return TestResult::passed; }
@@ -79,7 +83,7 @@ struct SelftestResultImplIndx {
 
     [[deprecated("Use the ToolIndex overload")]]
     inline TestResult evaluate_fans([[maybe_unused]] uint8_t tool) const {
-        return test_result::evaluate_results(_tool._print_fan, _tool._heatbreak_fan);
+        return test_result::evaluate_results(_tool._print_fan, _tool._heatbreak_fan, _tool._dock_fan);
     }
     inline TestResult evaluate_fans([[maybe_unused]] PhysicalToolIndex tool) const { return evaluate_fans(tool.to_raw()); }
 

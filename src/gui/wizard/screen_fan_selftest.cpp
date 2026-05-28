@@ -61,6 +61,9 @@ static constexpr const char *en_text_header = N_("SELFTEST");
 static constexpr const char *en_text_fan_test = N_("Fan RPM tests");
 static constexpr const char *en_text_hotend_fan = N_("Hotend fan");
 static constexpr const char *en_text_print_fan = N_("Print fan");
+#if HAS_INDX()
+static constexpr const char *en_text_dock_fan = N_("Dock fan");
+#endif
 #if HAS_SWITCHED_FAN_TEST()
 static constexpr const char *en_text_fans_switched = N_("Switched fans");
 static constexpr const char *en_text_info_switched = N_("Based on the test it looks like the fans connectors are switched. Double check your wiring and repeat the test.");
@@ -106,6 +109,12 @@ namespace frame {
 
         WindowIconOkNgArray print_icons;
         WindowIconOkNgArray heatbreak_icons;
+
+#if HAS_INDX()
+        window_text_t dock_fan_label;
+        window_icon_t dock_fan_label_icon;
+        WindowIconOkNgArray dock_fan_icons;
+#endif
 
         StringViewUtf8Parameters<4> info_params;
 
@@ -159,6 +168,10 @@ namespace frame {
                 process_fan_result(result.get_print_fan(tool), print_icons, tool.to_raw());
                 process_fan_result(result.get_heatbreak_fan(tool), heatbreak_icons, tool.to_raw());
             }
+
+#if HAS_INDX()
+            process_fan_result(result.get_dock_fan(), dock_fan_icons, 0);
+#endif
 
 #if HAS_CHAMBER_API()
             switch (buddy::chamber().backend()) {
@@ -224,6 +237,11 @@ namespace frame {
             , info { parent, Rect16(col_texts, row_8, col_texts_w, WizardDefaults::row_h * 4), is_multiline::yes, is_closed_on_click_t::no }
             , print_icons { make_fan_icon_array(parent, row_2, tool_icon_count) }
             , heatbreak_icons { make_fan_icon_array(parent, row_3, tool_icon_count) }
+#if HAS_INDX()
+            , dock_fan_label { parent, Rect16(col_texts, row_5, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_dock_fan) }
+            , dock_fan_label_icon { parent, &img::turbine_16x16, point_i16_t({ WizardDefaults::col_0, row_5 }) }
+            , dock_fan_icons { make_fan_icon_array(parent, row_5, 1) }
+#endif
 #if HAS_CHAMBER_API()
             , enclosure_label { parent, Rect16(col_texts, row_4, col_texts_w, WizardDefaults::txt_h), is_multiline::no, is_closed_on_click_t::no, _(en_text_enclosure_fan) }
             , enclosure_label_icon { parent, &img::fan_16x16, point_i16_t({ WizardDefaults::col_0, row_4 }) }

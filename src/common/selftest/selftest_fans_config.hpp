@@ -40,6 +40,8 @@ constexpr FanRPMRange print_fan_range = { .rpm_min = 4800, .rpm_max = 6799 };
 constexpr FanRPMRange print_low_fan_range = benevolent_fan_range;
     #if HAS_INDX()
 constexpr FanRPMRange heatbreak_fan_range = { .rpm_min = 12000, .rpm_max = 18000 };
+// The dock fan is the same hardware as the C1 print fan, so reuse its range.
+constexpr FanRPMRange dock_fan_range = print_fan_range;
     #else
 constexpr FanRPMRange heatbreak_fan_range = { .rpm_min = 6800, .rpm_max = 8700 };
     #endif

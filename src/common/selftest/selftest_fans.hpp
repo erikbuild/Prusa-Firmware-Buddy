@@ -11,6 +11,7 @@
 #include <pwm_utils.hpp>
 #include <option/has_bed_fan.h>
 #include <option/has_psu_fan.h>
+#include <option/has_indx.h>
 
 #if HAS_BED_FAN()
     #include <feature/bed_fan/controller.hpp>
@@ -21,6 +22,9 @@ namespace fan_selftest {
 enum class FanType {
     print = 0,
     heatbreak,
+#if HAS_INDX()
+    dock,
+#endif
 #if XL_ENCLOSURE_SUPPORT()
     xl_enclosure,
 #endif
@@ -39,6 +43,9 @@ enum class FanType {
 static constexpr EnumArray<FanType, const char *, FanType::_count> fan_type_names {
     { FanType::print, N_("Print") },
         { FanType::heatbreak, N_("Heatbreak") },
+#if HAS_INDX()
+        { FanType::dock, N_("Dock") },
+#endif
 #if XL_ENCLOSURE_SUPPORT()
         { FanType::xl_enclosure, N_("XL Enclosure") },
 #endif

@@ -290,6 +290,9 @@ private:
             result.set_heatbreak_fan(tool, TestResult::unknown);
             result.set_fans_switched(tool, TestResult::unknown);
         }
+#if HAS_INDX()
+        result.set_dock_fan(TestResult::unknown);
+#endif
         config_store().selftest_result.set(result);
 
 #if HAS_CHAMBER_API()
@@ -340,6 +343,11 @@ private:
             case FanType::heatbreak:
                 result.set_heatbreak_fan(fan->get_desc_num(), fan->test_result());
                 break;
+#if HAS_INDX()
+            case FanType::dock:
+                result.set_dock_fan(fan->test_result());
+                break;
+#endif
 #if XL_ENCLOSURE_SUPPORT()
             case FanType::xl_enclosure:
                 config_store().xl_enclosure_fan_selftest_result.set(fan->test_result());
@@ -419,14 +427,18 @@ void M1978() {
         &Fans::print(PhysicalToolIndex::from_raw(0)));
     CommonFanHandler indx_heatbreak_fan(FanType::heatbreak, 0, heatbreak_fan_range,
         &Fans::heat_break(PhysicalToolIndex::from_raw(0)));
+    // Auxiliary dock fan on the xBuddy print-fan pin (same hardware as the C1 print fan).
+    CommonFanHandler indx_dock_fan(FanType::dock, 0, dock_fan_range,
+        &Fans::dock_fan());
 
-    std::array<FanHandler *, 2 + 5 /* reserve for chamber/bed/psu fans */> fan_container;
+    std::array<FanHandler *, 3 + 5 /* reserve for chamber/bed/psu fans */> fan_container;
     std::array<std::pair<FanHandler *, FanHandler *>, 1> tool_fan_pairs;
 
     size_t container_index = 0;
     uint8_t pairs = 0;
     fan_container[container_index++] = &indx_print_fan;
     fan_container[container_index++] = &indx_heatbreak_fan;
+    fan_container[container_index++] = &indx_dock_fan;
     tool_fan_pairs[pairs++] = std::make_pair<FanHandler *, FanHandler *>(&indx_print_fan, &indx_heatbreak_fan);
 #else
     auto print_fans = [&]<size_t... ix>(std::index_sequence<ix...>) {
