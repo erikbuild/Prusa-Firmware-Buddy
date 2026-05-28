@@ -55,8 +55,6 @@ void loop();
 // direct call of babystep.add_steps(Z_AXIS, ...)
 void do_babystep_Z(float offs);
 
-void move_axis(float pos, float feedrate, size_t axis);
-
 // direct call of 'enqueue_and_echo_command'
 // @retval true command enqueued
 // @retval false otherwise

@@ -1216,16 +1216,6 @@ void do_babystep_Z(float offs) {
     babystep.add_steps(Z_AXIS, static_cast<int16_t>(std::round(offs * planner.settings.axis_steps_per_mm[Z_AXIS])));
 }
 
-extern void move_axis(float pos, float feedrate, size_t axis) {
-    current_position[axis] = pos;
-    line_to_current_position(feedrate);
-}
-
-void move_xyz_axes_to(xyz_float_t position, float feedrate) {
-    current_position.set(position);
-    line_to_current_position(feedrate);
-}
-
 void enqueue_gcode(const char *gcode) {
     if (!queue.enqueue_one(gcode)) {
         bsod("enqueue_gcode failed");
