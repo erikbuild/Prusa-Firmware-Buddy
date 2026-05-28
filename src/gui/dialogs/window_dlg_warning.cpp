@@ -5,6 +5,7 @@
 #include <common/fsm_base_types.hpp>
 #include <option/has_dwarf.h>
 #include <option/has_uneven_bed_prompt.h>
+#include <option/has_indx.h>
 #include <state/printer_state.hpp>
 
 static constexpr int16_t icon_size = 48;
@@ -45,6 +46,9 @@ const img::Resource *warning_dialog_icon(WarningType warning_type) {
 
     case WarningType::HotendFanError:
     case WarningType::PrintFanError:
+#if HAS_INDX()
+    case WarningType::DockFanError:
+#endif
         return &img::fan_error_48x48;
 
     case WarningType::HeatersTimeout:

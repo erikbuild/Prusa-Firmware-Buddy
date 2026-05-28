@@ -586,6 +586,10 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::CONNECT_HOTEND_FAN_ERROR;
     case WarningType::PrintFanError:
         return ErrCode::CONNECT_PRINT_FAN_ERROR;
+#if HAS_INDX()
+    case WarningType::DockFanError:
+        return ErrCode::CONNECT_DOCK_FAN_ERROR;
+#endif
     case WarningType::HotendTempDiscrepancy:
         return ErrCode::CONNECT_HOTEND_TEMP_DISCREPANCY;
     case WarningType::HeatersTimeout:

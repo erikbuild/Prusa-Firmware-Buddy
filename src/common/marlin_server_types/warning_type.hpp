@@ -14,6 +14,7 @@
 #include <option/has_human_interactions.h>
 #include <option/has_anfc.h>
 #include <option/has_tool_offset_sensor.h>
+#include <option/has_indx.h>
 
 enum class WarningType : uint32_t {
 #if HAS_EMERGENCY_STOP()
@@ -21,6 +22,9 @@ enum class WarningType : uint32_t {
 #endif
     HotendFanError,
     PrintFanError,
+#if HAS_INDX()
+    DockFanError,
+#endif
     HeatersTimeout,
     HotendTempDiscrepancy,
     NozzleTimeout,

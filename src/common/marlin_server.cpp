@@ -3010,10 +3010,9 @@ static void _server_print_loop(void) {
 #endif
         printFanErrorChecker.checkTrue(Fans::print(active_extruder).is_fan_ok(), WarningType::PrintFanError, false, true);
 #if HAS_INDX()
-        // INDX_TODO: Replace WarningType::PrintFanError with a dedicated
-        // WarningType::DockFanError (YAML entry + ErrCode mapping + icon).
-        // Disabled for now — `true` keeps the checker from firing.
-        dockFanErrorChecker.checkTrue(true /* INDX_TODO: Fans::dock_fan().is_fan_ok() */, WarningType::PrintFanError, false, true);
+        // The dock fan is auxiliary (cools the tool dock) and not present on
+        // all dev units yet, so a fault must only warn — never pause the print.
+        dockFanErrorChecker.checkTrue(Fans::dock_fan().is_fan_ok(), WarningType::DockFanError, false, false);
 #endif
 
 #if XBUDDY_EXTENSION_VARIANT_IS_STANDARD()
@@ -3050,7 +3049,6 @@ static void _server_print_loop(void) {
         printFanErrorChecker.reset();
     }
 #if HAS_INDX()
-    // INDX_TODO: pair with the dedicated dock-fan checker when wired up.
     if (Fans::dock_fan().get_rpm_is_ok()) {
         dockFanErrorChecker.reset();
     }
@@ -3110,7 +3108,6 @@ void resuming_begin(void) {
     }
     printFanErrorChecker.reset();
 #if HAS_INDX()
-    // INDX_TODO: pair with the dedicated dock-fan checker when wired up.
     dockFanErrorChecker.reset();
 #endif
 
