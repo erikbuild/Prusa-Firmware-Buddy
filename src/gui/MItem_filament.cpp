@@ -37,11 +37,8 @@ void setup_item(IWindowMenuItem &item) {
 } // namespace
 
 #if HAS_TOOLCHANGER()
-[[nodiscard]] bool show_tool_selector_dialog(SelectToolDialogArgs::ToolFilter tool_filter = SelectToolDialogArgs::default_tool_filter) {
-    const auto tool = select_tool_dialog({
-        .allow_return = true,
-        .tool_filter = tool_filter,
-    });
+[[nodiscard]] bool show_tool_selector_dialog(const SelectToolDialogArgs &args) {
+    const auto tool = select_tool_dialog(args);
 
     if (!tool) {
         return false;
@@ -76,7 +73,9 @@ MI_LOAD::MI_LOAD()
 
 void MI_LOAD::click(IWindowMenu &) {
 #if HAS_TOOLCHANGER()
-    if (!show_tool_selector_dialog()) {
+    if (!show_tool_selector_dialog({
+            .allow_return = true,
+        })) {
         return;
     }
 #endif
@@ -99,7 +98,9 @@ MI_UNLOAD::MI_UNLOAD()
 
 void MI_UNLOAD::click(IWindowMenu &) {
 #if HAS_TOOLCHANGER()
-    if (!show_tool_selector_dialog()) {
+    if (!show_tool_selector_dialog({
+            .allow_return = true,
+        })) {
         return;
     }
 #endif
@@ -120,7 +121,10 @@ void MI_CHANGE::Loop() {
 
 void MI_CHANGE::click(IWindowMenu &) {
 #if HAS_TOOLCHANGER()
-    if (!show_tool_selector_dialog(tool_has_filament)) {
+    if (!show_tool_selector_dialog({
+            .allow_return = true,
+            .tool_filter = tool_has_filament,
+        })) {
         return;
     }
 #endif
@@ -148,7 +152,10 @@ MI_PURGE::MI_PURGE()
 
 void MI_PURGE::click(IWindowMenu &) {
 #if HAS_TOOLCHANGER()
-    if (!show_tool_selector_dialog(tool_has_filament)) {
+    if (!show_tool_selector_dialog({
+            .allow_return = true,
+            .tool_filter = tool_has_filament,
+        })) {
         return;
     }
 #endif
