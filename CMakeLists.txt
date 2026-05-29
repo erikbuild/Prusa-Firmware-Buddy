@@ -36,7 +36,6 @@ include(ProjectOptions.cmake)
 
 # link time optimizations to disable LTO run cmake with -DDISABLE_LTO
 if(NOT DEFINED DISABLE_LTO
-   AND NOT DEVELOPER_MODE
    AND NOT BOARD STREQUAL DWARF
    AND CMAKE_CROSSCOMPILING # This will not force LTO for natively built unittests
    )
