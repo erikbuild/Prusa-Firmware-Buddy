@@ -13,10 +13,10 @@ namespace {
     // See BFW-8630 for more info
 
     /// K/W at full fan power, thermal resistance of nozzle tip surface to air
-    constexpr float nozzle_tip_thermal_resistance_k_w = 75;
+    constexpr float nozzle_tip_thermal_resistance_k_w = 100;
 
     /// K/W, thermal resistance between the nozzle and the heatsink
-    constexpr float heatbreak_thermal_resistance_k_w = 80;
+    constexpr float heatbreak_thermal_resistance_k_w = 75;
 
     /// K/W/mm, thermal resistance of the nozzle body per mm, used for calculating heat gradient
     constexpr float nozzle_linear_thermal_resistance_k_w_mm = 1.7f;

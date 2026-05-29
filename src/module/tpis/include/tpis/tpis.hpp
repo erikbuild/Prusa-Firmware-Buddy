@@ -9,7 +9,7 @@ namespace tpis {
 
 using fixed = fpm::fixed<int32_t, int64_t, 7>;
 
-constexpr float emissivity = 0.46f;
+constexpr float emissivity = 0.48f;
 
 struct SensorData {
     uint32_t tp_object = 0;
