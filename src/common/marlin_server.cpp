@@ -1194,15 +1194,15 @@ void loop() {
 static bool idle_running = false;
 
 static void idle(void) {
+    AutoRestore idle_running_guard(idle_running, true);
+
     cycle();
 
     // cycle -> loop -> idle -> MarlinUI::update() -> ExtUI::onIdle -> idle -> cycle
     // This is only a work-around: this should be avoided at a higher level
-    if (idle_running) {
+    if (idle_running_guard.original_value()) {
         return;
     }
-
-    AutoRestore _ar(idle_running, true);
 
 #if HAS_EMERGENCY_STOP()
     // During printing, possibly block anytime, with exception of Load Unload sequence
@@ -1565,6 +1565,8 @@ void print_abort(void) {
         server.print_state = State::Aborting_Begin;
         break;
 
+    case State::PrintInit:
+    case State::SerialPrintInit:
     case State::PrintPreviewInit:
     case State::PrintPreviewImage:
     case State::PrintPreviewConfirmed:
@@ -2202,6 +2204,11 @@ static void _server_print_loop(void) {
 
     case State::PrintInit:
     case State::SerialPrintInit:
+        if (idle_running || is_processing()) {
+            // Prints must always be started from outer loop
+            break;
+        }
+
         server.print_is_serial = (server.print_state == State::SerialPrintInit);
         server.was_print_time_saved = false;
 #if HAS_MMU2()
