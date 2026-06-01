@@ -58,4 +58,3 @@ void try_fix_if_needed(const i2c::Result &result);
 [[nodiscard]] i2c::Result eeprom_transmit(EepromCommandWrite cmd, uint8_t *pData, uint16_t size);
 [[nodiscard]] i2c::Result user_read_bytes(EepromCommand cmd, uint16_t address, void *pdata, uint16_t size);
 [[nodiscard]] i2c::Result user_write_bytes(EepromCommand cmd, uint16_t address, const void *pdata, uint16_t size);
-[[nodiscard]] i2c::Result user_unverified_write_bytes(uint16_t address, const void *pdata, uint16_t size);

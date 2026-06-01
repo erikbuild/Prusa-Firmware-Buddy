@@ -336,28 +336,6 @@ void try_fix_if_needed(const i2c::Result &result) {
     return result;
 }
 
-[[nodiscard]] i2c::Result user_unverified_write_bytes(uint16_t address, const void *pdata, uint16_t size) {
-    if (size == 0) {
-        return i2c::Result::ok;
-    }
-
-    i2c::Result result = i2c::Result::error;
-
-    for (uint32_t try_no = 0; try_no < RETRIES; ++try_no) {
-
-        st25dv64k_lock();
-        result = user_write_bytes_without_lock(EepromCommandWrite::addr_memory, address, pdata, size);
-        st25dv64k_unlock();
-        try_fix_if_needed(result);
-
-        if (result == i2c::Result::ok) {
-            break;
-        }
-    }
-
-    return result;
-}
-
 void st25dv64k_user_read_bytes(uint16_t address, void *pdata, uint16_t size) {
     st25dv64k_user_write_bytes_flush(); // commit pending buffered writes so the read sees them
     auto result = user_read_bytes(EepromCommand::memory, address, pdata, size);
@@ -369,11 +347,6 @@ void st25dv64k_user_write_bytes(uint16_t address, const void *pdata, uint16_t si
     rise_error_if_needed(st25dv64k_user_write_bytes_buffered_internal(address, pdata, size));
     rise_error_if_needed(st25dv64k_user_write_bytes_flush_internal());
     st25dv64k_unlock();
-}
-
-void st25dv64k_user_unverified_write_bytes(uint16_t address, const void *pdata, uint16_t size) {
-    auto result = user_unverified_write_bytes(address, pdata, size);
-    rise_error_if_needed(result);
 }
 
 uint8_t st25dv64k_rd_cfg(uint16_t address) {
