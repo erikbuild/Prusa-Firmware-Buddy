@@ -126,10 +126,14 @@ void XBuddyExtension::step() {
         filtration_fan_actual_pwm_ = chamber_cooling.apply_pwm_overrides(rpm2.value_or(0) > 5, filtration_fan_actual_pwm_);
 
         const auto set_fan_pwm = [this](Fan fan, PWM255 pwm) {
-            puppies::xbuddy_extension.set_fan_pwm(std::to_underlying(fan), pwm.value);
+            const uint8_t fan_idx = std::to_underlying(fan);
+            const uint8_t prev_pwm = puppies::xbuddy_extension.get_requested_fan_pwm(fan_idx);
+            puppies::xbuddy_extension.set_fan_pwm(fan_idx, pwm.value);
 
-            // Keep resetting start_timestamp while the fan is not spinning.
-            if (pwm.value == 0) {
+            // Refresh the start timestamp whenever the fan is not running (so
+            // it stays fresh while off) and on the 0 -> non-zero edge (so
+            // spin-up gets a fresh FANCTL_START_TIMEOUT grace period).
+            if (pwm.value == 0 || prev_pwm == 0) {
                 fan_start_timestamp[fan] = ticks_ms();
             }
         };
