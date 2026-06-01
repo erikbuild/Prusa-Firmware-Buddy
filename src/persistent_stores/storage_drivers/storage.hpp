@@ -12,6 +12,7 @@ class Storage {
 public:
     virtual size_t read_bytes(size_t address, WritableBytes buffer) = 0;
     virtual size_t write_bytes(size_t address, Bytes data) = 0;
+    virtual void flush() = 0;
     Storage() = default;
     Storage(const Storage &other) = delete;
     Storage(Storage &&other) = delete;

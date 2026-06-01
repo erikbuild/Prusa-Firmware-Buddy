@@ -12,3 +12,6 @@ size_t EEPROMStorage::write_bytes(size_t address, Bytes data) {
     bytes_written_.fetch_add(data.size(), std::memory_order_relaxed);
     return data.size();
 }
+
+void EEPROMStorage::flush() {
+}

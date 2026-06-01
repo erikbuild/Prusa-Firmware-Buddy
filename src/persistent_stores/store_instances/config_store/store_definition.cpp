@@ -80,6 +80,7 @@ void CurrentStore::perform_config_check() {
     // then we can finally stop writing this and rely entirely on dataexchange.
     uint8_t null_byte = 0x00;
     EEPROMInstance().write_bytes(0x040B, trivial_as_bytes(null_byte));
+    EEPROMInstance().flush();
 
     // First run -> the config store is empty -> we don't need to do any migrations from older versions
     if (!is_first_run && config_version.get() != newest_config_version) {

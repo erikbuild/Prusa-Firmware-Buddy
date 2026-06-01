@@ -10,6 +10,7 @@ class EEPROMStorage : public configuration_store::Storage {
 public:
     size_t read_bytes(size_t address, WritableBytes buffer) override;
     size_t write_bytes(size_t address, Bytes data) override;
+    void flush() override;
 };
 
 inline configuration_store::Storage &EEPROMInstance() {

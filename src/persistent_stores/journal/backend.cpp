@@ -430,7 +430,9 @@ uint16_t Backend::write_end_item(uint16_t address) {
     }
 
     CRCType crc = crc32(0, trivial_as_bytes(LAST_ITEM_STOP));
-    return write_item(address, LAST_ITEM_STOP, {}, crc);
+    const uint16_t written = write_item(address, LAST_ITEM_STOP, {}, crc);
+    storage.flush();
+    return written;
 }
 void Backend::store_single_item(uint16_t id, const Bytes &data) {
     if (!fits_in_current_bank(ITEM_HEADER_SIZE + data.size() + CRC_SIZE + END_ITEM_SIZE_WITH_CRC)) {
