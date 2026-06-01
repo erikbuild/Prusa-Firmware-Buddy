@@ -98,6 +98,13 @@ float random_jitter(uint8_t r_param) {
 /// Strips the currently applied hotend offset to avoid accumulating old offsets.
 float probe_z_at(const xy_pos_t &pos, uint8_t probe_count) {
 
+    // BFW-8817: tool_change() between tools toggles the loadcell stream, so the first
+    // samples can be stale and make probe_at_point report a phantom trigger, killing the calib (observed in logs)
+    if (!tool_offset::wait_for_loadcell_alive()) {
+        log_error(ToolOffsetCalib, "Loadcell did not produce fresh samples before Z probe");
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
     const float measured = probe_at_point(pos, PROBE_PT_NONE, 1, true, probe_count);
     if (std::isnan(measured)) {
         return measured;
