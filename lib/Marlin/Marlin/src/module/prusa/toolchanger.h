@@ -311,9 +311,10 @@ private:
      * @brief Verify nozzle presence/absence.
      * @param prev_tool index of previous tool (for logs)
      * @param expect_present true after pickup (expect nozzle), false after park (expect no nozzle)
+     * @param mode controls the bail-out condition during the wait (see WaitMode)
      * @return true if nozzle state matches expectation
      */
-    [[nodiscard]] bool verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present);
+    [[nodiscard]] bool verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present, WaitMode mode = WaitMode::default_mode);
 
     enum class ToolchangeFailureAction { abort, retry };
 

@@ -2,6 +2,12 @@
 #include "toolchanger.h"
 
 #include <module/planner.h>
+#include "Marlin.h"
+#include "timing.h"
+
+#if ENABLED(POWER_PANIC)
+    #include <power_panic.hpp>
+#endif
 
 void PrusaToolChanger::z_shift(const float diff) {
     if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
@@ -36,4 +42,30 @@ float PrusaToolChanger::calc_z_raise(tool_return_t return_type, xyz_pos_t return
         z_raise += get_mbl_z_lift_height();
     }
     return z_raise;
+}
+
+// This function confuses the indexer, so it is last in the file
+bool PrusaToolChangerUtils::wait(const stdext::inplace_function<bool()> &function, uint32_t timeout_ms, WaitMode mode) {
+    auto should_bail = [mode]() {
+        switch (mode) {
+        case WaitMode::default_mode:
+            return planner.draining();
+        case WaitMode::bail_on_power_panic:
+#if ENABLED(POWER_PANIC)
+            return power_panic::panic_is_active();
+#else
+            return false;
+#endif
+        }
+        bsod_unreachable();
+    };
+
+    uint32_t start_time = ticks_ms();
+    bool result = false;
+    while (!(result = function()) // Wait for this and remember its state for return
+        && !should_bail()
+        && (ticks_ms() - start_time) < timeout_ms) { // Timeout
+        idle(true);
+    }
+    return result;
 }

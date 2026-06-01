@@ -30,6 +30,11 @@ struct PrusaToolInfo {
     float dock_y;
 };
 
+enum class WaitMode {
+    default_mode, ///< Bail on planner.draining() (includes user Stop, power panic, and the other quick_stop callers).
+    bail_on_power_panic, ///< Keep polling through any planner.draining() cause; only bail when power panic is active.
+};
+
 class PrusaToolChangerUtils {
 public:
     #if HAS_INDX()
@@ -276,9 +281,10 @@ protected:
      * @brief Wait until function returns true.
      * @param function wait for this to return true
      * @param timeout_ms maximal time to wait [ms]
-     * @return true on success, false if timeout was reached
+     * @param mode controls the bail-out condition during the wait (see WaitMode)
+     * @return true on success, false if the condition was not met (timeout or early-exit per @p mode)
      */
-    [[nodiscard]] bool wait(stdext::inplace_function<bool()> function, uint32_t timeout_ms);
+    [[nodiscard]] bool wait(const stdext::inplace_function<bool()> &function, uint32_t timeout_ms, WaitMode mode = WaitMode::default_mode);
 
     /**
      * @brief Get maximum difference of MBL height

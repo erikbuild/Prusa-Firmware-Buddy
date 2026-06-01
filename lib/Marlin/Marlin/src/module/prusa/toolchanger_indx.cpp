@@ -606,6 +606,14 @@ bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
 bool PrusaToolChanger::park(PhysicalToolIndex tool) {
     uint8_t max_retry_cnt = 2;
 
+    // On bail-out, reconcile active_extruder with what the sensor sees.
+    ScopeGuard committer = [&] {
+        // bail_on_power_panic - the presence analysis must settle even after a user Stop.
+        // Power-panic still short-circuits inside wait() so we don't drain PSU caps.
+        if (!nozzle_check_disabled && verify_nozzle_state(tool, false, WaitMode::bail_on_power_panic)) {
+            commit_park(tool);
+        }
+    };
     for (;;) {
         if (!ensure_safe_move()) {
             return false; // We cannot even home, abort the print
@@ -655,14 +663,15 @@ bool PrusaToolChanger::park(PhysicalToolIndex tool) {
     return true;
 }
 
-bool PrusaToolChanger::verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present) {
+bool PrusaToolChanger::verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present, WaitMode mode) {
     // Wait until nozzle presence confirms the expected post-pickup/park state.
     // This avoids failing on an early stale-but-valid sample from before the mechanical transition settled.
     // Note: a "stuck halfway" nozzle reads as `unknown` on the head side (decay between thresholds),
     // so it stays nullopt here and times out into the retry/abort recovery branch below.
     const bool data_ready = wait(
         [expect_present]() { return buddy::puppies::indx.get_nozzle_present() == std::optional<bool>(expect_present); },
-        NOZZLE_VERIFY_TIMEOUT_MS);
+        NOZZLE_VERIFY_TIMEOUT_MS,
+        mode);
 
     if (data_ready) {
         log_info(PrusaToolChanger, "Nozzle verify after %s tool #%u: ok",

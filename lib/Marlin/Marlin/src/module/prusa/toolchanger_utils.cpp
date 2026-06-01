@@ -385,16 +385,4 @@ void PrusaToolChangerUtils::ConfRestorer::restore_feedrate() {
     feedrate_percentage = sampled_feedrate_percentage;
 }
 
-// This function confuses the indexer, so it is last in the file
-bool PrusaToolChangerUtils::wait(stdext::inplace_function<bool()> function, uint32_t timeout_ms) {
-    uint32_t start_time = ticks_ms();
-    bool result = false;
-    while (!(result = function()) // Wait for this and remember its state for return
-        && !planner.draining() // This triggers on powerpanic and quickstop
-        && (ticks_ms() - start_time) < timeout_ms) { // Timeout
-        idle(true);
-    }
-    return result;
-}
-
 #endif
