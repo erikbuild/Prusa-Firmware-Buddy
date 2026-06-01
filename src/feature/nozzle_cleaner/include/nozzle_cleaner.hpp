@@ -21,9 +21,20 @@ enum class Sequence : uint16_t {
     eject_blob,
     enter_cleaner,
     exit_cleaner,
+
+    // Internal-only sequences below; not invocable via G12.
+    _cnt_external,
+    enter_cleaner_from_inside = _cnt_external,
 #endif
     _cnt,
 };
+
+/// Count of sequences exposed via G12. Excludes internal-only sequences.
+#if HAS_INDX()
+inline constexpr size_t externally_invocable_count = static_cast<size_t>(Sequence::_cnt_external);
+#else
+inline constexpr size_t externally_invocable_count = static_cast<size_t>(Sequence::_cnt);
+#endif
 
 std::optional<Sequence> parse_sequence(std::string_view name);
 const GCodeFile &get_sequence(Sequence seq);

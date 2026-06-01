@@ -135,6 +135,12 @@ static constexpr EnumArray<Sequence, GCodeFile, static_cast<int>(Sequence::_cnt)
                                       .default_gcode = "G750 Y98.5 F21000\n"
                                                        "G750 X-9 F10000",
                                   } },
+        { Sequence::enter_cleaner_from_inside, {
+                                                   .filename = "enter_cleaner_from_inside",
+                                                   .directory = directory,
+                                                   .default_gcode = "G750 Y98.5 F21000\n"
+                                                                    "G750 X0.65 F10000",
+                                               } },
 #else
     { Sequence::clean, {
                            .filename = "clean",
@@ -184,6 +190,23 @@ static constexpr EnumArray<Sequence, GCodeFile, static_cast<int>(Sequence::_cnt)
 #endif
 };
 
+#if HAS_INDX()
+namespace {
+    bool is_inside_bin() {
+        // Same area as parking.cpp's "wastebin area"; constants are rough
+        // estimates of the bin's outer extent (INDX_TODO).
+        return current_position.x > X_WASTEBIN_SAFE_POINT
+            && current_position.y > Y_WASTEBIN_SAFE_POINT;
+    }
+
+    /// If the nozzle is outside the bin, runs enter_cleaner first.
+    /// @return false on draining/error from the auto-enter, true otherwise.
+    bool ensure_safe_cleaning() {
+        return is_inside_bin() || load_and_execute(Sequence::enter_cleaner);
+    }
+} // namespace
+#endif
+
 static GCodeLoader &nozzle_cleaner_gcode_loader_instance() {
     static GCodeLoader nozzle_cleaner_gcode_loader;
     return nozzle_cleaner_gcode_loader;
@@ -207,6 +230,28 @@ void load_sequence(Sequence seq) {
 }
 
 bool load_and_execute(Sequence seq) {
+#if HAS_INDX()
+    switch (seq) {
+    case Sequence::enter_cleaner:
+        if (is_inside_bin()) {
+            seq = Sequence::enter_cleaner_from_inside;
+        }
+        break;
+    case Sequence::enter_cleaner_from_inside:
+        break;
+    case Sequence::exit_cleaner:
+        if (!is_inside_bin()) {
+            return true;
+        }
+        break;
+    default:
+        if (!ensure_safe_cleaning()) {
+            return false;
+        }
+        break;
+    }
+#endif
+
     PrintStatusMessageGuard status_message;
     status_message.update<PrintStatusMessage::nozzle_cleaner>({});
 

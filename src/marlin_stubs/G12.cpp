@@ -67,7 +67,7 @@ void PrusaGcodeSuite::G12() {
             { 91, nozzle_cleaner::Sequence::exit_cleaner },
 #endif
         };
-        static_assert(std::size(s_param_map) == static_cast<size_t>(nozzle_cleaner::Sequence::_cnt));
+        static_assert(std::size(s_param_map) == nozzle_cleaner::externally_invocable_count);
 
         uint16_t s_param = 0;
         (void)parser.store_option_if_present('S', s_param);
