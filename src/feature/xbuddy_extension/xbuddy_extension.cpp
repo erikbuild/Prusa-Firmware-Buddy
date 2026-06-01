@@ -19,6 +19,9 @@ namespace {
 // This is a bit below 15%.
 constexpr uint8_t strobe_pwm = 35;
 
+// How long a bad RPM reading must persist before is_fan_ok reports failure.
+constexpr uint32_t fan_bad_timeout_ms = 750;
+
 } // namespace
 
 namespace buddy {
@@ -61,21 +64,32 @@ void XBuddyExtension::step() {
     puppies::xbuddy_extension.set_white_strobe_frequency(strobe_freq_);
     puppies::xbuddy_extension.set_usb_power(config_store().xbe_usb_power.get());
 
-    const auto rpm0 = puppies::xbuddy_extension.get_fan_rpm(0);
-    const auto rpm1 = puppies::xbuddy_extension.get_fan_rpm(1);
-    const auto rpm2 = puppies::xbuddy_extension.get_fan_rpm(2);
-
-    // if we dont have data, suppose fan is not running and reset timer
     const auto now = ticks_ms();
-    if (!rpm0.has_value()) {
-        fan_start_timestamp[0] = now;
-    }
-    if (!rpm1.has_value()) {
-        fan_start_timestamp[1] = now;
-    }
-    if (!rpm2.has_value()) {
-        fan_start_timestamp[2] = now;
-    }
+
+    const auto update_fan = [this, now](Fan fan, FanPWM pwm) -> std::optional<FanRPM> {
+        const auto rpm = puppies::xbuddy_extension.get_fan_rpm(std::to_underlying(fan));
+
+        // No data -> assume the fan is not running; reset the spin-up timer.
+        if (!rpm.has_value()) {
+            fan_start_timestamp[fan] = now;
+        }
+
+        bool sample_bad = false;
+        if (pwm.value == 0) {
+            // Fan is not supposed to spin
+        } else if (!rpm.has_value() || rpm.value() > 0) {
+            // Fan is spinning, or RPM unknown (modbus comm error)
+        } else if (ticks_diff(now, fan_start_timestamp[fan]) >= FANCTL_START_TIMEOUT) {
+            sample_bad = true;
+        }
+        fan_failure_latch[fan].update(sample_bad, now, fan_bad_timeout_ms);
+
+        return rpm;
+    };
+
+    const auto rpm0 = update_fan(Fan::cooling_fan_1, cooling_fans_actual_pwm_);
+    const auto rpm1 = update_fan(Fan::cooling_fan_2, cooling_fans_actual_pwm_);
+    const auto rpm2 = update_fan(Fan::filtration_fan, filtration_fan_actual_pwm_);
 
     // Trigger fatal error due to chamber temperature only if we get valid values, that are not reasonable
     if (temp.has_value()) {
@@ -180,24 +194,9 @@ std::optional<XBuddyExtension::FanRPM> XBuddyExtension::fan_rpm(Fan fan) const {
 }
 
 bool XBuddyExtension::is_fan_ok(const Fan fan) const {
-    const auto actual_pwm = fan_actual_pwm(fan);
-
     std::lock_guard _lg(mutex_);
-
-    if (actual_pwm.value == 0) {
-        // Fan is not supposed to spin - all is well
-
-    } else if (auto rpm = fan_rpm(fan); !rpm.has_value() || rpm.value() > 0) {
-        // Fan is spinning - all is well
-        // Or we don't know the RPM, at which point, it's an error in modBus read communication and we can't assume anything about the fan_rpm
-
-    } else if (ticks_diff(ticks_ms(), fan_start_timestamp[fan]) >= FANCTL_START_TIMEOUT) {
-        // Fan should be spinning for some time now, but it isn't -> report a problem
-        return false;
-    }
-
-    return true;
-};
+    return !fan_failure_latch[fan].is_triggered();
+}
 
 XBuddyExtension::FanPWMOrAuto XBuddyExtension::fan_target_pwm(Fan fan) const {
     std::lock_guard _lg(mutex_);

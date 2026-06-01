@@ -13,6 +13,7 @@
 #include <freertos/mutex.hpp>
 #include <temperature.hpp>
 #include <pwm_utils.hpp>
+#include <utils/timing/latching_debouncer.hpp>
 
 #include <xbuddy_extension/shared_enums.hpp>
 #include <option/xbuddy_extension_variant.h>
@@ -48,7 +49,7 @@ public: // Fans
     /// \returns measured RPM of the specified fan
     std::optional<FanRPM> fan_rpm(Fan fan) const;
 
-    /// \returns False on unexpected fan behaviour (positive PWM but 0 RPM)
+    /// \returns False if the fan has unexpectedly read 0 RPM at positive PWM for longer than a short debounce window.
     bool is_fan_ok(const Fan fan) const;
 
     /// \returns shared target PWM of the specified fan
@@ -183,6 +184,9 @@ private:
 
     // keeps fan power up timestamp to measure headstart delay
     EnumArray<Fan, uint32_t, xbuddy_extension::fan_count> fan_start_timestamp = {};
+
+    // Latches failure state once fan reports 0 RPM at positive PWM beyond grace period.
+    EnumArray<Fan, utils::LatchingDebouncer, xbuddy_extension::fan_count> fan_failure_latch = {};
 
     bool can_auto_cool_ = false;
     bool overheating_warning_shown = false;
