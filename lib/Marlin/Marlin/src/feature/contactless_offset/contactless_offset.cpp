@@ -694,8 +694,19 @@ FsmState next_state(FsmState state, FsmEvent event, FsmContext &ctx) {
 const char *dispatch_fsm(FsmContext &ctx) {
     constexpr unsigned max_iterations = 14;
 
+    // if the INDX puppy resets mid-FSM, every subsequent scan reads garbage
+    // (rough align fails, chunk_size collapses, peaks never line up),
+    // Snapshot the reset counter and bail out the moment we notice it advanced,
+    // the caller will surface a clean error and the user-facing retry can start from a known-good puppy state
+    const uint32_t initial_reset_counter = buddy::puppies::indx.get_reset_counter();
+
     FsmState state = FsmState::offset_measurement_x;
     for (unsigned i = 0; i < max_iterations; ++i) {
+        if (buddy::puppies::indx.get_reset_counter() != initial_reset_counter) {
+            log_error(ContactlessOffset, "INDX puppy reset during XY scan; aborting FSM");
+            return "INDX puppy reset during XY scan";
+        }
+
         if (state == FsmState::finished && ctx.om_x.confidence > high_confidence_threshold && ctx.om_y.confidence > high_confidence_threshold) {
             return nullptr;
         } else if (state == FsmState::finished) {
