@@ -44,4 +44,8 @@ public:
      * and return it to original state
      */
     ~AutoRestore() { ref = val; }
+
+    T original_value() const {
+        return val;
+    }
 };
