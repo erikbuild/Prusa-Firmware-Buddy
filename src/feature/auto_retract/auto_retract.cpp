@@ -247,12 +247,6 @@ void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
         }
         // Retract
         const float retracted_distance = this->retracted_distance(physical_tool).value_or(0.f);
-
-        // There's a generic trap on the extruder moves, which prevents any extruder retraction once we are already auto-retracted.
-        // Because of that, we need to set the auto-retracted distance to nullopt, to make the generic trap allow us to retract
-        // where we want (and we then set the new total auto-retracted distance after doing this).
-        set_retracted_distance(physical_tool, std::nullopt);
-
         const float retract_amount = full_retract_distance - retracted_distance;
         mapi::extruder_move(-retract_amount, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
         planner.synchronize();
