@@ -443,7 +443,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
     const int32_t exp_d = static_cast<int32_t>(XY_HOMING_ORIGIN_OFFSET * 2 / planner.mm_per_step[axis]
         + ab_off[0] * phase_cycle_steps(other_axis) * 2);
     const int32_t exp_a = ab_off[1] * phase_cycle_steps(axis);
-    const int32_t exp_dist_steps[2] = { exp_d + exp_a * measure_dir, exp_d - exp_a * measure_dir };
+    const int32_t exp_dist_steps[2] = { exp_d + exp_a, exp_d - exp_a };
 
     // absolute tolerance for the travel move:
     // - maximum diagonal shift of classic homing (maximum relative difference or absolute bump tolerance)
