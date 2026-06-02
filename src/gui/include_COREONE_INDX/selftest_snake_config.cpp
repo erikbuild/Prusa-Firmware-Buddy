@@ -75,6 +75,8 @@ TestResult get_test_result(Action action, ToolMask tool) {
         });
     case Action::DockCalibration:
         return sr.get_dock_offset(PhysicalToolIndex::from_raw(0));
+    case Action::ToolOffsetsCalibration:
+        return config_store().selftest_result_tool_offsets_calibration.get();
     case Action::NozzleCleanerCalibration:
         return config_store().selftest_result_nozzle_cleaner_calibration.get();
     case Action::InputShaper:
@@ -95,6 +97,7 @@ uint64_t get_test_mask(Action action) {
     case Action::DoorSensor:
     case Action::FilamentSensorCalibration:
     case Action::DockCalibration:
+    case Action::ToolOffsetsCalibration:
     case Action::NozzleCleanerCalibration:
     case Action::InputShaper:
     case Action::PhaseSteppingCalibration:

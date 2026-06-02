@@ -12,17 +12,18 @@ enum class Action : uint8_t {
     DoorSensor,
     XCheck,
     YCheck,
+    ZAlign, // also known as z_calib
     BeltTuning,
 #if HAS_PRECISE_HOMING_COREXY()
     PreciseHoming,
 #endif
     DockCalibration,
-    NozzleCleanerCalibration,
-    ZAlign, // also known as z_calib
     Loadcell, // Check loadcell before Z test, because it is used there
     ZCheck,
     Fans,
     Heaters,
+    ToolOffsetsCalibration,
+    NozzleCleanerCalibration,
     FilamentSensorCalibration,
     PhaseSteppingCalibration,
     InputShaper,
@@ -57,12 +58,20 @@ constexpr EnumBitset<Action, Action::_count> get_dependencies(Action action) {
         deps.set(Action::PreciseHoming);
 #endif
         break;
-    case Action::NozzleCleanerCalibration:
     case Action::Heaters:
         deps.set(Action::DockCalibration);
         break;
+    case Action::ToolOffsetsCalibration:
+        deps.set(Action::DockCalibration);
+        deps.set(Action::Heaters);
+        break;
+    case Action::NozzleCleanerCalibration:
+        deps.set(Action::ToolOffsetsCalibration);
+        break;
     case Action::Loadcell:
-        deps.set(Action::NozzleCleanerCalibration); // if nozzle is hot, it is parked above nozzle cleaner
+        // NozzleCleanerCalibration now runs later — fall back to the uncalibrated cleaner origin
+        // for parking. The default position lands inside the bin (calibration only refines within
+        // a few mm), so any drips still go where intended.
         break;
     case Action::FilamentSensorCalibration:
         // if filament is loaded, we need to unload (above nozzle cleaner)
