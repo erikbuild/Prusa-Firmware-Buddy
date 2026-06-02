@@ -110,8 +110,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
     });
 
     // Check where we should return to
-    // Note: purge_and_to_destination is treated as to_destination — INDX purge is handled in the loader gcode, not here
-    if (return_type == tool_return_t::to_destination || return_type == tool_return_t::purge_and_to_destination) {
+    if (return_type == tool_return_t::to_destination) {
         return_position = destination.xyz();
     }
 

@@ -202,7 +202,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
         [](NoTool) { return MARLIN_NO_TOOL_PICKED; });
 
     // Check where we should return to
-    if (return_type == tool_return_t::to_destination || return_type == tool_return_t::purge_and_to_destination) {
+    if (return_type == tool_return_t::to_destination) {
         return_position = destination.xyz();
     }
 
@@ -342,12 +342,6 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
             // Pick new tool
             if (!pickup(*new_dwarf) || !check_skipped_step()) {
                 return false;
-            }
-
-            if (return_type == tool_return_t::purge_and_to_destination) {
-                if (!purge_tool(PhysicalToolIndex::from_raw(new_dwarf->dwarf_index()))) {
-                    return false;
-                }
             }
         }
 

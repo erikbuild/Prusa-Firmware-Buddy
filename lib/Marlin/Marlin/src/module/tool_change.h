@@ -45,7 +45,6 @@
 enum class tool_return_t {
   no_return, // lift and/or retract as needed, but don't return to any position after toolchange
   to_current, // return to the current position
-  purge_and_to_destination, // purge nozlle, then return to destination
   to_destination, // return to destination
 };
 
