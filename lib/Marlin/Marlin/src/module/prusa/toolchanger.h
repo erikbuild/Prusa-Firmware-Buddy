@@ -60,6 +60,13 @@ public:
 
     #endif // HAS_TOOL_CRASH_RECOVERY() || HAS_INDX()
 
+    #if PRINTER_IS_PRUSA_XL()
+    /**
+     * @brief Purges tool by extruding some filament outside of print area and tries to shake it away and wipe it by parking
+     */
+    bool purge_tool(PhysicalToolIndex tool);
+    #endif
+
     #if HAS_TOOL_CRASH_RECOVERY()
 
     /**
@@ -413,11 +420,6 @@ private:
      * @return true on success
      */
     [[nodiscard]] bool park(buddy::puppies::Dwarf &dwarf);
-
-    /**
-     * @brief Purges tool by extruding some filament outside of print area and tries to shake it away and wipe it by parking
-     */
-    bool purge_tool(buddy::puppies::Dwarf &dwarf);
 
     /**
      * @brief Check if steps were skipped during parking.

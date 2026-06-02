@@ -345,7 +345,7 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
             }
 
             if (return_type == tool_return_t::purge_and_to_destination) {
-                if (!purge_tool(*new_dwarf)) {
+                if (!purge_tool(PhysicalToolIndex::from_raw(new_dwarf->dwarf_index()))) {
                     return false;
                 }
             }
@@ -474,8 +474,8 @@ void PrusaToolChanger::toolfall() {
     toolchanger_error("Tool fell off");
 }
 
-bool PrusaToolChanger::purge_tool(Dwarf &dwarf) {
-    const PhysicalToolIndex tool = PhysicalToolIndex::from_raw(dwarf.dwarf_index());
+bool PrusaToolChanger::purge_tool(PhysicalToolIndex tool) {
+    auto &dwarf = dwarfs[tool];
 
     if (thermalManager.tooColdToExtrude(tool)) {
         // hotend is cold, skip purge because it can't do anything
