@@ -11,6 +11,9 @@ METRIC_DEF(metric_store_id, "store_id", METRIC_VALUE_INTEGER, 0, METRIC_ENABLED)
 
 /// Emitted for ecah migration, value is the number of bytes written due to the migration
 METRIC_DEF(metric_store_migration, "store_migration", METRIC_VALUE_INTEGER, 0, METRIC_ENABLED);
+
+/// Emitted for each migration, value is the duration of the migration in ms
+METRIC_DEF(metric_store_migration_ms, "store_migration_ms", METRIC_VALUE_INTEGER, 0, METRIC_ENABLED);
 #endif
 
 namespace journal {
@@ -452,6 +455,7 @@ Backend::Address Backend::get_next_bank_start_address() const {
 void Backend::migrate_bank() {
 #ifndef UNITTESTS
     const auto start_bytes_written = storage.bytes_written();
+    const auto start_ms = ticks_ms();
 #endif
 
     current_bank_id++;
@@ -465,6 +469,7 @@ void Backend::migrate_bank() {
 
 #ifndef UNITTESTS
     metric_record_integer(&metric_store_migration, storage.bytes_written() - start_bytes_written);
+    metric_record_integer(&metric_store_migration_ms, ticks_diff(ticks_ms(), start_ms));
 #endif
 }
 void Backend::transaction_start() {
