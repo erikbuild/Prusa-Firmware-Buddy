@@ -2613,12 +2613,16 @@ static void _server_print_loop(void) {
         {
 #endif
             retract_and_lift();
+            // Skip homing and parking when no tool is picked - there's no nozzle to clean or park,
+            // and pre_finalize_print's tool_change(NoTool) is a no-op in that case.
+            if (std::holds_alternative<PhysicalToolIndex>(PhysicalToolIndex::currently_selected())) {
 #if HAS_NOZZLE_CLEANER()
-            // With nozzle cleaner, home so that the head position is known for parking and nozzle cleaning.
-            // On INDX, home precisely so that finalize_print's tool_change(NoTool) docking can skip its own homing.
-            GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .can_calibrate = false, .precise = HAS_INDX() });
+                // With nozzle cleaner, home so that the head position is known for parking and nozzle cleaning.
+                // On INDX, home precisely so that finalize_print's tool_change(NoTool) docking can skip its own homing.
+                GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .can_calibrate = false, .precise = HAS_INDX() });
 #endif
-            park_head(false);
+                park_head(false);
+            }
         }
 
         thermalManager.disable_all_heaters();
