@@ -74,17 +74,16 @@ struct ToolTemperatures {
 /// Get nozzle temperatures for a physical tool from its loaded filament.
 /// Uses tool mapping to find the gcode tool, then looks up the filament type.
 /// xy_probing temp is set to a default since it does not depend on used filament or tool
-ToolTemperatures get_tool_temperatures(PhysicalToolIndex tool) {
-    const uint8_t gcode_raw = tools_mapping::to_gcode_tool(tool.to_raw());
-    if (gcode_raw == tools_mapping::no_tool) {
+ToolTemperatures get_tool_temperatures(PhysicalToolIndex physical_tool) {
+    const auto virtual_tool = stdext::get_optional<VirtualToolIndex>(physical_tool.currently_selected_virtual_tool());
+    const FilamentType filament = virtual_tool.has_value() ? config_store().get_filament_type(*virtual_tool) : FilamentType::none;
+
+    if (filament != FilamentType::none) {
+        const auto params = filament.parameters();
+        return { params.nozzle_temperature, params.nozzle_preheat_temperature, DEFAULT_XY_PROBING_TEMP };
+    } else {
         return { DEFAULT_CLEANING_TEMP, DEFAULT_Z_PROBING_TEMP, DEFAULT_XY_PROBING_TEMP };
     }
-    const FilamentType filament = config_store().get_filament_type(VirtualToolIndex::from_raw(gcode_raw));
-    if (filament == FilamentType::none) {
-        return { DEFAULT_CLEANING_TEMP, DEFAULT_Z_PROBING_TEMP, DEFAULT_XY_PROBING_TEMP };
-    }
-    const auto params = filament.parameters();
-    return { params.nozzle_temperature, params.nozzle_preheat_temperature, DEFAULT_XY_PROBING_TEMP };
 }
 
 /// Return a random float in [-r_param, +r_param]
