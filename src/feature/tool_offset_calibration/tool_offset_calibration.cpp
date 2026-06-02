@@ -152,8 +152,10 @@ bool prepare_tool(PhysicalToolIndex tool, tool_offset_calibration::Context conte
         // park out of cleaner area
         mapi::park(mapi::ParkingPosition::from_xyz_pos({ { X_WASTEBIN_SAFE_POINT, Y_WASTEBIN_SAFE_POINT, SAFE_Z_HEIGHT } }));
     } else {
-        // Calibration context: nozzle was cleaned by the user. Heat directly to probing temperature.
-        thermalManager.setTargetHotend(temps.z_probing, tool);
+        // Calibration context: nozzle was cleaned by the user and Z is not probed here. Heat
+        // straight to the XY-probing temperature (lower than the Z-probing temperature, so no
+        // cool-down needed afterwards).
+        thermalManager.setTargetHotend(temps.xy_probing, tool);
         thermalManager.wait_for_hotend(tool, false);
     }
     return true;
@@ -382,6 +384,10 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
 
     log_info(ToolOffsetCalib, "Calibrating %u tool(s)", num_tools);
 
+    // Z probing is only done from a running print — selftest skips it to save time. Z offsets
+    // are then left at zero until the next G427 call from a print start.
+    const bool measure_z = (context == Context::Print);
+
     struct ProbeResult {
         float z;
         xy_pos_t pos;
@@ -484,59 +490,61 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
                 return false;
             }
 
-            if (num_tools == 1) {
+            if (num_tools == 1 && measure_z) {
                 // With one-tool print, we still need to do prepare_tool which runs the nozzle cleaner
                 // But we don't need to do any offset calibrations, so we can just quit now
                 // We don't need to be that precise for the nozzle cleaner
                 break;
             }
 
-            const auto result_opt = probe_at(tool, step);
-            if (!result_opt) {
-                log_error(ToolOffsetCalib, "Z probe failed for tool %u (step %u)", tool.to_raw(), step);
-                if (handle_tool_failure()) {
-                    break;
-                }
-                abort_print_if_needed();
-                return false;
-            }
-            const auto result = *result_opt;
-
-            if (step == 0) {
-                // Keep offset at zero as set by the reset at the beginning of the function
-
-                // If we're measuring more than one tool, we will be measuring all tools on a single X line.
-                // Use the first tool to probe both start and end of the line to interpolate from
-                // This is basically a ghetto MBL
-                ref_first = result;
-
-                // Probe at last position (with the same first tool)
-                const auto ref_last_opt = probe_at(tool, num_tools);
-                if (!ref_last_opt) {
-                    log_error(ToolOffsetCalib, "Z probe failed at reference-line end for tool %u", tool.to_raw());
+            if (measure_z) {
+                const auto result_opt = probe_at(tool, step);
+                if (!result_opt) {
+                    log_error(ToolOffsetCalib, "Z probe failed for tool %u (step %u)", tool.to_raw(), step);
                     if (handle_tool_failure()) {
                         break;
                     }
                     abort_print_if_needed();
                     return false;
                 }
-                ref_last = *ref_last_opt;
+                const auto result = *result_opt;
 
-                log_info(ToolOffsetCalib, "Reference line: Z_first=%.3f at (%.1f,%.1f) Z_last=%.3f at (%.1f,%.1f)",
-                    static_cast<double>(ref_first.z), static_cast<double>(ref_first.pos.x), static_cast<double>(ref_first.pos.y),
-                    static_cast<double>(ref_last.z), static_cast<double>(ref_last.pos.x), static_cast<double>(ref_last.pos.y));
+                if (step == 0) {
+                    // Keep offset at zero as set by the reset at the beginning of the function
 
-            } else {
-                // Interpolate expected Z on the reference line at the actual probed X
-                const float t = result.pos.x - ref_first.pos.x;
-                const float z_expected = ref_first.z + (ref_last.z - ref_first.z) * (t / (ref_last.pos.x - ref_first.pos.x));
-                const float z_offset = z_expected - result.z; // Inverted, because +Z is down
-                hotend_offset[tool].z = z_offset;
-                log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", tool.to_raw(), static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
+                    // If we're measuring more than one tool, we will be measuring all tools on a single X line.
+                    // Use the first tool to probe both start and end of the line to interpolate from
+                    // This is basically a ghetto MBL
+                    ref_first = result;
+
+                    // Probe at last position (with the same first tool)
+                    const auto ref_last_opt = probe_at(tool, num_tools);
+                    if (!ref_last_opt) {
+                        log_error(ToolOffsetCalib, "Z probe failed at reference-line end for tool %u", tool.to_raw());
+                        if (handle_tool_failure()) {
+                            break;
+                        }
+                        abort_print_if_needed();
+                        return false;
+                    }
+                    ref_last = *ref_last_opt;
+
+                    log_info(ToolOffsetCalib, "Reference line: Z_first=%.3f at (%.1f,%.1f) Z_last=%.3f at (%.1f,%.1f)",
+                        static_cast<double>(ref_first.z), static_cast<double>(ref_first.pos.x), static_cast<double>(ref_first.pos.y),
+                        static_cast<double>(ref_last.z), static_cast<double>(ref_last.pos.x), static_cast<double>(ref_last.pos.y));
+
+                } else {
+                    // Interpolate expected Z on the reference line at the actual probed X
+                    const float t = result.pos.x - ref_first.pos.x;
+                    const float z_expected = ref_first.z + (ref_last.z - ref_first.z) * (t / (ref_last.pos.x - ref_first.pos.x));
+                    const float z_offset = z_expected - result.z; // Inverted, because +Z is down
+                    hotend_offset[tool].z = z_offset;
+                    log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", tool.to_raw(), static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
+                }
+
+                min_z_offset = std::min(min_z_offset, hotend_offset[tool].z);
+                max_z_offset = std::max(max_z_offset, hotend_offset[tool].z);
             }
-
-            min_z_offset = std::min(min_z_offset, hotend_offset[tool].z);
-            max_z_offset = std::max(max_z_offset, hotend_offset[tool].z);
 
             // Note: If we would first calibrate XY offset, it should then give us more precise interpolation on the ghetto MBL line
             // but there is a trade off with filament oozing during calibration
@@ -611,7 +619,7 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
             }
         }
 
-        if (max_z_offset - min_z_offset > MAX_Z_OFFSET_DIFFERENCE) {
+        if (measure_z && max_z_offset - min_z_offset > MAX_Z_OFFSET_DIFFERENCE) {
             if (prompt_retry(WarningType::HotendOffsetUnsafeZDeviation, context) == Response::Retry) {
                 continue;
             }
