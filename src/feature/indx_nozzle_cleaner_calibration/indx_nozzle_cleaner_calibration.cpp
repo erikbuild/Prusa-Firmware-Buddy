@@ -284,10 +284,18 @@ private:
             MachinePosXY diff;
             corexy_ab_to_xy(position_before - position_after, diff);
 
+            // Fold the picked tool's hotend offset into the measurement so the stored cleaner
+            // position is tool-independent. The raw `diff` represents the carriage displacement;
+            // the nozzle (which is what the user placed in the V-groove) sits at
+            // carriage + hotend_offset, so adding the offset gives the V-groove position in
+            // machine coordinates that any tool can later be steered to via G750.
+            const auto selected_tool = stdext::get_optional<PhysicalToolIndex>(PhysicalToolIndex::currently_selected());
+            const xyz_pos_t tool_offset = selected_tool ? hotend_offset[*selected_tool] : xyz_pos_t {};
+
             // Extract the measured position for this axis
             const float measured = (config.axis == AxisEnum::X_AXIS)
-                ? (diff.x + current_position.x)
-                : (diff.y + current_position.y);
+                ? (diff.x + current_position.x + tool_offset.x)
+                : (diff.y + current_position.y + tool_offset.y);
 
             const float offset = measured - config.nominal_mm;
 
