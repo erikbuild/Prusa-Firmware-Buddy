@@ -250,7 +250,7 @@ bool ChamberFiltration::needs_filtration() const {
             continue;
         }
 
-        const FilamentTypeParameters filament = config_store().get_filament_type(virtual_tool).parameters();
+        const FilamentTypeParameters filament = FilamentType::for_tool_heuristic(virtual_tool).parameters();
 
         const bool hotend_is_hot =
             // Give some headroom over preheat temperature, we don't want the filtration to trigger when oscilating around it

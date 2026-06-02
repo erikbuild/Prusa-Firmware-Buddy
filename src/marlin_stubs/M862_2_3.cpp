@@ -33,8 +33,8 @@ static void setup_gcode_compatibility(const PrinterModelInfo *gcode_printer) {
         FilamentTypeParameters params;
 
         // Try to somewhat deduce chamber temperature from the loaded filaments from whatever extruder is used
-        GCodeInfo::getInstance().for_each_used_extruder([&]([[maybe_unused]] uint8_t logical_ix, uint8_t physical_ix, const GCodeInfo::ExtruderInfo &) {
-            params = config_store().get_filament_type(physical_ix).parameters();
+        GCodeInfo::getInstance().for_each_used_extruder([&](GcodeToolIndex, VirtualToolIndex virtual_tool, const GCodeInfo::ExtruderInfo &) {
+            params = FilamentType::for_tool_heuristic(virtual_tool).parameters();
         });
 
         // If the maximum chamber temperature is specified, enqueue cooling

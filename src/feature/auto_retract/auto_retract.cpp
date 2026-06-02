@@ -102,7 +102,7 @@ void AutoRetract::maybe_retract_from_nozzle(const RetractFromNozzleParams &param
         return;
     }
 
-    const auto filament_parameters = config_store().get_filament_type(virtual_tool).parameters();
+    const auto filament_parameters = FilamentType::for_tool_heuristic(virtual_tool).parameters();
 
     // Do not auto retract flexible filaments, they might get tangled in the extruder (BFW-6953)
     if (filament_parameters.is_flexible) {
@@ -234,7 +234,7 @@ void AutoRetract::ensure_retracted_no_ramming(float purge_length) {
     planner.synchronize();
     const auto temp_before = thermalManager.degTargetHotend(physical_tool);
     const M109Flags flags_pre = {
-        .target_temp = config_store().get_filament_type(virtual_tool).parameters().nozzle_temperature,
+        .target_temp = FilamentType::for_tool_heuristic(virtual_tool).parameters().nozzle_temperature,
     };
     M109_no_parser(physical_tool, flags_pre);
 

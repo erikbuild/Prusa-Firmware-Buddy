@@ -53,7 +53,7 @@ void INDXHotendTempModel::step() {
 
     const auto hotend_temp_c = indx_head.get_hotend_temp_uncompensated();
     const auto e_steps = stepper.position_from_startup(e_axis);
-    const auto current_filament = config_store().get_filament_type(*virtual_tool);
+    const auto current_filament = FilamentType::for_tool(*virtual_tool);
 
     ScopeGuard last_sg = [&] {
         last_e_steps_ = e_steps;
@@ -61,13 +61,17 @@ void INDXHotendTempModel::step() {
     };
 
     if (!is_initialized_) {
-        if (current_filament == FilamentType::none) {
+        const auto heuristic_filament = FilamentType::for_tool_heuristic(*virtual_tool);
+
+        if (heuristic_filament == FilamentType::none) {
             // No filament loaded, we don't want to compensate at all
             return;
         }
 
         compensator_.reset_state();
-        compensator_.set_filament_parameters(indx::FilamentParameters::for_filament(current_filament.parameters()));
+
+        // Do NOT use current_filament, use a smarter heuristic here
+        compensator_.set_filament_parameters(indx::FilamentParameters::for_filament(heuristic_filament.parameters()));
 
         retracted_distance_mm_ = 0;
 

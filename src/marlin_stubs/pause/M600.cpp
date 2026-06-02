@@ -234,7 +234,7 @@ void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool, xyze_float
 
         // Sets the target temperature based on the current filament type
         // M600 generally should not set target temperature, this is an exception for specific scenario where user wants to change filament on currently unused toolhead during print
-        const auto filament_data = config_store().get_filament_type(target_tool).parameters();
+        const auto filament_data = FilamentType::for_tool_heuristic(target_tool).parameters();
         Temperature::setTargetHotend(filament_data.nozzle_temperature, physical_target_tool);
     }
 #endif
@@ -262,9 +262,11 @@ void M600_execute(xyz_pos_t park_point, VirtualToolIndex target_tool, xyze_float
 
     if (filament_type.has_value()) {
         config_store().set_filament_type(target_tool, filament_type.value());
+    } else {
+        filament_type = FilamentType::for_tool_heuristic(target_tool);
     }
 
-    filament::set_type_to_load(config_store().get_filament_type(target_tool));
+    filament::set_type_to_load(*filament_type);
     filament::set_color_to_load(filament_colour);
     Pause::Instance().filament_change(settings, is_filament_stuck);
 

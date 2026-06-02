@@ -604,18 +604,18 @@ bool GCodeInfo::is_singletool_gcode() const {
     return true;
 }
 
-void GCodeInfo::for_each_used_extruder(const stdext::inplace_function<void(uint8_t logical_ix, uint8_t physical_ix, const ExtruderInfo &info)> &callback) {
-    for (int8_t e = 0; e < EXTRUDERS; e++) {
-        const auto &info = get_extruder_info(e);
+void GCodeInfo::for_each_used_extruder(const stdext::inplace_function<void(GcodeToolIndex, VirtualToolIndex, const ExtruderInfo &info)> &callback) {
+    for (auto gcode_tool : GcodeToolIndex::all()) {
+        const auto &info = get_extruder_info(gcode_tool);
         if (!info.used()) {
             continue;
         }
 
-        const uint8_t tool_index = tools_mapping::to_physical_tool(e);
+        const uint8_t tool_index = tools_mapping::to_physical_tool(gcode_tool.to_raw());
         if (tool_index == tools_mapping::no_tool) {
             continue;
         }
 
-        callback(e, tool_index, info);
+        callback(gcode_tool, VirtualToolIndex::from_raw(tool_index), info);
     }
 }

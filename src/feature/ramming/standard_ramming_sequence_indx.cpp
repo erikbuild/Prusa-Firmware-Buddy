@@ -11,7 +11,7 @@
 using namespace buddy;
 
 const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence seq, VirtualToolIndex virtual_tool) {
-    const bool is_flexible = config_store().get_filament_type(virtual_tool).parameters().is_flexible;
+    const bool is_flexible = FilamentType::for_tool_heuristic(virtual_tool).parameters().is_flexible;
 
     switch (seq) {
 

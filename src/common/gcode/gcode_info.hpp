@@ -196,7 +196,7 @@ public:
     }
 
     /// Calls \param callback for each extruder that is used for the print
-    void for_each_used_extruder(const stdext::inplace_function<void(uint8_t logical_ix, uint8_t physical_ix, const ExtruderInfo &info)> &callback);
+    void for_each_used_extruder(const stdext::inplace_function<void(GcodeToolIndex, VirtualToolIndex, const ExtruderInfo &info)> &callback);
 
     /** Get static instance of the singleton
      */

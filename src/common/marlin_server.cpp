@@ -2307,8 +2307,8 @@ static void _server_print_loop(void) {
         {
             // Find the highest chamber target temperature across the filaments used by the print
             std::optional<uint8_t> max_chamber_target_temp;
-            GCodeInfo::getInstance().for_each_used_extruder([&]([[maybe_unused]] uint8_t logical_ix, uint8_t physical_ix, const GCodeInfo::ExtruderInfo &) {
-                const auto target = config_store().get_filament_type(physical_ix).parameters().chamber_target_temperature;
+            GCodeInfo::getInstance().for_each_used_extruder([&]([[maybe_unused]] GcodeToolIndex, VirtualToolIndex virtual_tool, const GCodeInfo::ExtruderInfo &) {
+                const auto target = FilamentType::for_tool_heuristic(virtual_tool).parameters().chamber_target_temperature;
                 if (target.has_value() && (!max_chamber_target_temp.has_value() || *target > *max_chamber_target_temp)) {
                     max_chamber_target_temp = target;
                 }
