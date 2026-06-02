@@ -163,6 +163,8 @@ const char *get_action_label(Action action) {
 #if HAS_INDX()
     case Action::NozzleCleanerCalibration:
         return N_("Nozzle Cleaner Calibration");
+    case Action::ToolOffsetsCalibration:
+        return N_("Tool Offsets Calibration");
 #endif
 #if PRINTER_IS_PRUSA_XL()
     case Action::ToolOffsetsCalibration:
@@ -378,6 +380,9 @@ void do_snake(Action action, PhysicalToolIndex tool) {
             break;
         case Action::NozzleCleanerCalibration:
             marlin_client::gcode("M1983");
+            break;
+        case Action::ToolOffsetsCalibration:
+            marlin_client::gcode("M1985");
             break;
         case Action::BeltTuning:
             marlin_client::gcode("M961");
