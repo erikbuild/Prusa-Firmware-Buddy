@@ -4,27 +4,41 @@
     #include "Configuration_XL.h"
 #endif
 #include <logging/log.hpp>
-#include "marlin_server.hpp"
 #include "module/motion.h"
 #include "module/prusa/tool_mapper.hpp"
 #include <cmath>
 #include <limits>
 #include <optional>
 #include <option/has_mmu2.h>
-#include <option/has_toolchanger.h>
+#include <option/has_dwarf.h>
 #include "module/temperature.h"
 #include "module/planner.h" // for get_axis_position_mm
-#include "marlin_vars.hpp"
 #include "module/tool_change.h"
 #include <config_store/store_instance.hpp>
 #include "mmu2_toolchanger_common.hpp"
 #include <feature/print_status_message/print_status_message_mgr.hpp>
 #include <feature/print_status_message/print_status_message_guard.hpp>
 #include <tool_index.hpp>
+#include <mapi/parking.hpp>
+#include <mapi/motion.hpp>
+
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <module/prusa/toolchanger.h>
+#endif
 
 #include <option/has_nozzle_cleaner.h>
 #if HAS_NOZZLE_CLEANER()
     #include "../../../feature/nozzle_cleaner/include/nozzle_cleaner.hpp"
+#endif
+
+#include <option/has_filament_tracker.h>
+#if HAS_FILAMENT_TRACKER()
+    #include <feature/filament_tracker/filament_tracker.hpp>
+#endif
+
+#if ENABLED(CRASH_RECOVERY)
+    #include <feature/prusa/crash_recovery.hpp>
 #endif
 
 SpoolJoin spool_join;
@@ -230,7 +244,8 @@ bool SpoolJoin::do_join(VirtualToolIndex current_virtual_tool) {
 
     planner.synchronize();
 
-    [[maybe_unused]] xyze_pos_t return_pos = current_position;
+    /// The tool offset can change during the toolchange, so store the return position as logical (nozzle) position
+    [[maybe_unused]] const XYZval<float, LogicalPosTag> return_pos = current_position.asLogical().xyz();
 
     // set up new tool mapping, so that next Tx will use spool we are joining to
     // but do mapping of logical->physical, so first convert current_tool to its logical tool
@@ -243,63 +258,77 @@ bool SpoolJoin::do_join(VirtualToolIndex current_virtual_tool) {
     }
     tool_mapper.set_enable(true);
 
+    static_assert((HAS_INDX() + HAS_DWARF() + HAS_MMU2()) == 1, "This code assumes exactly one of these toolchanger types");
+
+#if HAS_TOOLCHANGER()
     const auto current_physical_tool = current_virtual_tool.to_physical();
-    [[maybe_unused]] const auto new_physical_tool = new_virtual_tool.to_physical();
+    const auto new_physical_tool = new_virtual_tool.to_physical();
 
-    [[maybe_unused]] auto target_temp = thermalManager.degTargetHotend(current_physical_tool);
+    const auto nozzle_temp = thermalManager.degTargetHotend(current_physical_tool);
 
-    static_assert((HAS_INDX() + PRINTER_IS_PRUSA_XL() + HAS_MMU2()) == 1);
+    const auto orig_e_pos = current_position.e;
 
-#if HAS_INDX()
-    // cool down current tool
-    thermalManager.setTargetHotend(0, current_physical_tool);
+    bool should_park = true;
+    #if ENABLED(CRASH_RECOVERY)
+    // Do not park/unpark during crash recovery (= gcode intterupt)
+    // Crash recovery handles that
+    should_park &= (crash_s.get_state() != Crash_s::RECOVERY);
+    #endif
 
-    // change to new tool
-    tool_change(new_virtual_tool, tool_return_t::no_return, tool_change_lift_t::full_lift, false);
+    const float target_retracted_distance = buddy::filament_tracker().get_retracted_distance(current_physical_tool).value_or(0);
 
     // transfer target temperature from one tool to another
-    thermalManager.setTargetHotend(target_temp, new_physical_tool);
+    thermalManager.setTargetHotend(0, current_physical_tool);
+    thermalManager.setTargetHotend(nozzle_temp, new_physical_tool);
 
-    // We intentinally keep loaded filament type in EEPROM. That makes it possible for user to click "Change Filament" and printer will know what temperature to preheat to.
-    // Filament sensor should say that there is no filament, so it will not be possible to start print in this state.
+    if (should_park) {
+        // Z raise
+        mapi::park(mapi::ParkingPosition { .z = mapi::ParkingPosition::AdvancedZ { .relative = TOOLCHANGE_ZRAISE } });
+    }
+
+    const auto wait_for_temp = [&] {
+        if (nozzle_temp != 0) {
+            thermalManager.wait_for_hotend(new_physical_tool, false, true);
+        }
+    };
+
+    #if !HAS_INDX()
+    // Park current tool
+    tool_change(NoTool {}, tool_return_t::no_return, tool_change_lift_t::no_lift, false);
+
+    // Wait for the new tool to heat up WHILE IT'S PARKED - not possible on INDX
+    wait_for_temp();
+    #endif
+
+    // change to new tool
+    tool_change(new_virtual_tool, tool_return_t::no_return, tool_change_lift_t::no_lift, false);
 
     #if HAS_NOZZLE_CLEANER()
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::enter_cleaner);
-    #endif
 
-    if (target_temp != 0) {
-        thermalManager.wait_for_hotend(new_physical_tool, false, true);
-    }
+    wait_for_temp();
 
-    #if HAS_NOZZLE_CLEANER()
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::purge_clean);
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::clean);
     nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::exit_cleaner);
+
+    #else
+    wait_for_temp();
+    prusa_toolchanger.purge_tool(new_physical_tool);
+
     #endif
 
-    // return to original print position
-    do_blocking_move_to(return_pos);
-
-#elif PRINTER_IS_PRUSA_XL()
-    // cool down current tool
-    thermalManager.setTargetHotend(0, current_physical_tool);
-
-    // Park current tool, to get away from print
-    tool_change(NoTool {}, tool_return_t::no_return);
-
-    // transfer target temperature from one tool to another
-    thermalManager.setTargetHotend(target_temp, new_physical_tool);
-
-    // We intentinally keep loaded filament type in EEPROM. That makes it possible for user to click "Change Filament" and printer will know what temperature to preheat to.
-    // Filament sensor should say that there is no filament, so it will not be possible to start print in this state.
-
-    if (target_temp != 0) {
-        thermalManager.wait_for_hotend(new_physical_tool, false, true);
+    if (should_park) {
+        // return to original print position
+        do_blocking_move_to(return_pos.asNative());
     }
 
-    // change to new tool
-    destination = return_pos;
-    tool_change(new_virtual_tool, tool_return_t::purge_and_to_destination /* For MMU unused */);
+    // Match the retracted distance of the original tool
+    const float current_retracted_distance = buddy::filament_tracker().get_retracted_distance(new_physical_tool).value_or(0);
+    mapi::extruder_move(-(target_retracted_distance - current_retracted_distance), ADVANCED_PAUSE_PURGE_FEEDRATE);
+
+    // Make the spool join seamless in terms of E stepper position
+    sync_e_position_to(orig_e_pos);
 
 #elif HAS_MMU2()
     MMU2::mmu2.tool_change_full(new_virtual_tool.to_raw());
