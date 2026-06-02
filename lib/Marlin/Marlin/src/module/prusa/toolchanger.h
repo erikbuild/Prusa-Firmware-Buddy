@@ -180,6 +180,19 @@ public:
      */
     bool ensure_head_open(std::variant<PhysicalToolIndex, NoTool> tool = NoTool {});
 
+    /**
+     * @brief Manually park a tool whose dock association the firmware doesn't know.
+     *
+     * Runs the bump-to-dock → set_active_extruder → persist → park sequence used
+     * by the nozzle-mismatch recovery. With no @p tool, drives the nozzle-mismatch
+     * FSM (prompt → dock_selection → parking → dock_not_empty) so the user can
+     * pick a dock interactively. With @p tool, jumps straight to bump+park on that
+     * dock without involving the FSM.
+     *
+     * @return true on success (tool parked), false on abort/failure
+     */
+    bool manual_tool_park(std::optional<PhysicalToolIndex> tool = std::nullopt);
+
     enum class BumpError : uint8_t {
         unsafe_move,
         hit

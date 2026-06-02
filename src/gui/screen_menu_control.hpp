@@ -9,6 +9,7 @@
 #include <option/filament_sensor.h>
 #include <option/buddy_enable_connect.h>
 #include <option/has_toolchanger.h>
+#include <option/has_indx.h>
 #include <option/has_selftest.h>
 #include <option/has_mmu2.h>
 #include <option/has_coldpull.h>
@@ -41,6 +42,11 @@ using ScreenMenuControlSpec = ScreenMenu<EFooter::On, MI_RETURN
 #if HAS_SHEET_PROFILES()
     ,
     MI_CURRENT_SHEET_PROFILE
+#endif
+
+#if HAS_INDX()
+    ,
+    MI_FIX_STUCK_NOZZLE
 #endif
     ,
     MI_DISABLE_STEP, MI_LIVE_ADJUST_Z

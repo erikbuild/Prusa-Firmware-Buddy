@@ -236,41 +236,7 @@ void PrusaToolChanger::check_nozzle_presence_vs_eeprom() {
     if (eeprom_says_no_tool && nozzle_present) {
         // EEPROM says no tool, but a nozzle is detected — ask user which dock it belongs to
         log_error(PrusaToolChanger, "Nozzle detected but EEPROM says no tool");
-
-        // Prevent re-entry: wait_for_response() runs the idle loop, which calls loop() -> check_nozzle_presence_vs_eeprom() again
-        block_tool_check = true;
-        ScopeGuard guard = [this] { block_tool_check = false; };
-
-        marlin_server::FSM_Holder fsm(PhaseNozzleMismatch::prompt);
-        [[maybe_unused]] const auto prompt_response = marlin_server::wait_for_response(PhaseNozzleMismatch::prompt);
-
-        while (true) {
-            marlin_server::fsm_change(PhaseNozzleMismatch::dock_selection);
-            auto response = marlin_server::wait_for_response_variant(PhaseNozzleMismatch::dock_selection);
-            uint8_t dock_idx = response.value_or<uint8_t>(0);
-
-            const auto tool_index = PhysicalToolIndex::from_raw(dock_idx);
-
-            log_info(PrusaToolChanger, "User selected dock %u for unknown nozzle", dock_idx);
-
-            marlin_server::fsm_change(PhaseNozzleMismatch::parking);
-            if (bump_to_dock(tool_index)) {
-                log_info(PrusaToolChanger, "Bump to dock %u succeeded, parking tool", dock_idx);
-                set_active_extruder(tool_index);
-                persist_last_picked_tool(tool_index);
-                if (park(tool_index)) {
-                    break; // Success — FSM_Holder destructor closes the dialog
-                }
-                // park() failed — tool still on head, let user retry dock selection
-                log_warning(PrusaToolChanger, "Park of tool #%u failed, retrying dock selection", tool_index.to_raw());
-                continue;
-            }
-
-            // Dock occupied — revert picked state and let user try another dock
-            log_warning(PrusaToolChanger, "Bump to dock %u failed — dock not empty", dock_idx);
-            marlin_server::fsm_change(PhaseNozzleMismatch::dock_not_empty);
-            marlin_server::wait_for_response(PhaseNozzleMismatch::dock_not_empty);
-        }
+        manual_tool_park();
     } else if (eeprom_says_tool && !nozzle_present) {
         // EEPROM says tool is picked, but no nozzle is detected — correct to no tool
         const auto tool_index = std::get<PhysicalToolIndex>(eeprom_tool);
@@ -452,6 +418,65 @@ bool PrusaToolChanger::ensure_head_open(std::variant<PhysicalToolIndex, NoTool> 
         : PhysicalToolIndex::from_raw(0);
     open_head(physical_tool);
     return true;
+}
+
+bool PrusaToolChanger::manual_tool_park(std::optional<PhysicalToolIndex> tool) {
+    // Bump → set_active → persist → park sequence shared by both paths.
+    // On dock-occupied this surfaces the dock_not_empty FSM phase so both the
+    // interactive and the direct caller get visual feedback.
+    const auto dock_tool = [this](PhysicalToolIndex t) -> bool {
+        if (!bump_to_dock(t)) {
+            log_warning(PrusaToolChanger, "Manual park: bump to dock %u failed", t.to_raw());
+            marlin_server::fsm_change(PhaseNozzleMismatch::dock_not_empty);
+            marlin_server::wait_for_response(PhaseNozzleMismatch::dock_not_empty);
+            return false;
+        }
+        log_info(PrusaToolChanger, "Bump to dock %u succeeded, parking tool", t.to_raw());
+        set_active_extruder(t);
+        persist_last_picked_tool(t);
+        if (!park(t)) {
+            log_warning(PrusaToolChanger, "Manual park of tool #%u failed", t.to_raw());
+            return false;
+        }
+        return true;
+    };
+
+    // Prevent re-entry: wait_for_response() runs the idle loop, which calls
+    // loop() -> check_nozzle_presence_vs_eeprom() again
+    block_tool_check = true;
+    ScopeGuard guard = [this] { block_tool_check = false; };
+
+    // Direct path — caller already knows which dock to use. Still show the
+    // parking FSM so the user gets visual feedback during the procedure.
+    if (tool) {
+        marlin_server::FSM_Holder fsm(PhaseNozzleMismatch::parking);
+        return dock_tool(*tool);
+    }
+
+    // Interactive path — drive the nozzle-mismatch FSM so the user picks a dock
+    marlin_server::FSM_Holder fsm(PhaseNozzleMismatch::prompt);
+    [[maybe_unused]] const auto prompt_response = marlin_server::wait_for_response(PhaseNozzleMismatch::prompt);
+
+    while (true) {
+        marlin_server::fsm_change(PhaseNozzleMismatch::dock_selection);
+        const auto response = marlin_server::wait_for_response_variant(PhaseNozzleMismatch::dock_selection);
+        const auto *raw_dock = response.value_maybe<uint8_t>();
+        if (!raw_dock) {
+            // User aborted dock selection (e.g. Back) — exit cleanly
+            log_info(PrusaToolChanger, "Manual park: dock selection aborted");
+            return false;
+        }
+        const auto tool_index = PhysicalToolIndex::from_raw(*raw_dock);
+
+        log_info(PrusaToolChanger, "User selected dock %u for unknown nozzle", *raw_dock);
+
+        marlin_server::fsm_change(PhaseNozzleMismatch::parking);
+        if (dock_tool(tool_index)) {
+            return true; // FSM_Holder destructor closes the dialog
+        }
+        // dock_tool failed; on dock-occupied it already showed dock_not_empty
+        // and waited. Loop back to dock_selection so the user can try another.
+    }
 }
 
 void PrusaToolChanger::wiggle_and_partial_unlock() {
