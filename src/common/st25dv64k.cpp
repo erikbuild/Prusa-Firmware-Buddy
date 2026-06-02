@@ -1,9 +1,6 @@
 #include <common/st25dv64k.h>
 
 #include <common/st25dv64k_internal.h>
-
-#include <option/has_nfc.h>
-#include <nfc.hpp>
 #include <freertos/mutex.hpp>
 
 #include "i2c.hpp"
@@ -265,8 +262,4 @@ void st25dv64k_init() {
     st25dv64k_wr_cfg(REG_RFA1SS, 0b0); // AREA 1 RF R/W
     st25dv64k_wr_cfg(REG_RFA2SS, 0b1101); // AREA 2 RF N/A
     st25dv64k_wr_cfg(REG_RFA3SS, 0b1101); // AREA 3 RF N/A
-
-#if HAS_NFC()
-    nfc::init();
-#endif
 }

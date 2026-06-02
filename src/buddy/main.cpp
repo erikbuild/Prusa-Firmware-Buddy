@@ -694,7 +694,10 @@ extern "C" void startup_task(void const *) {
     // init eeprom module itself
     {
         freertos::CriticalSection critical_section;
-        st25dv64k_init(); // init NFC+eeprom chip
+        st25dv64k_init();
+#if HAS_NFC()
+        nfc::init();
+#endif
 
         init_config_store();
         config_store().perform_config_check();
