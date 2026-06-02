@@ -45,6 +45,12 @@ add_executable(timer_tests ${CMAKE_CURRENT_SOURCE_DIR}/timer_tests.cpp)
 target_include_directories(timer_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils)
 add_catch_test(timer_tests)
 
+add_executable(latching_debouncer_tests ${CMAKE_CURRENT_SOURCE_DIR}/latching_debouncer_tests.cpp)
+target_include_directories(
+  latching_debouncer_tests PUBLIC ${CMAKE_SOURCE_DIR}/src/module/utils/buddy_utils
+  )
+add_catch_test(latching_debouncer_tests)
+
 # leaky_bucket_tests
 add_executable(leaky_bucket_tests leaky_bucket.cpp)
 target_include_directories(

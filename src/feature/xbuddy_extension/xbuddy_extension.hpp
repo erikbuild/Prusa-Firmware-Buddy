@@ -8,8 +8,9 @@
 #include <optional>
 
 #include <utils/enum_array.hpp>
-#include <freertos/mutex.hpp>
 #include <utils/led_color.hpp>
+#include <utils/timing/latching_debouncer.hpp>
+#include <freertos/mutex.hpp>
 #include <temperature.hpp>
 #include <pwm_utils.hpp>
 
