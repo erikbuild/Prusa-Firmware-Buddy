@@ -58,6 +58,9 @@ using ab_grid_t = XYval<int32_t, PhaseGridTag>;
 // Electrical phase alignment position: set to 45' for maximum two-phase current holding torque
 static constexpr int16_t ZERO_PHASE_MSCNT_ANGLE = 1024 / 8;
 
+// Number of measurement probes to average
+static constexpr int16_t MEASURE_PROBE_N = 2;
+
 namespace internal {
     bool home_unstable = false; ///< Last homing stability state
     uint8_t probe_id = 0; ///< Probe id for metric cross-referencing
@@ -458,14 +461,13 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
         * std::numbers::sqrt2_v<float> / planner.mm_per_step[axis]);
 
     // keep the average of at least n values having less than max_err of separation between each
-    constexpr int probe_n = 2;
-    ab_steps_t p_steps[probe_n];
-    xy_pos_t p_dist[probe_n];
+    ab_steps_t p_steps[MEASURE_PROBE_N];
+    xy_pos_t p_dist[MEASURE_PROBE_N];
 
     // keep sampling *while* cycling on retries (we don't know which probes are good yet)
     uint8_t retries = 0;
     for (uint8_t idx = 0; retries <= XY_HOMING_ORIGIN_BUMP_RETRIES;) {
-        const uint8_t slot = idx % probe_n;
+        const uint8_t slot = idx % MEASURE_PROBE_N;
 
         // measure distance B-/B+
         for (uint8_t dir = 0; dir != 2;) {
@@ -527,15 +529,15 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
 
         // check for maximum probe difference in the window
         float p_diff[2] = { 0, 0 };
-        if (idx >= probe_n && probe_n > 1) {
-            for (uint8_t n = 0; n < probe_n - 1; ++n) {
+        if (idx >= MEASURE_PROBE_N && MEASURE_PROBE_N > 1) {
+            for (uint8_t n = 0; n < MEASURE_PROBE_N - 1; ++n) {
                 LOOP_XY(i) {
                     p_diff[i] = max(p_diff[i], abs(p_dist[n][i] - p_dist[n + 1][i]));
                 }
             }
         }
 
-        if (idx >= probe_n) {
+        if (idx >= MEASURE_PROBE_N) {
             if (p_diff[0] < measure_bump_max_err_mm && p_diff[1] < measure_bump_max_err_mm) {
                 break;
             }
@@ -550,8 +552,8 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
     }
 
     // calculate the absolute cycle coordinates
-    const float d1 = sum_along(p_steps, probe_n, 0) / float(probe_n);
-    const float d2 = sum_along(p_steps, probe_n, 1) / float(probe_n);
+    const float d1 = sum_along(p_steps, MEASURE_PROBE_N, 0) / float(MEASURE_PROBE_N);
+    const float d2 = sum_along(p_steps, MEASURE_PROBE_N, 1) / float(MEASURE_PROBE_N);
     const float d = d1 + d2;
     const float a = d / 2.f;
     const float b = d1 - a;
@@ -559,8 +561,8 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
     c_dist[0] = a / float(phase_cycle_steps(other_axis));
     c_dist[1] = b / float(phase_cycle_steps(axis));
 
-    m_dist[0] = sum_along(p_dist, probe_n, 0) / float(probe_n);
-    m_dist[1] = sum_along(p_dist, probe_n, 1) / float(probe_n);
+    m_dist[0] = sum_along(p_dist, MEASURE_PROBE_N, 0) / float(MEASURE_PROBE_N);
+    m_dist[1] = sum_along(p_dist, MEASURE_PROBE_N, 1) / float(MEASURE_PROBE_N);
 
     if (DEBUGGING(LEVELING)) {
         // measured distance and cycle
