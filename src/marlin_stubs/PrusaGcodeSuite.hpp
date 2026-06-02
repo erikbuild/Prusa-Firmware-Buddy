@@ -173,6 +173,7 @@ void M1981(); //< Filament sensors selftest
 void M1982(); //< INDX dock calibration
 void M1983(); //< INDX nozzle cleaner calibration
 void M1984(); //< Manually park a stuck nozzle into a dock
+void M1985(); //< INDX tool offsets calibration
 #endif
 
 void M9140(); //< Set normal (non-stealth) mode
