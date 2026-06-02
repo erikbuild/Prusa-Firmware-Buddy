@@ -38,14 +38,18 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
             return seq;
         }
         static constexpr RammingSequenceArray seq({
-            { 16, 1500 },
-            { -22, 2400 },
-            { 2, 60 },
-            { 20, 2400 },
-            { 1, 900 },
-            { -20, 2400 },
-            { -4, 240 },
-            { -30, 900 },
+            { 8, 1500 }, // first ramming
+            { 8, 1200 },
+            { -20, 2100 },
+            { -3, 60 }, // cooling moves
+            { 3, 120 },
+            { 19, 1800 }, // second ramming
+            { 2, 600 },
+            { -20, 2100 },
+            { -3, 120 }, // cooling moves
+            { 3, 120 },
+            { -6, 120 }, // tip cooling before retraction
+            { -8, 360 },
         });
         return seq;
     }
@@ -58,14 +62,18 @@ const RammingSequence &buddy::standard_ramming_sequence(StandardRammingSequence 
             return seq;
         }
         static constexpr RammingSequenceArray seq({
-            { 16, 1500 },
-            { -22, 2400 },
-            { 2, 60 },
-            { 20, 2400 },
-            { 1, 900 },
-            { -20, 2400 },
-            { -4, 240 },
-            { -30, 900 },
+            { 8, 1500 }, // first ramming
+            { 8, 1200 },
+            { -20, 2100 },
+            { -3, 60 }, // cooling moves
+            { 3, 120 },
+            { 19, 1800 }, // second ramming
+            { 2, 600 },
+            { -20, 2100 },
+            { -3, 120 }, // cooling moves
+            { 3, 120 },
+            { -6, 120 }, // tip cooling before retraction
+            { -8, 360 },
         });
         return seq;
     }
