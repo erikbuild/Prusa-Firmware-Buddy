@@ -6,11 +6,9 @@
 using namespace buddy;
 
 FilamentTracker::FilamentTracker() {
-    for (auto &dist : retracted_distances) {
-        // Starts as if it is fully retracted (to the edge of the extruder)
-        // After the value validates (travels at least +extruder_to_nozzle_distance) we can start to keep track of retracted distance
-        dist = extruder_to_nozzle_distance;
-    }
+    // Start assuming all filament is unretracted
+    // This is not necessarily true
+    retracted_distances.fill(0);
 }
 
 void FilamentTracker::track_extruder_move(VirtualToolIndex virtual_tool, float e_delta) {
@@ -23,12 +21,15 @@ void FilamentTracker::track_extruder_move(VirtualToolIndex virtual_tool, float e
         const float new_retraction_distance = std::clamp(new_retracted_distance_unclamped, 0.0f, extruder_to_nozzle_distance);
         retracted_distances[physical_tool] = new_retraction_distance;
 
-        if (!distance_valid.test(physical_tool.to_raw()) && new_retraction_distance == 0.0f) {
-            // retracted_distance resets to extruder_to_nozzle_distance and we validate when it reaches zero - we are sure filament is fully in the nozzle
-            distance_valid.set(physical_tool.to_raw(), true);
-        } else if (distance_valid.test(physical_tool.to_raw()) && new_retraction_distance == extruder_to_nozzle_distance) {
+        decltype(distance_valid)::reference valid = distance_valid[physical_tool.to_raw()];
+
+        if (!valid && new_retraction_distance == 0.0f) {
+            // we are now sure filament is fully in the nozzle
+            valid = true;
+
+        } else if (valid && new_retraction_distance == extruder_to_nozzle_distance) {
             // if we retract more than extruder_to_nozzle_distance, we most likely lost the track of the retractions, because the filament is no longer engaged with the extruder
-            distance_valid.set(physical_tool.to_raw(), false);
+            valid = false;
         }
     }
 
@@ -40,6 +41,12 @@ void FilamentTracker::track_extruder_move(VirtualToolIndex virtual_tool, float e
         edist.fractional = std::modf(edist.fractional, &integral);
         edist.integral += static_cast<uint32_t>(integral);
     }
+}
+
+void buddy::FilamentTracker::assume_retracted_distance(PhysicalToolIndex physical_tool, std::optional<float> distance) {
+    const float val = std::clamp<float>(distance.value_or(extruder_to_nozzle_distance), 0, extruder_to_nozzle_distance);
+    retracted_distances[physical_tool] = val;
+    distance_valid.set(physical_tool.to_raw(), val != extruder_to_nozzle_distance);
 }
 
 std::optional<float> FilamentTracker::get_retracted_distance(PhysicalToolIndex physical_tool) const {

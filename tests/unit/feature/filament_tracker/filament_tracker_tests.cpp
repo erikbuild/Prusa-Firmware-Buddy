@@ -14,26 +14,7 @@ TEST_CASE("FilamentTracker") {
     CHECK(ft.get_retracted_distance(pt) == std::nullopt);
     CHECK(ft.get_extruded_distance(vt) == 0);
 
-    // Nothing should happen until we extrude at least extruder_to_nozzle_distance filament
-    {
-        ft.track_extruder_move(vt, 0);
-        CHECK(ft.get_retracted_distance(pt) == std::nullopt);
-        CHECK(ft.get_extruded_distance(vt) == 0);
-
-        ft.track_extruder_move(vt, -10);
-        CHECK(ft.get_retracted_distance(pt) == std::nullopt);
-        CHECK(ft.get_extruded_distance(vt) == 0);
-
-        ft.track_extruder_move(vt, FilamentTracker::extruder_to_nozzle_distance / 2);
-        CHECK(ft.get_retracted_distance(pt) == std::nullopt);
-        CHECK(ft.get_extruded_distance(vt) == 0);
-
-        ft.track_extruder_move(vt, -3);
-        CHECK(ft.get_retracted_distance(pt) == std::nullopt);
-        CHECK(ft.get_extruded_distance(vt) == 0);
-    }
-
-    ft.track_extruder_move(vt, FilamentTracker::extruder_to_nozzle_distance / 2 + 6);
+    ft.track_extruder_move(vt, 3);
     CHECK(ft.get_retracted_distance(pt) == 0);
     CHECK(ft.get_extruded_distance(vt) == 3);
 

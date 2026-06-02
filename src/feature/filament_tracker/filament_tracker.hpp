@@ -42,6 +42,10 @@ public:
     ///   or std::nullopt if the value is not known
     std::optional<float> get_retracted_distance(PhysicalToolIndex physical_tool) const;
 
+    /// Make the system assume that the specified tool has a filament retracted to the specified distance
+    /// std::nullopt would signalize that the filament is fully removed
+    void assume_retracted_distance(PhysicalToolIndex physical_tool, std::optional<float> distance);
+
     /// @returns how much filament (in mm) has been extruded from the nozzle since last reset
     /// This value is NOT persistent
     uint32_t get_extruded_distance(VirtualToolIndex virtual_tool) const;

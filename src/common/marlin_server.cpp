@@ -741,6 +741,16 @@ void init(void) {
     prusa_toolchanger.load_tool_info();
     prusa_toolchanger.restore_last_picked_tool();
 #endif
+
+#if HAS_FILAMENT_TRACKER() && HAS_AUTO_RETRACT()
+    for (auto tool : PhysicalToolIndex::all()) {
+        // If we know that some filament is auto-retracted, pass it over to the filament_tracker
+        auto retracted_dist = buddy::auto_retract().retracted_distance(tool);
+        if (retracted_dist.has_value()) {
+            buddy::filament_tracker().assume_retracted_distance(tool, retracted_dist);
+        }
+    }
+#endif
 }
 
 void print_fan_spd() {
