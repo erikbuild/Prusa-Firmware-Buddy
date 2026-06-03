@@ -158,16 +158,26 @@ public:
      * @details This enum is used to determine which process to start/perform.
      */
     enum class LoadType : uint8_t {
+        /// load_to_gears + autoload
         load,
+
+        /// Insert filament that is already loaded_to_gears into the nozzle
         autoload,
+
+        /// Just grabs the filament in the extruder gears, does not insert
         load_to_gears,
         load_purge,
         unload,
         unload_confirm,
+
+        /// Reverses load_to_gears, called upon cancel at the beginning of autoload
         unload_from_gears,
+
         filament_change,
         filament_stuck,
     };
+
+    static bool needs_hot_nozzle(LoadType lt, PhysicalToolIndex tool);
 
     static constexpr const float minimal_purge = 1;
     static Pause &Instance();

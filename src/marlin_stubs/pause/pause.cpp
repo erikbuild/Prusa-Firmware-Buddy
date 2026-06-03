@@ -255,39 +255,41 @@ bool Pause::should_park() {
     }
 
     switch (load_type) {
-    case Pause::LoadType::load_purge:
+    case LoadType::load_purge:
+    case LoadType::filament_change:
+    case LoadType::filament_stuck:
         return true;
-    case Pause::LoadType::load_to_gears:
+
+    case LoadType::load_to_gears:
         return !FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
-    case Pause::LoadType::autoload:
+
+    case LoadType::autoload:
         // TODO: Change autoload trigger sensor on printers with side_fs
         // and adjust phases to handle properly loading to gears, mmu_rework and parking
         // autoload on printers with side_fs, should behave similary to iX autoload
-    case Pause::LoadType::load:
+
+    case LoadType::load:
         return option::has_human_interactions || !FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder);
-    case Pause::LoadType::unload_from_gears:
+
+    case LoadType::unload_from_gears:
         return false;
-    case Pause::LoadType::unload:
-#if HAS_AUTO_RETRACT()
-        if (auto_retract().can_cold_unload(settings.physical_tool())) {
-            return false;
-        }
-#endif
-        return true;
-    default:
-        return true;
+
+    case LoadType::unload:
+    case LoadType::unload_confirm:
+        return needs_hot_nozzle(load_type, settings.physical_tool());
     }
+
+    bsod_unreachable();
 }
 
 bool Pause::is_target_temperature_safe() {
     // Restore target temperatures, otherwise targetTooColdToExtrude would return true
     buddy::safety_timer().reset_restore_nonblocking();
 
-#if HAS_AUTO_RETRACT()
-    if (load_type == LoadType::unload && auto_retract().can_cold_unload(settings.physical_tool())) {
+    if (!needs_hot_nozzle(load_type, settings.physical_tool())) {
         return true; // Its safe to unload even if the temp is too low if we are retracted
     }
-#endif
+
     if (!DEBUGGING(DRYRUN) && thermalManager.targetTooColdToExtrude(settings.physical_tool())) {
         SERIAL_ECHO_MSG(MSG_ERR_HOTEND_TOO_COLD);
         return false;
@@ -1315,6 +1317,35 @@ bool Pause::tool_change([[maybe_unused]] VirtualToolIndex target_tool, [[maybe_u
 #endif
 
     return true;
+}
+
+bool Pause::needs_hot_nozzle(LoadType lt, [[maybe_unused]] PhysicalToolIndex tool) {
+    switch (lt) {
+
+    case LoadType::load:
+    case LoadType::autoload:
+    case LoadType::load_purge:
+        return true;
+
+    case LoadType::filament_change:
+    case LoadType::filament_stuck:
+
+        return true;
+    case LoadType::unload:
+    case LoadType::unload_confirm:
+#if HAS_AUTO_RETRACT()
+        return !auto_retract().can_cold_unload(tool);
+#else
+        return true;
+#endif
+
+    case LoadType::load_to_gears:
+    case LoadType::unload_from_gears:
+        // The filament is just grabbed by the gears, is not in the nozzle
+        return false;
+    }
+
+    bsod_unreachable();
 }
 
 bool Pause::perform(LoadType load_type_, const pause::Settings &settings_) {
