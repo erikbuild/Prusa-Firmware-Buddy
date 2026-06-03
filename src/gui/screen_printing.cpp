@@ -318,7 +318,10 @@ void screen_printing_data_t::windowEvent(window_t *sender, GUI_event_t event, vo
         }
 #endif
 
-        // Update status message
+// Update status message
+#if HAS_LARGE_DISPLAY()
+        if (!print_progress.IsVisible())
+#endif
         {
             const auto new_msg = print_status_message().current_message();
             if (new_msg.message != current_message) {
