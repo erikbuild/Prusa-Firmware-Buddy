@@ -1202,11 +1202,6 @@ void loop() {
 
 static bool idle_running = false;
 
-static void idle(void) {
-    AutoRestore idle_running_guard(idle_running, true);
-    cycle();
-}
-
 void do_babystep_Z(float offs) {
     babystep.add_steps(Z_AXIS, static_cast<int16_t>(std::round(offs * planner.settings.axis_steps_per_mm[Z_AXIS])));
 }
@@ -3891,7 +3886,11 @@ namespace ExtUI {
 using namespace marlin_server;
 
 void onIdle() {
-    idle();
+    // Note: idle_running can lock out some functionality inside cycle()
+    // that is happening in the outer loop
+    AutoRestore idle_running_guard(idle_running, true);
+
+    cycle();
 
     // update sensor values for metrics and sensor screens
     sensor_data().update();
