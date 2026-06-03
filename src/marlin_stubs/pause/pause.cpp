@@ -225,6 +225,13 @@ bool Pause::is_unstoppable() const {
     case LoadType::load_to_gears:
     case LoadType::unload_from_gears:
         return false;
+
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+        // If the unload during spool join does not finish for some reason,
+        // it's not a problem - the printer will just pick a next nozzle and yadida
+        return false;
+#endif
     }
 
     bsod("Unhandled LoadType");
@@ -236,14 +243,21 @@ LoadUnloadMode Pause::get_load_unload_mode() {
     case Pause::LoadType::autoload:
     case Pause::LoadType::load_to_gears:
         return LoadUnloadMode::Load;
+
     case Pause::LoadType::load_purge:
         return LoadUnloadMode::Purge;
+
     case Pause::LoadType::unload:
     case Pause::LoadType::unload_confirm:
     case Pause::LoadType::unload_from_gears:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
         return LoadUnloadMode::Unload;
+
     case Pause::LoadType::filament_change:
         return LoadUnloadMode::Change;
+
     case Pause::LoadType::filament_stuck:
         return LoadUnloadMode::FilamentStuck;
     }
@@ -280,6 +294,9 @@ bool Pause::should_park() {
 
     case LoadType::unload:
     case LoadType::unload_confirm:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
         return needs_hot_nozzle(load_type, settings.physical_tool());
     }
 
@@ -384,15 +401,20 @@ void Pause::start_process([[maybe_unused]] Response response) {
     setup_progress_mapper();
 
     switch (load_type) {
+
     case LoadType::load:
     case LoadType::autoload:
     case LoadType::load_to_gears:
     case LoadType::load_purge:
         set(LoadState::load_start);
         break;
+
     case LoadType::unload:
     case LoadType::unload_confirm:
     case LoadType::unload_from_gears:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
     case LoadType::filament_change:
     case LoadType::filament_stuck:
         set(LoadState::unload_start);
@@ -1176,10 +1198,14 @@ void Pause::unload_process([[maybe_unused]] Response response) {
 
     switch (load_type) {
     case LoadType::unload:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
         if constexpr (option::has_human_interactions) {
             set(LoadState::unload_finish_or_change);
             break;
         }
+
     case LoadType::unload_confirm:
     case LoadType::filament_change:
     case LoadType::filament_stuck:
@@ -1197,6 +1223,7 @@ void Pause::unload_process([[maybe_unused]] Response response) {
             set(LoadState::unloaded_ask);
         }
         break;
+
     default:
         break;
     }
@@ -1333,10 +1360,13 @@ bool Pause::needs_hot_nozzle(LoadType lt, [[maybe_unused]] PhysicalToolIndex too
 
     case LoadType::filament_change:
     case LoadType::filament_stuck:
-
         return true;
+
     case LoadType::unload:
     case LoadType::unload_confirm:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
 #if HAS_AUTO_RETRACT()
         return !auto_retract().can_cold_unload(tool);
 #else
@@ -1667,6 +1697,9 @@ bool Pause::ram_filament() {
     switch (load_type) {
     case LoadType::filament_change:
     case LoadType::filament_stuck:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
         ramming_sequence = &standard_ramming_sequence(StandardRammingSequence::runout, *virtual_tool);
         break;
 
@@ -1803,6 +1836,9 @@ void Pause::setup_progress_mapper() {
 
     case LoadType::unload:
     case LoadType::unload_confirm:
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+    case LoadType::unload_spool_join:
+#endif
     case LoadType::filament_stuck: {
         constexpr static ProgressMapperWorkflowArray workflow { std::to_array<WorkflowStep>({
             { LoadState::unload_wait_temp, 3 },

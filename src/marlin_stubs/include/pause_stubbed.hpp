@@ -22,6 +22,8 @@
 #include <option/has_side_fsensor.h>
 #include <option/has_indx.h>
 #include <option/has_extruder_fsensor.h>
+#include <option/has_spool_join.h>
+#include <option/has_toolchanger.h>
 
 #include <utils/progress_mapper.hpp>
 
@@ -172,6 +174,11 @@ public:
         load_purge,
         unload,
         unload_confirm,
+
+#if HAS_SPOOL_JOIN() && HAS_TOOLCHANGER()
+        /// Unload that happens during spool join - runs runout ramming sequence
+        unload_spool_join,
+#endif
 
         /// Reverses load_to_gears, called upon cancel at the beginning of autoload
         unload_from_gears,

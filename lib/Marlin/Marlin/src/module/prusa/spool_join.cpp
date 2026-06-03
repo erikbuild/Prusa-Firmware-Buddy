@@ -302,7 +302,7 @@ bool SpoolJoin::do_join(VirtualToolIndex current_virtual_tool) {
         settings.SetParkPoint(mapi::get_parking_position(mapi::ParkPosition::unload));
 
         // Pick the right tool
-        Pause::Instance().perform(Pause::LoadType::unload, settings);
+        Pause::Instance().perform(Pause::LoadType::unload_spool_join, settings);
     }
 
     // Cool down the old tool
