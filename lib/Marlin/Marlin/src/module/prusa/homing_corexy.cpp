@@ -677,14 +677,14 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
     // scramble probing sequence to improve belt redistribution when estimating the centroid
     // unit is full AB cycles away from homing corner as given to plan_corexy_abgrid_move()
     static constexpr ab_grid_t point_sequence[] = {
-        { 1, 0 },
-        { -1, 0 },
-        { 0, 1 },
-        { 0, -1 },
-        { -1, -1 },
-        { 1, 1 },
         { 1, -1 },
         { -1, 1 },
+        { 1, 1 },
+        { -1, -1 },
+        { 1, -3 },
+        { -1, 3 },
+        { 3, 1 },
+        { -3, -1 },
         { 0, 0 },
     };
 
