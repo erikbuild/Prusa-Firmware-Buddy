@@ -116,8 +116,13 @@ static constexpr HeaterConfig_t Config_HeaterNozzle[] = {
         .start_temp = 80,
         .undercool_temp = 75,
         .target_temp = 290,
+#if HAS_INDX()
+        .heat_min_temp = 185,
+        .heat_max_temp = 255,
+#else
         .heat_min_temp = 195,
         .heat_max_temp = 245,
+#endif
         .heatbreak_min_temp = 10,
         .heatbreak_max_temp = 45,
         .heater_load_stable_ms = 200,
