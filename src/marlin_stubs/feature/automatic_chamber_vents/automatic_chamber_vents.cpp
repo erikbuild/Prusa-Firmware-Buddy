@@ -167,6 +167,13 @@ bool execute_control(VentState target_state) {
     }
 
 #if HAS_INDX()
+    const auto previous_tool = PhysicalToolIndex::currently_selected();
+    auto restore_tool_now = [&]() -> bool {
+        return prusa_toolchanger.tool_change(previous_tool, tool_return_t::no_return, {}, tool_change_lift_t::full_lift, false);
+    };
+    // Best-effort tool restore on the failure paths (already returns false).
+    ScopeGuard restore_tool([&] { restore_tool_now(); });
+
     if (!execute_indx_vent_lever(open)) {
         return false;
     }
@@ -192,6 +199,13 @@ bool execute_control(VentState target_state) {
     planner.synchronize();
 
     buddy::chamber().set_vent_state(target_state);
+
+#if HAS_INDX()
+    restore_tool.disarm();
+    if (!restore_tool_now()) {
+        return false;
+    }
+#endif
 
     return true;
 }
