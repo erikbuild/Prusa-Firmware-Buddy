@@ -440,12 +440,13 @@ CommunicationStatus XBuddyExtension::refresh(PuppyModbus &bus) {
     }
 
     // Drain the Cyphal bridge queue (up to 5 reads per cycle)
-    if (stream_callback_) {
+    if (stream_callback_ || bridge_has_stale_data_) {
         for (int i = 0; i < 5; ++i) {
             if (pull_cyphal_bridge(bus) != CommunicationStatus::OK) {
                 break;
             }
             if (cyphal_bridge.value.bytes_available == 0) {
+                bridge_has_stale_data_ = false;
                 break;
             }
         }
@@ -523,6 +524,7 @@ void XBuddyExtension::set_stream_callback(StreamCallback cb, void *ctx) {
     Lock lock(mutex);
     stream_callback_ = cb;
     stream_callback_ctx_ = ctx;
+    bridge_has_stale_data_ = true; // There may be old data we dont want to send to callback
 }
 
 CommunicationStatus XBuddyExtension::pull_cyphal_bridge(PuppyModbus &bus) {
@@ -535,7 +537,7 @@ CommunicationStatus XBuddyExtension::pull_cyphal_bridge(PuppyModbus &bus) {
 }
 
 void XBuddyExtension::dispatch_bridge_messages() {
-    if (!stream_callback_) {
+    if (!stream_callback_ || bridge_has_stale_data_) {
         return;
     }
 

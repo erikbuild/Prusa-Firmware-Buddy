@@ -13,11 +13,6 @@ static void on_stream(uint16_t port_id, std::span<const std::byte> payload, void
     }
 }
 
-// Keeps the bridge draining so the XBE queue doesn't overflow,
-// but discards all data (sensor object is being destroyed).
-static void on_stream_discard(uint16_t, std::span<const std::byte>, void *) {
-}
-
 static void on_start(void *ctx) {
     auto *sensor = static_cast<CanRemoteSensor *>(ctx);
     buddy::puppies::xbuddy_extension.set_stream_callback(on_stream, sensor);
@@ -26,7 +21,7 @@ static void on_start(void *ctx) {
 
 static void on_stop(void * /*ctx*/) {
     buddy::puppies::tool_offset_sensor.set_config(false, false);
-    buddy::puppies::xbuddy_extension.set_stream_callback(on_stream_discard, nullptr);
+    buddy::puppies::xbuddy_extension.set_stream_callback(nullptr, nullptr);
 }
 
 static bool check_hw_error(void *) {

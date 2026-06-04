@@ -184,6 +184,7 @@ private:
     ModbusInputRegisterBlock<CyphalBridge::address, CyphalBridge> cyphal_bridge;
     StreamCallback stream_callback_ = nullptr;
     void *stream_callback_ctx_ = nullptr;
+    bool bridge_has_stale_data_ = false;
     CommunicationStatus pull_cyphal_bridge(PuppyModbus &);
     void dispatch_bridge_messages();
 };
