@@ -53,6 +53,17 @@ constexpr bool is_singletool_only_action([[maybe_unused]] Action action) {
 #endif
 }
 
+constexpr bool is_multitool_only_action([[maybe_unused]] Action action) {
+#if PRINTER_IS_PRUSA_XL()
+    return action == Action::DockCalibration
+        || action == Action::ToolOffsetsCalibration
+        || action == Action::NozzleHeaters
+        || action == Action::BedHeaters;
+#else
+    return false;
+#endif
+}
+
 Action _get_valid_action(Action start_action, int step) {
     assert(step == 1 || step == -1); // other values would cause weird behaviour (endless loop / go beyond array)
     if (is_multitool()) {

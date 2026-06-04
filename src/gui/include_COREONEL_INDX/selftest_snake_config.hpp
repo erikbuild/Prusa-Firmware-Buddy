@@ -41,10 +41,6 @@ constexpr bool has_submenu(Action action) {
     }
 }
 
-constexpr bool is_multitool_only_action([[maybe_unused]] Action action) {
-    return false;
-}
-
 constexpr bool requires_toolchanger([[maybe_unused]] Action action) {
     return false;
 }

@@ -42,10 +42,6 @@ constexpr bool has_submenu(Action action) {
     }
 }
 
-constexpr bool is_multitool_only_action(Action action) {
-    return action == Action::DockCalibration || action == Action::ToolOffsetsCalibration || action == Action::NozzleHeaters || action == Action::BedHeaters;
-}
-
 constexpr bool requires_toolchanger(Action action) {
     return action == Action::DockCalibration || action == Action::ToolOffsetsCalibration;
 }
