@@ -350,7 +350,7 @@ namespace {
      * @param type pause type used for different media_print pause
      * @param resume_pos position to resume from, used only in Pause_Type::Crash
      */
-    void pause_print(Pause_Type type = Pause_Type::Pause);
+    void process_pausing_begin_state(Pause_Type type = Pause_Type::Pause);
 
     fsm::States fsm_states;
 
@@ -367,7 +367,9 @@ namespace {
             set_warning(warning);
 
             if (pause_print_on_error && server.print_state == State::Printing) {
-                pause_print(); // Must store current hotend temperatures before they are set to 0
+                // HACK - changing printer state possibly in the middle of a gcode
+                // This is done because we need to store current hotend temperatures before disabling hotend
+                process_pausing_begin_state();
                 server.print_state = State::Pausing_WaitIdle;
             }
 
@@ -488,7 +490,7 @@ namespace {
     constinit MCUTempErrorChecker modbedMaxTempErrorChecker; ///< Check ModularBed MCU temperature
 #endif
 
-    void pause_print(Pause_Type type) {
+    void process_pausing_begin_state(Pause_Type type) {
         if (!server.print_is_serial) {
             switch (type) {
 
@@ -2377,7 +2379,7 @@ static void _server_print_loop(void) {
         break;
 
     case State::Pausing_Begin:
-        pause_print();
+        process_pausing_begin_state();
         server.print_state = State::Pausing_WaitIdle;
         break;
 
@@ -2723,7 +2725,7 @@ static void _server_print_loop(void) {
     case State::CrashRecovery_Begin: {
         // pause and set correct resume position: this will stop media reading and clear the queue
         // TODO: this is completely broken for crashes coming from serial printing
-        pause_print(Pause_Type::Crash);
+        process_pausing_begin_state(Pause_Type::Crash);
         set_media_position(crash_s.sdpos);
 
         const auto orig_crash_state = crash_s.get_state();
