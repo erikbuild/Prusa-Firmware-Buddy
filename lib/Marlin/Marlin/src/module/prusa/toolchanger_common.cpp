@@ -28,16 +28,23 @@ float PrusaToolChanger::calc_z_raise(tool_return_t return_type, xyz_pos_t return
     if (z_lift == tool_change_lift_t::no_lift) {
         return 0.f;
     }
-    float z_raise = 0;
-    if (return_type != tool_return_t::no_return) {
-        float min_z = current_position.z;
-        min_z = std::max(min_z, return_position.z); // account for clearance in the return move
-        min_z = std::max(min_z, planner.max_printed_z); // raise above the printed model
-        z_raise += (min_z - current_position.z);
-    }
+
+    float min_z = current_position.z;
+
+    // raise above the printed model
+    min_z = std::max(min_z, planner.max_printed_z);
+
+    // avoid the workpiece for parking
     if (z_lift == tool_change_lift_t::full_lift) {
-        z_raise += toolchange_settings.z_raise; // avoid the workpiece for parking
+        min_z += toolchange_settings.z_raise;
     }
+
+    // account for clearance in the return move
+    if (return_type != tool_return_t::no_return) {
+        min_z = std::max(min_z, return_position.z);
+    }
+
+    float z_raise = (min_z - current_position.z);
     if (levelling_active) {
         z_raise += get_mbl_z_lift_height();
     }
