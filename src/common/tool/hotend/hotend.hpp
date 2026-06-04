@@ -7,6 +7,7 @@
 #include <module/temperature/hotend_regulator/hotend_regulator.hpp>
 #include <pwm_utils.hpp>
 #include <atomic>
+#include <option/has_indx.h>
 
 struct FilamentTypeParameters;
 
@@ -147,7 +148,14 @@ protected:
 #endif
 
     bool nozzle_temp_reached_ : 1 = false;
+
+#if HAS_INDX()
     bool is_thermally_managed_ : 1 = true;
+#else
+    // The printer doesn't have a disablable hotend,
+    // optimize out the ifs and prevent disabling safety checks
+    static constexpr bool is_thermally_managed_ = true;
+#endif
 
 #if ENABLED(MODEL_DETECT_STUCK_THERMISTOR)
     bool thermal_model_protection_ok_ : 1 = false;
