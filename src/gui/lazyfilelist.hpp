@@ -83,6 +83,12 @@ protected:
     char sfnPath[FILE_PATH_BUFFER_LEN]; ///< current directory path - @@TODO this may not be enough - needs checking
 
     SortPolicy sortPolicy; ///< sort policy set in ChangeDirectory
+
+private:
+    // Largest amount accepted by MoveUp() from the current position
+    int max_move_up_step() const;
+    // Largest amount accepted by MoveDown() from the current position
+    int max_move_down_step() const;
 };
 
 /// Lazy Dir View

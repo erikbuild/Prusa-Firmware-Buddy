@@ -136,21 +136,23 @@ int LazyDirViewBase::move_window_by(int amount) {
     int remaining = amount;
 
     while (remaining > 0) {
-        int tamount = std::min(remaining, window_size - 1);
-        if (!MoveDown(tamount)) {
+        int step = std::min(remaining, max_move_down_step());
+        if (step == 0) {
             break;
         }
-
-        remaining -= tamount;
+        [[maybe_unused]] const bool moved = MoveDown(step);
+        assert(moved);
+        remaining -= step;
     }
 
     while (remaining < 0) {
-        int tamount = std::min(-remaining, window_size - 1);
-        if (!MoveUp(tamount)) {
+        int step = std::min(-remaining, max_move_up_step());
+        if (step == 0) {
             break;
         }
-
-        remaining += tamount;
+        [[maybe_unused]] const bool moved = MoveUp(step);
+        assert(moved);
+        remaining += step;
     }
 
     return amount - remaining;
@@ -165,7 +167,7 @@ bool LazyDirViewBase::MoveUp(int amount) {
         return true;
     }
 
-    if (windowStartingFrom - amount < -1) {
+    if (amount > max_move_up_step()) {
         return false;
     }
 
@@ -262,7 +264,7 @@ bool LazyDirViewBase::MoveDown(int amount) {
         return true;
     }
 
-    if (windowStartingFrom + amount >= totalFiles - window_size) {
+    if (amount > max_move_down_step()) {
         return false; // no more files
     }
 
@@ -307,4 +309,14 @@ bool LazyDirViewBase::MoveDown(int amount) {
     }
 
     return true;
+}
+int LazyDirViewBase::max_move_up_step() const {
+    assert(windowStartingFrom >= -1);
+    const int to_top = windowStartingFrom + 1;
+    return std::min(to_top, window_size - 1);
+}
+
+int LazyDirViewBase::max_move_down_step() const {
+    const int to_bottom = std::max(totalFiles - window_size - windowStartingFrom - 1, 0);
+    return std::min(to_bottom, window_size - 1);
 }

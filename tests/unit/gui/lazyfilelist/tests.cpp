@@ -435,3 +435,32 @@ TEST_CASE("LazyDirView::HoppingAround", "[LazyDirView]") {
     ldv.move_window_by(-8);
     CHECK(ldv_files(ldv) == StringList { "Q_17.bgcode", "P_16.bgcode", "O_15.bgcode", "N_14.bgcode", "M_13.bgcode", "L_12.bgcode", "K_11.bgcode", "J_10.bgcode", "I_9.bgcode" });
 }
+
+// User fast-scrolls toward the end of a long file list. The jog wheel accumulates
+// ticks into one large amount, so move_window_by is called with a value that
+// overshoots the end boundary. The window must still slide to the last reachable
+// position; today it stays put, which is what makes click-prints-the-wrong-file.
+TEST_CASE("LazyDirView::FastScrollToEnd", "[LazyDirView]") {
+    using LDV = LazyDirView<9>;
+
+    // 15 files -> last reachable window_offset = totalFiles - window_size - 1 = 5
+    testFiles0 = {
+        { "01.g", 1, false }, { "02.g", 2, false }, { "03.g", 3, false },
+        { "04.g", 4, false }, { "05.g", 5, false }, { "06.g", 6, false },
+        { "07.g", 7, false }, { "08.g", 8, false }, { "09.g", 9, false },
+        { "10.g", 10, false }, { "11.g", 11, false }, { "12.g", 12, false },
+        { "13.g", 13, false }, { "14.g", 14, false }, { "15.g", 15, false }
+    };
+
+    LDV ldv;
+    ldv.ChangeDirectory("path", LDV::SortPolicy::BY_NAME, nullptr);
+    REQUIRE(ldv.window_offset() == -1);
+
+    // One fast spin asking for far past the end.
+    ldv.move_window_by(1000);
+
+    // totalFiles counts ".." too (16 total), so the last reachable
+    // window_offset is totalFiles - window_size - 1 = 6, showing 07.g..15.g.
+    CHECK(ldv.window_offset() == 6);
+    CHECK(ldv_files(ldv) == StringList { "07.g", "08.g", "09.g", "10.g", "11.g", "12.g", "13.g", "14.g", "15.g" });
+}
