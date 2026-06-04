@@ -64,13 +64,31 @@ Configuration::Configuration() {
 }
 
 bool Configuration::check_bom_compatible() const {
-#if PRINTER_IS_PRUSA_MK3_5()
-    return get_board_bom_id() >= 37;
-#elif PRINTER_IS_PRUSA_iX()
-    return get_board_bom_id() >= 1;
+    // Caution: This is BOM ID, not a board revision!
+    const uint8_t board_bom_id = get_board_bom_id();
+
+    // Note: Following dispatch should be based on BOARD_IS_*() macro but
+    //       BOARD_IS_IXBUDDY() doesn't exist yet.
+#if PRINTER_IS_PRUSA_iX()
+    return board_bom_id >= 1;
 #else
-    // MK4, COREONE, COREONEL
-    return get_board_bom_id() >= 27;
+    if (board_bom_id >= 37) {
+        // BOM ID 37 and newer are always compatible
+        return true;
+    }
+
+    if (board_bom_id == 12 || board_bom_id == 14) {
+        // We still need to support early revisions...
+    #if PRINTER_IS_PRUSA_MK3_5()
+        // ...but they are not compatible with MK3.5
+        return false;
+    #else
+        return true;
+    #endif
+    }
+
+    // Anything else is not compatible.
+    return false;
 #endif
 }
 
