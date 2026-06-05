@@ -25,6 +25,7 @@ BRASS_DIR = Path('src/gui/res/png_brass')
 # orange pixels in the standard theme. Add filenames here to exclude them from
 # the parity check.
 NO_BRASS_REQUIRED: set[str] = {
+    'cleaner_calibration_x.png',
     'cleaner_calibration_y.png',
     'cleaner_calibration_z.png',
     'indx_dock_calibration_tightening.png',
