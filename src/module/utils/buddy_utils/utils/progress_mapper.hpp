@@ -29,6 +29,8 @@ public:
     using Step = ProgressMapperWorkflowStep<State>;
     using StepScale = Step::Scale;
 
+    struct Runtime {};
+
     struct StepData {
         /// Same as ProgressMapperWorkflowStep::state
         State state;
@@ -39,6 +41,7 @@ public:
 
 public:
     consteval ProgressMapperWorkflow() = default;
+    constexpr ProgressMapperWorkflow(Runtime) {}
 
     constexpr const auto &steps() const {
         return steps_;
@@ -54,6 +57,10 @@ public:
 
 protected:
     consteval void setup(const std::span<StepData> &steps, const std::span<const Step> &params) {
+        setup(Runtime {}, steps, params);
+    }
+
+    constexpr void setup(Runtime, const std::span<StepData> &steps, const std::span<const Step> &params) {
         assert(is_workflow_valid(params.size()));
         assert(params.size() == steps.size());
 
@@ -82,6 +89,7 @@ template <class State, std::size_t N>
 class ProgressMapperWorkflowArray : public ProgressMapperWorkflow<State> {
 public:
     using WorkflowBase = ProgressMapperWorkflow<State>;
+    using Runtime = typename WorkflowBase::Runtime;
 
 public:
     consteval ProgressMapperWorkflowArray(const std::array<ProgressMapperWorkflowStep<State>, N> &params) {
@@ -89,6 +97,14 @@ public:
         static_assert(WorkflowBase::is_workflow_valid(N));
 
         this->setup(data_, params);
+    }
+
+    constexpr ProgressMapperWorkflowArray(Runtime, const std::array<ProgressMapperWorkflowStep<State>, N> &params)
+        : WorkflowBase(Runtime {}) {
+        // max is reserved as for the initial value
+        static_assert(WorkflowBase::is_workflow_valid(N));
+
+        this->setup(Runtime {}, data_, params);
     }
 
 private:
