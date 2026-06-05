@@ -19,13 +19,6 @@ enum class Action {
     _first = Fans,
 };
 
-constexpr bool has_submenu([[maybe_unused]] Action action) {
-    switch (action) {
-    default:
-        return false;
-    }
-}
-
 constexpr auto get_submenu_label_template([[maybe_unused]] Action action) -> const char * {
     bsod_unreachable();
 }

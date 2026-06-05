@@ -32,15 +32,6 @@ enum class Action : uint8_t {
     _first = DoorSensor,
 };
 
-constexpr bool has_submenu(Action action) {
-    switch (action) {
-    case Action::FilamentSensorCalibration:
-        return true;
-    default:
-        return false;
-    }
-}
-
 constexpr const char *get_submenu_label_template(Action action) {
     switch (action) {
 

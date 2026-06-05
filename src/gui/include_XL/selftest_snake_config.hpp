@@ -30,18 +30,6 @@ enum class Action {
     _first = Fans,
 };
 
-constexpr bool has_submenu(Action action) {
-    switch (action) {
-    case Action::DockCalibration:
-    case Action::Loadcell:
-    case Action::FilamentSensorCalibration:
-    case Action::Gears:
-        return true;
-    default:
-        return false;
-    }
-}
-
 // Returns a printf-style format string with a single %d for the 1-based tool/dock index.
 constexpr auto get_submenu_label_template(Action action) -> const char * {
     switch (action) {
