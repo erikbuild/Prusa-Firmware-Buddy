@@ -2272,7 +2272,10 @@ static void _server_print_loop(void) {
 #endif // HAS_LOADCELL()
 
 #if HAS_TOOLCHANGER()
-        {
+        // Singletool printers have no docks, so the dock positions are never
+        // calibrated and get_tool_dock_position() would red-screen on its
+        // calibration check.
+        if (prusa_toolchanger.is_toolchanger_enabled()) {
             METRIC_DEF(metric_dock_position, "dock_pos", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
             for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
                 const xy_float_t pos = prusa_toolchanger.get_tool_dock_position(tool);
