@@ -478,23 +478,26 @@ MI_INFO_MMU::MI_INFO_MMU()
 /*****************************************************************************/
 // MI_FS_AUTOLOAD
 static is_hidden_t get_autoload_hide_state() {
-    // Autoloading option doesn't make sense with filament sensors disabled
-    if (!config_store().fsensor_enabled.get()) {
-        return is_hidden_t::yes;
-    }
-
 #if HAS_MMU2()
     // Do not show autoload option with MMU rework enabled - BFW-4290
     if (config_store().is_mmu_rework.get()) {
         return is_hidden_t::yes;
     }
 #endif
-
     return is_hidden_t::no;
 }
 
+static is_enabled_t get_autoload_enable_state() {
+    // Autoloading option doesn't make sense with filament sensors disabled
+    if (config_store().fsensor_enabled.get()) {
+        return is_enabled_t::yes;
+    } else {
+        return is_enabled_t::no;
+    }
+}
+
 MI_FS_AUTOLOAD::MI_FS_AUTOLOAD()
-    : WI_ICON_SWITCH_OFF_ON_t(config_store().fs_autoload_enabled.get(), _(label), nullptr, is_enabled_t::yes, get_autoload_hide_state()) {}
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().fs_autoload_enabled.get(), _(label), nullptr, get_autoload_enable_state(), get_autoload_hide_state()) {}
 
 void MI_FS_AUTOLOAD::OnChange(size_t) {
     config_store().fs_autoload_enabled.set(value());
