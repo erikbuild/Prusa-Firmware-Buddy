@@ -31,6 +31,8 @@ constexpr color_scheme special_button_background_color_scheme = {
 };
 
 constexpr Rect16 buttons_rect = Rect16::fromLTRB(buttons_rect_margin, GuiDefaults::HeaderHeight + 72, GuiDefaults::ScreenWidth - buttons_rect_margin, GuiDefaults::ScreenHeight - buttons_rect_margin);
+constexpr Font prompt_font = Font::small;
+constexpr uint16_t max_prompt_length = (buttons_rect.Width() - (2 * button_padding)) / resource_font_size(prompt_font).w;
 
 constexpr size_ui16_t button_grid_item_size = { buttons_rect.Width() / button_cols, buttons_rect.Height() / button_rows };
 constexpr size_ui16_t button_size = { button_grid_item_size.w - button_padding * 2, button_grid_item_size.h - button_padding * 2 };
@@ -72,6 +74,10 @@ DialogTextInput::DialogTextInput(const string_view_utf8 &prompt, std::span<char>
     // We need to set focus to something, otherwise touch wouldn't work
     ui.btn_matrix[0].SetFocus();
 }
+
+uint16_t DialogTextInput::get_max_prompt_length() {
+    return max_prompt_length;
+};
 
 bool DialogTextInput::exec(const string_view_utf8 &prompt, std::span<char> buffer) {
     DialogTextInput dlg(prompt, buffer);
@@ -118,7 +124,7 @@ void DialogTextInput::setup_ui() {
         auto &wnd = ui.txt_prompt;
         wnd.SetRect(Rect16::fromLTRB(buttons_rect.Left() + button_padding, y, buttons_rect.Right() - button_padding, y + h));
         wnd.SetTextColor(COLOR_WHITE);
-        wnd.set_font(Font::small);
+        wnd.set_font(prompt_font);
         wnd.SetAlignment(Align_t::Right());
         wnd.set_enabled(false);
 

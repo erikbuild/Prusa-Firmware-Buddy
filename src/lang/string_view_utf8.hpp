@@ -308,10 +308,8 @@ public:
         if constexpr (std::is_same_v<T, std::string_view>) {
             // std::string_view is automatically expanded for the "%.*s" format specifier
             add_param_impl(0, val.size(), val.data());
-
         } else if constexpr (std::is_arithmetic_v<T> || std::is_same_v<T, char *> || std::is_same_v<T, const char *>) {
             add_param_impl(0, val);
-
         } else {
             static_assert(false);
         }

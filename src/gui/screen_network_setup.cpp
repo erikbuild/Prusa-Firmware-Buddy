@@ -28,8 +28,20 @@ namespace network_wizard {
 
 using Phase = PhaseNetworkSetup;
 
-const char *text_password = N_("Password");
+const char *text_password = N_("Password for %s");
 const char *text_return = N_("Return");
+
+bool display_password_input(std::span<const char> ssid, std::span<char> password) {
+    StringViewUtf8Parameters<config_store_ns::wifi_max_ssid_len + 1> params;
+    auto prompt = _(text_password).formatted(params, ssid.data());
+
+    // if SSID is too long, use default
+    if (prompt.computeNumUtf8Chars() > DialogTextInput::get_max_prompt_length()) {
+        _(text_password).formatted(params, "Wi-fi");
+    }
+
+    return DialogTextInput::exec(prompt, password);
+};
 
 class MI_ACTION_RETURN : public FSMMenuItem {
 
@@ -92,7 +104,7 @@ protected:
 
         std::array<char, config_store_ns::wifi_max_passwd_len + 1> password = { 0 };
 
-        if (!DialogTextInput::exec(_(text_password), password)) {
+        if (!display_password_input(ssid, password)) {
             return;
         }
 
@@ -161,7 +173,7 @@ protected:
     virtual void click(IWindowMenu &) {
         std::array<char, config_store_ns::wifi_max_passwd_len + 1> password = { 0 };
 
-        if (needs_password_ && !DialogTextInput::exec(_(text_password), password)) {
+        if (needs_password_ && !display_password_input(ssid_, password)) {
             return;
         }
 

@@ -21,6 +21,11 @@ class DialogTextInput final : public IDialog {
 
 public:
     /**
+     * \returns the maximum number of character that will fit into a prompt
+     */
+    static uint16_t get_max_prompt_length();
+
+    /**
      * Executes the text input dialog on the provided text buffer.
      * \param buffer is taken for initial value and for storing the result.
      * \returns true if user pressed ok, false if cancelled.
