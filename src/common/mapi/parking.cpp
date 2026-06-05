@@ -10,6 +10,9 @@
 
 namespace mapi {
 
+// Make sure our little [[no_unique_address]] trick works
+static_assert(sizeof(ParkingPosition::Minimum) == 8);
+
 ParkingPosition get_parking_position(ParkPosition position) {
     switch (position) {
     case ParkPosition::park:
@@ -73,18 +76,18 @@ xyz_pos_t ParkingPosition::to_nan_xyz_pos(const xyz_pos_t &pos) const {
             z, //
             [&](Unchanged) { return pos.z; }, //
             [](float val) { return val; }, //
-            [&](const AdvancedZ &mv) { //
-                float result = pos.z + mv.relative;
+            [&](Relative arg) {
+                return std::clamp<float>(pos.z + arg.delta, Z_MIN_POS, Z_MAX_POS);
+            }, //
+            [&](Minimum arg) {
+                float min_z = arg.absolute;
 
-                if (std::isnan(result)) {
-                    return result;
+                if (!std::isnan(arg.above_print)) {
+                    min_z = std::max(min_z, planner.max_printed_z + arg.above_print);
                 }
 
-                if (!std::isnan(mv.minimum)) {
-                    result = std::max<float>(result, mv.minimum);
-                }
-
-                return std::clamp<float>(result, Z_MIN_POS, Z_MAX_POS);
+                // Formulate the formula in such way that pos.z never goes down
+                return std::clamp<float>(pos.z, min_z, Z_MAX_POS);
             } //
             ),
     };
@@ -92,17 +95,17 @@ xyz_pos_t ParkingPosition::to_nan_xyz_pos(const xyz_pos_t &pos) const {
 
 ParkingPosition ParkingPosition::from_xyz_pos(const xyz_pos_t &pos) {
     return ParkingPosition {
-        std::isnan(pos.x) ? (decltype(x))mapi::ParkingPosition::unchanged : pos.x,
-        std::isnan(pos.y) ? (decltype(y))mapi::ParkingPosition::unchanged : pos.y,
-        std::isnan(pos.z) ? (decltype(z))mapi::ParkingPosition::unchanged : pos.z,
+        std::isnan(pos.x) ? (X)unchanged : pos.x,
+        std::isnan(pos.y) ? (Y)unchanged : pos.y,
+        std::isnan(pos.z) ? (Z)unchanged : pos.z,
     };
 }
 
 ParkingPosition ParkingPosition::from_xy_relative_z_pos(const xyz_pos_t &pos) {
     return ParkingPosition {
-        std::isnan(pos.x) ? (decltype(x))mapi::ParkingPosition::unchanged : pos.x,
-        std::isnan(pos.y) ? (decltype(y))mapi::ParkingPosition::unchanged : pos.y,
-        std::isnan(pos.z) ? (decltype(z))mapi::ParkingPosition::unchanged : AdvancedZ { .relative = pos.z },
+        std::isnan(pos.x) ? (X)unchanged : pos.x,
+        std::isnan(pos.y) ? (Y)unchanged : pos.y,
+        std::isnan(pos.z) ? (Z)unchanged : Relative { pos.z },
     };
 }
 
@@ -290,7 +293,7 @@ bool park(const ParkingPosition &parking_position) {
 
 void home_if_needed_and_park(const ParkingPosition &parking_position) {
     // We only need homing if we move to absolute coordinates
-    // For relative moves through AdvancedZ we can use do_homing_move
+    // For relative moves we can use do_homing_move
     const xyz_bool_t do_axis = parking_position.axes_needing_homing();
     GcodeSuite::G28_no_parser(do_axis.x, do_axis.y, do_axis.z,
         {

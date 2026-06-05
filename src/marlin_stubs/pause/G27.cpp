@@ -77,9 +77,7 @@ void GcodeSuite::G27() {
             switch (parser.option<int>('P').value_or(0)) {
 
             case 0:
-                parking_position.z = mapi::ParkingPosition::AdvancedZ {
-                    .minimum = *z,
-                };
+                parking_position.z = mapi::ParkingPosition::Minimum { .above_print = *z };
                 break;
 
             case 1:
@@ -87,9 +85,7 @@ void GcodeSuite::G27() {
                 break;
 
             case 2:
-                parking_position.z = mapi::ParkingPosition::AdvancedZ {
-                    .relative = *z,
-                };
+                parking_position.z = mapi::ParkingPosition::Relative { *z };
                 break;
             }
         }

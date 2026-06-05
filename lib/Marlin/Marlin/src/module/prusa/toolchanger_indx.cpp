@@ -891,7 +891,7 @@ std::expected<void, PrusaToolChanger::BumpError> PrusaToolChanger::bump_to_dock(
     }
     planner.synchronize();
 
-    mapi::park({ .z = mapi::ParkingPosition::AdvancedZ { .minimum = 2.0f } });
+    mapi::park({ .z = mapi::ParkingPosition::Minimum { .above_print = 2.0f } });
 
     // Get dock info
     const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);

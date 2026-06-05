@@ -283,7 +283,7 @@ bool SpoolJoin::do_join(VirtualToolIndex current_virtual_tool) {
 
     if (should_park) {
         // Z raise
-        mapi::park(mapi::ParkingPosition { .z = mapi::ParkingPosition::AdvancedZ { .relative = TOOLCHANGE_ZRAISE } });
+        mapi::park(mapi::ParkingPosition { .z = mapi::ParkingPosition::Minimum { .above_print = TOOLCHANGE_ZRAISE } });
     }
 
     const auto wait_for_temp = [&] {

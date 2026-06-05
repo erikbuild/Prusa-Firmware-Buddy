@@ -31,21 +31,38 @@ struct ParkingPosition {
         constexpr bool operator==(const Unchanged &) const = default;
     };
 
-    struct AdvancedZ {
-        /// Relative move up/down by this amount
-        float relative = 0;
+    /// Moves relatively to the current position, clamped to the machine limits
+    struct Relative {
+        float delta;
 
-        /// Minimum Z we should move to
-        float minimum = NAN;
+        constexpr bool operator==(const Relative &) const = default;
+    };
 
-        constexpr bool operator==(const AdvancedZ &) const = default;
+    /// Parks the Z axis at the specified minimum distance
+    struct Minimum {
+        /// A little trick to prevent users from doing Minimum { 5.5f }
+        /// Encourages using aggregate initializer Minimum { .above_print = ... }
+        [[no_unique_address]] std::monostate _use_aggregatee_initizalizer {};
+
+        /// Don't park lower than this distance above print (planner.max_printed_z) if specified
+        float above_print = NAN;
+
+        /// Don't park lower than this absolute position if specified
+        float absolute = 0;
+
+        constexpr bool operator==(const Minimum &) const = default;
     };
 
     static constexpr Unchanged unchanged {};
 
+    using X = std::variant<Unchanged, float>;
+    using Y = std::variant<Unchanged, float>;
+    using Z = std::variant<Unchanged, float, Relative, Minimum>;
+
     // float = absolute coordinate
-    std::variant<Unchanged, float> x = unchanged, y = unchanged;
-    std::variant<Unchanged, float, AdvancedZ> z = unchanged;
+    X x = unchanged;
+    Y y = unchanged;
+    Z z = unchanged;
 
     constexpr bool operator==(const ParkingPosition &) const = default;
 
