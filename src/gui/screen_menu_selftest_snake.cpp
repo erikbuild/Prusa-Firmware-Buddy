@@ -27,6 +27,7 @@
 #include "selftest/i_selftest.hpp"
 #include <selftest/selftest_invocation.hpp>
 #include <gui/wizard/screen_selftest_submenu.hpp>
+#include <lang/i18n.h>
 
 #include <option/has_side_fsensor_remap.h>
 #if HAS_SIDE_FSENSOR_REMAP()

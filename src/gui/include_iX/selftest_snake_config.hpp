@@ -1,8 +1,7 @@
 #pragma once
-#include "i18n.h"
 #include <utility_extensions.hpp>
 #include <printer_selftest.hpp>
-#include "selftest_types.hpp"
+#include <selftest_types.hpp>
 #include <option/has_precise_homing_corexy.h>
 
 namespace SelftestSnake {
