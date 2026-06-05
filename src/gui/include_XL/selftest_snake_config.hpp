@@ -30,22 +30,6 @@ enum class Action {
     _first = Fans,
 };
 
-// Returns a printf-style format string with a single %d for the 1-based tool/dock index.
-constexpr auto get_submenu_label_template(Action action) -> const char * {
-    switch (action) {
-    case Action::DockCalibration:
-        return N_("Dock %d Calibration");
-    case Action::Loadcell:
-        return N_("Tool %d Loadcell Test");
-    case Action::FilamentSensorCalibration:
-        return N_("Tool %d Filament Sensor Calibration");
-    case Action::Gears:
-        return N_("Tool %d Gearbox alignment");
-    default:
-        bsod_unreachable();
-    }
-}
-
 TestResult get_test_result(Action action, ToolMask tool);
 uint64_t get_test_mask(Action action);
 } // namespace SelftestSnake

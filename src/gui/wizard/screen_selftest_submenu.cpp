@@ -18,6 +18,30 @@ int Menu::item_count() const {
     return PhysicalToolIndex::count + 1; // + MI_RETURN
 }
 
+// Returns a printf-style format string with a single %d for the 1-based tool/dock index.
+constexpr auto get_submenu_label_template([[maybe_unused]] Action action) -> const char * {
+    assert(has_submenu(action));
+#if PRINTER_IS_PRUSA_XL()
+    switch (action) {
+    case Action::DockCalibration:
+        return N_("Dock %d Calibration");
+    case Action::Loadcell:
+        return N_("Tool %d Loadcell Test");
+    case Action::FilamentSensorCalibration:
+        return N_("Tool %d Filament Sensor Calibration");
+    case Action::Gears:
+        return N_("Tool %d Gearbox alignment");
+    default:
+        break;
+    }
+#elif HAS_INDX()
+    if (action == Action::FilamentSensorCalibration) {
+        return N_("Tool %d Filament Sensor Calibration");
+    }
+#endif
+    return "Tool %d";
+}
+
 void Menu::setup_item(ItemVariant &variant, int index) {
     if (index == 0) {
         variant.emplace<MI_RETURN>();

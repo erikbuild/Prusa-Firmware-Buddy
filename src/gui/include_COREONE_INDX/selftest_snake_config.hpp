@@ -32,17 +32,6 @@ enum class Action : uint8_t {
     _first = DoorSensor,
 };
 
-constexpr const char *get_submenu_label_template(Action action) {
-    switch (action) {
-
-    case Action::FilamentSensorCalibration:
-        return N_("Tool %d Filament Sensor Calibration");
-
-    default:
-        bsod_unreachable();
-    }
-}
-
 constexpr EnumBitset<Action, Action::_count> get_dependencies(Action action) {
     auto deps = EnumBitset<Action, Action::_count> {};
 
