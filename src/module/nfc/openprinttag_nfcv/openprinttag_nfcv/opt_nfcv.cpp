@@ -73,7 +73,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::io_op(TagID tag, PayloadPos start, s
     }
 
     if (const auto r = impl(tag_data); !r.has_value()) {
-        return handle_io_error(tag, r.error());
+        return std::unexpected(to_backend_error(r.error()));
     }
 
     return {};
@@ -281,7 +281,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::initialize_tag(TagID tag, const Init
             return {};
 
         } else {
-            return handle_io_error(tag, r.error());
+            return std::unexpected(to_backend_error(r.error()));
         }
     };
 
@@ -320,11 +320,11 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::initialize_tag(TagID tag, const Init
     case Policy::write_password: {
         const auto tag_info = reader.get_system_info(tag_data.uid);
         if (!tag_info) {
-            return handle_io_error(tag, tag_info.error());
+            return std::unexpected(to_backend_error(tag_info.error()));
         }
         const auto block_size = tag_info->mem_size.value_or(nfcv::TagInfo::MemorySize {}).block_size;
         if (block_size == 0) {
-            return handle_io_error(tag, nfcv::Error::bad_request);
+            return std::unexpected(to_backend_error(nfcv::Error::bad_request));
         }
 
         // Set up the passwords
@@ -427,7 +427,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::unlock_tag(TagID tag, uint32_t passw
 
     for (const auto reg : { nfcv::ReaderWriterInterface::Register::read_password, nfcv::ReaderWriterInterface::Register::write_password }) {
         if (auto r = reader.set_password(tag_data.uid, reg, password); !r) {
-            return handle_io_error(tag, r.error());
+            return std::unexpected(to_backend_error(r.error()));
         }
     }
 
@@ -440,7 +440,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::unlock_tag(TagID tag, uint32_t passw
             .h_page_protection = nfcv::SLIX2PageProtection::none,
         } };
         if (auto r = reader.nfcv_command(cmd); !r) {
-            return handle_io_error(tag, r.error());
+            return std::unexpected(to_backend_error(r.error()));
         }
     }
 
@@ -454,10 +454,6 @@ bool OPTBackend_NFCV::is_valid(TagID tag_id) {
     }
 
     return tags.at(tag_id).state != TagData::State::free;
-}
-
-std::unexpected<OPTBackend::IOError> OPTBackend_NFCV::handle_io_error(TagID tag, nfcv::Error error) {
-    return std::unexpected(to_backend_error(error));
 }
 
 void OPTBackend_NFCV::run_next_discovery() {
