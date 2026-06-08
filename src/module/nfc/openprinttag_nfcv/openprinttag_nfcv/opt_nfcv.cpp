@@ -64,6 +64,11 @@ OPTBackend_NFCV::OPTBackend_NFCV(nfcv::ReaderWriterInterface &reader, const Conf
 }
 
 void openprinttag::OPTBackend_NFCV::set_config(const Config &config) {
+    if (!config.enable_radio) {
+        // The field might be left up, shut it down
+        reader.field_down();
+    }
+
     OPTBackend::set_config(config);
     discoveries_limiter.set_min_delay(config.discovery_interval_ms);
 }
