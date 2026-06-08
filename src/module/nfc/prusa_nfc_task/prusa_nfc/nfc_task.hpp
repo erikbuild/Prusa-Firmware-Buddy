@@ -22,7 +22,7 @@ class NFCTask {
 public:
     using Job = stdext::move_only_inplace_function<void()>;
     using EventCallback = stdext::inplace_function<void(prusa3d_nfc_event_Event_1_0 &)>;
-    using HWReconfigurationCallback = stdext::inplace_function<void(const prusa3d_nfc_request_debug_ModulationConfig_1_0 &)>;
+    using HWReconfigurationCallback = stdext::inplace_function<void(const prusa3d_nfc_request_config_ModulationConfig_1_0 &)>;
 
 public:
     NFCTask(openprinttag::OPTBackend &backend, EventCallback &&event_callback, HWReconfigurationCallback &&hw_reconfiguration_callback);
@@ -54,7 +54,7 @@ private:
     void handle_raw_write_request(const prusa3d_nfc_request_RawWrite_1_0 &request, prusa3d_nfc_util_ReaderError_1_0 &result);
     void handle_initialize_tag_request(const prusa3d_nfc_request_InitializeTag_1_0 &request, prusa3d_nfc_util_ReaderError_1_0 &result);
     void handle_unlock_tag_request(const prusa3d_nfc_request_UnlockTag_1_0 &request, prusa3d_nfc_util_ReaderError_1_0 &result);
-    void handle_set_debug_config_request(const prusa3d_nfc_request_SetDebugConfig_1_0 &request);
+    void handle_set_config_request(const prusa3d_nfc_request_SetConfig_1_0 &request);
     void handle_get_tag_uid_request(const prusa3d_nfc_request_GetTagUID_1_0 &request, prusa3d_nfc_request_GetTagUIDResult_1_0 &result);
 
 private:

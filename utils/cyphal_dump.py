@@ -467,12 +467,12 @@ def unpack_nfc_request_data(data):
     def disable_radio(data):
         return 'disable_radio', data
 
-    def set_debug_config(data):
+    def set_config(data):
         enforce_antenna, data = unpack_unsigned(data, 1)
         auto_forget_tag, data = unpack_unsigned(data, 1)
         modulation_cnt, data = unpack_unsigned(data, 1)
         antenna = 'any' if enforce_antenna == 255 else f'A#{enforce_antenna}'
-        return f'set_debug_config antenna={antenna} auto_forget={bool(auto_forget_tag)} modulation_configs={modulation_cnt}', data
+        return f'set_config antenna={antenna} auto_forget={bool(auto_forget_tag)} modulation_configs={modulation_cnt}', data
 
     def get_tag_uid(data):
         tag_id, data = unpack_nfc_tag_id(data)
@@ -492,7 +492,7 @@ def unpack_nfc_request_data(data):
             9: unlock_tag,
             10: enable_radio,
             11: disable_radio,
-            12: set_debug_config,
+            12: set_config,
             13: get_tag_uid,
         })
 

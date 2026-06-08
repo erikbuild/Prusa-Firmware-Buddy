@@ -187,7 +187,7 @@ async def main():
         print(term.home + term.clear)
         print("Reconfiguring ...")
         request_id = await send_request(
-            "set_debug_config",
+            "set_config",
             {
                 "enforce_antenna":
                 0,

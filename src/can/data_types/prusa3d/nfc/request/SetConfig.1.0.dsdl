@@ -6,7 +6,7 @@ bool[<=1] auto_forget_tag
 
 # Modulation settings, if not present don't change anything
 # If present will reset the internal nfc chip and reconfigure it also will reset the reader implementation state to start with a clean sheet
-prusa3d.nfc.request.debug.ModulationConfig.1.0[<=1] modulation_settings
+prusa3d.nfc.request.config.ModulationConfig.1.0[<=1] modulation_settings
 
 # Discovery interval, in milliseconds
 # This is "shared" between the alternating antennas, so for each antenna, the interval is discovery_interval * antenna_count

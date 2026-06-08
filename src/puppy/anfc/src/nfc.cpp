@@ -142,7 +142,7 @@ void nfc::readers_init() {
     }
 }
 
-void nfc::reconfigure_readers(const prusa3d_nfc_request_debug_ModulationConfig_1_0 &config) {
+void nfc::reconfigure_readers(const prusa3d_nfc_request_config_ModulationConfig_1_0 &config) {
     st25r39xxb::ModulationConfiguration res;
 
     // If target amplitude is set to 100% use OOK Modulation which does technically the same
@@ -154,17 +154,17 @@ void nfc::reconfigure_readers(const prusa3d_nfc_request_debug_ModulationConfig_1
     }
 
     // If we have an AWS preset then propagate correct preset to readers
-    if (config.aws_config.value != prusa3d_nfc_request_debug_AwsConfig_1_0_NO_AWS) {
+    if (config.aws_config.value != prusa3d_nfc_request_config_AwsConfig_1_0_NO_AWS) {
         st25r39xxb::config::AWS aws_config {};
 
         switch (config.aws_config.value) {
-        case prusa3d_nfc_request_debug_AwsConfig_1_0_AWS_SLOW_TRANSIENT:
+        case prusa3d_nfc_request_config_AwsConfig_1_0_AWS_SLOW_TRANSIENT:
             aws_config = st25r39xxb::config::AWSTransient::slow;
             break;
-        case prusa3d_nfc_request_debug_AwsConfig_1_0_AWS_MEDIUM_TRANSIENT:
+        case prusa3d_nfc_request_config_AwsConfig_1_0_AWS_MEDIUM_TRANSIENT:
             aws_config = st25r39xxb::config::AWSTransient::medium;
             break;
-        case prusa3d_nfc_request_debug_AwsConfig_1_0_AWS_FAST_TRANSIENT:
+        case prusa3d_nfc_request_config_AwsConfig_1_0_AWS_FAST_TRANSIENT:
             aws_config = st25r39xxb::config::AWSTransient::fast;
             break;
         default:
