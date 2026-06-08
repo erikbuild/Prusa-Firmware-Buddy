@@ -15,15 +15,22 @@ namespace buddy {
 class INDXToolLockHack {
 
 public:
+    INDXToolLockHack();
+
     bool is_armed() const {
         return extrusion_needed_mm_ > 0;
     }
 
     /// Arms the hack; to be called after tool pickup
-    void rearm(Badge<PrusaToolChanger>);
+    void rearm(Badge<PrusaToolChanger>) {
+        rearm();
+    }
 
     /// Tracks the extruder move and possibly injects the hack
     void track_extruder_move(float delta_e, Badge<Planner>);
+
+private:
+    void rearm();
 
 private:
     /// Remaining distance to extrude before the hack becomes disarmed

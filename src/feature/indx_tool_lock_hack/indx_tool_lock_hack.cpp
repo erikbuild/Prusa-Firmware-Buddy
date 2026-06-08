@@ -11,7 +11,12 @@ INDXToolLockHack &indx_tool_lock_hack() {
     return instance;
 }
 
-void INDXToolLockHack::rearm(Badge<PrusaToolChanger>) {
+INDXToolLockHack::INDXToolLockHack() {
+    // We don't remember how things were the last print run, assume we need the hack
+    rearm();
+}
+
+void INDXToolLockHack::rearm() {
     extrusion_needed_mm_ = 2;
 }
 
