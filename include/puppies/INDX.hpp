@@ -172,7 +172,7 @@ public:
     /// @returns a value that increments every time the puppy is reset
     /// It is recommended to check for the reset counter against the previous one
     /// AFTER reading out all the needed data from the puppy.
-    uint32_t get_reset_counter() const {
+    [[nodiscard]] uint32_t get_reset_counter() const {
         return reset_counter.load();
     }
 

@@ -193,6 +193,11 @@ CommunicationStatus Dwarf::initial_scan(PuppyModbus &bus) {
     AccelerometerEnableCoil.dirty = true;
     selected = false;
 
+    // !!! MUST be after resetting all the stuff to avoid race conditions
+    // The intention is that when someone detects a reset, we want to guarantee that the data is already marked as invalid
+    // and will become valid again only after it is properly fetched from the newly reset puppy.
+    reset_counter++;
+
     // Write coil values that are not written automatically
     if (bus.write(unit, IsSelectedCoil) == CommunicationStatus::ERROR) {
         return CommunicationStatus::ERROR;

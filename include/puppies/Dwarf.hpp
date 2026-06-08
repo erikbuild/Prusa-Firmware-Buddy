@@ -205,6 +205,13 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
 
     [[nodiscard]] IFSensor::value_type get_tool_filament_sensor();
 
+    /// @returns a value that increments every time the puppy is reset
+    /// It is recommended to check for the reset counter against the previous one
+    /// AFTER reading out all the needed data from the puppy.
+    [[nodiscard]] uint32_t get_reset_counter() const {
+        return reset_counter.load();
+    }
+
     [[nodiscard]] int16_t get_mcu_temperature(); ///< Get MCU temperature [°C]
     [[nodiscard]] int16_t get_board_temperature(); ///< Get board temperature [°C]
     [[nodiscard]] float get_24V(); ///< Get 24V power supply voltage [V]
@@ -401,6 +408,9 @@ private:
     static constexpr uint8_t DISC_BTN_UP = 1 << 2;
     static constexpr uint8_t DISC_BTN_DN = 1 << 3;
     std::atomic<uint8_t> discrete_status { 0 };
+
+    /// Gets incremented each time the puppy is reset
+    std::atomic<uint32_t> reset_counter { 0 };
 
     // --- Desired write-side state, applied by write_general() ---
 
