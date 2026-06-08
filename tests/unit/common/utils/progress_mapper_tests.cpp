@@ -29,6 +29,28 @@ ProgressMapperWorkflowArray test_pipeline {
     })
 };
 
+enum class ZeroScaleState {
+    begin,
+    middle,
+    end,
+};
+
+ProgressMapperWorkflowArray pipeline_zero_scale_middle {
+    std::to_array<ProgressMapperWorkflowStep<ZeroScaleState>>({
+        { ZeroScaleState::begin, 1 },
+        { ZeroScaleState::middle, 0 },
+        { ZeroScaleState::end, 1 },
+    })
+};
+
+ProgressMapperWorkflowArray pipeline_zero_scale_end {
+    std::to_array<ProgressMapperWorkflowStep<ZeroScaleState>>({
+        { ZeroScaleState::begin, 1 },
+        { ZeroScaleState::middle, 1 },
+        { ZeroScaleState::end, 0 },
+    })
+};
+
 TEST_CASE("ProgressMapper: Pipeline test") {
     CHECK(test_pipeline.steps().size() == size_t(5));
     CHECK(test_pipeline.scale_sum() == 2 + 4 + 1 + 1 + 2);
@@ -104,4 +126,27 @@ TEST_CASE("ProgressMapper: Update current progress") {
     CHECK(mapper.current_progress() == 10);
     CHECK(mapper.update_progress(TestState::start, to_normalized_progress(0, 40, 30)) == 15);
     CHECK(mapper.current_progress() == 15);
+}
+
+TEST_CASE("ProgressMapper: Zero-scale step (visited)") {
+    ProgressMapper<ZeroScaleState> mapper(pipeline_zero_scale_middle);
+    CHECK(mapper.update_progress_span(ZeroScaleState::begin) == ProgressSpan { 0, 50 });
+    CHECK(mapper.update_progress(ZeroScaleState::middle, 0.5f) == 50);
+    CHECK(mapper.update_progress(ZeroScaleState::middle, 1.0f) == 50);
+    CHECK(mapper.update_progress_span(ZeroScaleState::end) == ProgressSpan { 50, 100 });
+    CHECK(mapper.update_progress(ZeroScaleState::end, 1.0f) == 100);
+}
+
+TEST_CASE("ProgressMapper: Zero-scale step (skipped)") {
+    ProgressMapper<ZeroScaleState> mapper(pipeline_zero_scale_middle);
+    CHECK(mapper.update_progress(ZeroScaleState::begin, 1) == 50);
+    CHECK(mapper.update_progress_span(ZeroScaleState::end) == ProgressSpan { 50, 100 });
+    CHECK(mapper.update_progress(ZeroScaleState::end, 1.0f) == 100);
+}
+
+TEST_CASE("ProgressMapper: Trailing zero-scale step does not divide by zero") {
+    ProgressMapper<ZeroScaleState> mapper(pipeline_zero_scale_end);
+    CHECK(mapper.update_progress_span(ZeroScaleState::begin) == ProgressSpan { 0, 50 });
+    CHECK(mapper.update_progress(ZeroScaleState::middle, 1.0f) == 100);
+    CHECK(mapper.update_progress_span(ZeroScaleState::end) == ProgressSpan { 100, 100 });
 }

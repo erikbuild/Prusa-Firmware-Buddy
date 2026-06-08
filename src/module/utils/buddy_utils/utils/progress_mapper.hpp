@@ -69,8 +69,6 @@ protected:
 
         auto step = steps.begin();
         for (const auto &param : params) {
-            assert(param.scale > 0);
-
             scale_accum += param.scale;
 
             *step = StepData {
@@ -79,6 +77,8 @@ protected:
             };
             step++;
         }
+
+        assert(scale_accum > 0);
     }
 
 private:
@@ -211,7 +211,11 @@ public:
         /// Scale of all remaining steps (including this one)
         const auto remaining_scale = workflow_->scale_sum() - step_base_cumulative_scale;
 
-        current_step_span_.max = current_step_span_.min + static_cast<int>(std::roundf(float(step_scale) / remaining_scale * (100 - current_step_span_.min)));
+        if (remaining_scale > 0) {
+            current_step_span_.max = current_step_span_.min + static_cast<int>(std::roundf(float(step_scale) / remaining_scale * (100 - current_step_span_.min)));
+        } else {
+            current_step_span_.max = current_step_span_.min;
+        }
 
         return current_step_span_;
     }
