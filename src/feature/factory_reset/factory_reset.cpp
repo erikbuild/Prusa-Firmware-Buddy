@@ -191,28 +191,6 @@ static FactoryReset::ItemBitset decode_items_to_keep(uint16_t encoded_params) {
     }
     indicate_progress(FactoryResetStep::wipe_specific_xflash_files, 1.f);
 
-    {
-        // freertos::CriticalSection is a bit too restrictive and wouldn't allow us to udpate the display properly
-        // To be decently sure that noone pokes with anything, let's instead give this thread the highest priority
-        // and reduce other tasks priorities.
-        // We cannot suspend them completely, because they might be holding a mutex we will need during the factory reset.
-        const auto current_thread = osThreadGetId();
-        osThreadSetPriority(current_thread, osPriorityRealtime);
-
-        // Make sure that all other tasks have lower priority
-        const auto count = uxTaskGetNumberOfTasks();
-        const auto list = new TaskStatus_t[count];
-
-        uxTaskGetSystemState(list, count, nullptr);
-
-        for (size_t i = 0; i < count; i++) {
-            const auto handle = list[i].xHandle;
-            if (handle != current_thread && osThreadGetPriority(handle) >= osPriorityRealtime) {
-                osThreadSetPriority(handle, osPriorityHigh);
-            }
-        }
-    }
-
     if (wipe_eeprom) {
         constexpr uint16_t eeprom_size = 8192;
         for (uint16_t address = 0; address < eeprom_size; address += 4) {
