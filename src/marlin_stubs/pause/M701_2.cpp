@@ -103,7 +103,7 @@ void filament_gcodes::M701_load(FilamentType filament_to_be_loaded, const std::o
     settings.SetMmuFilamentToLoad(mmu_slot);
 
     mapi::ParkingPosition park_position = mapi::get_parking_position(do_purge_only ? mapi::ParkPosition::purge : mapi::ParkPosition::load);
-    park_position.z = std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE });
+    park_position.z = mapi::ParkingPosition::Minimum { .above_print = Z_NOZZLE_PARK_RISE, .absolute = z_min_pos };
 
     settings.SetParkPoint(park_position);
     const xyze_pos_t current_position_tmp = current_position;
@@ -167,9 +167,9 @@ void filament_gcodes::M702_unload(std::optional<float> unload_length, float z_mi
     settings.SetUnloadLength(unload_length);
     settings.SetRetractLength(0.f);
     mapi::ParkingPosition park_position = {
-        X_AXIS_UNLOAD_POS,
-        Y_AXIS_UNLOAD_POS,
-        std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE })
+        .x = X_AXIS_UNLOAD_POS,
+        .y = Y_AXIS_UNLOAD_POS,
+        .z = mapi::ParkingPosition::Minimum { .above_print = Z_NOZZLE_PARK_RISE, .absolute = z_min_pos },
     };
     settings.SetParkPoint(park_position);
     xyze_pos_t current_position_tmp = current_position;
@@ -266,9 +266,9 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
     settings.SetRetractLength(0.f);
     float e_pos_to_restore = current_position.e;
     mapi::ParkingPosition pos = {
-        X_AXIS_LOAD_POS,
-        Y_AXIS_LOAD_POS,
-        std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE })
+        .x = X_AXIS_LOAD_POS,
+        .y = Y_AXIS_LOAD_POS,
+        .z = mapi::ParkingPosition::Minimum { .above_print = Z_NOZZLE_PARK_RISE, .absolute = z_min_pos },
     };
     settings.SetParkPoint(pos);
 
@@ -322,7 +322,7 @@ void filament_gcodes::M1701_autoload(const std::optional<float> &fast_load_lengt
         filament::set_type_to_load(filament);
         filament::set_color_to_load(std::nullopt);
 
-        mapi::ParkingPosition park_position({ .z = std::max({ current_position.z + Z_NOZZLE_PARK_RISE, z_min_pos, planner.max_printed_z + Z_NOZZLE_PARK_RISE }) });
+        mapi::ParkingPosition park_position = { .z = mapi::ParkingPosition::Minimum { .above_print = Z_NOZZLE_PARK_RISE, .absolute = z_min_pos } };
         // Returning to previous position is unwanted outside of printing (M1701 should be used only outside of printing)
         settings.SetParkPoint(park_position);
 
