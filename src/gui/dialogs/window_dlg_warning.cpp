@@ -1,42 +1,10 @@
 #include "window_dlg_warning.hpp"
 
-#include <utils/enum_array.hpp>
-#include <common/find_error.hpp>
 #include <common/fsm_base_types.hpp>
-#include <option/has_dwarf.h>
-#include <option/has_uneven_bed_prompt.h>
-#include <option/has_indx.h>
 #include <state/printer_state.hpp>
+#include <img_resources.hpp>
 
-static constexpr int16_t icon_size = 48;
-static constexpr int16_t qr_size = GuiDefaults::QRSize;
-static constexpr const img::Resource *phone_resource = &img::hand_qr_59x72;
-static constexpr uint16_t padding = GuiDefaults::WarningDlgPadding;
-static constexpr int16_t top_row_height = std::max({ icon_size, (int16_t)phone_resource->h, qr_size });
-static constexpr int16_t top_row_width_spare_space = GuiDefaults::RectScreen.Width() - (icon_size + phone_resource->w + qr_size + 2 * padding);
-static_assert(top_row_width_spare_space > 0);
-
-static constexpr int16_t icon_left = top_row_width_spare_space / 2;
-static constexpr Rect16 icon_rect = {
-    icon_left,
-    padding + (top_row_height - icon_size) / 2,
-    icon_size,
-    icon_size,
-};
-static constexpr int16_t phone_left = icon_left + icon_size + padding;
-static constexpr Rect16 phone_rect = {
-    phone_left,
-    padding + (top_row_height - phone_resource->h) / 2,
-    phone_resource->w,
-    phone_resource->h,
-};
-static constexpr Rect16 qr_rect = {
-    phone_left + phone_resource->w + padding,
-    padding + (top_row_height - qr_size) / 2,
-    qr_size,
-    qr_size,
-};
-
+namespace {
 const img::Resource *warning_dialog_icon(WarningType warning_type) {
     switch (warning_type) {
 
@@ -76,28 +44,19 @@ const img::Resource *warning_dialog_icon(WarningType warning_type) {
 #endif
     }
 }
+} // namespace
 
 DialogWarning::DialogWarning(fsm::BaseData data)
-    : IDialogMarlin(GuiDefaults::RectScreen)
-    , icon(this, icon_rect, nullptr)
-    , phone(this, phone_rect, phone_resource)
-    , qr(this, qr_rect, ErrCode::ERR_UNDEF)
-    , text(this, GuiDefaults::WarningDlgTextRect, is_multiline::yes, is_closed_on_click_t::no, {})
-    , button(this, GuiDefaults::GetButtonRect(GuiDefaults::RectScreen), PhasesWarning::_last) {
-    CaptureNormalWindow(button);
+    : IDialogMarlin(GuiDefaults::RectScreenNoHeader) {
     Change(data);
 }
 
 void DialogWarning::Change(fsm::BaseData data) {
     const auto phase = GetEnumFromPhaseIndex<PhasesWarning>(data.GetPhase());
     const auto warning_type = static_cast<WarningType>(*data.GetData().data());
-    const auto err_desc = find_error(printer_state::warning_type_to_error_code(warning_type));
+    const auto err_code = printer_state::warning_type_to_error_code(warning_type);
 
-    icon.SetRes(warning_dialog_icon(warning_type));
-    qr.set_error_code(err_desc.err_code);
-    text.SetText(_(err_desc.err_text));
-    button.set_fsm_and_phase(phase);
-
-    // Reset selection to default on phase change
-    button.SetBtnIndex(0);
+    // Construct-once frame; recreated on change because the warning type
+    // (and thus the error code and icon) is delivered through the FSM data.
+    frame_.emplace(this, FSMAndPhase { phase }, err_code, warning_dialog_icon(warning_type));
 }

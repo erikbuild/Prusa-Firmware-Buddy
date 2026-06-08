@@ -1,6 +1,7 @@
 target_sources(
   firmware
-  PRIVATE frame_progress_prompt.cpp
+  PRIVATE frame_icon_qr_prompt.cpp
+          frame_progress_prompt.cpp
           frame_prompt.cpp
           frame_qr_prompt.cpp
           frame_text_image_prompt.cpp
