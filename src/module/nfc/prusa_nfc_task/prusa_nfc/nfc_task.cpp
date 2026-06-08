@@ -483,8 +483,14 @@ void NFCTask::handle_unlock_tag_request(const prusa3d_nfc_request_UnlockTag_1_0 
 
 void NFCTask::handle_set_debug_config_request(const prusa3d_nfc_request_SetDebugConfig_1_0 &request) {
     OPTBackend::Config config = reader_.backend().config();
-    config.auto_forget_tag = request.auto_forget_tag;
-    config.enforced_antenna = request.enforce_antenna;
+
+    if (request.auto_forget_tag.count == 1) {
+        config.auto_forget_tag = request.auto_forget_tag.bitpacked[0];
+    }
+
+    if (request.enforce_antenna.count == 1) {
+        config.enforced_antenna = request.enforce_antenna.elements[0];
+    }
 
     if (request.discovery_interval.count == 1) {
         config.discovery_interval_ms = request.discovery_interval.elements[0];
