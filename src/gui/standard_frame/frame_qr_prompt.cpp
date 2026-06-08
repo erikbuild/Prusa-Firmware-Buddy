@@ -3,91 +3,25 @@
 #include <img_resources.hpp>
 #include <guiconfig/wizard_config.hpp>
 #include <find_error.hpp>
-#include <bsod/bsod.h>
 #include <auto_layout.hpp>
 
 namespace {
 static constexpr uint8_t qr_size = GuiDefaults::QRSize;
 static constexpr uint8_t txt_height = WizardDefaults::txt_h;
 static constexpr uint8_t spacing = 16;
+// Inset of the inner frame (no bottom margin - radio sits right below). Reuses HeaderPadding
+// so the content lines up with the header inset and adapts per display.
+static constexpr int16_t inner_frame_margin_side = GuiDefaults::HeaderPadding.left;
+static constexpr int16_t inner_frame_margin_top = GuiDefaults::HeaderPadding.top;
 static constexpr auto txt_details = N_("More details at");
 static constexpr auto txt_scan_me = N_("Scan me!");
 
-static constexpr Rect16 inner_frame_rect =
-#if HAS_LARGE_DISPLAY()
-    Rect16 {
-        WizardDefaults::col_0,
-        WizardDefaults::row_0,
-        GuiDefaults::ScreenWidth - 2 * WizardDefaults::MarginLeft, // 2* = 1 left, 1 right
-        qr_size + txt_height + 2 * spacing // QR code with scanMe + spacing (text is beside it)
-    };
-#else // MINI
-    Rect16 {
-        WizardDefaults::col_0,
-        WizardDefaults::row_0,
-        GuiDefaults::ScreenWidth - 2 * WizardDefaults::MarginLeft,
-        txt_height * 6 + spacing + qr_size // 8 lines of text, spacing, QR code with scanMe  (text is above qr)
-    };
-#endif
-
-static constexpr Rect16 info_text_rect =
-#if HAS_LARGE_DISPLAY()
-    Rect16 {
-        inner_frame_rect.Left(),
-        inner_frame_rect.Top(),
-        GuiDefaults::ScreenWidth - qr_size - 2 * WizardDefaults::MarginLeft + spacing, // 2* = left, right, spacing =  between qr and text
-        inner_frame_rect.Height()
-    };
-#else // MINI
-    Rect16 {
-        inner_frame_rect.Left(),
-        inner_frame_rect.Top(),
-        inner_frame_rect.Width(),
-        txt_height * 6 // 5 lines of text
-    };
-#endif
-
-static constexpr Rect16 qr_rect =
-#if HAS_LARGE_DISPLAY()
-    Rect16 {
-        info_text_rect.Right() + spacing,
-        inner_frame_rect.Top(),
-        qr_size,
-        qr_size
-    };
-#else // MINI
-    Rect16 {
-        inner_frame_rect.Left(),
-        info_text_rect.Bottom() + spacing,
-        qr_size,
-        qr_size
-    };
-#endif
-
-static constexpr Rect16 scan_me_rect =
-#if HAS_LARGE_DISPLAY()
-    Rect16 {
-        info_text_rect.Right() + spacing,
-        qr_rect.Bottom(), // no spacing here to be as close to the QR code as possible (the qr doesnt fill the whole qr_rect)
-        qr_size,
-        txt_height + spacing
-    };
-#else // MINI
-    Rect16 {
-        qr_rect.Right() + spacing,
-        qr_rect.Top(),
-        inner_frame_rect.Width() - spacing - qr_rect.Width(), // rest of space beside qr
-        qr_rect.Height()
-    };
-#endif
-
 static constexpr std::array layout_no_footer {
-    StackLayoutItem { .height = inner_frame_rect.Height() }, // space for inner_frame
     StackLayoutItem {
         .height = StackLayoutItem::stretch,
-        .margin_side = WizardDefaults::MarginLeft,
-    }, // Details
-    StackLayoutItem { .height = txt_height, .margin_side = WizardDefaults::MarginLeft }, // Link
+        .margin_side = inner_frame_margin_side,
+        .margin_top = inner_frame_margin_top,
+    }, // inner_frame (text + QR + details + link)
     standard_stack_layout::for_radio,
 };
 static constexpr std::array layout_only_footer {
@@ -99,12 +33,12 @@ static_assert(layout_no_footer.size() + 1 == layout_with_footer.size(), "Layout 
 } // namespace
 
 FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, const string_view_utf8 &info_text, const char *qr_suffix)
-    : inner_frame(parent, inner_frame_rect)
-    , info(&inner_frame, info_text_rect, is_multiline::yes, is_closed_on_click_t::no, info_text)
-    , scan_me(&inner_frame, scan_me_rect, is_multiline::no, is_closed_on_click_t::no, txt_scan_me)
-    , qr(&inner_frame, qr_rect)
-    , details(parent, {}, is_multiline::no, is_closed_on_click_t::no, txt_details)
-    , link(parent, {})
+    : inner_frame(parent, parent->GetRect())
+    , info(&inner_frame, {}, is_multiline::yes, is_closed_on_click_t::no, info_text)
+    , scan_me(&inner_frame, {}, is_multiline::no, is_closed_on_click_t::no, txt_scan_me)
+    , qr(&inner_frame, {})
+    , details(&inner_frame, {}, is_multiline::no, is_closed_on_click_t::no, txt_details)
+    , link(&inner_frame, {})
     , radio(parent, {}, fsm_phase) //
 {
     StringBuilder(link_buffer)
@@ -130,30 +64,62 @@ FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, cons
     link.set_font(Font::small);
     details.set_font(Font::small);
 
-    std::array<window_t *, layout_no_footer.size()> windows_no_footer { &inner_frame, &details, &link, &radio };
+    std::array<window_t *, layout_no_footer.size()> windows_no_footer { &inner_frame, &radio };
     layout_vertical_stack(parent->GetRect(), windows_no_footer, layout_no_footer);
+
+    layout_contents();
 }
 
-FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, std::optional<ErrCode> (*error_code_mapper)(FSMAndPhase fsm_phase))
+void FrameQRPrompt::layout_contents() {
+    const Rect16 f = inner_frame.GetRect();
+    const int16_t row = txt_height; // height of one details/link row
+
+#if HAS_LARGE_DISPLAY()
+    // Two columns: text on the left, QR on the right.
+    const int16_t left_w = f.Width() - qr_size - spacing;
+    const int16_t right_x = f.Left() + left_w + spacing;
+
+    // Right column: QR on top, "Scan me!" right below it.
+    qr.SetRect(Rect16(right_x, f.Top(), qr_size, qr_size));
+    scan_me.SetRect(Rect16(right_x, f.Top() + qr_size, qr_size, row + spacing));
+
+    // Left column: info on top, "More details at" + link pinned to the bottom.
+    info.SetRect(Rect16(f.Left(), f.Top(), left_w, f.Height() - 2 * row));
+    details.SetRect(Rect16(f.Left(), f.Top() + f.Height() - 2 * row, left_w, row));
+    link.SetRect(Rect16(f.Left(), f.Top() + f.Height() - row, left_w, row));
+#else // MINI
+    // Single column (too narrow for two): info on top, then "More details at" +
+    // link, then QR with "Scan me!" beside it pinned to the bottom.
+    const int16_t qr_top = f.Top() + f.Height() - qr_size;
+    qr.SetRect(Rect16(f.Left(), qr_top, qr_size, qr_size));
+    scan_me.SetRect(Rect16(f.Left() + qr_size + spacing, qr_top, f.Width() - qr_size - spacing, qr_size));
+
+    details.SetRect(Rect16(f.Left(), qr_top - spacing - 2 * row, f.Width(), row));
+    link.SetRect(Rect16(f.Left(), qr_top - spacing - row, f.Width(), row));
+    info.SetRect(Rect16(f.Left(), f.Top(), f.Width(), (qr_top - spacing - 2 * row) - f.Top()));
+#endif
+}
+
+FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, ErrCode err_code)
     : FrameQRPrompt(parent, fsm_phase, string_view_utf8::MakeNULLSTR(), nullptr) {
 
-    // Extracting information: Phase -> corresponding error code -> message
-    const auto err_code = error_code_mapper(fsm_phase);
-    if (!err_code.has_value()) {
-        bsod_unreachable(); // Some phases do not have corresponding error codes - they should not be called with this constructor
-    }
-
-    const auto err = find_error(err_code.value());
+    const auto err = find_error(err_code);
 
     info.SetText(_(err.err_text));
 
     // link's internal buffer is used instead of link_buffer
-    link.set_error_code(err_code.value());
+    link.set_error_code(err_code);
 
     qr.set_error_code(err.err_code);
 }
 
+// Phase -> corresponding error code -> message. Phases without an error code must not
+// use this constructor: .value() BSODs (throws bad_optional_access) if there is none.
+FrameQRPrompt::FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, std::optional<ErrCode> (*error_code_mapper)(FSMAndPhase fsm_phase))
+    : FrameQRPrompt(parent, fsm_phase, error_code_mapper(fsm_phase).value()) {}
+
 void FrameQRPrompt::add_footer(FooterLine &footer) {
-    std::array<window_t *, layout_with_footer.size()> windows_with_footer { &inner_frame, &details, &link, &radio, &footer };
+    std::array<window_t *, layout_with_footer.size()> windows_with_footer { &inner_frame, &radio, &footer };
     layout_vertical_stack(radio.GetParent()->GetRect(), windows_with_footer, layout_with_footer);
+    layout_contents();
 }

@@ -14,10 +14,10 @@
 
 /**
  * Standard layout frame with a QR code.
- * Contains:
- * - Left aligned text
- * - QR code & link
- * - A FSM radio
+ * The inner frame is split into two columns:
+ * - Left: info text + "More details at" + link
+ * - Right: QR code + "Scan me!"
+ * A FSM radio sits below the inner frame.
  */
 class FrameQRPrompt {
 
@@ -29,6 +29,11 @@ public:
      */
     FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, std::optional<ErrCode> (*error_code_mapper)(FSMAndPhase fsm_phase));
 
+    /** Takes info text and QR suffix directly from \param err_code.
+     *  Useful when the error code does not follow from the phase alone (e.g. warnings, where it comes from the FSM data).
+     */
+    FrameQRPrompt(window_frame_t *parent, FSMAndPhase fsm_phase, ErrCode err_code);
+
     /**
      * Used by WithFooter<>
      * @param footer to add to vertical stack
@@ -36,7 +41,10 @@ public:
     void add_footer(FooterLine &footer);
 
 protected:
-    window_frame_t inner_frame; // frame containing text on the left and QR code with ScanMe on the right
+    /// Positions all sub-windows inside the (already laid-out) inner_frame.
+    void layout_contents();
+
+    window_frame_t inner_frame; // holds the text on the left and the QR code with ScanMe on the right
     window_text_t info;
     window_text_t scan_me;
     QRErrorUrlWindow qr;
