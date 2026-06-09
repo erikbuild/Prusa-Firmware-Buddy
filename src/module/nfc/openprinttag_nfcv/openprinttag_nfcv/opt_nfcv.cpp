@@ -286,6 +286,7 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::initialize_tag(TagID tag, const Init
         } else if (params.best_effort && r.error() == nfcv::Error::response_is_error) {
             // The chip will stop responding if we try to do a command with wrong password, we need to power cycle
             reader.field_down();
+
             if (auto r = reader.field_up(tag_data.antenna); !r) {
                 return std::unexpected(to_backend_error(r.error()));
             }
@@ -299,6 +300,12 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::initialize_tag(TagID tag, const Init
         } else {
             return std::unexpected(to_backend_error(r.error()));
         }
+    };
+
+    // Reset the tag when we finish
+    // We don't want to leave the tag with the correct password set
+    ScopeGuard field_down_guard = [&] {
+        reader.field_down();
     };
 
     FieldGuard field_guard { *this, tag_data.antenna };
@@ -435,6 +442,12 @@ OPTBackend::IOResult<void> OPTBackend_NFCV::unlock_tag(TagID tag, uint32_t passw
     if (tag_data.tag_type != TagType::slix2) {
         return std::unexpected(IOError::not_implemented);
     }
+
+    // Reset the tag when we finish
+    // We don't want to leave the tag with the correct password set
+    ScopeGuard field_down_guard = [&] {
+        reader.field_down();
+    };
 
     FieldGuard field_guard { *this, tag_data.antenna };
     if (!field_guard) {
