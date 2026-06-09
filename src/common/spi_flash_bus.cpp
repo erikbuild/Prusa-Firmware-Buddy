@@ -118,6 +118,10 @@ uint8_t SpiFlashBus::receive_byte() {
 }
 
 void SpiFlashBus::send(const uint8_t *buffer, uint32_t len) {
+    if (current_error != 0) {
+        return;
+    }
+
     if (len > 4 && dma_is_available()) {
         if (memory_supports_dma_transfer(buffer)) {
             Measure _ { "send dma-fast %u %u", len };
