@@ -377,13 +377,7 @@ bool run(uint8_t r_param, uint8_t probe_count) {
     // pass with offsets reset.
     while (true) {
         apply_stored_sensor_position(probing_config);
-
-        for (auto t : PhysicalToolIndex::all().skip_all_disabled()) {
-            if (!used_physical_tools.test(t.to_raw())) {
-                continue;
-            }
-            reset_hotend_offset(t);
-        }
+        reset_hotend_offsets();
         hotend_currently_applied_offset = xyz_pos_t {};
 
         // Helper: probe Z at the given mapped index position (with jitter)
