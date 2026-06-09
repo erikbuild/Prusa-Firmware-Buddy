@@ -421,12 +421,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
                                                     SystemInfo { .uid = data::uid1 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
         logger.events.clear();
 
@@ -444,9 +444,9 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
             res = reader.get_event(event, time);
             REQUIRE(res == false);
             CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                        FieldDown {},
                                                         FieldUp { .antenna = 1 },
                                                         Inventory {},
-                                                        FieldDown {},
                                                     }));
             logger.events.clear();
 
@@ -458,9 +458,9 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
             res = reader.get_event(event, discovery_interval);
             REQUIRE(res == false);
             CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                        FieldDown {},
                                                         FieldUp { .antenna = 0 },
                                                         Inventory {},
-                                                        FieldDown {},
                                                     }));
 
             logger.events.clear();
@@ -472,9 +472,9 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagLostEvent>(event));
         REQUIRE(std::get<OPTBackend::TagLostEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -494,6 +494,7 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -502,7 +503,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
                                                     StayQuiet { .uid = data::uid2 },
                                                     SystemInfo { .uid = data::uid2 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
         logger.events.clear();
         res = reader.get_event(event, 10);
@@ -537,6 +537,7 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -545,7 +546,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
                                                     StayQuiet { .uid = data::uid2 },
                                                     SystemInfo { .uid = data::uid2 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
         logger.events.clear();
         res = reader.get_event(event, 10);
@@ -565,12 +565,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 2);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid3 },
                                                     SystemInfo { .uid = data::uid3 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -590,6 +590,7 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 0);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
@@ -598,7 +599,6 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
                                                     StayQuiet { .uid = data::uid2 },
                                                     SystemInfo { .uid = data::uid2 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
         logger.events.clear();
         res = reader.get_event(event, 10);
@@ -611,9 +611,9 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         res = reader.get_event(event, 251);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
 
         logger.tags[data::uid1].antennas = { 0 };
@@ -625,44 +625,44 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagLostEvent>(event));
         CHECK(std::get<OPTBackend::TagLostEvent>(event).tag == 1);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
 
         logger.events.clear();
         res = reader.get_event(event, 751);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid2 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
 
         logger.events.clear();
         res = reader.get_event(event, 1001);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
 
         logger.events.clear();
         res = reader.get_event(event, 1251);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid2 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
 
         reader.forget_tag(1);
@@ -671,11 +671,11 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         res = reader.get_event(event, 1501);
         REQUIRE(res == false);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 0 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid1 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
 
         logger.events.clear();
@@ -684,12 +684,12 @@ TEST_CASE("Test NFC-V tag discovery and tag lost detection", "[nfcv][openprintta
         REQUIRE(std::holds_alternative<OPTBackend::TagDetectedEvent>(event));
         CHECK(std::get<OPTBackend::TagDetectedEvent>(event).tag == 1);
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
+                                                    FieldDown {},
                                                     FieldUp { .antenna = 1 },
                                                     Inventory {},
                                                     StayQuiet { .uid = data::uid2 },
                                                     SystemInfo { .uid = data::uid2 },
                                                     Inventory {},
-                                                    FieldDown {},
                                                 }));
     }
 }
@@ -725,7 +725,6 @@ TEST_CASE("Test NFC-V tag read ops", "[nfcv][openprinttag]") {
         CHECK(std::ranges::equal(logger.events, std::vector<Event> {
                                                     FieldUp { .antenna = 0 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 0 },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -740,7 +739,6 @@ TEST_CASE("Test NFC-V tag read ops", "[nfcv][openprinttag]") {
                                                     FieldUp { .antenna = 0 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 0 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 1 },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -761,7 +759,6 @@ TEST_CASE("Test NFC-V tag read ops", "[nfcv][openprinttag]") {
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 9 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 10 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 11 },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -784,7 +781,6 @@ TEST_CASE("Test NFC-V tag read ops", "[nfcv][openprinttag]") {
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 10 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 11 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 12 },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -858,7 +854,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 5, .data = std::vector { std::byte { 0xeb }, std::byte { 0xea }, std::byte { 0xe9 }, std::byte { 0xe8 } } },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 6, .data = std::vector { std::byte { 0xe7 }, std::byte { 0xe6 }, std::byte { 0xe5 }, std::byte { 0xe4 } } },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 7, .data = std::vector { std::byte { 0xe3 }, std::byte { 0xe2 }, std::byte { 0xe1 }, std::byte { 0xe0 } } },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -882,7 +877,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 2, .data = std::vector { std::byte { 0xf9 }, std::byte { 0xf8 }, std::byte { 0xf7 }, std::byte { 0xf6 } } },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 3, .data = std::vector { std::byte { 0xf5 }, std::byte { 0xf4 }, std::byte { 0xf3 }, std::byte { 0xf2 } } },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 4, .data = std::vector { std::byte { 0xf1 }, std::byte { 0xf0 }, std::byte { 0xef }, std::byte { 0xee } } },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -908,7 +902,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 4, .data = std::vector { std::byte { 0xf3 }, std::byte { 0xf2 }, std::byte { 0xf1 }, std::byte { 0xf0 } } },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 5 },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 5, .data = std::vector { std::byte { 0xef }, std::byte { 0xee }, std::byte { 0x16 }, std::byte { 0x17 } } },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -929,7 +922,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     FieldUp { .antenna = 0 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 0 },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 0, .data = std::vector { std::byte { 0xff }, std::byte { 0xfe }, std::byte { 0x02 }, std::byte { 0x03 } } },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -951,7 +943,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     FieldUp { .antenna = 0 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 0 },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 0, .data = std::vector { std::byte { 0x00 }, std::byte { 0xff }, std::byte { 0xfe }, std::byte { 0x03 } } },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -973,7 +964,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     FieldUp { .antenna = 0 },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 0 },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 0, .data = std::vector { std::byte { 0x00 }, std::byte { 0x01 }, std::byte { 0xff }, std::byte { 0xfe } } },
-                                                    FieldDown {},
                                                 }));
     }
 
@@ -997,7 +987,6 @@ TEST_CASE("Test NFC-V tags write ops", "[nfcv][openprinttag]") {
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 0, .data = std::vector { std::byte { 0x00 }, std::byte { 0x01 }, std::byte { 0x02 }, std::byte { 0xff } } },
                                                     ReadSingleBlock { .uid = data::uid1, .block_address = 1 },
                                                     WriteSingleBlock { .uid = data::uid1, .block_address = 1, .data = std::vector { std::byte { 0xfe }, std::byte { 0x05 }, std::byte { 0x06 }, std::byte { 0x07 } } },
-                                                    FieldDown {},
                                                 }));
     }
 }
