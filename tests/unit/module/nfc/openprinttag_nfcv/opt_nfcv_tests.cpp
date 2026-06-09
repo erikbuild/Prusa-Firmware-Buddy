@@ -1122,7 +1122,7 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][openprinttag]") {
             using Register = nfcv::ReaderWriterInterface::Register;
             const nfcv::Result<void> expected_ll_write_result = registers_locked ? std::unexpected(nfcv::Error::response_is_error) : nfcv::Result<void> {};
 
-            nfcv::FieldGuard field_guard { logger, 0 };
+            logger.field_up(0);
 
             CHECK(logger.write_register(tag_uid, Register::afi, 135) == expected_ll_write_result);
             CHECK(logger.write_register(tag_uid, Register::dsfid, 231) == expected_ll_write_result);
@@ -1130,6 +1130,8 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][openprinttag]") {
 
             // At no point we should be able to just write a password (we would first need to set_password either to 0 or to the protection one)
             CHECK(logger.write_register(tag_uid, Register::write_password, 1234) == std::unexpected(nfcv::Error::response_is_error));
+
+            logger.field_down();
         }
     };
 
