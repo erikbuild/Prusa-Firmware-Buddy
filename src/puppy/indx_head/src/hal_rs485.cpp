@@ -42,6 +42,8 @@ void init() {
 
     HAL_NVIC_SetPriority(TIM14_IRQn, ISR_PRIORITY_DEFAULT, 0);
     HAL_NVIC_EnableIRQ(TIM14_IRQn);
+
+    LL_USART_DisableDirectionRx(USART2);
 }
 
 std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> tx_data) {
@@ -53,6 +55,7 @@ std::span<std::byte> maybe_transmit_and_then_receive(std::span<std::byte> tx_dat
         // setup receiving
         state.data = state.buffer;
         state.size = sizeof(state.buffer);
+        LL_USART_EnableDirectionRx(USART2);
         LL_USART_EnableIT_RXNE(USART2);
         LL_USART_EnableIT_IDLE(USART2);
     } else {
@@ -94,6 +97,7 @@ extern "C" void USART2_IRQHandler(void) {
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET); // DE/RE low: Rx mode
         state.data = state.buffer;
         state.size = sizeof(state.buffer);
+        LL_USART_EnableDirectionRx(USART2);
         LL_USART_EnableIT_RXNE(USART2);
         LL_USART_EnableIT_IDLE(USART2);
     }
@@ -125,6 +129,7 @@ extern "C" void USART2_IRQHandler(void) {
             LL_USART_ClearFlag_IDLE(USART2);
             LL_USART_DisableIT_IDLE(USART2);
             LL_USART_DisableIT_RXNE(USART2);
+            LL_USART_DisableDirectionRx(USART2);
             state.semaphore.release_from_isr();
         } else {
             // idle expired and nothing received, keep waiting for another one
