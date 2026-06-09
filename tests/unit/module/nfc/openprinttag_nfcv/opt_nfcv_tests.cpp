@@ -1102,6 +1102,8 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][openprinttag]") {
     std::array<std::byte, 2> read_buf;
 
     const auto check_write_access = [&](bool locked, bool registers_locked) {
+        CAPTURE(locked, registers_locked, lock_boundary);
+
         const OPTBackend::IOResult<void> expected_write_result = locked ? std::unexpected(OPTBackend::IOError::other) : OPTBackend::IOResult<void> {};
 
         // Reads should always succeed
@@ -1142,6 +1144,7 @@ TEST_CASE("Test NFC-V tag initialization", "[nfcv][openprinttag]") {
 
     const auto post_init_checks = [&] {
         INFO("Post-init checks");
+        CAPTURE(params.protection_policy);
 
         // Check that the tag has been initialized properly
         CHECK(tag.info.afi == 0);
