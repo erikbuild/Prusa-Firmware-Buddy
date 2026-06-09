@@ -13,11 +13,25 @@ void ProbeAnalysisBase::SetSamplingIntervalMs(float interval) {
     samplingInterval = interval / 1000;
 }
 
-void ProbeAnalysisBase::StoreSample([[maybe_unused]] uint32_t time_us, float currentZ, float currentLoad) {
+void ProbeAnalysisBase::StoreSample(uint32_t time_us, float currentZ, float currentLoad) {
     if (analysisInProgress) {
         return;
     }
     window.push_back({ currentZ, currentLoad });
+
+    // Detect dropped samples: the index-based time axis assumes uniform sampling,
+    // so a large gap (e.g. a puppy reset) would skew the analysis. The flag stays
+    // raised while the affected samples remain in the window.
+    if (prevSampleValid) {
+        const uint32_t delta = time_us - prevSampleTime;
+        if (delta > static_cast<uint32_t>(maxSampleGapFactor * samplingInterval * 1e6f)) {
+            gapWindowRemaining = window.capacity();
+        } else if (gapWindowRemaining > 0) {
+            --gapWindowRemaining;
+        }
+    }
+    prevSampleTime = time_us;
+    prevSampleValid = true;
 
 #if !defined(UNITTESTS)
     lastSampleTimestamp = ticks_us();
@@ -29,6 +43,11 @@ ProbeAnalysisBase::Result ProbeAnalysisBase::Analyse(bool is_nozzle_clean /*= fa
     ScopeGuard _sg = [this] {
         analysisInProgress = false;
     };
+
+    // Reject if a large gap is still within the window (it corrupts the index-based time axis).
+    if (gapWindowRemaining > 0) {
+        return std::unexpected(AnalysisError { "stream-gap" });
+    }
 
     // First of all, shift Z coordinates in order to compansate for the system's delay.
     if (auto r = CompensateForSystemDelay(); !r) {

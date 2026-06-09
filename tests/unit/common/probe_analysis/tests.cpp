@@ -352,3 +352,114 @@ TEST_CASE("probe analysis does not crash on problematic probe instances", "[prob
         analysis.Analyse();
     }
 }
+
+SCENARIO("gap detection in sample stream", "[probe_analysis]") {
+    GIVEN("a ProbeAnalysis<12> with 3ms sampling interval") {
+        ProbeAnalysis<12> analysis;
+        analysis.SetSamplingIntervalMs(3.0);
+
+        WHEN("a large inter-sample gap is inside the window") {
+            uint32_t t = 0;
+            // Store a few normal samples
+            for (int i = 0; i < 4; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+            // Big gap: one dropped-samples burst (~60ms)
+            t += 60000;
+            analysis.StoreSample(t, 0, 0);
+            t += 3000;
+            // A couple more normal samples (still fewer than capacity=12)
+            for (int i = 0; i < 3; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+
+            THEN("Analyse() fails with stream-gap") {
+                auto result = analysis.Analyse();
+                REQUIRE(!result);
+                REQUIRE_THAT(result.error().description, Catch::Matchers::Equals("stream-gap"));
+            }
+        }
+
+        WHEN("the gap has aged out of the window") {
+            uint32_t t = 0;
+            // Normal samples up to the gap
+            for (int i = 0; i < 4; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+            // Big gap
+            t += 60000;
+            analysis.StoreSample(t, 0, 0);
+            t += 3000;
+            // Store more than window capacity (12) further normal samples
+            for (int i = 0; i < 13; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+
+            THEN("Analyse() does not fail with stream-gap") {
+                auto result = analysis.Analyse();
+                // May fail with another error (small-window, load-lines, etc.) — just not stream-gap.
+                if (!result) {
+                    REQUIRE_THAT(result.error().description, !Catch::Matchers::Equals("stream-gap"));
+                }
+            }
+        }
+
+        WHEN("the inter-sample gap is small (fewer than 4 intervals, e.g. ~6000us)") {
+            uint32_t t = 0;
+            for (int i = 0; i < 4; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+            // Small gap: only ~2 missed samples (6000us < 12000us threshold)
+            t += 6000;
+            analysis.StoreSample(t, 0, 0);
+            t += 3000;
+            for (int i = 0; i < 4; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+
+            THEN("Analyse() does not fail with stream-gap") {
+                auto result = analysis.Analyse();
+                if (!result) {
+                    REQUIRE_THAT(result.error().description, !Catch::Matchers::Equals("stream-gap"));
+                }
+            }
+        }
+
+        WHEN("a large gap occurred but Reset() was called before Analyse()") {
+            uint32_t t = 0;
+            for (int i = 0; i < 4; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+            // Big gap
+            t += 60000;
+            analysis.StoreSample(t, 0, 0);
+            t += 3000;
+            for (int i = 0; i < 3; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+
+            // Reset clears gap state; subsequent samples start fresh
+            analysis.Reset();
+            t = 0;
+            for (int i = 0; i < 5; i++) {
+                analysis.StoreSample(t, 0, 0);
+                t += 3000;
+            }
+
+            THEN("Analyse() does not fail with stream-gap") {
+                auto result = analysis.Analyse();
+                if (!result) {
+                    REQUIRE_THAT(result.error().description, !Catch::Matchers::Equals("stream-gap"));
+                }
+            }
+        }
+    }
+}

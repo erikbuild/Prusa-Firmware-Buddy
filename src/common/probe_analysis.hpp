@@ -191,6 +191,8 @@ public:
     /// Clear the analysis window
     void Reset() {
         window.clear();
+        prevSampleValid = false;
+        gapWindowRemaining = 0;
     }
 
 public:
@@ -225,6 +227,12 @@ public:
     /// for the analysis. Lookahead should have enough samples to match the lenght of the
     /// pre-compression line after accounting for raise time, plus some margin.
     static constexpr float analysisLookahead = analysisBaselineTime + analysisDecompressionGap + analysisExpectedRaiseTime;
+
+    /// A gap between two consecutive samples larger than this many sampling
+    /// intervals (e.g. a puppy reset dropping samples) corrupts the index-based
+    /// time axis; such a probe is failed and retried. Small gaps (1-2 dropped
+    /// samples) are tolerated.
+    static constexpr float maxSampleGapFactor = 4.0f;
 
     /// Currently recorded samples (moving window).
     CircleBufferBaseT<Record> &window;
@@ -368,6 +376,15 @@ protected:
 
     /// True if Analyse() is being process (and no samples should be processed)
     std::atomic<bool> analysisInProgress = false;
+
+    /// Timestamp [us] of the previously stored sample (for gap detection)
+    uint32_t prevSampleTime = 0;
+
+    /// Whether prevSampleTime holds a real sample yet
+    bool prevSampleValid = false;
+
+    /// >0 while a large inter-sample gap is still within the window
+    size_t gapWindowRemaining = 0;
 
     /// Log features into metrics
     void log_features_metrics(const Features &features, std::optional<float> detected_z) const;
