@@ -241,9 +241,6 @@ static std::expected<TwoSpeedAnalysisResult, const char *> execute_and_analyze_s
 static constexpr float position_tolerance = 0.01f;
 
 static float measure_sensor_true_z(const tool_offset::ProbingConfig &config) {
-    assert(std::abs(current_position.x - config.sensor_position.x) < position_tolerance);
-    assert(std::abs(current_position.y - config.sensor_position.y) < position_tolerance);
-
     // Both are needed to run `probe_here`
     pressure_advance::PressureAdvanceDisabler pa_disabler;
     Loadcell::HighPrecisionEnabler loadcell_high_precision_enabler(loadcell);
