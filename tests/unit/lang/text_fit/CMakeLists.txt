@@ -33,6 +33,7 @@ foreach(
   it
   ja
   pl
+  uk
   )
   set(PO_FILE "${CMAKE_SOURCE_DIR}/src/lang/po/${LANG}/Prusa-Firmware-Buddy_${LANG}.po")
   set(MO_FILE "${CMAKE_CURRENT_BINARY_DIR}/MO/${LANG}.mo")

@@ -24,7 +24,7 @@ void _bsod(const char *fmt, const char *fine_name, int line_number, ...) {
     std::unreachable();
 }
 
-constexpr std::array<const char *, 8> lang_codes = { "en", "cs", "de", "es", "fr", "it", "ja", "pl" };
+constexpr std::array<const char *, 9> lang_codes = { "en", "cs", "de", "es", "fr", "it", "ja", "pl", "uk" };
 
 static constexpr Font red_screen_font = GuiDefaults::EnableDialogBigLayout ? GuiDefaults::DefaultFont : Font::small;
 
@@ -49,6 +49,8 @@ const FILETranslationProvider ja("MO/ja.mo");
 ProviderRegistrator jaReg("ja", &ja);
 const FILETranslationProvider pl("MO/pl.mo");
 ProviderRegistrator plReg("pl", &pl);
+const FILETranslationProvider uk("MO/uk.mo");
+ProviderRegistrator ukReg("uk", &uk);
 } // namespace
 
 void test_error(const ErrorEntry &error) {
