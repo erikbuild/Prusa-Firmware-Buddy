@@ -73,28 +73,32 @@ xyz_pos_t ParkingPosition::to_xyz_pos(const xyz_pos_t &pos) const {
     return result;
 }
 
+float ParkingPosition::resolve_z(float reference_z) const {
+    return match(
+        z, //
+        [&](Unchanged) { return reference_z; }, //
+        [](float val) { return val; }, //
+        [&](Relative arg) {
+            return std::clamp<float>(reference_z + arg.delta, Z_MIN_POS, Z_MAX_POS);
+        }, //
+        [&](Minimum arg) {
+            float min_z = arg.absolute;
+
+            if (!std::isnan(arg.above_print)) {
+                min_z = std::max(min_z, planner.max_printed_z + arg.above_print);
+            }
+
+            // Don't let Z go down
+            return std::clamp<float>(reference_z, min_z, Z_MAX_POS);
+        } //
+    );
+}
+
 xyz_pos_t ParkingPosition::to_nan_xyz_pos(const xyz_pos_t &pos) const {
     return {
         .x = std::holds_alternative<Unchanged>(x) ? pos.x : std::get<float>(x),
         .y = std::holds_alternative<Unchanged>(y) ? pos.y : std::get<float>(y),
-        .z = match(
-            z, //
-            [&](Unchanged) { return pos.z; }, //
-            [](float val) { return val; }, //
-            [&](Relative arg) {
-                return std::clamp<float>(pos.z + arg.delta, Z_MIN_POS, Z_MAX_POS);
-            }, //
-            [&](Minimum arg) {
-                float min_z = arg.absolute;
-
-                if (!std::isnan(arg.above_print)) {
-                    min_z = std::max(min_z, planner.max_printed_z + arg.above_print);
-                }
-
-                // Formulate the formula in such way that pos.z never goes down
-                return std::clamp<float>(pos.z, min_z, Z_MAX_POS);
-            } //
-            ),
+        .z = resolve_z(pos.z),
     };
 }
 

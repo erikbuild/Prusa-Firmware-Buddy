@@ -61,15 +61,11 @@ private:
     std::optional<float> purge_length_;
     float retract;
 
-    mapi::ParkingPosition park_point; // requested parking position, resolved lazily at park time
-    xyz_pos_t park_pos; // resolved working copy, only valid after resolve_park_point()
+    mapi::ParkingPosition park_point; // requested parking position, resolved against the live position at park time
     xyze_pos_t resume_pos;
 
     uint8_t mmu_filament_to_load = 0;
     uint8_t target_extruder;
-
-    // Resolves park_point into park_pos against the current position.
-    void resolve_park_point();
 };
 
 } // namespace pause

@@ -4,10 +4,8 @@
 
 #include "pause_settings.hpp"
 #include "config_features.h"
-#include "config_store/store_c_api.h"
 #include "../../../lib/Marlin/Marlin/src/core/types.h"
 #include "../../../lib/Marlin/Marlin/src/feature/pause.h"
-#include "../../../lib/Marlin/Marlin/src/module/motion.h"
 #include <option/has_mmu2.h>
 
 // cannot be class member (externed in marlin)
@@ -20,7 +18,6 @@ Settings::Settings()
     , slow_load_length(GetDefaultSlowLoadLength())
     , fast_load_length(GetDefaultFastLoadLength())
     , retract(GetDefaultRetractLength())
-    , park_pos { NAN, NAN, NAN }
     , resume_pos { NAN, NAN, NAN, NAN }
     , target_extruder(0)
 //
@@ -74,13 +71,6 @@ void Settings::SetRetractLength(const std::optional<float> &len) {
 
 void Settings::SetParkPoint(const mapi::ParkingPosition &park_point) {
     this->park_point = park_point;
-}
-
-void Settings::resolve_park_point() {
-    // Resolve Z against the live position. Unchanged X/Y map to NaN (not the
-    // current position), as the parking code uses NaN to mean "don't move".
-    park_pos = park_point.to_nan_xyz_pos({ NAN, NAN, current_position.z });
-    park_pos.z = std::min(park_pos.z, get_z_max_pos_mm());
 }
 
 void Settings::SetResumePoint(const xyze_pos_t &resume_point) {

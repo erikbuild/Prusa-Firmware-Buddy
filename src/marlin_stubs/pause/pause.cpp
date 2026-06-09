@@ -1478,14 +1478,15 @@ bool Pause::parkMoveXGreaterThanY(const xyz_pos_t &pos0, const xyz_pos_t &pos1) 
 
 void Pause::park_nozzle_and_notify() {
     setPhase(is_unstoppable() ? PhasesLoadUnload::Parking_unstoppable : PhasesLoadUnload::Parking_stoppable);
-    settings.resolve_park_point();
+
+    const mapi::ParkingPosition &park = settings.park_point;
+    // Resolve Z against the live position; resolve_z already clamps to Z_MAX_POS.
+    const float target_Z = park.resolve_z(current_position.z);
 
     // Initial retract before move to filament change position
     if (!thermalManager.tooColdToExtrude(active_extruder)) {
         mapi::retract_to(-settings.retract, PAUSE_PARK_RETRACT_FEEDRATE);
     }
-
-    const float target_Z = settings.park_pos.z;
 
     // Z lift
     if (isfinite(target_Z)) {
@@ -1498,8 +1499,9 @@ void Pause::park_nozzle_and_notify() {
     }
 
     // Home XY if needed before parking
-    const bool has_xy_park = !isnan(settings.park_pos.x) || !isnan(settings.park_pos.y);
+    const bool has_xy_park = !std::holds_alternative<mapi::ParkingPosition::Unchanged>(park.x) || !std::holds_alternative<mapi::ParkingPosition::Unchanged>(park.y);
     if (has_xy_park) {
+        mapi::ParkingPosition xy_target = park;
 #if CORE_IS_XY
         if (axes_need_homing(_BV(X_AXIS) | _BV(Y_AXIS))) {
             GcodeSuite::G28_no_parser(true, true, false,
@@ -1511,25 +1513,19 @@ void Pause::park_nozzle_and_notify() {
 
             // We have moved both axes, go to park position if not requested otherwise
             static constexpr xyz_pos_t park = XYZ_NOZZLE_PARK_POINT_M600;
-            LOOP_XY(axis) {
-                if (isnan(settings.park_pos.pos[axis])) {
-                    settings.park_pos.pos[axis] = park[axis];
-                }
+            if (std::holds_alternative<mapi::ParkingPosition::Unchanged>(xy_target.x)) {
+                xy_target.x = park.x;
             }
-        } else {
-            LOOP_XY(axis) {
-                if (isnan(settings.park_pos.pos[axis])) {
-                    settings.park_pos.pos[axis] = current_position.pos[axis];
-                }
+            if (std::holds_alternative<mapi::ParkingPosition::Unchanged>(xy_target.y)) {
+                xy_target.y = park.y;
             }
         }
 #else /*CORE_IS_XY*/
-        // home the X or Y axis if it is not homed and we want to move it
-        // homing is after Z move to be clear of all obstacles
-        // Should not affect other operations than Load/Unload/Change filament run from home screen without homing. We are homed during print
+        // Home each park axis individually; homing is after Z move to be clear of all obstacles.
+        const xyz_bool_t is_park_axis = park.axes_needing_homing();
         LOOP_XY(axis) {
             // TODO: make homeaxis non-blocking to allow quick_stop
-            if (!isnan(settings.park_pos.pos[axis])) {
+            if (is_park_axis.pos[axis]) {
                 GcodeSuite::G28_no_parser(axis == X_AXIS, axis == Y_AXIS, false,
                     {
                         .only_if_needed = true,
@@ -1540,15 +1536,12 @@ void Pause::park_nozzle_and_notify() {
             if (check_user_stop(getResponse())) {
                 return;
             }
-            if (isnan(settings.park_pos.pos[axis])) {
-                settings.park_pos.pos[axis] = current_position.pos[axis];
-            }
         }
 #endif /*CORE_IS_XY*/
 
-        // XY park (includes dock avoidance on INDX)
+        // XY park (includes dock avoidance on INDX); mapi::park maps Unchanged to current_position
         log_info(MarlinServer, "Parking XY");
-        mapi::park({ .x = settings.park_pos.x, .y = settings.park_pos.y });
+        mapi::park(xy_target.without_z_move());
     }
 
     report_current_position();
@@ -1579,9 +1572,9 @@ void Pause::unpark_nozzle_and_notify() {
     const float Z_len = current_position.z - settings.resume_pos.z; // sign does not matter, does not check Z max val (unlike park_nozzle_and_notify)
     const float XY_len = begin_pos - end_pos; // sign does not matter
 
-    // home the axis if it is not homed
-    // we can move only one axis during parking and not home the other one and then unpark and move the not homed one, so we need to home it
-    GcodeSuite::G28_no_parser(!isnan(settings.park_pos.pos[X_AXIS]), !isnan(settings.park_pos.pos[Y_AXIS]), false,
+    // Home axes that were parked — needed if we moved only one axis during parking
+    const xyz_bool_t park_axes = settings.park_point.axes_needing_homing();
+    GcodeSuite::G28_no_parser(park_axes.x, park_axes.y, false,
         {
             .only_if_needed = true,
             .z_raise = 0,

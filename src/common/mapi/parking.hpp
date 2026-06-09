@@ -70,6 +70,11 @@ struct ParkingPosition {
     /// @returns a vector of which axes need to be homed for the parking to the position to be realizable
     xyz_bool_t axes_needing_homing() const;
 
+    /// Resolves the Z component against reference_z (the current Z): Unchanged yields
+    /// reference_z, an absolute value yields itself, Relative offsets reference_z and
+    /// Minimum raises it to a floor; Relative/Minimum are clamped to Z_MAX_POS.
+    float resolve_z(float reference_z) const;
+
     // Synchronizes this provided position and provides appropriate xyz_pos_t
     xyz_pos_t to_xyz_pos(const xyz_pos_t &pos) const;
 
