@@ -426,8 +426,15 @@ bool tool_offset::wait_for_loadcell_alive(uint32_t per_attempt_timeout_us, uint8
         if (attempt < retries) {
             log_warning(ContactlessOffset, "INDX loadcell silent after enable, re-arming (attempt %u/%u)",
                 static_cast<unsigned>(attempt + 1), static_cast<unsigned>(retries));
-            buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, false);
-            buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, true);
+            buddy::puppies::indx.set_loadcell(false);
+            // Wait (bounded) for the puppy task to flush the "off" write so the head
+            // sees a real off->on transition rather than having it coalesced to a no-op.
+            const uint32_t rearm_start = ticks_us();
+            while (buddy::puppies::indx.is_general_write_pending()
+                && ticks_diff(ticks_us(), rearm_start) <= static_cast<int32_t>(per_attempt_timeout_us)) {
+                idle(true);
+            }
+            buddy::puppies::indx.set_loadcell(true);
         }
     }
     log_error(ContactlessOffset, "INDX loadcell did not resume streaming after %u retries",
@@ -753,14 +760,14 @@ public:
         , prev_accelerometer_active_(buddy::puppies::indx.get_accelerometer_active())
         , prev_hotend_target_(hotend.nozzle_target_temp())
         , prev_bed_target_(thermalManager.degTargetBed()) {
-        buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, false);
+        buddy::puppies::indx.set_loadcell(false);
         buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, false);
         hotend_.set_nozzle_target_temp(0);
         thermalManager.setTargetBed(0);
     }
 
     ~IndxScanState() {
-        buddy::puppies::indx.set_loadcell(buddy::puppies::puppyModbus, prev_loadcell_active_);
+        buddy::puppies::indx.set_loadcell(prev_loadcell_active_);
         buddy::puppies::indx.set_accelerometer(buddy::puppies::puppyModbus, prev_accelerometer_active_);
         hotend_.set_nozzle_target_temp(prev_hotend_target_);
         thermalManager.setTargetBed(prev_bed_target_);

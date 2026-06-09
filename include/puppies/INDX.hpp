@@ -64,12 +64,12 @@ public:
     CommunicationStatus pull_fifo(PuppyModbus &, bool &more);
 
     /**
-     * @brief Enable/disable loadcell data in FIFO.
+     * @brief Asynchronously enable/disable loadcell data in FIFO.
      *
+     * The puppy task performs the write on its next general-write pass.
      * @param active Enable loadcell FIFO output
-     * @return True when successful, false on communication error
      */
-    bool set_loadcell(PuppyModbus &, bool active);
+    void set_loadcell(bool active);
 
     /**
      * @brief Get loadcell active state
@@ -77,6 +77,9 @@ public:
      * @return True if loadcell output is enabled, false otherwise
      */
     bool get_loadcell_active();
+
+    /// True while a general write has been requested but not yet flushed by the puppy task.
+    bool is_general_write_pending() const { return general_write_dirty.load(); }
 
     /**
      * @brief Enable/disable accelerometer data in FIFO.

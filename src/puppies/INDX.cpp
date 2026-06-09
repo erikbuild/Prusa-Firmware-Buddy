@@ -328,11 +328,10 @@ bool Indx::get_accelerometer_active() {
     return accelerometer_enabled;
 }
 
-bool Indx::set_loadcell(PuppyModbus &bus, bool active) {
+void Indx::set_loadcell(bool active) {
     Lock guard(*mutex);
     loadcell_enabled = active;
     general_write_dirty.store(true);
-    return write_general(bus) == CommunicationStatus::OK;
 }
 
 bool Indx::get_loadcell_active() {
