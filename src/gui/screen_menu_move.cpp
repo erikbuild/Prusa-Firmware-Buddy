@@ -48,6 +48,8 @@ I_MI_AXIS::I_MI_AXIS(size_t index)
 
 static const char *get_tool_state_label(ToolState state) {
     switch (state) {
+    case ToolState::no_tool:
+        return N_("No tool");
     case ToolState::heating:
         return N_("Heating");
     case ToolState::low_temp:
@@ -66,7 +68,7 @@ DUMMY_AXIS_E::DUMMY_AXIS_E()
 
 void DUMMY_AXIS_E::set_state(ToolState state) {
     UpdateValue(state); // update label
-    set_enabled(true);
+    set_enabled(state != ToolState::no_tool);
 }
 
 void DUMMY_AXIS_E::click(IWindowMenu &) {
@@ -158,7 +160,10 @@ void ScreenMenuMove::loop() {
     }
 
     // Update DUMMY_AXIS_E
-    ToolState state = is_temp_set ? ToolState::heating : ToolState::low_temp;
+    ToolState state = ToolState::no_tool;
+    if (PhysicalToolIndex::currently_selected_opt().has_value()) {
+        state = is_temp_set ? ToolState::heating : ToolState::low_temp;
+    }
     Item<DUMMY_AXIS_E>().set_state(state);
 
     // Update whether MI_COOLDOWN is enabled

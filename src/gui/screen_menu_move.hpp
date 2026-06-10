@@ -17,6 +17,7 @@ public:
 };
 
 enum ToolState {
+    no_tool,
     heating,
     low_temp
 };
