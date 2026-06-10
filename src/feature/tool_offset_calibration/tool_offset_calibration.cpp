@@ -30,6 +30,7 @@
 #include <feature/contactless_offset/contactless_offset.hpp>
 #include <feature/pressure_advance/pressure_advance_config.hpp>
 #include <utils/variant_utils.hpp>
+#include <option/has_indx.h>
 #include <option/has_toolchanger.h>
 
 #include <option/has_spool_join.h>
@@ -118,6 +119,20 @@ float probe_z_at(const xy_pos_t &pos, uint8_t probe_count) {
 /// auto-clean sequence is skipped; the caller has already prompted the user to clean manually.
 /// @return true if cleaning succeeded, false on failure or abort
 bool prepare_tool(PhysicalToolIndex tool, tool_offset_calibration::Context context) {
+    // Guard against a silently failed toolchange — do not drive to a parked tool's brush
+    const std::optional<PhysicalToolIndex> selected = PhysicalToolIndex::currently_selected_opt();
+    if (!selected.has_value() || selected.value() != tool) {
+        log_error(ToolOffsetCalib, "Tool %u is not the selected tool, cannot clean", tool.to_raw());
+        return false;
+    }
+#if !HAS_INDX()
+    // Physical pick detection is only available on the dwarf toolchanger
+    if (!prusa_toolchanger.getTool(tool).is_picked()) {
+        log_error(ToolOffsetCalib, "Tool %u is not physically picked, cannot clean", tool.to_raw());
+        return false;
+    }
+#endif
+
     const ToolTemperatures temps = get_tool_temperatures(tool);
 
     if (context == tool_offset_calibration::Context::Print) {
@@ -357,7 +372,9 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
     // Restore the originally picked tool on any exit path
     const auto original_tool = PhysicalToolIndex::currently_selected();
     ScopeGuard restore_tool([&] {
-        tool_change(stdext::to_variant(original_tool), tool_return_t::no_return);
+        if (!tool_change(stdext::to_variant(original_tool), tool_return_t::no_return)) {
+            log_error(ToolOffsetCalib, "Failed to restore original tool");
+        }
 
         // Do not allow RAM-EEPROM mismatch of tool offsets, save whatever is currently set, even if we fail
         prusa_toolchanger.save_tool_offsets();
@@ -472,7 +489,10 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
                 }
             }
 
-            tool_change(stdext::to_variant(tool), tool_return_t::no_return);
+            if (!tool_change(stdext::to_variant(tool), tool_return_t::no_return)) {
+                log_error(ToolOffsetCalib, "Tool change to tool %u failed", tool.to_raw());
+                return false;
+            }
 
             const int16_t saved_temp = thermalManager.degTargetHotend(tool);
             ScopeGuard restore_temp([&] {

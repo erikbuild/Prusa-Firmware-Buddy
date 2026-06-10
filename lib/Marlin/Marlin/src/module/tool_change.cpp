@@ -54,8 +54,9 @@
 /**
  * Perform a tool-change, which may result in moving the
  * previous tool out of the way and the new tool into place.
+ * Returns true on success, false if the toolchanger reported a failure.
  */
-void tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool> new_tool,
+bool tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool> new_tool,
                  [[maybe_unused]] tool_return_t return_type /*= tool_return_t::to_current*/,
                  [[maybe_unused]] tool_change_lift_t z_lift /*= tool_change_lift_t::full_lift*/,
                  [[maybe_unused]] bool z_return /*= true*/){
@@ -66,6 +67,7 @@ void tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool>
       [](PhysicalToolIndex physical_tool){ /* do nothing */ static_assert(PhysicalToolIndex::count == 1); },
       [](NoTool){ MMU2::mmu2.unload(); }
     );
+    return true;
 
   #elif HAS_TOOLCHANGER()
     using MaybePhysical = std::variant<PhysicalToolIndex, NoTool>;
@@ -74,7 +76,7 @@ void tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool>
       [](PhysicalToolIndex physical_tool) -> MaybePhysical { return physical_tool; },
       [](NoTool) -> MaybePhysical { return NoTool{}; }
     );
-    bool ret [[maybe_unused]] = prusa_toolchanger.tool_change(maybe_physical, return_type, current_position.xyz(), z_lift, z_return);
+    return prusa_toolchanger.tool_change(maybe_physical, return_type, current_position.xyz(), z_lift, z_return);
 
   #else
     #error Not implemented
