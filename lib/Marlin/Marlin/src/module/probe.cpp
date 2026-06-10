@@ -597,15 +597,15 @@ bool loadcell_wait_streaming(uint32_t per_attempt_timeout_us, uint8_t retries) {
   }
 
 // Recover after a loadcell anomaly tripped the safety stop mid-probe: disarm, settle
-// motion, re-establish streaming, back off Z, then re-arm for the next attempt.
-// Callers `continue` after this, bypassing single_only and the end-of-loop Z raise.
+// motion, re-establish streaming, and back off Z. Does not re-arm; callers `continue`
+// to the loop top, which re-arms after the XY travel. The Z back-off lift runs unarmed
+// (away from bed).
 static bool recover_from_probe_safety_trip() {
   loadcell.disarm_probe_safety(); // disarm first so the ISR can't re-trip during the wait below
   planner.synchronize();          // drain the quick_stop (stop_pending cleared)
   if (!loadcell_wait_streaming())
     return false;
   do_blocking_move_to_z(current_position.z + Z_CLEARANCE_MULTI_PROBE, MMM_TO_MMS(Z_PROBE_SPEED_FAST));
-  loadcell.rearm_probe_safety(); // re-arm against the post-recovery generation
   return true;
 }
 
@@ -657,6 +657,8 @@ float run_z_probe(const RunZProbeParams& params) {
       return NAN;
     }
     auto H = loadcell.CreateLoadAboveErrEnforcer();
+    // Arm for the reference tare + descent; disarms on every return path.
+    auto safetyArmer = Loadcell::ProbeSafetyArmer(loadcell);
     auto reference_tare = loadcell_retare_for_analysis(Z_FIRST_PROBE_DELAY); ///< Use this value as reference for following tares
     const auto max_tare_offset = std::abs(loadcell.GetThreshold()); ///< Maximal valid offset from reference_tare
     if (loadcell.probe_should_abort())
@@ -719,7 +721,10 @@ float run_z_probe(const RunZProbeParams& params) {
       idle(false); // Avoid watchdog reset in case of no move while probing
       #if ENABLED(NOZZLE_LOAD_CELL)
         auto center_offset = offset_for_probe_try(probe_idx++);
+        // XY travel must not be quick-stoppable; re-arm after for the tare + descent.
+        loadcell.disarm_probe_safety();
         do_blocking_move_to_xy(center_pos + center_offset, MMM_TO_MMS(Z_PROBE_SPEED_FAST));
+        loadcell.arm_probe_safety();
 
         // re-tare the loadcell
         auto offset = loadcell_retare_for_analysis(Z_FIRST_PROBE_DELAY) - reference_tare;

@@ -144,17 +144,21 @@ float Loadcell::Tare(TareMode mode) {
     tareSum = 0;
     tareCount = requestedTareCount;
 
-    // wait until we have all the samples that were requested
-    while (!probe_should_abort() && tareCount != 0) {
+    const auto generation_mismatch = [&] {
+        return last_source_generation.load() != tare_generation.load();
+    };
+
+    // Wait until all tare samples are collected.
+    // Also bail on generation mismatch when disarmed (probe_safety_stop() is a no-op then,
+    // so probe_should_abort() would never become true and the loop would hang).
+    while (!probe_should_abort() && !generation_mismatch() && tareCount != 0) {
         idle(true);
     }
 
-    // We might have exited the loop prematurely because probe_should_abort() became true.
-    // In that case, reset tare count to 0.
-    // This is safe - the tareCount is consumed from the ISR, which has a higher priority
+    // Reset tare count — safe: consumed from ISR with higher priority.
     tareCount = 0;
 
-    if (!probe_should_abort()) {
+    if (!probe_should_abort() && !generation_mismatch()) {
         if (tareMode == TareMode::Continuous) {
             // double-check filters are ready after the tare
             assert(z_filter.initialized());
@@ -446,31 +450,30 @@ Loadcell::FailureOnLoadAboveEnforcer::~FailureOnLoadAboveEnforcer() {
     lcell.SetFailsOnLoadAbove(oldErrThreshold);
 }
 
-/**
- * @brief Create object enabling high precision mode
- *
- * Keep high precision enabled when created, then restore when destroyed
- * @param enable Enable condition. Useful if you want to create enforcer based on condition.
- *              You can not put object simply inside if block, because you unintentionally also
- *              limit its scope.
- *   @arg @c true Normal operation
- *   @arg @c false Do not enable high precision mode and tare when created.
- * @param arm_probe_safety Whether to arm the probe-safety stop for this session.
- *   @arg @c true Normal operation (Z/XY probe sessions).
- *   @arg @c false High-precision use that is not a probe (e.g. MMU2 E-stall detection).
- */
-Loadcell::HighPrecisionEnabler::HighPrecisionEnabler(Loadcell &lcell,
-    bool enable,
-    bool arm_probe_safety)
+Loadcell::HighPrecisionEnabler::HighPrecisionEnabler(Loadcell &lcell, bool enable)
     : m_lcell(lcell)
     , m_enable(enable) {
     if (m_enable) {
-        m_lcell.EnableHighPrecision(arm_probe_safety);
+        m_lcell.EnableHighPrecision();
     }
 }
 
 Loadcell::HighPrecisionEnabler::~HighPrecisionEnabler() {
     if (m_enable) {
         m_lcell.DisableHighPrecision();
+    }
+}
+
+Loadcell::ProbeSafetyArmer::ProbeSafetyArmer(Loadcell &lcell, bool arm)
+    : m_lcell(lcell)
+    , m_armed(arm) {
+    if (m_armed) {
+        m_lcell.arm_probe_safety();
+    }
+}
+
+Loadcell::ProbeSafetyArmer::~ProbeSafetyArmer() {
+    if (m_armed) {
+        m_lcell.disarm_probe_safety();
     }
 }

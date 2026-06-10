@@ -104,18 +104,15 @@ public:
     int32_t get_raw_value() const;
 
     /// @brief Request highest precision available from loadcell
-    inline void EnableHighPrecision(bool arm_probe_safety = true) {
+    inline void EnableHighPrecision() {
         assert(!highPrecision); // ensure HP is not recursively enabled
         reset_filters(); // reset filters before we turn on HP
-        tare_generation.store(last_source_generation.load()); // no spurious reset before first tare
-        probe_safety_tripped.store(false);
-        probe_safety_armed.store(arm_probe_safety);
         highPrecision = true;
     }
     inline void DisableHighPrecision() {
         assert(highPrecision); // ensure HP is not recursively disabled
         highPrecision = false;
-        probe_safety_armed.store(false);
+        probe_safety_armed.store(false); // safety net: disarm on HP exit
         reset_endstops();
     }
     inline bool IsHighPrecisionEnabled() const { return highPrecision; }
@@ -139,17 +136,19 @@ public:
     /// safety stop has tripped. @see WaitBarrier(), run_z_probe().
     bool probe_should_abort() const;
 
-    /// True if the probe-safety stop tripped on an anomaly (sticky until the next tare).
+    /// True if the probe-safety stop tripped on an anomaly (sticky until cleared by disarm/arm or a tare).
     inline bool probe_safety_did_trip() const { return probe_safety_tripped.load(); }
 
-    /// Disarm the probe-safety stop and clear any pending trip (use while recovering before re-arming).
+    /// Disarm the probe-safety stop and clear any pending trip
+    /// (use around moves that must not be quick-stopped, e.g. XY travel).
     inline void disarm_probe_safety() {
         probe_safety_armed.store(false);
         probe_safety_tripped.store(false);
     }
 
-    /// Re-arm the probe-safety against the current data-source generation for another attempt.
-    inline void rearm_probe_safety() {
+    /// Arm the probe-safety for a tare + Z-descent window. Also syncs tare_generation
+    /// so the arm→tare window can't trip on a stale generation (Tare() re-syncs again).
+    inline void arm_probe_safety() {
         tare_generation.store(last_source_generation.load());
         probe_safety_tripped.store(false);
         probe_safety_armed.store(true);
@@ -166,15 +165,30 @@ public:
         float oldErrThreshold;
     };
 
+    /// RAII guard: enables high precision on construction, disables on destruction.
+    /// The `enable` flag allows conditional use without scoping the guard inside an if block.
     class HighPrecisionEnabler {
     public:
-        HighPrecisionEnabler(Loadcell &lcell, bool enable = true, bool arm_probe_safety = true);
+        HighPrecisionEnabler(Loadcell &lcell, bool enable = true);
         HighPrecisionEnabler(HighPrecisionEnabler &&) = default;
         ~HighPrecisionEnabler();
 
     private:
         Loadcell &m_lcell;
         bool m_enable;
+    };
+
+    /// RAII guard: arms probe-safety on construction, disarms on destruction.
+    /// The `arm` flag allows conditional use without scoping the guard inside an if block.
+    class ProbeSafetyArmer {
+    public:
+        ProbeSafetyArmer(Loadcell &lcell, bool arm = true);
+        ProbeSafetyArmer(ProbeSafetyArmer &&) = default;
+        ~ProbeSafetyArmer();
+
+    private:
+        Loadcell &m_lcell;
+        bool m_armed;
     };
 
     FailureOnLoadAboveEnforcer CreateLoadAboveErrEnforcer(bool enable = true, float grams = 3000);

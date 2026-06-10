@@ -304,28 +304,31 @@ MachinePosXY probe_xy(const MachinePosXYZ &center, const float angle, const uint
 
     // Wait for resonance to damper and tare
     wait_ms(RESONANCE_DAMPER_WAIT_MS);
-    loadcell.WaitBarrier(); // Sync samples before tare
-    loadcell.Tare(Loadcell::TareMode::Continuous);
+    {
+        // Arm for tare + pin approach only; the return move at INTERPROBE_FEEDRATE_MMS
+        // must not be quick-stoppable.
+        Loadcell::ProbeSafetyArmer safetyArmer(loadcell);
+        loadcell.WaitBarrier(); // Sync samples before tare
+        loadcell.Tare(Loadcell::TareMode::Continuous);
 
-    if (loadcell.GetXYEndstop()) {
-        // This is hopefully rare situation when the loadcell data are totally wrong. If we know this happens
-        // and why it happens we should add a red screen with appropriate text.
-        bsod("XY probe triggered");
-    }
+        if (loadcell.GetXYEndstop()) {
+            // This is hopefully rare situation when the loadcell data are totally wrong. If we know this happens
+            // and why it happens we should add a red screen with appropriate text.
+            bsod("XY probe triggered");
+        }
 
-    // Expect pin hit
-    endstops.enable_xy_probe(true);
+        // Expect pin hit
+        endstops.enable_xy_probe(true);
 #if ENABLED(CRASH_RECOVERY)
-    crash_s.deactivate();
+        crash_s.deactivate();
 #endif
 
-    // Go to center
-    {
+        // Go to center
         auto target = initial_mm;
         target.set(center.xy());
         line_to_machine_pos(target, PROBE_FEEDRATE_MMS);
         planner.synchronize();
-    }
+    } // safetyArmer disarms here; return move runs unarmed
 
     // No longer expecting pin hit
     const bool reached = endstops.trigger_state();

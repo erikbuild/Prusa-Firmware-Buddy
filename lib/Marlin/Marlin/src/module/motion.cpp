@@ -838,7 +838,7 @@ uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate
   #endif
 
   #if ENABLED(NOZZLE_LOAD_CELL) && HOMING_Z_WITH_PROBE
-    // NOTE: This guard cannot be hidden behind an if block
+    // NOTE: These RAII guards must outlive the homing move below; do not scope them inside an if block.
 
     // HighPrecision needs to be enabled with some time margin to prime the filters.
     // If it hasn't been already we're being called in single-probe mode, enable it temporarily.
@@ -846,6 +846,8 @@ uint8_t do_homing_move(const AxisEnum axis, const float distance, const feedRate
     if (enableHighPrecision) SERIAL_ECHO_MSG("probe: enabling high-precision for single-probe mode");
     auto loadcellPrecisionEnabler = Loadcell::HighPrecisionEnabler(loadcell, enableHighPrecision);
     auto H = loadcell.CreateLoadAboveErrEnforcer(moving_probe_toward_bed);
+    // Arm only for descents toward the bed (tare + Z-probe); X/Y homing stays unarmed.
+    auto safetyArmer = Loadcell::ProbeSafetyArmer(loadcell, moving_probe_toward_bed);
     if (moving_probe_toward_bed) {
       safe_delay(Z_FIRST_PROBE_DELAY); // dampen the system before the tare
       loadcell.WaitBarrier(); // Sync samples before tare
