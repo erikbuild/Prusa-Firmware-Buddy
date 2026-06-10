@@ -321,6 +321,15 @@ private:
                     "Dock %u position %.1f, %.1f out of bounds",
                     tool.to_raw(), static_cast<double>(measured.dock_x), static_cast<double>(measured.dock_y));
 
+                // Move in front of the dock before showing the error
+                current_position.x = PrusaToolChanger::DOCK_DEFAULT_X_MM[tool];
+                current_position.y = PrusaToolChanger::DOCK_DEFAULT_Y_MM + PrusaToolChanger::DOCK_SAFE_Y_OFFSET;
+                line_to_current_position(PrusaToolChanger::TRAVEL_MOVE_MM_S);
+                planner.synchronize();
+
+                // Disable XY motors so the user can move the head
+                disable_XY();
+
                 fsm_change(PhaseDockCalibration::calibration_failed,
                     DockCalibrationFailedData { tool, measured.dock_x, measured.dock_y }.serialize());
                 if (wait_for_response(PhaseDockCalibration::calibration_failed) == Response::Retry) {
