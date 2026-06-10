@@ -118,7 +118,9 @@ bool ScreenMenuMove::try_init() {
 
     marlin_client::gcode("G90");
     marlin_client::gcode("M82");
-    marlin_client::gcode("G92 E0");
+    if (PhysicalToolIndex::currently_selected_opt().has_value()) {
+        marlin_client::gcode("G92 E0");
+    }
 
     e_axis_offset = 0;
     queued_pos = { { nx, ny, nz, 0 } };
