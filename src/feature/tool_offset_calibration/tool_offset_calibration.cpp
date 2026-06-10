@@ -73,6 +73,28 @@ struct ToolTemperatures {
     int16_t xy_probing; // cooled-down temp for XY probing
 };
 
+class AxisAlignedBoundingBox {
+public:
+    void add(const xyz_pos_t &point) {
+        min_.x = std::min(min_.x, point.x);
+        min_.y = std::min(min_.y, point.y);
+        min_.z = std::min(min_.z, point.z);
+        max_.x = std::max(max_.x, point.x);
+        max_.y = std::max(max_.y, point.y);
+        max_.z = std::max(max_.z, point.z);
+    }
+
+    const xyz_pos_t &min() const { return min_; }
+    const xyz_pos_t &max() const { return max_; }
+    xyz_pos_t size() const { return max_ - min_; }
+
+private:
+    static constexpr float hi = std::numeric_limits<float>::max();
+    static constexpr float lo = std::numeric_limits<float>::lowest();
+    xyz_pos_t min_ { hi, hi, hi };
+    xyz_pos_t max_ { lo, lo, lo };
+};
+
 /// Get nozzle temperatures for a physical tool from its loaded filament.
 /// Uses tool mapping to find the gcode tool, then looks up the filament type.
 /// xy_probing temp is set to a default since it does not depend on used filament or tool
@@ -459,13 +481,7 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
         ProbeResult ref_first;
         ProbeResult ref_last;
 
-        float min_z_offset = std::numeric_limits<float>::max();
-        float max_z_offset = std::numeric_limits<float>::lowest();
-
-        float min_x_offset = std::numeric_limits<float>::max();
-        float max_x_offset = std::numeric_limits<float>::lowest();
-        float min_y_offset = std::numeric_limits<float>::max();
-        float max_y_offset = std::numeric_limits<float>::lowest();
+        AxisAlignedBoundingBox aabb;
         xyz_pos_t sum_offsets {};
         uint8_t no_summed_offsets = 0;
 
@@ -562,10 +578,6 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
                     hotend_offset[tool].z = z_offset;
                     log_info(ToolOffsetCalib, "Tool %u Z offset=%.3f (measured=%.3f expected=%.3f)", tool.to_raw(), static_cast<double>(z_offset), static_cast<double>(result.z), static_cast<double>(z_expected));
                 }
-
-                min_z_offset = std::min(min_z_offset, hotend_offset[tool].z);
-                max_z_offset = std::max(max_z_offset, hotend_offset[tool].z);
-                sum_offsets.z += hotend_offset[tool].z;
             }
 
             // Note: If we would first calibrate XY offset, it should then give us more precise interpolation on the ghetto MBL line
@@ -576,12 +588,8 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
                 return false;
             }
 
-            min_x_offset = std::min(min_x_offset, hotend_offset[tool].x);
-            max_x_offset = std::max(max_x_offset, hotend_offset[tool].x);
-            min_y_offset = std::min(min_y_offset, hotend_offset[tool].y);
-            max_y_offset = std::max(max_y_offset, hotend_offset[tool].y);
-            sum_offsets.x += hotend_offset[tool].x;
-            sum_offsets.y += hotend_offset[tool].y;
+            aabb.add(hotend_offset[tool]);
+            sum_offsets += hotend_offset[tool];
             no_summed_offsets++;
 
             step++;
@@ -594,16 +602,13 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
 
         // Normalize XY offsets so the average offset is zero.
         // The ScopeGuard at function exit persists hotend_offset to EEPROM.
+        const xyz_pos_t spread = aabb.size();
         if (num_tools > 1) {
             const xyz_pos_t average_offset = sum_offsets / no_summed_offsets;
 
-            // Spread is invariant under the midpoint subtraction, so we can use the pre-normalization extremes.
-            const float x_spread = max_x_offset - min_x_offset;
-            const float y_spread = max_y_offset - min_y_offset;
-
-            if (x_spread > MAX_XY_OFFSET_DIFFERENCE || y_spread > MAX_XY_OFFSET_DIFFERENCE) {
+            if (spread.x > MAX_XY_OFFSET_DIFFERENCE || spread.y > MAX_XY_OFFSET_DIFFERENCE) {
                 log_error(ToolOffsetCalib, "XY offset spread too large: X=%.3f Y=%.3f (limit %.3f)",
-                    static_cast<double>(x_spread), static_cast<double>(y_spread), static_cast<double>(MAX_XY_OFFSET_DIFFERENCE));
+                    static_cast<double>(spread.x), static_cast<double>(spread.y), static_cast<double>(MAX_XY_OFFSET_DIFFERENCE));
                 if (prompt_retry(WarningType::HotendOffsetUnsafeXyDeviation, context) == Response::Retry) {
                     continue;
                 }
@@ -640,7 +645,7 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
             }
         }
 
-        if (measure_z && max_z_offset - min_z_offset > MAX_Z_OFFSET_DIFFERENCE) {
+        if (measure_z && spread.z > MAX_Z_OFFSET_DIFFERENCE) {
             if (prompt_retry(WarningType::HotendOffsetUnsafeZDeviation, context) == Response::Retry) {
                 continue;
             }
