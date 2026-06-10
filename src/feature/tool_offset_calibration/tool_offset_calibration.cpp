@@ -466,6 +466,8 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
         float max_x_offset = std::numeric_limits<float>::lowest();
         float min_y_offset = std::numeric_limits<float>::max();
         float max_y_offset = std::numeric_limits<float>::lowest();
+        xyz_pos_t sum_offsets {};
+        uint8_t no_summed_offsets = 0;
 
         uint8_t step = 0;
         for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
@@ -563,6 +565,7 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
 
                 min_z_offset = std::min(min_z_offset, hotend_offset[tool].z);
                 max_z_offset = std::max(max_z_offset, hotend_offset[tool].z);
+                sum_offsets.z += hotend_offset[tool].z;
             }
 
             // Note: If we would first calibrate XY offset, it should then give us more precise interpolation on the ghetto MBL line
@@ -577,6 +580,9 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
             max_x_offset = std::max(max_x_offset, hotend_offset[tool].x);
             min_y_offset = std::min(min_y_offset, hotend_offset[tool].y);
             max_y_offset = std::max(max_y_offset, hotend_offset[tool].y);
+            sum_offsets.x += hotend_offset[tool].x;
+            sum_offsets.y += hotend_offset[tool].y;
+            no_summed_offsets++;
 
             step++;
         }
@@ -586,11 +592,11 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
             continue;
         }
 
-        // Normalize XY offsets so the midpoint between min and max sits at zero.
+        // Normalize XY offsets so the average offset is zero.
         // The ScopeGuard at function exit persists hotend_offset to EEPROM.
         if (num_tools > 1) {
-            const float avg_x_offset = (min_x_offset + max_x_offset) / 2.0f;
-            const float avg_y_offset = (min_y_offset + max_y_offset) / 2.0f;
+            const xyz_pos_t average_offset = sum_offsets / no_summed_offsets;
+
             // Spread is invariant under the midpoint subtraction, so we can use the pre-normalization extremes.
             const float x_spread = max_x_offset - min_x_offset;
             const float y_spread = max_y_offset - min_y_offset;
@@ -604,19 +610,16 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
                 return false;
             }
 
-            if (std::abs(avg_x_offset) > probing_config.sensor_position_error_threshold || std::abs(avg_y_offset) > probing_config.sensor_position_error_threshold) {
+            if (std::abs(average_offset.x) > probing_config.sensor_position_error_threshold || std::abs(average_offset.y) > probing_config.sensor_position_error_threshold) {
                 if (prompt_retry(WarningType::HotendOffsetUnsafeSensorXY, context) == Response::Retry) {
                     continue;
                 }
                 return false;
-            } else if (std::abs(avg_x_offset) > probing_config.sensor_position_update_threshold || std::abs(avg_y_offset) > probing_config.sensor_position_update_threshold) {
+            } else if (std::abs(average_offset.x) > probing_config.sensor_position_update_threshold || std::abs(average_offset.y) > probing_config.sensor_position_update_threshold) {
                 // Detected sensor movement - update stored sensor position and apply correction to all tools.
                 // `probing_config.sensor_position` is the position the scan was conducted at (either the
                 // stored value or the default, depending on what apply_stored_sensor_position resolved to).
-                const MachinePosXY new_sensor_position { { {
-                    probing_config.sensor_position.x - avg_x_offset,
-                    probing_config.sensor_position.y - avg_y_offset,
-                } } };
+                const MachinePosXY new_sensor_position { (probing_config.sensor_position - average_offset).xy() };
                 log_info(ToolOffsetCalib, "Updating stored sensor position: (%.3f, %.3f) -> (%.3f, %.3f)",
                     static_cast<double>(probing_config.sensor_position.x), static_cast<double>(probing_config.sensor_position.y),
                     static_cast<double>(new_sensor_position.x), static_cast<double>(new_sensor_position.y));
@@ -627,8 +630,7 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
 
                 for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
                     // Note: we update offset for all enabled tools, even if they are not measured in this run
-                    hotend_offset[tool].x -= avg_x_offset;
-                    hotend_offset[tool].y -= avg_y_offset;
+                    hotend_offset[tool] -= average_offset.xy();
                     metric_record_custom(&metric_tool_offset, ",tool=%u x=%.3f,y=%.3f,z=%.3f",
                         tool.to_raw(),
                         static_cast<double>(hotend_offset[tool].x),
