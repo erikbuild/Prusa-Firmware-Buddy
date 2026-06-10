@@ -595,6 +595,31 @@ bool loadcell_wait_streaming(uint32_t per_attempt_timeout_us, uint8_t retries) {
     loadcell.analysis.Reset(); // Reset window to remove tare offset jump
     return tare;
   }
+
+// Recover after a loadcell anomaly tripped the safety stop mid-probe: disarm, settle
+// motion, re-establish streaming, back off Z, then re-arm for the next attempt.
+// Callers `continue` after this, bypassing single_only and the end-of-loop Z raise.
+static bool recover_from_probe_safety_trip() {
+  loadcell.disarm_probe_safety(); // disarm first so the ISR can't re-trip during the wait below
+  planner.synchronize();          // drain the quick_stop (stop_pending cleared)
+  if (!loadcell_wait_streaming())
+    return false;
+  do_blocking_move_to_z(current_position.z + Z_CLEARANCE_MULTI_PROBE, MMM_TO_MMS(Z_PROBE_SPEED_FAST));
+  loadcell.rearm_probe_safety(); // re-arm against the post-recovery generation
+  return true;
+}
+
+enum class ProbeRetry { retry, fail };
+
+// Called whenever probe_should_abort() or probe_safety_did_trip() fires mid-probe.
+// Returns 'retry' → caller should continue the probe loop; 'fail' → caller returns NAN.
+static ProbeRetry handle_probe_safety_trip() {
+  if (planner.draining())
+    return ProbeRetry::fail; // cancelled: propagate
+  if (!recover_from_probe_safety_trip())
+    return ProbeRetry::fail; // unrecoverable loadcell
+  return ProbeRetry::retry;
+}
 #endif
 
 /**
@@ -721,18 +746,28 @@ float run_z_probe(const RunZProbeParams& params) {
         // when the Z move is very short
         loadcell.WaitBarrier(static_cast<uint32_t>(ticks_us() + loadcell.analysis.analysisLookback * 1e6f));
 
-        // A re-tare or the sync above tripped the safety stop: fail before descending.
-        if (loadcell.probe_should_abort())
-          return NAN;
+        // A re-tare or the sync above tripped the safety stop.
+        if (loadcell.probe_should_abort()) {
+          if (handle_probe_safety_trip() == ProbeRetry::fail)
+            return NAN;
+          continue;
+        }
       #endif
 
       // Probe downward slowly to find the bed
       if (do_probe_move(z_probe_low_point, MMM_TO_MMS(Z_PROBE_SPEED_SLOW))) {
         if(params.endstop_triggered)
           *params.endstop_triggered = false;
-        if (planner.draining() || PreciseStepping::stopping())
-          return NAN;
-
+        if (planner.draining())
+          return NAN; // cancelled
+        #if ENABLED(NOZZLE_LOAD_CELL)
+          if (loadcell.probe_safety_did_trip()) { // anomaly mid-descent: recover and retry
+            if (handle_probe_safety_trip() == ProbeRetry::fail)
+              return NAN;
+            continue;
+          }
+        #endif
+        // genuine: bed not reached
         #if ENABLED(HALT_ON_PROBING_ERROR)
           // #error dead code found by automatic analyses (see BFW-5461)
           kill("PROBING ERROR", "Could not reach the bed, SLOW Probe fail!");
@@ -760,8 +795,11 @@ float run_z_probe(const RunZProbeParams& params) {
         set_current_position(to_native_pos(target));
 
         planner.synchronize();
-        if (loadcell.probe_should_abort())
-          return NAN;
+        if (loadcell.probe_should_abort()) {
+          if (handle_probe_safety_trip() == ProbeRetry::fail)
+            return NAN;
+          continue;
+        }
         uint32_t move_back_end = PreciseStepping::get_time_of_last_block_us();
       #endif
 
@@ -789,8 +827,11 @@ float run_z_probe(const RunZProbeParams& params) {
         uint32_t window_end = move_back_end + static_cast<uint32_t>((loadcell.analysis.analysisLookahead + loadcell.analysis.loadDelay) * 1000000.f);
         loadcell.WaitBarrier(window_end);
 
-        if (loadcell.probe_should_abort())
-          return NAN;
+        if (loadcell.probe_should_abort()) {
+          if (handle_probe_safety_trip() == ProbeRetry::fail)
+            return NAN;
+          continue;
+        }
 
         METRIC_DEF(analysis_result, "probe_analysis", METRIC_VALUE_CUSTOM, 0, METRIC_ENABLED);
         auto result = loadcell.analysis.Analyse(params.is_nozzle_clean);

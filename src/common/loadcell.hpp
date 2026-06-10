@@ -139,6 +139,22 @@ public:
     /// safety stop has tripped. @see WaitBarrier(), run_z_probe().
     bool probe_should_abort() const;
 
+    /// True if the probe-safety stop tripped on an anomaly (sticky until the next tare).
+    inline bool probe_safety_did_trip() const { return probe_safety_tripped.load(); }
+
+    /// Disarm the probe-safety stop and clear any pending trip (use while recovering before re-arming).
+    inline void disarm_probe_safety() {
+        probe_safety_armed.store(false);
+        probe_safety_tripped.store(false);
+    }
+
+    /// Re-arm the probe-safety against the current data-source generation for another attempt.
+    inline void rearm_probe_safety() {
+        tare_generation.store(last_source_generation.load());
+        probe_safety_tripped.store(false);
+        probe_safety_armed.store(true);
+    }
+
     class FailureOnLoadAboveEnforcer {
     public:
         FailureOnLoadAboveEnforcer(Loadcell &lcell, bool enable, float grams);
