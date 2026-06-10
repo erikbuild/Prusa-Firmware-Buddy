@@ -30,7 +30,7 @@ static constexpr const char *txt_unload = N_("Unloading");
 static constexpr const char *txt_unload_confirm = N_("Was filament unload successful?");
 static constexpr const char *txt_filament_not_in_fs = N_("Please remove filament from filament sensor.");
 #if HAS_INDX() // INDX has no idler
-static constexpr const char *txt_manual_unload = N_("Please remove the filament manually");
+static constexpr const char *txt_manual_unload = N_("Manually remove the filament from the extruder.");
 #else
 static constexpr const char *txt_manual_unload = N_("Please open idler and remove filament manually");
 #endif
