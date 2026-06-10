@@ -41,7 +41,11 @@ static constexpr const char *txt_is_filament_in_gear = N_("Is filament in extrud
 static constexpr const char *txt_ejecting = N_("Ejecting");
 static constexpr const char *txt_loading = N_("Loading to nozzle");
 static constexpr const char *txt_purging = N_("Purging");
+#if HAS_INDX()
+static constexpr const char *txt_is_color = N_("Was filament successfully extruded?");
+#else
 static constexpr const char *txt_is_color = N_("Is color correct?");
+#endif
 #if HAS_NOZZLE_CLEANER()
 static constexpr const char *txt_nozzle_cleaning = N_("Cleaning nozzle");
 #endif
