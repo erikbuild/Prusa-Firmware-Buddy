@@ -176,7 +176,6 @@ Response prompt_retry(WarningType warning, tool_offset_calibration::Context cont
 
     if (marlin_server::prompt_warning(warning) != Response::Retry) {
         if (context == tool_offset_calibration::Context::Print) {
-            marlin_server::quick_stop();
             marlin_server::print_abort();
         }
         return Response::Abort;
@@ -431,11 +430,10 @@ bool run(uint8_t r_param, uint8_t probe_count, Context context, const ProgressCa
             return false;
         };
 
-        // Issue quick_stop + print_abort only if running from a print. In a calibration wizard the
+        // Issue print_abort only if running from a print. In a calibration wizard the
         // caller handles wizard teardown itself.
         auto abort_print_if_needed = [&] {
             if (context == Context::Print) {
-                marlin_server::quick_stop();
                 marlin_server::print_abort();
             }
         };
