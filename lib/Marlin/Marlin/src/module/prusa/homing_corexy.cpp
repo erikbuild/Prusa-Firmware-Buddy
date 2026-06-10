@@ -68,6 +68,11 @@ static constexpr float UNSTABLE_PHASE_THRESHOLD = 1. / 4;
 // Origin estimate sweep resolution: grid-offset samples per axis
 static constexpr int ORIGIN_SWEEP_RES = 128;
 
+// Per-point minimum 95% cycle measurement convergence and maximum pass count
+static constexpr float ORIGIN_MIN_CYCLE_CI = 0.5f; // half a cycle width
+static constexpr uint16_t ORIGIN_MAX_PASSES = 10;
+static_assert(ORIGIN_MAX_PASSES >= 2, "CI convergence needs at least 2 samples per point");
+
 namespace internal {
     bool home_unstable = false; ///< Last homing stability state
     uint8_t probe_id = 0; ///< Probe id for metric cross-referencing
@@ -615,11 +620,106 @@ static ab_steps_t plan_corexy_abgrid_move(const ab_steps_t &origin_steps, const 
 }
 
 // Per-grid-point measurement
-struct point_data {
+struct measure_data {
     xy_pos_t c_dist; ///< absolute AB cycle coordinate of the probed cell
     xy_pos_t m_dist; ///< measured AB distance from the endstop (mm)
-    bool revalidate; ///< re-probe this point on the next pass
 };
+
+/**
+ * @brief Per-axis mean cycle coordinate along all passes of a measurement point
+ * @tparam N array stride
+ * @param points in the format measure_data[passes * N + idx]
+ * @param passes pass count
+ * @param idx point index
+ * @return cycle mean
+ **/
+template <size_t N>
+static xy_pos_t point_cycle_mean(const measure_data *points, size_t passes, size_t idx) {
+    xy_pos_t mean = { 0.f, 0.f };
+    LOOP_XY(axis) {
+        float sum = 0.f;
+        for (size_t p = 0; p != passes; ++p) {
+            sum += points[p * N + idx].c_dist[axis];
+        }
+        mean[axis] = sum / float(passes);
+    }
+    return mean;
+}
+
+/**
+ * @brief Return the maximum absolute range along all passes of a measurement point
+ * @tparam N array stride
+ * @param points in the format measure_data[passes * N + idx]
+ * @param passes pass count
+ * @param idx point index
+ * @return per-axis cycle range
+ **/
+template <size_t N>
+static xy_pos_t point_cycle_range(const measure_data *points, size_t passes, size_t idx) {
+    xy_pos_t c_min;
+    xy_pos_t c_max;
+    LOOP_XY(axis) {
+        c_min[axis] = c_max[axis] = points[idx].c_dist[axis];
+        for (size_t p = 1; p != passes; ++p) {
+            const auto &data = points[p * N + idx];
+            c_min[axis] = std::min(c_min[axis], data.c_dist[axis]);
+            c_max[axis] = std::max(c_max[axis], data.c_dist[axis]);
+        }
+    }
+    return { abs(c_max[A_AXIS] - c_min[A_AXIS]), abs(c_max[B_AXIS] - c_min[B_AXIS]) };
+}
+
+/// Two-sided 95% student-t critical value for the given degrees of freedom (dof >= 1)
+static constexpr float t95_value(const uint16_t dof) {
+    // exact for dof 1..10, coarse steps above, asymptoting to the normal z = 1.96
+    static constexpr float t[] = {
+        12.706f, 4.303f, 3.182f, 2.776f, 2.571f,
+        2.447f, 2.365f, 2.306f, 2.262f, 2.228f
+    };
+    if (dof < 1) {
+        return INFINITY;
+    }
+    if (dof <= 10) {
+        return t[dof - 1];
+    }
+    if (dof <= 15) {
+        return 2.131f;
+    }
+    if (dof <= 20) {
+        return 2.086f;
+    }
+    if (dof <= 30) {
+        return 2.042f;
+    }
+    return 1.96f;
+}
+
+/**
+ * @brief Return the cycle width 95% CI of the worst axis of a point
+ * @tparam N array stride
+ * @param points in the format measure_data[passes * N + idx]
+ * @param passes pass count
+ * @param idx point index
+ * @return CI
+ **/
+template <size_t N>
+static float point_cycle_ci(const measure_data *points, size_t passes, size_t idx) {
+    if (passes < 2) {
+        return INFINITY;
+    }
+    const xy_pos_t mean = point_cycle_mean<N>(points, passes, idx);
+    float worst = 0.f;
+    LOOP_XY(axis) {
+        float ss = 0.f;
+        for (size_t p = 0; p != passes; ++p) {
+            ss += SQR(points[p * N + idx].c_dist[axis] - mean[axis]);
+        }
+        const float stddev = sqrtf(ss / float(passes - 1));
+        const float halfwidth = t95_value(passes - 1) * stddev / sqrtf(float(passes));
+        worst = std::max(worst, halfwidth * 2);
+    }
+    return worst;
+}
 
 /**
  * @brief Estimate the grid origin by chamfer distance under translation.
@@ -632,7 +732,7 @@ struct point_data {
  * each point to its nearest node in order to penalize outliers.
  **/
 template <size_t N>
-static xy_pos_t estimate_origin(const point_data (&points)[N], const ab_grid_t &anchor_ab) {
+static xy_pos_t estimate_origin(const measure_data (&points)[N], size_t count, const ab_grid_t &anchor_ab) {
     const xy_pos_t origin = {
         points[0].c_dist[A_AXIS] - float(anchor_ab[A_AXIS]),
         points[0].c_dist[B_AXIS] - float(anchor_ab[B_AXIS]),
@@ -640,7 +740,7 @@ static xy_pos_t estimate_origin(const point_data (&points)[N], const ab_grid_t &
 
     // calculate per-point fractional distance
     xy_pos_t points_frac[N];
-    for (size_t i = 0; i != N; ++i) {
+    for (size_t i = 0; i != count; ++i) {
         points_frac[i][A_AXIS] = points[i].c_dist[A_AXIS] - floorf(points[i].c_dist[A_AXIS]);
         points_frac[i][B_AXIS] = points[i].c_dist[B_AXIS] - floorf(points[i].c_dist[B_AXIS]);
     }
@@ -652,7 +752,7 @@ static xy_pos_t estimate_origin(const point_data (&points)[N], const ab_grid_t &
         for (int ib = 0; ib != ORIGIN_SWEEP_RES; ++ib) {
             const float db = float(ib) / ORIGIN_SWEEP_RES;
             float cost = 0.f;
-            for (size_t i = 0; i != N; ++i) {
+            for (size_t i = 0; i != count; ++i) {
                 // squared distance to the nearest node, per axis in range [0, 0.5]
                 const float ra = fabsf(points_frac[i][A_AXIS] - da);
                 const float rb = fabsf(points_frac[i][B_AXIS] - db);
@@ -688,92 +788,103 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
         { 0, 0 },
     };
 
-    point_data points[std::size(point_sequence)];
+    // to conserve stack space, store all measured points in a flat array and recompute derived
+    // values on the fly at each pass (those are cheap to compute)
+    constexpr size_t N = std::size(point_sequence);
+    measure_data measure[N * ORIGIN_MAX_PASSES];
 
-    // allow single-point revalidation on instability to speed-up retries
-    // start by forcing whole-grid revalidation
-    for (size_t i = 0; i != std::size(point_sequence); ++i) {
-        points[i].revalidate = true;
-    }
-
-    // keep track of points to revalidate
-    size_t rev_cnt = std::size(point_sequence);
-    for (size_t revcount = 0; revcount < std::size(point_sequence) / 2; ++revcount) {
-        size_t new_rev_cnt = 0;
-
-        // cycle through grid points and calculate centroid
-        for (size_t i = 0; i != std::size(point_sequence); ++i) {
+    // Re-measure the whole grid until every point is known to be within ORIGIN_MIN_CYCLE_CI.
+    // Abort immediately during skips and/or if we cannot converge within ORIGIN_MAX_PASSES.
+    bool converged = false;
+    size_t passes = 0;
+    while (!converged && passes < ORIGIN_MAX_PASSES) {
+        // cycle through grid points and measure one sample per point
+        for (size_t i = 0; i != N; ++i) {
             const auto &seq = point_sequence[i];
-            auto &data = points[i];
+            auto &data = measure[passes * N + i];
 
-            if (data.revalidate) {
-                plan_corexy_abgrid_move(origin_steps, seq, fr_mm_s);
-                if (planner.draining()) {
-                    return false;
-                }
-
-                if (!measure_phase_cycles(axis, seq, data.c_dist, data.m_dist, fr_mm_s)) {
-                    return false;
-                }
-            }
-        }
-        origin = estimate_origin(points, point_sequence[0]);
-
-        metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"s\" c=%u,p=%u,i=%u,r=%u",
-            axis, internal::cal_id, internal::probe_id, revcount, (unsigned)rev_cnt);
-        metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"o\" c=%u,o0=%.3f,o1=%.3f",
-            axis, internal::cal_id, (double)origin[0], (double)origin[1]);
-
-        // verify each probed point with the current centroid
-        ab_grid_t o_int = { int32_t(roundf(origin[A_AXIS])), int32_t(roundf(origin[B_AXIS])) };
-        for (size_t i = 0; i != std::size(point_sequence); ++i) {
-            const auto &seq = point_sequence[i];
-            auto &data = points[i];
-
-            const ab_grid_t c_ab = cdist_translate(data.c_dist, origin);
-            const ab_grid_t c_diff = c_ab - seq - o_int;
-            const bool c_unstable = point_is_unstable(data.c_dist, origin);
-            const bool c_invalid = c_diff[A_AXIS] || c_diff[B_AXIS];
-
-            metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"p\" c=%u,p=%u,c0=%li,c1=%li,s=%u",
-                axis, internal::cal_id, i, (long)c_ab[0], (long)c_ab[1], c_unstable);
-            metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"p\" c=%u,p=%u,d0=%li,d1=%li,v=%u",
-                axis, internal::cal_id, i, (long)c_diff[0], (long)c_diff[1], c_invalid);
-            idle(true); // allow some time to flush the metrics buffer
-
-            if (c_invalid) {
-                internal::home_unstable = true;
-                SERIAL_ECHOLNPAIR("home calibration point (", seq[A_AXIS], ",", seq[B_AXIS],
-                    ") invalid A:", c_diff[A_AXIS], " B:", c_diff[B_AXIS],
-                    " with origin A:", o_int[A_AXIS], " B:", o_int[B_AXIS]);
-                // when even just a point is invalid, we likely have skipped or have a false centroid:
-                // no point in revalidating, mark the calibration as an instant failure
+            plan_corexy_abgrid_move(origin_steps, seq, fr_mm_s);
+            if (planner.draining()) {
                 return false;
             }
 
-            data.revalidate = c_unstable;
-            if (data.revalidate) {
-                internal::home_unstable = true;
-                SERIAL_ECHOLNPAIR("home calibration point (", seq[A_AXIS], ",", seq[B_AXIS],
-                    ") unstable A:", data.c_dist[A_AXIS], " B:", data.c_dist[B_AXIS],
-                    " with origin A:", origin[A_AXIS], " B:", origin[B_AXIS]);
-                ++new_rev_cnt;
+            if (!measure_phase_cycles(axis, seq, data.c_dist, data.m_dist, fr_mm_s)) {
+                return false;
+            }
+            idle(true); // allow some time to flush the metrics buffer
+        }
+        ++passes;
+
+        if (passes >= 2) {
+            // verify if we did converge on all points
+            converged = true;
+            for (size_t i = 0; i != N; ++i) {
+                const auto &seq = point_sequence[i];
+
+                const xy_pos_t c_range = point_cycle_range<N>(measure, passes, i);
+                if (c_range[A_AXIS] >= 1 || c_range[B_AXIS] >= 1) {
+                    // if the maximum range is greater than a full cycle we likely skipped
+                    SERIAL_ECHOLNPAIR("home calibration point (", seq[A_AXIS], ",", seq[B_AXIS],
+                        ") range too large A:", c_range[A_AXIS], " B:", c_range[B_AXIS]);
+                    return false;
+                }
+
+                const float c_ci = point_cycle_ci<N>(measure, passes, i);
+                if (c_ci >= ORIGIN_MIN_CYCLE_CI) {
+                    SERIAL_ECHOLNPAIR("home calibration point (", seq[A_AXIS], ",", seq[B_AXIS],
+                        ") not converged after ", passes, " passes");
+                    converged = false;
+                    break;
+                }
             }
         }
+    }
+    if (!converged || !passes) {
+        // measurements never stabilized within the target precision: reject calibration
+        internal::home_unstable = true;
+        SERIAL_ECHOLNPAIR("home grid measurement did not converge");
+        return false;
+    }
 
-        if (new_rev_cnt > rev_cnt) {
-            // we got worse, likely we have moved the centroid: give up
+    const size_t count = passes * N;
+    origin = estimate_origin(measure, count, point_sequence[0]);
+
+    metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"o\" c=%u,o0=%.3f,o1=%.3f,p=%u",
+        axis, internal::cal_id, (double)origin[0], (double)origin[1], passes);
+
+    // verify every individual sample against the computed centroid
+    const ab_grid_t o_int = { int32_t(roundf(origin[A_AXIS])), int32_t(roundf(origin[B_AXIS])) };
+    for (size_t k = 0; k != count; ++k) {
+        const auto &seq = point_sequence[k % N];
+        auto &data = measure[k];
+
+        const ab_grid_t c_ab = cdist_translate(data.c_dist, origin);
+        const ab_grid_t c_diff = c_ab - seq - o_int;
+        const bool c_unstable = point_is_unstable(data.c_dist, origin);
+        const bool c_invalid = c_diff[A_AXIS] || c_diff[B_AXIS];
+
+        metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"p\" c=%u,p=%u,c0=%li,c1=%li,s=%u",
+            axis, internal::cal_id, k, (long)c_ab[0], (long)c_ab[1], c_unstable);
+        metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"p\" c=%u,p=%u,d0=%li,d1=%li,v=%u",
+            axis, internal::cal_id, k, (long)c_diff[0], (long)c_diff[1], c_invalid);
+
+        if (c_invalid) {
+            // when even just a sample is invalid, we likely have skipped or have a false centroid:
+            // no point in retrying, mark the calibration as an instant failure
+            internal::home_unstable = true;
+            SERIAL_ECHOLNPAIR("home calibration measure ", k, " (", seq[A_AXIS], ",", seq[B_AXIS],
+                ") invalid A:", c_diff[A_AXIS], " B:", c_diff[B_AXIS],
+                " with origin A:", o_int[A_AXIS], " B:", o_int[B_AXIS]);
             return false;
         }
-        rev_cnt = new_rev_cnt;
-        if (!rev_cnt) {
-            // stop if all points are valid
-            break;
+
+        if (c_unstable) {
+            // mark/log the calibration as unstable, but accept it silently
+            internal::home_unstable = true;
+            SERIAL_ECHOLNPAIR("home calibration measure ", k, " (", seq[A_AXIS], ",", seq[B_AXIS],
+                ") unstable A:", data.c_dist[A_AXIS], " B:", data.c_dist[B_AXIS],
+                " with origin A:", origin[A_AXIS], " B:", origin[B_AXIS]);
         }
-    }
-    if (rev_cnt) {
-        // we left with unstable points, reject calibration
-        return false;
     }
 
     // explicitly plan a return to zero to leave origin unchanged as required by the rest of homing
