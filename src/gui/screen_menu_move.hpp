@@ -16,10 +16,16 @@ public:
     I_MI_AXIS(size_t index);
 };
 
-class DUMMY_AXIS_E : public WI_FORMATABLE_LABEL_t<int> {
+enum ToolState {
+    heating,
+    low_temp
+};
 
+class DUMMY_AXIS_E : public WI_FORMATABLE_LABEL_t<ToolState> {
 public:
     DUMMY_AXIS_E();
+
+    void set_state(ToolState state);
 
 protected:
     void click(IWindowMenu &window_menu) override;

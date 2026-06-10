@@ -46,18 +46,31 @@ I_MI_AXIS::I_MI_AXIS(size_t index)
         axis_ranges_spin_config(index), _(MenuVars::labels[index]), nullptr, is_enabled_t::yes, is_hidden_t::no) //
 {}
 
-void DUMMY_AXIS_E::click(IWindowMenu &) {
-    marlin_client::gcode("M1700 S E W2 B0"); // set filament, preheat to target, do not heat bed, return option
+static const char *get_tool_state_label(ToolState state) {
+    switch (state) {
+    case ToolState::heating:
+        return N_("Heating");
+    case ToolState::low_temp:
+        return N_("Low temp");
+    }
+    bsod_unreachable();
 }
 
 DUMMY_AXIS_E::DUMMY_AXIS_E()
-    : WI_FORMATABLE_LABEL_t<int>(_(MenuVars::labels[MARLIN_VAR_INDEX_E]), nullptr, is_enabled_t::yes, is_hidden_t::no, 0,
-        // this lambda is used during print, but does require item to be invalidated
+    : WI_FORMATABLE_LABEL_t<ToolState>(_(MenuVars::labels[MARLIN_VAR_INDEX_E]), nullptr, is_enabled_t::yes, is_hidden_t::no, ToolState::low_temp,
         [&](const std::span<char> &buffer) {
-            const char *label_str = value() ? N_("Heating") : N_("Low temp");
-            _(label_str).copyToRAM(buffer);
+            _(get_tool_state_label(value())).copyToRAM(buffer);
         }) {
     touch_extension_only_ = true;
+}
+
+void DUMMY_AXIS_E::set_state(ToolState state) {
+    UpdateValue(state); // update label
+    set_enabled(true);
+}
+
+void DUMMY_AXIS_E::click(IWindowMenu &) {
+    marlin_client::gcode("M1700 S E W2 B0"); // set filament, preheat to target, do not heat bed, return option
 }
 
 ScreenMenuMove::ScreenMenuMove()
@@ -144,8 +157,9 @@ void ScreenMenuMove::loop() {
         menu.menu.SwapVisibility(Item<DUMMY_AXIS_E>(), Item<MI_AXIS_E>());
     }
 
-    // Update DUMMY_AXIS_E label (too cold vs heating up)
-    Item<DUMMY_AXIS_E>().UpdateValue(is_temp_set);
+    // Update DUMMY_AXIS_E
+    ToolState state = is_temp_set ? ToolState::heating : ToolState::low_temp;
+    Item<DUMMY_AXIS_E>().set_state(state);
 
     // Update whether MI_COOLDOWN is enabled
     Item<screen_menu_move::MI_COOLDOWN>().set_enabled(is_temp_set
