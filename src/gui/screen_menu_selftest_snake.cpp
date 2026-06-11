@@ -92,6 +92,43 @@ Action get_next_action(Action action) {
     return _get_valid_action(static_cast<Action>(std::to_underlying(action) + 1), 1);
 }
 
+// Range of all actions valid for the current printer configuration, for range-for loops.
+// Unlike get_next_action(), the iterator has standard half-open semantics
+// incrementing the last action yields end (Action::_count).
+class ValidActionsRange {
+public:
+    class Iterator {
+    public:
+        explicit Iterator(Action action)
+            : action_(action) {}
+
+        Action operator*() const {
+            return action_;
+        }
+
+        Iterator &operator++() {
+            action_ = _get_valid_action(static_cast<Action>(std::to_underlying(action_) + 1), 1);
+            return *this;
+        }
+
+        bool operator==(const Iterator &) const = default;
+
+    private:
+        Action action_;
+    };
+
+    Iterator begin() const {
+        return Iterator(get_first_action());
+    }
+    Iterator end() const {
+        return Iterator(Action::_count);
+    }
+};
+
+ValidActionsRange valid_actions() {
+    return {};
+}
+
 bool is_completed(TestResult test_result) {
     // Skipped is also considered completed - it marks non-obligatory tests that have been explicitly skipped by the user
     return test_result == TestResult::passed || test_result == TestResult::skipped;
@@ -185,7 +222,7 @@ const char *get_action_label(Action action) {
 
 bool are_dependencies_met(Action action) {
     const auto dependencies = get_dependencies(action);
-    for (Action dependency = get_first_action(), end = get_last_action(); dependency != end; dependency = get_next_action(dependency)) {
+    for (Action dependency : valid_actions()) {
         if (!dependencies.test(dependency)) {
             continue;
         }
@@ -197,7 +234,7 @@ bool are_dependencies_met(Action action) {
 }
 
 bool are_all_actions_completed() {
-    for (Action action = get_first_action(), end = get_last_action(); action != end; action = get_next_action(action)) {
+    for (Action action : valid_actions()) {
         if (!is_completed(get_test_result(action, AllTools {}))) {
             return false;
         }
@@ -211,7 +248,7 @@ void show_unmet_dependencies_warning(Action action) {
     StringBuilder sb(msg);
     sb.append_string_view(_("Complete these calibrations first:"));
     const auto dependencies = get_dependencies(action);
-    for (Action dependency = get_first_action(); dependency <= Action::_last; dependency = get_next_action(dependency)) {
+    for (Action dependency : valid_actions()) {
         if (!dependencies.test(dependency)) {
             continue;
         }
@@ -225,15 +262,11 @@ void show_unmet_dependencies_warning(Action action) {
 
 #else
 
-// Can't (shouldn't) be called with first action
-Action get_previous_action(Action action) {
-    assert(get_first_action() != action && "Unhandled edge case");
-    return _get_valid_action(static_cast<Action>(std::to_underlying(action) - 1), -1);
-}
-
 bool are_previous_completed(Action action) {
-    for (Action act = action; act > get_first_action();) {
-        act = get_previous_action(act);
+    for (Action act : valid_actions()) {
+        if (act == action) {
+            break;
+        }
         if (!is_completed(get_test_result(act, AllTools {}))) {
             return false;
         }
@@ -521,11 +554,8 @@ string_view_utf8 I_MI_STS::get_filled_menu_item_label(Action action) {
             std::array<size_t, std::to_underlying(Action::_count)> indices { { {} } };
 
             int idx { 1 }; // start number
-            for (Action act = get_first_action();; act = get_next_action(act)) {
+            for (Action act : valid_actions()) {
                 indices[std::to_underlying(act)] = idx++;
-                if (act == get_last_action()) { // explicitly done this way to avoid getting next action of the last action
-                    break;
-                }
             }
             return indices;
         }()
