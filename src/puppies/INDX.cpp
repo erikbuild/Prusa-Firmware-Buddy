@@ -123,6 +123,9 @@ CommunicationStatus Indx::read_general_status(PuppyModbus &bus) {
         hotend_duty_cycle_sq_integral_us.store(
             block.value.hotend_duty_cycle_sq_integral_us_lo
             | (uint32_t(block.value.hotend_duty_cycle_sq_integral_us_hi) << 16));
+        hotend_energy_consumed_uJ.store(
+            block.value.hotend_energy_consumed_uJ_lo
+            | (uint32_t(block.value.hotend_energy_consumed_uJ_hi) << 16));
 
         mcu_temperature.store(block.value.mcu_temperature);
         board_temperature.store(block.value.board_temperature);
@@ -291,6 +294,10 @@ float Indx::get_hotend_temp_raw_c_dt_s() const {
 
 uint32_t Indx::get_hotend_duty_cycle_sq_integral_us() const {
     return hotend_duty_cycle_sq_integral_us.load();
+}
+
+uint32_t Indx::get_hotend_energy_consumed_uJ() const {
+    return hotend_energy_consumed_uJ.load();
 }
 
 CommunicationStatus Indx::set_hotend_target_temp(float target) {

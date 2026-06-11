@@ -40,6 +40,11 @@ struct Status {
     uint16_t hotend_duty_cycle_sq_integral_us_lo = 0;
     uint16_t hotend_duty_cycle_sq_integral_us_hi = 0;
 
+    /// Integral of measured V × I power over time [mW × ms]
+    /// Expect overflows. At 60W, overflows once in 4294967295 / 60000 / 1000000 ≈ 71 s
+    uint16_t hotend_energy_consumed_uJ_lo = 0;
+    uint16_t hotend_energy_consumed_uJ_hi = 0;
+
     /// Ambient temperature reported by the TPiS sensor [int16_t in 1/100 °C]
     int16_t tpis_ambient_temperature_c100 = default_hotend_temperature_c100;
 

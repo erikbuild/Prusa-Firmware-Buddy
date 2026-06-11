@@ -112,6 +112,14 @@ public:
     /// !!! Overflows periodically
     [[nodiscard]] uint32_t get_hotend_duty_cycle_sq_integral_us() const;
 
+    /// Integral of measured V × I power [uJ]
+    /// !!! Overflows periodically (~71s at 60W)
+    [[nodiscard]] uint32_t get_hotend_energy_consumed_uJ() const;
+
+    /// Fraction of the coil power delivered to nozzle
+    /// Relates to get_hotend_energy_consumed_uJ
+    static constexpr float hotend_induction_efficiency = 0.94f;
+
     [[nodiscard]] int16_t get_mcu_temperature(); ///< Get MCU temperature [°C]
     [[nodiscard]] int16_t get_board_temperature(); ///< Get board temperature [°C]
     [[nodiscard]] float get_tpis_ambient_temperature(); ///< Get TPiS sensor ambient temperature [°C]
@@ -184,6 +192,7 @@ private:
     std::atomic<int16_t> hotend_temp_uncompensated_c100 { indx_head::modbus::default_hotend_temperature_c100 };
     std::atomic<int16_t> hotend_temp_raw_c100_dt_s { 0 };
     std::atomic<uint32_t> hotend_duty_cycle_sq_integral_us { 0 };
+    std::atomic<uint32_t> hotend_energy_consumed_uJ { 0 };
     std::atomic<bool> temps_valid { false };
 
     // General-status fields — populated by read_general_status(), read lock-free from Marlin.
