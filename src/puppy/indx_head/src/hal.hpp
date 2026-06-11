@@ -80,6 +80,8 @@ namespace adc {
     int16_t get_board_temp();
     /// Calculates input volatage in mV
     uint16_t get_input_voltage_mV();
+    /// Calculates heater current in mA
+    uint16_t get_heater_current_mA();
 
     namespace impl {
         alignas(uint32_t) extern std::array<uint16_t, std::to_underlying(Channel::_cnt)> buffer;

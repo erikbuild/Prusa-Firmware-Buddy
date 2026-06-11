@@ -78,4 +78,21 @@ uint16_t get_input_voltage_mV() {
     return uint16_t { fpm::fixed_16_16 { v_adc_pin_mv } * adj_coef };
 }
 
+uint16_t get_heater_current_mA() {
+    // Calculate actual reference voltage of the chip [mV]
+    const uint32_t v_ref_mv = __LL_ADC_CALC_VREFANALOG_VOLTAGE(get_raw(Channel::vref_int), LL_ADC_RESOLUTION_12B);
+
+    // Voltage at ADC pin [mV] = current in mA (sensor gain: 1 V/A)
+    const uint16_t raw_mA = __LL_ADC_CALC_DATA_TO_VOLTAGE(v_ref_mv, get_raw(Channel::heater_current), LL_ADC_RESOLUTION_12B);
+
+    if (raw_mA < 200) {
+        // The current sensing circuitry is a bit noisy.
+        // When the nozzle is off, the "negative noise" gets clamped at 0, so it manifests as a positive current on average.
+        // The lowest nozzle power should be ~500 mA, so just clamp to zero.
+        return 0;
+    } else {
+        return raw_mA;
+    }
+}
+
 } // namespace hal::adc
