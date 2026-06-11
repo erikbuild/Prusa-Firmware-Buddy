@@ -38,6 +38,14 @@ MI_INFO_NOZZLE_TEMP_UNCOMPENSATED::MI_INFO_NOZZLE_TEMP_UNCOMPENSATED()
         standard_print_format::temp_c,
         [](auto) { return SensorData::nozzle_temp_uncompensated(); },
     } {}
+
+MI_INFO_NOZZLE_POWER::MI_INFO_NOZZLE_POWER()
+    : MenuItemAutoUpdatingLabel {
+        _("Nozzle Power"),
+        "%.1f W",
+        [](auto) { return sensor_data().nozzle_power_W(); },
+    } {}
+
 #endif
 
 ScreenMenuSensorInfo::ScreenMenuSensorInfo()
