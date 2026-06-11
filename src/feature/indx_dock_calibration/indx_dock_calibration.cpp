@@ -3,6 +3,7 @@
 
 #include <client_response.hpp>
 #include <common/fsm_base_types.hpp>
+#include <common/mapi/calibration_preamble.hpp>
 #include <gcode/gcode.h>
 #include <marlin_server.hpp>
 #include <module/endstops.h>
@@ -28,9 +29,6 @@ LOG_COMPONENT_DEF(DockCalibration, logging::Severity::info);
 using marlin_server::wait_for_response;
 
 namespace indx_dock_calibration {
-
-/// Feedrate for Z lowering [mm/s]
-static constexpr feedRate_t Z_LOWER_FEEDRATE = HOMING_FEEDRATE_INVERTED_Z;
 
 /// How far to move in Y to clear the dock after measurement [mm]
 static constexpr float DOCK_EXIT_Y_MM = 30.0f;
@@ -168,13 +166,11 @@ private:
             }
         }
 
-        // Lower Z all the way down (stops at endstop)
-        fsm_change(PhaseDockCalibration::moving_away);
-        do_homing_move(AxisEnum::Z_AXIS, Z_MAX_POS, Z_LOWER_FEEDRATE);
-
-        // Home XY (z_raise=0: Z is already safely at the bottom from the homing move above)
-        fsm_change(PhaseDockCalibration::homing);
-        GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = false });
+        mapi::calibration_preamble(mapi::CalibrationPreambleToolPolicy::keep_as_is, [&](mapi::CalibrationPreambleStep step) {
+            fsm_change(step == mapi::CalibrationPreambleStep::moving_away
+                    ? PhaseDockCalibration::moving_away
+                    : PhaseDockCalibration::homing);
+        });
 
         // Ensure head locking mechanism is open (no tool present)
         prusa_toolchanger.ensure_head_open();

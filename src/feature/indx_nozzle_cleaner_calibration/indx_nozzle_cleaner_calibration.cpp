@@ -17,6 +17,7 @@
 #include <logging/log.hpp>
 #include <config_store/store_instance.hpp>
 #include <common/selftest_result.hpp>
+#include <common/mapi/calibration_preamble.hpp>
 #include <common/mapi/parking.hpp>
 #include <tool/hotend/hotend.hpp>
 #include <utils/variant_utils.hpp>
@@ -27,9 +28,6 @@ LOG_COMPONENT_DEF(NozzleCleanerCalibration, logging::Severity::info);
 using marlin_server::wait_for_response;
 
 namespace indx_nozzle_cleaner_calibration {
-
-/// Feedrate for Z lowering [mm/s]
-static constexpr feedRate_t z_lower_feedrate = HOMING_FEEDRATE_INVERTED_Z;
 
 /// Hotend is considered cool enough to touch below this temperature [°C]
 static constexpr int16_t cooldown_safe_temperature_c = 50;
@@ -122,21 +120,20 @@ private:
             return Result::aborted;
         }
 
-        // Lower Z all the way down (stops at endstop) — always first, before any homing or tool picking
-        fsm_change(PhaseNozzleCleanerCalibration::moving_away);
-        do_homing_move(AxisEnum::Z_AXIS, Z_MAX_POS, z_lower_feedrate);
-
-        // Pick any available tool (Z is already safe at the bottom, skip Z lift)
-        if (std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
-            fsm_change(PhaseNozzleCleanerCalibration::picking_tool);
-            if (!prusa_toolchanger.pick_any_tool(tool_return_t::no_return, {}, tool_change_lift_t::no_lift, false)) {
-                return Result::aborted;
-            }
-            // XY was homed precisely inside tool_change
-        } else {
-            // Home XY (z_raise=0: Z is already safely at the bottom from the homing move above)
-            fsm_change(PhaseNozzleCleanerCalibration::homing);
-            GcodeSuite::G28_no_parser(true, true, false, { .z_raise = 0, .precise = false });
+        if (!mapi::calibration_preamble(mapi::CalibrationPreambleToolPolicy::ensure_picked, [&](mapi::CalibrationPreambleStep step) {
+                switch (step) {
+                case mapi::CalibrationPreambleStep::moving_away:
+                    fsm_change(PhaseNozzleCleanerCalibration::moving_away);
+                    break;
+                case mapi::CalibrationPreambleStep::picking_tool:
+                    fsm_change(PhaseNozzleCleanerCalibration::picking_tool);
+                    break;
+                case mapi::CalibrationPreambleStep::homing:
+                    fsm_change(PhaseNozzleCleanerCalibration::homing);
+                    break;
+                }
+            })) {
+            return Result::aborted;
         }
 
         // Wait for the nozzle to cool down before the user handles the head
