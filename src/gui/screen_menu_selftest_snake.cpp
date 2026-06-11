@@ -579,7 +579,7 @@ void I_MI_STS::Loop() {
 }
 
 I_MI_STS_SUBMENU::I_MI_STS_SUBMENU(const char *label_template, Action action, PhysicalToolIndex tool)
-    : IWindowMenuItem(string_view_utf8 {}, nullptr, is_enabled_t::yes, tool.is_enabled() ? is_hidden_t::no : is_hidden_t::yes)
+    : IWindowMenuItem(string_view_utf8 {}, nullptr, tool.is_enabled() ? is_enabled_t::yes : is_enabled_t::no, is_hidden_t::no)
     , action(action)
     , tool(tool) {
     SetLabel(_(label_template).formatted(label_params_, tool.display_index()));
