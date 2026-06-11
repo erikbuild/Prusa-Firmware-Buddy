@@ -608,6 +608,15 @@ static ab_grid_t cdist_translate(const xy_pos_t &c_dist, const xy_pos_t &origin)
     return c_ab;
 }
 
+/// Convert an absolute AB cycle origin to the diagonal mm distance from the endstop
+static xy_pos_t origin_to_distance(const AxisEnum axis, const xy_pos_t &origin) {
+    const AxisEnum other_axis = (axis == B_AXIS ? A_AXIS : B_AXIS);
+    const float a = origin[A_AXIS] * phase_cycle_steps(other_axis);
+    const float b = origin[B_AXIS] * phase_cycle_steps(axis);
+    const float step_to_mm = planner.mm_per_step[axis] / std::numbers::sqrt2_v<float>;
+    return { (a + b) * step_to_mm, CORESIGN(a - b) * step_to_mm };
+}
+
 /**
  * @brief plan a relative move by full AB cycles around origin_steps
  * @param ab_off full AB cycles away from homing corner
@@ -883,12 +892,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
     plan_corexy_abgrid_move(origin_steps, { 0, 0 }, fr_mm_s);
 
     // recompute the diagonal distance in mm from the computed origin cycles to the endstop
-    const AxisEnum other_axis = (axis == B_AXIS ? A_AXIS : B_AXIS);
-    const float a = origin[A_AXIS] * phase_cycle_steps(other_axis);
-    const float b = origin[B_AXIS] * phase_cycle_steps(axis);
-    const float step_to_mm = planner.mm_per_step[axis] / std::numbers::sqrt2_v<float>;
-    distance[A_AXIS] = (a + b) * step_to_mm;
-    distance[B_AXIS] = CORESIGN(a - b) * step_to_mm;
+    distance = origin_to_distance(axis, origin);
 
     metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"d\" c=%u,d0=%.3f,d1=%.3f",
         axis, internal::cal_id, (double)distance[0], (double)distance[1]);
