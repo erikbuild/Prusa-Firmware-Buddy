@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
+#include <memory>
 #include <optional>
 #include <cerrno>
 #include <sys/stat.h>
 #include <sys/iosupport.h>
+#include <unistd.h>
 
 #include "bsod.h"
 #include "bbf.hpp"
@@ -21,6 +23,9 @@
 #include "semihosting/semihosting.hpp"
 #include "resources/bootstrap.hpp"
 #include "resources/hash.hpp"
+#include "resources/tarball.hpp"
+#include <raii/scope_guard.hpp>
+#include <sha256.h>
 
 #include "fileutils.hpp"
 
@@ -414,13 +419,13 @@ static FILE *open_bbf_over_debugger(Path &path_buffer, const buddy::resources::R
         return nullptr;
     }
 
-    if (is_relevant_bbf_for_bootstrap(bbf, filepath, revision, buddy::bbf::TLVType::RESOURCES_IMAGE_HASH)) {
+    if (is_relevant_bbf_for_bootstrap(bbf, filepath, revision, buddy::bbf::TLVType::RESOURCES_TARBALL_DIGEST)) {
         log_info(Resources, "Found suitable bbf provided by debugger: %s", filepath);
-        bbf_entry = buddy::bbf::TLVType::RESOURCES_IMAGE;
+        bbf_entry = buddy::bbf::TLVType::RESOURCES_TARBALL;
         return bbf;
-    } else if (is_relevant_bbf_for_bootstrap(bbf, filepath, revision, buddy::bbf::TLVType::RESOURCES_BOOTLOADER_IMAGE_HASH)) {
+    } else if (is_relevant_bbf_for_bootstrap(bbf, filepath, revision, buddy::bbf::TLVType::BOOTLOADER_TARBALL_DIGEST)) {
         log_info(Resources, "Found suitable bbf provided by debugger: %s", filepath);
-        bbf_entry = buddy::bbf::TLVType::RESOURCES_BOOTLOADER_IMAGE;
+        bbf_entry = buddy::bbf::TLVType::BOOTLOADER_TARBALL;
         return bbf;
     } else {
         fclose(bbf);
@@ -458,15 +463,15 @@ static bool find_suitable_bbf_file(const buddy::resources::Revision &revision, P
         }
 
         // check if the file contains required resources
-        if (is_relevant_bbf_for_bootstrap(bbf_file.get(), bbf.get(), revision, buddy::bbf::TLVType::RESOURCES_IMAGE_HASH)) {
+        if (is_relevant_bbf_for_bootstrap(bbf_file.get(), bbf.get(), revision, buddy::bbf::TLVType::RESOURCES_TARBALL_DIGEST)) {
             log_info(Resources, "Found suitable bbf for bootstraping: %s", bbf.get());
             bbf_found = true;
-            bbf_entry = buddy::bbf::TLVType::RESOURCES_IMAGE;
+            bbf_entry = buddy::bbf::TLVType::RESOURCES_TARBALL;
             break;
-        } else if (is_relevant_bbf_for_bootstrap(bbf_file.get(), bbf.get(), revision, buddy::bbf::TLVType::RESOURCES_BOOTLOADER_IMAGE_HASH)) {
+        } else if (is_relevant_bbf_for_bootstrap(bbf_file.get(), bbf.get(), revision, buddy::bbf::TLVType::BOOTLOADER_TARBALL_DIGEST)) {
             log_info(Resources, "Found suitable bbf for bootstraping: %s", bbf.get());
             bbf_found = true;
-            bbf_entry = buddy::bbf::TLVType::RESOURCES_BOOTLOADER_IMAGE;
+            bbf_entry = buddy::bbf::TLVType::BOOTLOADER_TARBALL;
             break;
         } else {
             log_info(Resources, "Skipping file: %s (not compatible)", bbf.get());
@@ -482,13 +487,45 @@ static bool find_suitable_bbf_file(const buddy::resources::Revision &revision, P
     return true;
 }
 
+[[nodiscard]] static bool extract_and_hash(int payload_fd, uint32_t length, std::span<uint8_t> tar_buffer, buddy::resources::Hash &out_hash) {
+    buddy::bootstrap_state_set(0, buddy::BootstrapStage::copying_files);
+
+    struct {
+        mbedtls_sha256_context sha;
+        uint32_t length;
+        uint32_t extracted = 0;
+        unsigned last_percent = 0;
+    } state;
+    state.length = length;
+
+    mbedtls_sha256_init(&state.sha);
+    ScopeGuard free_sha = [&] { mbedtls_sha256_free(&state.sha); };
+    mbedtls_sha256_starts_ret(&state.sha, 0);
+
+    const auto on_data = [&state](std::span<const uint8_t> data) {
+        mbedtls_sha256_update_ret(&state.sha, data.data(), data.size());
+
+        state.extracted += data.size();
+        const unsigned percent = state.extracted * 100 / state.length;
+        if (percent != state.last_percent) {
+            buddy::bootstrap_state_set(percent, buddy::BootstrapStage::copying_files);
+            state.last_percent = percent;
+        }
+    };
+    if (!buddy::resources::tarball::extract(payload_fd, length, tar_buffer, on_data)) {
+        return false;
+    }
+
+    mbedtls_sha256_finish_ret(&state.sha, out_hash.data());
+    return true;
+}
+
 static bool do_bootstrap(const buddy::resources::Revision &revision) {
-    BootstrapProgressReporter reporter { BootstrapStage::looking_for_bbf };
     Path source_path("/");
     unique_file_ptr bbf;
-    buddy::bbf::TLVType bbf_entry = buddy::bbf::TLVType::RESOURCES_IMAGE;
+    buddy::bbf::TLVType bbf_entry = buddy::bbf::TLVType::RESOURCES_TARBALL;
 
-    reporter.report(); // initial report
+    bootstrap_state_set(0, BootstrapStage::looking_for_bbf); // initial report
 
     // try to find required BBF on attached USB drive
     if (find_suitable_bbf_file(revision, source_path, bbf_entry)) {
@@ -504,32 +541,23 @@ static bool do_bootstrap(const buddy::resources::Revision &revision) {
         return false;
     }
 
-    reporter.update_stage(BootstrapStage::preparing_bootstrap);
+    bootstrap_state_set(0, BootstrapStage::preparing_bootstrap);
 
     // use a small buffer for the BBF
     setvbuf(bbf.get(), NULL, _IOFBF, 32);
 
-    // mount the filesystem stored in the bbf
-    ScopedFileSystemLittlefsBBF scoped_bbf_mount(bbf.get(), bbf_entry);
-    if (!scoped_bbf_mount.mounted()) {
-        log_info(Resources, "BBF mounting failed");
+    uint32_t length;
+    if (!buddy::bbf::seek_to_tlv_entry(bbf.get(), bbf_entry, length)) {
+        log_error(Resources, "Failed to find payload in BBF");
         return false;
     }
 
-    // calculate stats for better progress reporting
-    ResourcesScanResult scan_result;
-    source_path.set("/bbf");
-    if (!scan_resources_folder(source_path, scan_result)) {
-        log_error(Resources, "Failed to scan the /bbf directory");
-    }
-    log_info(Resources, "To copy: %i files, %i directories, %i bytes",
-        scan_result.files_count, scan_result.directories_count, scan_result.total_size_of_files);
-    reporter.assign_scan_result(scan_result);
-
-    // open the bbf's root dir
-    Directory dir { "/bbf" };
-    if (!dir) {
-        log_warning(Resources, "Failed to open /bbf directory");
+    // Realign the raw fd to the stream's logical position, we are not using stdio
+    // to circumvent the buffering.
+    const int payload_fd = fileno(bbf.get());
+    const long payload_start = ftell(bbf.get());
+    if (payload_start < 0 || lseek(payload_fd, payload_start, SEEK_SET) != payload_start) {
+        log_error(Resources, "Failed to align BBF fd for payload read (errno %i)", errno);
         return false;
     }
 
@@ -541,18 +569,14 @@ static bool do_bootstrap(const buddy::resources::Revision &revision) {
         return false;
     }
 
-    // copy the resources
-    reporter.update_stage(BootstrapStage::copying_files);
-    source_path.set("/bbf");
-    if (!copy_resources_directory(source_path, target_path, reporter)) {
-        log_error(Resources, "Failed to copy resources");
-        return false;
-    }
+    // Larger the buffer, faster the copy, with diminishing returns
+    constexpr size_t tar_buffer_size = 32 * buddy::resources::tarball::block_size;
+    auto tar_buffer = std::make_unique<uint8_t[]>(tar_buffer_size);
 
-    // calculate the hash of the resources we just installed
+    // copy the resources and compute hash
     buddy::resources::Hash current_hash;
-    if (!buddy::resources::calculate_directory_hash(current_hash, "/internal/res")) {
-        log_error(Resources, "Failed to calculate hash of /internal/res directory");
+    if (!extract_and_hash(payload_fd, length, { tar_buffer.get(), tar_buffer_size }, current_hash)) {
+        log_error(Resources, "Failed to copy resources");
         return false;
     }
 
