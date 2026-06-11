@@ -60,6 +60,11 @@ public:
     MI_INFO_HEAD_AMBIENT_TEMPERATURE();
 };
 
+class MI_INFO_NOZZLE_TEMP_UNCOMPENSATED : public MenuItemAutoUpdatingLabel<float> {
+public:
+    MI_INFO_NOZZLE_TEMP_UNCOMPENSATED();
+};
+
 #endif
 
 using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
@@ -98,6 +103,7 @@ using ScreenMenuSensorInfo_ = ScreenMenu<GuiDefaults::MenuFooter,
     #endif
     #if HAS_INDX()
     MI_INFO_HEAD_AMBIENT_TEMPERATURE,
+    MI_INFO_NOZZLE_TEMP_UNCOMPENSATED,
     #endif
     #if HAS_REMOTE_BED()
     MI_INFO_REMOTE_BED_MCU_TEMPERATURE,

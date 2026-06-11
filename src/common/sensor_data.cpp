@@ -161,4 +161,7 @@ float SensorData::head_mcu_temperature() {
 float SensorData::head_ambient_temperature() {
     return buddy::puppies::indx.get_tpis_ambient_temperature();
 }
+float SensorData::nozzle_temp_uncompensated() {
+    return buddy::puppies::indx.get_hotend_temp_uncompensated();
+}
 #endif

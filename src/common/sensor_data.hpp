@@ -56,6 +56,7 @@ public:
 #endif
 #if HAS_INDX()
     static float head_ambient_temperature();
+    static float nozzle_temp_uncompensated();
 #endif
 
 #if HAS_DOOR_SENSOR()

@@ -2,6 +2,7 @@
 #include "screen_menu_sensor_info.hpp"
 
 #include <common/sensor_data.hpp>
+#include <option/has_indx.h>
 #include <screen_move_z.hpp>
 
 #if HAS_DWARF() || HAS_INDX()
@@ -31,6 +32,12 @@ MI_INFO_HEAD_AMBIENT_TEMPERATURE::MI_INFO_HEAD_AMBIENT_TEMPERATURE()
         [](auto) { return SensorData::head_ambient_temperature(); },
     } {}
 
+MI_INFO_NOZZLE_TEMP_UNCOMPENSATED::MI_INFO_NOZZLE_TEMP_UNCOMPENSATED()
+    : MenuItemAutoUpdatingLabel {
+        _("Nozzle Raw Temperature"),
+        standard_print_format::temp_c,
+        [](auto) { return SensorData::nozzle_temp_uncompensated(); },
+    } {}
 #endif
 
 ScreenMenuSensorInfo::ScreenMenuSensorInfo()
