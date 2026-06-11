@@ -2,7 +2,6 @@
 
 #include "indx_tool_offsets_calibration.hpp"
 #include <common/fsm_base_types.hpp>
-#include <gui/auto_layout.hpp>
 #include <guiconfig/GuiDefaults.hpp>
 #include <guiconfig/wizard_config.hpp>
 #include <i18n.h>
@@ -19,6 +18,7 @@ namespace {
 constexpr auto txt_title = N_("Tool Offsets Calibration");
 constexpr auto txt_intro = N_("The printer will calibrate the XY/Z offsets of all tools using the tool offset sensor. This may take several minutes.");
 constexpr auto txt_ensure_nozzles_clean = N_("Make sure all the nozzles are clean, then press Continue.");
+constexpr auto txt_moving_away = N_("Raising Z axis for clearance");
 constexpr auto txt_picking_tool = N_("Picking up tool");
 constexpr auto txt_homing = N_("Homing");
 // %u placeholders are filled with the 1-based current tool and the total tool count.
@@ -57,6 +57,7 @@ private:
 using Frames = FrameDefinitionList<ScreenToolOffsetsCalibration::FrameStorage,
     FrameDefinition<PhaseToolOffsetsCalibration::intro, FramePrompt, PhaseToolOffsetsCalibration::intro, txt_title, txt_intro>,
     FrameDefinition<PhaseToolOffsetsCalibration::ensure_nozzles_clean, FramePrompt, PhaseToolOffsetsCalibration::ensure_nozzles_clean, txt_title, txt_ensure_nozzles_clean>,
+    FrameDefinition<PhaseToolOffsetsCalibration::moving_away, FrameWait, txt_moving_away>,
     FrameDefinition<PhaseToolOffsetsCalibration::picking_tool, FrameWait, txt_picking_tool>,
     FrameDefinition<PhaseToolOffsetsCalibration::homing, FrameWait, txt_homing>,
     FrameDefinition<PhaseToolOffsetsCalibration::calibrating, FrameCalibratingProgress, PhaseToolOffsetsCalibration::calibrating, txt_title, txt_calibrating_progress>,

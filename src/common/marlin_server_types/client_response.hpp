@@ -523,6 +523,7 @@ constexpr inline ClientFSM client_fsm_from_phase(PhaseNozzleCleanerCalibration) 
 enum class PhaseToolOffsetsCalibration : PhaseUnderlyingType {
     intro,
     ensure_nozzles_clean,
+    moving_away,
     picking_tool,
     homing,
     calibrating,
@@ -853,6 +854,7 @@ inline constexpr EnumArray<PhaseNozzleCleanerCalibration, PhaseResponses, CountP
 inline constexpr EnumArray<PhaseToolOffsetsCalibration, PhaseResponses, CountPhases<PhaseToolOffsetsCalibration>()> tool_offsets_calibration_responses {
     { PhaseToolOffsetsCalibration::intro, { Response::Continue, Response::Abort } },
     { PhaseToolOffsetsCalibration::ensure_nozzles_clean, { Response::Continue, Response::Abort } },
+    { PhaseToolOffsetsCalibration::moving_away, {} },
     { PhaseToolOffsetsCalibration::picking_tool, {} },
     { PhaseToolOffsetsCalibration::homing, {} },
     { PhaseToolOffsetsCalibration::calibrating, { Response::Abort } },

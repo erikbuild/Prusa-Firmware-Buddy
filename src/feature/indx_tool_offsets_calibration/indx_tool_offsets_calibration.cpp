@@ -1,19 +1,15 @@
 #include "indx_tool_offsets_calibration.hpp"
 
-#include <bsod/bsod.h>
 #include <client_response.hpp>
 #include <common/fsm_base_types.hpp>
+#include <common/mapi/calibration_preamble.hpp>
 #include <common/selftest_result.hpp>
 #include <config_store/store_instance.hpp>
 #include <feature/tool_offset_calibration/tool_offset_calibration.hpp>
-#include <gcode/gcode.h>
 #include <logging/log.hpp>
 #include <marlin_server.hpp>
-#include <module/motion.h>
-#include <module/prusa/toolchanger.h>
 #include <selftest/selftest_invocation.hpp>
 #include <test_result.hpp>
-#include <utils/variant_utils.hpp>
 
 LOG_COMPONENT_DEF(ToolOffsetsCalibration, logging::Severity::info);
 
@@ -76,16 +72,22 @@ namespace {
                 return Result::aborted;
             }
 
-            // Pick any available tool or just home XY (tool_offset_calibration::run drives Z
-            // itself, so we don't pre-lower Z).
-            if (std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
-                fsm_change(PhaseToolOffsetsCalibration::picking_tool);
-                if (!prusa_toolchanger.pick_any_tool(tool_return_t::no_return, {})) {
-                    return Result::aborted;
-                }
-            } else {
-                fsm_change(PhaseToolOffsetsCalibration::homing);
-                GcodeSuite::G28_no_parser(true, true, false, { .precise = false });
+            // Make the bed provably safe (it may be at an unknown height with Z unhomed) and
+            // get a tool picked / XY homed before any moves over the bed.
+            if (!mapi::calibration_preamble(mapi::CalibrationPreambleToolPolicy::ensure_picked, [this](mapi::CalibrationPreambleStep step) {
+                    switch (step) {
+                    case mapi::CalibrationPreambleStep::moving_away:
+                        fsm_change(PhaseToolOffsetsCalibration::moving_away);
+                        break;
+                    case mapi::CalibrationPreambleStep::picking_tool:
+                        fsm_change(PhaseToolOffsetsCalibration::picking_tool);
+                        break;
+                    case mapi::CalibrationPreambleStep::homing:
+                        fsm_change(PhaseToolOffsetsCalibration::homing);
+                        break;
+                    }
+                })) {
+                return Result::aborted;
             }
 
             // Run the actual tool-offset calibration in Calibration context (no auto-clean, no
