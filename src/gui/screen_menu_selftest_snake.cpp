@@ -244,6 +244,13 @@ bool are_previous_completed(Action action) {
 
 #endif
 
+PhysicalToolIndex get_first_enabled_tool() {
+    for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
+        return tool;
+    }
+    return PhysicalToolIndex::from_raw(0);
+}
+
 PhysicalToolIndex get_last_enabled_tool() {
     auto result = PhysicalToolIndex::from_raw(0);
     for (auto tool : PhysicalToolIndex::all().skip_all_disabled()) {
@@ -460,7 +467,7 @@ void continue_snake() {
     if (!is_multitool()
         || !has_submenu(snake_config.last_action)
         || snake_config.last_tool == get_last_enabled_tool()) { // singletool or wasn't submenu or was last in a submenu
-        do_snake(get_next_action(snake_config.last_action), PhysicalToolIndex::from_raw(0));
+        do_snake(get_next_action(snake_config.last_action), get_first_enabled_tool());
     } else { // current submenu not yet finished
         do_snake(snake_config.last_action, get_next_tool(snake_config.last_tool));
     }
@@ -567,7 +574,7 @@ void I_MI_STS::click(IWindowMenu &) {
         return;
     }
     if (!has_submenu(action) || !is_multitool()) {
-        do_snake(action, PhysicalToolIndex::from_raw(0));
+        do_snake(action, get_first_enabled_tool());
     } else {
         Screens::Access()->Open(ScreenFactory::ScreenWithArg<ScreenSelftestSubmenu>(action));
     }
@@ -667,7 +674,7 @@ void ScreenMenuSTSWizard::windowEvent(window_t *sender, GUI_event_t event, void 
         // Now show always, bed heater selftest can fail if there is no sheet on the bed
         MsgBoxInfo(_("Before you continue, make sure the print sheet is installed on the heatbed."), Responses_Ok);
 
-        do_snake(get_first_action(), PhysicalToolIndex::from_raw(0));
+        do_snake(get_first_action(), get_first_enabled_tool());
         snake_config.auto_continue = SnakeConfig::AutoContinue::all;
         return;
     }
