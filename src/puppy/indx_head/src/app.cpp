@@ -61,6 +61,7 @@ std::atomic<bool> selftest_mode = false;
 /// Integrates (hotend duty cycle 0-1)^2 over time - in us units
 /// Overflows are expected
 std::atomic<uint32_t> hotend_duty_cycle_sq_integral_us { 0 };
+std::atomic<uint32_t> hotend_energy_consumed_uJ { 0 };
 
 int16_t validate_board_temperature() {
     constexpr int16_t min_board_temp_degC = 10;
@@ -192,6 +193,22 @@ void run() {
             // Integrate duty cycle
             hotend_duty_cycle_sq_integral_us += uint32_t(inductionHeater.current_duty_cycle_sq() * induction_control_dt_us);
 
+            // Integrate V × I power [mW × ms]
+            // All integer arithmetic, no 64-bit division (expensive on Cortex-M0)
+            {
+                const uint32_t voltage_mV = hal::adc::get_input_voltage_mV();
+                const uint32_t current_mA = hal::adc::get_heater_current_mA();
+
+                // max ~75000, fits uint32_t
+                const uint32_t power_mW = voltage_mV * current_mA / 1000;
+
+                // To avoid truncation of dt_us/1000 (3333→3), accumulate sub-ms remainder
+                static uint32_t power_mW_us_accum = 0;
+                power_mW_us_accum += power_mW * static_cast<uint32_t>(induction_control_dt_us);
+                hotend_energy_consumed_uJ += power_mW_us_accum / 1000;
+                power_mW_us_accum %= 1000;
+            }
+
             // Just to give scope what numbers we're dealing with
             // Duty cycle is 0-1, control_delay_us is in thousands - so when we cast to uint32_t after the duty cycle multiplication, we should get reasonably precise values
             static_assert(control_delay_us >= 1000 && control_delay_us <= 10000);
@@ -234,6 +251,10 @@ int16_t get_hotend_temp_raw_c100_dt_s() {
 
 uint32_t get_hotend_duty_cycle_sq_integral_us() {
     return hotend_duty_cycle_sq_integral_us.load();
+}
+
+uint32_t get_hotend_energy_consumed_uJ() {
+    return hotend_energy_consumed_uJ.load();
 }
 
 int16_t get_tpis_ambient_temp_c100() {

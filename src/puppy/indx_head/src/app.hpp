@@ -22,6 +22,10 @@ int16_t get_hotend_temp_raw_c100_dt_s();
 /// Expect overflows. Since duty cycle is 0-1, overflows at most once in 4294967295/1000000 = 4300 s
 uint32_t get_hotend_duty_cycle_sq_integral_us();
 
+/// In mW * ms. Integral of measured V × I over time.
+/// Expect overflows. At 60W, overflows once in 4294967295 / 60000 / 1000000 ≈ 71 s
+uint32_t get_hotend_energy_consumed_uJ();
+
 /// In 1/100 °C
 int16_t get_tpis_ambient_temp_c100();
 
