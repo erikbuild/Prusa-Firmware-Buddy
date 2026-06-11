@@ -433,12 +433,10 @@ static float travel_accel_distance(const float fr_mm_s) {
  * @param axis Physical axis to measure
  * @param ab_off Expected relative AB cycle offset from origin
  * @param c_dist AB cycle distance from the endstop
- * @param m_dist AB distance from the endstop (mm)
  * @param fr_mm_s Service move feedrate
  * @return True on success
  */
-static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
-    xy_pos_t &c_dist, xy_pos_t &m_dist, const float fr_mm_s) {
+static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, xy_pos_t &c_dist, const float fr_mm_s) {
     // prepare for repeated measurements
     const AxisEnum other_axis = (axis == B_AXIS ? A_AXIS : B_AXIS);
     MeasurementGuard setup_guard(other_axis);
@@ -567,11 +565,13 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off,
     c_dist[0] = a / float(phase_cycle_steps(other_axis));
     c_dist[1] = b / float(phase_cycle_steps(axis));
 
-    m_dist[0] = sum_along(p_dist, MEASURE_PROBE_N, 0) / float(MEASURE_PROBE_N);
-    m_dist[1] = sum_along(p_dist, MEASURE_PROBE_N, 1) / float(MEASURE_PROBE_N);
-
     if (DEBUGGING(LEVELING)) {
         // measured distance and cycle
+        const xy_pos_t m_dist = {
+            sum_along(p_dist, MEASURE_PROBE_N, 0) / float(MEASURE_PROBE_N),
+            sum_along(p_dist, MEASURE_PROBE_N, 1) / float(MEASURE_PROBE_N),
+        };
+
         SERIAL_ECHOLNPAIR("home ", physical_axis_codes[axis], "+ steps 0:", p_steps[0][1], " 1:", p_steps[1][1],
             " cycle A:", c_dist[0], " mm:", m_dist[1]);
         SERIAL_ECHOLNPAIR("home ", physical_axis_codes[axis], "- steps 0:", p_steps[0][0], " 1:", p_steps[1][0],
@@ -622,7 +622,6 @@ static ab_steps_t plan_corexy_abgrid_move(const ab_steps_t &origin_steps, const 
 // Per-grid-point measurement
 struct measure_data {
     xy_pos_t c_dist; ///< absolute AB cycle coordinate of the probed cell
-    xy_pos_t m_dist; ///< measured AB distance from the endstop (mm)
 };
 
 /**
@@ -808,7 +807,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
                 return false;
             }
 
-            if (!measure_phase_cycles(axis, seq, data.c_dist, data.m_dist, fr_mm_s)) {
+            if (!measure_phase_cycles(axis, seq, data.c_dist, fr_mm_s)) {
                 return false;
             }
             idle(true); // allow some time to flush the metrics buffer
@@ -1240,8 +1239,8 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
         internal::refine_id, (double)calibrated_origin_xy[0], (double)calibrated_origin_xy[1]);
 
     // measure from current origin
-    xy_pos_t c_dist, _;
-    if (!measure_phase_cycles(measured_axis, { 0, 0 }, c_dist, _, fr_mm_s)) {
+    xy_pos_t c_dist;
+    if (!measure_phase_cycles(measured_axis, { 0, 0 }, c_dist, fr_mm_s)) {
         return false;
     }
 
@@ -1262,7 +1261,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
         return false;
     }
     xy_pos_t v_c_dist;
-    if (!measure_phase_cycles(measured_axis, v_ab_off, v_c_dist, _, fr_mm_s)) {
+    if (!measure_phase_cycles(measured_axis, v_ab_off, v_c_dist, fr_mm_s)) {
         return false;
     }
 
