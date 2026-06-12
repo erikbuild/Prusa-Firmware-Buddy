@@ -29,7 +29,7 @@ std::atomic<int16_t> hotend_temp_raw_c100_dt_s = 0;
 
 constexpr float max_nozzle_temp = 330.f;
 constexpr float min_nozzle_temp = 5.f;
-constexpr float max_tpis_ambient_temp = 85.f;
+constexpr float max_tpis_ambient_temp = 100.f;
 constexpr float min_tpis_ambient_temp = 10.f;
 constexpr uint32_t invalid_nozzle_temp_timeout_ms = 1000 * 2;
 /// Target nozzle temperature in DegC
