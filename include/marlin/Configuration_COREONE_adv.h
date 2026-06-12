@@ -242,7 +242,11 @@
 // Default stepper release if idle. Set to 0 to deactivate.
 // Steppers will shut down DEFAULT_STEPPER_DEACTIVE_TIME seconds after the last move when DISABLE_INACTIVE_? is true.
 // Time can be set by M18 and M84.
-#define DEFAULT_STEPPER_DEACTIVE_TIME 120
+#if HAS_INDX()
+  #define DEFAULT_STEPPER_DEACTIVE_TIME 600 // 10 min on INDX
+#else
+  #define DEFAULT_STEPPER_DEACTIVE_TIME 120
+#endif
 #define DISABLE_INACTIVE_X true
 #define DISABLE_INACTIVE_Y true
 #define DISABLE_INACTIVE_Z false
