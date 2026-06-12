@@ -56,14 +56,14 @@ struct PhaseGridTag {};
 using ab_grid_t = XYval<int32_t, PhaseGridTag>;
 
 // Electrical phase alignment position: set to 45' for maximum two-phase current holding torque
-static constexpr int16_t ZERO_PHASE_MSCNT_ANGLE = 1024 / 8;
+static constexpr int16_t zero_phase_mscnt_angle = 1024 / 8;
 
 // Number of measurement probes to average
-static constexpr int16_t MEASURE_PROBE_N = 2;
+static constexpr int16_t measure_probe_n = 2;
 
 // Scramble the calibration probing sequence to improve belt redistribution when estimating the
 // centroid: units are full AB cycles away from homing corner as given to plan_corexy_abgrid_move()
-static constexpr ab_grid_t MEASURE_POINT_SEQUENCE[] = {
+static constexpr ab_grid_t measure_point_sequence[] = {
     { 1, -3 },
     { -3, -1 },
     { 3, 1 },
@@ -73,15 +73,15 @@ static constexpr ab_grid_t MEASURE_POINT_SEQUENCE[] = {
 
 // Instability phase threshold: total width of the invalid period close to the roundoff threshold
 // when calculating the resulting grid value.
-static constexpr float UNSTABLE_PHASE_THRESHOLD = 1. / 4;
+static constexpr float unstable_phase_threshold = 1. / 4;
 
 // Origin estimate sweep resolution: grid-offset samples per axis
-static constexpr int ORIGIN_SWEEP_RES = 128;
+static constexpr int origin_sweep_res = 128;
 
 // Per-point minimum 95% cycle measurement convergence and maximum pass count
-static constexpr float ORIGIN_MIN_CYCLE_CI = 0.5f; // half a cycle width
-static constexpr uint16_t ORIGIN_MAX_PASSES = 10;
-static_assert(ORIGIN_MAX_PASSES >= 2, "CI convergence needs at least 2 samples per point");
+static constexpr float origin_min_cycle_ci = 0.5f; // half a cycle width
+static constexpr uint16_t origin_max_passes = 10;
+static_assert(origin_max_passes >= 2, "CI convergence needs at least 2 samples per point");
 
 namespace internal {
     bool home_unstable = false; ///< Last homing stability state
@@ -177,7 +177,7 @@ static int16_t phase_backoff_steps(const AxisEnum axis) {
     }
 
     const int16_t phaseCurrent = axis_mscnt(axis); // The TMC µsteps(phase) count of the current position
-    const int16_t phaseZero = (phaseCurrent + ZERO_PHASE_MSCNT_ANGLE) % 1024; // zero phase
+    const int16_t phaseZero = (phaseCurrent + zero_phase_mscnt_angle) % 1024; // zero phase
     const int16_t phaseDelta = ((stepperCountDir < 0) == (effectorBackoutDir < 0) ? phaseZero : 1024 - phaseZero);
     const int16_t phasePerStep = phase_per_ustep(axis);
     return int16_t((phaseDelta + phasePerStep / 2) / phasePerStep) * effectorBackoutDir;
@@ -185,7 +185,7 @@ static int16_t phase_backoff_steps(const AxisEnum axis) {
 
 static bool phase_aligned(AxisEnum axis) {
     const int16_t phase_cur = axis_mscnt(axis);
-    const int16_t phase_zero = (phase_cur + ZERO_PHASE_MSCNT_ANGLE) % 1024;
+    const int16_t phase_zero = (phase_cur + zero_phase_mscnt_angle) % 1024;
     const int16_t ustep_max = phase_per_ustep(axis) / 2;
     return (phase_zero <= ustep_max || phase_zero >= (1024 - ustep_max));
 }
@@ -479,13 +479,13 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, x
         * std::numbers::sqrt2_v<float> / planner.mm_per_step[axis]);
 
     // keep the average of at least n values having less than max_err of separation between each
-    ab_steps_t p_steps[MEASURE_PROBE_N];
-    xy_pos_t p_dist[MEASURE_PROBE_N];
+    ab_steps_t p_steps[measure_probe_n];
+    xy_pos_t p_dist[measure_probe_n];
 
     // keep sampling *while* cycling on retries (we don't know which probes are good yet)
     uint8_t retries = 0;
     for (uint8_t idx = 0; retries <= XY_HOMING_ORIGIN_BUMP_RETRIES;) {
-        const uint8_t slot = idx % MEASURE_PROBE_N;
+        const uint8_t slot = idx % measure_probe_n;
 
         // measure distance B-/B+
         for (uint8_t dir = 0; dir != 2;) {
@@ -540,15 +540,15 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, x
 
         // check for maximum probe difference in the window
         float p_diff[2] = { 0, 0 };
-        if (idx >= MEASURE_PROBE_N && MEASURE_PROBE_N > 1) {
-            for (uint8_t n = 0; n < MEASURE_PROBE_N - 1; ++n) {
+        if (idx >= measure_probe_n && measure_probe_n > 1) {
+            for (uint8_t n = 0; n < measure_probe_n - 1; ++n) {
                 LOOP_XY(i) {
                     p_diff[i] = max(p_diff[i], abs(p_dist[n][i] - p_dist[n + 1][i]));
                 }
             }
         }
 
-        if (idx >= MEASURE_PROBE_N) {
+        if (idx >= measure_probe_n) {
             if (p_diff[0] < measure_bump_max_err_mm && p_diff[1] < measure_bump_max_err_mm) {
                 break;
             }
@@ -563,8 +563,8 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, x
     }
 
     // calculate the absolute cycle coordinates
-    const float d1 = sum_along(p_steps, MEASURE_PROBE_N, 0) / float(MEASURE_PROBE_N);
-    const float d2 = sum_along(p_steps, MEASURE_PROBE_N, 1) / float(MEASURE_PROBE_N);
+    const float d1 = sum_along(p_steps, measure_probe_n, 0) / float(measure_probe_n);
+    const float d2 = sum_along(p_steps, measure_probe_n, 1) / float(measure_probe_n);
     const float d = d1 + d2;
     const float a = d / 2.f;
     const float b = d1 - a;
@@ -575,8 +575,8 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, x
     if (DEBUGGING(LEVELING)) {
         // measured distance and cycle
         const xy_pos_t m_dist = {
-            sum_along(p_dist, MEASURE_PROBE_N, 0) / float(MEASURE_PROBE_N),
-            sum_along(p_dist, MEASURE_PROBE_N, 1) / float(MEASURE_PROBE_N),
+            sum_along(p_dist, measure_probe_n, 0) / float(measure_probe_n),
+            sum_along(p_dist, measure_probe_n, 1) / float(measure_probe_n),
         };
 
         SERIAL_ECHOLNPAIR("home ", physical_axis_codes[axis], "+ steps 0:", p_steps[0][1], " 1:", p_steps[1][1],
@@ -591,7 +591,7 @@ static bool measure_phase_cycles(const AxisEnum axis, const ab_grid_t &ab_off, x
 static bool point_is_unstable(const xy_pos_t &c_dist, const xy_pos_t &origin) {
     LOOP_XY(axis) {
         // The threshold is a total width, but we're comparing against one-sided distances here
-        if (abs(fmod(abs(c_dist[axis] - origin[axis]), 1.f) - 0.5f) < UNSTABLE_PHASE_THRESHOLD / 2) {
+        if (abs(fmod(abs(c_dist[axis] - origin[axis]), 1.f) - 0.5f) < unstable_phase_threshold / 2) {
             return true;
         }
     }
@@ -743,7 +743,7 @@ static float point_cycle_ci(const measure_data *points, size_t passes, size_t id
  * @return absolute origin
  *
  * The fractional cycle coordinate is modular (the phase grid repeats every cycle). Sweep the grid
- * offset at 1/ORIGIN_SWEEP_RES and keep the offset minimizing the summed squared 2D distance from
+ * offset at 1/origin_sweep_res and keep the offset minimizing the summed squared 2D distance from
  * each point to its nearest node in order to penalize outliers.
  **/
 template <size_t N>
@@ -762,10 +762,10 @@ static xy_pos_t estimate_origin(const measure_data (&points)[N], size_t count, c
 
     float best_cost = INFINITY;
     xy_pos_t best_delta = { 0.f, 0.f };
-    for (int ia = 0; ia != ORIGIN_SWEEP_RES; ++ia) {
-        const float da = float(ia) / ORIGIN_SWEEP_RES;
-        for (int ib = 0; ib != ORIGIN_SWEEP_RES; ++ib) {
-            const float db = float(ib) / ORIGIN_SWEEP_RES;
+    for (int ia = 0; ia != origin_sweep_res; ++ia) {
+        const float da = float(ia) / origin_sweep_res;
+        for (int ib = 0; ib != origin_sweep_res; ++ib) {
+            const float db = float(ib) / origin_sweep_res;
             float cost = 0.f;
             for (size_t i = 0; i != count; ++i) {
                 // squared distance to the nearest node, per axis in range [0, 0.5]
@@ -794,17 +794,17 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
     xy_pos_t &origin, xy_pos_t &distance, const float fr_mm_s) {
     // to conserve stack space, store all measured points in a flat array and recompute derived
     // values on the fly at each pass (those are cheap to compute)
-    constexpr size_t N = std::size(MEASURE_POINT_SEQUENCE);
-    measure_data measure[N * ORIGIN_MAX_PASSES];
+    constexpr size_t N = std::size(measure_point_sequence);
+    measure_data measure[N * origin_max_passes];
 
-    // Re-measure the whole grid until every point is known to be within ORIGIN_MIN_CYCLE_CI.
-    // Abort immediately during skips and/or if we cannot converge within ORIGIN_MAX_PASSES.
+    // Re-measure the whole grid until every point is known to be within `origin_min_cycle_ci`.
+    // Abort immediately during skips and/or if we cannot converge within `origin_max_passes`.
     bool converged = false;
     size_t passes = 0;
-    while (!converged && passes < ORIGIN_MAX_PASSES) {
+    while (!converged && passes < origin_max_passes) {
         // cycle through grid points and measure one sample per point
         for (size_t i = 0; i != N; ++i) {
-            const auto &seq = MEASURE_POINT_SEQUENCE[i];
+            const auto &seq = measure_point_sequence[i];
             auto &data = measure[passes * N + i];
 
             plan_corexy_abgrid_move(origin_steps, seq, fr_mm_s);
@@ -823,7 +823,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
             // verify if we did converge on all points
             converged = true;
             for (size_t i = 0; i != N; ++i) {
-                const auto &seq = MEASURE_POINT_SEQUENCE[i];
+                const auto &seq = measure_point_sequence[i];
 
                 const xy_pos_t c_range = point_cycle_range<N>(measure, passes, i);
                 if (c_range[A_AXIS] >= 1 || c_range[B_AXIS] >= 1) {
@@ -834,7 +834,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
                 }
 
                 const float c_ci = point_cycle_ci<N>(measure, passes, i);
-                if (c_ci >= ORIGIN_MIN_CYCLE_CI) {
+                if (c_ci >= origin_min_cycle_ci) {
                     SERIAL_ECHOLNPAIR("home calibration point (", seq[A_AXIS], ",", seq[B_AXIS],
                         ") not converged after ", passes, " passes");
                     converged = false;
@@ -851,7 +851,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
     }
 
     const size_t count = passes * N;
-    origin = estimate_origin(measure, count, MEASURE_POINT_SEQUENCE[0]);
+    origin = estimate_origin(measure, count, measure_point_sequence[0]);
 
     metric_record_custom(&metric_phxy_orig, ",a=%u,t=\"o\" c=%u,o0=%.3f,o1=%.3f,p=%u",
         axis, internal::cal_id, (double)origin[0], (double)origin[1], passes);
@@ -859,7 +859,7 @@ static bool measure_origin_multipoint(AxisEnum axis, const ab_steps_t &origin_st
     // verify every individual sample against the computed centroid
     const ab_grid_t o_int = { int32_t(roundf(origin[A_AXIS])), int32_t(roundf(origin[B_AXIS])) };
     for (size_t k = 0; k != count; ++k) {
-        const auto &seq = MEASURE_POINT_SEQUENCE[k % N];
+        const auto &seq = measure_point_sequence[k % N];
         auto &data = measure[k];
 
         const ab_grid_t c_ab = cdist_translate(data.c_dist, origin);
@@ -1221,7 +1221,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
             bool valid = true;
             LOOP_XY(axis) {
                 const float diff = origin[axis] - calibrated_origin.origin[axis];
-                if (fabsf(diff - roundf(diff)) >= UNSTABLE_PHASE_THRESHOLD) {
+                if (fabsf(diff - roundf(diff)) >= unstable_phase_threshold) {
                     // phase moved too much on either axis: ignore previous calibration entirely
                     valid = false;
                     break;
@@ -1232,7 +1232,7 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
                 bool anchor = false;
                 LOOP_XY(axis) {
                     const float frac = origin[axis] - floorf(origin[axis]);
-                    if (fabsf(frac - 0.5f) < UNSTABLE_PHASE_THRESHOLD / 2) {
+                    if (fabsf(frac - 0.5f) < unstable_phase_threshold / 2) {
                         // reuse the previous phase, keep the newly measured integer cycle
                         const float diff = roundf(origin[axis] - calibrated_origin.origin[axis]);
                         o_shift[axis] = static_cast<int32_t>(diff);
