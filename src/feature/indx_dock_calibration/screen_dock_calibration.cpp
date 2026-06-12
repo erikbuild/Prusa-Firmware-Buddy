@@ -24,6 +24,7 @@ constexpr auto txt_intro = N_("The printer will guide you through calibrating th
 constexpr auto txt_remove_tool = N_("A tool is currently detected on the head.\n\nPlease remove the tool manually and try again.");
 constexpr auto txt_homing = N_("Homing XY axes");
 constexpr auto txt_moving_away = N_("Raising Z axis for clearance");
+constexpr auto txt_parking_tool = N_("Parking tool");
 constexpr auto txt_lock_position = N_("Motors are now locked.\n\nEnsure your hands are outside the printer enclosure.\n\nVerify the head is in the correct position, then press Continue to start measuring.");
 constexpr auto txt_measuring = N_("Measuring dock position\n\nDo not touch the printer.");
 constexpr auto txt_success = N_("Dock positions have been successfully calibrated and saved.");
@@ -128,6 +129,7 @@ using Frames = FrameDefinitionList<ScreenDockCalibration::FrameStorage,
     FrameDefinition<PhaseDockCalibration::select_docks, FrameSelectDocks>,
     FrameDefinition<PhaseDockCalibration::homing, FrameWait, txt_homing>,
     FrameDefinition<PhaseDockCalibration::moving_away, FrameWait, txt_moving_away>,
+    FrameDefinition<PhaseDockCalibration::parking_tool, FrameWait, txt_parking_tool>,
     FrameDefinition<PhaseDockCalibration::tighten_silver_screws, FrameScrewInstructions, PhaseDockCalibration::tighten_silver_screws, txt_title_tighten_silver_screws, txt_tighten_silver_screws, img_tighten_silver_screws>,
     FrameDefinition<PhaseDockCalibration::ask_position_dock, FrameDockPosition, PhaseDockCalibration::ask_position_dock, txt_intro /* unused, overridden by update */>,
     FrameDefinition<PhaseDockCalibration::lock_position, FrameTextPrompt, PhaseDockCalibration::lock_position, txt_lock_position>,

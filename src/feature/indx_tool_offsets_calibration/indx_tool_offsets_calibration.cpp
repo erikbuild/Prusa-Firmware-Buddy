@@ -85,6 +85,8 @@ namespace {
                     case mapi::CalibrationPreambleStep::homing:
                         fsm_change(PhaseToolOffsetsCalibration::homing);
                         break;
+                    case mapi::CalibrationPreambleStep::parking_tool:
+                        bsod_unreachable();
                     }
                 })) {
                 return Result::aborted;

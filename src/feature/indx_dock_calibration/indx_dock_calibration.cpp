@@ -21,7 +21,6 @@
 #include <logging/log.hpp>
 #include <config_store/store_instance.hpp>
 #include <common/selftest_result.hpp>
-#include <raii/scope_guard.hpp>
 #include <selftest/selftest_invocation.hpp>
 
 LOG_COMPONENT_DEF(DockCalibration, logging::Severity::info);
@@ -53,13 +52,6 @@ static fsm::PhaseData serialize_dock_data(PhysicalToolIndex tool) {
 class DockCalibrationWizard {
 public:
     void run() {
-        // Disable nozzle check for the duration of calibration (RAII restores on exit)
-        const bool nozzle_check_was_disabled = prusa_toolchanger.is_nozzle_check_disabled();
-        prusa_toolchanger.set_nozzle_check_disabled(true);
-        ScopeGuard nozzle_check_guard([nozzle_check_was_disabled] {
-            prusa_toolchanger.set_nozzle_check_disabled(nozzle_check_was_disabled);
-        });
-
         const auto result = run_inner();
 
         // Store calibration result (abort leaves it unchanged)
@@ -111,8 +103,12 @@ private:
             return Result::aborted;
         }
 
-        // Check if nozzle is present — ask user to remove tool
-        if (auto nozzle = buddy::puppies::indx.get_nozzle_present(); nozzle.has_value() && nozzle.value()) {
+        // A picked tool gets parked automatically during the preamble; when that's not
+        // possible (unknown tool or uncalibrated dock), ask the user to remove it manually
+        const auto picked_tool = PhysicalToolIndex::currently_selected_opt();
+        const bool nozzle_present = buddy::puppies::indx.get_nozzle_present().value_or(false);
+        const bool can_auto_park = picked_tool.has_value() && picked_tool->is_enabled();
+        if ((picked_tool.has_value() || nozzle_present) && !can_auto_park) {
             fsm_change(PhaseDockCalibration::remove_tool);
             if (wait_for_response(PhaseDockCalibration::remove_tool) == Response::Abort) {
                 return Result::aborted;
@@ -166,11 +162,29 @@ private:
             }
         }
 
-        mapi::calibration_preamble(mapi::CalibrationPreambleToolPolicy::keep_as_is, [&](mapi::CalibrationPreambleStep step) {
-            fsm_change(step == mapi::CalibrationPreambleStep::moving_away
-                    ? PhaseDockCalibration::moving_away
-                    : PhaseDockCalibration::homing);
-        });
+        // Park the picked tool (if any) so the head is empty for calibration
+        if (!mapi::calibration_preamble(mapi::CalibrationPreambleToolPolicy::ensure_parked, [&](mapi::CalibrationPreambleStep step) {
+                switch (step) {
+                case mapi::CalibrationPreambleStep::moving_away:
+                    fsm_change(PhaseDockCalibration::moving_away);
+                    break;
+                case mapi::CalibrationPreambleStep::parking_tool:
+                    fsm_change(PhaseDockCalibration::parking_tool);
+                    break;
+                case mapi::CalibrationPreambleStep::homing:
+                    fsm_change(PhaseDockCalibration::homing);
+                    break;
+                case mapi::CalibrationPreambleStep::picking_tool:
+                    bsod_unreachable();
+                }
+            })) {
+            // Park failed — the tool is still on the head; ask the user to remove it manually
+            fsm_change(PhaseDockCalibration::remove_tool);
+            if (wait_for_response(PhaseDockCalibration::remove_tool) == Response::Abort) {
+                return Result::aborted;
+            }
+            bsod_unreachable();
+        }
 
         // Ensure head locking mechanism is open (no tool present)
         prusa_toolchanger.ensure_head_open();

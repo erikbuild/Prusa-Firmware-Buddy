@@ -20,13 +20,21 @@ bool calibration_preamble(CalibrationPreambleToolPolicy tool_policy,
     // tool picking, so XY moves can't drag the nozzle across the bed
     do_homing_move(AxisEnum::Z_AXIS, Z_MAX_POS, HOMING_FEEDRATE_INVERTED_Z);
 
-    if (tool_policy == CalibrationPreambleToolPolicy::ensure_picked && std::holds_alternative<NoTool>(PhysicalToolIndex::currently_selected())) {
+    const auto current_tool = PhysicalToolIndex::currently_selected();
+    if (tool_policy == CalibrationPreambleToolPolicy::ensure_picked && std::holds_alternative<NoTool>(current_tool)) {
         on_step(CalibrationPreambleStep::picking_tool);
         // Z is already safe at the bottom: skip the Z lift and don't return Z anywhere
         if (!prusa_toolchanger.pick_any_tool(tool_return_t::no_return, {}, tool_change_lift_t::no_lift, false)) {
             return false;
         }
         // pick_any_tool homes XY precisely
+    } else if (tool_policy == CalibrationPreambleToolPolicy::ensure_parked && std::holds_alternative<PhysicalToolIndex>(current_tool)) {
+        on_step(CalibrationPreambleStep::parking_tool);
+        // Z is already safe at the bottom: skip the Z lift and don't return Z anywhere
+        if (!prusa_toolchanger.tool_change(NoTool {}, tool_return_t::no_return, {}, tool_change_lift_t::no_lift, false)) {
+            return false;
+        }
+        // tool_change homes XY precisely before parking
     } else {
         on_step(CalibrationPreambleStep::homing);
         // z_raise=0: Z is already safely at the bottom from the homing move above
