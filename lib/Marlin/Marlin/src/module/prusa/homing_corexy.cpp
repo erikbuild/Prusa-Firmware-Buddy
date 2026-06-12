@@ -1239,8 +1239,11 @@ bool corexy_home_refine(float fr_mm_s, CoreXYCalibrationMode mode) {
                 }
                 if (anchor) {
                     // report the shift and update to the new distance
-                    SERIAL_ECHOLNPAIR("home origin hysteresis shift A:", o_shift[A_AXIS], " B:", o_shift[B_AXIS]);
                     distance = origin_to_distance(measured_axis, origin);
+
+                    SERIAL_ECHOLNPAIR("home origin hysteresis shift A:", o_shift[A_AXIS], " B:", o_shift[B_AXIS]);
+                    metric_record_custom(&metric_phxy_home, ",t=\"s\" h=%u,s0=%ld,s1=%ld",
+                        internal::refine_id, (long)o_shift[0], (long)o_shift[1]);
                 }
             }
         }
