@@ -765,6 +765,14 @@ set_feature_for_printers(HAS_INDX "COREONE_INDX" "COREONEL_INDX")
 set_feature_for_printers(HAS_INDX_HEAD "COREONE_INDX" "COREONEL_INDX")
 set_feature_for_printers(HAS_MOTOR_CURRENT_PROFILES "COREONE_INDX" "COREONEL_INDX")
 
+# Wastebin fill-tracking (persistent pellet counter + pre-print / mid-print overfill warnings). Only
+# INDX printers that actually have a wastebin (CoreOne / CoreOneL INDX).
+if(HAS_WASTEBIN AND HAS_INDX)
+  define_boolean_option(HAS_WASTEBIN_FILL_TRACKING yes)
+else()
+  define_boolean_option(HAS_WASTEBIN_FILL_TRACKING no)
+endif()
+
 if(HAS_TOOLCHANGER OR HAS_MMU2)
   define_boolean_option(HAS_TOOL_MAPPING yes)
   define_boolean_option(HAS_SPOOL_JOIN yes)
