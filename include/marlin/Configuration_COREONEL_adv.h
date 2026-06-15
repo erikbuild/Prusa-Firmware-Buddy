@@ -205,6 +205,14 @@
     #define AVOID_NOZZLE_CLEANER_Y_FIRST true
 #endif
 
+#include <option/has_wastebin_fill_tracking.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    // Pellet capacity of the nozzle-cleaner wastebin, per installed cleaner type (runtime-selectable).
+    // PLACEHOLDER values - real numbers TBD.
+    #define NOZZLE_CLEANER_WASTEBIN_CAPACITY_BASIC 3000 // standard cleaner
+    #define NOZZLE_CLEANER_WASTEBIN_CAPACITY_EXTENDED 150000 // extended (high-capacity) cleaner
+#endif
+
 /**
  * Z Steppers Auto-Alignment
  * Add the G34 command to align multiple Z steppers using a bed probe.

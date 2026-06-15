@@ -56,6 +56,7 @@
 #include <option/has_heatbed_screws_during_transport.h>
 #include <option/has_anfc.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <option/has_side_fsensor.h>
 #include <option/has_side_fsensor_invertible.h>
 #include <common/extended_printer_type.hpp>
@@ -641,6 +642,16 @@ struct CurrentStore
     StoreItem<uint32_t, 0, ItemFlag::stats, journal::hash("Last MMU maintenance")> mmu_last_maintenance;
     // A "leaky bucket" for MMU failures.
     StoreItem<uint16_t, 0, ItemFlag::stats, journal::hash("MMU fail bucket")> mmu_fail_bucket;
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    /// Number of pellets ejected into the INDX nozzle-cleaner wastebin since it was last emptied.
+    /// Printer state, not a stat: it resets on user input (emptying) and drives the overfill checks.
+    StoreItem<uint32_t, 0, ItemFlag::printer_state, journal::hash("Nozzle cleaner pellets")> nozzle_cleaner_pellets;
+    /// Whether reaching the wastebin capacity mid-print auto-pauses the print (true) or just warns (false).
+    StoreItem<bool, true, ItemFlag::features, journal::hash("Nozzle cleaner autopause on full")> nozzle_cleaner_autopause_on_full;
+    /// Installed nozzle-cleaner type: false = standard capacity, true = extended (high-capacity).
+    StoreItem<bool, false, ItemFlag::hw_config, journal::hash("Nozzle cleaner extended capacity")> nozzle_cleaner_extended_capacity;
+#endif
 
     StoreItem<HWCheckSeverity, defaults::hw_check_severity, ItemFlag::features, journal::hash("HW Check Nozzle")> hw_check_nozzle;
     StoreItem<HWCheckSeverity, defaults::hw_check_severity, ItemFlag::features, journal::hash("HW Check Model")> hw_check_model;
