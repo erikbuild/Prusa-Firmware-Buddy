@@ -18,6 +18,10 @@
 #include <Marlin/src/module/motion.h>
 #include <option/has_mmu2.h>
 #include <option/has_gui.h>
+#include <option/has_wastebin_fill_tracking.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include <feature/wastebin_watcher/wastebin_watcher.hpp>
+#endif
 #if HAS_GUI()
     #include "screen_menu_filament_changeall.hpp"
 #endif
@@ -83,6 +87,11 @@ std::optional<PhasesPrintPreview> IPrintPreview::getCorrespondingPhase(IPrintPre
 
     case State::gcode_invalid_wait_user_abort:
         return PhasesPrintPreview::gcode_incompatible_fatal;
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case State::wastebin_overfill_wait_user:
+        return PhasesPrintPreview::wastebin_overfill_warning;
+#endif
 
     case State::filament_not_inserted_wait_user:
     case State::filament_not_inserted_load:
@@ -523,6 +532,36 @@ PrintPreview::Result PrintPreview::Loop() {
         }
         break;
 
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case State::wastebin_overfill_wait_user:
+        switch (response) {
+
+        case Response::Done:
+            // User emptied the bin -> reset the counter, then continue (monitoring stays on).
+            WastebinWatcher::instance().mark_emptied();
+            ChangeState(stateFromFilamentPresence());
+            break;
+
+        case Response::Ignore:
+            // Turn off wastebin monitoring for the whole upcoming print, then continue.
+            WastebinWatcher::instance().set_ignored_for_print(true);
+            ChangeState(stateFromFilamentPresence());
+            break;
+
+        case Response::Print:
+            // Continue the normal check chain (monitoring stays on for plain Print).
+            ChangeState(stateFromFilamentPresence());
+            break;
+
+        case Response::_none:
+            break;
+
+        default:
+            bsod_unreachable();
+        }
+        break;
+#endif
+
     case State::filament_not_inserted_wait_user:
         switch (response) {
 
@@ -704,6 +743,9 @@ PrintPreview::Result PrintPreview::stateToResult() const {
     case State::new_firmware_available_wait_user:
     case State::gcode_invalid_wait_user:
     case State::gcode_invalid_wait_user_abort:
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case State::wastebin_overfill_wait_user:
+#endif
     case State::wrong_filament_change:
     case State::wrong_filament_wait_user:
     case State::filament_not_inserted_load:
@@ -753,6 +795,19 @@ IPrintPreview::State PrintPreview::stateFromUpdateCheck() {
     }
 }
 
+#if HAS_WASTEBIN_FILL_TRACKING()
+IPrintPreview::State PrintPreview::stateFromWastebinCheck() {
+    // Fresh decision for every print: re-enable mid-print monitoring so a previous print's
+    // "Ignore" cannot leak into this one. Pressing Ignore on the warning below re-disables it.
+    WastebinWatcher::instance().set_ignored_for_print(false);
+
+    if (WastebinWatcher::instance().print_will_overfill()) {
+        return State::wastebin_overfill_wait_user;
+    }
+    return stateFromFilamentPresence();
+}
+#endif
+
 IPrintPreview::State PrintPreview::stateFromPrinterCheck() {
     // Determine whether we want to show the incompatibilities screen
 
@@ -789,7 +844,11 @@ IPrintPreview::State PrintPreview::stateFromPrinterCheck() {
     switch (report.failure_severity()) {
 
     case HWCheckSeverity::Ignore:
+#if HAS_WASTEBIN_FILL_TRACKING()
+        return stateFromWastebinCheck();
+#else
         return stateFromFilamentPresence();
+#endif
 
     case HWCheckSeverity::Warning:
         return State::gcode_invalid_wait_user;

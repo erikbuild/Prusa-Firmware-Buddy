@@ -10,6 +10,7 @@
 #include "gcode_info.hpp"
 #include <option/has_mmu2.h>
 #include <option/has_tool_mapping.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <async_job/async_job.hpp>
 #include <inplace_function.hpp>
 #include <fsm/print_preview_phases.hpp>
@@ -39,6 +40,10 @@ public:
 
         gcode_invalid_wait_user,
         gcode_invalid_wait_user_abort,
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+        wastebin_overfill_wait_user,
+#endif
 
         filament_not_inserted_wait_user,
         filament_not_inserted_load,
@@ -150,5 +155,8 @@ private:
     State stateFromSelftestCheck();
     State stateFromUpdateCheck();
     State stateFromPrinterCheck();
+#if HAS_WASTEBIN_FILL_TRACKING()
+    State stateFromWastebinCheck();
+#endif
     Result stateToResult() const;
 };

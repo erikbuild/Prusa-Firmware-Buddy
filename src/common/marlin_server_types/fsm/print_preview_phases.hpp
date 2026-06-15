@@ -5,6 +5,7 @@
 #include <option/has_mmu2.h>
 #include <option/has_tool_mapping.h>
 #include <option/has_e2ee_support.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 enum class PhasesPrintPreview : PhaseUnderlyingType {
     loading,
@@ -24,6 +25,9 @@ enum class PhasesPrintPreview : PhaseUnderlyingType {
     wrong_filament,
 #if HAS_E2EE_SUPPORT()
     untrusted_identity,
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+    wastebin_overfill_warning, ///< The print is likely to overfill the nozzle-cleaner wastebin
 #endif
     file_error, ///< Something is wrong with the gcode file
     _last = file_error
@@ -86,6 +90,13 @@ inline constexpr EnumArray<PhasesPrintPreview, PhaseResponses, CountPhases<Phase
                                               } },
 #if HAS_E2EE_SUPPORT()
         { PhasesPrintPreview::untrusted_identity, { Response::Yes, Response::No, Response::Abort } },
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+        { PhasesPrintPreview::wastebin_overfill_warning, {
+                                                             Response::Print,
+                                                             Response::Ignore,
+                                                             Response::Done,
+                                                         } },
 #endif
         { PhasesPrintPreview::file_error, {
                                               Response::Abort,

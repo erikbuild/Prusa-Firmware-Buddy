@@ -2,6 +2,7 @@
 
 #include <fsm/print_preview_phases.hpp>
 #include <error_codes.hpp>
+#include <option/has_wastebin_fill_tracking.h>
 
 constexpr std::optional<ErrCode> map_print_preview_phase_to_error_code(const FSMAndPhase print_preview_phase) {
     if (print_preview_phase.fsm != ClientFSM::PrintPreview) {
@@ -33,6 +34,11 @@ constexpr std::optional<ErrCode> map_print_preview_phase_to_error_code(const FSM
 #if HAS_TOOL_MAPPING()
     case PhasesPrintPreview::tools_mapping:
         return ErrCode::CONNECT_PRINT_PREVIEW_TOOLS_MAPPING;
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case PhasesPrintPreview::wastebin_overfill_warning:
+        // Reported to Connect via its own error code (the on-printer dialog uses the GUI frame text).
+        return ErrCode::CONNECT_NOZZLE_CLEANER_MAY_OVERFILL;
 #endif
     case PhasesPrintPreview::loading:
     case PhasesPrintPreview::main_dialog:

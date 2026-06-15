@@ -25,6 +25,10 @@
 #include <option/has_mmu2.h>
 #include <option/has_tool_mapping.h>
 #include <option/has_e2ee_support.h>
+#include <option/has_wastebin_fill_tracking.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include <feature/wastebin_watcher/wastebin_watcher.hpp>
+#endif
 
 #include <static_alocation_ptr.hpp>
 #if HAS_TOOL_MAPPING()
@@ -107,6 +111,24 @@ private:
 };
 #endif
 
+#if HAS_WASTEBIN_FILL_TRACKING()
+class FrameWastebinOverfill : FramePrompt {
+public:
+    FrameWastebinOverfill(window_frame_t *parent)
+        : FramePrompt(parent, Phase::wastebin_overfill_warning,
+            _("Wastebin may overflow"),
+            _("This print may overfill the wastebin.\nWastebin: %u / %u pellets.\nThis print: %u tool changes.\n\nPrint: start the print anyway.\nIgnore: print without wastebin checks this print.\nDone: wastebin emptied, reset the counter.")) {
+        info.SetText(info.GetText().formatted(params_,
+            WastebinWatcher::instance().fill_level(),
+            WastebinWatcher::instance().capacity(),
+            static_cast<unsigned>(GCodeInfo::getInstance().get_total_toolchanges().value_or(0))));
+    }
+
+private:
+    StringViewUtf8Parameters<20> params_;
+};
+#endif
+
 } // namespace frames
 
 namespace {
@@ -128,6 +150,9 @@ using Frames = FrameDefinitionList<ScreenPrintPreview::FrameStorage,
     FrameDefinition<Phase::wrong_filament, FramePrompt, Phase::wrong_filament, map_print_preview_phase_to_error_code>,
 #if HAS_E2EE_SUPPORT()
     FrameDefinition<Phase::untrusted_identity, frames::FrameUntrustedIdentity>,
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+    FrameDefinition<Phase::wastebin_overfill_warning, frames::FrameWastebinOverfill>,
 #endif
     FrameDefinition<Phase::file_error, FramePrompt, Phase::file_error, map_print_preview_phase_to_error_code>>;
 
