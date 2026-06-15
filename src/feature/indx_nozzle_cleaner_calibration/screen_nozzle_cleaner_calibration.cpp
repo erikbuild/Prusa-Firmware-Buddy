@@ -9,6 +9,8 @@
 #include <standard_frame/frame_text_prompt.hpp>
 #include <standard_frame/frame_wait.hpp>
 #include <standard_frame/frame_wait_temp.hpp>
+#include <standard_frame/frame_extensions/with_footer.hpp>
+#include <footer_line.hpp>
 #include <common/fsm_base_types.hpp>
 #include <img_resources.hpp>
 #include <string_view_utf8.hpp>
@@ -94,9 +96,12 @@ static constexpr const img::Resource *img_ask_position_x = &img::cleaner_calibra
 static constexpr const img::Resource *img_ask_position_y = &img::cleaner_calibration_y;
 static constexpr const img::Resource *img_move_to_z_point = &img::cleaner_calibration_z;
 
+/// Footer items shown on the nozzle cooldown phase
+constexpr FooterLine::IdArray cooldown_footer_items = { footer::Item::nozzle };
+
 using Frames = FrameDefinitionList<ScreenNozzleCleanerCalibration::FrameStorage,
     FrameDefinition<PhaseNozzleCleanerCalibration::intro, FramePrompt, PhaseNozzleCleanerCalibration::intro, txt_title_intro, txt_intro>,
-    FrameDefinition<PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, FrameWaitTemp, PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, txt_wait_for_nozzle_cooldown>,
+    FrameDefinition<PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, WithFooter<FrameWaitTemp, cooldown_footer_items>, PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown, txt_wait_for_nozzle_cooldown>,
     FrameDefinition<PhaseNozzleCleanerCalibration::picking_tool, FrameWait, txt_picking_tool>,
     FrameDefinition<PhaseNozzleCleanerCalibration::homing, FrameWait, txt_homing>,
     FrameDefinition<PhaseNozzleCleanerCalibration::moving_away, FrameWait, txt_moving_away>,
