@@ -27,6 +27,7 @@
 #include <option/has_emergency_stop.h>
 #include <option/has_heatbed_screws_during_transport.h>
 #include <option/has_indx_head.h>
+#include <option/has_indx.h>
 
 #include <option/has_selftest.h>
 #if HAS_SELFTEST()
@@ -193,11 +194,21 @@ ScreenSplash::ScreenSplash()
                 N_("Hi, this is your\nOriginal Prusa iX printer.\n"
                    "I would like to guide you\nthrough the setup process.");
 #elif PRINTER_IS_PRUSA_COREONE()
+    #if HAS_INDX()
+                N_("Hi, this is your\nPrusa CORE One INDX printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+    #else
                 N_("Hi, this is your\nPrusa CORE One printer.\n"
                    "I would like to guide you\nthrough the setup process.");
+    #endif
 #elif PRINTER_IS_PRUSA_COREONEL()
-                N_("Hi, this is your\nPrusa CORE One L printer.\n"
+    #if HAS_INDX()
+                N_("Hi, this is your\nPrusa CORE One L INDX printer.\n"
                    "I would like to guide you\nthrough the setup process.");
+    #else
+                N_("Hi, this is your\nPrusa CORE One printer.\n"
+                   "I would like to guide you\nthrough the setup process.");
+    #endif
 #else
     #error unknown config
 #endif
