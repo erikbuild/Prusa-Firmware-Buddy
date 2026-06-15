@@ -184,12 +184,13 @@ private:
         fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown);
 
         // Push current temp to the GUI and handle abort while M109 is blocking
-        Subscriber subscriber(marlin_server::idle_publisher, [tool, current_temp] {
+        Subscriber subscriber(marlin_server::idle_publisher, [tool] {
             if (marlin_server::get_response_from_phase(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown) == Response::Abort) {
                 planner.quick_stop();
                 return;
             }
-            const uint16_t t = static_cast<uint16_t>(current_temp);
+            // Read the live temperature each tick so the GUI reflects the actual cooldown progress
+            const uint16_t t = static_cast<uint16_t>(Hotend::for_tool(*tool).nozzle_temp());
             const fsm::PhaseData data = {
                 static_cast<uint8_t>((t >> 8) & 0xff),
                 static_cast<uint8_t>(t & 0xff),
