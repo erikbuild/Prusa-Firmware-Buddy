@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "odometer.hpp"
+#include <option/has_wastebin_fill_tracking.h>
 #include "cmath_ext.h"
 #include <config_store/store_instance.hpp>
 
@@ -33,6 +34,12 @@ bool Odometer_s::changed() {
         return true;
     }
 
+#if HAS_WASTEBIN_FILL_TRACKING()
+    if (nozzle_cleaner_pellets != 0) {
+        return true;
+    }
+#endif
+
     return false;
 }
 
@@ -62,6 +69,11 @@ void Odometer_s::force_to_eeprom() {
 
     store.mmu_changes.set(get_mmu_changes());
     mmu_changes = 0;
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    store.nozzle_cleaner_pellets.set(get_nozzle_cleaner_pellets());
+    nozzle_cleaner_pellets = 0;
+#endif
 }
 
 void Odometer_s::add_axis(axis_t axis, float value) {
@@ -120,6 +132,22 @@ void Odometer_s::add_mmu_change() {
 uint32_t Odometer_s::get_mmu_changes() {
     return config_store().mmu_changes.get() + mmu_changes;
 }
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+void Odometer_s::add_nozzle_cleaner_pellet() {
+    nozzle_cleaner_pellets++;
+}
+
+uint32_t Odometer_s::get_nozzle_cleaner_pellets() {
+    return config_store().nozzle_cleaner_pellets.get() + nozzle_cleaner_pellets;
+}
+
+void Odometer_s::reset_nozzle_cleaner_pellets() {
+    // get_nozzle_cleaner_pellets() returns persisted + RAM accumulator, so zero both.
+    nozzle_cleaner_pellets = 0;
+    config_store().nozzle_cleaner_pellets.set(0);
+}
+#endif
 
 void Odometer_s::add_time(uint32_t value) {
     duration_time += value;

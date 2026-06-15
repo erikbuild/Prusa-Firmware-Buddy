@@ -6,6 +6,7 @@
 #include <utils/utility_extensions.hpp>
 #include <inc/MarlinConfig.h>
 #include <tool_index.hpp>
+#include <option/has_wastebin_fill_tracking.h>
 
 /// Singleton class that measures
 /// distance traveled and filament consumed
@@ -29,6 +30,11 @@ private:
     StrongIndexArray<std::atomic<uint32_t>, PhysicalToolIndex::count, PhysicalToolIndex, PhysicalToolIndex::to_raw_static> toolpick {};
     std::atomic<uint32_t> duration_time = 0;
     std::atomic<uint32_t> mmu_changes = 0;
+#if HAS_WASTEBIN_FILL_TRACKING()
+    /// Pellets ejected into the INDX nozzle-cleaner wastebin since last emptied (RAM delta, flushed to eeprom).
+    /// The fill-tracking policy on top of this lives in WastebinWatcher.
+    std::atomic<uint32_t> nozzle_cleaner_pellets = 0;
+#endif
 
     Odometer_s() = default;
 
@@ -104,6 +110,17 @@ public:
      * @brief Get count of MMU filament changes.
      */
     uint32_t get_mmu_changes();
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    /// Register one pellet ejected into the nozzle-cleaner wastebin.
+    void add_nozzle_cleaner_pellet();
+
+    /// Get the number of pellets in the wastebin since it was last emptied.
+    uint32_t get_nozzle_cleaner_pellets();
+
+    /// Empty the wastebin: reset the pellet counter (RAM accumulator + persisted value) to zero.
+    void reset_nozzle_cleaner_pellets();
+#endif
 
     /**
      * @brief Save new print duration.
