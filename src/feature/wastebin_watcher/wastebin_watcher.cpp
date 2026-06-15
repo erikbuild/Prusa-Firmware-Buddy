@@ -116,10 +116,13 @@ uint32_t WastebinWatcher::fill_level() const {
     return Odometer_s::instance().get_nozzle_cleaner_pellets();
 }
 
-uint32_t WastebinWatcher::expected_remaining_pellets() const {
+std::optional<uint32_t> WastebinWatcher::expected_remaining_pellets() const {
     // One pellet is ejected per toolchange, so the gcode's total toolchange count is the number of
     // pellets this print will eject; subtract the ones already ejected to get what is still ahead.
-    const uint32_t total = GCodeInfo::getInstance().get_total_toolchanges().value_or(0);
+    const auto total = GCodeInfo::getInstance().get_total_toolchanges();
+    if (!total.has_value()) {
+        return std::nullopt;
+    }
     const uint32_t done = pellets_this_print_;
-    return total > done ? total - done : 0;
+    return *total > done ? *total - done : 0;
 }

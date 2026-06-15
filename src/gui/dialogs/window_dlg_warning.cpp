@@ -69,13 +69,12 @@ void DialogWarning::Change(fsm::BaseData data) {
     // Per-warning text overrides; most warnings just use the plain error-code text.
     switch (warning_type) {
 #if HAS_WASTEBIN_FILL_TRACKING()
-    case WarningType::NozzleCleanerFull: {
-        // Override the generic error text with the live count of tool changes still ahead
-        // in this print (Connect still gets the generic err_text from the error code).
-        const unsigned remaining = WastebinWatcher::instance().expected_remaining_pellets();
-        frame_->set_info_text(_("Nozzle cleaner wastebin is full.\n Tool changes remaining: %u.\n\nIgnore: continue without wastebin checks this print.\nDone: wastebin emptied, reset the counter.").formatted(info_params, remaining));
+    case WarningType::NozzleCleanerFull:
+        // With a known toolchange count, add how many are still ahead; otherwise keep the error-code text.
+        if (const std::optional<uint32_t> remaining = WastebinWatcher::instance().expected_remaining_pellets()) {
+            frame_->set_info_text(_("Nozzle cleaner wastebin is full.\nTool changes remaining: %u.").formatted(info_params, static_cast<unsigned>(*remaining)));
+        }
         break;
-    }
 #endif
     default:
         break;

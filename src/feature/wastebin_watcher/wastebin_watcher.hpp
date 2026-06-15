@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <optional>
 
 // Compiled into the build only where the feature is enabled (added via CMake). A static_assert
 // (instead of #if-ing the whole header) turns a stray include on a non-feature build into a hard
@@ -56,8 +57,8 @@ public:
     /// [Thread-safe] Pellets in the bin since it was last emptied (current fill, not an action).
     uint32_t fill_level() const;
     /// [Thread-safe] Pellets still expected to be ejected in the rest of this print (one per
-    /// remaining toolchange; 0 if the gcode carries no toolchange count).
-    uint32_t expected_remaining_pellets() const;
+    /// remaining toolchange). std::nullopt if the gcode carries no toolchange count
+    std::optional<uint32_t> expected_remaining_pellets() const;
 
 private:
     WastebinWatcher() = default;
