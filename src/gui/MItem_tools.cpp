@@ -37,6 +37,11 @@
 #include <option/has_side_leds.h>
 #include <option/has_coldpull.h>
 #include <option/has_auto_retract.h>
+#include <option/has_wastebin_fill_tracking.h>
+#include <gcode/inject_queue_actions.hpp>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include <feature/wastebin_watcher/wastebin_watcher.hpp>
+#endif
 #include <raii/auto_restore.hpp>
 #include <time.h>
 #include <footer_items_heaters.hpp>
@@ -227,6 +232,51 @@ void MI_AUTO_HOME::click(IWindowMenu & /*window_menu*/) {
         marlin_client::gcode("G28 P I");
     }
 }
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+MI_NOZZLE_CLEANER_EMPTY_WASTEBIN::MI_NOZZLE_CLEANER_EMPTY_WASTEBIN()
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_NOZZLE_CLEANER_EMPTY_WASTEBIN::click(IWindowMenu & /*window_menu*/) {
+    marlin_client::inject(GCodeLiteral("M1986"));
+}
+
+void MI_NOZZLE_CLEANER_EMPTY_WASTEBIN::Loop() {
+    // Disabled only during the start gcodes (homing / MBL / tool-offset), where parking would
+    // interfere - i.e. while printing before the first layer. Allowed when idle and once printing.
+    set_enabled(!marlin_client::is_printing() || marlin_vars().max_printed_z > 0);
+}
+
+MI_NOZZLE_CLEANER_AUTOPAUSE::MI_NOZZLE_CLEANER_AUTOPAUSE()
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().nozzle_cleaner_autopause_on_full.get(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_NOZZLE_CLEANER_AUTOPAUSE::OnChange(size_t old_index) {
+    config_store().nozzle_cleaner_autopause_on_full.set(!old_index);
+}
+
+static constexpr const char *nozzle_cleaner_capacity_items[] = {
+    N_("Normal"),
+    N_("Extended"),
+};
+
+MI_NOZZLE_CLEANER_CAPACITY::MI_NOZZLE_CLEANER_CAPACITY()
+    : MenuItemSwitch(_(label), nozzle_cleaner_capacity_items, static_cast<size_t>(config_store().nozzle_cleaner_extended_capacity.get())) {}
+
+void MI_NOZZLE_CLEANER_CAPACITY::OnChange(size_t /*old_index*/) {
+    config_store().nozzle_cleaner_extended_capacity.set(get_index() == 1);
+}
+
+MI_NOZZLE_CLEANER_FILL::MI_NOZZLE_CLEANER_FILL()
+    : MenuItemAutoUpdatingLabel(
+        _(label),
+        [](const std::span<char> &buffer) {
+            snprintf(buffer.data(), buffer.size(), "%u / %u",
+                static_cast<unsigned>(WastebinWatcher::instance().fill_level()),
+                static_cast<unsigned>(WastebinWatcher::instance().capacity()));
+        },
+        [](auto) { return WastebinWatcher::instance().fill_level(); }) {}
+
+#endif
 
 /*****************************************************************************/
 // MI_MESH_BED

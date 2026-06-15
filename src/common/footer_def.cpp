@@ -2,6 +2,7 @@
 
 #include <option/has_chamber_api.h>
 #include <option/has_mmu2.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 #include <utils/enum_array.hpp>
 
@@ -58,6 +59,13 @@ const char *footer::to_string(Item item) {
         { Item::f_s_value_side,
 #if HAS_SIDE_FSENSOR()
             N_("FS Value Side")
+#else
+            nullptr
+#endif
+        },
+        { Item::wastebin_pellets,
+#if HAS_WASTEBIN_FILL_TRACKING()
+            N_("Wastebin")
 #else
             nullptr
 #endif

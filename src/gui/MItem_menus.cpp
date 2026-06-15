@@ -22,6 +22,10 @@
 #include "screen_menu_lang_and_time.hpp"
 #include "screen_menu_hardware.hpp"
 #include "screen_menu_hardware_tune.hpp"
+#include <option/has_wastebin_fill_tracking.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include "screen_menu_wastebin.hpp"
+#endif
 #include "screen_menu_system.hpp"
 #include "screen_menu_error_test.hpp"
 #include "screen_menu_input_shaper.hpp"
@@ -126,6 +130,9 @@ template struct MI_SCREEN_CTOR<ScreenMenuNetwork>;
 template struct MI_SCREEN_CTOR<ScreenMenuNetworkStatus>;
 template struct MI_SCREEN_CTOR<ScreenMenuHardware>;
 template struct MI_SCREEN_CTOR<ScreenMenuHardwareTune>;
+#if HAS_WASTEBIN_FILL_TRACKING()
+template struct MI_SCREEN_CTOR<ScreenMenuWastebin>;
+#endif
 template struct MI_SCREEN_CTOR<ScreenMenuSystem>;
 template struct MI_SCREEN_CTOR<ScreenMenuInfo>;
 template struct MI_SCREEN_CTOR<ScreenFactoryReset>;

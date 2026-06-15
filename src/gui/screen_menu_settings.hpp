@@ -16,6 +16,7 @@
 #include <option/has_phase_stepping.h>
 #include <option/has_toolchanger.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 #if HAS_MMU2()
     #include "MItem_mmu.hpp"
@@ -86,6 +87,9 @@ using ScreenMenuSettings__ = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
     MI_FAN_CHECK,
     MI_GCODE_VERIFY,
     MI_DRYRUN,
+#if HAS_WASTEBIN_FILL_TRACKING()
+    MI_WASTEBIN,
+#endif
 #if HAS_CHAMBER_FILTRATION_API()
     MI_CHAMBER_FILTRATION,
 #endif

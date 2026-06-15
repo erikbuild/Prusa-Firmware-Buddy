@@ -105,9 +105,10 @@ static_assert(std::to_underlying(Item::none) == 0
         && std::to_underlying(Item::nozzle_pwm) == 23
         && std::to_underlying(Item::chamber_temp) == 24
         && std::to_underlying(Item::f_s_value_side) == 25
+        && std::to_underlying(Item::wastebin_pellets) == 26
         && true, // So that we don't have to move the ',' around
     "Numbers assigned to items should never change and always be available (not ifdefed)!!");
 
-static_assert(std::to_underlying(Item::_count) == 26, "When adding a new item, increment this counter and add it to the static_assert above");
+static_assert(std::to_underlying(Item::_count) == 27, "When adding a new item, increment this counter and add it to the static_assert above");
 
 } // namespace footer::eeprom

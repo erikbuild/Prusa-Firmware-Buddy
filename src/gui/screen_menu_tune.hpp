@@ -23,6 +23,7 @@
 #include <option/xbuddy_extension_variant.h>
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <device/board.h>
 #include <gui/screen/screen_m600.hpp>
 
@@ -48,6 +49,9 @@ using ScreenMenuTune__ = ScreenMenu<EFooter::On, MI_RETURN,
     MI_LIVE_ADJUST_Z, // position without loadcell
 #endif
     MI_M600,
+#if HAS_WASTEBIN_FILL_TRACKING()
+    MI_NOZZLE_CLEANER_EMPTY_WASTEBIN,
+#endif
 #if HAS_CANCEL_OBJECT()
     MI_CO_CANCEL_OBJECT,
 #endif

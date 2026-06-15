@@ -15,6 +15,7 @@
 #include <option/has_sheet_profiles.h>
 #include <option/has_chamber_api.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <option/has_per_tool_temperatures.h>
 #include <option/has_toolchanger.h>
 #include "i18n.h"
@@ -75,6 +76,7 @@ enum class Item : uint8_t { // stored in eeprom, must fit to footer::eeprom::val
     nozzle_pwm = 23,
     chamber_temp = 24,
     f_s_value_side = 25,
+    wastebin_pellets = 26,
     _count,
 };
 
@@ -131,6 +133,10 @@ inline constexpr std::array item_list {
         // Fans
         Item::print_fan,
         Item::heatbreak_fan,
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+        Item::wastebin_pellets,
+#endif
 
 // Debug
 #if _DEBUG

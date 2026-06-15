@@ -38,3 +38,7 @@ endif()
 if(HAS_CHAMBER_API)
   target_sources(firmware PRIVATE footer_item_chamber_temp.cpp)
 endif()
+
+if(HAS_WASTEBIN_FILL_TRACKING)
+  target_sources(firmware PRIVATE footer_item_wastebin.cpp)
+endif()

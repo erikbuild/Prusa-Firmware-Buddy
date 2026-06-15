@@ -17,7 +17,12 @@
 #include <option/has_mmu2.h>
 #include <option/has_sheet_profiles.h>
 #include <option/has_chamber_api.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <meta_utils.hpp>
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include "footer_item_wastebin.hpp"
+#endif
 
 #if HAS_SHEET_PROFILES()
     #include "footer_item_sheet_profile.hpp"
@@ -81,6 +86,9 @@ using FooterItemMappings = TypeList< //
     FooterItemMappingRec<FooterItemNozzlePWM, Item::nozzle_pwm>,
 #if HAS_CHAMBER_API()
     FooterItemMappingRec<FooterItemChamberTemperature, Item::chamber_temp>,
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+    FooterItemMappingRec<FooterItemWastebin, Item::wastebin_pellets>,
 #endif
     FooterItemMappingRec<FooterItemNozzle, Item::nozzle>
     //

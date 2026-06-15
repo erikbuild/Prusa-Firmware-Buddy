@@ -12,6 +12,7 @@
 #include <option/has_chamber_filtration_api.h>
 #include <option/has_mmu2.h>
 #include <option/has_e2ee_support.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <option/has_leds_menu.h>
 #include <img_resources.hpp>
 #include <ScreenFactory.hpp>
@@ -123,6 +124,11 @@ using MI_NETWORK_STATUS
 
 using MI_HARDWARE
     = MI_SCREEN<N_("Hardware"), class ScreenMenuHardware>;
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+using MI_WASTEBIN
+    = MI_SCREEN<N_("Wastebin"), class ScreenMenuWastebin>;
+#endif
 
 using MI_HARDWARE_TUNE
     = MI_SCREEN<N_("Hardware"), class ScreenMenuHardwareTune, nullptr, is_hidden_t::dev>;
