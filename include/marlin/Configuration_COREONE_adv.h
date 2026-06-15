@@ -837,7 +837,7 @@
 
     #if AXIS_IS_TMC(E0)
         #if HAS_INDX()
-            #define E0_CURRENT 650
+            #define E0_CURRENT 550
         #else
             #define E0_CURRENT 450
         #endif
