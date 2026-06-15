@@ -1,4 +1,5 @@
 #include "warning_type.hpp"
+#include <option/has_wastebin_fill_tracking.h>
 
 #include <bitset>
 #include <option/has_mmu2.h>
@@ -90,6 +91,15 @@ constexpr PhasesWarning warning_type_phase_constexpr(WarningType warning) {
 
     case WarningType::HotendOffsetUnsafeSensorXY:
         return PhasesWarning::HotendOffsetUnsafeSensorXY;
+#endif
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case WarningType::NozzleCleanerFull:
+        return PhasesWarning::NozzleCleanerFull;
+    case WarningType::NozzleCleanerManualEmpty:
+        return PhasesWarning::NozzleCleanerManualEmpty;
+        // NozzleCleanerFullInfo intentionally has no dedicated phase - it falls back to the generic
+        // PhasesWarning::Warning (single Ok), see the default below.
 #endif
 
         //

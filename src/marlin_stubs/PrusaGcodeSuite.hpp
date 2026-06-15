@@ -19,6 +19,7 @@
 #include <option/has_chamber_vents.h>
 #include <option/has_spool_join.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 #include <gcode/gcode_parser.hpp>
 
@@ -174,6 +175,9 @@ void M1982(); //< INDX dock calibration
 void M1983(); //< INDX nozzle cleaner calibration
 void M1984(); //< Manually park a stuck nozzle into a dock
 void M1985(); //< INDX tool offsets calibration
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+void M1986(); //< Empty the INDX nozzle-cleaner wastebin (pause, move aside, reset fill counter)
 #endif
 
 void M9140(); //< Set normal (non-stealth) mode

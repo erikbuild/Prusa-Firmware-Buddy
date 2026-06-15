@@ -7,6 +7,7 @@
 #include <module/planner.h>
 
 #include <option/has_wastebin.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 namespace mapi {
 
@@ -48,6 +49,13 @@ ParkingPosition get_parking_position(ParkPosition position) {
 
     case ParkPosition::loadcell_selftest:
         return ParkingPosition(XYZ_LOADCELL_SELFTEST_POINT);
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case ParkPosition::empty_wastebin:
+        // Head clear of the cleaner (which sits at high X) with Y forward, and Z lifted high (at
+        // least 80, more above tall prints) so the cleaner can be slid out without hitting the head.
+        return ParkingPosition { 0.0f, static_cast<float>(Y_MAX_POS), ParkingPosition::Minimum { .above_print = 5, .absolute = 80 } };
+#endif
 
     case ParkPosition::_cnt:
         bsod_unreachable();
@@ -262,7 +270,11 @@ bool park(const ParkingPosition &parking_position) {
     const auto park_destination = parking_position.to_xyz_pos(curr_pos);
     const auto needs_homed = parking_position.axes_needing_homing();
 
-    if (park_destination.z != curr_pos.z) {
+    // @returns false if the move cannot be performed safely (the caller aborts)
+    const auto move_z = [&]() -> bool {
+        if (park_destination.z == curr_pos.z) {
+            return true;
+        }
         if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise)) {
             do_blocking_move_to_z(park_destination.z, fr_z);
 
@@ -274,9 +286,13 @@ bool park(const ParkingPosition &parking_position) {
         } else {
             do_homing_move(Z_AXIS, park_destination.z - curr_pos.z, HOMING_FEEDRATE_INVERTED_Z);
         }
-    }
+        return true;
+    };
 
-    if (park_destination.xy() != curr_pos.xy()) {
+    const auto move_xy = [&]() -> bool {
+        if (park_destination.xy() == curr_pos.xy()) {
+            return true;
+        }
         if (!axes_home_level.is_homed({ X_AXIS, Y_AXIS }, AxisHomeLevel::imprecise)) {
             // We need to always be homed to do XY moves
             return false;
@@ -293,6 +309,21 @@ bool park(const ParkingPosition &parking_position) {
         pre_park_move_pattern(fr_xy, park_destination.xy());
 #endif
         do_blocking_move_to_xy(park_destination, fr_xy);
+        return true;
+    };
+
+    // Order the two moves so the nozzle is never dragged across the print: the XY traverse always
+    // happens at the higher of the current/destination Z. Going up: lift first, then traverse.
+    // Going down: traverse first (at the current, higher Z), then descend. Each move handles its own
+    // homing requirements internally (and bails out if unsatisfied).
+    if (park_destination.z < curr_pos.z) {
+        if (!move_xy() || !move_z()) {
+            return false;
+        }
+    } else {
+        if (!move_z() || !move_xy()) {
+            return false;
+        }
     }
 
     planner.synchronize();

@@ -3,6 +3,12 @@
 #include <common/fsm_base_types.hpp>
 #include <state/printer_state.hpp>
 #include <img_resources.hpp>
+#include <option/has_wastebin_fill_tracking.h>
+#include <option/has_indx.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include <i18n.h>
+    #include <feature/wastebin_watcher/wastebin_watcher.hpp>
+#endif
 
 namespace {
 const img::Resource *warning_dialog_icon(WarningType warning_type) {
@@ -59,4 +65,19 @@ void DialogWarning::Change(fsm::BaseData data) {
     // Construct-once frame; recreated on change because the warning type
     // (and thus the error code and icon) is delivered through the FSM data.
     frame_.emplace(this, FSMAndPhase { phase }, err_code, warning_dialog_icon(warning_type));
+
+    // Per-warning text overrides; most warnings just use the plain error-code text.
+    switch (warning_type) {
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case WarningType::NozzleCleanerFull: {
+        // Override the generic error text with the live count of tool changes still ahead
+        // in this print (Connect still gets the generic err_text from the error code).
+        const unsigned remaining = WastebinWatcher::instance().expected_remaining_pellets();
+        frame_->set_info_text(_("Nozzle cleaner wastebin is full.\n Tool changes remaining: %u.\n\nIgnore: continue without wastebin checks this print.\nDone: wastebin emptied, reset the counter.").formatted(info_params, remaining));
+        break;
+    }
+#endif
+    default:
+        break;
+    }
 }

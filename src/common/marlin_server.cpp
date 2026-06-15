@@ -123,6 +123,10 @@
 #endif
 
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include <feature/wastebin_watcher/wastebin_watcher.hpp>
+#endif
 #if HAS_INDX()
     #include <feature/indx_hotend_temp_model/hotend_temp_model.hpp>
 #endif
@@ -2209,6 +2213,10 @@ static void _server_print_loop(void) {
 
         server.print_is_serial = (server.print_state == State::SerialPrintInit);
         server.was_print_time_saved = false;
+#if HAS_WASTEBIN_FILL_TRACKING()
+        // Fresh print: reset the per-print pellet/toolchange progress counter.
+        WastebinWatcher::instance().reset_print_progress();
+#endif
 #if HAS_MMU2()
         server.mmu_maintenance_checked = false;
 #endif

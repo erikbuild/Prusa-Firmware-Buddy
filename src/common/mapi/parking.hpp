@@ -5,6 +5,7 @@
 
 #include <option/has_nozzle_cleaner.h>
 #include <option/has_wastebin.h>
+#include <option/has_wastebin_fill_tracking.h>
 #include <option/has_indx.h>
 #include <bsod/bsod.h>
 
@@ -21,6 +22,10 @@ enum class ParkPosition : uint8_t {
     load,
     unload,
     loadcell_selftest,
+#if HAS_WASTEBIN_FILL_TRACKING()
+    /// Head clear of the nozzle cleaner so the wastebin can be pulled out, lifted above the print.
+    empty_wastebin,
+#endif
     _cnt,
 };
 

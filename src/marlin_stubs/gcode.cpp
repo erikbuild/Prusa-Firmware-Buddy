@@ -20,6 +20,7 @@
 #include <option/has_chamber_vents.h>
 #include <option/has_spool_join.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 #if HAS_LOADCELL()
     #include "loadcell.hpp"
@@ -338,6 +339,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             break;
         case 1985:
             PrusaGcodeSuite::M1985();
+            break;
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+        case 1986:
+            PrusaGcodeSuite::M1986();
             break;
 #endif
         case 9140:

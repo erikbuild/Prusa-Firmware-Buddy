@@ -40,6 +40,10 @@ public:
      */
     void add_footer(FooterLine &footer);
 
+    /// Override the left-column info text. Useful when the message has to be
+    /// built at runtime (e.g. a formatted count) instead of the error's default text.
+    void set_info_text(const string_view_utf8 &text) { info.SetText(text); }
+
 protected:
     /// Positions all sub-windows inside the (already laid-out) inner_frame.
     void layout_contents();

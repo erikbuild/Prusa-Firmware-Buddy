@@ -23,6 +23,8 @@
 #include <config_store/store_instance.hpp>
 #include <option/has_remote_bed.h>
 #include <option/has_chamber_filtration_api.h>
+#include <option/has_wastebin_fill_tracking.h>
+#include <option/has_indx.h>
 #include <option/has_door_sensor_calibration.h>
 #include <option/xbuddy_extension_variant.h>
 #include <option/has_side_fsensor.h>
@@ -662,6 +664,12 @@ ErrCode warning_type_to_error_code(WarningType wtype) {
         return ErrCode::CONNECT_ENCLOSURE_FILTER_EXPIRATION_WARNING;
     case WarningType::EnclosureFilterExpiration:
         return ErrCode::CONNECT_ENCLOSURE_FILTER_EXPIRATION;
+#endif
+#if HAS_WASTEBIN_FILL_TRACKING()
+    case WarningType::NozzleCleanerFull:
+    case WarningType::NozzleCleanerFullInfo:
+    case WarningType::NozzleCleanerManualEmpty:
+        return ErrCode::CONNECT_NOZZLE_CLEANER_FULL;
 #endif
 
 #if ENABLED(DETECT_PRINT_SHEET)

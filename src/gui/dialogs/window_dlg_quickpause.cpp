@@ -19,17 +19,21 @@ DialogQuickPause::DialogQuickPause(fsm::BaseData data)
     , gcode_name(this, Rect16(GuiDefaults::MsgBoxLayoutRect.Left(), 45, GuiDefaults::MsgBoxLayoutRect.Width(), 21))
     , radio(this, GuiDefaults::GetButtonRect_AvoidFooter(GuiDefaults::RectScreenBody), PhasesQuickPause::QuickPaused) {
 
-    if (marlin_vars().print_state == marlin_server::State::Printing) {
+    const char *msg = nullptr;
+    memcpy(&msg, (uint32_t *)data.GetData().data(), sizeof(uint32_t));
+    if (msg) {
+        // Custom message (e.g. the "Empty Wastebin" prompt). Show it instead of the default
+        // quick-pause text and hide the gcode-name field - that one belongs to the M0 quick-pause
+        // presentation and would render confusingly over a custom dialog.
+        // Run it through gettext: a translatable (N_-marked) string gets localized; raw strings
+        // not in the catalog pass through unchanged.
+        text.SetText(_(msg));
+        gcode_name.Hide();
+    } else if (marlin_vars().print_state == marlin_server::State::Printing) {
         auto lock = MarlinVarsLockGuard();
         static char buff[FILE_NAME_BUFFER_LEN] = { 0 };
         marlin_vars().media_LFN.copy_to(buff, FILE_NAME_BUFFER_LEN, lock);
         gcode_name.SetText(string_view_utf8::MakeRAM(buff));
-    }
-
-    const char *msg;
-    memcpy(&msg, (uint32_t *)data.GetData().data(), sizeof(uint32_t));
-    if (msg) {
-        text.SetText(string_view_utf8::MakeRAM(msg));
     }
 
     CaptureNormalWindow(radio);

@@ -102,6 +102,10 @@ if(HAS_INDX)
   target_sources(firmware PRIVATE M1982.cpp M1983.cpp M1984.cpp M1985.cpp)
 endif()
 
+if(HAS_WASTEBIN_FILL_TRACKING)
+  target_sources(firmware PRIVATE M1986.cpp)
+endif()
+
 if(HAS_TOOL_OFFSET_SENSOR)
   target_sources(firmware PRIVATE G427.cpp)
 endif()

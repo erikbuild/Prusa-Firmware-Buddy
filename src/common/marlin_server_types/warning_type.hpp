@@ -15,6 +15,7 @@
 #include <option/has_anfc.h>
 #include <option/has_tool_offset_sensor.h>
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
 
 enum class WarningType : uint32_t {
 #if HAS_EMERGENCY_STOP()
@@ -119,6 +120,15 @@ enum class WarningType : uint32_t {
 
     /// Filament tracking write failed, maybe the user removed the tag?
     OpenPrintTagUsageWriteFailed,
+#endif
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+    /// The INDX nozzle-cleaner wastebin is full; the print is paused so the user can empty it (Ignore / Done).
+    NozzleCleanerFull,
+    /// The wastebin is full but auto-pause is off: informational only, the print keeps running (single dismiss).
+    NozzleCleanerFullInfo,
+    /// Manual "Empty Wastebin" (M1986): the print is parked, prompting the user to empty the bin and confirm.
+    NozzleCleanerManualEmpty,
 #endif
 
 #if HAS_ILI9488_DISPLAY() && HAS_HUMAN_INTERACTIONS()

@@ -12,6 +12,10 @@
 #endif
 
 #include <option/has_indx.h>
+#include <option/has_wastebin_fill_tracking.h>
+#if HAS_WASTEBIN_FILL_TRACKING()
+    #include <feature/wastebin_watcher/wastebin_watcher.hpp>
+#endif
 
 LOG_COMPONENT_REF(PRUSA_GCODE);
 
@@ -78,7 +82,23 @@ void PrusaGcodeSuite::G12() {
             return;
         }
 
-        (void)nozzle_cleaner::load_and_execute(it->second);
+        [[maybe_unused]] const bool executed = nozzle_cleaner::load_and_execute(it->second);
+#if HAS_WASTEBIN_FILL_TRACKING()
+        if (executed && it->second == nozzle_cleaner::Sequence::eject_blob) {
+            // One ejected blob == one pellet; WastebinWatcher handles the mid-print full detection.
+            //
+            // KNOWN LIMITATION (BFW-8884): this only counts blobs ejected via G12 S30,
+            // i.e. the slicer's per-toolchange ejects. Other sequences that deposit material into the
+            // wastebin are NOT accounted for: purge_clean / power_panic_purge (each extrudes ~25 mm)
+            // and the eject_blob + purge_clean + deep_clean run during tool-offset calibration / tool
+            // prep, which call nozzle_cleaner::load_and_execute() directly (bypassing G12). As a
+            // result a printer doing only single-material prints can slowly fill the bin without ever
+            // tripping the warning. A proper fix would move the accounting down into
+            // nozzle_cleaner::load_and_execute() (where all paths converge) and weight purges by their
+            // larger deposit; tracked separately.
+            WastebinWatcher::instance().account_ejected_pellet();
+        }
+#endif
     }
 }
 
