@@ -29,10 +29,6 @@
     #include <feature/xbuddy_extension/xbuddy_extension.hpp>
 #endif
 
-#if PRINTER_IS_PRUSA_iX()
-    #include "filament_sensor_ix_side.hpp"
-#endif
-
 static auto *extruder_filament_sensor(uint8_t index) {
 #if FILAMENT_SENSOR_IS_ADC()
     static FSensorADC extruder_filament_sensor(FilamentSensorID { .position = FilamentSensorID::Position::extruder, .index = 0 });
@@ -62,12 +58,6 @@ IFSensor *GetSideFSensor([[maybe_unused]] uint8_t index) {
     if (index == 0 && buddy::xbuddy_extension().status() != buddy::XBuddyExtension::Status::disabled) {
         static FSensorXBuddyExtension xbe_filament_sensor(FilamentSensorID { .position = FilamentSensorID::Position::side, .index = 0 }, FSensorXBuddyExtension::Source::gpio);
         return &xbe_filament_sensor;
-    }
-#elif PRINTER_IS_PRUSA_iX()
-    // #error dead code found by automatic analyses (see BFW-5461)
-    if (index == 0) {
-        static FSensor_iXSide sensor(FilamentSensorID { .position = FilamentSensorID::Position::side, .index = 0 });
-        return &sensor;
     }
 #endif
 

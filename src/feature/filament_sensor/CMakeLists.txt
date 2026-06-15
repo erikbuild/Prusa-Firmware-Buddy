@@ -22,11 +22,7 @@ if(BOARD_IS_MASTER_BOARD)
   if(HAS_SIDE_FSENSOR_REMAP)
     target_sources(firmware PRIVATE filament_sensors_handler_remap.cpp)
   endif()
-  if(PRINTER STREQUAL "iX")
-    target_sources(
-      firmware PRIVATE filament_sensor_ix_side.cpp filament_sensors_handler_default.cpp
-      )
-  elseif(PRINTER STREQUAL "XL" OR PRINTER STREQUAL "XL_DEV_KIT")
+  if(PRINTER STREQUAL "XL" OR PRINTER STREQUAL "XL_DEV_KIT")
     target_sources(firmware PRIVATE filament_sensors_handler_XL.cpp)
   elseif(PRINTER STREQUAL "COREONE_INDX" OR PRINTER STREQUAL "COREONEL_INDX")
     target_sources(firmware PRIVATE filament_sensors_handler_INDX.cpp)

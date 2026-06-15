@@ -168,7 +168,7 @@ extern TIM_HandleTypeDef htim14;
     #define i2c2_SDA_PIN       GPIO_PIN_0
     #define i2c2_SCL_PIN       GPIO_PIN_1
 
-    // iX uses the I2C3 pins for back door filament sensor - BFW-4746
+    // iX doesn't have touchscreen
     #if !PRINTER_IS_PRUSA_iX()
         #define i2c3_SDA_PORT_BASE GPIOC_BASE
         #define i2c3_SCL_PORT_BASE GPIOA_BASE
