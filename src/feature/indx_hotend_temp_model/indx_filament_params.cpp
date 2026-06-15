@@ -14,6 +14,12 @@ namespace {
         .heat_time_constant = 0.95f,
     };
 
+    constexpr FilamentParameters no_filament_parameters {
+        .heat_per_mm = 0,
+        // Very low  time constant -> heat changes should apply immediately
+        .heat_time_constant = 0.0001f,
+    };
+
     constexpr EnumArray<PresetFilamentType, FilamentParameters, PresetFilamentType::_count> preset_parameters {
         {
             PresetFilamentType::PLA,
@@ -95,6 +101,10 @@ const FilamentParameters &FilamentParameters::for_filament(const FilamentTypePar
     } else {
         return fallback_parameters;
     }
+}
+
+const FilamentParameters &FilamentParameters::for_no_filament() {
+    return no_filament_parameters;
 }
 
 } // namespace indx

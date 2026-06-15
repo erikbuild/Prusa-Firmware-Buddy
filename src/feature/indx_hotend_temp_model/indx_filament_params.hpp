@@ -16,6 +16,8 @@ struct FilamentParameters {
 
     /// Implemented in indx_filament_params.cpp
     static const FilamentParameters &for_filament(const FilamentTypeParameters &filament_parameters);
+
+    static const FilamentParameters &for_no_filament();
 };
 
 } // namespace indx
