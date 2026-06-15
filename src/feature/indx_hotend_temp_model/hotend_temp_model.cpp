@@ -51,14 +51,34 @@ void INDXHotendTempModel::step() {
     const AxisEnum e_axis = E0_AXIS;
     static_assert(E_STEPPERS == 1);
 
+    // !!! MUST be read before the temperatures themselves to avoid race conditions
+    const bool temps_valid = indx_head.get_temps_valid();
+
     const auto hotend_temp_c = indx_head.get_hotend_temp_uncompensated();
     const auto e_steps = stepper.position_from_startup(e_axis);
     const auto current_filament = FilamentType::for_tool(*virtual_tool);
 
+    // !!! MUST be read after everything else from the puppy to avoid race conditions
+    // This being the last thing is intended to catch indx head resets mid read
+    const auto puppy_reset_count = indx_head.get_reset_counter();
+
     ScopeGuard last_sg = [&] {
         last_e_steps_ = e_steps;
         last_filament_ = current_filament;
+        last_puppy_reset_count_ = puppy_reset_count;
     };
+
+    if (!temps_valid || (puppy_reset_count != last_puppy_reset_count_)) {
+        // Either the puppy has been reset (which invalidates readings)
+        // or the readings have not yet become valid after indx heat boot
+        // We can't continue, wait till everything is valid
+
+        // Reset all models
+        is_initialized_ = false;
+
+        // Some of the readings are invalid - reinitialize the model when they become valid
+        return;
+    }
 
     if (current_filament != last_filament_) {
         // This is not perfect, something can still change filament parameters without changing the actual filament.
