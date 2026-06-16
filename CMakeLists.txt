@@ -8,6 +8,7 @@ include(cmake/Options.cmake)
 include(cmake/CCache.cmake)
 include(cmake/AddPuppyFirmware.cmake)
 include(cmake/Sha256.cmake)
+include(cmake/Tar.cmake)
 
 # Needded for nunavut
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
