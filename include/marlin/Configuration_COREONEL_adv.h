@@ -81,7 +81,7 @@
    */
     #if HAS_INDX()
     // Caution: these values are not not gathered from rigorous analysis, they are defined based on educated guess
-    #define WATCH_TEMP_PERIOD 10 // Seconds
+    #define WATCH_TEMP_PERIOD 5 // Seconds
     #define WATCH_TEMP_INCREASE 20 // Degrees Celsius
     #else
     #define WATCH_TEMP_PERIOD 20 // Seconds
