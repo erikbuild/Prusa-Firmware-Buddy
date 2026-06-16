@@ -15,23 +15,6 @@ namespace indx_hotend_temp_compensation {
 
 using FilamentParameters = indx::FilamentParameters;
 
-struct FilamentPrecomputedParameters {
-    /// Constant parameter for linear filament offset formula if feedrate > threshold
-    float const_coef;
-
-    /// Linear parameter for linear filament offset formula if feedrate > threshold
-    float linear_coef;
-
-    /// Below this feedrate, offset is held constant at the threshold value
-    float feedrate_threshold_mm_s;
-
-    float heat_time_constant;
-
-    static FilamentPrecomputedParameters compute(const FilamentParameters &params);
-
-    inline bool operator==(const FilamentPrecomputedParameters &) const = default;
-};
-
 struct StepParams {
     /// Delta time since the last step, in seconds
     float dt_s;
@@ -52,6 +35,8 @@ struct StepParams {
 
     /// PWM of the print fan, 0-255
     uint8_t print_fan_pwm;
+
+    const FilamentParameters &filament;
 };
 
 /// Platform-independent compensator with pure inputs and outputs
@@ -60,9 +45,6 @@ struct StepParams {
 class HotendTempCompensator {
 
 public:
-    void set_filament_parameters(const FilamentParameters &set);
-    void set_filament_parameters(const FilamentPrecomputedParameters &set);
-
     /// Steps once
     /// Needs to be called every step_dt_s
     float step(const StepParams &params);
@@ -70,8 +52,6 @@ public:
     void reset_state();
 
 private:
-    FilamentPrecomputedParameters filament_;
-
     struct State {
         /// Feedrate with exponential fadeoff applied
         float feedrate_mm_s = 0;

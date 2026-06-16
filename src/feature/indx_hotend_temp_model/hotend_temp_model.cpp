@@ -127,7 +127,7 @@ void INDXHotendTempModel::step() {
         if (new_params != filament_params_) {
             // Filament changed, reset the models
             filament_params_ = new_params;
-            compensator_.set_filament_parameters(new_params);
+            compensator_.reset_state();
             thermal_model_.reset_state();
         }
 
@@ -167,6 +167,7 @@ void INDXHotendTempModel::step() {
             .hotend_temp_readout_c = hotend_temp_uncompensated_c,
             .hotend_temp_readout_dt_c_s = hotend_temp_raw_dt_c_s,
             .print_fan_pwm = print_fan_pwm,
+            .filament = filament_params_,
         };
 
         // Will be applied by compensation_sg ScopeGuard

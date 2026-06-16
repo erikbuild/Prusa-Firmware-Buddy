@@ -44,46 +44,29 @@ namespace {
     /// Base constant for calculating heat gradient from nozzle heating
     constexpr float heating_offset_weight = (heat_capacity_center_mm - temp_sensor_position_mm) * heat_capacity_j_k * nozzle_linear_thermal_resistance_k_w_mm;
 
+    constexpr float filament_base_linear_coef = 3.5f * 0.001f;
+    constexpr float filament_const_coef = -0.17f;
+    constexpr float filament_base_threshold = 28.f;
 } // namespace
-
-FilamentPrecomputedParameters FilamentPrecomputedParameters::compute(const FilamentParameters &params) {
-    static constexpr float base_const_coef = -55.0f * 0.001f;
-    static constexpr float base_linear_coef = 2.2f * 0.001f;
-    static constexpr float base_threshold = 6.5f;
-
-    return FilamentPrecomputedParameters {
-        .const_coef = base_const_coef * params.heat_per_mm / params.heat_time_constant,
-        .linear_coef = base_linear_coef * params.heat_per_mm,
-        .feedrate_threshold_mm_s = base_threshold / params.heat_time_constant,
-        .heat_time_constant = params.heat_time_constant,
-    };
-}
-
-void HotendTempCompensator::set_filament_parameters(const FilamentParameters &set) {
-    set_filament_parameters(FilamentPrecomputedParameters::compute(set));
-}
-
-void HotendTempCompensator::set_filament_parameters(const FilamentPrecomputedParameters &set) {
-    if (filament_ == set) {
-        return;
-    }
-
-    filament_ = set;
-    reset_state();
-}
 
 float HotendTempCompensator::step(const StepParams &params) {
     const float hotend_ambient_temp_diff_c = params.hotend_temp_readout_c - params.chamber_temperature_c;
 
-    // Apply ema to filament feedrate
-    state_.feedrate_mm_s = exponential_moving_average(state_.feedrate_mm_s, params.extruder_feedrate_mm_s, params.dt_s, filament_.heat_time_constant);
+    // Apply EMA to filament feedrate, time constant of 1 second was measured to be close to feedrate transients
+    state_.feedrate_mm_s = exponential_moving_average(state_.feedrate_mm_s, params.extruder_feedrate_mm_s, params.dt_s, 1);
 
     // Calculate filament offset
-    float filament_offset_c;
+    // Below threshold: constant = const_coef × ΔT
+    // Above threshold: linearly approaches zero as feedrate increases
+    float filament_offset_c = 0;
     {
-        const float effective_feedrate = std::max(state_.feedrate_mm_s, filament_.feedrate_threshold_mm_s);
-        filament_offset_c = hotend_ambient_temp_diff_c * (filament_.linear_coef * effective_feedrate + filament_.const_coef);
-        filament_offset_c = std::min<float>(filament_offset_c, 0);
+        float slope = 0;
+        if (params.filament.heat_per_mm > 0) {
+            slope = std::max<float>(state_.feedrate_mm_s - filament_base_threshold / params.filament.heat_per_mm, 0);
+        }
+        const float coef = filament_const_coef + slope * filament_base_linear_coef * params.filament.heat_per_mm;
+
+        filament_offset_c = std::min<float>(hotend_ambient_temp_diff_c * coef, 0);
     }
 
     // Calculate fan offset
