@@ -1,30 +1,11 @@
 #pragma once
 
 #include "screen_menu.hpp"
-#include "MItem_tools.hpp"
 #include <utility_extensions.hpp>
 #include <selftest_snake_config.hpp>
-#include <printers.h>
 #include <meta_utils.hpp>
-#include <option/has_indx.h>
 
 namespace SelftestSnake {
-static_assert(Action::_first != Action::_last, "Edge case not handled");
-
-const char *get_action_label(Action action);
-
-constexpr bool has_submenu([[maybe_unused]] Action action) {
-#if PRINTER_IS_PRUSA_XL()
-    return action == Action::DockCalibration
-        || action == Action::Loadcell
-        || action == Action::FilamentSensorCalibration
-        || action == Action::Gears;
-#elif HAS_INDX()
-    return action == Action::FilamentSensorCalibration;
-#else
-    return false;
-#endif
-}
 
 class I_MI_STS : public IWindowMenuItem {
 public:

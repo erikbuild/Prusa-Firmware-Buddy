@@ -1,4 +1,6 @@
 #include "selftest_snake_config.hpp"
+#include <selftest_action_helpers.hpp>
+#include <selftest_dependencies.hpp>
 #include <selftest_types.hpp>
 #include <selftest_result_evaluation.hpp>
 #include <config_store/store_instance.hpp>

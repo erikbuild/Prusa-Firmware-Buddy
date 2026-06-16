@@ -13,6 +13,7 @@
 #include "gui_invalidate.hpp"
 #include "knob_event.hpp"
 #include "marlin_client.hpp"
+#include <timing.h>
 #include <utils/timing/rate_limiter.hpp>
 #include <logging/log.hpp>
 #include "display_hw_checks.hpp"

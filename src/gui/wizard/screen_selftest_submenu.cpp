@@ -3,6 +3,7 @@
 
 #include <tool_index.hpp>
 #include <screen_menu_selftest_snake.hpp>
+#include <selftest_action_helpers.hpp>
 
 namespace SelftestSnake::screen_selftest_submenu {
 
