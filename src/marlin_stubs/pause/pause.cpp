@@ -69,6 +69,9 @@ static_assert(HAS_PAUSE());
 #endif
 
 #include <option/has_indx.h>
+#if HAS_INDX()
+    #include <Marlin/src/module/tool_change.h>
+#endif
 #include <option/has_extruder_fsensor.h>
 
 #include <option/has_auto_retract.h>
@@ -1309,21 +1312,56 @@ void Pause::filament_not_in_fs_process(Response response) {
     }
 }
 
-void Pause::manual_unload_process(Response response) {
-    const bool has_filament = FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder)
-        || (!FSensors_instance().sensor(LogicalFilamentSensor::extruder) && FSensors_instance().has_filament_surely(LogicalFilamentSensor::side));
-    const bool can_continue = !has_filament;
-    setPhase(can_continue ? PhasesLoadUnload::ManualUnload_continuable : PhasesLoadUnload::ManualUnload_uncontinuable);
-    handle_help(response);
+void Pause::manual_unload_process([[maybe_unused]] Response entry_response) {
+#if HAS_INDX()
+    // INDX carries the extruder in the toolhead - dock it (and back off from the dock) before the
+    // user can remove the filament by hand. Remember where we started so we can return there after
+    // re-picking the tool (instead of assuming the head started at a fixed position).
+    const xyz_pos_t resume_pos = current_position.xyz();
+    setPhase(PhasesLoadUnload::ChangingTool);
+    // ::tool_change is the free function; the member Pause::tool_change would shadow it here
+    ::tool_change(NoTool {}, tool_return_t::dock_backoff);
 
-    if (response == Response::Continue
-        && can_continue) { // Allow to continue when nothing remains in filament sensor
-        enable_e_steppers();
-        set(LoadState::unload_finish_or_change);
+    // Re-pick the docked tool and return to where manual unload started
+    const auto pick_tool_and_resume = [&] {
+        setPhase(PhasesLoadUnload::ChangingTool);
+        ::tool_change(settings.virtual_tool(), tool_return_t::no_return);
+        mapi::park({ .x = resume_pos.x, .y = resume_pos.y, .z = resume_pos.z });
+    };
+#endif
+    while (true) {
+        const bool has_filament = FSensors_instance().has_filament_surely(LogicalFilamentSensor::extruder)
+            || (!FSensors_instance().sensor(LogicalFilamentSensor::extruder) && FSensors_instance().has_filament_surely(LogicalFilamentSensor::side));
+        const bool can_continue = !has_filament;
+        const PhasesLoadUnload phase = can_continue ? PhasesLoadUnload::ManualUnload_continuable : PhasesLoadUnload::ManualUnload_uncontinuable;
+        setPhase(phase);
 
-    } else if (response == Response::Retry) { // Retry unloading
-        enable_e_steppers();
-        set(LoadState::ram_sequence);
+        const Response response = getResponse();
+        handle_help(response);
+
+        if (planner.draining() || check_user_stop(response)) {
+            set(LoadState::stop);
+            return;
+        }
+
+        if (response == Response::Continue && can_continue) { // Allow to continue when nothing remains in filament sensor
+            enable_e_steppers();
+#if HAS_INDX()
+            pick_tool_and_resume();
+#endif
+            set(LoadState::unload_finish_or_change);
+            return;
+        }
+
+        if (response == Response::Retry) { // Retry unloading
+            enable_e_steppers();
+#if HAS_INDX()
+            pick_tool_and_resume();
+#endif
+            set(LoadState::ram_sequence);
+            return;
+        }
+        idle(true);
     }
 }
 
