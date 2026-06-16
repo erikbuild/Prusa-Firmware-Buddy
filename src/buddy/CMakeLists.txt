@@ -7,12 +7,10 @@ target_sources(
           filesystem.cpp
           filesystem_fatfs.cpp
           filesystem_littlefs.cpp
-          filesystem_littlefs_bbf.cpp
           filesystem_littlefs_internal.cpp
           filesystem_root.cpp
           filesystem_semihosting.cpp
           libsysbase_syscalls.cpp
-          littlefs_bbf.cpp
           littlefs_internal.cpp
           logging.cpp
           lwip.cpp
