@@ -423,6 +423,7 @@ static FILE *open_bbf_over_debugger(Path &path_buffer, const buddy::resources::R
         bbf_entry = buddy::bbf::TLVType::RESOURCES_BOOTLOADER_IMAGE;
         return bbf;
     } else {
+        fclose(bbf);
         return nullptr;
     }
 }
