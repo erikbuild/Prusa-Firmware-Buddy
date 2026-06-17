@@ -61,10 +61,10 @@ float HotendTempCompensator::step(const StepParams &params) {
     float filament_offset_c = 0;
     {
         float slope = 0;
-        if (params.filament.heat_per_mm > 0) {
-            slope = std::max<float>(state_.feedrate_mm_s - filament_base_threshold / params.filament.heat_per_mm, 0);
+        if (params.filament.linear_heat_capacity_J_C_m > 0) {
+            slope = std::max<float>(state_.feedrate_mm_s - filament_base_threshold / params.filament.linear_heat_capacity_J_C_m, 0);
         }
-        const float coef = filament_const_coef + slope * filament_base_linear_coef * params.filament.heat_per_mm;
+        const float coef = filament_const_coef + slope * filament_base_linear_coef * params.filament.linear_heat_capacity_J_C_m;
 
         filament_offset_c = std::min<float>(hotend_ambient_temp_diff_c * coef, 0);
     }

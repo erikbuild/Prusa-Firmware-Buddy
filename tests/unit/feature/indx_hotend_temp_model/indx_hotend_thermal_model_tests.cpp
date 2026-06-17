@@ -60,7 +60,7 @@ float converge(HotendThermalModel &model, StepParams &params, const MetaParams &
 }
 
 constexpr FilamentParameters filament {
-    .heat_per_mm = 6.1f,
+    .linear_heat_capacity_J_C_m = 6.1f,
 };
 
 constexpr StepParams base_params {

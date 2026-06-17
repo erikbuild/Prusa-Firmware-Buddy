@@ -67,9 +67,7 @@ bool HotendThermalModel::step(const StepParams &args) {
             ambient_thermal_conductivity_W_C *= std::max<float>(args.nozzle_temp_C - args.board_temp_C, 0) / nozzle_ambient_temp_diff_C;
         }
 
-        // Use heat_per_mm from compensation params (per-filament) scaled to J/(°C·mm)
-        constexpr float heat_per_mm_to_capacity = 0.001f;
-        const float filament_flow_thermal_conductivity_W_C = args.filament.heat_per_mm * heat_per_mm_to_capacity * filament_feedrate_mm_s_;
+        const float filament_flow_thermal_conductivity_W_C = args.filament.linear_heat_capacity_J_C_m * filament_feedrate_mm_s_ * 0.001f;
 
         total_thermal_conductivity_W_C = fan_thermal_conductivity_W_C + ambient_thermal_conductivity_W_C + filament_flow_thermal_conductivity_W_C;
     }

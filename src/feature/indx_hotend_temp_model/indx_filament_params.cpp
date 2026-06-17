@@ -10,72 +10,72 @@ namespace indx {
 namespace {
 
     constexpr FilamentParameters fallback_parameters {
-        .heat_per_mm = 4.5f,
+        .linear_heat_capacity_J_C_m = 4.5f,
     };
 
     constexpr FilamentParameters no_filament_parameters {
-        .heat_per_mm = 0,
+        .linear_heat_capacity_J_C_m = 0,
     };
 
     constexpr EnumArray<PresetFilamentType, FilamentParameters, PresetFilamentType::_count> preset_parameters {
         {
             PresetFilamentType::PLA,
             FilamentParameters {
-                .heat_per_mm = 6.1f,
+                .linear_heat_capacity_J_C_m = 6.1f,
             },
         },
         {
             PresetFilamentType::PETG,
             FilamentParameters {
-                .heat_per_mm = 4.3f,
+                .linear_heat_capacity_J_C_m = 4.3f,
             },
         },
         {
             PresetFilamentType::ASA,
             FilamentParameters {
-                .heat_per_mm = 4.0f,
+                .linear_heat_capacity_J_C_m = 4.0f,
             },
         },
         {
             PresetFilamentType::PC,
             FilamentParameters {
-                .heat_per_mm = 4.4f,
+                .linear_heat_capacity_J_C_m = 4.4f,
             },
         },
         {
             PresetFilamentType::PVB,
             FilamentParameters {
-                .heat_per_mm = 4.5f,
+                .linear_heat_capacity_J_C_m = 4.5f,
             },
         },
         {
             PresetFilamentType::ABS,
             FilamentParameters {
-                .heat_per_mm = 3.9f,
+                .linear_heat_capacity_J_C_m = 3.9f,
             },
         },
         {
             PresetFilamentType::HIPS,
             FilamentParameters {
-                .heat_per_mm = 3.9f,
+                .linear_heat_capacity_J_C_m = 3.9f,
             },
         },
         {
             PresetFilamentType::PP,
             FilamentParameters {
-                .heat_per_mm = 5.1f,
+                .linear_heat_capacity_J_C_m = 5.1f,
             },
         },
         {
             PresetFilamentType::FLEX,
             FilamentParameters {
-                .heat_per_mm = 5.9f,
+                .linear_heat_capacity_J_C_m = 5.9f,
             },
         },
         {
             PresetFilamentType::PA,
             FilamentParameters {
-                .heat_per_mm = 5.2f,
+                .linear_heat_capacity_J_C_m = 5.2f,
             },
         },
     };
