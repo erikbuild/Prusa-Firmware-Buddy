@@ -56,11 +56,11 @@ constexpr float SAFE_Z_HEIGHT = 3.0f;
 
 /// Maximum allowable Z offset difference between tools, in mm
 /// If exceeded, the print is not allowed to continue
-constexpr float MAX_Z_OFFSET_DIFFERENCE = 0.8f;
+constexpr float MAX_Z_OFFSET_DIFFERENCE = 0.4f;
 
 /// Maximum allowable XY offset spread (max - min) per axis after normalization, in mm
 /// If exceeded, the print is not allowed to continue
-constexpr float MAX_XY_OFFSET_DIFFERENCE = 0.8f;
+constexpr float MAX_XY_OFFSET_DIFFERENCE = 0.4f;
 
 // Fallback temperatures if no filament is loaded
 constexpr int16_t DEFAULT_CLEANING_TEMP = 220;
