@@ -181,6 +181,16 @@ constinit const ChecksTraits<VirtualToolCheck>::Metadata ChecksTraits<VirtualToo
             },
         },
 #endif
+#if HAS_INDX()
+        {
+            VirtualToolCheck::filament_calibrated,
+            CheckMetadata {
+                .severity = HWCheckSeverity::Abort,
+                .title = N_("Filament not calibrated"),
+                .description = N_("Filament is missing calibration data. Unload it and load again to run the calibration."),
+            },
+        },
+#endif
 };
 
 template <>
@@ -437,6 +447,10 @@ void CompatibilityReport::generate_toolmapping_only_noclear([[maybe_unused]] con
                 // We cannot rely on the remaining filament calculations
                 remaining_filament_g = NAN;
             }
+#endif
+
+#if HAS_INDX()
+// TODO VirtualToolCheck::filament_calibrated
 #endif
 
 #if HAS_SPOOL_JOIN()

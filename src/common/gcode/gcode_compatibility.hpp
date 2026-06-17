@@ -123,6 +123,11 @@ enum class VirtualToolCheck : uint8_t {
     can_spool_join,
 #endif
 
+#if HAS_INDX()
+    /// Fails if the filament parameters are not calibrated (should happen during the load procedure)
+    filament_calibrated,
+#endif
+
     _cnt
 };
 
