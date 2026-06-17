@@ -23,7 +23,7 @@ constexpr auto txt_intro = N_("The printer will guide you through calibrating th
 constexpr auto txt_wait_for_nozzle_cooldown = N_("Wait!\n\nThe nozzle is still cooling down.");
 constexpr auto txt_picking_tool = N_("Picking up tool");
 constexpr auto txt_homing = N_("Homing XY axes");
-constexpr auto txt_moving_away = N_("Raising Z axis for clearance");
+constexpr auto txt_moving_away = N_("Lowering bed for clearance");
 // %c is the axis letter ('Y' or 'Z')
 constexpr auto txt_title_axis_alignment = N_("Nozzle %c-Axis Alignment");
 // Identical wording to dock_calibration's txt_lock_position; kept verbatim so both share one POT entry.
