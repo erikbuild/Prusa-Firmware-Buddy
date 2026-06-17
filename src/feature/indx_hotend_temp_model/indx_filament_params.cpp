@@ -39,7 +39,7 @@ namespace {
         {
             PresetFilamentType::PC,
             FilamentParameters {
-                .linear_heat_capacity_J_C_m = 4.4f,
+                .linear_heat_capacity_J_C_m = 4.9f,
             },
         },
         {
