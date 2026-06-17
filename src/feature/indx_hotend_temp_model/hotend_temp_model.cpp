@@ -5,6 +5,7 @@
 #include <raii/scope_guard.hpp>
 
 #include <feature/filament_tracker/filament_tracker.hpp>
+#include <tool/hotend/hotend.hpp>
 #include <config_store/store_instance.hpp>
 #include <feature/chamber/chamber.hpp>
 #include <puppies/INDX.hpp>
@@ -46,6 +47,14 @@ void INDXHotendTempModel::step() {
     const auto virtual_tool = VirtualToolIndex::currently_selected_opt();
     if (!virtual_tool.has_value()) {
         // Reset state once we pick a tool
+        is_initialized_ = false;
+        return;
+    }
+
+    if (!Hotend::for_tool(virtual_tool->to_physical()).is_thermally_managed()) {
+        // Suspend while the nozzle isn't thermally managed (e.g. parked mid-toolchange, when the
+        // head has no nozzle). The measured temperature legitimately drops when the nozzle is
+        // removed, which would otherwise read as a runaway against the modelled temp.
         is_initialized_ = false;
         return;
     }
