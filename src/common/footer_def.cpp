@@ -65,7 +65,7 @@ const char *footer::to_string(Item item) {
         },
         { Item::wastebin_pellets,
 #if HAS_WASTEBIN_FILL_TRACKING()
-            N_("Wastebin")
+            N_("Nozzle Cleaner")
 #else
             nullptr
 #endif

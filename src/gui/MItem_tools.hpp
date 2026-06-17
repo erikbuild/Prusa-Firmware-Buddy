@@ -95,7 +95,7 @@ protected:
 /// Tune / Wastebin-submenu action: park the nozzle clear of the INDX wastebin so the user can empty
 /// it, then reset the pellet fill counter (handled by M1986). Works both mid-print and while idle.
 class MI_NOZZLE_CLEANER_EMPTY_WASTEBIN : public IWindowMenuItem {
-    static constexpr const char *const label = N_("Empty Wastebin");
+    static constexpr const char *const label = N_("Empty Nozzle Cleaner");
 
 public:
     MI_NOZZLE_CLEANER_EMPTY_WASTEBIN();
@@ -108,7 +108,7 @@ protected:
 /// Wastebin submenu: auto-pause the print when the nozzle-cleaner wastebin reaches capacity
 /// (otherwise only a non-blocking warning is shown).
 class MI_NOZZLE_CLEANER_AUTOPAUSE : public WI_ICON_SWITCH_OFF_ON_t {
-    static constexpr const char *const label = N_("Pause on Full Wastebin");
+    static constexpr const char *const label = N_("Pause on Full Nozzle Cleaner");
 
 public:
     MI_NOZZLE_CLEANER_AUTOPAUSE();
@@ -120,7 +120,7 @@ protected:
 /// Wastebin submenu: which nozzle-cleaner is installed - standard or extended (high-capacity)
 /// wastebin. Selects the capacity used for overfill warnings.
 class MI_NOZZLE_CLEANER_CAPACITY : public MenuItemSwitch {
-    static constexpr const char *const label = N_("Wastebin Capacity");
+    static constexpr const char *const label = N_("Nozzle Cleaner Capacity");
 
 public:
     MI_NOZZLE_CLEANER_CAPACITY();

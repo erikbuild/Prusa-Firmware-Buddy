@@ -72,7 +72,7 @@ void DialogWarning::Change(fsm::BaseData data) {
     case WarningType::NozzleCleanerFull:
         // With a known toolchange count, add how many are still ahead; otherwise keep the error-code text.
         if (const std::optional<uint32_t> remaining = WastebinWatcher::instance().expected_remaining_pellets()) {
-            frame_->set_info_text(_("Nozzle cleaner wastebin is full.\nTool changes remaining: %u.").formatted(info_params, static_cast<unsigned>(*remaining)));
+            frame_->set_info_text(_("Nozzle cleaner is full.\nTool changes remaining: %u.").formatted(info_params, static_cast<unsigned>(*remaining)));
         }
         break;
 #endif

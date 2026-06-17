@@ -14,5 +14,5 @@ using ScreenMenuWastebin_ = ScreenMenu<GuiDefaults::MenuFooter, MI_RETURN,
 class ScreenMenuWastebin : public ScreenMenuWastebin_ {
 public:
     ScreenMenuWastebin()
-        : ScreenMenuWastebin_(_("WASTEBIN")) {}
+        : ScreenMenuWastebin_(_("NOZZLE CLEANER")) {}
 };

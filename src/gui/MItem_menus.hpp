@@ -127,7 +127,7 @@ using MI_HARDWARE
 
 #if HAS_WASTEBIN_FILL_TRACKING()
 using MI_WASTEBIN
-    = MI_SCREEN<N_("Wastebin"), class ScreenMenuWastebin>;
+    = MI_SCREEN<N_("Nozzle Cleaner"), class ScreenMenuWastebin>;
 #endif
 
 using MI_HARDWARE_TUNE
