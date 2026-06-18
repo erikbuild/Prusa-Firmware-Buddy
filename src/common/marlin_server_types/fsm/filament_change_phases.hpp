@@ -69,6 +69,10 @@ enum class PhasesLoadUnload : PhaseUnderlyingType {
     OPT_UncommitedUsage,
 #endif
 
+#if HAS_INDX()
+    FilamentCalibrationFailed,
+#endif
+
 #if HAS_MMU2()
     // MMU-specific dialogs
     LoadFilamentIntoMMU,

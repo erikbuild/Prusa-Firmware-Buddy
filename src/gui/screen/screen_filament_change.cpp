@@ -477,6 +477,9 @@ using Frames = FrameDefinitionList<ScreenFilamentChange::FrameStorage,
 #if HAS_ANFC()
     FrameDefinition<Phase::OPT_UncommitedUsage, FramePrompt, N_("OpenPrintTag Pending Write"), N_("There is filament usage to be written to the OpenPrintTag. Make sure the spool is close to the NFC reader.")>,
 #endif
+#if HAS_INDX()
+    FrameDefinition<Phase::FilamentCalibrationFailed, WithBeepAlertSound<FramePrompt>, N_("Filament Calibration Failed"), N_("Make sure the filament is properly inserted.")>,
+#endif
 #if HAS_MMU2()
     FrameDefinition<Phase::LoadFilamentIntoMMU, FrameProgress, txt_mmu_insert_filament>,
     FrameDefinition<Phase::MMUDummyStartNoAttention, FrameProgress, txt_mmu_dummy_start>,
