@@ -60,7 +60,6 @@ public:
         unload_from_gears,
 #if HAS_NOZZLE_CLEANER()
         unload_nozzle_clean,
-        purge_nozzle_clean,
 #endif
         unload_finish_or_change,
         load_start,
@@ -235,7 +234,6 @@ private:
     void unload_from_gears_process(Response response);
 #if HAS_NOZZLE_CLEANER()
     void unload_nozzle_clean_process(Response response);
-    void purge_nozzle_clean_process(Response response);
 #endif
     void unload_finish_or_change_process(Response response);
     void load_start_process(Response response);
@@ -263,6 +261,11 @@ private:
     void runout_during_load_process(Response response);
     void stop_process(Response response);
 
+#if HAS_NOZZLE_CLEANER()
+    bool nozzle_cleaner_purge_sequence();
+#endif
+    bool standard_purge_sequence();
+
     using StateHandler = void (Pause::*)(Response response);
     static constexpr EnumArray<LoadState, StateHandler, static_cast<int>(LoadState::_finished)> state_handlers {
         { LoadState::start, &Pause::start_process },
@@ -286,7 +289,6 @@ private:
             { LoadState::unload_from_gears, &Pause::unload_from_gears_process },
 #if HAS_NOZZLE_CLEANER()
             { LoadState::unload_nozzle_clean, &Pause::unload_nozzle_clean_process },
-            { LoadState::purge_nozzle_clean, &Pause::purge_nozzle_clean_process },
 #endif
             { LoadState::unload_finish_or_change, &Pause::unload_finish_or_change_process },
             { LoadState::load_start, &Pause::load_start_process },

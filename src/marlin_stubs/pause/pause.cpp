@@ -745,18 +745,37 @@ static constexpr float retract_distance = -4.f; // mm
 static constexpr feedRate_t retract_feedrate = 35; // mm/s
 
 void Pause::purge_process([[maybe_unused]] Response response) {
-#if HAS_NOZZLE_CLEANER()
-    set(LoadState::purge_nozzle_clean);
-    return;
-#endif
     // Extrude filament to get into hotend
     setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
 
     planner.synchronize(); // Finish any pending moves before starting the purge
+
+#if HAS_NOZZLE_CLEANER()
+    if (!nozzle_cleaner_purge_sequence()) {
+        return;
+    }
+#else
+    if (!standard_purge_sequence()) {
+        return;
+    }
+#endif
+
+    config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
+
+    if constexpr (option::has_human_interactions) {
+        set(LoadState::color_correct_ask);
+    } else {
+        set(LoadState::load_finalize);
+    }
+
+    handle_filament_removal(LoadState::filament_push_ask);
+}
+
+bool Pause::standard_purge_sequence() {
     const auto purge_result = do_e_move_notify_progress_hotextrude(settings.purge_length(), ADVANCED_PAUSE_PURGE_FEEDRATE, StopConditions::All);
     if (purge_result == StopConditions::SideFilamentSensorRunout) {
         set(LoadState::runout_during_load);
-        return;
+        return false;
     }
     // If the user stopped the purge, we need to stop the extruder move
     if (purge_result == StopConditions::UserStopped) {
@@ -767,21 +786,15 @@ void Pause::purge_process([[maybe_unused]] Response response) {
         std::ignore = do_e_move_notify_progress_hotextrude(retract_distance, retract_feedrate, StopConditions::UserStopped);
     }
 
-    config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
-
-    set(LoadState::color_correct_ask);
-    handle_filament_removal(LoadState::filament_push_ask);
+    return true;
 }
 
 #if HAS_NOZZLE_CLEANER()
-void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
+bool Pause::nozzle_cleaner_purge_sequence() {
     [[maybe_unused]] static constexpr float purge_length = 5.f;
     static constexpr uint8_t retry_cnt = 3; // Number of maximum retries for the whole nozzle cleaning purge loop
-
-    setPhase(is_unstoppable() ? PhasesLoadUnload::Purging_unstoppable : PhasesLoadUnload::Purging_stoppable);
     static constexpr uint32_t purge_nozzle_clean_duration_estimate_ms = 8'000;
     PauseFsmDurationNotifier progress_notifier(*this, purge_nozzle_clean_duration_estimate_ms);
-    planner.synchronize(); // Finish any pending moves before starting the purge
 
     ScopeGuard resetLoader = [&] {
         nozzle_cleaner::reset();
@@ -806,11 +819,11 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
         switch (purge_result) {
         case StopConditions::SideFilamentSensorRunout:
             set(LoadState::runout_during_load);
-            return;
+            return false;
         case StopConditions::UserStopped:
             planner.quick_stop_and_resume();
             set(LoadState::load_finalize);
-            return;
+            return false;
         default:
             break;
         }
@@ -818,7 +831,7 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
         planner.synchronize(); // Wait for the purge to finish before continuing
         if (!nozzle_cleaner::load_and_execute(nozzle_cleaner::Sequence::purge_clean)) {
             if (planner.draining()) {
-                return; // we exited the load_and_execute cause of .draining, we need to exit asap
+                return false; // we exited the load_and_execute cause of .draining, we need to exit asap
             }
 
             if (++failed_purge_attempts >= retry_cnt) {
@@ -826,22 +839,17 @@ void Pause::purge_nozzle_clean_process([[maybe_unused]] Response response) {
                 SERIAL_ECHO_MSG("Purging with nozzle cleaning failed, stopping the process");
                 set(LoadState::stop);
                 failed_purge_attempts = 0; // Reset the failed attempts counter
-                return;
+                return false;
             }
-            return; // This exits the loop and method and does not change the state so the whole loop will begin again
+            return false; // This exits the loop and method and does not change the state so the whole loop will begin again
         };
 
     #if HAS_INDX() // INDX_TODO: clean up this :)
         break; // On INDX we do the purge in the gcode of the loader, so we only want to loop on the cleaner execution, but not do multiple purges
     #endif
     }
-    config_store().set_filament_type(settings.virtual_tool(), filament::get_type_to_load());
 
-    if constexpr (option::has_human_interactions) {
-        set(LoadState::color_correct_ask);
-    } else {
-        set(LoadState::load_finalize);
-    }
+    return true;
 }
 #endif // HAS_NOZZLE_CLEANER()
 
@@ -1837,11 +1845,7 @@ void Pause::setup_progress_mapper() {
             { LoadState::load_to_gears, 1 },
                 { LoadState::load_wait_temp, 3 },
                 { LoadState::long_load, 1 },
-#if HAS_NOZZLE_CLEANER()
-                { LoadState::purge_nozzle_clean, 1 },
-#else
                 { LoadState::purge, 1 },
-#endif
 #if HAS_AUTO_RETRACT()
                 { LoadState::auto_retract, 1 },
 #endif
@@ -1853,11 +1857,7 @@ void Pause::setup_progress_mapper() {
     case LoadType::load_purge: {
         constexpr static ProgressMapperWorkflowArray workflow { std::to_array<WorkflowStep>({
             { LoadState::load_wait_temp, 3 },
-#if HAS_NOZZLE_CLEANER()
-                { LoadState::purge_nozzle_clean, 1 },
-#else
                 { LoadState::purge, 1 },
-#endif
 #if HAS_AUTO_RETRACT()
                 { LoadState::auto_retract, 1 },
 #endif
@@ -1900,11 +1900,7 @@ void Pause::setup_progress_mapper() {
 #endif
                 { LoadState::ram_sequence, 1 },
                 { LoadState::long_load, 2 },
-#if HAS_NOZZLE_CLEANER()
-                { LoadState::purge_nozzle_clean, 1 },
-#else
                 { LoadState::purge, 1 },
-#endif
 #if HAS_AUTO_RETRACT()
                 { LoadState::auto_retract, 1 },
 #endif
