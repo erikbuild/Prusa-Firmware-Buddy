@@ -47,7 +47,7 @@ float converge(HotendThermalModel &model, StepParams &params, const MetaParams &
 
         // Give the model a bit of a time to start reacting
         if (step > 1) {
-            if (temp_diff < 0.2f) {
+            if (temp_diff < 0.1f) {
                 // Converged - return the number
                 return model.modelled_nozzle_temp_C();
             }
@@ -197,7 +197,7 @@ TEST_CASE("indx_hotend_thermal_model::stuck_TPIS") {
         model.step(params);
         meta_params.step(params);
     }
-    CHECK(model.modelled_nozzle_temp_C() > 180);
+    CHECK(model.modelled_nozzle_temp_C() > 200);
 }
 
 TEST_CASE("indx_hotend_thermal_model::convergence") {

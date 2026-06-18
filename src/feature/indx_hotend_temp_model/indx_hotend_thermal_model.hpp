@@ -13,7 +13,7 @@ class HotendThermalModel {
 
 public:
     /// Fraction of the coil power delivered to nozzle
-    static constexpr float hotend_induction_efficiency = 0.85f;
+    static constexpr float hotend_induction_efficiency = 0.94f;
 
 public:
     /// Input data for the thermal model, collected each cycle (~160ms)

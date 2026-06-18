@@ -118,7 +118,7 @@ public:
 
     /// Fraction of the coil power delivered to nozzle
     /// Relates to get_hotend_energy_consumed_uJ
-    static constexpr float hotend_induction_efficiency = 0.85f;
+    static constexpr float hotend_induction_efficiency = 0.94f;
 
     [[nodiscard]] int16_t get_mcu_temperature(); ///< Get MCU temperature [°C]
     [[nodiscard]] int16_t get_board_temperature(); ///< Get board temperature [°C]
