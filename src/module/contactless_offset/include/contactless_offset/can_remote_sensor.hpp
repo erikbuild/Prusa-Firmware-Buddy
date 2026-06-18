@@ -1,5 +1,7 @@
 #pragma once
 
+#define DO_NOT_CHECK_ATOMIC_LOCK_FREE
+
 #include <contactless_offset/tool_sensor.hpp>
 #include <utils/atomic_circular_queue.hpp>
 #include <atomic>
