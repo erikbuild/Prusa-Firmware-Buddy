@@ -13,6 +13,8 @@
     #define MCU_IS_STM32F4() 1
 #elif MCU_IS_STM32G070RBT6()
     #define MCU_IS_STM32G0() 1
+#elif MCU_IS_STM32C092KCUX()
+    #define MCU_IS_STM32C0() 1
 #elif MCU_IS_STM32H503CBU7()
     #define MCU_IS_STM32H5() 1
 #else
@@ -21,6 +23,10 @@
 
 #ifndef MCU_IS_STM32G0
     #define MCU_IS_STM32G0() 0
+#endif
+
+#ifndef MCU_IS_STM32C0
+    #define MCU_IS_STM32C0() 0
 #endif
 
 #ifndef MCU_IS_STM32F4
