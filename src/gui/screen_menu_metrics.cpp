@@ -15,7 +15,7 @@
 LOG_COMPONENT_REF(GUI);
 
 MI_METRICS_HOST::MI_METRICS_HOST()
-    : WiInfo(string_view_utf8::MakeCPUFLASH("Host")) {
+    : WiInfo(_("Host")) {
     ChangeInformation(config_store().metrics_host.get().data());
 }
 
@@ -33,7 +33,7 @@ void MI_METRICS_HOST::click(IWindowMenu &) {
 }
 
 MI_METRICS_PORT::MI_METRICS_PORT()
-    : WiSpin(config_store().metrics_port.get(), numeric_input_config::network_port, string_view_utf8::MakeCPUFLASH("Metrics Port")) {}
+    : WiSpin(config_store().metrics_port.get(), numeric_input_config::network_port, _("Metrics Port")) {}
 
 void MI_METRICS_PORT::OnClick() {
     config_store().metrics_port.set(static_cast<uint16_t>(value()));
@@ -41,7 +41,7 @@ void MI_METRICS_PORT::OnClick() {
 }
 
 MI_SYSLOG_PORT::MI_SYSLOG_PORT()
-    : WiSpin(config_store().syslog_port.get(), numeric_input_config::network_port, string_view_utf8::MakeCPUFLASH("Syslog Port")) {}
+    : WiSpin(config_store().syslog_port.get(), numeric_input_config::network_port, _("Syslog Port")) {}
 
 void MI_SYSLOG_PORT::OnClick() {
     config_store().syslog_port.set(static_cast<uint16_t>(value()));
@@ -50,27 +50,27 @@ void MI_SYSLOG_PORT::OnClick() {
 
 // Info message
 MI_METRICS_INFO_LABEL::MI_METRICS_INFO_LABEL()
-    : IWindowMenuItem(string_view_utf8::MakeCPUFLASH("What is this?"), &img::question_16x16) {}
+    : IWindowMenuItem(_("What is this?"), &img::question_16x16) {}
 
 void MI_METRICS_INFO_LABEL::click(IWindowMenu &) {
-    MsgBoxInfo(string_view_utf8::MakeCPUFLASH("This feature allows you to gather diagnostic data to show in Grafana.\n\nBe careful, it can send unencrypted data to the internet."), Responses_Ok);
+    MsgBoxInfo(_("This feature allows you to gather diagnostic data to show in Grafana.\n\nBe careful, it can send unencrypted data to the internet."), Responses_Ok);
 }
 
 MI_METRICS_ENABLE::MI_METRICS_ENABLE()
-    : WI_ICON_SWITCH_OFF_ON_t(config_store().enable_metrics.get(), string_view_utf8::MakeCPUFLASH("Enable Metrics")) {}
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().enable_metrics.get(), _("Enable Metrics")) {}
 
 void MI_METRICS_ENABLE::OnChange([[maybe_unused]] size_t old_index) {
     config_store().enable_metrics.set(value());
     logging::syslog_reconfigure();
     metrics_reconfigure();
     if (value() && !config_store().enable_metrics.get()) {
-        MsgBoxWarning(string_view_utf8::MakeCPUFLASH("Failed to enable metrics. Check your settings."), Responses_Ok);
+        MsgBoxWarning(_("Failed to enable metrics. Check your settings."), Responses_Ok);
         set_value(false);
     }
 }
 
 MI_METRICS_LIST::MI_METRICS_LIST()
-    : IWindowMenuItem(string_view_utf8::MakeCPUFLASH("Metrics List"), nullptr, is_enabled_t::yes, is_hidden_t::no, expands_t::yes) {
+    : IWindowMenuItem(_("Metrics List"), nullptr, is_enabled_t::yes, is_hidden_t::no, expands_t::yes) {
 }
 
 void MI_METRICS_LIST::click(IWindowMenu &) {
@@ -78,4 +78,4 @@ void MI_METRICS_LIST::click(IWindowMenu &) {
 }
 
 ScreenMenuMetricsSettings::ScreenMenuMetricsSettings()
-    : ScreenMenu(string_view_utf8::MakeCPUFLASH("METRICS & LOG")) {}
+    : ScreenMenu(_("METRICS & LOG")) {}

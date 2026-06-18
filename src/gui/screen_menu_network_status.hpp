@@ -38,14 +38,14 @@ public:
 
 #if BUDDY_ENABLE_CONNECT()
 class MI_STATS_CONNECT : public WiInfo<stats_text_size> {
-    static constexpr const char *label = HAS_MINI_DISPLAY() ? N_("Connect") : N_("- Connect");
+    static constexpr const char *label = HAS_MINI_DISPLAY() ? "Connect" : "- Connect";
 
 public:
     MI_STATS_CONNECT();
 };
 
 class MI_CONNECT_IP : public WiInfo<ADDR_LEN> {
-    static constexpr const char *label = N_("Connect IP");
+    static constexpr const char *label = "Connect IP";
 
 public:
     MI_CONNECT_IP();

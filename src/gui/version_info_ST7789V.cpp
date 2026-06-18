@@ -35,7 +35,7 @@ ScreenMenuVersionInfo::ScreenMenuVersionInfo()
     {
         // r=1 c=20
         char fmt[21];
-        string_view_utf8::MakeCPUFLASH("Firmware Version\n").copyToRAM(fmt, sizeof(fmt)); // note the underscore at the beginning of this line
+        _("Firmware Version\n").copyToRAM(fmt, sizeof(fmt)); // note the underscore at the beginning of this line
         begin += snprintf(begin, end - begin, fmt);
     }
 
@@ -58,7 +58,7 @@ ScreenMenuVersionInfo::ScreenMenuVersionInfo()
     if (end > begin) {
         // c=20 r=4
         char fmt[20 * 4];
-        string_view_utf8::MakeCPUFLASH("\nBootloader Version\n%d.%d.%d\n\nBuddy Board\n%d\n%s").copyToRAM(fmt, sizeof(fmt)); // note the underscore at the beginning of this line
+        _("\nBootloader Version\n%d.%d.%d\n\nBuddy Board\n%d\n%s").copyToRAM(fmt, sizeof(fmt)); // note the underscore at the beginning of this line
         begin += snprintf(begin, end - begin,
             fmt,
             bootloader->major, bootloader->minor, bootloader->patch,

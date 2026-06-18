@@ -271,7 +271,7 @@ void MI_MMU_INVOKE_MAINTENANCE::click(IWindowMenu & /*window_menu*/) {
 }
 
 MI_MMU_NEXTRUDER_REWORK::MI_MMU_NEXTRUDER_REWORK()
-    : MenuItemSelectMenu(HAS_LOADCELL() ? string_view_utf8::MakeCPUFLASH("Nextruder") : _("Extruder")) {
+    : MenuItemSelectMenu(_(HAS_LOADCELL() ? "Nextruder" : N_("Extruder"))) {
     set_current_item(config_store().is_mmu_rework.get());
 }
 

@@ -16,6 +16,6 @@ class ScreenMenuVersionInfo : public ScreenMenuVersionInfo__ {
     void set_serial_number(WiInfo<28> &item, const char *sn, uint8_t bom_id);
 
 public:
-    constexpr static const char *label = "VERSION INFO";
+    constexpr static const char *label = N_("VERSION INFO");
     ScreenMenuVersionInfo();
 };

@@ -22,7 +22,7 @@ class MI_ALT_FAN : public WI_ICON_SWITCH_OFF_ON_t {
 
 public:
     MI_ALT_FAN()
-        : WI_ICON_SWITCH_OFF_ON_t(init_index(), string_view_utf8::MakeCPUFLASH("Alt fan correction"), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+        : WI_ICON_SWITCH_OFF_ON_t(init_index(), _("Alt fan correction"), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
 
 protected:
     virtual void OnChange(size_t old_index) override;

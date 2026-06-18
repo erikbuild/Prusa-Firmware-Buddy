@@ -86,21 +86,21 @@ using MI_METRICS_SETTINGS
     = MI_SCREEN<N_("Metrics & Log"), class ScreenMenuMetricsSettings>;
 
 using MI_ETH_SETTINGS
-    = MI_SCREEN<"Ethernet"_ntr, class ScreenMenuEthernetSettings, &img::lan_16x16>;
+    = MI_SCREEN<N_("Ethernet"), class ScreenMenuEthernetSettings, &img::lan_16x16>;
 
 #if HAS_ESP()
 using MI_WIFI_SETTINGS
-    = MI_SCREEN<"Wi-Fi"_ntr, class ScreenMenuWifiSettings, &img::wifi_16x16>;
+    = MI_SCREEN<N_("Wi-Fi"), class ScreenMenuWifiSettings, &img::wifi_16x16>;
 #endif
 
 using MI_MESSAGES
     = MI_SCREEN<N_("Message History"), class screen_messages_data_t>;
 
 using MI_PRUSA_CONNECT
-    = MI_SCREEN<"Prusa Connect"_ntr, class ScreenMenuConnect>;
+    = MI_SCREEN<N_("Prusa Connect"), class ScreenMenuConnect>;
 
 using MI_PRUSALINK
-    = MI_SCREEN<"PrusaLink"_ntr, class ScreenMenuPrusaLink>;
+    = MI_SCREEN<N_("PrusaLink"), class ScreenMenuPrusaLink>;
 
 using MI_FOOTER_SETTINGS
     = MI_SCREEN<N_("Footer"), class ScreenMenuFooterSettings>;

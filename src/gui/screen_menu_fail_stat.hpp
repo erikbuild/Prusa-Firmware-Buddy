@@ -19,7 +19,7 @@ using ScreenMenuIndxDiag__ = ScreenMenu<EFooter::On, MI_RETURN,
     MI_INFO_XEXT_REFRESH_ERR>;
 
 class ScreenMenuIndxDiag : public ScreenMenuIndxDiag__ {
-    static constexpr const char *label = "INDX DIAGNOSTICS";
+    static constexpr const char *label = N_("INDX DIAGNOSTICS");
 
 public:
     ScreenMenuIndxDiag();
@@ -52,7 +52,7 @@ using ScreenMenuFailStat__ = ScreenMenu<EFooter::On, MI_RETURN
     >;
 
 class ScreenMenuFailStat : public ScreenMenuFailStat__ {
-    static constexpr const char *label = "FAILURE STATISTICS";
+    static constexpr const char *label = N_("FAILURE STATISTICS");
 
 public:
     ScreenMenuFailStat();

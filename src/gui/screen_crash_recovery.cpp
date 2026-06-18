@@ -221,12 +221,12 @@ WinsToolRecovery::WinsToolRecovery(ScreenCrashRecovery &screen)
     : text_long(&screen, text_long_rc, is_multiline::yes, is_closed_on_click_t::no, _(en_text_long_tool))
     , text_careful(&screen, { 0, tool_row_careful, GuiDefaults::ScreenWidth, char_h }, is_multiline::yes, is_closed_on_click_t::no, _(en_text_tool_careful))
     , text_tool {
-        { &screen, { tool_col_0 - tool_text_w, tool_row_0, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("T1") },
-        { &screen, { tool_col_0 - tool_text_w, tool_row_1, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("T2") },
-        { &screen, { tool_col_0 - tool_text_w, tool_row_2, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("T3") },
-        { &screen, { tool_col_1 - tool_text_w, tool_row_0, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("T4") },
-        { &screen, { tool_col_1 - tool_text_w, tool_row_1, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("T5") },
-        { &screen, { tool_col_1 - tool_text_w, tool_row_2, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("T6") },
+        { &screen, { tool_col_0 - tool_text_w, tool_row_0, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, _("T1") },
+        { &screen, { tool_col_0 - tool_text_w, tool_row_1, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, _("T2") },
+        { &screen, { tool_col_0 - tool_text_w, tool_row_2, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, _("T3") },
+        { &screen, { tool_col_1 - tool_text_w, tool_row_0, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, _("T4") },
+        { &screen, { tool_col_1 - tool_text_w, tool_row_1, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, _("T5") },
+        { &screen, { tool_col_1 - tool_text_w, tool_row_2, tool_text_w, char_h }, is_multiline::no, is_closed_on_click_t::no, _("T6") },
     }
     , icon_tool {
         { &screen, { tool_col_0 + 5, tool_row_0 } },

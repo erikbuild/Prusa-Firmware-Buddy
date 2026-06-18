@@ -14,7 +14,7 @@ class ScreenMenuVersionInfo : public screen_t {
     static constexpr uint8_t VERSION_INFO_STR_MAXLEN = 150;
     static constexpr uint8_t blank_space_h = 10; // Visual bottom padding for HELP string
     std::array<char, VERSION_INFO_STR_MAXLEN> version_info_str;
-    constexpr static const char *label = "VERSION INFO";
+    constexpr static const char *label = N_("VERSION INFO");
     static constexpr size_t helper_lines = 10;
     static constexpr Font helper_font = Font::normal;
 

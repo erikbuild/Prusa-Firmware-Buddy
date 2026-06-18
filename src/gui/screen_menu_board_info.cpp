@@ -108,7 +108,7 @@ MI_OTP_INDX_HEAD::MI_OTP_INDX_HEAD()
 
 ScreenMenuBoardInfo::ScreenMenuBoardInfo()
     : ScreenMenuBoardInfo__ {
-        string_view_utf8::MakeCPUFLASH("BOARD INFO"),
+        _("BOARD INFO"),
     } {
     header.SetIcon(&img::info_16x16);
     EnableLongHoldScreenAction();

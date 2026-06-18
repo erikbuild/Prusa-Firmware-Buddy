@@ -61,7 +61,7 @@ inline constexpr const char *get_response_text(Response response) {
     case Response::NotNow:
         return N_("NOT NOW");
     case Response::Ok:
-        return "OK";
+        return N_("OK");
     case Response::Pause:
         return N_("PAUSE");
     case Response::Print:

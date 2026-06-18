@@ -81,7 +81,7 @@ void MI_PL_QRCODE::click(IWindowMenu &) {
 // ScreenMenuPrusaLink
 // ----------------------------------------------------------------
 ScreenMenuPrusaLink::ScreenMenuPrusaLink()
-    : ScreenMenu(string_view_utf8::MakeCPUFLASH("PRUSALINK")) {
+    : ScreenMenu(_("PRUSALINK")) {
     // The user might want to read the password from here, don't time it out on them.
     ClrMenuTimeoutClose();
 }
