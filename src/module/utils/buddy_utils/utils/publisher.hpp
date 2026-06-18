@@ -113,3 +113,16 @@ private:
     Subscriber *next_ = nullptr;
     Callback callback_ = {};
 };
+
+template <typename Publisher, typename Lambda>
+class LambdaSubscriber : public Publisher::Subscriber {
+
+public:
+    LambdaSubscriber(Publisher &publisher, Lambda &&lambda)
+        : Publisher::Subscriber(publisher, [this](auto... args) { lambda_(args...); })
+        , lambda_(lambda) {
+    }
+
+private:
+    Lambda lambda_;
+};
