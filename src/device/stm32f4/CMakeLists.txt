@@ -21,6 +21,9 @@ else()
   target_sources(firmware PRIVATE cmsis.cpp)
 endif()
 
+target_link_options(firmware PUBLIC "-L" "${CMAKE_CURRENT_SOURCE_DIR}/linker")
+add_link_dependency(firmware "${CMAKE_CURRENT_SOURCE_DIR}/linker/stm32f4_platform.ld")
+
 if(MCU MATCHES "STM32F42")
   target_set_linker_script(firmware "${CMAKE_CURRENT_SOURCE_DIR}/linker/stm32f42x${BOOT_SUFFIX}.ld")
 elseif(MCU MATCHES "STM32F407")
