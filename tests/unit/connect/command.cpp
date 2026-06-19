@@ -196,6 +196,12 @@ TEST_CASE("Set value - high flow") {
     REQUIRE(get<bool>(cmd.value));
 }
 
+TEST_CASE("Set value - high tool index nozzle diameter") {
+    auto cmd = command_test<SetValue>("{\"command\":\"SET_VALUE\",\"kwargs\":{\"tools.8.nozzle_diameter\":0.4}}");
+    REQUIRE(cmd.name == PropertyName::NozzleDiameter);
+    REQUIRE(cmd.idx == 7);
+}
+
 void set_value_chamber_target_temp(uint32_t temperature) {
     std::string json = std::format(R"({{"command":"SET_VALUE","kwargs":{{"chamber.target_temp": {}}}}})", temperature);
 

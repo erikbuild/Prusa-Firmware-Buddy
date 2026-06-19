@@ -380,6 +380,9 @@ Command Command::parse_json_command(CommandId id, char *body, size_t body_size, 
             NOZZLE_PARAMS(3)
             NOZZLE_PARAMS(4)
             NOZZLE_PARAMS(5)
+            NOZZLE_PARAMS(6)
+            NOZZLE_PARAMS(7)
+            NOZZLE_PARAMS(8)
 #endif
 #undef NOZZLE_PARAMS
         } else if (is_arg("port", Type::Primitive)) {

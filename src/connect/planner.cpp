@@ -980,6 +980,10 @@ void Planner::command(const Command &command, const SetValue &params) {
     const char *err = nullptr;
 
     auto adjust_nozzle = [&](size_t idx, auto cback) {
+        if (idx >= printer.params().slots.size()) {
+            err = "Tool index out of range";
+            return;
+        }
         const auto vt = VirtualToolIndex::from_raw(idx);
         auto slot = printer.params().slots[idx];
         cback(slot);
