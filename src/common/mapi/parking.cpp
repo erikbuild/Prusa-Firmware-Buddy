@@ -127,6 +127,23 @@ ParkingPosition ParkingPosition::from_xy_relative_z_pos(const xyz_pos_t &pos) {
     };
 }
 
+#if HAS_INDX()
+/// Applies nozzle cleaner origin offsets (from calibration) to the given parking position's X and Y.
+ParkingPosition apply_nozzle_cleaner_offset(const ParkingPosition &position) {
+    const float x_offset = config_store().nozzle_cleaner_x_origin_offset.get();
+    const float y_offset = config_store().nozzle_cleaner_y_origin_offset.get();
+
+    ParkingPosition result = position;
+    if (auto *x = std::get_if<float>(&result.x)) {
+        *x += x_offset;
+    }
+    if (auto *y = std::get_if<float>(&result.y)) {
+        *y += y_offset;
+    }
+    return result;
+}
+#endif
+
 #if HAS_NOZZLE_CLEANER()
 /**
  * Does the extra parking moves except the last one to move in the correct
@@ -238,22 +255,6 @@ static void pre_park_move_pattern(const feedRate_t &feedrate, const xy_pos_t &de
         #error "Implement"
     #endif
 }
-
-    #if HAS_INDX()
-ParkingPosition apply_nozzle_cleaner_offset(const ParkingPosition &position) {
-    const float x_offset = config_store().nozzle_cleaner_x_origin_offset.get();
-    const float y_offset = config_store().nozzle_cleaner_y_origin_offset.get();
-
-    ParkingPosition result = position;
-    if (auto *x = std::get_if<float>(&result.x)) {
-        *x += x_offset;
-    }
-    if (auto *y = std::get_if<float>(&result.y)) {
-        *y += y_offset;
-    }
-    return result;
-}
-    #endif
 
 void move_out_of_nozzle_cleaner_area() {
     #if PRINTER_IS_PRUSA_iX()
