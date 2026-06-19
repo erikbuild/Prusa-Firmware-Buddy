@@ -13,10 +13,10 @@ namespace {
     // See BFW-8630 for more info
 
     /// K/W at full fan power, thermal resistance of nozzle tip surface to air
-    constexpr float nozzle_tip_thermal_resistance_k_w = 120;
+    constexpr float nozzle_tip_thermal_resistance_k_w = 200;
 
     /// K/W, thermal resistance between the nozzle and the heatsink
-    constexpr float heatbreak_thermal_resistance_k_w = 90;
+    constexpr float heatbreak_thermal_resistance_k_w = 160;
 
     /// K/W/mm, thermal resistance of the nozzle body per mm, used for calculating heat gradient
     constexpr float nozzle_linear_thermal_resistance_k_w_mm = 1.7f;
@@ -25,7 +25,7 @@ namespace {
     constexpr float heat_capacity_j_k = 1.17f;
 
     /// Decides how much of temperature gradient is compensated [%]
-    constexpr float compensation_factor = 0.25f;
+    constexpr float compensation_factor = 0.15f;
 
     // Positions of heat sources and sinks
     constexpr float heatbreak_position_mm = 0;
@@ -44,8 +44,8 @@ namespace {
     /// Base constant for calculating heat gradient from nozzle heating
     constexpr float heating_offset_weight = (heat_capacity_center_mm - temp_sensor_position_mm) * heat_capacity_j_k * nozzle_linear_thermal_resistance_k_w_mm;
 
-    constexpr float filament_base_linear_coef = 3.5f * 0.001f;
-    constexpr float filament_const_coef = -0.17f;
+    constexpr float filament_base_linear_coef = 2.5f * 0.001f;
+    constexpr float filament_const_coef = -0.12f;
     constexpr float filament_base_threshold = 28.f;
 } // namespace
 

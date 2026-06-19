@@ -10,7 +10,7 @@ namespace indx {
 namespace {
 
     constexpr FilamentParameters fallback_parameters {
-        .linear_heat_capacity_J_C_m = 4.5f,
+        .linear_heat_capacity_J_C_m = 5.8f,
     };
 
     constexpr FilamentParameters no_filament_parameters {
