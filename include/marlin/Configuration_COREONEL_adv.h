@@ -652,7 +652,7 @@
      */
     #define PAUSE_PARK_RETRACT_LENGTH 8
 #if HAS_INDX()
-    #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 15 // (mm/s) Unload filament feedrate. This can be pretty fast.
+    #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 15 // (mm/s) Unload filament feedrate. Needs to be slower for INDX
 #else
     #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 25 // (mm/s) Unload filament feedrate. This can be pretty fast.
 #endif
@@ -679,7 +679,7 @@
      */
 #if HAS_INDX()
     #define FILAMENT_CHANGE_SLOW_LOAD_LENGTH 15
-    #define FILAMENT_CHANGE_FAST_LOAD_FEEDRATE 25 // (mm/s) Load filament feedrate. This can be pretty fast.
+    #define FILAMENT_CHANGE_FAST_LOAD_FEEDRATE 15 // (mm/s) Load filament feedrate. Needs to be slower for INDX.
 #else
     #define FILAMENT_CHANGE_SLOW_LOAD_LENGTH 40
     #define FILAMENT_CHANGE_FAST_LOAD_FEEDRATE 25 // (mm/s) Load filament feedrate. This can be pretty fast.
@@ -690,7 +690,11 @@
      * For Bowden, the full length of the tube and nozzle.
      * For direct drive, the full length of the nozzle.
      */
-    #define FILAMENT_CHANGE_FAST_LOAD_LENGTH 20
+#if HAS_INDX()
+        #define FILAMENT_CHANGE_FAST_LOAD_LENGTH 25
+#else
+        #define FILAMENT_CHANGE_FAST_LOAD_LENGTH 20
+#endif
     #define ADVANCED_PAUSE_PURGE_FEEDRATE 3 // (mm/s) Extrude feedrate (after loading). Should be slower than load feedrate.
     #define ADVANCED_PAUSE_PURGE_LENGTH 40 // (mm) Length to extrude after loading.
 #endif
