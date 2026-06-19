@@ -28,7 +28,7 @@ constexpr auto txt_moving_away = N_("Lowering bed for clearance");
 constexpr auto txt_title_axis_alignment = N_("Nozzle %c-Axis Alignment");
 // Identical wording to dock_calibration's txt_lock_position; kept verbatim so both share one POT entry.
 constexpr auto txt_lock_position = N_("Motors are now locked.\n\nEnsure your hands are outside the printer enclosure.\n\nVerify the head is in the correct position, then press Continue to start measuring.");
-constexpr auto txt_move_to_z_point = N_("Move the head to the center of the silicone V-groove so the nozzle lightly touches the silicone, as shown in the picture.\n\nTurn the adjustment screw below the V-groove counterclockwise until the nozzle touches the silicone.");
+constexpr auto txt_move_to_z_point = N_("Position the nozzle in the center of the silicone V-groove as shown.\n\nTurn the adjustment screw counterclockwise until it touches the silicone.");
 constexpr auto txt_ask_position_x = N_("Now we will measure the X offset of the nozzle cleaner.\n\nMove the head to the center of the silicone V-groove so the nozzle lightly touches the silicone, as shown in the picture.");
 constexpr auto txt_ask_position_y = N_("Move the nozzle precisely to the Y-axis calibration indent on the side of the nozzle cleaner bin.\n\nThen press Continue.");
 // %c is the axis letter ('X' or 'Y')
