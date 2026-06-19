@@ -59,8 +59,8 @@ uint32_t FourierSeries3d::add_sample(const float sample_time, const acceleromete
 
 xyz_float_t FourierSeries3d::get_magnitude() {
 
-    xyz_double_t retval = { std::abs(m_sum[0]), std::abs(m_sum[1]), std::abs(m_sum[2]) };
+    xyz_double_t retval { std::abs(m_sum[0]), std::abs(m_sum[1]), std::abs(m_sum[2]) };
     retval *= 2.;
     retval = retval / m_samples_num;
-    return retval.asFloat();
+    return xyz_float_t { (float)retval.x, (float)retval.y, (float)retval.z };
 }
