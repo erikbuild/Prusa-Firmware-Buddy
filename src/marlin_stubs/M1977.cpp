@@ -267,6 +267,7 @@ namespace state {
 
 #if PRINTER_IS_PRUSA_iX()
         mapi::move_out_of_nozzle_cleaner_area();
+        planner.synchronize();
 #endif
 
 #if HAS_ATTACHABLE_ACCELEROMETER()

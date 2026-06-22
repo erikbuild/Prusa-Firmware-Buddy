@@ -23,7 +23,8 @@
 #include "../inc/MarlinConfigPre.h"
 
 #include "tool_change.h"
-#include "utils/overloaded_visitor.hpp"
+#include <utils/overloaded_visitor.hpp>
+#include <mapi/motion.hpp>
 
 #include <option/has_toolchanger.h>
 #if HAS_TOOLCHANGER()
