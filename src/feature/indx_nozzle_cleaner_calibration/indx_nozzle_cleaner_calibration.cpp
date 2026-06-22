@@ -19,6 +19,7 @@
 #include <common/selftest_result.hpp>
 #include <common/mapi/calibration_preamble.hpp>
 #include <common/mapi/parking.hpp>
+#include <feature/gcode_exception/gcode_exception.hpp>
 #include <tool/hotend/hotend.hpp>
 #include <utils/variant_utils.hpp>
 #include <selftest/selftest_invocation.hpp>
@@ -183,10 +184,14 @@ private:
 
         fsm_change(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown);
 
+        // Interrupt the blocking M109 the instant Abort is pressed. The handler resumes queuing on
+        // scope exit. Cooldown does no moves, so there are no skipped steps to recover.
+        GCodeExceptionHandler abort_handler { GCEHandlerExtent::extruder_only, [] {} };
+
         // Push current temp to the GUI and handle abort while M109 is blocking
-        Subscriber subscriber(marlin_server::idle_publisher, [tool] {
+        Subscriber subscriber(marlin_server::idle_publisher, [tool, &abort_handler] {
             if (marlin_server::get_response_from_phase(PhaseNozzleCleanerCalibration::wait_for_nozzle_cooldown) == Response::Abort) {
-                planner.quick_stop();
+                gcode_exceptions().throw_at(&abort_handler);
                 return;
             }
             // Read the live temperature each tick so the GUI reflects the actual cooldown progress
@@ -210,7 +215,7 @@ private:
             Hotend::for_tool(*tool).set_nozzle_target_temp(0); // This is so that we dont accidentally re-heat to 50
         }
 
-        return planner.draining() ? Result::aborted : Result::success;
+        return gcode_exceptions().is_unwinding() ? Result::aborted : Result::success;
     }
 
     /// @return success if axis calibrated, failed on measurement failure, aborted on user abort
