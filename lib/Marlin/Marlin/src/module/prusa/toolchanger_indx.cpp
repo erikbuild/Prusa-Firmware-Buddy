@@ -314,10 +314,8 @@ void PrusaToolChanger::check_nozzle_presence_during_print() {
     // but it's important for Z
     set_current_from_steppers();
 
-    // Don't crash into sequential prints
-    if (axes_home_level.is_homed(Z_AXIS, AxisHomeLevel::imprecise) && current_position.z < planner.max_printed_z) {
-        do_blocking_move_to_z(planner.max_printed_z);
-    }
+    // Lift clear of the printed model (incl. sequential prints) before re-homing/pickup.
+    mapi::park({ .z = mapi::ParkingPosition::AtLeast { .above_print = 10 } });
 
     marlin_server::FSM_Holder fsm(PhaseNozzleMismatch::tool_lost);
     marlin_server::wait_for_response(PhaseNozzleMismatch::tool_lost);
