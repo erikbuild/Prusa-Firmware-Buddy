@@ -194,7 +194,7 @@ bool PrusaToolChanger::check_emergency_stop() {
     return false;
 }
 
-bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool> new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool z_return, const ToolChangeArgs &args) {
+bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool> new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool z_return) {
     // WARNING: called from default(marlin) task
     uint8_t raw_new_tool = match(
         new_tool,
@@ -308,8 +308,6 @@ bool PrusaToolChanger::tool_change(const std::variant<PhysicalToolIndex, NoTool>
 
         // Park old tool
         if (old_dwarf != nullptr) {
-            mapi::extruder_move(-args.retraction_distance_mm, args.retraction_fr_mm_s);
-
             if (!park(*old_dwarf) || !check_skipped_step()) {
                 return false;
             }

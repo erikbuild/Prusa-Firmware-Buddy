@@ -117,14 +117,12 @@ void GcodeSuite::T() {
   if (z_lift > tool_change_lift_t::_last_item) z_lift = tool_change_lift_t::full_lift; // invalid input, use full_lift
   bool z_down = parser.byteval('D', 1);
 
-  ToolChangeArgs args;
-
+  // TODO: Make retraction in parallel with the parking (BFW-8942)
   if (const float retract_mm = parser.floatval('R', 0); retract_mm != 0 && PhysicalToolIndex::currently_selected_opt().has_value()) {
-    args.retraction_distance_mm = retract_mm;
-    args.retraction_fr_mm_s = parser.floatval('V', 40);
+      mapi::extruder_move(-retract_mm, parser.floatval('V', 40));
   }
 
-  tool_change(stdext::to_variant(virtual_tool), return_type, z_lift, z_down, args);
+  tool_change(stdext::to_variant(virtual_tool), return_type, z_lift, z_down);
 }
 
 /** @}*/

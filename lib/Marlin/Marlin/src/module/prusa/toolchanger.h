@@ -1,5 +1,4 @@
 #pragma once
-
 #include <bitset>
 #include <inc/MarlinConfigPre.h>
 #include <option/has_toolchanger.h>
@@ -7,8 +6,6 @@
 #include <utils/variant_utils.hpp>
 #include <option/has_indx.h>
 #include <option/has_tool_crash_recovery.h>
-#include <module/tool_change.h>
-#include <mapi/parking.hpp>
 
 #if HAS_TOOLCHANGER()
     #include "toolchanger_utils.h"
@@ -37,7 +34,7 @@ public:
      * @param z_return when true, printer will go to return_position.z after toolchange is complete, false will leave Z in last state (possibly lifted by z_lift)
      * @return true if toolchange was successful
      */
-    [[nodiscard]] bool tool_change(const std::variant<PhysicalToolIndex, NoTool> new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift = tool_change_lift_t::full_lift, bool z_return = true, const ToolChangeArgs &args = {});
+    [[nodiscard]] bool tool_change(const std::variant<PhysicalToolIndex, NoTool> new_tool, tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift = tool_change_lift_t::full_lift, bool z_return = true);
 
     float calc_z_raise(tool_return_t return_type, xyz_pos_t return_position, tool_change_lift_t z_lift, bool levelling_active) const;
 
@@ -337,8 +334,7 @@ private:
      */
     [[nodiscard]] bool verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present, WaitMode mode = WaitMode::default_mode);
 
-    enum class ToolchangeFailureAction { abort,
-        retry };
+    enum class ToolchangeFailureAction { abort, retry };
 
     /**
      * @brief Show toolchange failure dialog and get user decision.
@@ -380,7 +376,7 @@ private:
      * @param tool this tool
      * @return true on success
      */
-    [[nodiscard]] bool park(PhysicalToolIndex tool, const mapi::ParkArgs &args = {});
+    [[nodiscard]] bool park(PhysicalToolIndex tool);
 
     /**
      * @brief Execute the physical park sequence: move to dock, unlock, release nozzle, exit.
@@ -388,7 +384,7 @@ private:
      * @param tool this tool
      * INDX_TODO: Do homing moves to makes sure we dont crash and crash the printer
      */
-    bool park_procedure(PhysicalToolIndex tool, const mapi::ParkArgs &args = {});
+    bool park_procedure(PhysicalToolIndex tool);
 
     /// Commit parked state (NoTool active, persisted, head open, loadcell reset).
     void commit_park(PhysicalToolIndex previous_tool);

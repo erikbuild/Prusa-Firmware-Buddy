@@ -60,12 +60,9 @@
 bool tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool> new_tool,
                  [[maybe_unused]] tool_return_t return_type /*= tool_return_t::to_current*/,
                  [[maybe_unused]] tool_change_lift_t z_lift /*= tool_change_lift_t::full_lift*/,
-                 [[maybe_unused]] bool z_return /*= true*/,
-                 const ToolChangeArgs &args){
+                 [[maybe_unused]] bool z_return /*= true*/){
 
   #if HAS_MMU2()
-    mapi::extruder_move(-args.retraction_distance_mm, args.retraction_fr_mm_s);
-
     match(new_tool,
       [](VirtualToolIndex virtual_tool){ MMU2::mmu2.tool_change(virtual_tool.to_raw()); },
       [](PhysicalToolIndex physical_tool){ /* do nothing */ static_assert(PhysicalToolIndex::count == 1); },
@@ -80,7 +77,7 @@ bool tool_change(const std::variant<VirtualToolIndex, PhysicalToolIndex, NoTool>
       [](PhysicalToolIndex physical_tool) -> MaybePhysical { return physical_tool; },
       [](NoTool) -> MaybePhysical { return NoTool{}; }
     );
-    return prusa_toolchanger.tool_change(maybe_physical, return_type, current_position.xyz(), z_lift, z_return, args);
+    return prusa_toolchanger.tool_change(maybe_physical, return_type, current_position.xyz(), z_lift, z_return);
 
   #else
     #error Not implemented
