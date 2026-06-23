@@ -8,6 +8,7 @@
 #include <option/has_wastebin_fill_tracking.h>
 #include <option/has_indx.h>
 #include <bsod/bsod.h>
+#include <tool_index.hpp>
 
 namespace mapi {
 
@@ -22,10 +23,18 @@ enum class ParkPosition : uint8_t {
     load,
     unload,
     loadcell_selftest,
+
 #if HAS_WASTEBIN_FILL_TRACKING()
     /// Head clear of the nozzle cleaner so the wastebin can be pulled out, lifted above the print.
     empty_wastebin,
 #endif
+
+#if HAS_TOOLCHANGER()
+    /// Move the head to a position for tool docking - typically just before the dock
+    /// !!! The tool MUST be provided in get_parking_position args
+    tool_park,
+#endif
+
     _cnt,
 };
 
@@ -104,7 +113,7 @@ struct ParkingPosition {
     }
 };
 
-ParkingPosition get_parking_position(ParkPosition position);
+ParkingPosition get_parking_position(ParkPosition position, std::variant<VirtualToolIndex, NoTool> tool = NoTool {});
 
 #if HAS_NOZZLE_CLEANER()
 void move_out_of_nozzle_cleaner_area();

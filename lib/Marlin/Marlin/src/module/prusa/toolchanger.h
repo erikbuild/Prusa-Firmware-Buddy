@@ -98,6 +98,9 @@ public:
      */
     const xy_float_t get_tool_dock_position(PhysicalToolIndex tool);
 
+    /// @returns position just in front of the dock, the tool being ready to be parked
+    xy_pos_t tool_park_position(PhysicalToolIndex tool);
+
     /**
      * @brief Loop that checks toolchanger state.
      * @warning Called only directly from marlin server.
@@ -334,7 +337,8 @@ private:
      */
     [[nodiscard]] bool verify_nozzle_state(PhysicalToolIndex prev_tool, bool expect_present, WaitMode mode = WaitMode::default_mode);
 
-    enum class ToolchangeFailureAction { abort, retry };
+    enum class ToolchangeFailureAction { abort,
+        retry };
 
     /**
      * @brief Show toolchange failure dialog and get user decision.

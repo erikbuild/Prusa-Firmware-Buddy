@@ -606,6 +606,13 @@ const xy_float_t PrusaToolChanger::get_tool_dock_position(PhysicalToolIndex tool
     return xy_float_t { info.dock_x, SAFE_Y_WITH_TOOL };
 }
 
+xy_pos_t PrusaToolChanger::tool_park_position(PhysicalToolIndex tool) {
+    const PrusaToolInfo &info = get_tool_info(dwarfs[tool], /*check_calibrated=*/false);
+
+    // This position should 1:1 match the initial position for tool parking
+    return xy_pos_t { .x = info.dock_x + PARK_X_OFFSET_1, .y = SAFE_Y_WITH_TOOL };
+}
+
 bool PrusaToolChanger::park(Dwarf &dwarf) {
     auto dwarf_parked = [&dwarf]() {
         if (!dwarf.refresh_park_pick_status()) {
@@ -624,7 +631,7 @@ bool PrusaToolChanger::park(Dwarf &dwarf) {
     const PrusaToolInfo &info = get_tool_info(dwarf, /*check_calibrated=*/true);
 
     // safe target dock position
-    const xy_pos_t target_pos = { info.dock_x + PARK_X_OFFSET_1, SAFE_Y_WITH_TOOL };
+    const xy_pos_t target_pos = tool_park_position(dwarf.tool_index());
 
     // reduce maximum parking speed to improve reliability during constant toolchanging
     float target_fr = limit_stealth_feedrate(PARKING_FINAL_MAX_SPEED);

@@ -578,6 +578,11 @@ void PrusaToolChanger::open_head(PhysicalToolIndex tool) {
     log_info(PrusaToolChanger, "Head locking mechanism opened");
 }
 
+xy_pos_t PrusaToolChanger::tool_park_position(PhysicalToolIndex tool) {
+    const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);
+    return xy_pos_t { .x = info.dock_x, .y = info.dock_y + DOCK_SAFE_Y_OFFSET };
+}
+
 bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     // Invalidate nozzle presence data during park — the physical state is changing,
     // so the last reported result is stale until a fresh modbus read arrives.
@@ -586,14 +591,14 @@ bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     IndxHotend::indx_tool(tool).hotend().stop_heating();
 
     const PrusaToolInfo &info = get_tool_info(tool, /*check_calibrated=*/false);
-    const float safe_y = info.dock_y + DOCK_SAFE_Y_OFFSET;
+    const auto park_pos = tool_park_position(tool);
 
     // Move to dock X, then to safe Y in front of dock
-    mapi::park({ .x = info.dock_x, .y = safe_y });
+    mapi::park({ .x = park_pos.x, .y = park_pos.y });
     planner.synchronize();
 
     // Approach unlock position
-    move(info.dock_x, info.dock_y, DOCK_ENGAGE_FEEDRATE);
+    move(park_pos.x, info.dock_y, DOCK_ENGAGE_FEEDRATE);
     planner.synchronize();
 
     {
@@ -609,7 +614,7 @@ bool PrusaToolChanger::park_procedure(PhysicalToolIndex tool) {
     (void)wait([]() { return false; }, DOCK_DWELL_MS);
 
     // Fast move to safe position
-    move(info.dock_x, safe_y, SLOW_EXIT_FEEDRATE);
+    move(park_pos.x, park_pos.y, SLOW_EXIT_FEEDRATE);
     planner.synchronize();
 
     buddy::puppies::indx.invalidate_nozzle_data();

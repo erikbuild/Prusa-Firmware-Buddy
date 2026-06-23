@@ -313,6 +313,9 @@ void ToolsMappingBody::windowEvent([[maybe_unused]] window_t *sender, GUI_event_
     inline uint8_t dwarf_index() const {
         return dwarf_number;
     }
+    PhysicalToolIndex tool_index() const {
+        return PhysicalToolIndex::from_raw(dwarf_number);
+    }
 
     uint16_t get_fan_pwm(uint8_t fan_nr) const;
     uint16_t get_fan_rpm(uint8_t fan_nr) const;

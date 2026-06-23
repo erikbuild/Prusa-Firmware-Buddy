@@ -10,12 +10,17 @@
 #include <option/has_wastebin.h>
 #include <option/has_wastebin_fill_tracking.h>
 
+#include <option/has_toolchanger.h>
+#if HAS_TOOLCHANGER()
+    #include <module/prusa/toolchanger.h>
+#endif
+
 namespace mapi {
 
 // Make sure our little [[no_unique_address]] trick works
 static_assert(sizeof(ParkingPosition::AtLeast) == 8);
 
-ParkingPosition get_parking_position(ParkPosition position) {
+ParkingPosition get_parking_position(ParkPosition position, [[maybe_unused]] std::variant<VirtualToolIndex, NoTool> tool) {
     switch (position) {
     case ParkPosition::park:
 #if HAS_INDX()
@@ -57,6 +62,18 @@ ParkingPosition get_parking_position(ParkPosition position) {
         // cleaner which sits at high X, and drop the bed low (Z at least 160, or 20 above tall
         // prints) so there is room to reach in and empty the cleaner.
         return ParkingPosition { 0.0f, static_cast<float>(Y_MAX_POS), ParkingPosition::AtLeast { .above_print = 20, .absolute = 160 } };
+#endif
+
+#if HAS_TOOLCHANGER()
+    case ParkPosition::tool_park:
+        if (auto *t = std::get_if<VirtualToolIndex>(&tool)) {
+            const auto xy = prusa_toolchanger.tool_park_position(t->to_physical());
+            return { .x = xy.x, .y = xy.y, .z = mapi::ParkingPosition::AtLeast { .above_print = 2 } };
+        } else {
+            // User-reachable, don't do a BSOD
+            return {};
+        }
+
 #endif
 
     case ParkPosition::_cnt:
