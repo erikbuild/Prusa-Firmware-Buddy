@@ -1141,6 +1141,14 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = 576.f / 550.f;
     #define X_NOZZLE_CLEANER_ORIGIN 259.7f
     #define Y_NOZZLE_CLEANER_ORIGIN 63.5f
 
+    // Y calibration indent positions [mm] for the two wastebin variants. Both bins share the same cleaner
+    // origin / coordinate system - these are only where the Y calibration feature sits on each bin, not a
+    // shifted origin, so the cleaning sequence and wastebin positions stay put. The standard (longer) bin's
+    // indent is at the origin; the extended (shorter, perforated-side-panel) bin's is 40 mm closer to the
+    // silicone blocks (+Y). The matched point also selects the bin's capacity.
+    #define Y_NOZZLE_CLEANER_CALIB_POINT_STANDARD Y_NOZZLE_CLEANER_ORIGIN
+    #define Y_NOZZLE_CLEANER_CALIB_POINT_EXTENDED (Y_NOZZLE_CLEANER_ORIGIN + 40.f)
+
     #define X_WASTEBIN_SAFE_POINT 250.f //INDX_TODO: Refine and add proper values (this is from c1)
     #define Y_WASTEBIN_SAFE_POINT 55.5f //INDX_TODO: Refine and add proper values (this is from c1)
     #define Y_BRUSH_AVOID_POINT 164.5f //INDX_TODO: Refine and add proper values (this is from c1)

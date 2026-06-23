@@ -23,6 +23,11 @@
 #include <tool/hotend/hotend.hpp>
 #include <utils/variant_utils.hpp>
 #include <selftest/selftest_invocation.hpp>
+#include <option/has_wastebin_fill_tracking.h>
+
+#include <array>
+#include <optional>
+#include <span>
 
 LOG_COMPONENT_DEF(NozzleCleanerCalibration, logging::Severity::info);
 
@@ -39,6 +44,17 @@ static constexpr float offset_tolerance_mm = 3.0f;
 /// Exit measurement point (general for both axes)
 static constexpr float exit_move_mm = -30.f;
 
+/// One machine position [mm] the measurement may snap to. The extended-capacity wastebin variant has
+/// its Y calibration cut-out 40 mm closer to the silicone blocks, so the Y axis has two valid targets;
+/// X has one.
+struct CalibTarget {
+    /// Expected position in machine coordinates [mm].
+    float nominal_mm;
+    /// When this target matches: set nozzle_cleaner_extended_capacity to this (identifies the installed
+    /// bin variant). nullopt = leave the capacity unchanged (X axis carries no capacity information).
+    std::optional<bool> set_extended_capacity;
+};
+
 /// Per-axis calibration configuration
 struct AxisCalibConfig {
     PhaseNozzleCleanerCalibration phase_ask_position;
@@ -46,11 +62,23 @@ struct AxisCalibConfig {
     PhaseNozzleCleanerCalibration phase_measuring;
     PhaseNozzleCleanerCalibration phase_evaluating;
     AxisEnum axis;
-    /// Expected position in machine coordinates [mm]
-    float nominal_mm;
+    /// Candidate positions the measurement may match (within tolerance). At most one can match: they
+    /// are far enough apart (40 mm) that the +/- tolerance windows never overlap.
+    std::span<const CalibTarget> targets;
     /// Park position before disabling motors (user will move it from there).
     /// Slightly offset from the calibration point to avoid collision if not calibrated.
     xy_pos_t park_pos;
+};
+
+static constexpr std::array x_targets {
+    CalibTarget { .nominal_mm = X_NOZZLE_CLEANER_ORIGIN, .set_extended_capacity = std::nullopt },
+};
+
+static constexpr std::array y_targets {
+    // Standard (longer) bin -> calibration indent at the origin, standard capacity.
+    CalibTarget { .nominal_mm = Y_NOZZLE_CLEANER_CALIB_POINT_STANDARD, .set_extended_capacity = false },
+    // Extended (shorter) bin -> indent 40 mm closer to the blocks, extended capacity.
+    CalibTarget { .nominal_mm = Y_NOZZLE_CLEANER_CALIB_POINT_EXTENDED, .set_extended_capacity = true },
 };
 
 static constexpr AxisCalibConfig y_axis_config {
@@ -59,7 +87,7 @@ static constexpr AxisCalibConfig y_axis_config {
     .phase_measuring = PhaseNozzleCleanerCalibration::measuring_y,
     .phase_evaluating = PhaseNozzleCleanerCalibration::evaluating_y,
     .axis = AxisEnum::Y_AXIS,
-    .nominal_mm = Y_NOZZLE_CLEANER_ORIGIN,
+    .targets = y_targets,
     .park_pos = { .x = X_NOZZLE_CLEANER_ORIGIN - 10.f, .y = Y_NOZZLE_CLEANER_ORIGIN },
 };
 
@@ -69,7 +97,7 @@ static constexpr AxisCalibConfig x_axis_config {
     .phase_measuring = PhaseNozzleCleanerCalibration::measuring_x,
     .phase_evaluating = PhaseNozzleCleanerCalibration::evaluating_x,
     .axis = AxisEnum::X_AXIS,
-    .nominal_mm = X_NOZZLE_CLEANER_ORIGIN,
+    .targets = x_targets,
     .park_pos = { .x = X_WASTEBIN_SAFE_POINT, .y = Y_BRUSH_AVOID_POINT },
 };
 
@@ -220,10 +248,22 @@ private:
 
     /// @return success if axis calibrated, failed on measurement failure, aborted on user abort
     Result calibrate_axis(const AxisCalibConfig &config) {
+        // Pre-park near the calibration indent of the bin variant the user currently has configured
+        // (EEPROM), so the manual move onto the indent is as short as possible. Only the Y indent moves
+        // between variants; X has a single fixed approach point.
+        xy_pos_t park_pos = config.park_pos;
+#if HAS_WASTEBIN_FILL_TRACKING()
+        if (config.axis == AxisEnum::Y_AXIS) {
+            park_pos.y = config_store().nozzle_cleaner_extended_capacity.get()
+                ? Y_NOZZLE_CLEANER_CALIB_POINT_EXTENDED
+                : Y_NOZZLE_CLEANER_CALIB_POINT_STANDARD;
+        }
+#endif
+
         for (;;) { // Retry loop for this axis
 
             // Move close to the calibration point so the user has a shorter distance to adjust
-            mapi::park({ .x = config.park_pos.x, .y = config.park_pos.y });
+            mapi::park({ .x = park_pos.x, .y = park_pos.y });
 
             // Position and confirm loop — user can go back to reposition
             for (;;) {
@@ -302,21 +342,35 @@ private:
                 ? (diff.x + current_position.x + tool_offset.x)
                 : (diff.y + current_position.y + tool_offset.y);
 
-            const float offset = measured - config.nominal_mm;
+            // Snap the measurement to one of this axis' calibration targets (each within +/- tolerance).
+            // The targets are far enough apart that at most one matches; keep the nearest for the failure UI.
+            const CalibTarget *matched = nullptr;
+            const CalibTarget *nearest = &config.targets.front();
+            for (const CalibTarget &target : config.targets) {
+                if (std::abs(measured - target.nominal_mm) < std::abs(measured - nearest->nominal_mm)) {
+                    nearest = &target;
+                }
+                if (std::abs(measured - target.nominal_mm) <= offset_tolerance_mm) {
+                    matched = &target;
+                }
+            }
 
-            // Validate offset is within bounds
-            if (std::abs(offset) > offset_tolerance_mm) {
+            // No target in range -> out of bounds. Report against the nearest one.
+            if (matched == nullptr) {
+                const float offset = measured - nearest->nominal_mm;
                 log_error(NozzleCleanerCalibration,
                     "Nozzle cleaner %c offset %.2f out of bounds (max %.1f mm)",
                     (config.axis == AxisEnum::X_AXIS) ? 'X' : 'Y',
                     static_cast<double>(offset), static_cast<double>(offset_tolerance_mm));
 
-                fsm_change(config.phase_evaluating, fsm::serialize_data(EvaluatingData::from(offset, config.nominal_mm)));
+                fsm_change(config.phase_evaluating, fsm::serialize_data(EvaluatingData::from(offset, nearest->nominal_mm)));
                 if (wait_for_response(config.phase_evaluating) == Response::Retry) {
                     continue; // Retry this axis
                 }
                 return Result::failed;
             }
+
+            const float offset = measured - matched->nominal_mm;
 
             // Store offset for this axis
             if (config.axis == AxisEnum::X_AXIS) {
@@ -324,6 +378,14 @@ private:
             } else {
                 config_store().nozzle_cleaner_y_origin_offset.set(offset);
             }
+
+#if HAS_WASTEBIN_FILL_TRACKING()
+            // The matched Y target also identifies the installed wastebin variant -> set its capacity.
+            // (Manual override stays available via the wastebin menu.)
+            if (matched->set_extended_capacity.has_value()) {
+                config_store().nozzle_cleaner_extended_capacity.set(*matched->set_extended_capacity);
+            }
+#endif
 
             log_info(NozzleCleanerCalibration,
                 "Nozzle cleaner %c calibrated: offset=%.2f",

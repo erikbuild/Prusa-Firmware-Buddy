@@ -258,6 +258,8 @@ static constexpr const char *nozzle_cleaner_capacity_items[] = {
     N_("Extended"),
 };
 
+// The nozzle cleaner Y calibration auto-detects the installed bin variant and sets the capacity; this
+// switch is the manual override.
 MI_NOZZLE_CLEANER_CAPACITY::MI_NOZZLE_CLEANER_CAPACITY()
     : MenuItemSwitch(_(label), nozzle_cleaner_capacity_items, static_cast<size_t>(config_store().nozzle_cleaner_extended_capacity.get())) {}
 
