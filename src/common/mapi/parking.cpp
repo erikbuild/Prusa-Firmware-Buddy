@@ -20,6 +20,8 @@ namespace mapi {
 // Make sure our little [[no_unique_address]] trick works
 static_assert(sizeof(ParkingPosition::AtLeast) == 8);
 
+const ParkArgs ParkArgs::default_args {};
+
 ParkingPosition get_parking_position(ParkPosition position, [[maybe_unused]] std::variant<VirtualToolIndex, NoTool> tool) {
     switch (position) {
     case ParkPosition::park:

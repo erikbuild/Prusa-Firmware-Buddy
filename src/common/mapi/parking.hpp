@@ -126,6 +126,8 @@ ParkingPosition apply_nozzle_cleaner_offset(const ParkingPosition &position);
 #endif
 
 struct ParkArgs {
+    static const ParkArgs default_args;
+
     /// Distance to retract during parking - retraction is done in parallel with the parking moves
     float retract_distance_mm = 0;
 
@@ -144,13 +146,13 @@ struct ParkArgs {
  *
  * @returns if the whole intended move was executed
  */
-bool park(const ParkingPosition &parking_position = get_parking_position(ParkPosition::park), const ParkArgs &args = {});
+bool park(const ParkingPosition &parking_position = get_parking_position(ParkPosition::park), const ParkArgs &args = ParkArgs::default_args);
 
 /**
  * @brief Homes required axes if needed, then parks the toolhead.
  *
  * Same as park(), but performs homing first on axes that will need it
  */
-void home_if_needed_and_park(const ParkingPosition &parking_position = get_parking_position(ParkPosition::park), const ParkArgs &args = {});
+void home_if_needed_and_park(const ParkingPosition &parking_position = get_parking_position(ParkPosition::park), const ParkArgs &args = ParkArgs::default_args);
 
 } // namespace mapi
