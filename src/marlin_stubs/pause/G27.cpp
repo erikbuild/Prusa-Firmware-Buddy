@@ -52,6 +52,7 @@
  *   - `0` - Park
  *   - `1` - Purge
  *   - `2` - Load
+ *   - `3` - Tool park (toolchangers only)
  */
 void GcodeSuite::G27() {
     GCodeParser2 parser;
@@ -61,8 +62,18 @@ void GcodeSuite::G27() {
 
     mapi::ParkingPosition parking_position;
 
-    if (auto where_to_park = parser.option<mapi::ParkPosition>('W', mapi::ParkPosition::_cnt)) {
-        parking_position = mapi::get_parking_position(*where_to_park);
+    static constexpr mapi::ParkPosition where_to_park_list[] {
+        [0] = mapi::ParkPosition::park,
+        [1] = mapi::ParkPosition::purge,
+        [2] = mapi::ParkPosition::load,
+#if HAS_TOOLCHANGER()
+        [3] = mapi::ParkPosition::tool_park,
+#else
+        [3] = mapi::ParkPosition::park,
+#endif
+    };
+    if (auto ix = parser.option<size_t>('W', (size_t)0, std::size(where_to_park_list) - 1)) {
+        parking_position = mapi::get_parking_position(where_to_park_list[*ix], VirtualToolIndex::currently_selected());
     }
 
     if (auto x = parser.option<float>('X')) {
