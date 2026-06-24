@@ -127,12 +127,21 @@ void restore_current_if(bool condition, el_current_xyz_t current) {
     stepperZ.rms_current(current.z);
 }
 
-void homing_reset(bool no_modifiers, bool default_acceleration, bool default_current) {
+HomingResetGuard::HomingResetGuard(bool no_modifiers, bool default_acceleration, bool default_current)
+    : no_modifiers(no_modifiers)
+    , default_acceleration(default_acceleration)
+    , default_current(default_current) {
 #if HAS_WORKSPACE_OFFSET
     disable_workspace(true, true, true);
 #endif
-    disable_modifiers_if(no_modifiers, false);
-    reset_acceleration_if(default_acceleration);
+    restore_leveling = disable_modifiers_if(no_modifiers, false);
+    motion_params = reset_acceleration_if(default_acceleration);
     endstops.enable(true); //< Enable endstops for homing moves
-    reset_current_if(default_current);
+    current = reset_current_if(default_current);
+}
+
+HomingResetGuard::~HomingResetGuard() {
+    restore_current_if(default_current, current);
+    restore_acceleration_if(default_acceleration, motion_params);
+    enable_modifiers_if(no_modifiers, restore_leveling);
 }

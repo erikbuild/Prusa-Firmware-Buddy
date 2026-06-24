@@ -5,7 +5,6 @@
 #include "../../Marlin/src/module/stepper.h"
 #include "../../Marlin/src/module/endstops.h"
 #include "../../Marlin/src/module/motion.h"
-#include "../../Marlin/src/module/prusa/homing_utils.hpp"
 #include "../../Marlin/src/feature/motordriver_util.h"
 #include "selftest_log.hpp"
 #include "i_selftest.hpp"
@@ -32,7 +31,6 @@ CSelftestPart_Axis::CSelftestPart_Axis(IPartHandler &state_machine, const AxisCo
     , rResult(result)
     , log(1000) {
     log_info(Selftest, "%s Started", config.partname);
-    homing_reset();
 }
 
 CSelftestPart_Axis::~CSelftestPart_Axis() {

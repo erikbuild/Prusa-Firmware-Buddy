@@ -8,6 +8,7 @@
 #include "selftest_log.hpp"
 
 #include <printers.h>
+#include "Marlin/src/module/prusa/homing_utils.hpp"
 namespace selftest {
 
 class CSelftestPart_Axis {
@@ -22,6 +23,7 @@ class CSelftestPart_Axis {
     float unmeasured_distance = 0; // Distance traveled before axis measuring is started
 #endif
     bool coils_ok = false; // Initially false, set to true when any coil check passes
+    HomingResetGuard homing_reset_guard; // Resets accel/current/modifiers for homing, restores them on destruction
 
     void phaseMove(int8_t dir);
     LoopResult wait(int8_t dir);
