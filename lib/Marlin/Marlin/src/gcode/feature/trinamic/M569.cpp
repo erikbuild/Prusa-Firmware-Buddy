@@ -28,6 +28,7 @@
 #include "../../../feature/tmc_util.h"
 #include "../../../module/stepper/indirection.h"
 #include <utils/variant_utils.hpp>
+#include <option/has_indx.h>
 
 template<typename TMC>
 void tmc_say_stealth_status(TMC &st) {
@@ -186,9 +187,15 @@ static void say_stealth_status() {
  */
 void GcodeSuite::M569() {
   if (parser.seen('S')){
+#if HAS_INDX()
+    // INDX has passive tools (single E stepper), so apply even with no tool selected.
+    static_assert(E_STEPPERS == 1, "INDX assumes a single E stepper");
+    set_stealth_status(parser.value_bool(), PhysicalToolIndex::from_raw(0));
+#else
     const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
     if (!tool.has_value()) return;
     set_stealth_status(parser.value_bool(), *tool);
+#endif
   } else
     say_stealth_status();
 }
