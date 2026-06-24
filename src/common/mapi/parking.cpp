@@ -180,6 +180,7 @@ namespace {
         }
 
     public:
+        /// Can apply retraction as well, depending on the PrintArgs
         void move(const xyz_pos_t &target, feedRate_t fr_mm_s) {
             static constexpr PrepareMoveHints hints {
                 .scale_feedrate = false,
@@ -202,49 +203,67 @@ namespace {
                 const float distance_to_retract_mm = std::min(maximum_move_retraction_mm, remaining_distance_to_retract_mm_);
                 remaining_distance_to_retract_mm_ -= distance_to_retract_mm;
 
-                // Split the move into two segments:
-                // - First segment with retraction
+                // If the retraction distance would be reached before reaching target XYZ, split the move into two segments:
+                // - First segment with parallel retraction
+                // - Second, move-only segment after we've got remaining_distance_to_retract_mm_ to 0, implemented after this if
+
                 target_xyze.set(current_position.xyz() + delta_xyz * (distance_to_retract_mm / maximum_move_retraction_mm));
                 target_xyze.e -= distance_to_retract_mm;
                 prepare_move_to(target_xyze, fr_mm_s, hints);
-
-                // - Second segment after we've got remaining_distance_to_retract_mm_ to 0
-                // (will be a nop if remaining_distance_to_retract_mm_ does not get to zero during this move)
-                // Implemented outside the if
             }
 
+            // This will be a nop if the move with retraction reached the target XYZ already
             target_xyze.set(target);
             prepare_move_to(target_xyze, fr_mm_s, hints);
         }
 
+        /// Can apply retraction and Z ramp as well, depending on the PrintArgs
         void move_x(float target) {
             move_xy({ target, current_position.y });
         }
+
+        /// Can apply retraction and Z ramp as well, depending on the PrintArgs
         void move_y(float target) {
             move_xy({ current_position.x, target });
         }
+
+        /// Can apply retraction and Z ramp as well, depending on the PrintArgs
         void move_xy(const xy_pos_t &target) {
             if (args_.z_ramp_slope > 0) {
-                // Do a parallel Z move with the XY move
+                // Do a parallel Z move with the XY move with a CONSTANT SLOPE.
+                //
+                // The Z ramp is intended to be SPREAD across all XY moves during the park,
+                // we don't have to reach the `destination_z_` at the end of this function.
+                //
+                // If the destination_z is not reached even after all XY moves,
+                // things will get settled by the final Z park move.
+
                 const float dest_delta_z = destination_z_ - current_position.z;
                 const xy_pos_t full_delta_xy = target - current_position.xy();
+
+                /// Delta Z we would be able to do according to the z_ramp_slope, disregarding destination Z overshoot
                 const float full_delta_z = std::copysignf(full_delta_xy.magnitude() * args_.z_ramp_slope, dest_delta_z);
 
                 if (full_delta_z != 0) {
-                    // Split the move into two segments:
-                    // - First segment with the Z move
-                    const float segment_coef = std::min<float>(std::abs(dest_delta_z / full_delta_z), 1);
-                    const xyz_pos_t full_delta_xyz { full_delta_xy.x, full_delta_xy.y, full_delta_z };
-                    move(current_position.xyz() + full_delta_xyz * segment_coef, fr_xy);
+                    // If we would reach target Z before reaching target xy, the move will get split into two segments:
+                    // - Segment with the parallel Z move to reach the dest Z
+                    // - Second XY-only segment, implemented after this if
 
-                    // - Second XY-only segment if we've already reached the Z destination
-                    // Implemented outside the if
+                    /// Delta XYZ we would be able to do according to the z_ramp_slope, disregarding destination Z overshoot
+                    const xyz_pos_t full_delta_xyz { full_delta_xy.x, full_delta_xy.y, full_delta_z };
+
+                    // Compute how much of full_delta_xyz we can do before overshooting target Z
+                    const float segment_coef = std::min<float>(std::abs(dest_delta_z / full_delta_z), 1);
+
+                    move(current_position.xyz() + full_delta_xyz * segment_coef, fr_xy);
                 }
             }
 
+            // This will be a nop if the Z ramp move reached the target XY
             move(xyz_pos_t { target.x, target.y, current_position.z }, fr_xy);
         }
 
+        /// Can apply retraction as well, depending on the PrintArgs
         void move_z(float target) {
             auto target_pos = current_position.xyz();
             target_pos.z = target;
