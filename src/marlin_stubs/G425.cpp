@@ -179,9 +179,10 @@ enum class Phase : uint8_t {
 class AccelerationLimiter {
 public:
     AccelerationLimiter(const float max_acceleration_mmss)
-        : previous_x(planner.settings.max_acceleration_mm_per_s2[X_AXIS])
-        , previous_y(planner.settings.max_acceleration_mm_per_s2[Y_AXIS]) {
-        planner.set_max_acceleration(X_AXIS | Y_AXIS, max_acceleration_mmss);
+        : previous_x(planner.user_settings.max_acceleration_mm_per_s2[X_AXIS])
+        , previous_y(planner.user_settings.max_acceleration_mm_per_s2[Y_AXIS]) {
+        planner.set_max_acceleration(X_AXIS, max_acceleration_mmss);
+        planner.set_max_acceleration(Y_AXIS, max_acceleration_mmss);
     }
     ~AccelerationLimiter() {
         planner.set_max_acceleration(X_AXIS, previous_x);
