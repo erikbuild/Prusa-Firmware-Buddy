@@ -28,6 +28,7 @@
 #include "../../../feature/tmc_util.h"
 #include "../../../module/stepper/indirection.h"
 #include <utils/variant_utils.hpp>
+#include <option/has_indx.h>
 
 #include <option/has_motor_current_profiles.h>
 #if HAS_MOTOR_CURRENT_PROFILES()
@@ -112,9 +113,15 @@ void GcodeSuite::M906() {
         #endif
         break;
       case E_AXIS: {
+#if HAS_INDX()
+        // INDX has passive tools (single E stepper), so apply even with no tool selected.
+        static_assert(E_STEPPERS == 1, "INDX assumes a single E stepper");
+        switch (E_INDEX_N(0)) {
+#else
         const std::optional<PhysicalToolIndex> tool = stdext::get_optional<PhysicalToolIndex>(get_target_physical_from_command());
         if (!tool.has_value()) return;
         switch (E_INDEX_N(tool->to_raw())) {
+#endif
           #if AXIS_IS_TMC(E0)
             case 0: TMC_SET_CURRENT(E0); break;
           #endif
